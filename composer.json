@@ -5,7 +5,7 @@
     "type": "project",
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "app\\": "app/"
         }
     },
     "require": {}
