@@ -1,7 +1,4 @@
 <?php
-
-namespace app\controllers;
-
 require_once __DIR__ . '/../core/conexion.php';
 
 class TestController
