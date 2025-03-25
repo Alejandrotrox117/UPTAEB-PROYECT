@@ -4,7 +4,7 @@ class Views{
     $controller = get_class($controller);
     //Validamos que el archivo inicial sea el inicio
         if($controller=="Home"){
-            $view = "public/index.php";
+            $view = "public/views/home.php";
         }else{
             //Si no es el inicio en el caso contrario sigue con otro controlador
             $view = "public/views/".$controller."/".$view.".php";
