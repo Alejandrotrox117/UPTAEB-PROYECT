@@ -1,8 +1,10 @@
 <?php
 
-class Peso extends Controllers {
+
+class Peso extends Controllers 
+{
     public function __construct() {
-        parent::__construct();
+        parent::__construct(); // Llama al constructor de la clase base
     }
 
     public function peso() {
@@ -12,9 +14,6 @@ class Peso extends Controllers {
     }
 
     public function detalle($id) {
-        $data['page_title'] = "Detalle de Peso";
-        $data['page_name'] = "Detalle Peso";
-        $data['id'] = $id;
-        $this->views->getView($this, "detalle", $data);
+        echo "Detalle del peso con ID: " . $id;
     }
 }
