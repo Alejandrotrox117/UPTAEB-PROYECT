@@ -16,7 +16,7 @@ class Home extends Controllers
     public function home($params = null) {
         $data['page_id'] = 1;
         $data["page_title"] = "Pagina principal";
-        $data["tag_page"] = "Celtech Store";
+        $data["tag_page"] = "La pradera de pavia";
         $data["page_name"] = "Home";
         
         // Verifica si hay parámetros

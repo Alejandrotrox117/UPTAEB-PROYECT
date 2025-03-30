@@ -7,11 +7,11 @@
 <body>
 <?php
 include './public/header.php';
-// Instancia del controlador y llama al método
-$controller = new Home();
-$controller->home('Parámetros de prueba');
+
+
 
 include './public/footer.php'; 
 ?>
+
 </body>
 </html>
