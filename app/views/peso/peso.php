@@ -121,7 +121,7 @@
                         </div>
                     </div>
 
-                    <table class="w-full text-left border-collapse">
+                    <table id="dtPeso" class="w-full text-left border-collapse">
                         <thead>
                             <tr class="text-gray-500 text-sm border-b">
                                 <th class="py-2">Nro</th>
@@ -134,49 +134,8 @@
                             </tr>
                         </thead>
                         <tbody class="text-gray-900">
-                            <tr class="border-b">
-                                <td class="py-3">01</td>
-                                <td>10-03-2025</td>
-                                <td>1,735</td>
-                                <td>Kg</td>
-                                <td>Cartón</td>
-                                <td>Fernando Gutierrez</td>
-                                <td>Venta de materiales</td>
-                            </tr>
-                            <tr class="border-b">
-                                <td class="py-3">02</td>
-                                <td>10-03-2025</td>
-                                <td>100</td>
-                                <td>Kg</td>
-                                <td>Cartón</td>
-                                <td>Jhonkleider Rodriquez</td>
-                                <td>Empacado por empleado</td>
-                            </tr>
-                            <tr>
-                                <td class="py-3">03</td>
-                                <td>10-03-2025</td>
-                                <td>450</td>
-                                <td>Kg</td>
-                                <td>Archivo</td>
-                                <td>Humberto Hernandez</td>
-                                <td>Empacado por empleado</td>
-                            </tr>
                         </tbody>
                     </table>
-
-                    <div class="flex justify-between items-center mt-4 text-gray-500 text-sm">
-                        <span>Mostrando del 1 al 8 de 700 registros</span>
-                        <div class="flex items-center space-x-2">
-                            <button class="px-3 py-1 border rounded-md text-gray-500">&lt;</button>
-                            <button class="px-3 py-1 bg-green-500 text-white rounded-md">1</button>
-                            <button class="px-3 py-1 border rounded-md text-gray-500">2</button>
-                            <button class="px-3 py-1 border rounded-md text-gray-500">3</button>
-                            <button class="px-3 py-1 border rounded-md text-gray-500">4</button>
-                            <span class="px-3">...</span>
-                            <button class="px-3 py-1 border rounded-md text-gray-500">40</button>
-                            <button class="px-3 py-1 border rounded-md text-gray-500">&gt;</button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </main>

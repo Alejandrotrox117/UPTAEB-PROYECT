@@ -1,9 +1,15 @@
+<?php if (isset($data['page_functions_js'])): ?>
+  <script src="<?php 'project/app/assets/js/' . $data['page_functions_js']; ?>"></script>
 
+  <?php endif; ?>
 <!-- Font Awesome -->
-<script src="app/assets/fontawesome/js/fontawesome.js" crossorigin="anonymous"></script>
+<script src="/project/app/assets/fontawesome/js/fontawesome.js" crossorigin="anonymous"></script>
 <!-- filepath: c:\xampp\htdocs\project\app\views\peso\peso.php -->
-<script src="/project/app/assets/js/prueba.js"></script>
-</div>
+<script type="module" src="/project/app/assets/js/functions_peso.js"></script>
+<script src="/project/app/assets/DataTables/datatables.js"></script>
+<script src="/project/app/assets/DataTables/jquery.min.js"></script>
 
+</div>
 </body>
+
 </html>
