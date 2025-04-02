@@ -27,17 +27,21 @@ document.addEventListener(
         },
       },
       ajax: {
-        url: base_url + "/usuarios/getUsuarios",
+        url:   "app/controllers/getCompras",
         dataSrc: "",
       },
       columns: [
         
-        { data: "idusuario" },
-        { data: "usuario" },
+        { data: "Nr_Compra" },
+        { data: "fecha" },
 
-        { data: "correo" },
-        { data: "estado" },
-        { data: "acciones" },
+        { data: "inv_inicial" },
+        { data: "ajuste" },
+        { data: "compras" },
+        { data: "descuento" },
+        { data: "inv_final" },
+
+
       ],
       destroy: true,
       responsive: true,
@@ -46,6 +50,6 @@ document.addEventListener(
     });
     
   },
-  false,
+  false
  
 );

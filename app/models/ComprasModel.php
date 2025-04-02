@@ -73,20 +73,24 @@ class ComprasModel extends Mysql
     {
         $this->descuento = $descuento;
     }
-
-
-
-
-    public function __construct() {}
-
-
-    //funcion para consultar todos
-    public function selectCompras()
-    {
-        $query = "SELECT * FROM  WHERE categoriaId != 0 ORDER BY categoriaId ASC";
-        $request = $this->searchAll($query);
-        return $request;
+    //constructor
+    public function __construct(){
+        $this->conexion = new Conexion();
+        $this->db = $this->conexion->connectGeneral();
+        parent::__construct();
     }
 
+
+
+  
+
+   
     
+        public function selectCompras() {
+            $sql = "SELECT * FROM compra_materiales";
+            return $this->searchAll($sql);
+    
+    
+    
+}
 }

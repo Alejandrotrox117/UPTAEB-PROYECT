@@ -21,12 +21,12 @@ class Conexion {
 // CREACION DE FUNCIONCION CONSTRUCTOR
 public function __construct() {
    
-    $connectionStringGeneral = "mysql:host=".$this->ip.";dbname=".$this->bd, $this->user, $this->password;
+    $connectionStringGeneral = "mysql:host=".$this->ip.";dbname=".$this->bd;
     try {
-        $conectGeneral = new PDO($connectionStringGeneral, DB_USER_GENERAL, DB_PASSWORD_GENERAL);
+        $conectGeneral = new PDO($connectionStringGeneral, $this->user, $this->password);
         // Configurar las conexiones para que lancen excepciones en caso de error
         $conectGeneral->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->set_conectGeneral($conectGeneral);
+        $this->set_conect($conectGeneral);
     } catch(PDOException $e) {
         // Mostrar el error en el log
         error_log("Error de conexión a la base de datos: " . $e->getMessage());
@@ -42,7 +42,7 @@ public function __construct() {
 
 
 public function connectGeneral() {
-    return $this->get_conectGeneral();
+    return $this->get_conect();
 }
 
 // Crear una instancia de la clase Conexion y realizar operaciones
