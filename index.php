@@ -1,6 +1,6 @@
 <?php
 require_once "app/core/Controllers.php";
-
+require_once "vendor/autoload.php";
 $url = !empty($_GET['url']) ? $_GET['url'] : 'home/home'; // URL
 
 $arrUrl = explode('/', $url);
