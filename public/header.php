@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <link rel="shortcut icon" href="/project/app/assets/img/favicon.ico">
+    <link rel="shortcut icon" href="/project/app/assets/img/favicon.svg" type="image/x-icon">
+    <title>Recuperadora</title>
+    <meta name="description" content="Recuperadora de materiales reciclables">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="/project/app/assets/styles/styles.css" rel="stylesheet"> <!-- Tailwind -->
     <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
@@ -17,16 +19,48 @@
    
         <!-- Sidebar -->
         <aside class="w-84 bg-white shadow-md p-5 flex flex-col">
-            <h1 class="text-2xl font-bold text-green-600">Recuperadora</h1>
+            <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="text-2xl font-bold text-green-600">
             <nav class="mt-5">
                 <ul>
-                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Dashboard</span></li>
-                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Romana</span></li>
-                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Compra de Materiales</span></li>
-                    
-                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Clasidficacion de Materiales</span></li>
-                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Empleados temporales</span></li>
-                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Ventas de Materiales </span></li>
+                    <!-- Dashboard -->
+                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
+                        <a href="/project/dashboard" class="flex items-center">
+                            <span><i class="fa-solid fa-tachometer-alt icon"></i></span>
+                            <span class="ml-5">Dashboard</span>
+                        </a>
+                    </li>
+                    <!-- Romana -->
+                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
+                        <a href="/project/romana" class="flex items-center">
+                            <span><i class="fa-solid fa-weight-scale  icon "></i></span>
+                            <span class="ml-5">Romana</span>
+                        </a>
+                    </li>
+                    <!-- Compras -->
+                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
+                        <a href="/project/compras" class="flex items-center">
+                            <span><i class="fa-solid fa-cart-shopping icon"></i></span>
+                            <span class="ml-5">Compra de Materiales</span>
+                        </a>
+                    </li>
+                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
+                        <a href="/project/clasificacion" class="flex items-center">
+                            <span><i class="fa-solid fa-layer-group icon"></i></span>
+                            <span class="ml-5">Clasificacion de Materiales</span>
+                        </a>
+                    </li>
+                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
+                        <a href="/project/empleados" class="flex items-center">
+                            <span><i class="fa-solid fa-user-clock icon"></i></span>
+                            <span class="ml-5">Empleados temporales</span>
+                        </a>
+                    </li>
+                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
+                        <a href="/project/ventas" class="flex items-center">
+                            <span><i class="fa-solid fa-file-invoice-dollar icon"></i></span>
+                            <span class="ml-5">Ventas de Materiales </span>
+                        </a>
+                    </li>
                     <li class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
                         <a href="/project/inventario" class="flex items-center">
                             <span><i class="fa-solid fa-boxes-stacked"></i></span>
