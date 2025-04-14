@@ -27,7 +27,7 @@ document.addEventListener(
         },
       },
       ajax: {
-       url: base_url + "getInventario",
+       url: "inventario/getInventario",
         dataSrc: "",
       },
       columns: [
@@ -36,7 +36,6 @@ document.addEventListener(
         { data: "inicial" },
 
         { data: "ajuste" },
-        { data: "" },
         { data: "material_compra" },
         { data: "despacho" },
         { data: "descuento" },

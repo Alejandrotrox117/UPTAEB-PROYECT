@@ -23,10 +23,16 @@
                     <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Dashboard</span></li>
                     <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Romana</span></li>
                     <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Compra de Materiales</span></li>
-                    <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Movimiento de Inventarios</span></li>
+                    
                     <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Clasidficacion de Materiales</span></li>
                     <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Empleados temporales</span></li>
                     <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg "><span><i class="fa-solid fa-weight-scale  icon "></i></span><span class="ml-5">Ventas de Materiales </span></li>
+                    <li class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
+                        <a href="/project/inventario" class="flex items-center">
+                            <span><i class="fa-solid fa-boxes-stacked"></i></span>
+                            <span class="ml-5">Inventario</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </aside>

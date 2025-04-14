@@ -30,7 +30,7 @@ class Inventario extends Controllers
     }
 
 
-    public function App()
+    public function getInventario()
     {
        
         $arrData = $this->model->selectAllInventario();
