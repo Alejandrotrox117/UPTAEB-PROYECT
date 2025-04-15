@@ -4,44 +4,66 @@ require_once("app/core/conexion.php");
 require_once("app/core/mysql.php");
 class ComprasModel extends Mysql
 {
+
     private $db;
     private $conexion;
+    private $numero;
     private $fecha;
     private $id;
-    private $inv_inicial;
-    private $inv_final;
-    private $compras;
-    private $ajustes;
+    private $proveedor;
+    private $peso_vehiculo;
+    private $peso_bruto;
+    private $peso_neto;
+    private $precio_kg;
     private $descuento;
+    private $subtotal;
+    private $total;
 
     //getters
-    public function getId()
+    public function getid()
     {
         return $this->id;
     }
-    public function getFecha()
+    public function getfecha()
     {
         return $this->fecha;
     }
-    public function getInv_inicial()
+    public function getnumero()
     {
-        return $this->inv_inicial;
+        return $this->numero;
     }
-    public function getInv_final()
+    
+    public function getproveedor()
     {
-        return $this->inv_final;
+        return $this->proveedor;
     }
-    public function getCompra()
+    public function getpeso_vehiculo()
     {
-        return $this->compras;
+        return $this->peso_vehiculo;
     }
-    public function getAjustes()
+    public function getcompra()
     {
-        return $this->ajustes;
+        return $this->peso_bruto;
     }
-    public function getDescuento()
+    public function getpeso_neto()
+    {
+        return $this->peso_neto;
+    }
+    public function getprecio_kg()
+    {
+        return $this->precio_kg;
+    }
+    public function getdescuento()
     {
         return $this->descuento;
+    }
+    public function getsubtotal()
+    {
+        return $this->subtotal;
+    }
+    public function gettotal()
+    {
+        return $this->total;
     }
 
     //setters
@@ -53,26 +75,34 @@ class ComprasModel extends Mysql
     {
         $this->fecha = $fecha;
     }
-    public function inv_inicial($inv_inicial)
+    public function numero($numero)
     {
-        $this->inv_inicial = $inv_inicial;
+        $this->numero = $numero;
     }
-    public function inv_final($inv_final)
+    public function proveedor($proveedor)
     {
-        $this->inv_final = $inv_final;
+        $this->proveedor = $proveedor;
     }
-    public function compras($compras)
+    public function peso_vehiculo($peso_vehiculo)
     {
-        $this->compras = $compras;
+        $this->peso_vehiculo = $peso_vehiculo;
     }
-    public function ajustes($ajustes)
+    public function peso_bruto($peso_bruto)
     {
-        $this->ajustes = $ajustes;
+        $this->peso_bruto = $peso_bruto;
+    }
+    public function peso_neto($peso_neto)
+    {
+        $this->peso_neto = $peso_neto;
+    }
+    public function precio_kg($precio_kg)
+    {
+        $this->precio_kg = $precio_kg;
     }
     public function descuento($descuento)
     {
         $this->descuento = $descuento;
-    }
+    }   
     //constructor
     public function __construct(){
         $this->conexion = new Conexion();
@@ -80,17 +110,9 @@ class ComprasModel extends Mysql
         parent::__construct();
     }
 
-
-
-  
-
-   
+    public function SelectAllCompras() {
+        $sql = "SELECT * FROM compras";
+        return $this->searchAll($sql);
+    }
     
-        public function selectCompras() {
-            $sql = "SELECT * FROM compra_materiales";
-            return $this->searchAll($sql);
-    
-    
-    
-}
 }
