@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     },
     ajax: {
-      url: "app/controllers/Compras/getComprasData",
+      url: "Compras/getComprasData",
       dataSrc: "", // Configura el origen de datos
     },
     columns: [
@@ -31,12 +31,8 @@ document.addEventListener("DOMContentLoaded", function () {
       { "data": "fecha" },
       { "data": "idproveedor" },
       { "data": "idmaterial" },
-      { "data": "peso_vehiculo" },
-      { "data": "peso_bruto" },
       { "data": "peso_neto" },
-      { "data": "precio_kg" },
       { "data": "%_descuento" },
-      { "data": "subtotal" },
       { "data": "total" }
     ],
     destroy: true,
