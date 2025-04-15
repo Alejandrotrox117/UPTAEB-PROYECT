@@ -114,5 +114,23 @@ class ComprasModel extends Mysql
         $sql = "SELECT * FROM compras";
         return $this->searchAll($sql);
     }
+
+public function insertCompra($data) {
+    $query = "INSERT INTO compras (idproveedor, idmaterial, peso_bruto, peso_neto, peso_vehiculo, subtotal, descuento_porcentaje, total)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $this->db->prepare($query); // Prepara la consulta
+    $arrValues = [
+        $data['proveedor'], 
+        $data['tipo_material'], 
+        $data['peso_bruto'], 
+        $data['peso_neto'], 
+        $data['peso_vehiculo'], 
+        $data['subtotal'], 
+        $data['porcentaje_descuento'], 
+        $data['total']
+    ];
+    return $stmt->execute($arrValues); // Ejecuta la consulta con los valores
+}
+    
     
 }
