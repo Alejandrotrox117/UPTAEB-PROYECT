@@ -1,6 +1,11 @@
-<?php headerAdmin($data); ?>
+
+<?php headerAdmin($data); 
+?> 
+ <?php getModal('modalInventario', $data); ?>
+
         <!-- Main Content -->
         <main class="flex-1 p-6">
+            
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold">Hola, Richard 👋</h2>
 
@@ -8,6 +13,7 @@
             </div>
             <div class="flex justify-between bg-white p-6 rounded-2xl shadow-md space-x-8 mt-5">
                 <!-- Tarjeta 1 -->
+                 
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
                         <i class="fa-solid fa-weight-scale text-green-500 text-3xl"></i>
@@ -81,13 +87,16 @@
 
 
             <div class=" min-h-screen mt-4">
-                <h1 class="text-3xl font-bold text-gray-900">Romana</h1>
+           <!-- Botón para abrir el modal -->
+<button id="show-modal" class="text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+    Open Modal
+</button>
+                <h1 class="text-3xl font-bold text-gray-900">Registros de movimientos</h1>
                 <p class="text-green-500 text-lg">Movimientos de inventarios</p>
 
                 <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
                     <div class="flex justify-between items-center mb-4">
-                        <a href="vista copy.html" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">Registrar</a>
-                        <div class="flex space-x-4">
+                     <div class="flex space-x-4">
                             <div class="relative">
                                 <i class="fa-solid fa-search absolute left-3 top-2 text-gray-400"></i>
                                 <input type="text" placeholder="Search" class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none">
@@ -123,4 +132,6 @@
             </div>
         </main>
     </div>
+    
+   
     <?php footerAdmin($data); ?>

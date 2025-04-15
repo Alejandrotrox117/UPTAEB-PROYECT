@@ -86,7 +86,10 @@ class InventarioModel extends Mysql
 
     public function selectAllInventario()
     {
-        $sql = "SELECT *  FROM movimiento_existencia ORDER BY id_movimiento DESC";
+        $sql = "SELECT id_movimiento, inicial, ajuste, material_compra, despacho, descuento, final, fecha
+FROM movimiento_existencia
+ORDER BY id_movimiento ASC
+LIMIT 10 OFFSET 0;";
         $request = $this->searchAll($sql);
         return $request;
     }
