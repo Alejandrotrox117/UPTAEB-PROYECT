@@ -6,7 +6,8 @@
     <title>Recuperadora</title>
     <meta name="description" content="Recuperadora de materiales reciclables">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="/project/app/assets/styles/styles.css" rel="stylesheet"> <!-- Tailwind -->
+    <!--<link href="/project/app/assets/styles/styles.css" rel="stylesheet"> Tailwind -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
     <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
