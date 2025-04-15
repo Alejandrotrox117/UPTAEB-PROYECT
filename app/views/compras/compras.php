@@ -18,7 +18,7 @@
         </button>
       </div>
 
-      <table id="dtPeso" class="w-full text-left border-collapse mt-6">
+      <table id="TablaCompras" class="w-full text-left border-collapse mt-6">
         <thead>
           <tr class="text-gray-500 text-sm border-b">
             <th class="py-2">Nro</th>
