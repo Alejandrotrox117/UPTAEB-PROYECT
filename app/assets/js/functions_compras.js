@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Inicialización de DataTable
-  DataTable({
+  $('#TablaCompras').DataTable({ // Asocia la configuración al ID "TablaCompras"
     aProcessing: true,
     aServerSide: true,
     language: {
@@ -18,33 +17,35 @@ document.addEventListener("DOMContentLoaded", function () {
       zeroRecords: "Sin resultados encontrados",
       paginate: {
         first: "Primero",
-        last: "Ultimo",
+        last: "Último",
         next: "Siguiente",
         previous: "Anterior",
       },
     },
     ajax: {
       url: "app/controllers/Compras/getComprasData",
-      dataSrc: "",
+      dataSrc: "", // Configura el origen de datos
     },
     columns: [
-            { "data": "nro_compra" },
-            { "data": "fecha" },
-            { "data": "idproveedor" },
-            { "data": "idmaterial" },
-            { "data": "peso_vehiculo" },
-            { "data": "peso_bruto" },
-            { "data": "peso_neto" },
-            { "data": "precio_kg" },
-            { "data": "%_descuento" },
-            { "data": "subtotal" },
-            { "data": "total" }
+      { "data": "nro_compra" },
+      { "data": "fecha" },
+      { "data": "idproveedor" },
+      { "data": "idmaterial" },
+      { "data": "peso_vehiculo" },
+      { "data": "peso_bruto" },
+      { "data": "peso_neto" },
+      { "data": "precio_kg" },
+      { "data": "%_descuento" },
+      { "data": "subtotal" },
+      { "data": "total" }
     ],
     destroy: true,
     responsive: true,
     pageLength: 10,
     order: [[0, "asc"]],
   });
+
+
 
   /* Modal de Registro */
   const openRegistrationModalBtn = document.getElementById('openRegistrationModalBtn');
