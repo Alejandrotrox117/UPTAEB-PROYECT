@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     },
     ajax: {
-      url: "app/controllers/Compras/getComprasData",
+      url: "Compras/getComprasData",
       dataSrc: "", // Configura el origen de datos
     },
     columns: [

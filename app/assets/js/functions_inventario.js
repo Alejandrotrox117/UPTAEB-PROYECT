@@ -1,29 +1,6 @@
 var dtInventario;
 
-// Mueve la función OpenModal fuera del bloque para que esté en el contexto global
-function OpenModal() {
-  // Usa jQuery para mostrar el modal
-  $("#crud-modal").modal("show");
-}
-// Mostrar el modal
-document.getElementById('show-modal').addEventListener('click', function () {
-  document.getElementById('popup-modal').classList.remove('hidden');
-});
 
-// Ocultar el modal
-document.getElementById('close-modal').addEventListener('click', function () {
-  document.getElementById('popup-modal').classList.add('hidden');
-});
-
-document.getElementById('cancel-modal').addEventListener('click', function () {
-  document.getElementById('popup-modal').classList.add('hidden');
-});
-
-// Acción de confirmación
-document.getElementById('confirm-delete').addEventListener('click', function () {
-  alert('Producto eliminado');
-  document.getElementById('popup-modal').classList.add('hidden');
-});
 document.addEventListener(
   "DOMContentLoaded",
   function () {
@@ -73,3 +50,34 @@ document.addEventListener(
   false
 );
 
+/* Modal de Registro */
+const openRegistrationModalBtn = document.getElementById('openRegistrationModalBtn');
+const registrationModal = document.getElementById('registrationModal');
+const registrationCloseBtn = document.getElementById('registrationCloseBtn');
+const registrationCancelBtn = document.getElementById('registrationCancelBtn');
+
+const openRegistrationModal = () => {
+  registrationModal.classList.remove('opacity-0', 'pointer-events-none');
+  registrationModal.classList.add('opacity-100');
+};
+
+const closeRegistrationModal = () => {
+  registrationModal.classList.remove('opacity-100');
+  registrationModal.classList.add('opacity-0', 'pointer-events-none');
+};
+
+if(openRegistrationModalBtn) {
+  openRegistrationModalBtn.addEventListener('click', openRegistrationModal);
+}
+if(registrationCloseBtn) {
+  registrationCloseBtn.addEventListener('click', closeRegistrationModal);
+}
+if(registrationCancelBtn) {
+  registrationCancelBtn.addEventListener('click', closeRegistrationModal);
+}
+
+registrationModal.addEventListener('click', (e) => {
+  if (e.target === registrationModal) {
+    closeRegistrationModal();
+  }
+});
