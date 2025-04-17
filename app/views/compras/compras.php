@@ -63,7 +63,7 @@
             <label for="proveedor" class="block text-gray-700 font-medium mb-2">Proveedor</label>
             <select id="proveedor" name="proveedor" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
               <option value="">Selecciona un proveedor</option>
-              <option value="proveedor1">Proveedor 1</option>
+              <option value="1">Proveedor 1</option>
               <option value="proveedor2">Proveedor 2</option>
               <option value="proveedor3">Proveedor 3</option>
             </select>
@@ -91,7 +91,7 @@
             <label for="tipo_material" class="block text-gray-700 font-medium mb-2">Tipo de Material</label>
             <select id="tipo_material" name="tipo_material" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
               <option value="">Selecciona un material</option>
-              <option value="material1">Material 1</option>
+              <option value="1">Material 1</option>
               <option value="material2">Material 2</option>
               <option value="material3">Material 3</option>
             </select>
