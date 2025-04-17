@@ -75,21 +75,34 @@ class InventarioModel extends Mysql
     }
 
 
-   //constructor
-   public function __construct(){
-    $this->conexion = new Conexion();
-    $this->db = $this->conexion->connectGeneral();
-    parent::__construct();
-}
+    //constructor
+    public function __construct()
+    {
+        $this->conexion = new Conexion();
+        $this->db = $this->conexion->connectGeneral();
+        parent::__construct();
+    }
 
 
 
     public function selectAllInventario()
     {
-        $sql = "SELECT id_movimiento, inicial, ajuste, material_compra, despacho, descuento, final, fecha
-FROM movimiento_existencia
-ORDER BY id_movimiento ASC
-LIMIT 10 OFFSET 0;";
+        $sql = "SELECT 
+                tm.idexistencia, 
+                tm.idmovimiento, 
+                tm.idcompra, 
+                tm.cantidad, 
+                tm.descuento, 
+                tm.fechacreacion, 
+                tm.ultimamodificacion,
+                m.nombre AS idmaterial,
+                c.idmaterial AS material_compra
+            FROM tipo_movimiento tm
+            LEFT JOIN compras c ON tm.idcompra = c.idcompra
+            LEFT JOIN tipo_material m ON c.idmaterial = m.idmaterial
+            ORDER BY tm.idexistencia ASC
+            LIMIT 10 OFFSET 0;";
+    
         $request = $this->searchAll($sql);
         return $request;
     }

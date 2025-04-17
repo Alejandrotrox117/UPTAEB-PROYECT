@@ -117,13 +117,11 @@
                 <thead>
                     <tr class="text-gray-500 text-sm border-b">
                         <th class="py-2">Nro</th>
-                        <th class="py-2">inicial</th>
-                        <th class="py-2">ajuste</th>
-                        <th class="py-2">material_compras</th>
-                        <th class="py-2">Despacho</th>
+                        <th class="py-2">Material</th>
+                        <th class="py-2">Cantidad</th>
                         <th class="py-2">Descuento</th>
-                        <th class="py-2">Final</th>
                         <th class="py-2">Fecha</th>
+                        <th class="py-2">Ultima modificacion</th>
 
                     </tr>
                 </thead>
