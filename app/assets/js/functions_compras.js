@@ -24,19 +24,15 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     ajax: {
       url: "Compras/getComprasData",
-      dataSrc: "", // Configura el origen de datos
+      dataSrc: "", 
     },
     columns: [
       { "data": "nro_compra" },
       { "data": "fecha" },
       { "data": "idproveedor" },
       { "data": "idmaterial" },
-      { "data": "peso_vehiculo" },
-      { "data": "peso_bruto" },
       { "data": "peso_neto" },
-      { "data": "precio_kg" },
-      { "data": "%_descuento" },
-      { "data": "subtotal" },
+      { "data": "descuento_porcentaje" },
       { "data": "total" }
     ],
     destroy: true,
@@ -110,6 +106,31 @@ document.addEventListener("DOMContentLoaded", function () {
       closeDeletionModal();
     }
   });
+
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+  const registrationForm = document.getElementById("registrationForm"); 
+  registrationForm.addEventListener("submit", function(e) {
+      e.preventDefault(); 
+      const formData = new FormData(registrationForm);
+
+      fetch("Compras/setCompra", { 
+          method: "POST",
+          body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.status) {
+              alert(data.message); 
+              location.reload(); 
+          } else {
+              alert(data.message); 
+          }
+      })
+      .catch(error => console.error("Error:", error));
+  });
+});
+
 
  
