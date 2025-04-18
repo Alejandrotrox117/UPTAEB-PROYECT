@@ -29,7 +29,8 @@ class personasModel extends Mysql
                     estado, 
                     pais, 
                     estatus 
-                FROM personas";
+                FROM personas 
+                WHERE estatus = 'ACTIVO'";
         return $this->searchAll($sql);
     }
 
@@ -59,5 +60,55 @@ class personasModel extends Mysql
     
         return $stmt->execute($arrValues); // Ejecuta la consulta con los valores
     }
+    public function deletePersona($idpersona) {
+        $sql = "UPDATE personas SET estatus = 'INACTIVO' WHERE idpersona = ?";
+        $stmt = $this->db->prepare($sql); // Prepara la consulta
+        return $stmt->execute([$idpersona]); // Ejecuta la consulta con el ID
+    }
+
+    public function updatePersona($data) {
+        $sql = "UPDATE personas SET 
+                    nombre = ?, 
+                    apellido = ?, 
+                    cedula = ?, 
+                    rif = ?, 
+                    tipo = ?, 
+                    genero = ?, 
+                    fecha_nacimiento = ?, 
+                    telefono_principal = ?, 
+                    correo_electronico = ?, 
+                    direccion = ?, 
+                    ciudad = ?, 
+                    estado = ?, 
+                    pais = ?, 
+                    estatus = ? 
+                WHERE idpersona = ?";
+        
+        $stmt = $this->db->prepare($sql); // Prepara la consulta
+        $arrValues = [
+            $data['nombre'], 
+            $data['apellido'], 
+            $data['cedula'], 
+            $data['rif'], 
+            $data['tipo'], 
+            $data['genero'], 
+            $data['fecha_nacimiento'], 
+            $data['telefono_principal'], 
+            $data['correo_electronico'], 
+            $data['direccion'], 
+            $data['ciudad'], 
+            $data['estado'], 
+            $data['pais'], 
+            $data['estatus'],
+            $data['idpersona'] // El ID de la persona a actualizar
+        ];
     
+        return $stmt->execute($arrValues); // Ejecuta la consulta con los valores
+    }
+    public function getPersonaById($idpersona) {
+        $sql = "SELECT * FROM personas WHERE idpersona = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$idpersona]);
+        return $stmt->fetch(PDO::FETCH_ASSOC); // Devuelve un solo registro
+    }
 }

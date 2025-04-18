@@ -74,23 +74,23 @@
           <div>
           <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Nombre</label>
-              <input type="text" name="nombre" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="nombre" name="nombre" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">RIF</label>
-              <input type="text" name="rif" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="rif" name="rif" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Teléfono Principal</label>
-              <input type="text" name="telefono_principal" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="telefono_principal" name="telefono_principal" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Ciudad</label>
-              <input type="text" name="ciudad" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="ciudad" name="ciudad" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Tipo</label>
-              <select name="tipo" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <select id="tipo" name="tipo" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
                 <option value="">Seleccione</option>
                 <option value="cliente">Cliente</option>
                 <option value="proveedor">Proveedor</option>
@@ -103,11 +103,11 @@
           <div>
           <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Apellido</label>
-              <input type="text" name="apellido" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="apellido" name="apellido" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Género</label>
-              <select name="genero" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <select id="genero" name="genero" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
                 <option value="">Seleccione</option>
                 <option value="masculino">Masculino</option>
                 <option value="femenino">Femenino</option>
@@ -116,15 +116,15 @@
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Correo Electrónico</label>
-              <input type="email" name="correo_electronico" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="email" id="correo_electronico" name="correo_electronico" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Estado</label>
-              <input type="text" name="estado" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="estado" name="estado" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Estatus</label>
-              <select name="estatus" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <select id="estatus" name="estatus" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
                 <option value="activo">Activo</option>
                 <option value="inactivo">Inactivo</option>
               </select>
@@ -135,19 +135,23 @@
           <div>
           <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Cédula</label>
-              <input type="text" name="cedula" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="cedula" name="cedula" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Fecha de nacimiento</label>
-              <input type="date" name="fecha_nacimiento" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">Dirección</label>
-              <input type="text" name="direccion" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="direccion" name="direccion" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
             <div class="mb-6">
               <label class="block text-gray-700 font-medium mb-2">País</label>
-              <input type="text" name="pais" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+              <input type="text" id="pais" name="pais" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+            </div>
+            <div class="mb-6">
+              <label class="block text-gray-700 font-medium mb-2">id</label>
+              <input type="text" id="idpersona" name="idpersona" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
             </div>
           </div>
         </div>
