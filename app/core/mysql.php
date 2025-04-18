@@ -83,5 +83,15 @@ class Mysql extends Conexion {
             return [];
         }
     }
+    public function searchOne($sql, $params = []) {
+        try {
+            $query = $this->get_conexionGeneral()->prepare($sql);
+            $query->execute($params);
+            return $query->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            echo "Error en la consulta: " . $e->getMessage();
+            return [];
+        }
+    }
 }
 ?>

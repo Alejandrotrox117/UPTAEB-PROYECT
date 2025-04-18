@@ -31,7 +31,7 @@ class Inventario extends Controllers
 
     public function index() {
         $usuarioId = $_SESSION['usuario_id'];
-        if (!$this->auth->tienePermiso($usuarioId, 'ver_inventario')) {
+        if (!$this->auth->tienePermiso($usuarioId, 'Inventario')) {
             echo "No tienes permiso para acceder a esta página.";
             exit;
         }

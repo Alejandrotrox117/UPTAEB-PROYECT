@@ -16,10 +16,12 @@ class RolesModel extends Mysql {
 
     // Obtener permisos por usuario
     public function getPermisosPorUsuario($idUsuario) {
-        $sql = "SELECT p.idpermiso, p.idmodulo, p.lectura, p.escritura, p.actualizar, p.eliminar 
+        $sql = "SELECT m.titulo , p.lectura, p.escritura, p.actualizar, p.eliminar 
                 FROM permisos p
-                WHERE p.idusuario = $idUsuario AND p.estatus = 'activo'";
-        $request = $this->searchAll($sql);
+                INNER JOIN modulos m ON p.idmodulo = m.idmodulo
+                WHERE p.idrol = ? AND p.estatus = 'activo'";
+        $request = $this->searchAll($sql, [$idUsuario]);
+       
         return $request;
     }
 
@@ -34,8 +36,17 @@ class RolesModel extends Mysql {
 
     // Asignar permisos a un rol
     public function asignarPermisosARol($idRol, $idModulo, $lectura, $escritura, $actualizar, $eliminar) {
+        // Verificar si el rol existe
+        $sqlCheck = "SELECT idrol FROM roles WHERE idrol = ?";
+        $rolExiste = $this->searchOne($sqlCheck, [$idRol]);
+
+        if (!$rolExiste) {
+            throw new Exception("El rol con id $idRol no existe en la tabla roles.");
+        }
+
+        // Insertar permisos
         $sql = "INSERT INTO permisos (idrol, idmodulo, lectura, escritura, actualizar, eliminar, estatus, fecha_creacion, ultima_modificacion) 
-                VALUES (?, ?, ?, ?, ?, ?, 'activo', UNIX_TIMESTAMP(), UNIX_TIMESTAMP())";
+                VALUES (?, ?, ?, ?, ?, ?, 'activo', NOW(), NOW())";
         $arrData = [$idRol, $idModulo, $lectura, $escritura, $actualizar, $eliminar];
         $request = $this->insert($sql, $arrData);
         return $request;

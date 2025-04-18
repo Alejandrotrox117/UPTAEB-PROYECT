@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Redirigir al login si no hay sesión activa
 if (!isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_URI'] !== '/project/login') {

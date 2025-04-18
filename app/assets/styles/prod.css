@@ -2,5 +2,12 @@
 
 @tailwind utilities;
 @tailwind components;
+@tailwind screens;
+@tailwind forms;
+@tailwind typography;
+@tailwind animations;
+@tailwind aspect-ratio;
+@tailwind line-clamp;
+@tailwind modals;
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";

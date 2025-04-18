@@ -1,5 +1,4 @@
 <?php
-// filepath: c:\xampp\htdocs\project\core\Auth.php
 require_once "app/models/RolesModel.php";
 
 class Auth {
@@ -11,11 +10,13 @@ class Auth {
 
     public function tienePermiso($usuarioId, $permisoNombre) {
         $permisos = $this->rolesModel->getPermisosPorUsuario($usuarioId);
+
         foreach ($permisos as $permiso) {
-            if ($permiso['nombre'] === $permisoNombre) {
+            if ($permiso['titulo'] === $permisoNombre && $permiso['lectura'] == 1) {
                 return true;
             }
         }
+
         return false;
     }
 }
