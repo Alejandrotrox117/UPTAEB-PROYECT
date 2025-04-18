@@ -51,9 +51,9 @@
                         </a>
                     </li>
                     <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
-                        <a href="/project/empleados" class="flex items-center">
+                        <a href="/project/personas" class="flex items-center">
                             <span><i class="fa-solid fa-user-clock icon"></i></span>
-                            <span class="ml-5">Empleados temporales</span>
+                            <span class="ml-5">Personas</span>
                         </a>
                     </li>
                     <li class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">

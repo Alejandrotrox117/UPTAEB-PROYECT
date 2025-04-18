@@ -3,3 +3,34 @@
 @tailwind utilities;
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+/* Estilos generales para los botones */
+.editar-btn, .eliminar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; /* Ancho fijo para los botones */
+    height: 24px; /* Alto fijo para los botones */
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+  }
+  
+  /* Estilos específicos para los íconos */
+  .editar-btn i, .eliminar-btn i {
+    font-size: 16px; /* Tamaño del ícono */
+  }
+  
+  /* Estilos para el hover */
+  .editar-btn:hover {
+    color: #007bff; /* Azul claro al pasar el mouse */
+  }
+  .eliminar-btn:hover {
+    color: #dc3545; /* Rojo claro al pasar el mouse */
+  }
+  
+  /* Estilos para DataTables */
+  #TablaPersonas td:last-child {
+    white-space: nowrap; /* Evitar que el texto se rompa en múltiples líneas */
+    text-align: center; /* Centrar los botones horizontalmente */
+  }
