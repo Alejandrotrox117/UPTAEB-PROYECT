@@ -1,6 +1,8 @@
-<?php headerAdmin($data);
+<?php headerAdmin($data); ?>
+<?php
+$auth = new Auth();
+$usuarioId = $_SESSION['usuario_id'];
 ?>
-
 
 <!-- Main Content -->
 <main class="flex-1 p-6">
@@ -93,9 +95,11 @@
         <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
             <div class="flex justify-between items-center mb-4">
                 <!-- Botón para abrir el modal de Registro -->
-                <button id="openRegistrationModalBtn" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
-                    Registrar
-                </button>
+                <?php if ($auth->tienePermiso($usuarioId, 'registrar_movimiento')): ?>
+                    <button id="openRegistrationModalBtn" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
+                        Registrar
+                    </button>
+                <?php endif; ?>
             </div>
             <div class="flex justify-between items-center mb-4">
                 <div class="flex space-x-4">
@@ -117,12 +121,14 @@
                 <thead>
                     <tr class="text-gray-500 text-sm border-b">
                         <th class="py-2">Nro</th>
-                        <th class="py-2">Material</th>
-                        <th class="py-2">Cantidad</th>
+                        <th class="py-2">Nombre Material</th>
+                        <th class="py-2">Tipo Movimiento</th>
                         <th class="py-2">Descuento</th>
-                        <th class="py-2">Fecha</th>
-                        <th class="py-2">Ultima modificacion</th>
-
+                        <th class="py-2">Inventario</th>
+                        <th class="py-2">Nro Documento</th>
+                        <th class="py-2">Desde</th>
+                        <th class="py-2">Hasta</th>
+                        <th class="py-2">Estado</th>
                     </tr>
                 </thead>
                 <tbody class="text-gray-900">

@@ -6,76 +6,102 @@ class InventarioModel extends Mysql
 
     private $db;
     private $conexion;
-    private $fecha;
-    private $id;
-    private $inicial;
-    private $final;
-    private $material_compras;
-    private $ajuste;
+    private $idmovimiento;
+    private $nombre_material;
+    private $tipo_movimiento;
     private $descuento;
+    private $inventario;
+    private $nr_documento;
+    private $desde;
+    private $hasta;
+    private $estado;
+    private $fecha_movimiento;
 
-    //getters
-    public function getId()
+    // Getters
+    public function getIdMovimiento()
     {
-        return $this->id;
+        return $this->idmovimiento;
     }
-    public function getFecha()
+    public function getNombreMaterial()
     {
-        return $this->fecha;
+        return $this->nombre_material;
     }
-    public function getInicial()
+    public function getTipoMovimiento()
     {
-        return $this->inicial;
-    }
-    public function getFinal()
-    {
-        return $this->final;
-    }
-    public function getMaterial_compras()
-    {
-        return $this->material_compras;
-    }
-    public function getAjuste()
-    {
-        return $this->ajuste;
+        return $this->tipo_movimiento;
     }
     public function getDescuento()
     {
         return $this->descuento;
     }
+    public function getInventario()
+    {
+        return $this->inventario;
+    }
+    public function getNrDocumento()
+    {
+        return $this->nr_documento;
+    }
+    public function getDesde()
+    {
+        return $this->desde;
+    }
+    public function getHasta()
+    {
+        return $this->hasta;
+    }
+    public function getEstado()
+    {
+        return $this->estado;
+    }
+    public function getFechaMovimiento()
+    {
+        return $this->fecha_movimiento;
+    }
 
-    //setters
-    public function setId($id)
+    // Setters
+    public function setIdMovimiento($idmovimiento)
     {
-        $this->id = $id;
+        $this->idmovimiento = $idmovimiento;
     }
-    public function setFecha($fecha)
+    public function setNombreMaterial($nombre_material)
     {
-        $this->fecha = $fecha;
+        $this->nombre_material = $nombre_material;
     }
-    public function setInicial($inicial)
+    public function setTipoMovimiento($tipo_movimiento)
     {
-        $this->inicial = $inicial;
-    }
-    public function setFinal($final)
-    {
-        $this->final = $final;
-    }
-    public function setMaterial_compras($material_compras)
-    {
-        $this->material_compras = $material_compras;
-    }
-    public function setAjuste($ajuste)
-    {
-        $this->ajuste = $ajuste;
+        $this->tipo_movimiento = $tipo_movimiento;
     }
     public function setDescuento($descuento)
     {
         $this->descuento = $descuento;
     }
+    public function setInventario($inventario)
+    {
+        $this->inventario = $inventario;
+    }
+    public function setNrDocumento($nr_documento)
+    {
+        $this->nr_documento = $nr_documento;
+    }
+    public function setDesde($desde)
+    {
+        $this->desde = $desde;
+    }
+    public function setHasta($hasta)
+    {
+        $this->hasta = $hasta;
+    }
+    public function setEstado($estado)
+    {
+        $this->estado = $estado;
+    }
+    public function setFechaMovimiento($fecha_movimiento)
+    {
+        $this->fecha_movimiento = $fecha_movimiento;
+    }
 
-
-    //constructor
+    // Constructor
     public function __construct()
     {
         $this->conexion = new Conexion();
@@ -83,25 +109,24 @@ class InventarioModel extends Mysql
         parent::__construct();
     }
 
-
-
+    // Método para obtener todos los datos del inventario
     public function selectAllInventario()
     {
         $sql = "SELECT 
-                tm.idexistencia, 
-                tm.idmovimiento, 
-                tm.idcompra, 
-                tm.cantidad, 
-                tm.descuento, 
-                tm.fechacreacion, 
-                tm.ultimamodificacion,
-                m.nombre AS idmaterial,
-                c.idmaterial AS material_compra
-            FROM tipo_movimiento tm
-            LEFT JOIN compras c ON tm.idcompra = c.idcompra
-            LEFT JOIN tipo_material m ON c.idmaterial = m.idmaterial
-            ORDER BY tm.idexistencia ASC
-            LIMIT 10 OFFSET 0;";
+                    me.idmovimiento, 
+                    tm.nombre AS nombre_material, 
+                    me.tipo_movimiento, 
+                    me.descuento, 
+                    me.inventario, 
+                    me.nr_documento, 
+                    me.desde, 
+                    me.hasta, 
+                    me.estado, 
+                    me.fecha AS fecha_movimiento
+                FROM movimientos_existencia me
+                LEFT JOIN tipo_materiales tm ON me.idmaterial = tm.idmaterial
+                ORDER BY me.idmovimiento ASC
+                LIMIT 10 OFFSET 0;";
     
         $request = $this->searchAll($sql);
         return $request;

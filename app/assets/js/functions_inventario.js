@@ -32,12 +32,17 @@ document.addEventListener(
         dataSrc: "",
       },
       columns: [
-        { data: "idexistencia" },
-        {data:"idmaterial"},
-        { data: "cantidad" },
+        { data: "idmovimiento" },
+       
+        { data: "nombre_material" },
+        { data: "tipo_movimiento" },
         { data: "descuento" },
-        { data: "fechacreacion" },
-        { data: "ultimamodificacion" },
+        { data: "inventario" },
+        { data: "nr_documento" },
+        { data: "desde" },
+        { data: "hasta" },
+        { data: "estado" },
+        
       ],
       destroy: true,
       responsive: true,

@@ -2,33 +2,46 @@
 
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
+require_once "app/core/Auth.php";
 class Inventario extends Controllers 
 {
+    private $auth;
 
-
-     // Método setter para establecer el valor de $model
-     public function set_model($model)
-     {
-         $this->model = $model;
-     }
- 
-     public function get_model()
-     {
-         return $this->model;
-     }
-
+    
     public function __construct() {
-        parent::__construct(); // Llama al constructor de la clase base
+        parent::__construct();
+        session_start();
+        if (!isset($_SESSION['usuario_id'])) {
+            header("Location: " . BASE_URL . "/login");
+            exit;
+        }
+        $this->auth = new Auth();
+    }
+
+    // Método setter para establecer el valor de $model
+    public function set_model($model)
+    {
+        $this->model = $model;
+    }
+ 
+    public function get_model()
+    {
+        return $this->model;
     }
 
     public function index() {
-        $data['page_title'] = "Gestión de inventario";
+        $usuarioId = $_SESSION['usuario_id'];
+        if (!$this->auth->tienePermiso($usuarioId, 'ver_inventario')) {
+            echo "No tienes permiso para acceder a esta página.";
+            exit;
+        }
+
+        $data['page_title'] = "Gestión de Inventario";
         $data['page_name'] = "Movimiento de inventario";
         $data['page_functions_js'] = "functions_inventario.js";
       
         $this->views->getView($this, "inventario", $data);
     }
-
 
     public function getInventario()
     {
@@ -44,5 +57,14 @@ class Inventario extends Controllers
         
     }
 
+    public function registrarMovimiento() {
+        $usuarioId = $_SESSION['usuario_id'];
+        if (!$this->auth->tienePermiso($usuarioId, 'registrar_movimiento')) {
+            echo "No tienes permiso para realizar esta acción.";
+            exit;
+        }
+
+        // Lógica para registrar un movimiento
+    }
    
 }

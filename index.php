@@ -1,6 +1,7 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "vendor/autoload.php";
+require_once "config/config.php";
 $url = !empty($_GET['url']) ? $_GET['url'] : 'home/home'; // URL
 
 $arrUrl = explode('/', $url);
@@ -30,4 +31,17 @@ if (file_exists($controllerPath)) {
 } else {
     echo "Controlador $controller no encontrado.";
 }
+
+if ($url[0] == "login") {
+    require_once "app/controllers/login.php";
+    $controller = new Login();
+    if (isset($url[1])) {
+        $controller->{$url[1]}();
+    } else {
+        $controller->login();
+    }
+}
+
+
+
 ?>

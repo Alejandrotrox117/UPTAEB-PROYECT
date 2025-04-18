@@ -1,4 +1,5 @@
 <?php
+
 //permite fragmentar el header del html principal
 function headerAdmin($data = "")
 {
@@ -18,4 +19,9 @@ function getModal(string $modal, $data)
     $view_modal = "app/views/forms/{$modal}.php";
     require_once($view_modal);
 }
+
+
+
+
+
 ?>
