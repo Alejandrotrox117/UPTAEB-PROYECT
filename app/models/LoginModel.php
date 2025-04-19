@@ -13,9 +13,9 @@ class LoginModel extends Mysql {
         $result = $this->searchAll($sql, [$usuario]);
 
         if (!empty($result)) {
-            return $result[0]; // Devuelve el primer registro como un array asociativo
+            return $result[0];
         }
 
-        return []; // Devuelve un array vacío si no se encuentra el usuario
+        return [];
     }
 }

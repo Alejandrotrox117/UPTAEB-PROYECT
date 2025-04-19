@@ -6,6 +6,8 @@
 <!-- DataTables -->
 <script src="/project/app/assets/DataTables/datatables.js"></script>
 
+<!-- libreria para los collapse del navbar -->
+<script src="/project/app/assets/js/flowbite.min.js"></script>
 <!-- Archivo dinámico -->
 <?php if (isset($data['page_functions_js'])): ?>
   <script type="module" src="/project/app/assets/js/<?php echo $data['page_functions_js']; ?>"></script>

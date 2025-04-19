@@ -48,6 +48,8 @@ class Login extends Controllers {
                 session_start();
                 $_SESSION['usuario_id'] = $user['idusuario'];
                 $_SESSION['usuario_rol'] = $user['idrol'];
+                $_SESSION['usuario'] = $user['usuario'];
+               
 
                 // Redirigir al módulo principal
                 header("Location: " . BASE_URL . "/home");

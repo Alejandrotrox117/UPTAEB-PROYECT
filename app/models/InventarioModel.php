@@ -121,7 +121,7 @@ class InventarioModel extends Mysql
                     me.nr_documento, 
                     me.desde, 
                     me.hasta, 
-                    me.estado, 
+                    me.estatus, 
                     me.fecha AS fecha_movimiento
                 FROM movimientos_existencia me
                 LEFT JOIN tipo_materiales tm ON me.idmaterial = tm.idmaterial

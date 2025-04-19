@@ -8,7 +8,7 @@ $usuarioId = $_SESSION['usuario_id'];
 <main class="flex-1 p-6">
 
     <div class="flex justify-between items-center">
-        <h2 class="text-xl font-semibold">Hola, Richard 👋</h2>
+        <h2 class="text-xl font-semibold">Hola, <?php  echo isset($_SESSION['usuario']) ? $_SESSION['usuario'] : 'Usuario'; ?> 👋</h2>
 
         <input type="text" placeholder="Search" class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none">
     </div>
