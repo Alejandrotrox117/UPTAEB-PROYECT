@@ -1,50 +1,54 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
-class personas extends Controllers 
+class personas extends Controllers
 {
 
 
-     // Método setter para establecer el valor de $model
-     public function set_model($model)
-     {
-         $this->model = $model;
-     }
- 
-     public function get_model()
-     {
-         return $this->model;
-     }
 
-    public function __construct() {
-        parent::__construct(); // Llama al constructor de la clase base
+    public function set_model($model)
+    {
+        $this->model = $model;
     }
 
-    public function index() {
+    public function get_model()
+    {
+        return $this->model;
+    }
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    public function index()
+    {
         $data['page_title'] = "Gestión de Personas";
         $data['page_name'] = "Personas";
         $data['page_functions_js'] = "functions_personas.js";
         $this->views->getView($this, "personas", $data);
     }
-    public function getPersonasData() {
-        // Obtener los datos del modelo
+    public function getPersonasData()
+    {
+
         $arrData = $this->get_model()->SelectAllPersonas();
-    
-        // Construir la respuesta en el formato esperado por DataTables
+
+
         $response = [
-            "draw" => intval($_GET['draw']), // El número de solicitud enviado por DataTables
-            "recordsTotal" => count($arrData), // Total de registros sin filtrar
-            "recordsFiltered" => count($arrData), // Total de registros después de aplicar filtros
-            "data" => $arrData // Los datos reales
+            "draw" => intval($_GET['draw']),
+            "recordsTotal" => count($arrData),
+            "recordsFiltered" => count($arrData),
+            "data" => $arrData
         ];
-    
+
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
-    public function setPersona() {
+    public function setPersona()
+    {
         $json = file_get_contents('php://input'); // Lee los datos JSON enviados por el frontend
         $data = json_decode($json, true); // Decodifica los datos JSON
-    
+
         // Extraer los datos del JSON
         $nombre = trim($data['nombre']) ?? null;
         $apellido = trim($data['apellido']) ?? null;
@@ -60,14 +64,14 @@ class personas extends Controllers
         $estado = trim($data['estado']) ?? null;
         $pais = trim($data['pais']) ?? null;
         $estatus = trim($data['estatus']) ?? null;
-    
+
         // Validar campos obligatorios
         if (empty($nombre) || empty($apellido) || empty($cedula)) {
             $response = array("status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios.");
             echo json_encode($response);
             return;
         }
-    
+
         // Insertar los datos usando el modelo
         $insertData = $this->get_model()->insertPersona([
             "nombre" => $nombre,
@@ -85,49 +89,51 @@ class personas extends Controllers
             "pais" => $pais,
             "estatus" => $estatus,
         ]);
-    
+
         // Respuesta al cliente
         if ($insertData) {
             $response = array("status" => true, "message" => "Persona registrada correctamente.");
         } else {
             $response = array("status" => false, "message" => "Error al registrar la persona. Intenta nuevamente.");
         }
-    
+
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
-    public function deletePersona() {
+    public function deletePersona()
+    {
         $json = file_get_contents('php://input'); // Lee los datos JSON enviados por el frontend
         $data = json_decode($json, true); // Decodifica los datos JSON
-    
+
         // Extraer el ID de la persona a desactivar
         $idpersona = trim($data['idpersona']) ?? null;
-    
+
         // Validar que el ID no esté vacío
         if (empty($idpersona)) {
             $response = ["status" => false, "message" => "ID de persona no proporcionado."];
             echo json_encode($response);
             return;
         }
-    
+
         // Desactivar la persona usando el modelo
         $deleteData = $this->get_model()->deletePersona($idpersona);
-    
+
         // Respuesta al cliente
         if ($deleteData) {
             $response = ["status" => true, "message" => "Persona desactivada correctamente."];
         } else {
             $response = ["status" => false, "message" => "Error al desactivar la persona. Intenta nuevamente."];
         }
-    
+
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
 
-    public function updatePersona() {
-        $json = file_get_contents('php://input'); // Lee los datos JSON enviados por el frontend
-        $data = json_decode($json, true); // Decodifica los datos JSON
-    
+    public function updatePersona()
+    {
+        $json = file_get_contents('php://input'); // Lee los datos JSON enviados por la vista
+        $data = json_decode($json, true); // datos del json lo decodifica 
+
         // Extraer los datos del JSON
         $idpersona = trim($data['idpersona']) ?? null;
         $nombre = trim($data['nombre']) ?? null;
@@ -144,22 +150,22 @@ class personas extends Controllers
         $estado = trim($data['estado']) ?? null;
         $pais = trim($data['pais']) ?? null;
         $estatus = trim($data['estatus']) ?? null;
-    
+
         // Validar campos obligatorios
         if (empty($idpersona) || empty($nombre) || empty($apellido) || empty($cedula)) {
             $response = ["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."];
             echo json_encode($response);
             return;
         }
-    
+
         // Validar formato del correo electrónico
         if (!filter_var($correo_electronico, FILTER_VALIDATE_EMAIL)) {
             $response = ["status" => false, "message" => "El correo electrónico no es válido."];
             echo json_encode($response);
             return;
         }
-    
-        // Actualizar los datos usando el modelo
+
+
         $updateData = $this->get_model()->updatePersona([
             "idpersona" => $idpersona,
             "nombre" => $nombre,
@@ -177,32 +183,32 @@ class personas extends Controllers
             "pais" => $pais,
             "estatus" => $estatus,
         ]);
-    
+
         // Respuesta al cliente
         if ($updateData) {
             $response = ["status" => true, "message" => "Persona actualizada correctamente."];
         } else {
             $response = ["status" => false, "message" => "Error al actualizar la persona. Intenta nuevamente."];
         }
-    
+
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
-    public function getPersonaById($idpersona) {
+    public function getPersonaById($idpersona)
+    {
         try {
-            // Llama al modelo para obtener los datos
+
             $persona = $this->get_model()->getPersonaById($idpersona);
-    
+
             if ($persona) {
                 echo json_encode(["status" => true, "data" => $persona]);
             } else {
                 echo json_encode(["status" => false, "message" => "Persona no encontrada."]);
             }
         } catch (Exception $e) {
-            // Captura cualquier error inesperado
+
             echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
         }
         exit();
     }
-   
 }
