@@ -176,32 +176,33 @@ class PersonasModel extends Mysql
     }
 
     // Método para insertar una nueva persona
-    public function insertPersona() {
-        $sql = "INSERT INTO personas (
-                    nombre, apellido, cedula, rif, tipo, genero, fecha_nacimiento, 
-                    telefono_principal, correo_electronico, direccion, ciudad, estado, pais, estatus
-                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        $stmt = $this->db->prepare($sql); 
-        $arrValues = [
-            $this->nombre, 
-            $this->apellido, 
-            $this->cedula, 
-            $this->rif, 
-            $this->tipo, 
-            $this->genero, 
-            $this->fecha_nacimiento, 
-            $this->telefono_principal, 
-            $this->correo_electronico, 
-            $this->direccion, 
-            $this->ciudad, 
-            $this->estado, 
-            $this->pais, 
-            $this->estatus
-        ];
-    
-        return $stmt->execute($arrValues); 
-    }
+    public function insertPersona($data)
+{
+    $sql = "INSERT INTO personas (
+                nombre, apellido, cedula, rif, tipo, genero, fecha_nacimiento, 
+                telefono_principal, correo_electronico, direccion, ciudad, estado, pais, estatus
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $this->db->prepare($sql);
+    $arrValues = [
+        $data['nombre'],
+        $data['apellido'],
+        $data['cedula'],
+        $data['rif'],
+        $data['tipo'],
+        $data['genero'],
+        $data['fecha_nacimiento'],
+        $data['telefono_principal'],
+        $data['correo_electronico'],
+        $data['direccion'],
+        $data['ciudad'],
+        $data['estado'],
+        $data['pais'],
+        $data['estatus']
+    ];
+
+    return $stmt->execute($arrValues);
+}
 
     // Método para eliminar lógicamente una persona
     public function deletePersona($idpersona) {

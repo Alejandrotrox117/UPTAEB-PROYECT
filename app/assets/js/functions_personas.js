@@ -66,47 +66,55 @@ document.addEventListener("DOMContentLoaded", function () {
     order: [[0, "asc"]],
   });
 
-  const personaForm = document.getElementById("personaForm");
-  personaForm.addEventListener("submit", function (e) {
-    e.preventDefault();
+ 
+  document.getElementById("personaForm").addEventListener("submit", function (e) {
+    e.preventDefault(); // Evita que el formulario se envíe de forma tradicional
 
-    // Convertir los datos del formulario en un objeto JSON
-    const formData = new FormData(personaForm);
+    // Convertir los datos del formulario en un objeto
+    const formData = new FormData(this);
     const data = {};
     formData.forEach((value, key) => {
-      data[key] = value;
+        data[key] = value;
     });
 
-    console.log("Datos a enviar:", data); // Depuración: Verifica los datos antes de enviar
+    console.log("Datos a enviar:", data); // Depuración
+
+    // Validar campos obligatorios
+    if (!data.nombre || !data.apellido || !data.cedula) {
+        alert("Por favor, completa todos los campos obligatorios.");
+        return;
+    }
 
     // Determinar si es una edición o una creación
     const idpersona = document.getElementById("idpersona").value;
-    const url = idpersona ? "personas/updatePersona" : "personas/setPersona";
+    const url = idpersona ? "personas/updatePersona" : "personas/createPersona";
     const method = idpersona ? "PUT" : "POST";
 
     fetch(url, {
-      method: method,
-      headers: {
-        "Content-Type": "application/json", // Indica que enviamos JSON
-      },
-      body: JSON.stringify(data), // Convierte los datos a JSON
+        method: method,
+        headers: { "Content-Type": "application/json" }, // Asegura que los datos sean JSON
+        body: JSON.stringify(data), // Convierte el objeto en una cadena JSON
     })
-      .then((response) => response.json()) // Parsea la respuesta como JSON
-      .then((result) => {
-        if (result.status) {
-          alert(result.message); // Muestra mensaje de éxito
-          cerrarModalPersona(); // Cierra el modal
-          $("#TablaPersonas").DataTable().ajax.reload(); // Recarga la tabla
-        } else {
-          alert(result.message); // Muestra mensaje de error
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error); // Maneja errores de red
-        alert("Ocurrió un error al procesar la solicitud.");
-      });
-  });
-
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((result) => {
+            if (result.status) {
+                alert(result.message);
+                cerrarModalPersona();
+                $('#TablaPersonas').DataTable().ajax.reload();
+            } else {
+                alert(result.message);
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("Ocurrió un error al procesar la solicitud.");
+        });
+});
   document.addEventListener("click", function (e) {
     if (e.target.closest(".editar-btn")) {
       const idpersona = e.target
