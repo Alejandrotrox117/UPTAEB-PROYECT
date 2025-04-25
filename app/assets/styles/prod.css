@@ -1,6 +1,8 @@
 /* @tailwind base ; */
 
 @tailwind utilities;
+@tailwind modals;
+@tailwind forms;
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 

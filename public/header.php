@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!--<link href="/project/app/assets/styles/styles.css" rel="stylesheet"> Tailwind -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="app\assets\styles\styles.css">
     <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
     <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
@@ -78,6 +79,12 @@
                         <a href="/project/categorias" class="flex items-center">
                             <span><i class="fa-solid fa-boxes-stacked"></i></span>
                             <span class="ml-5">Categorias</span>
+                        </a>
+                    </li>
+                    <li class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
+                        <a href="/project/moneda" class="flex items-center">
+                            <span><i class="fa-solid fa-boxes-stacked"></i></span>
+                            <span class="ml-5">Moneda</span>
                         </a>
                     </li>
                 </ul>
