@@ -1,5 +1,4 @@
-<?php require_once 'helpers/helpers.php';
-headerAdmin($data); ?>
+<?php require_once '../../../public/header.php'; ?>
         <!-- Main Content -->
         <main class="flex-1 p-6">
             <div class="flex justify-between items-center">
@@ -124,4 +123,4 @@ headerAdmin($data); ?>
             </div>
         </main>
     </div>
-    <?php footerAdmin($data); ?>
+    <?php require_once '../../../public/footer.php'; ?>
