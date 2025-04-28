@@ -27,7 +27,7 @@ class PersonasModel extends Mysql
     public function __construct()
     {
         $this->conexion = new Conexion();
-        $this->db = $this->conexion->connectGeneral();
+        $this->db = $this->conexion->connect();
         parent::__construct();
     }
 
@@ -254,12 +254,13 @@ class PersonasModel extends Mysql
 
     // Método para obtener una persona por ID
     public function getPersonaById($idpersona) {
-        $sql = "SELECT * FROM personas WHERE idpersona = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$idpersona]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($data) {
+        $conn = $this->db->connect(); // Asumo que tienes una función para conectar con mysqli
+    
+        $idpersona = mysqli_real_escape_string($conn, $idpersona); // Seguridad básica
+        $sql = "SELECT * FROM personas WHERE idpersona = '$idpersona'";
+        $result = $conn->query($sql);
+    
+        if ($result && $data = $result->fetch_assoc()) {
             // Asignar los valores a las propiedades del objeto
             $this->setIdpersona($data['idpersona']);
             $this->setNombre($data['nombre']);
@@ -276,8 +277,13 @@ class PersonasModel extends Mysql
             $this->setEstado($data['estado']);
             $this->setPais($data['pais']);
             $this->setEstatus($data['estatus']);
+            
+            $conn->close();
+            return $data;
+        } else {
+            $conn->close();
+            return false;
         }
-
-        return $data; 
     }
+    
 }

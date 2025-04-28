@@ -151,7 +151,6 @@ class personas extends Controllers
         $idpersona = trim($data['idpersona']) ?? null;
         $nombre = trim($data['nombre']) ?? null;
         $apellido = trim($data['apellido']) ?? null;
-        $cedula = trim($data['cedula']) ?? null;
         $rif = trim($data['rif']) ?? null;
         $tipo = trim($data['tipo']) ?? null;
         $genero = trim($data['genero']) ?? null;

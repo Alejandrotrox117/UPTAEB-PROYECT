@@ -34,7 +34,7 @@ class Mysql extends Conexion{
     }
 
     public function __construct(){
-        $this->set_conexionGeneral((new Conexion())->connectGeneral());
+        $this->set_conexionGeneral((new Conexion())->connect());
         }
 
     public function insert(string $query, array $arrValues) {

@@ -4,7 +4,7 @@
 require_once("app/core/conexion.php");
 require_once("app/core/mysql.php");
 
-class categoriasModel extends \Mysql
+class categoriasModel extends Mysql
 {
     private $db;
     private $conexion;
@@ -16,7 +16,7 @@ class categoriasModel extends \Mysql
     public function __construct()
     {
         $this->conexion = new Conexion();
-        $this->db = $this->conexion->connectGeneral();
+        $this->db = $this->conexion->connect();
         parent::__construct();
     }
 
