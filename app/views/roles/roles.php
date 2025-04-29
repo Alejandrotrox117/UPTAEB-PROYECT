@@ -1,221 +1,361 @@
-<?php 
-require_once('helpers/helpers.php');
-headerAdmin($data); ?>
-<!-- Main Content -->
-<main class="flex-1 p-6">
-  <div class="flex justify-between items-center">
-    <h2 class="text-xl font-semibold">Hola, Richard 👋</h2>
-    <input type="text" placeholder="Search" class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none">
+<?php require_once('helpers/helpers.php'); headerAdmin($data); ?>
+
+  <!-- Scripts y estilos externos -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <main class="flex-1 p-6">
+    <div class="flex justify-between items-center">
+      <h2 class="text-xl font-semibold">Administración de Roles</h2>
+      <input type="text" placeholder="Buscar Rol"
+        class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400">
+    </div>
+
+    <div class="min-h-screen mt-6">
+      <h1 class="text-3xl font-bold text-gray-900">Roles</h1>
+      <p class="text-green-500 text-lg">Gestión de Roles</p>
+
+      <div class="bg-white p-8 mt-6 rounded-2xl shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+          <button onclick="abrirModalRol()"
+            class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
+            Registrar Rol
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table id="TablaRoles" class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-gray-500 text-sm border-b">
+                <th class="py-3">Nº</th>
+                <th class="py-3">Nombre</th>
+                <th class="py-3">Estatus</th>
+                <th class="py-3">Descripción</th>
+                <th class="py-3">Acciones</th>
+              </tr>
+               <!-- Loader -->
+  <div id="loader" class="flex justify-center items-center my-4" style="display: none;">
+    <div class="dot-flashing"></div>
   </div>
+            </thead>
+            <tbody class="text-gray-900">
+              <!-- Aquí se llenarán los roles dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
 
-  <div class="min-h-screen mt-4">
-    <h1 class="text-3xl font-bold text-gray-900">Contactos</h1>
-    <p class="text-green-500 text-lg">Personas</p>
+  <?php footerAdmin($data); ?>
 
-    <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
-      <div class="flex justify-between items-center mb-4">
-        <!-- Botón para abrir el modal de Registro -->
-        <button onclick="abrirModalPersona()"  class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
-          Registrar
+  <!-- Modal Editar Rol -->
+<div id="modalEditar" class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+  <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
+    <div class="flex justify-between items-center px-6 py-4 border-b">
+      <h3 class="text-2xl font-bold text-gray-800">Editar Rol</h3>
+      <button onclick="cerrarModalEditar()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="px-6 py-6">
+      <div id="modalEditarContenido" class="space-y-4">
+        <!-- Aquí se llenará el contenido dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Eliminar Rol -->
+<div id="modalEliminar" class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+  <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
+    <div class="flex justify-between items-center px-6 py-4 border-b">
+      <h3 class="text-2xl font-bold text-gray-800">Eliminar Rol</h3>
+      <button onclick="cerrarModalEliminar()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="px-6 py-6">
+      <div id="modalEliminarContenido" class="space-y-4">
+        <!-- Aquí se llenará el contenido dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+  <!-- Modal Registrar Rol -->
+  <div id="rolModal"
+    class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
+      <div class="flex justify-between items-center px-6 py-4 border-b">
+        <h3 class="text-2xl font-bold text-gray-800">Registrar Rol</h3>
+        <button onclick="cerrarModalRol()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
-      <table id="TablaPersonas" class="w-full text-left border-collapse mt-6">
-        <thead>
-          <tr class="text-gray-500 text-sm border-b">
-            <th class="py-2">Nro</th>
-            <th class="py-2">Nombre </th>
-            <th class="py-2">Apellido </th>
-            <th class="py-2">Cédula </th>
-            <th class="py-2">Rif </th>
-            <th class="py-2">Tipo </th>
-            <th class="py-2">Genero </th>
-            <th class="py-2">Fecha de Nacimiento </th>
-            <th class="py-2">Teléfono</th>
-            <th class="py-2">Correo Electronico </th>
-            <th class="py-2">Direccion</th>
-            <th class="py-2">Ciudad</th>
-            <th class="py-2">Estado</th>
-            <th class="py-2">Pais</th>
-            <th class="py-2">Status</th>
-
-           
-          </tr>
-        </thead>
-        <tbody class="text-gray-900">
-        <td>
-  <button class="editar-btn bg-blue-500 text-white px-4 py-2 rounded" data-idpersona="1">Editar</button>
-</td>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</main>
-</div>
-<?php footerAdmin($data); ?>
-
-
-<!-- Modal -->
-<div id="personaModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
-  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-5xl">
-    <!-- Encabezado -->
-    <div class="px-8 py-6 border-b flex justify-between items-center">
-      <h3 class="text-2xl font-bold text-gray-800">Registrar Persona</h3>
-      <button onclick="cerrarModalPersona()" class="text-gray-600 hover:text-gray-800 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Formulario -->
-    <form id="personaForm" class="px-8 py-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Primera columna -->
-          <div>
-          <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Nombre</label>
-              <input type="text" id="nombre" name="nombre" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+      <div class="px-6 py-6">
+        <form id="formRegistrarRol" class="space-y-4">
+          <div class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-[45%]">
+              <label for="nombreRol" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol</label>
+              <input type="text" id="nombreRol" name="nombre"
+                class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+                required>
             </div>
-            <div class="mb-6">
-  <label class="block text-gray-700 font-medium mb-2">RIF</label>
-  <div class="flex">
-    <select id="tipoRif" name="tipoRif" class="border rounded-l-lg px-4 py-4 text-xl focus:outline-none">
-      <option value="V">V</option>
-      <option value="E">E</option>
-      <option value="J">J</option>
-      <option value="P">P</option>
-      <option value="G">G</option>
-    </select>
-    <input type="text" id="rif" name="rif" class="w-full border-t border-b border-r rounded-r-lg px-6 py-4 text-xl focus:outline-none" placeholder="Número de RIF">
-  </div>
-</div>
 
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Teléfono Principal</label>
-              <input type="text" id="telefono_principal" name="telefono_principal" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Ciudad</label>
-              <input type="text" id="ciudad" name="ciudad" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Tipo</label>
-              <select id="tipo" name="tipo" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-                <option value="">Seleccione</option>
-                <option value="cliente">Cliente</option>
-                <option value="proveedor">Proveedor</option>
-                <option value="empleado">Empleado</option>
+            <div class="flex-1 min-w-[45%]">
+              <label for="estatusRol" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+              <select id="estatusRol" name="estatus"
+                class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+                required>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
               </select>
             </div>
           </div>
-          
-          <!-- Segunda columna -->
+
           <div>
-          <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Apellido</label>
-              <input type="text" id="apellido" name="apellido" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Género</label>
-              <select id="genero" name="genero" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-                <option value="">Seleccione</option>
-                <option value="masculino">Masculino</option>
-                <option value="femenino">Femenino</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Correo Electrónico</label>
-              <input type="email" id="correo_electronico" name="correo_electronico" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Estado</label>
-              <input type="text" id="estado" name="estado" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Estatus</label>
-              <select id="estatus" name="estatus" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-              </select>
-            </div>
+            <label for="descripcionRol" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+            <textarea id="descripcionRol" name="descripcion" rows="3"
+              class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"></textarea>
           </div>
-          
-          <!-- Tercera columna -->
-          <div>
-          <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Cédula</label>
-              <input type="text" id="cedula" name="cedula" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Fecha de nacimiento</label>
-              <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">Dirección</label>
-              <input type="text" id="direccion" name="direccion" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">País</label>
-              <input type="text" id="pais" name="pais" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
-            <div class="mb-6">
-              <label class="block text-gray-700 font-medium mb-2">id</label>
-              <input type="text" id="idpersona" name="idpersona" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            </div>
+
+          <div class="flex justify-end pt-4">
+            <button type="submit" id="submitRol"
+              class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
+              Guardar Rol
+            </button>
           </div>
-        </div>
-
-        <!-- Botones -->
-        <div class="flex justify-end space-x-6 mt-6">
-          <button type="button" onclick="cerrarModalPersona()" class="px-6 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-xl">
-            Cancelar
-          </button>
-          <button type="submit" class="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600 transition text-xl">
-            Registrar
-          </button>
-        </div>
-</form>
-  </div>
-</div>
-
-
-
-
-<!-- Modal de Eliminación (fondo transparente con efecto de desenfoque leve) -->
-<div id="deletionModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-md">
-    <!-- Encabezado -->
-    <div class="px-8 py-6 border-b flex justify-between items-center">
-      <h3 class="text-2xl font-bold text-gray-800">Eliminar Elemento</h3>
-      <button id="deletionCloseBtn" class="text-gray-600 hover:text-gray-800 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-    <!-- Contenido -->
-    <div class="px-8 py-6">
-      <p class="text-gray-700 text-xl">
-        ¿Estás seguro de eliminar este elemento? Esta acción <span class="font-semibold">no se puede revertir</span>.
-      </p>
-    </div>
-    <!-- Acciones -->
-    <div class="px-8 py-6 border-t flex justify-end space-x-6">
-      <button id="deletionCancelBtn" class="px-6 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-xl">
-        Cancelar
-      </button>
-      <button id="deletionConfirmBtn" class="px-6 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition text-xl">
-        Eliminar
-      </button>
+        </form>
+      </div>
     </div>
   </div>
-</div>
+
+ 
+
+  <!-- Scripts personalizados -->
+  <script>
+
+function abrirModalEditar() {
+  const modal = document.getElementById('modalEditar');
+  modal.classList.remove('opacity-0', 'pointer-events-none');
+}
+
+function cerrarModalEditar() {
+  const modal = document.getElementById('modalEditar');
+  modal.classList.add('opacity-0', 'pointer-events-none');
+}
+
+function abrirModalEditar(id) {
+  const modal = document.getElementById('modalEditar');
+  modal.classList.remove('opacity-0', 'pointer-events-none');
+
+  console.log('ID recibido para editar:', id);
+
+  // Limpiar campos mientras se carga
+  document.getElementById('nombreRolEditar').value = '';
+  document.getElementById('estatusRolEditar').value = '';
+  document.getElementById('descripcionRolEditar').value = '';
+
+  // Ahora hacemos una petición al servidor para traer los datos del rol por id
+  fetch(`Roles/consultarunrol/${id}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      const rol = data.rol;  // Asumo que tu backend responde con un objeto { rol: {id, nombre, estatus, descripcion} }
+      
+      document.getElementById('nombreRolEditar').value = rol.nombre;
+      document.getElementById('estatusRolEditar').value = rol.estatus;
+      document.getElementById('descripcionRolEditar').value = rol.descripcion;
+      document.getElementById('idRolEditar').value = rol.id; // Guardar el id oculto
+    } else {
+      console.error('Error en backend:', data.message);
+      alert('No se pudo cargar la información del rol.');
+    }
+  })
+  .catch(error => {
+    console.error('Error de conexión al buscar rol:', error);
+    alert('Error de conexión al buscar datos del rol.');
+  });
+}
+
+function cerrarModalEliminar() {
+  const modal = document.getElementById('modalEliminar');
+  modal.classList.add('opacity-0', 'pointer-events-none');
+}
 
 
+function cargarRoles() {
+  const loader = document.getElementById('loader');
+  const tbody = document.querySelector('#TablaRoles tbody');
+
+  loader.style.display = 'flex';
+  tbody.innerHTML = '';  // Limpiar el contenido de la tabla
+
+  fetch('Roles/ConsultarRol', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(response => response.json())
+  .then(data => {
+    loader.style.display = 'none';
+    if (data.success) {
+      if (data.roles.length > 0) {
+        data.roles.forEach((rol, index) => {
+          const row = `
+            <tr class="border-b">
+              <td class="py-2">${index + 1}</td>
+              <td class="py-2">${rol.nombre}</td>
+              <td class="py-2">${rol.estatus}</td>
+              <td class="py-2">${rol.descripcion}</td>
+              <td class="py-2">
+                <button  class="bg-blue-500 text-white px-2 py-1 rounded editar-rol" 
+                  data-id="${rol.id}" 
+                  data-nombre="${rol.nombre}" 
+                  data-estatus="${rol.estatus}" 
+                  data-descripcion="${rol.descripcion}"
+                  onclick="abrirModalEditar(${rol.id})">
+                  Editar
+                </button>
+                <button class="bg-red-500 text-white px-2 py-1 rounded eliminar-rol" 
+                  data-id="${rol.id}" 
+                  data-nombre="${rol.nombre}"
+                  onclick="abrirModalEliminar(${rol.id})">
+                  Eliminar
+                </button>
+              </td>
+            </tr>`;
+          tbody.insertAdjacentHTML('beforeend', row); // Insertar fila
+        });
+        agregarEventos(); // Agregar eventos a los botones de la tabla
+      } else {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No hay roles disponibles.</td></tr>`;
+      }
+    } else {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">${data.message}</td></tr>`;
+      console.error('Error en backend:', data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error de conexión al cargar roles:', error);
+    loader.style.display = 'none';
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error de conexión al cargar roles.</td></tr>`;
+  });
+}
+
+function agregarEventos() {
+  // Agregar evento para abrir el modal de editar
+  document.querySelectorAll('.editar-rol').forEach(button => {
+    button.addEventListener('click', function() {
+      const id = this.getAttribute('data-id');
+      const nombre = this.getAttribute('data-nombre');
+      const estatus = this.getAttribute('data-estatus');
+      const descripcion = this.getAttribute('data-descripcion');
+
+      // Rellenar el contenido del modal de editar
+      document.querySelector('#modalEditar .modal-body').innerHTML = `
+        <h5>Editar Rol: ${nombre}</h5>
+        <p>ID: ${id}</p>
+        <p>Estatus: ${estatus}</p>
+        <p>Descripción: ${descripcion}</p>
+        <!-- Aquí puedes agregar un formulario para editar el rol -->
+        <button id="cerrarEditarModal">Cerrar</button>
+      `;
+
+      // Mostrar el modal de editar
+      document.getElementById('modalEditar').style.display = 'block';
+
+      // Agregar evento para cerrar el modal de editar
+      document.getElementById('cerrarEditarModal')?.addEventListener('click', function() {
+        document.getElementById('modalEditar').style.display = 'none';
+      });
+    });
+  });
+
+  // Agregar evento para abrir el modal de eliminar
+  document.querySelectorAll('.eliminar-rol').forEach(button => {
+    button.addEventListener('click', function() {
+      const id = this.getAttribute('data-id');
+      const nombre = this.getAttribute('data-nombre');
+
+      // Rellenar el contenido del modal de eliminar
+      document.querySelector('#modalEliminar .modal-body').innerHTML = `
+        <h5>Eliminar Rol: ${nombre}</h5>
+        <p>¿Estás seguro de que quieres eliminar el rol con ID: ${id}?</p>
+        <button id="cerrarEliminarModal">Cerrar</button>
+      `;
+
+      // Mostrar el modal de eliminar
+      document.getElementById('modalEliminar').style.display = 'block';
+
+      // Agregar evento para cerrar el modal de eliminar
+      document.getElementById('cerrarEliminarModal')?.addEventListener('click', function() {
+        document.getElementById('modalEliminar').style.display = 'none';
+      });
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', cargarRoles);
 
 
+  </script>
 
+  <!-- Estilos Loader -->
+  <style>
+    .dot-flashing {
+      position: relative;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      background-color: #4b5563;
+      animation: dot-flashing 1s infinite linear alternate;
+    }
+
+    @keyframes dot-flashing {
+      0% {
+        background-color: #4b5563;
+      }
+
+      50%,
+      100% {
+        background-color: #d1d5db;
+      }
+    }
+
+    .dot-flashing::before,
+    .dot-flashing::after {
+      content: '';
+      display: inline-block;
+      position: absolute;
+      top: 0;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      background-color: #4b5563;
+    }
+
+    .dot-flashing::before {
+      left: -1.5rem;
+      animation-delay: 0s;
+    }
+
+    .dot-flashing::after {
+      left: 1.5rem;
+      animation-delay: 0s;
+    }
+  </style>
