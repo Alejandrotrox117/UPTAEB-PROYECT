@@ -109,25 +109,30 @@
 
 </div>
 
-<!-- Modal Eliminar Rol -->
-<div id="modalEliminar" class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-  <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
-    <div class="flex justify-between items-center px-6 py-4 border-b">
-      <h3 class="text-2xl font-bold text-gray-800">Eliminar Rol</h3>
-      <button onclick="cerrarModalEliminar()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+
+<!-- modal eliminar --> 
+<div id="modalEliminar" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+    
+    <!-- Loader mientras carga (opcional) -->
+    <div id="loaderEliminar" class="flex justify-center items-center my-4" style="display: none;">
+      <div class="dot-flashing"></div>
     </div>
 
-    <div class="px-6 py-6">
-      <div id="modalEliminarContenido" class="space-y-4">
-        <!-- Aquí se llenará el contenido dinámicamente -->
-      </div>
+    <!-- Texto con el nombre del rol que se eliminará -->
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">¿Seguro que quieres desactivar el rol <span id="nombreRolEliminar" class="text-red-500 font-bold"></span>?</h2>
+
+    <!-- Botones -->
+    <div class="flex justify-end space-x-4 mt-6">
+      <button class="px-4 py-2 bg-gray-400 text-white rounded" onclick="cerrarModalEliminar()">Cancelar</button>
+      <!-- Botón de eliminación con el id guardado en data-id -->
+      <button id="botonEliminar" class="px-4 py-2 bg-red-600 text-white rounded" onclick="confirmarEliminar()">Eliminar</button>
     </div>
+
   </div>
 </div>
+
+
 
 
 
@@ -186,7 +191,95 @@
 
   <!-- Scripts personalizados -->
   <script>
+/* eliminar roles */
+function modalEliminar(id) {
+  const modal = document.getElementById('modalEliminar');
+  const nombreRolEliminar = document.getElementById('nombreRolEliminar'); // Elemento para mostrar el nombre del rol
+  const loaderEliminar = document.getElementById('loaderEliminar'); // Loader para cuando se esté cargando la información
+  const botonEliminar = document.getElementById('botonEliminar'); // Botón de eliminar
 
+  modal.classList.remove('opacity-0', 'pointer-events-none'); // Abrir modal
+
+  // Mostrar loader mientras se realiza la búsqueda
+  if (loaderEliminar) loaderEliminar.style.display = 'flex';
+  if (nombreRolEliminar) nombreRolEliminar.textContent = ''; // Limpiar nombre del rol
+
+  // Realizamos la consulta para obtener el nombre del rol por ID
+  fetch(`Roles/consultarunrol?id=${id}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (loaderEliminar) loaderEliminar.style.display = 'none'; // Ocultar el loader
+
+    if (data.success) {
+      const rol = data.rol;
+      if (nombreRolEliminar) {
+        nombreRolEliminar.textContent = rol.nombre; // Colocar el nombre del rol en el modal
+      }
+      // Asignamos el id al botón para usarlo más tarde
+      if (botonEliminar) {
+        botonEliminar.setAttribute('data-id', id);
+      }
+    } else {
+      console.error('Error al cargar el rol para eliminar:', data.message);
+      if (nombreRolEliminar) {
+        nombreRolEliminar.textContent = 'Error al cargar el nombre del rol.';
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Error de conexión al buscar rol para eliminar:', error);
+    if (loaderEliminar) loaderEliminar.style.display = 'none'; // Ocultar loader en caso de error
+    if (nombreRolEliminar) {
+      nombreRolEliminar.textContent = 'Error de conexión.';
+    }
+  });
+}
+
+
+
+function cerrarModalEliminar() {
+  const modal = document.getElementById('modalEliminar');
+  modal.classList.add('opacity-0', 'pointer-events-none');
+}
+
+function confirmarEliminar() {
+  const botonEliminar = document.getElementById('botonEliminar');
+  const idRol = botonEliminar.getAttribute('data-id'); // Obtener el ID del rol desde el atributo data-id
+
+  if (!idRol) {
+    alert('No se pudo obtener el ID del rol.');
+    return;
+  }
+
+  // Realizar la eliminación (puedes hacer un fetch para eliminar el rol, por ejemplo)
+  fetch(`Roles/eliminar?id=${idRol}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Rol eliminado correctamente.');
+      // Cerrar el modal y actualizar la vista si es necesario
+      cerrarModalEliminar();
+      cargarRoles();
+    } else {
+      alert('Error al eliminar el rol.');
+    }
+  })
+  .catch(error => {
+    console.error('Error al eliminar el rol:', error);
+    alert('Error de conexión al eliminar el rol.');
+  });
+}
+
+
+/* registrar roles  */
 function abrirModalRol() {
   const modal = document.getElementById('rolModal');
   modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -197,11 +290,8 @@ function cerrarModalRol() {
   modal.classList.add('opacity-0', 'pointer-events-none');
 }
 
-function rolModal() {
-  const modal = document.getElementById('modalEditar');
-  modal.classList.remove('opacity-0', 'pointer-events-none');
-}
 
+/* editar roles */
 function cerrarModalEditar() {
   const modal = document.getElementById('modalEditar');
   modal.classList.add('opacity-0', 'pointer-events-none');
@@ -255,10 +345,7 @@ function abrirModalEditar(id) {
 
 
 
-function cerrarModalEliminar() {
-  const modal = document.getElementById('modalEliminar');
-  modal.classList.add('opacity-0', 'pointer-events-none');
-}
+
 
 
 function cargarRoles() {
@@ -296,7 +383,7 @@ function cargarRoles() {
                 <button class="bg-red-500 text-white px-2 py-1 rounded eliminar-rol" 
                   data-id="${rol.id}" 
                   data-nombre="${rol.nombre}"
-                  onclick="abrirModalEliminar(${rol.id})">
+                  onclick="modalEliminar(${rol.id})">
                   Eliminar
                 </button>
               </td>
@@ -305,7 +392,7 @@ function cargarRoles() {
         });
         agregarEventos(); // Agregar eventos a los botones de la tabla
       } else {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No hay roles disponibles.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No Hay Roles Disponibles.</td></tr>`;
       }
     } else {
       tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">${data.message}</td></tr>`;

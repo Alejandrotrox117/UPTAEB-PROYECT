@@ -59,7 +59,10 @@ class Roles extends Controllers
         echo $this->model->rol();
     }
 
-
+    public function eliminar()
+    {
+        echo $this->model->eliminar_roles();
+    }
 
 }
 ?>

@@ -66,100 +66,141 @@ class RolesModel extends Mysql
 
 
     public function get_Roles()
-{
-    $conn = $this->conn->connect();
-    session_start();
+    {
+        $conn = $this->conn->connect();
+        session_start();
 
-    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['idrol'])) {
-        return json_encode(['success' => false, 'message' => 'No se pudo identificar el rol del usuario.']);
-    }
+        if (!isset($_SESSION['user']) || !isset($_SESSION['user']['idrol'])) {
+            return json_encode(['success' => false, 'message' => 'No se pudo identificar el rol del usuario.']);
+        }
 
-    $userRole = $_SESSION['user']['idrol'];
+        $userRole = $_SESSION['user']['idrol'];
 
-    if ($userRole == 3) { // Root
-        $sql = "SELECT idrol, nombre, estatus, descripcion FROM roles";
-    } elseif ($userRole == 1) { // Administrador
-        $sql = "SELECT idrol, nombre, estatus, descripcion 
+        if ($userRole == 3) { // Root
+            $sql = "SELECT idrol, nombre, estatus, descripcion FROM roles";
+        } elseif ($userRole == 1) { // Administrador
+            $sql = "SELECT idrol, nombre, estatus, descripcion 
                 FROM roles 
                 WHERE estatus = 'Activo' 
                 AND idrol != 3";
-    } else {
-        return json_encode(['success' => false, 'message' => 'Rol de usuario no autorizado para consultar roles.']);
-    }
-
-    $result = mysqli_query($conn, $sql);
-
-    if (!$result) {
-        return json_encode(['success' => false, 'message' => 'Error en la consulta: ' . mysqli_error($conn)]);
-    }
-
-    $roles = [];
-    while ($row = mysqli_fetch_assoc($result)) {
-        $roles[] = [
-            'id' => $row['idrol'],
-            'nombre' => $row['nombre'],
-            'estatus' => $row['estatus'],
-            'descripcion' => $row['descripcion']
-        ];
-    }
-
-    return json_encode(['success' => true, 'roles' => $roles]);
-}
-
-
-public function rol()
-{
-    // Asegurarnos de que el 'id' esté presente en la URL.
-    if (isset($_GET['id'])) {
-        $id = intval($_GET['id']); // Sanitizar el ID para evitar inyecciones SQL
-
-        // Obtener la conexión a la base de datos
-        $conn = $this->conn->connect();  
-
-        // Consulta para obtener los datos del rol por ID
-        $sql = "SELECT nombre, estatus, descripcion FROM roles WHERE idrol = ?";
-        $stmt = $conn->prepare($sql);
-
-        if ($stmt === false) {
-            echo json_encode(['success' => false, 'message' => 'Error en la preparación de la consulta.']);
-            return;
+        } else {
+            return json_encode(['success' => false, 'message' => 'Rol de usuario no autorizado para consultar roles.']);
         }
 
-        // Asociar el parámetro de entrada (ID)
-        $stmt->bind_param("i", $id);
+        $result = mysqli_query($conn, $sql);
 
-        // Ejecutar la consulta
-        $stmt->execute();
-        
-        // Obtener el resultado
-        $result = $stmt->get_result();
+        if (!$result) {
+            return json_encode(['success' => false, 'message' => 'Error en la consulta: ' . mysqli_error($conn)]);
+        }
 
-        // Verificar si se encontró el rol
-        if ($result->num_rows > 0) {
-            $rol = $result->fetch_assoc();
-            echo json_encode([
-                'success' => true,
-                'rol' => $rol
-            ]);
+        $roles = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $roles[] = [
+                'id' => $row['idrol'],
+                'nombre' => $row['nombre'],
+                'estatus' => $row['estatus'],
+                'descripcion' => $row['descripcion']
+            ];
+        }
+
+        return json_encode(['success' => true, 'roles' => $roles]);
+    }
+
+
+    public function rol()
+    {
+        // Asegurarnos de que el 'id' esté presente en la URL.
+        if (isset($_GET['id'])) {
+            $id = intval($_GET['id']); // Sanitizar el ID para evitar inyecciones SQL
+
+            // Obtener la conexión a la base de datos
+            $conn = $this->conn->connect();
+
+            // Consulta para obtener los datos del rol por ID
+            $sql = "SELECT nombre, estatus, descripcion FROM roles WHERE idrol = ?";
+            $stmt = $conn->prepare($sql);
+
+            if ($stmt === false) {
+                echo json_encode(['success' => false, 'message' => 'Error en la preparación de la consulta.']);
+                return;
+            }
+
+            // Asociar el parámetro de entrada (ID)
+            $stmt->bind_param("i", $id);
+
+            // Ejecutar la consulta
+            $stmt->execute();
+
+            // Obtener el resultado
+            $result = $stmt->get_result();
+
+            // Verificar si se encontró el rol
+            if ($result->num_rows > 0) {
+                $rol = $result->fetch_assoc();
+                echo json_encode([
+                    'success' => true,
+                    'rol' => $rol
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Rol no encontrado.'
+                ]);
+            }
+
+            // Cerrar la declaración y la conexión
+            $stmt->close();
+            $conn->close();
         } else {
             echo json_encode([
                 'success' => false,
-                'message' => 'Rol no encontrado.'
+                'message' => 'ID no proporcionado.'
             ]);
         }
-
-        // Cerrar la declaración y la conexión
-        $stmt->close();
-        $conn->close();
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'ID no proporcionado.'
-        ]);
     }
-}
 
+
+    public function eliminar_roles()
+    {
+        if (isset($_GET['id'])) 
+        {
+            $id = intval($_GET['id']); // Sanitizar el ID para evitar inyección SQL
     
+            // Obtener la conexión a la base de datos
+            $conn = $this->conn->connect();
+    
+            if (!$conn) {
+                // Error de conexión
+                echo json_encode(['success' => false, 'message' => 'Error de conexión a la base de datos.']);
+                return;
+            }
+    
+            try {
+                // Preparar y ejecutar la consulta para eliminar el rol
+                $stmt = $conn->prepare("UPDATE roles SET estatus = 'Inactivo' WHERE idrol = ?
+");
+                $stmt->bind_param('i', $id);
+    
+                if ($stmt->execute()) {
+                    echo json_encode(['success' => true, 'message' => 'Rol eliminado correctamente.']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'No se pudo eliminar el rol.']);
+                }
+    
+                $stmt->close();
+                $conn->close();
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            }
+        } 
+        else 
+        {
+            echo json_encode(['success' => false, 'message' => 'ID no recibido.']);
+        }
+    }
+    
+
+
 
 
 
