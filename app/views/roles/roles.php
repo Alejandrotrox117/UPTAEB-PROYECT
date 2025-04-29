@@ -49,7 +49,8 @@
 
   <?php footerAdmin($data); ?>
 
-  <!-- Modal Editar Rol -->
+
+<!-- Modal Editar Rol -->
 <div id="modalEditar" class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
   <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
     <div class="flex justify-between items-center px-6 py-4 border-b">
@@ -60,13 +61,52 @@
         </svg>
       </button>
     </div>
-    
+
+    <div id="loader" class="flex justify-center items-center my-4" style="display: none;">
+    <div class="dot-flashing"></div>
+  </div>
+
     <div class="px-6 py-6">
-      <div id="modalEditarContenido" class="space-y-4">
-        <!-- Aquí se llenará el contenido dinámicamente -->
-      </div>
+      <form id="formEditarRol" class="space-y-4">
+        <!-- Campo oculto para el ID del rol -->
+        <input type="hidden" id="idRolEditar" name="id">
+
+        <div class="flex flex-wrap gap-4">
+          <div class="flex-1 min-w-[45%]">
+            <label for="nombreRolEditar" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol</label>
+            <input type="text" id="nombreRolEditar" name="nombre"
+              class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+              required>
+          </div>
+
+          <div class="flex-1 min-w-[45%]">
+            <label for="estatusRolEditar" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+            <select id="estatusRolEditar" name="estatus"
+              class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+              required>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="descripcionRolEditar" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <textarea id="descripcionRolEditar" name="descripcion" rows="3"
+            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"></textarea>
+        </div>
+
+        <div class="flex justify-end pt-4">
+          <button type="submit" id="submitRol"
+            class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
+            actualizar rol 
+          </button>
+        </div>
+      </form>
     </div>
   </div>
+</div>
+
 </div>
 
 <!-- Modal Eliminar Rol -->
@@ -147,7 +187,17 @@
   <!-- Scripts personalizados -->
   <script>
 
-function abrirModalEditar() {
+function abrirModalRol() {
+  const modal = document.getElementById('rolModal');
+  modal.classList.remove('opacity-0', 'pointer-events-none');
+}
+
+function cerrarModalRol() {
+  const modal = document.getElementById('rolModal');
+  modal.classList.add('opacity-0', 'pointer-events-none');
+}
+
+function rolModal() {
   const modal = document.getElementById('modalEditar');
   modal.classList.remove('opacity-0', 'pointer-events-none');
 }
@@ -159,29 +209,38 @@ function cerrarModalEditar() {
 
 function abrirModalEditar(id) {
   const modal = document.getElementById('modalEditar');
+  const loader = document.getElementById('loader');
+
   modal.classList.remove('opacity-0', 'pointer-events-none');
 
   console.log('ID recibido para editar:', id);
 
-  // Limpiar campos mientras se carga
+  // Mostrar el loader
+  loader.style.display = 'flex';
+
+  // Limpiar campos mientras carga
   document.getElementById('nombreRolEditar').value = '';
   document.getElementById('estatusRolEditar').value = '';
   document.getElementById('descripcionRolEditar').value = '';
+  document.getElementById('idRolEditar').value = '';
 
-  // Ahora hacemos una petición al servidor para traer los datos del rol por id
-  fetch(`Roles/consultarunrol/${id}`, {
+  fetch(`Roles/consultarunrol?id=${id}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' }
   })
   .then(response => response.json())
   .then(data => {
+    console.log('Respuesta completa del servidor:', data);
+
+    // Ocultar el loader
+    loader.style.display = 'none';
+
     if (data.success) {
-      const rol = data.rol;  // Asumo que tu backend responde con un objeto { rol: {id, nombre, estatus, descripcion} }
-      
+      const rol = data.rol;
       document.getElementById('nombreRolEditar').value = rol.nombre;
       document.getElementById('estatusRolEditar').value = rol.estatus;
       document.getElementById('descripcionRolEditar').value = rol.descripcion;
-      document.getElementById('idRolEditar').value = rol.id; // Guardar el id oculto
+      document.getElementById('idRolEditar').value = id;
     } else {
       console.error('Error en backend:', data.message);
       alert('No se pudo cargar la información del rol.');
@@ -189,9 +248,12 @@ function abrirModalEditar(id) {
   })
   .catch(error => {
     console.error('Error de conexión al buscar rol:', error);
+    loader.style.display = 'none'; // Ocultar el loader si falla también
     alert('Error de conexión al buscar datos del rol.');
   });
 }
+
+
 
 function cerrarModalEliminar() {
   const modal = document.getElementById('modalEliminar');

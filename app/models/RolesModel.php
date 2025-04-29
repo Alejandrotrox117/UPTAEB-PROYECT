@@ -117,7 +117,7 @@ public function rol()
         $conn = $this->conn->connect();  
 
         // Consulta para obtener los datos del rol por ID
-        $sql = "SELECT id, nombre, estatus, descripcion FROM roles WHERE id = ?";
+        $sql = "SELECT nombre, estatus, descripcion FROM roles WHERE idrol = ?";
         $stmt = $conn->prepare($sql);
 
         if ($stmt === false) {
