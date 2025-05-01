@@ -16,21 +16,24 @@ if (isset($_POST['ingresar'])) {
         preg_match('/[0-9]/', $password) && 
         preg_match('/[^a-zA-Z0-9]/', $password)) {
 
-        $Model = new usuario();
-        $user = $Model->Postuser($username, $password);
+        // Usamos la nueva clase con getters y setters
+        $Model = new Usuario(); // Asegúrate que el nombre coincide con la clase (con mayúscula)
+        $Model->setUsername($username);
+        $Model->setPassword($password);
+        $user = $Model->PostUser();
 
         // Verificamos el tipo de error devuelto
-        if ($user == 'usuario_no_existe') {
+        if ($user === 'usuario_no_existe') {
             echo "<script>alert('El usuario no existe'); window.location = '../../index.php';</script>";
             exit;
         }
 
-        if ($user == 'contraseña_incorrecta') {
+        if ($user === 'contraseña_incorrecta') {
             echo "<script>alert('Contraseña incorrecta'); window.location = '../../index.php';</script>";
             exit;
         }
 
-        if ($user == 'error_en_la_consulta') {
+        if ($user === 'error_en_la_consulta') {
             echo "<script>alert('Hubo un error en la consulta'); window.location = '../../index.php';</script>";
             exit;
         }
@@ -40,6 +43,7 @@ if (isset($_POST['ingresar'])) {
 
         if (isset($_SESSION['user'])) {
             header('Location: ../views/home/home.php');
+            exit;
         }
     } else {
         echo "<script>alert('Lo siento, ha colocado un dato inválido');</script>";

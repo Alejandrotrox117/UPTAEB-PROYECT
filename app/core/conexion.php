@@ -1,35 +1,72 @@
 <?php
-class Conexion 
+class Conexion
 {
     private $servidor;
     private $username;
     private $password;
     private $database;
-    private $conn; // ← Guardamos la conexión como propiedad de la clase
+    private $conn;
 
-    public function __construct()
+    public function __construct($servidor = 'localhost', $username = 'root', $password = '', $database = 'project')
     {
-        $this->servidor = 'localhost';
-        $this->username = 'root';
-        $this->password = '';
-        $this->database = 'project';
+        $this->servidor = $servidor;
+        $this->username = $username;
+        $this->password = $password;
+        $this->database = $database;
     }
 
-    public function connect()
-    {
-        $this->conn = new mysqli($this->servidor, $this->username, $this->password, $this->database);
-        if ($this->conn->connect_error) {
-            die('Error de Conexión (' . $this->conn->connect_errno . ') ' . $this->conn->connect_error);
-        }
+    // Getters
+    public function getServidor() {
+        return $this->servidor;
+    }
 
+    public function getUsername() {
+        return $this->username;
+    }
+
+    public function getPassword() {
+        return $this->password;
+    }
+
+    public function getDatabase() {
+        return $this->database;
+    }
+
+    public function getConnection() {
         return $this->conn;
     }
 
-    public function disconnect()
-    {
-        if ($this->conn) {
-            $this->conn->close(); // ← Cierra la conexión
+    // Setters
+    public function setServidor($servidor) {
+        $this->servidor = $servidor;
+    }
+
+    public function setUsername($username) {
+        $this->username = $username;
+    }
+
+    public function setPassword($password) {
+        $this->password = $password;
+    }
+
+    public function setDatabase($database) {
+        $this->database = $database;
+    }
+
+    // Método para conectar con PDO
+    public function connect() {
+        try {
+            $dsn = "mysql:host={$this->servidor};dbname={$this->database};charset=utf8";
+            $this->conn = new PDO($dsn, $this->username, $this->password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            return $this->conn;
+        } catch (PDOException $e) {
+            die("Error de conexión: " . $e->getMessage());
         }
+    }
+
+    public function disconnect() {
+        $this->conn = null;
     }
 }
 ?>

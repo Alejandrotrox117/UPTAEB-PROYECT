@@ -1,58 +1,78 @@
 <?php
 require_once('../core/conexion.php');
 
-class usuario
+class Usuario
 {
     private $usuario;
+    private $username;
+    private $password;
 
     public function __construct()
     {
         $this->usuario = new Conexion();
     }
 
-    public function Postuser($username, $password = '')
-{
-    $conn = $this->usuario->connect();
-    
-    $sql = "SELECT * FROM usuarios WHERE correo = '$username' AND status1=1";
-    if ($password === '') {
-        $sql = "SELECT * FROM usuarios WHERE correo = '$username' AND status1=1"; // Eliminé el OR innecesario
+    // SETTERS
+    public function setUsername($username)
+    {
+        $this->username = $username;
     }
 
-    $results = $conn->query($sql);
-    if ($results == false) {
-        $conn->close();
-        return 'error_en_la_consulta'; // Se puede capturar el error de la consulta
+    public function setPassword($password)
+    {
+        $this->password = $password;
     }
 
-    $user = $results->fetch_assoc();
-    if (!$user) {
-        $conn->close();
-        return 'usuario_no_existe'; // El usuario no existe
+    // GETTERS
+    public function getUsername()
+    {
+        return $this->username;
     }
 
-    // Si el password viene vacío, solo devolvemos el usuario
-    if ($password === '') {
-        if (isset($user['rol'])) {
-            $user['rolName'] = $user['rol'];
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+    public function PostUser()
+    {
+        $conn = $this->usuario->connect();
+        
+        $sql = "SELECT * FROM usuarios WHERE correo = :correo AND status1 = 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':correo', $this->username, PDO::PARAM_STR);
+
+        try {
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                return 'usuario_no_existe';
+            }
+
+            // Si no se ha proporcionado contraseña, solo devolvemos el usuario
+            if ($this->password === '' || $this->password === null) {
+                if (isset($user['rol'])) {
+                    $user['rolName'] = $user['rol'];
+                }
+                return $user;
+            }
+
+            // Verificamos la contraseña
+            if (!password_verify($this->password, $user['clave'])) {
+                return 'contraseña_incorrecta';
+            }
+
+            // Usuario autenticado correctamente
+            if (isset($user['rol'])) {
+                $user['rolName'] = $user['rol'];
+            }
+
+            return $user;
+
+        } catch (PDOException $e) {
+            return 'error_en_la_consulta';
         }
-        $conn->close();
-        return $user;
     }
-
-    // Verificamos la contraseña
-    if (!password_verify($password, $user['clave'])) {
-        $conn->close();
-        return 'contraseña_incorrecta'; // Contraseña incorrecta
-    }
-
-    // Si todo está bien, devolvemos el usuario
-    if (isset($user['rol'])) {
-        $user['rolName'] = $user['rol'];
-    }
-    $conn->close();
-    return $user;
-}
-
 }
 ?>

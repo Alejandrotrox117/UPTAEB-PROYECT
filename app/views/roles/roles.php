@@ -187,7 +187,61 @@
     </div>
   </div>
 
- 
+  <script>
+  document.getElementById("formRegistrarRol").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const nombre = document.getElementById("nombreRol").value.trim();
+    const descripcion = document.getElementById("descripcionRol").value.trim();
+    const estatus = document.getElementById("estatusRol").value;
+
+    const soloLetrasRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+    const descripcionRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9.,\s]+$/;
+
+    if (!nombre || !descripcion) {
+      alert("Todos los campos son obligatorios.");
+      return;
+    }
+
+    if (!soloLetrasRegex.test(nombre)) {
+      alert("El nombre del rol solo debe contener letras.");
+      return;
+    }
+
+    if (!descripcionRegex.test(descripcion)) {
+      alert("La descripción solo puede contener letras, números, espacios, punto y coma.");
+      return;
+    }
+
+    // Envío AJAX a un archivo PHP nativo
+    fetch('Roles/guardarRol', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        nombre: nombre,
+        descripcion: descripcion,
+        estatus: estatus
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert("Rol registrado correctamente.");
+        cerrarModalRol();
+        document.getElementById("formRegistrarRol").reset();
+      } else {
+        alert("Error: " + data.message);
+      }
+    })
+    .catch(error => {
+      console.error("Error al enviar los datos:", error);
+      alert("Ocurrió un error al registrar el rol.");
+    });
+  });
+</script>
+
 
   <!-- Scripts personalizados -->
   <script>
