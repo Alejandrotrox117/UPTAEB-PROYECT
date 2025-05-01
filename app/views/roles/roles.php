@@ -99,7 +99,7 @@
         <div class="flex justify-end pt-4">
           <button type="submit" id="submitRol"
             class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
-            actualizar rol 
+            Actualizar 
           </button>
         </div>
       </form>
@@ -240,6 +240,58 @@
       alert("Ocurrió un error al registrar el rol.");
     });
   });
+
+
+
+  document.getElementById('formEditarRol').addEventListener('submit', function (e) {
+  e.preventDefault(); // Evita recarga
+
+  const id = document.getElementById('idRolEditar').value;
+  const nombre = document.getElementById('nombreRolEditar').value.trim();
+  const estatus = document.getElementById('estatusRolEditar').value;
+  const descripcion = document.getElementById('descripcionRolEditar').value.trim();
+
+  // Expresiones regulares para validación
+  const soloLetrasRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+  const descripcionRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9.,\s]+$/;
+
+  // Validación de campos
+  if (!nombre || !descripcion) {
+    alert("Todos los campos son obligatorios.");
+    return;
+  }
+
+  if (!soloLetrasRegex.test(nombre)) {
+    alert("El nombre del rol solo debe contener letras.");
+    return;
+  }
+
+  if (!descripcionRegex.test(descripcion)) {
+    alert("La descripción solo puede contener letras, números, espacios, punto y coma.");
+    return;
+  }
+
+  // Si pasa la validación, enviamos la información al backend
+  fetch('Roles/actualizar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, nombre, estatus, descripcion })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert('Rol actualizado con éxito');
+      // Cerrar modal, refrescar tabla, etc.
+    } else {
+      alert('Error al actualizar: ' + data.message);
+    }
+  })
+  .catch(err => {
+    console.error('Error al actualizar rol:', err);
+    alert('Ocurrió un error al enviar los datos.');
+  });
+});
+
 </script>
 
 
@@ -427,17 +479,17 @@ function cargarRoles() {
               <td class="py-2">${rol.descripcion}</td>
               <td class="py-2">
                 <button  class="bg-blue-500 text-white px-2 py-1 rounded editar-rol" 
-                  data-id="${rol.id}" 
+                  data-id="${rol.idrol}" 
                   data-nombre="${rol.nombre}" 
                   data-estatus="${rol.estatus}" 
                   data-descripcion="${rol.descripcion}"
-                  onclick="abrirModalEditar(${rol.id})">
+                  onclick="abrirModalEditar(${rol.idrol})">
                   Editar
                 </button>
                 <button class="bg-red-500 text-white px-2 py-1 rounded eliminar-rol" 
-                  data-id="${rol.id}" 
+                  data-id="${rol.idrol}" 
                   data-nombre="${rol.nombre}"
-                  onclick="modalEliminar(${rol.id})">
+                  onclick="modalEliminar(${rol.idrol})">
                   Eliminar
                 </button>
               </td>
