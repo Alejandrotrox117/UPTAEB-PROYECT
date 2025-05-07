@@ -14,7 +14,8 @@
     <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
     <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
     <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet"> <!-- DataTables -->
-    <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet"> <!-- DataTables -->
+    <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" /> <!-- DataTables -->
 </head>
 
 <body class="bg-blue-50">
@@ -99,6 +100,22 @@
                             <span class="ml-5">Roles</span>
                         </a>
                     </li>
+                    <li
+                        class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
+                        <a href="/project/permisos" class="flex items-center">
+                            <span><i class="fa-solid fa-key icon"></i></span>
+                            <span class="ml-5">Permisos</span>
+                        </a>
+                    </li>
+                    <li
+                        class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
+                        <a href="/project/modulos" class="flex items-center">
+                            <span><i class="fa-solid fa-cogs icon"></i></span> <!-- Icono de módulos (engranaje) -->
+                            <span class="ml-5">Modulos</span>
+                        </a>
+                    </li>
+
+
                 </ul>
             </nav>
         </aside>

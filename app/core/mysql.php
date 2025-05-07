@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . "/conexion.php";
+
 class Mysql extends Conexion{
     private $conexionGeneral;
     private $conexionSeguridad;

@@ -1,4 +1,5 @@
 <?php
+
 class Home extends Controllers 
 {
     // Método setter para establecer el valor de $model
@@ -10,6 +11,11 @@ class Home extends Controllers
     public function get_model()
     {
         return $this->model;
+    }
+
+    public function index()
+    {
+        $this->views->getView($this, "home");
     }
 
 
