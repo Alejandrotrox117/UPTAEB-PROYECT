@@ -1,5 +1,5 @@
 <?php 
-require_once "app/core/Views.php";
+require_once __DIR__. "/Views.php";
 
     class Controllers
     {

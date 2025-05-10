@@ -26,9 +26,10 @@ class PersonasModel extends Mysql
 
     public function __construct()
     {
-        $this->conexion = new Conexion();
-        $this->db = $this->conexion->connect();
         parent::__construct();
+        $this->conexion = new Conexion();
+        $this->db = (new Conexion())->connect();
+        
     }
 
     // Métodos Getters y Setters
@@ -253,37 +254,6 @@ class PersonasModel extends Mysql
     }
 
     // Método para obtener una persona por ID
-    public function getPersonaById($idpersona) {
-        $conn = $this->db->connect(); // Asumo que tienes una función para conectar con mysqli
-    
-        $idpersona = mysqli_real_escape_string($conn, $idpersona); // Seguridad básica
-        $sql = "SELECT * FROM personas WHERE idpersona = '$idpersona'";
-        $result = $conn->query($sql);
-    
-        if ($result && $data = $result->fetch_assoc()) {
-            // Asignar los valores a las propiedades del objeto
-            $this->setIdpersona($data['idpersona']);
-            $this->setNombre($data['nombre']);
-            $this->setApellido($data['apellido']);
-            $this->setCedula($data['cedula']);
-            $this->setRif($data['rif']);
-            $this->setTipo($data['tipo']);
-            $this->setGenero($data['genero']);
-            $this->setFechaNacimiento($data['fecha_nacimiento']);
-            $this->setTelefonoPrincipal($data['telefono_principal']);
-            $this->setCorreoElectronico($data['correo_electronico']);
-            $this->setDireccion($data['direccion']);
-            $this->setCiudad($data['ciudad']);
-            $this->setEstado($data['estado']);
-            $this->setPais($data['pais']);
-            $this->setEstatus($data['estatus']);
-            
-            $conn->close();
-            return $data;
-        } else {
-            $conn->close();
-            return false;
-        }
-    }
+   
     
 }
