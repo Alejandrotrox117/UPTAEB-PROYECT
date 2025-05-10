@@ -15,6 +15,7 @@
     <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
     <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet"> <!-- DataTables -->
     <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
+    <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" /> <!-- DataTables -->
 </head>
 
@@ -92,6 +93,12 @@
                     <a href="/project/categorias" class="flex items-center text-sm">
                       <span><i class="fa-solid fa-tags icon"></i></span>
                       <span class="ml-5">Categorias</span>
+                    </a>
+                  </li>
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/tasas" class="flex items-center text-sm">
+                      <span><i class="fas fa-coins icon"></i></span>
+                      <span class="ml-5">Historico de Tasas BCV</span>
                     </a>
                   </li>
                 </ul>

@@ -1,177 +1,128 @@
 <?php
 require_once "app/core/Controllers.php";
-require_once "helpers/helpers.php";
+require_once "helpers/helpers.php"; 
+require_once "app/models/BcvScraperModel.php"; 
 
-
-class tasas extends Controllers
+class Tasas extends Controllers
 {
-    public function set_model($model)
-    {
-        $this->model = $model;
-    }
-
-    public function get_model()
-    {
-        return $this->model;
-    }
-
     public function __construct()
     {
         parent::__construct();
+    
     }
 
-    // Vista principal para gestionar categorias
+    public function set_model($model) { $this->model = $model; }
+    public function get_model() { return $this->model; }
+
+
     public function index()
     {
-        $data['page_title'] = "Gestión de Historico de Tasas";
+
+        $data['page_title'] = "Gestión de Histórico de Tasas";
         $data['page_name'] = "Tasas BCV";
-        $data['page_functions_js'] = "functions_tasas.js";
+        $data['page_functions_js'] = "functions_tasas_bcv.js"; 
         $this->views->getView($this, "tasas", $data);
     }
 
-    // Obtener datos de categorias para DataTables
+    // Endpoint para que el JS obtenga los datos iniciales de las tablas
+    public function getTasas() // Renombrado desde tu getTasasData para coincidir con el JS
+    {
+        header('Content-Type: application/json');
+        // Asegúrate de que $this->model es una instancia de TasasModel
+        if (!($this->get_model() instanceof TasasModel)) {
+             // Si tu framework no carga el modelo automáticamente, hazlo aquí:
+             $this->set_model(new TasasModel()); // O usa tu método loadModel
+        }
+
+        $tasasUsd = $this->get_model()->obtenerTasasPorMoneda('USD', 5);
+        $tasasEur = $this->get_model()->obtenerTasasPorMoneda('EUR', 5);
+
+        $mensajeFlash = $_SESSION['mensaje_flash'] ?? null;
+        unset($_SESSION['mensaje_flash']);
+
+        echo json_encode([
+            'tasasUsd' => $tasasUsd,
+            'tasasEur' => $tasasEur,
+            'mensajeFlash' => $mensajeFlash
+        ]);
+        exit;
+    }
+
+    // Endpoint para actualizar AMBAS tasas (USD y EUR)
+    public function actualizarTasasBCV() // Nuevo nombre para el método unificado
+    {
+        header('Content-Type: application/json');
+        
+        // Asegúrate de que $this->model es una instancia de TasasModel
+        if (!($this->get_model() instanceof TasasModel)) {
+            $this->set_model(new TasasModel());
+        }
+
+        $bcvScraper = new BcvScraperModel(); // Instanciamos el scraper
+        $monedasParaActualizar = ['USD', 'EUR'];
+        $respuestasIndividuales = [];
+        $huboExitoGeneral = false;
+        $huboAdvertencia = false;
+
+        foreach ($monedasParaActualizar as $moneda) {
+            $datosTasa = $bcvScraper->obtenerDatosTasaBcv($moneda);
+
+            if ($datosTasa && isset($datosTasa['tasa']) && isset($datosTasa['fecha_bcv'])) {
+                $resultadoGuardado = $this->get_model()->guardarTasa(
+                    $moneda,
+                    $datosTasa['tasa'],
+                    $datosTasa['fecha_bcv']
+                );
+
+                if ($resultadoGuardado === 'insertado') {
+                    $respuestasIndividuales[] = "Tasa para {$moneda} actualizada a {$datosTasa['tasa']} VES (Fecha BCV: {$datosTasa['fecha_bcv']}).";
+                    $huboExitoGeneral = true;
+                } elseif ($resultadoGuardado === 'duplicado') {
+                    $respuestasIndividuales[] = "Tasa para {$moneda} (Fecha BCV: {$datosTasa['fecha_bcv']}) ya estaba registrada.";
+                    $huboAdvertencia = true;
+                } else { // false (error al guardar)
+                    $respuestasIndividuales[] = "Error al intentar guardar la tasa para {$moneda}.";
+                }
+            } else {
+                $respuestasIndividuales[] = "No se pudieron obtener los datos actuales para {$moneda} desde el BCV.";
+            }
+        }
+
+        $tipoRespuestaGeneral = 'error'; // Por defecto
+        if ($huboExitoGeneral) {
+            $tipoRespuestaGeneral = 'exito';
+        } elseif ($huboAdvertencia && !$huboExitoGeneral) { // Solo advertencia si no hubo ningún éxito
+            $tipoRespuestaGeneral = 'advertencia';
+        }
+        
+        // Si no hay mensajes, es un error genérico de que no se procesó nada
+        if (empty($respuestasIndividuales)) {
+             $respuestasIndividuales[] = "No se procesó ninguna actualización. Verifique la conexión o los logs.";
+        }
+
+        echo json_encode([
+            'tipo' => $tipoRespuestaGeneral,
+            'texto' => implode("<br>", $respuestasIndividuales) // Unir mensajes con <br> para display
+        ]);
+        exit;
+    }
+
+    // El método getTasasData para DataTables (si aún lo usas para otra cosa)
     public function getTasasData()
     {
+        if (!($this->get_model() instanceof TasasModel)) {
+            $this->set_model(new TasasModel());
+        }
         $arrData = $this->get_model()->SelectAllTasas();
-
+        // Formato para DataTables
         $response = [
-           
+            "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
             "recordsTotal" => count($arrData),
             "recordsFiltered" => count($arrData),
             "data" => $arrData
         ];
-
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
-
-    // Crear un nuevo categoria
-    public function crearCategoria()
-    {
-        try {
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
-
-            // Validar que los datos no sean nulos
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-                exit();
-            }
-
-            // Extraer los datos del JSON
-            $nombre = trim($data['nombre'] ?? '');
-            $descripcion = trim($data['descripcion'] ?? '');
-            $estatus = trim($data['estatus'] ?? 'ACTIVO');
-
-            // Validar campos obligatorios
-            if (empty($nombre)) {
-                echo json_encode(["status" => false, "message" => "El nombre de la categoría es obligatorio."]);
-                exit();
-            }
-
-            // Insertar los datos usando el modelo
-            $insertData = $this->model->insertCategoria([
-                "nombre" => $nombre,
-                "descripcion" => $descripcion,
-                "estatus" => $estatus,
-            ]);
-
-            // Respuesta al cliente
-            if ($insertData) {
-                echo json_encode(["status" => true, "message" => "Categoría registrada correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al registrar la categoría. Intenta nuevamente."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-        }
-        exit();
-    }
-
-    // Actualizar una categoría existente
-    public function actualizarCategoria()
-    {
-        try {
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
-
-            // Validar que los datos no sean nulos
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-                exit();
-            }
-
-            // Extraer los datos del JSON
-            $idcategoria = trim($data['idcategoria'] ?? null);
-            $nombre = trim($data['nombre'] ?? '');
-            $descripcion = trim($data['descripcion'] ?? '');
-            $estatus = trim($data['estatus'] ?? '');
-
-            // Validar campos obligatorios
-            if (empty($idcategoria) || empty($nombre)) {
-                echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-                exit();
-            }
-
-            // Actualizar los datos usando el modelo
-            $updateData = $this->model->updateCategoria([
-                "idcategoria" => $idcategoria,
-                "nombre" => $nombre,
-                "descripcion" => $descripcion,
-                "estatus" => $estatus,
-            ]);
-
-            // Respuesta al cliente
-            if ($updateData) {
-                echo json_encode(["status" => true, "message" => "Categoría actualizada correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al actualizar la categoría. Intenta nuevamente."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-        }
-        exit();
-    }
-
-    // Eliminar una categoría (lógico)
-    public function deleteCategoria($idcategoria)
-    {
-        try {
-            // Validar que el ID no esté vacío
-            if (empty($idcategoria)) {
-                echo json_encode(["status" => false, "message" => "ID de categoría no proporcionado."]);
-                return;
-            }
-
-            // Desactivar la categoría usando el modelo
-            $deleteData = $this->model->deleteCategoria($idcategoria);
-
-            // Respuesta al cliente
-            if ($deleteData) {
-                echo json_encode(["status" => true, "message" => "Categoría desactivada correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al desactivar la categoría. Intenta nuevamente."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-        }
-        exit();
-    }
-
-    // Obtener una categoría por ID
-    public function getCategoriaById($idcategoria)
-    {
-        try {
-            $categoria = $this->model->getCategoriaById($idcategoria);
-
-            if ($categoria) {
-                echo json_encode(["status" => true, "data" => $categoria]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Categoría no encontrada."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-        }
-        exit();
-    }
 }
+?>
