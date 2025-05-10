@@ -64,11 +64,32 @@
                 </ul>
               </details>
             </li>
-            <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-              <a href="/project/compras" class="flex items-center">
-                <span><i class="fa-solid fa-cart-shopping icon"></i></span>
-                <span class="ml-5">Compra de Materiales</span>
-              </a>
+            <li class="menu-item-group">
+              <details class="group">
+                <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+                  <div class="flex items-center">
+                    <span><i class="fa-solid fa-cart-shopping icon"></i></span>
+                    <span class="ml-5">Gestionar Compras de Materiales</span>
+                  </div>
+                  <span class="shrink-0 transition duration-300 group-open:rotate-180">
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                  </span>
+                </summary>
+                <ul class="ml-5 mt-1 space-y-1">
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/compras" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-cart-shopping icon"></i></span>
+                      <span class="ml-5">Compras</span>
+                    </a>
+                  </li>
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/proveedores" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-truck icon"></i></span>
+                      <span class="ml-5">Proveedores</span>
+                    </a>
+                  </li>
+                </ul>
+              </details>
             </li>
 
             <li class="menu-item-group">
@@ -104,6 +125,7 @@
                 </ul>
               </details>
             </li>
+
             <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
               <a href="/project/inventario" class="flex items-center">
                 <span><i class="fa-solid fa-warehouse icon"></i></span>

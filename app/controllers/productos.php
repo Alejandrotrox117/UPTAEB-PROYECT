@@ -1,7 +1,7 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
-use app\models\categoriasModel;
+
 
 class Productos extends Controllers
 {
