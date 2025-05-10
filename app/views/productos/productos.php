@@ -28,12 +28,6 @@
                         <th class="py-2">Precio </th>
                         <th class="py-2">Existencia </th>
                         <th class="py-2">Categoria </th>
-                        <th class="py-2">status </th>
-                        <th class="py-2">Fecha de Creacion</th>
-                        <th class="py-2">Modificacion </th>
-
-
-
                     </tr>
                 </thead>
                 <tbody class="text-gray-900">
@@ -93,11 +87,24 @@
 
                 <!-- Segunda columna -->
                 <div>
-                    <div class="mb-6">
+                    <div class="flex mb-3">
+                        <div class="mb-3 px-2">
                         <label class="block text-gray-700 font-medium mb-2">Precio</label>
                         <input type="number" step="0.01" id="precio" name="precio" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
                     </div>
-                    <div class="mb-6">
+                    <div class="mb-3 px-2">
+                        <label class="block text-gray-700 font-medium mb-2" for="moneda_predeterminada_categoria">Moneda</label>
+                        <select id="moneda" name="moneda" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+                            <option value="">Seleccione</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="VES">VES (Bs.)</option>
+
+                        </select>
+                    </div>
+                    </div>
+
+                    <div class="mb-6 mt-2">
                         <label class="block text-gray-700 font-medium mb-2">Existencia</label>
                         <input type="number" id="existencia" name="existencia" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
                     </div>

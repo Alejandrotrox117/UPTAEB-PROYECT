@@ -35,7 +35,6 @@ class Productos extends Controllers
         $arrData = $this->get_model()->SelectAllProductos();
 
         $response = [
-            "draw" => intval($_GET['draw']),
             "recordsTotal" => count($arrData),
             "recordsFiltered" => count($arrData),
             "data" => $arrData
@@ -67,6 +66,7 @@ class Productos extends Controllers
         $precio = trim($data['precio'] ?? null);
         $existencia = trim($data['existencia'] ?? null);
         $idcategoria = trim($data['idcategoria'] ?? null);
+        $moneda = trim($data['moneda'] ?? null);
         $estatus = trim($data['estatus'] ?? 'ACTIVO');
     
         // Validar campos obligatorios
@@ -83,6 +83,7 @@ class Productos extends Controllers
             "precio" => $precio,
             "existencia" => $existencia,
             "idcategoria" => $idcategoria,
+            "moneda" => $moneda,
             "estatus" => $estatus,
         ]);
     
@@ -149,6 +150,7 @@ class Productos extends Controllers
     $precio = trim($data['precio']) ?? null;
     $existencia = trim($data['existencia']) ?? null;
     $idcategoria = trim($data['idcategoria']) ?? null;
+    $moneda = trim($data['moneda']) ?? null;
     $estatus = trim($data['estatus']) ?? 'ACTIVO';
 
     // Validar campos obligatorios
@@ -166,6 +168,7 @@ class Productos extends Controllers
         "precio" => $precio,
         "existencia" => $existencia,
         "idcategoria" => $idcategoria,
+        "moneda" => $moneda,
         "estatus" => $estatus,
     ]);
 

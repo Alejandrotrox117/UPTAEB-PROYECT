@@ -56,7 +56,13 @@ class categoriasModel extends Mysql
     public function SelectAllCategorias()
     {
         $sql = "SELECT * FROM categoria WHERE estatus = 'activo'";
-        return $this->searchAll($sql);
+        try {
+            $stmt = $this->db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("CategoriasModel: Error al seleccionar todos las categorias- " . $e->getMessage());
+            return [];
+        }
     }
 
     public function insertCategoria($data)
