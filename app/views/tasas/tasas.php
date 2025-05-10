@@ -69,7 +69,7 @@
                         <thead>
                             <tr class="text-gray-600 text-sm border-b border-gray-300">
                                 <th class="py-3 px-4 font-semibold">Moneda</th>
-                                <th class="py-3 px-4 font-semibold">Tasa a VES</th>
+                                <th class="py-3 px-4 font-semibold">Tasa a Bolivares</th>
                                 <th class="py-3 px-4 font-semibold">Fecha Publicación BCV</th>
                                 <th class="py-3 px-4 font-semibold">Fecha de Captura</th>
                             </tr>
