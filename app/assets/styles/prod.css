@@ -10,6 +10,7 @@
 @tailwind line-clamp;
 @tailwind modals;
 @tailwind accordion;
+
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
