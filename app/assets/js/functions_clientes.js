@@ -14,9 +14,9 @@ document.addEventListener("DOMContentLoaded", function () {
       { data: "apellido", title: "Apellido" },
       { data: "telefono_principal", title: "Teléfono" },
       { data: "direccion", title: "Dirección" },
-      { data: "correo_electronico", title: "Correo Electrónico" },
+     
       { data: "estatus", title: "Estatus" },
-      {data: "observaciones", title: "Observaciones"},
+      { data: "observaciones", title: "Observaciones" },
 
       {
         data: null,
@@ -59,74 +59,134 @@ document.addEventListener("DOMContentLoaded", function () {
     responsive: true,
     pageLength: 10,
     order: [[0, "asc"]],
+  });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  let formCliente = document.querySelector("#clienteForm");
+
+  if (formCliente) {
+    formCliente.onsubmit = function (e) {
+      e.preventDefault(); // Evita que el formulario se envíe de forma tradicional
+
+       try {
+        // Obtener los valores de los campos para validar
+        let campos = [
+          { id: "cedula", nombre: "Cédula" },
+          { id: "nombre", nombre: "Nombre" },
+          { id: "apellido", nombre: "Apellido" },
+          { id: "telefono_principal", nombre: "Teléfono Principal" },
+          { id: "direccion", nombre: "Dirección" },
+          { id: "estatus", nombre: "Estatus" },
+          { id: "observaciones", nombre: "Observaciones" },
+        ];
+
+        // Validar campos vacíos
+        for (let campo of campos) {
+          let valor = document.getElementById(campo.id).value.trim();
+          if (valor === "") {
+            Swal.fire({
+              title: "¡Error!",
+              text: `El campo "${campo.nombre}" no puede estar vacío.`,
+              icon: "error",
+              confirmButtonText: "Aceptar",
+            });
+            return;
+          }
+        }
+
+        let datosFormulario = {};
+        for (let campo of campos) {
+          datosFormulario[campo.id] = document
+            .getElementById(campo.id)
+            .value.trim();
+        }
+        datosFormulario["cedula"] = document
+          .getElementById("cedula")
+          .value.trim();
+        datosFormulario["nombre"] = document
+          .getElementById("nombre")
+          .value.trim();
+        datosFormulario["apellido"] = document
+          .getElementById("apellido")
+          .value.trim();
+        datosFormulario["telefono_principal"] = document
+          .getElementById("telefono_principal")
+          .value.trim();
+        datosFormulario["direccion"] = document
+          .getElementById("direccion")
+          .value.trim();
+        datosFormulario["observaciones"] = document
+          .getElementById("observaciones")
+          .value.trim();
+        datosFormulario["estatus"] = document
+          .getElementById("estatus")
+          .value.trim();
+
+
+        console.log("Datos del formulario:", datosFormulario); // Depuración
+         console.log("Valor de cédula:", datosFormulario["cedula"]);
     
-  });
+   
 
- 
-  document.getElementById("clienteForm").addEventListener("submit", function (e) {
-    e.preventDefault(); // Evita que el formulario se envíe de forma tradicional
+  
+  
+        fetch("clientes/createcliente",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(datosFormulario),
+          })
+            .then((response) => response.json())
+            .then((result) => {
+              if (result.status) {
+                Swal.fire({
+                  title: "¡Éxito!",
+                  text: result.message,
+                  icon: "success",
+                  confirmButtonText: "Aceptar",
+                }).then(() => {
+                  $("#Tablaclientes").DataTable().ajax.reload();
+                  cerrarModalcliente();
+                });
+              } else {
+                Swal.fire({
+                  title: "¡Error!",
+                  text: result.message,
+                  icon: "error",
+                  confirmButtonText: "Aceptar",
+                });
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
 
-    // Convertir los datos del formulario en un objeto
-    const formData = new FormData(this);
-    const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
-
- 
-
-    // Validar campos obligatorios
-    if (!data.nombre || !data.apellido || !data.cedula) {
-        alert("Por favor, completa todos los campos obligatorios.");
-        return;
-    }
-
-    // Determinar si es una edición o una creación
-    const idcliente = document.getElementById("idcliente").value;
-    const url = idcliente ? "clientes/updatecliente" : "clientes/createcliente";
-    const method = idcliente ? "PUT" : "POST";
-
-    fetch(url, {
-        method: method,
-        headers: { "Content-Type": "application/json" }, // Asegura que los datos sean JSON
-        body: JSON.stringify(data), // Convierte el objeto en una cadena JSON
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then((result) => {
-            if (result.status) {
-                alert(result.message);
-                cerrarModalcliente();
-                $('#Tablaclientes').DataTable().ajax.reload();
-            } else {
-                alert(result.message);
-            }
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-            alert("Ocurrió un error al procesar la solicitud.");
+              Swal.fire({
+                title: "¡Error!",
+                text: "Ocurrió un error al guardar los datos.",
+                icon: "error",
+                confirmButtonText: "Aceptar",
+              });
+            });
+      } catch (error) {
+        console.error("Error al procesar el formulario:", error);
+        Swal.fire({
+          title: "¡Error!",
+          text: "Ocurrió un error al procesar el formulario.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
-});
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".editar-btn")) {
-      const idcliente = e.target
-        .closest(".editar-btn")
-        .getAttribute("data-idcliente");
-      console.log("Botón de edición clicado. ID de cliente:", idcliente); // Depuración
-
-      if (!idcliente || isNaN(idcliente)) {
-        alert("ID de cliente no válido.");
-        return;
+        
       }
-
-      abrirModalclienteParaEdicion(idcliente);
-    }
-  });
-});
+    };
+  } else {
+    console.error(
+      "El formulario con ID 'clienteForm' no se encontró en el DOM."
+    );
+  }
+ });
 
 function eliminarcliente(idcliente) {
   fetch(`clientes/deletecliente`, {
@@ -186,9 +246,10 @@ function abrirModalclienteParaEdicion(idcliente) {
         cliente.telefono_principal || "";
       document.getElementById("correo_electronico").value =
         cliente.correo_electronico || "";
-     
-        document.getElementById("direccion").value = cliente.direccion || "";
-        document.getElementById("observaciones").value =cliente.observaciones || "";
+
+      document.getElementById("direccion").value = cliente.direccion || "";
+      document.getElementById("observaciones").value =
+        cliente.observaciones || "";
 
       document.getElementById("estatus").value = cliente.estatus || "";
 

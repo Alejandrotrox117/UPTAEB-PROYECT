@@ -26,7 +26,7 @@
                             <th class="py-2">Nombre </th>
                             <th class="py-2">Apellido </th>
 
-                            <th class="py-2">Correo Electronico </th>
+                           
                             <th class="py-2">Teléfono</th>
 
                             <th class="py-2">Direccion</th>
@@ -68,26 +68,26 @@
             <div class=" grid grid-cols-2 md:grid-cols-2  gap-4">
                 <div class="">
                     <label for="cedula" class="block text-gray-700 font-medium mb-2">Cedula</label>
-                    <input type="text" id="cedula" name="cedula" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" required>
-
+                    <input type="text" id="cedula" name="cedula" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none">
+                    <p class="text-red-500 text-sm mt-1"></p>
                 </div>
                 <div class="">
                     <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre</label>
-                    <input type="text" id="nombre" name="nombre" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" required>
+                    <input type="text" id="nombre" name="nombre" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" >
 
                 </div>
                 <div class="">
                     <label for="apellido" class="block text-gray-700 font-medium mb-2">Apellido</label>
-                    <input type="text" id="apellido" name="apellido" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" required>
+                    <input type="text" id="apellido" name="apellido" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" >
                 </div>
                 <div class="">
                     <label for="telefono_principal" class="block text-gray-700 font-medium mb-2">Teléfono Principal</label>
-                    <input type="text" id="telefono_principal" name="telefono_principal" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" required>
+                    <input type="text" id="telefono_principal" name="telefono_principal" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none">
                 </div>
 
                 <div class="flex-1 min-w-[155%] my-10">
-                    <label for="estatusRol" class="block text-gray-700 font-medium mb-2">Estatus</label>
-                    <select id="estatusRol" name="estatus"
+                    <label for="estatus" class="block text-gray-700 font-medium mb-2">Estatus</label>
+                    <select id="estatus" name="estatus"
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
                         required>
                         <option value="Activo">Activo</option>
@@ -96,12 +96,12 @@
                 </div>
                 <div class="">
                     <label for="direccion" class="block text-gray-700 font-medium mb-2">Dirección</label>
-                    <input type="text" id="direccion" name="direccion" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" required>
+                    <input type="text" id="direccion" name="direccion" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" >
                 </div>
             </div>
                 <div class="grid-flow-row">
                     <label for="direccion" class="block text-gray-700 font-medium mb-2">Observaciones</label>
-                    <input type="text" id="direccion" name="direccion" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" required>
+                    <input type="text" id="observaciones" name="observaciones" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" >
                 </div>
             <div class="grid grid-cols-2 md:grid-cols-2  gap-4 mt-4">
                 <div class="">

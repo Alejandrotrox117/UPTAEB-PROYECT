@@ -137,54 +137,92 @@ class ClientesModel extends Mysql
         $this->estatus = $estatus;
     }
 
-    // Método para seleccionar todas las personas activas
-    public function SelectAllclientes()
-    {
-        $sql = "SELECT 
-                    idcliente, 
-                    nombre, 
-                    apellido, 
-                    cedula,
-                    direccion, 
-                    correo_electronico,
-                    estatus,
-                    telefono_principal,
-                    observaciones,
-                    fecha_creacion,
-                    fecha_modifcacion
-                FROM cliente 
-                WHERE estatus = 'ACTIVO'";
-        return $this->searchAll($sql);
+
+// Método para seleccionar todos los clientes activos
+public function SelectAllclientes()
+{
+    $sql = "SELECT 
+                idcliente, 
+                cedula,
+                nombre, 
+                apellido, 
+                direccion, 
+                estatus,
+                telefono_principal,
+                observaciones
+            FROM cliente 
+            WHERE estatus = 'ACTIVO'";
+
+    $result = $this->searchAll($sql);
+
+    // Mapear los resultados a las propiedades de la clase
+    $clientes = [];
+    foreach ($result as $row) {
+        $cliente = new self();
+        $cliente->setIdcliente($row['idcliente']);
+        $cliente->setCedula($row['cedula']);
+        $cliente->setNombre($row['nombre']);
+        $cliente->setApellido($row['apellido']);
+        $cliente->setDireccion($row['direccion']);
+        $cliente->setEstatus($row['estatus']);
+        $cliente->setTelefonoPrincipal($row['telefono_principal']);
+        $cliente->setObservaciones($row['observaciones']);
+        $clientes[] = $cliente;
     }
 
-    // Método para insertar una nueva persona
-    public function insertPersona($data)
-    {
-        $sql = "INSERT INTO personas (
-                nombre, apellido, cedula, rif, tipo, genero, fecha_nacimiento, 
-                telefono_principal, correo_electronico, direccion, ciudad, estado, pais, estatus
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    return $clientes;
+}
+   
 
-        $stmt = $this->db->prepare($sql);
-        $arrValues = [
-            $data['nombre'],
-            $data['apellido'],
-            $data['cedula'],
-            $data['rif'],
-            $data['tipo'],
-            $data['genero'],
-            $data['fecha_nacimiento'],
-            $data['telefono_principal'],
-            $data['correo_electronico'],
-            $data['direccion'],
-            $data['ciudad'],
-            $data['estado'],
-            $data['pais'],
-            $data['estatus']
-        ];
 
-        return $stmt->execute($arrValues);
-    }
+// Método para insertar un nuevo cliente
+public function insertCliente()
+{
+    $sql = "INSERT INTO cliente (
+                cedula,
+                nombre, 
+                apellido, 
+                 direccion, 
+                telefono_principal, 
+               estatus, 
+              observaciones
+               
+               
+                
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $this->db->prepare($sql);
+    $arrValues = [
+        $this->getCedula(),
+        $this->getNombre(),
+        $this->getApellido(),
+        $this->getTelefonoPrincipal(),
+    
+        $this->getDireccion(),
+        $this->getEstatus(),
+        $this->getObservaciones()
+    ];
+
+    return $stmt->execute($arrValues);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Método para eliminar lógicamente una persona
     public function deletePersona($idpersona)
