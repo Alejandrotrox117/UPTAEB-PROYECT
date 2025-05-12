@@ -131,7 +131,6 @@ document.addEventListener("DOMContentLoaded", function () {
     hiddenIdProveedorModal.value = "";
     divInfoProveedorModal.innerHTML = "";
     divInfoProveedorModal.classList.add("hidden");
-    inputBuscarProveedorModal.value = "";
     mensajeErrorFormCompraModal.textContent = "";
     fechaCompraModal.valueAsDate = new Date(); // Fecha actual por defecto
 
@@ -221,42 +220,59 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Autocompletar para buscar proveedor en el MODAL
-  $(inputBuscarProveedorModal).autocomplete({
-    source: function (request, response) {
-      $.ajax({
-        url: `compras/buscarProveedores`,
-        dataType: "json",
-        data: { term: request.term },
-        success: function (data) {
-          response(
-            data.map((item) => ({
-              label: `${item.nombre} ${item.apellido || ""} (${item.identificacion})`,
-              value: item.idproveedor,
-              nombre: `${item.nombre} ${item.apellido || ""}`,
-              identificacion: item.identificacion,
-            })),
-          );
-        },
-      });
-    },
-    minLength: 2,
-    select: function (event, ui) {
-      hiddenIdProveedorModal.value = ui.item.value;
-      divInfoProveedorModal
-        .html(
-          `Sel: <strong>${ui.item.nombre}</strong> (ID: ${ui.item.identificacion})`,
-        )
-        .removeClass("hidden");
-      inputBuscarProveedorModal.value = ui.item.label;
-      return false;
-    },
-    change: function (event, ui) {
-      if (!ui.item) {
-        hiddenIdProveedorModal.value = "";
-        divInfoProveedorModal.html("").addClass("hidden");
-      }
-    },
-  });
+const inputCriterioProveedorModal = document.getElementById('inputCriterioProveedorModal');
+const btnBuscarProveedorModal = document.getElementById('btnBuscarProveedorModal');
+const listaResultadosProveedorModal = document.getElementById('listaResultadosProveedorModal');
+
+
+if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
+    btnBuscarProveedorModal.addEventListener('click', async function() {
+        const termino = inputCriterioProveedorModal.value.trim();
+        if (termino.length < 2) { // O la longitud mínima que desees
+            alert("Ingrese al menos 2 caracteres para buscar.");
+            return;
+        }
+
+        listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-gray-500">Buscando...</div>';
+        listaResultadosProveedorModal.classList.remove('hidden');
+
+        try {
+            const response = await fetch(`compras/buscarProveedores?term=${encodeURIComponent(termino)}`);
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            const proveedores = await response.json();
+            
+            listaResultadosProveedorModal.innerHTML = ''; // Limpiar
+            if (proveedores && proveedores.length > 0) {
+                proveedores.forEach(prov => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.classList.add('p-2', 'text-xs', 'hover:bg-gray-100', 'cursor-pointer');
+                    itemDiv.textContent = `${prov.nombre || ""} ${prov.apellido || ""} (${prov.identificacion || ""})`.trim();
+                    itemDiv.dataset.idproveedor = prov.idproveedor;
+                    itemDiv.dataset.nombre = `${prov.nombre || ""} ${prov.apellido || ""}`.trim();
+                    itemDiv.dataset.identificacion = prov.identificacion || "";
+
+                    itemDiv.addEventListener('click', function() {
+                        hiddenIdProveedorModal.value = this.dataset.idproveedor;
+                        divInfoProveedorModal.innerHTML = `Sel: <strong>${this.dataset.nombre}</strong> (ID: ${this.dataset.identificacion})`;
+                        divInfoProveedorModal.classList.remove('hidden');
+                        inputCriterioProveedorModal.value = this.textContent; // Opcional: llenar el input con el seleccionado
+                        listaResultadosProveedorModal.classList.add('hidden');
+                        listaResultadosProveedorModal.innerHTML = ''; // Limpiar después de seleccionar
+                    });
+                    listaResultadosProveedorModal.appendChild(itemDiv);
+                });
+            } else {
+                listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-gray-500">No se encontraron proveedores.</div>';
+            }
+        } catch (error) {
+            console.error("Error al buscar proveedores:", error);
+            listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-red-500">Error al buscar. Intente de nuevo.</div>';
+        }
+    });
+}
+
 
   // Lógica para agregar productos al detalle en el MODAL
   if (btnAgregarProductoDetalleModal && selectProductoAgregarModal) {
@@ -311,6 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function renderizarTablaDetalleModal() {
     cuerpoTablaDetalleCompraModal.innerHTML = "";
     detalleCompraItemsModal.forEach((item, index) => {
+      console.log(item);
       const tr = document.createElement("tr");
       tr.classList.add("border-b", "hover:bg-gray-50");
       tr.dataset.index = index;
@@ -326,18 +343,18 @@ document.addEventListener("DOMContentLoaded", function () {
               </label>
             </div>
             <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
-              P.Veh: <input type="number" step="0.01" class="form-input-xs peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
-              P.Bru: <input type="number" step="0.01" class="form-input-xs peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
+              P.Bru: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
+               P.Veh: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
             </div>
             <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
-              P.Neto: <input type="number" step="0.01" class="form-input-xs peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
+              P.Neto: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
             </div>
             Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(item).toFixed(2)}</strong>
           </div>`;
       } else {
         infoEspecificaHtml = `
           <div>
-            Cant: <input type="number" step="0.01" class="form-input-xs cantidad_unidad_modal" value="${item.cantidad_unidad || "1"}" placeholder="1">
+            Cant: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${item.cantidad_unidad || "1"}" placeholder="1">
           </div>`;
       }
 
@@ -345,9 +362,9 @@ document.addEventListener("DOMContentLoaded", function () {
         <td class="py-1 px-1 text-xs">${item.nombre}</td>
         <td class="py-1 px-1 text-xs">${infoEspecificaHtml}</td>
         <td class="py-1 px-1 text-xs">
-            ${item.simbolo_moneda_item} <input type="number" step="0.01" class="form-input-sm precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
+            ${item.idmoneda_item} <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
         </td>
-        <td class="py-1 px-1 text-xs subtotal_linea_display_modal">${item.simbolo_moneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
+        <td class="py-1 px-1 text-xs subtotal_linea_display_modal">${item.idmoneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
         <td class="py-1 px-1"><button type="button" class="text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs">X</button></td>
       `;
       cuerpoTablaDetalleCompraModal.appendChild(tr);
@@ -430,7 +447,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     rowElement.querySelector(
       ".subtotal_linea_display_modal",
-    ).textContent = `${item.simbolo_moneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}`;
+    ).textContent = `${item.idmoneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}`;
     calcularTotalesGeneralesModal();
   }
 
@@ -466,7 +483,7 @@ document.addEventListener("DOMContentLoaded", function () {
         selectMonedaGeneralModal.selectedIndex
       ];
     const monedaGeneralSimbolo = monedaGeneralOption
-      ? monedaGeneralOption.dataset.simbolo
+      ? monedaGeneralOption.dataset.idmoneda_item
       : "$";
 
     detalleCompraItemsModal.forEach((item) => {
@@ -581,23 +598,35 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- Lógica del Modal de Nuevo Proveedor (adaptada para abrirse desde el modal de compra) ---
-  const modalNuevoProveedor = document.getElementById("modalNuevoProveedor");
-  const btnAbrirModalNuevoProveedorDENTRO = document.getElementById(
-    "btnAbrirModalNuevoProveedorDENTRO",
-  ); // Botón dentro del modal de compra
-  const btnCerrarModalNuevoProveedor = document.getElementById(
-    "btnCerrarModalNuevoProveedor",
-  );
-  const btnCancelarModalNuevoProveedor = document.getElementById(
-    "btnCancelarModalNuevoProveedor",
-  );
-  const formNuevoProveedor = document.getElementById("formNuevoProveedor");
+// --- Lógica del Modal de Nuevo Proveedor ---
+const modalNuevoProveedor = document.getElementById("modalNuevoProveedor");
+const btnAbrirModalNuevoProveedorDENTRO = document.getElementById(
+  "btnAbrirModalNuevoProveedorDENTRO",
+);
+const btnCerrarModalNuevoProveedor = document.getElementById( // Asegúrate que estos también estén definidos si los usas
+  "btnCerrarModalNuevoProveedor",
+);
+const btnCancelarModalNuevoProveedor = document.getElementById( // Asegúrate que estos también estén definidos si los usas
+  "btnCancelarModalNuevoProveedor",
+);
+const formNuevoProveedor = document.getElementById("formNuevoProveedor"); // Definir aquí
 
-  function abrirModalProv() {
-    formNuevoProveedor.reset();
-    modalNuevoProveedor.classList.remove("opacity-0", "pointer-events-none");
+function abrirModalProv() {
+  if (formNuevoProveedor) { // Verificar si el formulario existe
+      formNuevoProveedor.reset();
+  } else {
+      console.warn("El formulario 'formNuevoProveedor' no fue encontrado para resetear.");
   }
+  if (modalNuevoProveedor) { // Verificar si el modal existe
+      modalNuevoProveedor.classList.remove("opacity-0", "pointer-events-none");
+      // Podrías querer enfocar el primer input del modal de proveedor aquí
+      // const primerInput = modalNuevoProveedor.querySelector('input[type="text"], input[type="email"]');
+      // if (primerInput) primerInput.focus();
+  } else {
+      console.warn("El modal 'modalNuevoProveedor' no fue encontrado.");
+  }
+}
+
   function cerrarModalProv() {
     modalNuevoProveedor.classList.add("opacity-0", "pointer-events-none");
   }
@@ -620,7 +649,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       try {
         const response = await fetch(
-          `${URL_BASE}/Compras/registrarNuevoProveedor`,
+          `compras/registrarNuevoProveedor`,
           {
             method: "POST",
             body: formData,
