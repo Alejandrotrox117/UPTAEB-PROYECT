@@ -8,17 +8,47 @@ document.addEventListener("DOMContentLoaded", function () {
       dataSrc: "data",
     },
     columns: [
-      { data: "idproducto", title: "Nro" },
-      { data: "nombre", title: "Nombre" },
-      { data: "descripcion", title: "descripcion" },
-      { data: "unidad_medida", title: "Unidad de Medida" },
-      { data: "precio", title: "Precio" },
-      { data: "existencia", title: "Stock" },
-      { data: "idcategoria", title: "Categoria" },
-      { data: "estatus", title: "Estado" },
-      { data: "fecha_creacion", title: "Creando en" },
-      { data: "ultima_modificacion", title: "Ultima Modificacion" },
+        { data: "idproducto", title: "Nro" },
+        { data: "nombre", title: "Nombre" },
+        { data: "descripcion", title: "Descripcion" },
+        { data: "unidad_medida", title: "Unidad de Medida" },
+                { 
+            data: "precio", 
+            title: "Precio",
+            render: function (data, type, row) {
+                if (type === 'display') {
+                    const precioNumerico = parseFloat(data);
+                    if (isNaN(precioNumerico)) {
+                        return data; // Devolver el dato original si no es un número válido
+                    }
 
+                    let simboloMoneda = '';
+                    if (row.moneda === 'EUR') {
+                        simboloMoneda = '€';
+                    } else if (row.moneda === 'VES') { 
+                        simboloMoneda = 'Bs.'; // O 'Bs.' o el que prefieras
+                    } else if (row.moneda === 'USD') { 
+                        simboloMoneda = '$';
+                    }
+                    
+                    let numeroFormateado;
+                    try {
+                        
+                        numeroFormateado = precioNumerico.toLocaleString(undefined, { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                        });
+                    } catch (e) {
+                       numeroFormateado = precioNumerico.toFixed(2);
+                    }
+                    
+                    return  numeroFormateado + ' ' + simboloMoneda; 
+                }
+                return data; 
+            }
+        },
+        { data: "existencia", title: "Stock" },
+        { data: "nombre_categoria", title: "Categoría" },
       {
         data: null,
         title: "Acciones",
@@ -198,6 +228,7 @@ function abrirModalProductoParaEdicion(idproducto) {
       document.getElementById("unidad_medida").value =
         producto.unidad_medida || "";
       document.getElementById("precio").value = producto.precio || "";
+      document.getElementById("moneda").value = producto.moneda || "";
       document.getElementById("existencia").value = producto.existencia || "";
       document.getElementById("estatus").value = producto.estatus || "";
 
@@ -235,10 +266,10 @@ function eliminarProducto(idproducto) {
     .then((response) => response.json())
     .then((result) => {
       if (result.status) {
-        alert(result.message); // Muestra mensaje de éxito
-        $("#TablaProductos").DataTable().ajax.reload(); // Recarga la tabla
+        alert(result.message); 
+        $("#TablaProductos").DataTable().ajax.reload();
       } else {
-        alert(result.message); // Muestra mensaje de error
+        alert(result.message); 
       }
     })
     .catch((error) => {

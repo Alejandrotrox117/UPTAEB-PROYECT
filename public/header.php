@@ -7,120 +7,213 @@
     <title>Recuperadora</title>
     <meta name="description" content="Recuperadora de materiales reciclables">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--<link href="/project/app/assets/styles/styles.css" rel="stylesheet"> Tailwind -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> -->
+    <link rel="stylesheet" href="/project/app/assets/styles/styles.css">
     <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
     <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
     <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
     <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet"> <!-- DataTables -->
     <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
+    <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" /> <!-- DataTables -->
 </head>
 
 <body class="bg-blue-50">
     <div class="flex h-screen">
+<!-- Sidebar -->
+<aside class="w-84 flex flex-col bg-white p-5 shadow-md">
+<img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="text-2xl font-bold text-green-600">
+        <nav>
+          <ul class="space-y-1">
+            <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+              <a href="/project/dashboard" class="flex items-center">
+                <span><i class="fa-solid fa-tachometer-alt icon"></i></span>
+                <span class="ml-5">Dashboard</span>
+              </a>
+            </li>
 
-        <!-- Sidebar -->
-        <aside class=" w-84 bg-white shadow-md p-5 flex flex-col">
-            <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="text-2xl font-bold text-green-600">
-            <nav class="mt-5">
-                <ul>
-                    <!-- Dashboard -->
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
-                        <a href="/project/dashboard" class="flex items-center">
-                            <span><i class="fa-solid fa-tachometer-alt icon"></i></span>
-                            <span class="ml-5">Dashboard</span>
-                        </a>
-                    </li>
-                    <!-- Romana -->
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
-                        <a href="/project/romana" class="flex items-center">
-                            <span><i class="fa-solid fa-weight-scale  icon "></i></span>
-                            <span class="ml-5">Romana</span>
-                        </a>
-                    </li>
-                    <!-- Compras -->
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
-                        <a href="/project/compras" class="flex items-center">
-                            <span><i class="fa-solid fa-cart-shopping icon"></i></span>
-                            <span class="ml-5">Compra de Materiales</span>
-                        </a>
-                    </li>
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
-                        <a href="/project/clasificacion" class="flex items-center">
-                            <span><i class="fa-solid fa-layer-group icon"></i></span>
-                            <span class="ml-5">Clasificacion de Materiales</span>
-                        </a>
-                    </li>
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
-                        <a href="/project/personas" class="flex items-center">
-                            <span><i class="fa-solid fa-user-clock icon"></i></span>
-                            <span class="ml-5">Personas</span>
-                        </a>
-                    </li>
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100  hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg ">
-                        <a href="/project/ventas" class="flex items-center">
-                            <span><i class="fa-solid fa-file-invoice-dollar icon"></i></span>
-                            <span class="ml-5">Ventas de Materiales </span>
-                        </a>
-                    </li>
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
-                        <a href="/project/inventario" class="flex items-center">
-                            <span><i class="fa-solid fa-boxes-stacked"></i></span>
-                            <span class="ml-5">Inventario</span>
-                        </a>
-                    </li>
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
-                        <a href="/project/productos" class="flex items-center">
-                            <span><i class="fa-solid fa-boxes-stacked"></i></span>
-                            <span class="ml-5">Productos</span>
-                        </a>
-                    </li>
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
-                        <a href="/project/categorias" class="flex items-center">
-                            <span><i class="fa-solid fa-boxes-stacked"></i></span>
-                            <span class="ml-5">Categorias</span>
-                        </a>
-                    </li>
-
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
-                        <a href="/project/roles" class="flex items-center">
-                            <span><i class="fa-solid fa-user-shield icon"></i></span>
-                            <span class="ml-5">Roles</span>
-                        </a>
-                    </li>
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
-                        <a href="/project/permisos" class="flex items-center">
-                            <span><i class="fa-solid fa-key icon"></i></span>
-                            <span class="ml-5">Permisos</span>
-                        </a>
-                    </li>
-                    <li
-                        class="p-3 rounded-lg hover:bg-green-100 hover:p-3 hover:bg-green-600 hover:text-white hover:rounded-lg">
-                        <a href="/project/modulos" class="flex items-center">
-                            <span><i class="fa-solid fa-cogs icon"></i></span> <!-- Icono de módulos (engranaje) -->
-                            <span class="ml-5">Modulos</span>
-                        </a>
-                    </li>
-
-
+            <li class="menu-item-group">
+              <details class="group">
+                <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+                  <div class="flex items-center">
+                    <span><i class="fa-solid fa-cogs icon"></i></span>
+                    <span class="ml-5">Procesos</span>
+                  </div>
+                  <span class="shrink-0 transition duration-300 group-open:rotate-180">
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                  </span>
+                </summary>
+                <ul class="ml-5 mt-1 space-y-1">
+                  <li
+                    class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white"
+                  >
+                    <a href="/project/romana" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-weight-scale icon"></i></span>
+                      <span class="ml-5">Romana</span>
+                    </a>
+                  </li>
+                  <li
+                    class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white"
+                  >
+                    <a href="/project/clasificacion" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-layer-group icon"></i></span>
+                      <span class="ml-5">Clasificacion de Materiales</span>
+                    </a>
+                  </li>
                 </ul>
-            </nav>
-        </aside>
+              </details>
+            </li>
+            <li class="menu-item-group">
+              <details class="group">
+                <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+                  <div class="flex items-center">
+                    <span><i class="fa-solid fa-cart-shopping icon"></i></span>
+                    <span class="ml-5">Gestionar Compras de Materiales</span>
+                  </div>
+                  <span class="shrink-0 transition duration-300 group-open:rotate-180">
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                  </span>
+                </summary>
+                <ul class="ml-5 mt-1 space-y-1">
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/compras" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-cart-shopping icon"></i></span>
+                      <span class="ml-5">Compras</span>
+                    </a>
+                  </li>
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/proveedores" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-truck icon"></i></span>
+                      <span class="ml-5">Proveedores</span>
+                    </a>
+                  </li>
+                </ul>
+              </details>
+            </li>
 
+            <li class="menu-item-group">
+              <details class="group">
+                <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+                  <div class="flex items-center">
+                    <span><i class="fa-solid fa-boxes-stacked icon"></i></span>
+                    <span class="ml-5">Gestión de Productos</span>
+                  </div>
+                  <span class="shrink-0 transition duration-300 group-open:rotate-180">
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                  </span>
+                </summary>
+                <ul class="ml-5 mt-1 space-y-1">
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/productos" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-box icon"></i></span>
+                      <span class="ml-5">Productos</span>
+                    </a>
+                  </li>
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/categorias" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-tags icon"></i></span>
+                      <span class="ml-5">Categorias</span>
+                    </a>
+                  </li>
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/tasas" class="flex items-center text-sm">
+                      <span><i class="fas fa-coins icon"></i></span>
+                      <span class="ml-5">Historico de Tasas BCV</span>
+                    </a>
+                  </li>
+                </ul>
+              </details>
+            </li>
 
+            <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+              <a href="/project/inventario" class="flex items-center">
+                <span><i class="fa-solid fa-warehouse icon"></i></span>
+                <span class="ml-5">Inventario</span>
+              </a>
+            </li>
+            <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+              <a href="/project/ventas" class="flex items-center">
+                <span><i class="fa-solid fa-file-invoice-dollar icon"></i></span>
+                <span class="ml-5">Ventas de Materiales</span>
+              </a>
+            </li>
+            <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+              <a href="/project/personas" class="flex items-center">
+                <span><i class="fa-solid fa-users icon"></i></span>
+                <span class="ml-5">Personas</span>
+              </a>
+            </li>
+            <li class="menu-item-group">
+              <details class="group">
+                <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+                  <div class="flex items-center">
+                    <span><i class="fa-solid fa-shield-halved icon"></i></span>
+                    <span class="ml-5">Seguridad</span>
+                  </div>
+                  <span class="shrink-0 transition duration-300 group-open:rotate-180">
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                  </span>
+                </summary>
+                <ul class="ml-5 mt-1 space-y-1">
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/roles" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-user-shield icon"></i></span>
+                      <span class="ml-5">Roles</span>
+                    </a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 </body>
 
-</html>
+<script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const currentPath = window.location.pathname;
+        const pathDisplay = document.getElementById("current-path-display");
+        if (pathDisplay) {
+          pathDisplay.textContent = currentPath;
+        }
+
+        const navLinks = document.querySelectorAll("aside nav a");
+
+        navLinks.forEach((link) => {
+          const linkPath = link.getAttribute("href");
+          const listItem = link.closest("li");
+
+          if (listItem) { 
+            listItem.classList.remove("bg-green-600", "text-white");
+
+            if (linkPath === currentPath) {
+              listItem.classList.add("bg-green-600", "text-white");
+              listItem.classList.remove("hover:bg-green-100", "hover:text-black");
+              const detailsParent = link.closest("details");
+              if (detailsParent) {
+                detailsParent.setAttribute("open", "");
+              }
+            }
+          }
+        });
+        const groupItems = document.querySelectorAll("li.menu-item-group");
+        groupItems.forEach(groupLi => {
+            const hasActiveChild = groupLi.querySelector('details li.bg-green-600');
+            if (!hasActiveChild) {
+                 groupLi.classList.remove("bg-green-600", "text-white");
+                 const summary = groupLi.querySelector('summary');
+                 if (summary) {
+                     summary.classList.remove("text-white");
+                 }
+            } else {
+                 const summary = groupLi.querySelector('summary');
+                 if (summary) {
+                     summary.classList.remove("bg-green-600"); 
+                 }
+            }
+        });
+
+
+      });
+    </script>

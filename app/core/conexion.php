@@ -7,7 +7,7 @@ class Conexion
     private $database;
     private $conn;
 
-    public function __construct($servidor = 'localhost', $username = 'root', $password = '', $database = 'project')
+    public function __construct($servidor = 'localhost', $username = 'root', $password = '', $database = 'bd_pda')
     {
         $this->servidor = $servidor;
         $this->username = $username;

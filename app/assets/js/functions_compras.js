@@ -1,7 +1,35 @@
 document.addEventListener("DOMContentLoaded", function () {
-  $('#TablaCompras').DataTable({ // Asocia la configuración al ID "TablaCompras"
-    aProcessing: true,
-    aServerSide: true,
+  // --- DataTable (se mantiene igual que antes) ---
+  $("#TablaCompras").DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: {
+      url: "compras/getComprasDataTable",
+      type: "GET",
+      dataSrc: "data",
+    },
+    columns: [
+      { data: "nro_compra", title: "Nro" },
+      { data: "fecha", title: "Fecha" },
+      { data: "proveedor_nombre", title: "Proveedor" },
+      { data: "total_general", title: "Total" },
+      {
+        data: null,
+        title: "Acciones",
+        orderable: false,
+        render: function (data, type, row) {
+          // Generar botones con íconos de Font Awesome
+          return `
+                <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idpersona="${row.idcompra}">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" data-idpersona="${row.idcompra}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              `;
+        },
+      },
+    ],
     language: {
       decimal: "",
       emptyTable: "No hay información",
@@ -22,115 +50,607 @@ document.addEventListener("DOMContentLoaded", function () {
         previous: "Anterior",
       },
     },
-    ajax: {
-      url: "Compras/getComprasData",
-      dataSrc: "", 
-    },
-    columns: [
-      { "data": "nro_compra" },
-      { "data": "fecha" },
-      { "data": "idproveedor" },
-      { "data": "idmaterial" },
-      { "data": "peso_neto" },
-      { "data": "descuento_porcentaje" },
-      { "data": "total" }
-    ],
     destroy: true,
     responsive: true,
     pageLength: 10,
     order: [[0, "asc"]],
   });
 
+  // --- Lógica del Modal de Nueva Compra ---
+  const modalNuevaCompra = document.getElementById("modalNuevaCompra");
+  const btnAbrirModalNuevaCompra = document.getElementById(
+    "btnAbrirModalNuevaCompra",
+  );
+  const btnCerrarModalNuevaCompra = document.getElementById(
+    "btnCerrarModalNuevaCompra",
+  );
+  const btnCancelarCompraModal = document.getElementById(
+    "btnCancelarCompraModal",
+  );
+  const formNuevaCompraModal = document.getElementById("formNuevaCompraModal");
+  const btnGuardarCompraModal = document.getElementById("btnGuardarCompraModal");
 
+  // Elementos del formulario del modal
+  const fechaCompraModal = document.getElementById("fecha_compra_modal");
+  const selectMonedaGeneralModal = document.getElementById(
+    "idmoneda_general_compra_modal",
+  );
+  const inputBuscarProveedorModal = document.getElementById(
+    "buscar_proveedor_modal",
+  );
+  const hiddenIdProveedorModal = document.getElementById(
+    "idproveedor_seleccionado_modal",
+  );
+  const divInfoProveedorModal = document.getElementById(
+    "proveedor_seleccionado_info_modal",
+  );
+  const selectProductoAgregarModal = document.getElementById(
+    "select_producto_agregar_modal",
+  );
+  const btnAgregarProductoDetalleModal = document.getElementById(
+    "btnAgregarProductoDetalleModal",
+  );
+  const cuerpoTablaDetalleCompraModal = document.getElementById(
+    "cuerpoTablaDetalleCompraModal",
+  );
+  const subtotalGeneralDisplayModal = document.getElementById(
+    "subtotal_general_display_modal",
+  );
+  const subtotalGeneralInputModal = document.getElementById(
+    "subtotal_general_input_modal",
+  );
+  const descuentoPorcentajeInputModal = document.getElementById(
+    "descuento_porcentaje_input_modal",
+  );
+  const montoDescuentoDisplayModal = document.getElementById(
+    "monto_descuento_display_modal",
+  );
+  const montoDescuentoInputModal = document.getElementById(
+    "monto_descuento_input_modal",
+  );
+  const totalGeneralDisplayModal = document.getElementById(
+    "total_general_display_modal",
+  );
+  const totalGeneralInputModal = document.getElementById(
+    "total_general_input_modal",
+  );
+  const observacionesCompraModal = document.getElementById(
+    "observaciones_compra_modal",
+  );
+  const mensajeErrorFormCompraModal = document.getElementById(
+    "mensajeErrorFormCompraModal",
+  );
 
-  /* Modal de Registro */
-  const openRegistrationModalBtn = document.getElementById('openRegistrationModalBtn');
-  const registrationModal = document.getElementById('registrationModal');
-  const registrationCloseBtn = document.getElementById('registrationCloseBtn');
-  const registrationCancelBtn = document.getElementById('registrationCancelBtn');
+  let detalleCompraItemsModal = []; // Array para los ítems del detalle en el modal
 
-  const openRegistrationModal = () => {
-    registrationModal.classList.remove('opacity-0', 'pointer-events-none');
-    registrationModal.classList.add('opacity-100');
-  };
+  function abrirModalNuevaCompra() {
+    // Resetear formulario y cargar datos iniciales
+    formNuevaCompraModal.reset();
+    detalleCompraItemsModal = [];
+    renderizarTablaDetalleModal(); // Limpia la tabla de detalles
+    hiddenIdProveedorModal.value = "";
+    divInfoProveedorModal.innerHTML = "";
+    divInfoProveedorModal.classList.add("hidden");
+    inputBuscarProveedorModal.value = "";
+    mensajeErrorFormCompraModal.textContent = "";
+    fechaCompraModal.valueAsDate = new Date(); // Fecha actual por defecto
 
-  const closeRegistrationModal = () => {
-    registrationModal.classList.remove('opacity-100');
-    registrationModal.classList.add('opacity-0', 'pointer-events-none');
-  };
+    cargarMonedasParaModal();
+    cargarProductosParaModal();
 
-  if(openRegistrationModalBtn) {
-    openRegistrationModalBtn.addEventListener('click', openRegistrationModal);
+    modalNuevaCompra.classList.remove("opacity-0", "pointer-events-none");
+    document.body.classList.add("overflow-hidden"); // Evitar scroll del fondo
   }
-  if(registrationCloseBtn) {
-    registrationCloseBtn.addEventListener('click', closeRegistrationModal);
-  }
-  if(registrationCancelBtn) {
-    registrationCancelBtn.addEventListener('click', closeRegistrationModal);
+
+  function cerrarModalNuevaCompra() {
+    modalNuevaCompra.classList.add("opacity-0", "pointer-events-none");
+    document.body.classList.remove("overflow-hidden");
   }
 
-  registrationModal.addEventListener('click', (e) => {
-    if (e.target === registrationModal) {
-      closeRegistrationModal();
+  if (btnAbrirModalNuevaCompra)
+    btnAbrirModalNuevaCompra.addEventListener("click", abrirModalNuevaCompra);
+  if (btnCerrarModalNuevaCompra)
+    btnCerrarModalNuevaCompra.addEventListener("click", cerrarModalNuevaCompra);
+  if (btnCancelarCompraModal)
+    btnCancelarCompraModal.addEventListener("click", cerrarModalNuevaCompra);
+
+  // Cerrar modal si se hace clic fuera del contenido (en el overlay)
+  modalNuevaCompra.addEventListener("click", (e) => {
+    if (e.target === modalNuevaCompra) {
+      cerrarModalNuevaCompra();
     }
   });
 
-  /* Modal de Eliminación */
-  const openDeletionModalBtn = document.getElementById('openDeletionModalBtn');
-  const deletionModal = document.getElementById('deletionModal');
-  const deletionCloseBtn = document.getElementById('deletionCloseBtn');
-  const deletionCancelBtn = document.getElementById('deletionCancelBtn');
-
-  const openDeletionModal = () => {
-    deletionModal.classList.remove('opacity-0', 'pointer-events-none');
-    deletionModal.classList.add('opacity-100');
-  };
-
-  const closeDeletionModal = () => {
-    deletionModal.classList.remove('opacity-100');
-    deletionModal.classList.add('opacity-0', 'pointer-events-none');
-  };
-
-  if(openDeletionModalBtn) {
-    openDeletionModalBtn.addEventListener('click', openDeletionModal);
-  }
-  if(deletionCloseBtn) {
-    deletionCloseBtn.addEventListener('click', closeDeletionModal);
-  }
-  if(deletionCancelBtn) {
-    deletionCancelBtn.addEventListener('click', closeDeletionModal);
-  }
-
-  deletionModal.addEventListener('click', (e) => {
-    if (e.target === deletionModal) {
-      closeDeletionModal();
+  async function cargarMonedasParaModal() {
+    selectMonedaGeneralModal.innerHTML =
+      '<option value="">Cargando...</option>';
+    try {
+      const response = await fetch(
+        'compras/getListaMonedasParaFormulario'
+      );
+      if (!response.ok) throw new Error("Error en respuesta de monedas");
+      const monedas = await response.json();
+      selectMonedaGeneralModal.innerHTML =
+        '<option value="">Seleccione Moneda</option>';
+      monedas.forEach((moneda) => {
+        const option = document.createElement("option");
+        option.value = moneda.idmoneda;
+        if(moneda.codigo_moneda === "USD") {
+          $simbolo = "$";
+        }else if(moneda.codigo_moneda === "EUR") {
+          $simbolo = "€";
+        }else if(moneda.codigo_moneda === "VES") {
+          $simbolo = "Bs.";
+        }
+        option.textContent = `${moneda.codigo_moneda} (${$simbolo})`;
+        selectMonedaGeneralModal.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error al cargar monedas:", error);
+      selectMonedaGeneralModal.innerHTML =
+        '<option value="">Error al cargar</option>';
     }
+  }
+
+  async function cargarProductosParaModal() {
+    selectProductoAgregarModal.innerHTML =
+      '<option value="">Cargando...</option>';
+    try {
+      const response = await fetch(
+        `compras/getListaProductosParaFormulario`,
+      ); // Necesitarás este endpoint
+      if (!response.ok) throw new Error("Error en respuesta de productos");
+      const productos = await response.json();
+      selectProductoAgregarModal.innerHTML =
+        '<option value="">Seleccione producto...</option>';
+      productos.forEach((producto) => {
+        const option = document.createElement("option");
+        option.value = producto.idproducto;
+        option.dataset.idcategoria = producto.idcategoria;
+        option.dataset.nombre = producto.nombre_producto;
+        option.dataset.precio = producto.precio_referencia_compra || "0.00";
+        option.dataset.idmoneda = producto.idmoneda_producto || "";
+        option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria})`;
+        selectProductoAgregarModal.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error al cargar productos:", error);
+      selectProductoAgregarModal.innerHTML =
+        '<option value="">Error al cargar</option>';
+    }
+  }
+
+  // Autocompletar para buscar proveedor en el MODAL
+  $(inputBuscarProveedorModal).autocomplete({
+    source: function (request, response) {
+      $.ajax({
+        url: `compras/buscarProveedores`,
+        dataType: "json",
+        data: { term: request.term },
+        success: function (data) {
+          response(
+            data.map((item) => ({
+              label: `${item.nombre} ${item.apellido || ""} (${item.identificacion})`,
+              value: item.idproveedor,
+              nombre: `${item.nombre} ${item.apellido || ""}`,
+              identificacion: item.identificacion,
+            })),
+          );
+        },
+      });
+    },
+    minLength: 2,
+    select: function (event, ui) {
+      hiddenIdProveedorModal.value = ui.item.value;
+      divInfoProveedorModal
+        .html(
+          `Sel: <strong>${ui.item.nombre}</strong> (ID: ${ui.item.identificacion})`,
+        )
+        .removeClass("hidden");
+      inputBuscarProveedorModal.value = ui.item.label;
+      return false;
+    },
+    change: function (event, ui) {
+      if (!ui.item) {
+        hiddenIdProveedorModal.value = "";
+        divInfoProveedorModal.html("").addClass("hidden");
+      }
+    },
   });
 
-});
+  // Lógica para agregar productos al detalle en el MODAL
+  if (btnAgregarProductoDetalleModal && selectProductoAgregarModal) {
+    btnAgregarProductoDetalleModal.addEventListener("click", function () {
+      const selectedOption =
+        selectProductoAgregarModal.options[
+          selectProductoAgregarModal.selectedIndex
+        ];
+      if (!selectedOption.value) {
+        alert("Seleccione un producto.");
+        return;
+      }
+      const idproducto = selectedOption.value;
+      if (
+        detalleCompraItemsModal.find((item) => item.idproducto === idproducto)
+      ) {
+        alert("Este producto ya ha sido agregado.");
+        return;
+      }
 
-document.addEventListener("DOMContentLoaded", function() {
-  const registrationForm = document.getElementById("registrationForm"); 
-  registrationForm.addEventListener("submit", function(e) {
-      e.preventDefault(); 
-      const formData = new FormData(registrationForm);
+      const monedaGeneralSeleccionada =
+        selectMonedaGeneralModal.options[
+          selectMonedaGeneralModal.selectedIndex
+        ];
+      const simboloMonedaGeneral = monedaGeneralSeleccionada
+        ? monedaGeneralSeleccionada.dataset.simbolo
+        : "$";
 
-      fetch("Compras/setCompra", { 
+      const item = {
+        idproducto: idproducto,
+        nombre: selectedOption.dataset.nombre,
+        idcategoria: parseInt(selectedOption.dataset.idcategoria),
+        precio_unitario:
+          parseFloat(selectedOption.dataset.precio) || 0,
+        idmoneda_item:
+          selectedOption.dataset.idmoneda || selectMonedaGeneralModal.value,
+        simbolo_moneda_item:
+          selectedOption.dataset.monedaSimbolo || simboloMonedaGeneral,
+        // Campos específicos se llenarán en la tabla
+        no_usa_vehiculo: false, // Default
+        peso_vehiculo: 0,
+        peso_bruto: 0,
+        peso_neto_directo: 0,
+        cantidad_unidad: 1, // Default para productos por unidad
+      };
+      detalleCompraItemsModal.push(item);
+      renderizarTablaDetalleModal();
+      selectProductoAgregarModal.value = "";
+    });
+  }
+
+  function renderizarTablaDetalleModal() {
+    cuerpoTablaDetalleCompraModal.innerHTML = "";
+    detalleCompraItemsModal.forEach((item, index) => {
+      const tr = document.createElement("tr");
+      tr.classList.add("border-b", "hover:bg-gray-50");
+      tr.dataset.index = index;
+
+      let infoEspecificaHtml = "";
+      if (item.idcategoria === 1) {
+        // Materiales por Peso
+        infoEspecificaHtml = `
+          <div class="space-y-1">
+            <div>
+              <label class="flex items-center text-xs">
+                <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_modal" ${item.no_usa_vehiculo ? "checked" : ""}> No usa vehículo
+              </label>
+            </div>
+            <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
+              P.Veh: <input type="number" step="0.01" class="form-input-xs peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
+              P.Bru: <input type="number" step="0.01" class="form-input-xs peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
+            </div>
+            <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
+              P.Neto: <input type="number" step="0.01" class="form-input-xs peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
+            </div>
+            Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(item).toFixed(2)}</strong>
+          </div>`;
+      } else {
+        infoEspecificaHtml = `
+          <div>
+            Cant: <input type="number" step="0.01" class="form-input-xs cantidad_unidad_modal" value="${item.cantidad_unidad || "1"}" placeholder="1">
+          </div>`;
+      }
+
+      tr.innerHTML = `
+        <td class="py-1 px-1 text-xs">${item.nombre}</td>
+        <td class="py-1 px-1 text-xs">${infoEspecificaHtml}</td>
+        <td class="py-1 px-1 text-xs">
+            ${item.simbolo_moneda_item} <input type="number" step="0.01" class="form-input-sm precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
+        </td>
+        <td class="py-1 px-1 text-xs subtotal_linea_display_modal">${item.simbolo_moneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
+        <td class="py-1 px-1"><button type="button" class="text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs">X</button></td>
+      `;
+      cuerpoTablaDetalleCompraModal.appendChild(tr);
+    });
+    addEventListenersToDetalleInputsModal();
+    calcularTotalesGeneralesModal();
+  }
+
+  function addEventListenersToDetalleInputsModal() {
+    document
+      .querySelectorAll("#cuerpoTablaDetalleCompraModal tr")
+      .forEach((row) => {
+        const index = parseInt(row.dataset.index);
+        if (isNaN(index) || index >= detalleCompraItemsModal.length) return; // Safety check
+        const item = detalleCompraItemsModal[index];
+
+        const cbNoUsaVehiculo = row.querySelector(
+          ".no_usa_vehiculo_cb_modal",
+        );
+        if (cbNoUsaVehiculo) {
+          cbNoUsaVehiculo.addEventListener("change", function (e) {
+            item.no_usa_vehiculo = e.target.checked;
+            const camposPesoVehiculo = row.querySelector(
+              ".campos_peso_vehiculo_modal",
+            );
+            const campoPesoNetoDirecto = row.querySelector(
+              ".campo_peso_neto_directo_modal",
+            );
+            if (e.target.checked) {
+              camposPesoVehiculo.classList.add("hidden");
+              campoPesoNetoDirecto.classList.remove("hidden");
+              item.peso_vehiculo = 0;
+              item.peso_bruto = 0;
+            } else {
+              camposPesoVehiculo.classList.remove("hidden");
+              campoPesoNetoDirecto.classList.add("hidden");
+              item.peso_neto_directo = 0;
+            }
+            actualizarCalculosFilaModal(row, item);
+          });
+        }
+
+        row
+          .querySelectorAll(
+            ".peso_vehiculo_modal, .peso_bruto_modal, .peso_neto_directo_modal, .cantidad_unidad_modal, .precio_unitario_item_modal",
+          )
+          .forEach((input) => {
+            input.addEventListener("input", function (e) {
+              const fieldName = e.target.classList.contains(
+                "peso_vehiculo_modal",
+              )
+                ? "peso_vehiculo"
+                : e.target.classList.contains("peso_bruto_modal")
+                  ? "peso_bruto"
+                  : e.target.classList.contains("peso_neto_directo_modal")
+                    ? "peso_neto_directo"
+                    : e.target.classList.contains("cantidad_unidad_modal")
+                      ? "cantidad_unidad"
+                      : "precio_unitario";
+              item[fieldName] = parseFloat(e.target.value) || 0;
+              actualizarCalculosFilaModal(row, item);
+            });
+          });
+
+        row
+          .querySelector(".btnEliminarItemDetalleModal")
+          .addEventListener("click", function () {
+            detalleCompraItemsModal.splice(index, 1);
+            renderizarTablaDetalleModal();
+          });
+      });
+  }
+
+  function actualizarCalculosFilaModal(rowElement, item) {
+    const pesoNetoDisplay = rowElement.querySelector(
+      ".peso_neto_calculado_display_modal",
+    );
+    if (pesoNetoDisplay) {
+      pesoNetoDisplay.textContent = calcularPesoNetoItemModal(item).toFixed(2);
+    }
+    rowElement.querySelector(
+      ".subtotal_linea_display_modal",
+    ).textContent = `${item.simbolo_moneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}`;
+    calcularTotalesGeneralesModal();
+  }
+
+  function calcularPesoNetoItemModal(item) {
+    if (item.idcategoria === 1) {
+      if (item.no_usa_vehiculo) {
+        return parseFloat(item.peso_neto_directo) || 0;
+      } else {
+        const bruto = parseFloat(item.peso_bruto) || 0;
+        const vehiculo = parseFloat(item.peso_vehiculo) || 0;
+        return Math.max(0, bruto - vehiculo);
+      }
+    }
+    return 0;
+  }
+
+  function calcularSubtotalLineaItemModal(item) {
+    const precioUnitario = parseFloat(item.precio_unitario) || 0;
+    let cantidadBase = 0;
+    if (item.idcategoria === 1) {
+      cantidadBase = calcularPesoNetoItemModal(item);
+    } else {
+      cantidadBase = parseFloat(item.cantidad_unidad) || 0;
+    }
+    item.subtotal_linea = cantidadBase * precioUnitario;
+    return item.subtotal_linea;
+  }
+
+  function calcularTotalesGeneralesModal() {
+    let subtotalGeneral = 0;
+    const monedaGeneralOption =
+      selectMonedaGeneralModal.options[
+        selectMonedaGeneralModal.selectedIndex
+      ];
+    const monedaGeneralSimbolo = monedaGeneralOption
+      ? monedaGeneralOption.dataset.simbolo
+      : "$";
+
+    detalleCompraItemsModal.forEach((item) => {
+      // TODO: Implementar conversión de moneda si item.idmoneda_item es diferente a selectMonedaGeneralModal.value
+      subtotalGeneral += parseFloat(item.subtotal_linea) || 0;
+    });
+
+    subtotalGeneralDisplayModal.value = `${monedaGeneralSimbolo} ${subtotalGeneral.toFixed(2)}`;
+    subtotalGeneralInputModal.value = subtotalGeneral.toFixed(2);
+
+    const descuentoPorcentaje =
+      parseFloat(descuentoPorcentajeInputModal.value) || 0;
+    const montoDescuento = (subtotalGeneral * descuentoPorcentaje) / 100;
+    montoDescuentoDisplayModal.value = `${monedaGeneralSimbolo} ${montoDescuento.toFixed(2)}`;
+    montoDescuentoInputModal.value = montoDescuento.toFixed(2);
+
+    const totalGeneral = subtotalGeneral - montoDescuento;
+    totalGeneralDisplayModal.value = `${monedaGeneralSimbolo} ${totalGeneral.toFixed(2)}`;
+    totalGeneralInputModal.value = totalGeneral.toFixed(2);
+  }
+
+  if (descuentoPorcentajeInputModal)
+    descuentoPorcentajeInputModal.addEventListener(
+      "input",
+      calcularTotalesGeneralesModal,
+    );
+  if (selectMonedaGeneralModal)
+    selectMonedaGeneralModal.addEventListener(
+      "change",
+      calcularTotalesGeneralesModal,
+    ); // También al cambiar moneda general
+
+  // Guardar Compra desde el MODAL
+  if (btnGuardarCompraModal) {
+    btnGuardarCompraModal.addEventListener("click", async function () {
+      // Validaciones
+      mensajeErrorFormCompraModal.textContent = "";
+      if (!hiddenIdProveedorModal.value) {
+        mensajeErrorFormCompraModal.textContent =
+          "Debe seleccionar un proveedor.";
+        return;
+      }
+      if (detalleCompraItemsModal.length === 0) {
+        mensajeErrorFormCompraModal.textContent =
+          "Debe agregar al menos un producto al detalle.";
+        return;
+      }
+      if (!selectMonedaGeneralModal.value) {
+        mensajeErrorFormCompraModal.textContent =
+          "Debe seleccionar una moneda general para la compra.";
+        return;
+      }
+      for (const item of detalleCompraItemsModal) {
+        const precio = parseFloat(item.precio_unitario) || 0;
+        let cantidadValida = false;
+        if (item.idcategoria === 1) {
+          cantidadValida = calcularPesoNetoItemModal(item) > 0;
+        } else {
+          cantidadValida = (parseFloat(item.cantidad_unidad) || 0) > 0;
+        }
+        if (precio <= 0 || !cantidadValida) {
+          mensajeErrorFormCompraModal.textContent = `El producto "${item.nombre}" tiene precio o cantidad/peso inválido.`;
+          return;
+        }
+      }
+
+      const formData = new FormData(formNuevaCompraModal); // Recoge datos del form
+      formData.append(
+        "productos_detalle",
+        JSON.stringify(detalleCompraItemsModal),
+      );
+      // Asegurarse que los inputs de totales también se envíen si no están en el form
+      formData.set(
+        "subtotal_general_input",
+        subtotalGeneralInputModal.value,
+      );
+      formData.set(
+        "descuento_porcentaje_input",
+        descuentoPorcentajeInputModal.value,
+      );
+      formData.set(
+        "monto_descuento_input",
+        montoDescuentoInputModal.value,
+      );
+      formData.set("total_general_input", totalGeneralInputModal.value);
+
+      btnGuardarCompraModal.disabled = true;
+      btnGuardarCompraModal.textContent = "Guardando...";
+
+      try {
+        const response = await fetch(`${URL_BASE}/Compras/setCompra`, {
           method: "POST",
           body: formData,
-      })
-      .then(response => response.json())
-      .then(data => {
-          if (data.status) {
-              alert(data.message); 
-              location.reload(); 
-          } else {
-              alert(data.message); 
-          }
-      })
-      .catch(error => console.error("Error:", error));
-  });
-});
+        });
+        const data = await response.json();
+        alert(data.message); // O usar un sistema de notificaciones más elegante
+        if (data.status) {
+          cerrarModalNuevaCompra();
+          $("#TablaCompras").DataTable().ajax.reload(); // Recargar DataTable
+        } else {
+          mensajeErrorFormCompraModal.textContent =
+            data.message || "Error al guardar.";
+        }
+      } catch (error) {
+        console.error("Error al guardar compra:", error);
+        mensajeErrorFormCompraModal.textContent =
+          "Ocurrió un error de conexión al guardar.";
+      } finally {
+        btnGuardarCompraModal.disabled = false;
+        btnGuardarCompraModal.textContent = "Guardar Compra";
+      }
+    });
+  }
 
+  // --- Lógica del Modal de Nuevo Proveedor (adaptada para abrirse desde el modal de compra) ---
+  const modalNuevoProveedor = document.getElementById("modalNuevoProveedor");
+  const btnAbrirModalNuevoProveedorDENTRO = document.getElementById(
+    "btnAbrirModalNuevoProveedorDENTRO",
+  ); // Botón dentro del modal de compra
+  const btnCerrarModalNuevoProveedor = document.getElementById(
+    "btnCerrarModalNuevoProveedor",
+  );
+  const btnCancelarModalNuevoProveedor = document.getElementById(
+    "btnCancelarModalNuevoProveedor",
+  );
+  const formNuevoProveedor = document.getElementById("formNuevoProveedor");
 
- 
+  function abrirModalProv() {
+    formNuevoProveedor.reset();
+    modalNuevoProveedor.classList.remove("opacity-0", "pointer-events-none");
+  }
+  function cerrarModalProv() {
+    modalNuevoProveedor.classList.add("opacity-0", "pointer-events-none");
+  }
+
+  if (btnAbrirModalNuevoProveedorDENTRO)
+    btnAbrirModalNuevoProveedorDENTRO.addEventListener("click", abrirModalProv);
+  if (btnCerrarModalNuevoProveedor)
+    btnCerrarModalNuevoProveedor.addEventListener("click", cerrarModalProv);
+  if (btnCancelarModalNuevoProveedor)
+    btnCancelarModalNuevoProveedor.addEventListener("click", cerrarModalProv);
+
+  if (formNuevoProveedor) {
+    formNuevoProveedor.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(formNuevoProveedor);
+      // Aquí podrías añadir una validación simple antes de enviar
+      const btnSubmitProveedor = formNuevoProveedor.querySelector('button[type="submit"]');
+      btnSubmitProveedor.disabled = true;
+      btnSubmitProveedor.textContent = "Guardando...";
+
+      try {
+        const response = await fetch(
+          `${URL_BASE}/Compras/registrarNuevoProveedor`,
+          {
+            method: "POST",
+            body: formData,
+          },
+        );
+        const data = await response.json();
+        alert(data.message);
+        if (data.status) {
+          // Actualizar el campo de proveedor en el modal de compra
+          hiddenIdProveedorModal.value = data.idproveedor;
+          const nombreCompletoProv = `${formData.get("nombre_proveedor_nuevo")} ${formData.get("apellido_proveedor_nuevo") || ""}`.trim();
+          divInfoProveedorModal
+            .html(
+              `Sel: <strong>${nombreCompletoProv}</strong> (ID: ${formData.get("identificacion_proveedor_nuevo")})`,
+            )
+            .removeClass("hidden");
+          inputBuscarProveedorModal.value = `${nombreCompletoProv} (${formData.get("identificacion_proveedor_nuevo")})`;
+          cerrarModalProv();
+        }
+      } catch (error) {
+        console.error("Error al registrar proveedor:", error);
+        alert("Error de conexión al registrar proveedor.");
+      } finally {
+        btnSubmitProveedor.disabled = false;
+        btnSubmitProveedor.textContent = "Guardar Proveedor";
+      }
+    });
+  }
+}); 
+
+function verCompra(idcompra) {
+  alert("Ver detalle de la compra ID: " + idcompra);
+}

@@ -4,8 +4,8 @@ require_once("app/core/mysql.php");
 
 class productosModel extends Mysql
 {
+    private $conexionObjeto;
     private $db;
-    private $conexion;
 
     private $idproducto;
     private $nombre;
@@ -14,14 +14,22 @@ class productosModel extends Mysql
     private $precio;
     private $existencia;
     private $idcategoria;
+    private $moneda;
     private $estatus;
 
     public function __construct()
     {
-        $this->conexion = new Conexion();
-        $this->db = $this->conexion->connectGeneral();
-        parent::__construct();
+        $this->conexionObjeto = new Conexion();
+        $this->db = $this->conexionObjeto->connect();
     }
+
+    public function __destruct()
+    {
+        if ($this->conexionObjeto) {
+            $this->conexionObjeto->disconnect();
+        }
+    }
+
 
     // Métodos Getters y Setters
     public function getIdproducto() {
@@ -88,30 +96,50 @@ class productosModel extends Mysql
         $this->estatus = $estatus;
     }
 
-    // Método para seleccionar todos los productos activos
-    public function SelectAllProductos() {
-        $sql = "SELECT 
-                    idproducto, 
-                    nombre, 
-                    descripcion, 
-                    unidad_medida, 
-                    precio, 
-                    existencia, 
-                    idcategoria, 
-                    estatus, 
-                    fecha_creacion, 
-                    ultima_modificacion 
-                FROM producto 
-                WHERE estatus = 'ACTIVO'";
-        return $this->searchAll($sql);
+    public function getMoneda() {
+        return $this->moneda;
     }
+
+    public function setMoneda($moneda) {
+        $this->moneda = $moneda;
+    }
+    
+public function SelectAllProductos() {
+    $sql = "SELECT 
+                    p.idproducto, 
+                    p.nombre, 
+                    p.descripcion, 
+                    p.unidad_medida, 
+                    p.precio, 
+                    p.existencia, 
+                    c.nombre AS nombre_categoria,
+                    p.idcategoria,
+                    p.moneda,                
+                    p.estatus, 
+                    p.fecha_creacion, 
+                    p.ultima_modificacion
+                FROM 
+                    producto p 
+                LEFT JOIN 
+                    categoria c ON p.idcategoria = c.idcategoria 
+                WHERE 
+                    p.estatus = 'activo'";
+    try {
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("ProductosModel: Error al seleccionar todos los productos con categoría - " . $e->getMessage());
+        return [];
+    }
+}
+
 
 
     public function insertProducto($data)
     {
         $sql = "INSERT INTO producto (
-                    nombre, descripcion, unidad_medida, precio, existencia, idcategoria, estatus
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    nombre, descripcion, unidad_medida, precio, existencia, idcategoria, moneda, estatus
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     
         $stmt = $this->db->prepare($sql);
         $arrValues = [
@@ -121,6 +149,7 @@ class productosModel extends Mysql
             $data['precio'],
             $data['existencia'],
             $data['idcategoria'],
+            $data['moneda'],
             $data['estatus']
         ];
     
@@ -143,7 +172,8 @@ class productosModel extends Mysql
                     unidad_medida = ?, 
                     precio = ?, 
                     existencia = ?, 
-                    idcategoria = ?, 
+                    idcategoria = ?,
+                    moneda = ?,
                     estatus = ? 
                 WHERE idproducto = ?";
     
@@ -155,6 +185,7 @@ class productosModel extends Mysql
             $data['precio'],
             $data['existencia'],
             $data['idcategoria'],
+            $data['moneda'],
             $data['estatus'],
             $data['idproducto']
         ];
@@ -178,6 +209,7 @@ class productosModel extends Mysql
             $this->setPrecio($data['precio']);
             $this->setExistencia($data['existencia']);
             $this->setIdcategoria($data['idcategoria']);
+            $this->setMoneda($data['moneda']);
             $this->setEstatus($data['estatus']);
         }
 
@@ -185,7 +217,13 @@ class productosModel extends Mysql
     }
     public function SelectAllCategorias()
     {
-        $sql = "SELECT idcategoria, nombre FROM categoria WHERE estatus = 'ACTIVO'";
-        return $this->searchAll($sql);
+        $sql = "SELECT * FROM categoria WHERE estatus = 'activo'";
+        try {
+            $stmt = $this->db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("CategoriasModel: Error al seleccionar todos las categorias- " . $e->getMessage());
+            return [];
+        }
     }
 }
