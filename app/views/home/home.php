@@ -1,4 +1,6 @@
+<?php require_once '../../controllers/sesion.php';?>
 <?php require_once '../../../public/header.php'; ?>
+
         <!-- Main Content -->
         <main class="flex-1 p-6">
             <div class="flex justify-between items-center">
