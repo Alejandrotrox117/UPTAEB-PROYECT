@@ -138,12 +138,28 @@
                 <span class="ml-5">Ventas de Materiales</span>
               </a>
             </li>
-            <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-              <a href="/project/personas" class="flex items-center">
-                <span><i class="fa-solid fa-users icon"></i></span>
-                <span class="ml-5">Personas</span>
-              </a>
+            <li class="menu-item-group">
+              <details class="group">
+                <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+                  <div class="flex items-center">
+                    <span><i class="fa-solid fa-shield-halved icon"></i></span>
+                    <span class="ml-5">Personas</span>
+                  </div>
+                  <span class="shrink-0 transition duration-300 group-open:rotate-180">
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                  </span>
+                </summary>
+                <ul class="ml-5 mt-1 space-y-1">
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/clientes" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-user-shield icon"></i></span>
+                      <span class="ml-5">Clientes</span>
+                    </a>
+                  </li>
+                </ul>
+              </details>
             </li>
+           
             <li class="menu-item-group">
               <details class="group">
                 <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
