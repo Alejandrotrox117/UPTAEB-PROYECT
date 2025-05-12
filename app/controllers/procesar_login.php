@@ -1,7 +1,8 @@
+
 <?php require "../models/Usuario.php"; ?>
 
-<?php  
-if (isset($_POST['ingresar'])) {
+ <?php  
+ if (isset($_POST['ingresar'])) {
     $username = $_POST['email'];
     $password = $_POST['password'];
 
@@ -54,5 +55,6 @@ if (isset($_POST['ingresar'])) {
     echo "<script>alert('Ups, ha ocurrido un Error');</script>";
     echo "<script>window.location = '../../index.php';</script>";
     exit;
-}
-?>
+} 
+?> 
+ 

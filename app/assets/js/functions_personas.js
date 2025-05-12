@@ -189,8 +189,7 @@ function abrirModalPersonaParaEdicion(idpersona) {
       document.getElementById("rif").value = persona.rif || "";
       document.getElementById("tipo").value = persona.tipo || "";
       document.getElementById("genero").value = persona.genero || "";
-      document.getElementById("fecha_nacimiento").value =
-        persona.fecha_nacimiento || "";
+      document.getElementById("fecha_nacimiento").value = persona.fecha_nacimiento || "";
       document.getElementById("telefono_principal").value =
         persona.telefono_principal || "";
       document.getElementById("correo_electronico").value =

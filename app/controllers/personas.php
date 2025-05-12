@@ -1,226 +1,225 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
-//ini_set('display_errors', 1);
-//ini_set('display_startup_errors', 1);
-//error_reporting(E_ALL);
+
+
 class personas extends Controllers
 {
-
-
-
-    public function set_model($model)
-    {
-        $this->model = $model;
-    }
-
-    public function get_model()
-    {
-        return $this->model;
-    }
 
     public function __construct()
     {
         parent::__construct();
+        $this->model = new PersonasModel();
     }
 
     public function index()
     {
-        $data['page_title'] = "Gestión de Personas";
-        $data['page_name'] = "Personas";
-        $data['page_functions_js'] = "functions_personas.js";
+        $this->views->getView($this, "personas");
+    }
+
+    public function personas($params = null)
+    {
+        $data['page_id'] = 1;
+        $data["page_title"] = "Pagina principal";
+        $data["tag_page"] = "La pradera de pavia";
+        $data["page_name"] = "Personas";
+
+        // Verifica si hay parámetros
+        if ($params) {
+            echo "Parámetros recibidos: " . $params;
+        }
+
         $this->views->getView($this, "personas", $data);
     }
-    public function getPersonasData()
+
+
+    public function ConsultarPersonas()
     {
+        session_start();
+        $user = $_SESSION['user']['idrol'];
 
-        $arrData = $this->get_model()->SelectAllPersonas();
+        // Llamar a la función ConsultarPersonas y obtener los resultados
+        $resultados = $this->model->ConsultarPersonas($user);
 
-
-        $response = [
-            "draw" => intval($_GET['draw']),
-            "recordsTotal" => count($arrData),
-            "recordsFiltered" => count($arrData),
-            "data" => $arrData
-        ];
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
+        // Verificar si se encontraron resultados
+        if ($resultados) {
+            // Si hay resultados, devolver success: true
+            echo json_encode([
+                'success' => true,
+                'personas' => $resultados
+            ]);
+        } else {
+            // Si no se encontraron resultados, devolver success: false
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se encontraron personas.'
+            ]);
+        }
     }
-    public function createPersona()
+
+    public function consultarunaPersona()
     {
-        try {
-            $json = file_get_contents('php://input'); // Lee los datos JSON enviados por el frontend
-            $data = json_decode($json, true); // Decodifica los datos JSON
-    
-            // Depuración: Imprime los datos recibidos
-            error_log(print_r($data, true));
-    
-            // Validar que los datos no sean nulos
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-                exit();
+        header("Content-Type: application/json");
+
+        // Verificar si el parámetro 'id' está presente en la URL
+        if (!isset($_GET['id'])) {
+            echo json_encode(['success' => false, 'message' => 'Falta el parámetro ID.']);
+            return;
+        }
+
+        // Sanitizar el parámetro 'id' para evitar inyecciones SQL
+        $id = intval($_GET['id']);
+
+        // Verificar que el id sea válido
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID inválido.']);
+            return;
+        }
+
+        // Obtener el rol por ID
+        $persona = $this->model->getpersonaById($id);
+
+        // Verificar si el rol existe
+        if ($persona) {
+            echo json_encode(['success' => true, 'persona' => $persona]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Persona no encontrado.']);
+        }
+    }
+
+
+    public function eliminar()
+    {
+        // Verificar que el parámetro ID está presente
+        if (!isset($_GET['id'])) {
+            echo json_encode(['success' => false, 'message' => 'Falta el parámetro ID.']);
+            return;
+        }
+
+        // Sanitizar el parámetro 'id' para evitar inyecciones SQL
+        $id = intval($_GET['id']);
+
+        // Iniciar sesión si no está ya iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start(); // Inicia la sesión si no está iniciada
+        }
+
+        // Verificar si el usuario está autenticado y si la clave 'user' existe en la sesión
+        if (!isset($_SESSION['user']) || !isset($_SESSION['user']['idpersona'])) {
+            echo json_encode(['success' => false, 'message' => 'No estás autenticado.']);
+            return;
+        }
+
+        $usuarioAutenticadoId = $_SESSION['user']['idpersona']; // Obtener el ID del usuario autenticado
+
+        // Verificar que no sea el usuario autenticado quien está intentando desactivarse
+        if ($usuarioAutenticadoId == $id) {
+            // Si el usuario intenta desactivarse a sí mismo, lanzar un error
+            echo json_encode(['success' => false, 'message' => 'No puedes desactivarte a ti mismo.']);
+            return;
+        }
+
+        // Llamar al método eliminarUsuario para desactivar tanto el usuario como la persona
+        $resultado = $this->model->eliminarUsuario($id); // Asegúrate de que este método maneje correctamente los parámetros
+
+        // Verificar si la desactivación fue exitosa
+        if ($resultado) {
+            echo json_encode(['success' => true, 'message' => 'Usuario y persona desactivados correctamente.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al desactivar usuario y persona.']);
+        }
+    }
+
+
+    public function guardar()
+{ 
+    // Asegúrate de que la solicitud sea POST
+    try {
+        header("Content-Type: application/json");
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Methods: POST");
+        header("Access-Control-Allow-Headers: Content-Type");
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+            // Obtener los datos JSON del cuerpo de la solicitud
+           
+            
+            // Si los datos no son válidos, devolver un error
+            if (!$data) {
+                echo json_encode(['success' => false, 'message' => 'Datos no válidos.']);
+                return;
             }
+
+            
     
-            // Extraer los datos del JSON
-            $nombre = trim($data['nombre'] ?? '');
-            $apellido = trim($data['apellido'] ?? '');
-            $cedula = trim($data['cedula'] ?? '');
-            $rif = trim($data['rif'] ?? '');
-            $tipo = trim($data['tipo'] ?? '');
-            $genero = trim($data['genero'] ?? '');
-            $fecha_nacimiento = trim($data['fecha_nacimiento'] ?? '');
-            $telefono_principal = trim($data['telefono_principal'] ?? '');
-            $correo_electronico = trim($data['correo_electronico'] ?? '');
-            $direccion = trim($data['direccion'] ?? '');
-            $ciudad = trim($data['ciudad'] ?? '');
-            $estado = trim($data['estado'] ?? '');
-            $pais = trim($data['pais'] ?? '');
-            $estatus = trim($data['estatus'] ?? '');
+            // Recibir datos del formulario desde el JSON
+            $nombre = $data['nombre'] ?? '';
+            $apellido = $data['apellido'] ?? '';
+            $cedula = $data['cedula'] ?? '';
+            $rif = $data['rif'] ?? '';
+            $telefono = $data['telefono'] ?? '';
+            $tipo = $data['tipo'] ?? '';
+            $genero = $data['genero'] ?? '';
+            $fechaNacimiento = $data['fecha_nacimiento'] ?? '';
+            $estado = $data['estado'] ?? '';
+            $ciudad = $data['ciudad'] ?? '';
+            $pais = $data['pais'] ?? '';
+            $observaciones = $data['observaciones'] ?? '';
+            $crearUsuario = $data['crear_usuario'] ?? '0';
+            $correo = $data['correo_electronico'] ?? '';
+            $clave = $data['clave'] ?? '';
+            $rol = $data['rol'] ??'';
     
-            // Validar campos obligatorios
+            // Validar datos (ejemplo simple)
             if (empty($nombre) || empty($apellido) || empty($cedula)) {
-                echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-                exit();
+                echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
+                return;
             }
     
-            // Insertar los datos usando el modelo
-            $insertData = $this->model->insertPersona([
-                "nombre" => $nombre,
-                "apellido" => $apellido,
-                "cedula" => $cedula,
-                "rif" => $rif,
-                "tipo" => $tipo,
-                "genero" => $genero,
-                "fecha_nacimiento" => $fecha_nacimiento,
-                "telefono_principal" => $telefono_principal,
-                "correo_electronico" => $correo_electronico,
-                "direccion" => $direccion,
-                "ciudad" => $ciudad,
-                "estado" => $estado,
-                "pais" => $pais,
-                "estatus" => $estatus,
+            // Si se crea un usuario, encriptar la clave
+            if ($crearUsuario == '1' && !empty($clave)) {
+                $clave = password_hash($clave, PASSWORD_DEFAULT);
+            } else {
+                $clave = null;
+            }
+    
+            // Llamar al modelo para insertar en la base de datos
+            $resultado = $this->model->guardar_usuario([
+                'nombre' => $nombre,
+                'apellido' => $apellido,
+                'cedula' => $cedula,
+                'rif' => $rif,
+                'telefono' => $telefono,
+                'tipo' => $tipo,
+                'genero' => $genero,
+                'fecha_nacimiento' => $fechaNacimiento,
+                'estado' => $estado,
+                'ciudad' => $ciudad,
+                'pais' => $pais,
+                'observaciones' => $observaciones,
+                'correo' => $correo,
+                'clave' => $clave,
+                'rol'=>$rol,
+                'crear_usuario' => $crearUsuario
             ]);
     
-            // Respuesta al cliente
-            if ($insertData) {
-                echo json_encode(["status" => true, "message" => "Persona registrada correctamente."]);
+            if ($resultado) {
+                echo json_encode(['success' => true, 'message' => 'Registro exitoso.']);
             } else {
-                echo json_encode(["status" => false, "message" => "Error al registrar la persona. Intenta nuevamente."]);
+                echo json_encode(['success' => false, 'message' => 'No se pudo registrar.']);
             }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-        }
-        exit();
+    } catch (\Throwable $th) {
+        echo json_encode(['success' => false, 'message' => $th->getMessage()]);
+
     }
-    public function deletePersona()
-    {
-        $json = file_get_contents('php://input'); // Lee los datos JSON enviados por el frontend
-        $data = json_decode($json, true); // Decodifica los datos JSON
-
-        // Extraer el ID de la persona a desactivar
-        $idpersona = trim($data['idpersona']) ?? null;
-
-        // Validar que el ID no esté vacío
-        if (empty($idpersona)) {
-            $response = ["status" => false, "message" => "ID de persona no proporcionado."];
-            echo json_encode($response);
-            return;
-        }
-
-        // Desactivar la persona usando el modelo
-        $deleteData = $this->get_model()->deletePersona($idpersona);
-
-        // Respuesta al cliente
-        if ($deleteData) {
-            $response = ["status" => true, "message" => "Persona desactivada correctamente."];
-        } else {
-            $response = ["status" => false, "message" => "Error al desactivar la persona. Intenta nuevamente."];
-        }
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
-    }
-
-    public function updatePersona()
-    {
-        $json = file_get_contents('php://input'); // Lee los datos JSON enviados por la vista
-        $data = json_decode($json, true); // datos del json lo decodifica 
-
-        // Extraer los datos del JSON
-        $idpersona = trim($data['idpersona']) ?? null;
-        $nombre = trim($data['nombre']) ?? null;
-        $apellido = trim($data['apellido']) ?? null;
-        $rif = trim($data['rif']) ?? null;
-        $tipo = trim($data['tipo']) ?? null;
-        $genero = trim($data['genero']) ?? null;
-        $fecha_nacimiento = trim($data['fecha_nacimiento']) ?? null;
-        $telefono_principal = trim($data['telefono_principal']) ?? null;
-        $correo_electronico = trim($data['correo_electronico']) ?? null;
-        $direccion = trim($data['direccion']) ?? null;
-        $ciudad = trim($data['ciudad']) ?? null;
-        $estado = trim($data['estado']) ?? null;
-        $pais = trim($data['pais']) ?? null;
-        $estatus = trim($data['estatus']) ?? null;
-
-        // Validar campos obligatorios
-        if (empty($idpersona) || empty($nombre) || empty($apellido) || empty($cedula)) {
-            $response = ["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."];
-            echo json_encode($response);
-            return;
-        }
-
-        // Validar formato del correo electrónico
-        if (!filter_var($correo_electronico, FILTER_VALIDATE_EMAIL)) {
-            $response = ["status" => false, "message" => "El correo electrónico no es válido."];
-            echo json_encode($response);
-            return;
-        }
+   
+}
 
 
-        $updateData = $this->get_model()->updatePersona([
-            "idpersona" => $idpersona,
-            "nombre" => $nombre,
-            "apellido" => $apellido,
-            "cedula" => $cedula,
-            "rif" => $rif,
-            "tipo" => $tipo,
-            "genero" => $genero,
-            "fecha_nacimiento" => $fecha_nacimiento,
-            "telefono_principal" => $telefono_principal,
-            "correo_electronico" => $correo_electronico,
-            "direccion" => $direccion,
-            "ciudad" => $ciudad,
-            "estado" => $estado,
-            "pais" => $pais,
-            "estatus" => $estatus,
-        ]);
 
-        // Respuesta al cliente
-        if ($updateData) {
-            $response = ["status" => true, "message" => "Persona actualizada correctamente."];
-        } else {
-            $response = ["status" => false, "message" => "Error al actualizar la persona. Intenta nuevamente."];
-        }
 
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
-    }
-    public function getPersonaById($idpersona)
-    {
-        try {
 
-            $persona = $this->get_model()->getPersonaById($idpersona);
 
-            if ($persona) {
-                echo json_encode(["status" => true, "data" => $persona]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Persona no encontrada."]);
-            }
-        } catch (Exception $e) {
 
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-        }
-        exit();
-    }
+
 }
