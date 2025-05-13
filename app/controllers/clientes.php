@@ -173,84 +173,76 @@ public function deletecliente()
     exit();
 }
 
-    public function updatecliente()
-    {
-        $json = file_get_contents('php://input'); // Lee los datos JSON enviados por la vista
-        $data = json_decode($json, true); // datos del json lo decodifica 
+public function updatecliente()
+{
+    try {
+        // Leer los datos JSON enviados por el frontend
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
 
-        // Extraer los datos del JSON
-        $idcliente = trim($data['idcliente']) ?? null;
-        $nombre = trim($data['nombre']) ?? null;
-        $apellido = trim($data['apellido']) ?? null;
-        $rif = trim($data['rif']) ?? null;
-        $tipo = trim($data['tipo']) ?? null;
-        $genero = trim($data['genero']) ?? null;
-        $fecha_nacimiento = trim($data['fecha_nacimiento']) ?? null;
-        $telefono_principal = trim($data['telefono_principal']) ?? null;
-        $correo_electronico = trim($data['correo_electronico']) ?? null;
-        $direccion = trim($data['direccion']) ?? null;
-        $ciudad = trim($data['ciudad']) ?? null;
-        $estado = trim($data['estado']) ?? null;
-        $pais = trim($data['pais']) ?? null;
-        $estatus = trim($data['estatus']) ?? null;
+        // Validar que los datos sean válidos
+        if (!$data || !is_array($data)) {
+            echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
+            return;
+        }
 
         // Validar campos obligatorios
-        if (empty($idcliente) || empty($nombre) || empty($apellido) || empty($cedula)) {
-            $response = ["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."];
-            echo json_encode($response);
+        if (empty($data['idcliente']) || empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula'])) {
+            echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
             return;
         }
 
-        // Validar formato del correo electrónico
-        if (!filter_var($correo_electronico, FILTER_VALIDATE_EMAIL)) {
-            $response = ["status" => false, "message" => "El correo electrónico no es válido."];
-            echo json_encode($response);
-            return;
-        }
+       
 
+        // Usar los métodos set del modelo para establecer los valores
+        $model = $this->get_model();
+        $model->setIdcliente(trim($data['idcliente']));
+        $model->setNombre(trim($data['nombre']));
+        $model->setApellido(trim($data['apellido']));
+        $model->setCedula(trim($data['cedula']));
+        $model->setFechaNacimiento(trim($data['fecha_nacimiento'] ?? ''));
+        $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
+        
+        $model->setDireccion(trim($data['direccion'] ?? ''));
+     
+        $model->setEstatus(trim($data['estatus'] ?? ''));
 
-        $updateData = $this->get_model()->updatecliente([
-            "idcliente" => $idcliente,
-            "nombre" => $nombre,
-            "apellido" => $apellido,
-            "cedula" => $cedula,
-            "rif" => $rif,
-            "tipo" => $tipo,
-            "genero" => $genero,
-            "fecha_nacimiento" => $fecha_nacimiento,
-            "telefono_principal" => $telefono_principal,
-            "correo_electronico" => $correo_electronico,
-            "direccion" => $direccion,
-            "ciudad" => $ciudad,
-            "estado" => $estado,
-            "pais" => $pais,
-            "estatus" => $estatus,
-        ]);
+        // Actualizar los datos usando el modelo
+        $updateData = $model->updateCliente();
 
         // Respuesta al cliente
         if ($updateData) {
-            $response = ["status" => true, "message" => "cliente actualizada correctamente."];
+            echo json_encode(["status" => true, "message" => "Cliente actualizado correctamente."]);
         } else {
-            $response = ["status" => false, "message" => "Error al actualizar la cliente. Intenta nuevamente."];
+            echo json_encode(["status" => false, "message" => "Error al actualizar el cliente. Intenta nuevamente."]);
         }
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
+    } catch (Exception $e) {
+        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
     }
+    exit();
+}
+
+    
     public function getclienteById($idcliente)
     {
         try {
+            // Validar que el ID del cliente sea válido
+            if (empty($idcliente) || !is_numeric($idcliente)) {
+                echo json_encode(["status" => false, "message" => "ID de cliente no válido."]);
+                return;
+            }
 
-            $cliente = $this->get_model()->getclienteById($idcliente);
+            // Obtener los datos del cliente desde el modelo
+            $cliente = $this->get_model()->getClienteById($idcliente);
 
+            // Validar si se encontró el cliente
             if ($cliente) {
-                echo json_encode(["status" => true, "data" => $cliente]);
+                echo json_encode(["status" => true, "data" => $cliente], JSON_UNESCAPED_UNICODE);
             } else {
-                echo json_encode(["status" => false, "message" => "cliente no encontrada."]);
+                echo json_encode(["status" => false, "message" => "Cliente no encontrado."], JSON_UNESCAPED_UNICODE);
             }
         } catch (Exception $e) {
-
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
         }
         exit();
     }

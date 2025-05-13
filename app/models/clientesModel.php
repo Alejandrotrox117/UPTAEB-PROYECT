@@ -220,44 +220,69 @@ public function insertCliente()
         return $stmt->execute([$this->getIdcliente()]);
     }
 
-    // Método para actualizar una persona
-    public function updatePersona()
+   public function updateCliente()
     {
-        $sql = "UPDATE personas SET 
+        $sql = "UPDATE cliente SET 
+                    cedula = ?, 
                     nombre = ?, 
                     apellido = ?, 
-                    cedula = ?, 
-                    rif = ?, 
-                    tipo = ?, 
-                    genero = ?, 
-                    fecha_nacimiento = ?, 
-                    telefono_principal = ?, 
-                    correo_electronico = ?, 
                     direccion = ?, 
-                    ciudad = ?, 
-                    estado = ?, 
-                    pais = ?, 
-                    estatus = ? 
-                WHERE idpersona = ?";
+                    telefono_principal = ?, 
+                    estatus = ?, 
+                    observaciones = ? 
+                WHERE idcliente = ?";
 
         $stmt = $this->db->prepare($sql);
         $arrValues = [
-            $this->nombre,
-            $this->apellido,
-            $this->cedula,
-           
-            $this->telefono_principal,
-            $this->correo_electronico,
-            $this->direccion,
-           
-            $this->estatus,
-            $this->idcliente
+            $this->getCedula(),
+            $this->getNombre(),
+            $this->getApellido(),
+            $this->getDireccion(),
+            $this->getTelefonoPrincipal(),
+            $this->getEstatus(),
+            $this->getObservaciones(),
+            $this->getIdcliente() // Usar el ID constante
         ];
 
         return $stmt->execute($arrValues);
     }
 
-    // Método para obtener una persona por ID
-
+    public function getClienteById($idcliente)
+    {
+        $sql = "SELECT 
+                    idcliente, 
+                    cedula, 
+                    nombre, 
+                    apellido, 
+                    direccion, 
+                    telefono_principal, 
+                    estatus, 
+                    observaciones 
+                FROM cliente 
+                WHERE idcliente = ?";
+    
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$idcliente]);
+    
+        // Obtener el resultado
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        if ($result) {
+            // Mapear los datos a las propiedades de la clase
+            $this->setIdcliente($result['idcliente']);
+            $this->setCedula($result['cedula']);
+            $this->setNombre($result['nombre']);
+            $this->setApellido($result['apellido']);
+            $this->setDireccion($result['direccion']);
+            $this->setTelefonoPrincipal($result['telefono_principal']);
+           
+            $this->setEstatus($result['estatus']);
+            $this->setObservaciones($result['observaciones']);
+    
+            return $result; // Retornar los datos como un array asociativo
+        }
+    
+        return null; // Retornar null si no se encuentra el cliente
+    }
 
 }

@@ -67,6 +67,7 @@
         <form id="clienteForm" class="px-4 py-4">
             <div class=" grid grid-cols-2 md:grid-cols-2  gap-4">
                 <div class="">
+                    <input type="hidden" id="idcliente" name="idcliente">
                     <label for="cedula" class="block text-gray-700 font-medium mb-2">Cedula</label>
                     <input type="text" id="cedula" name="cedula" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none">
                      <small id="error-cedula-vacio" style="display: none; color: red;">El campo cédula no puede estar vacío.</small>

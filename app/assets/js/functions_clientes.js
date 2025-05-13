@@ -269,11 +269,11 @@ document.addEventListener("click", function (e) {
 });
 
 function abrirModalclienteParaEdicion(idcliente) {
-  console.log("ID de cliente recibido:", idcliente); // Depuración
+  console.log("ID de cliente recibido para edición:", idcliente); // Depuración
 
+  // Realizar la solicitud al backend para obtener los datos del cliente
   fetch(`clientes/getclienteById/${idcliente}`)
     .then((response) => {
-      console.log("Respuesta HTTP:", response); // Depuración
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
@@ -283,38 +283,39 @@ function abrirModalclienteParaEdicion(idcliente) {
       console.log("Datos recibidos del backend:", data); // Depuración
 
       if (!data.status) {
-        throw new Error(data.message || "Error al cargar los datos.");
+        throw new Error(data.message || "Error al cargar los datos del cliente.");
       }
 
       const cliente = data.data;
 
-      // Asigna los valores a los campos del modal formulario
+      // Asignar los valores a los campos del formulario
       document.getElementById("idcliente").value = cliente.idcliente || "";
       document.getElementById("nombre").value = cliente.nombre || "";
       document.getElementById("apellido").value = cliente.apellido || "";
       document.getElementById("cedula").value = cliente.cedula || "";
       document.getElementById("telefono_principal").value =
         cliente.telefono_principal || "";
-      document.getElementById("correo_electronico").value =
-        cliente.correo_electronico || "";
-
+     
       document.getElementById("direccion").value = cliente.direccion || "";
       document.getElementById("observaciones").value =
         cliente.observaciones || "";
-
       document.getElementById("estatus").value = cliente.estatus || "";
 
-      // Abre el modal
+      // Abrir el modal para edición
       abrirModalcliente();
     })
     .catch((error) => {
-      console.error("Error capturado:", error.message); // Depuración
-      alert(
-        "Ocurrió un error al cargar los datos. Por favor, intenta nuevamente."
-      );
+      console.error("Error capturado al cargar los datos:", error.message); // Depuración
+      Swal.fire({
+        title: "¡Error!",
+        text: "Ocurrió un error al cargar los datos del cliente. Por favor, intenta nuevamente.",
+        icon: "error",
+        confirmButtonText: "Aceptar",
+      });
     });
 }
 
+// Evento para manejar el clic en el botón de editar
 document.addEventListener("click", function (e) {
   if (e.target.closest(".editar-btn")) {
     const idcliente = e.target
@@ -322,13 +323,84 @@ document.addEventListener("click", function (e) {
       .getAttribute("data-idcliente");
 
     if (!idcliente || isNaN(idcliente)) {
-      alert("ID de cliente no válido.");
+      Swal.fire({
+        title: "¡Error!",
+        text: "ID de cliente no válido.",
+        icon: "error",
+        confirmButtonText: "Aceptar",
+      });
       return;
     }
 
     abrirModalclienteParaEdicion(idcliente);
   }
 });
+
+// Función para guardar los cambios del cliente editado
+document.getElementById("guardarCambiosBtn").addEventListener("click", function () {
+  const datosFormulario = {
+    idcliente: document.getElementById("idcliente").value.trim(),
+    nombre: document.getElementById("nombre").value.trim(),
+    apellido: document.getElementById("apellido").value.trim(),
+    cedula: document.getElementById("cedula").value.trim(),
+    telefono_principal: document.getElementById("telefono_principal").value.trim(),
+
+    direccion: document.getElementById("direccion").value.trim(),
+    observaciones: document.getElementById("observaciones").value.trim(),
+    estatus: document.getElementById("estatus").value.trim(),
+  };
+
+  // Validar que el ID del cliente esté presente
+  if (!datosFormulario.idcliente) {
+    Swal.fire({
+      title: "¡Error!",
+      text: "El ID del cliente no es válido.",
+      icon: "error",
+      confirmButtonText: "Aceptar",
+    });
+    return;
+  }
+
+  // Enviar los datos al backend para actualizar el cliente
+  fetch("clientes/updateCliente", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(datosFormulario),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status) {
+        Swal.fire({
+          title: "¡Éxito!",
+          text: result.message || "Cliente actualizado correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          $("#Tablaclientes").DataTable().ajax.reload();
+          cerrarModalcliente();
+        });
+      } else {
+        Swal.fire({
+          title: "¡Error!",
+          text: result.message || "No se pudo actualizar el cliente.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("Error al actualizar el cliente:", error);
+      Swal.fire({
+        title: "¡Error!",
+        text: "Ocurrió un error al actualizar el cliente.",
+        icon: "error",
+        confirmButtonText: "Aceptar",
+      });
+    });
+});
+
 function abrirModalcliente() {
   const modal = document.getElementById("clienteModal");
   modal.classList.remove("opacity-0", "pointer-events-none");
@@ -339,3 +411,14 @@ function cerrarModalcliente() {
   modal.classList.add("opacity-0", "pointer-events-none");
   document.getElementById("clienteForm").reset();
 }
+
+fetch("clientes/getclienteById")
+    .then((response) => response.json())
+    .then((data) => {
+        if (data.status) {
+            console.log(data.data); // Datos del cliente
+        } else {
+            console.error(data.message); // Cliente no encontrado.
+        }
+    })
+    .catch((error) => console.error("Error:", error));
