@@ -5,21 +5,21 @@ require_once "helpers/helpers.php";
 
 class Compras extends Controllers
 {
-    // El constructor se mantiene como lo tenías,
-    // asumiendo que la clase base Controllers o getModelInstance se encarga del modelo.
     public function __construct() {
         parent::__construct();
     }
+        public function set_model($model)
+    {
+        $this->model = $model;
+    }
 
-    // Método para asegurar que el modelo está cargado
-    private function getModelInstance() {
-        if (!isset($this->model) || !($this->model instanceof ComprasModel)) {
-            $this->model = new ComprasModel();
-        }
+    public function get_model()
+    {
         return $this->model;
     }
 
-    public function index() // Vista del listado
+
+    public function index() // data para vistas y js
     {
         $data['page_title'] = "Gestión de Compras";
         $data['page_name'] = "Listado de Compras";
@@ -30,7 +30,7 @@ class Compras extends Controllers
     public function getComprasDataTable()
     {
         header('Content-Type: application/json');
-        $modelo = $this->getModelInstance();
+        $modelo = $this->get_model();
 
         $draw = isset($_GET['draw']) ? intval($_GET['draw']) : 0;
         $start = isset($_GET['start']) ? intval($_GET['start']) : 0;
@@ -77,7 +77,7 @@ class Compras extends Controllers
 
     public function getListaMonedasParaFormulario() {
         header('Content-Type: application/json');
-        $modelo = $this->getModelInstance();
+        $modelo = $this->get_model();
         $monedas = $modelo->getMonedasActivas();
         echo json_encode($monedas);
         exit();
@@ -85,7 +85,7 @@ class Compras extends Controllers
 
     public function getListaProductosParaFormulario() {
         header('Content-Type: application/json');
-        $modelo = $this->getModelInstance();
+        $modelo = $this->get_model();
         $productos = $modelo->getProductosConCategoria();
         echo json_encode($productos);
         exit();
@@ -94,14 +94,12 @@ class Compras extends Controllers
     public function buscarProveedores() {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['term'])) {
-            // SIN limpiarCadena(): $_GET['term'] se usa directamente.
-            // El modelo DEBE usar sentencias preparadas para evitar Inyección SQL.
             $termino = $_GET['term'];
-            $modelo = $this->getModelInstance();
+            $modelo = $this->get_model();
             $proveedores = $modelo->buscarProveedor($termino);
             echo json_encode($proveedores);
         } else {
-            echo json_encode([]); // Devolver array vacío si no hay término
+            echo json_encode([]);
         }
         exit();
     }
@@ -110,18 +108,25 @@ class Compras extends Controllers
         header('Content-Type: application/json');
         $response = ["status" => false, "message" => "Datos incompletos o incorrectos."];
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $identificacion = $_POST['identificacion_proveedor_nuevo'] ?? '';
-            $nombre = $_POST['nombre_proveedor_nuevo'] ?? '';
+        if ($_POST) {
+            $data = [
+                'nombre' => $_POST['nombre'] ?? null,
+                'apellido' => $_POST['apellido'] ?? null,
+                'identificacion' => $_POST['identificacion'] ?? null,
+                'telefono_principal' => $_POST['telefono_principal'] ?? null,
+                'correo_electronico' => $_POST['correo_electronico'] ?? null, FILTER_SANITIZE_EMAIL,
+                'direccion' => $_POST['direccion'] ?? null,
+                'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?? null,
+                'genero' => $_POST['genero'] ?? null,
+                'estatus' => $_POST['estatus'] ?? 'ACTIVO',
+                'observaciones' => $_POST['observaciones'] ?? null,
+            ];
+            var_dump($_POST);
+            die();
 
-            if (empty($identificacion) || empty($nombre)) {
-                $response['message'] = "Identificación y nombre del proveedor son obligatorios.";
-                echo json_encode($response);
-                exit();
-            }
-
-            $modelo = $this->getModelInstance();
-            $existente = $modelo->getProveedorByIdentificacion($identificacion);
+        
+            $modelo = $this->get_model();
+            $existente = $modelo->getProveedorByIdentificacion($_POST['identificacion']);
 
             if ($existente && isset($existente['idproveedor'])) {
                 $response['message'] = "Proveedor con esta identificación ya existe.";
@@ -131,16 +136,14 @@ class Compras extends Controllers
                 exit();
             }
 
-            // Pasar todo el $_POST al modelo. El modelo debe ser selectivo con los campos que usa.
-            $idNuevoProveedor = $modelo->registrarProveedor($_POST);
+            $idNuevoProveedor = $modelo->registrarProveedor($data);
 
             if ($idNuevoProveedor) {
                 $response = [
                     "status" => true,
                     "message" => "Proveedor registrado con éxito.",
                     "idproveedor" => $idNuevoProveedor,
-                    // Sanitizar nombre para devolverlo al cliente si se va a mostrar directamente
-                    "nombre" => htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8')
+                    "nombre" => htmlspecialchars($_POST['nombre'], ENT_QUOTES, 'UTF-8')
                 ];
             } else {
                 $response['message'] = "Error al registrar el proveedor. Verifique los logs del servidor.";
@@ -155,14 +158,11 @@ class Compras extends Controllers
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $modelo = $this->getModelInstance();
+            $modelo = $this->get_model();
             $response = ["status" => false, "message" => "Error desconocido."];
 
-            // SIN limpiarCadena(): Los datos de $_POST se usan directamente.
-            // El modelo DEBE usar sentencias preparadas.
-            // Se mantienen las conversiones de tipo y valores por defecto.
             $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
-            $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d'); // Validar formato de fecha si es necesario
+            $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d'); 
             $idmoneda_general = intval($_POST['idmoneda_general_compra'] ?? 0);
             $observaciones_compra = $_POST['observaciones_compra'] ?? '';
             $subtotal_general_compra = floatval($_POST['subtotal_general_input'] ?? 0);
@@ -170,16 +170,14 @@ class Compras extends Controllers
             $monto_descuento_compra = floatval($_POST['monto_descuento_input'] ?? 0);
             $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
 
-            // Validaciones básicas
             if (empty($idproveedor) || empty($fecha_compra) || empty($idmoneda_general) || !isset($_POST['productos_detalle'])) {
                 $response['message'] = "Faltan datos obligatorios para la compra (proveedor, fecha, moneda o detalles).";
                 echo json_encode($response);
                 exit();
             }
-            // Podrías añadir más validaciones aquí (ej. formato de fecha, rangos numéricos)
 
             $nro_compra = $modelo->generarNumeroCompra();
-            if (strpos($nro_compra, "ERROR") !== false) { // Chequeo si la generación de nro_compra falló
+            if (strpos($nro_compra, "ERROR") !== false) { 
                 $response['message'] = "Error al generar el número de compra.";
                 echo json_encode($response);
                 exit();
@@ -194,7 +192,7 @@ class Compras extends Controllers
                 "descuento_porcentaje_compra" => $descuento_porcentaje_compra,
                 "monto_descuento_compra" => $monto_descuento_compra,
                 "total_general_compra" => $total_general_compra,
-                "observaciones_compra" => $observaciones_compra // El modelo debe manejar la sanitización para SQL
+                "observaciones_compra" => $observaciones_compra
             ];
 
             $detallesCompraInput = json_decode($_POST['productos_detalle'], true);
@@ -224,8 +222,7 @@ class Compras extends Controllers
                 $cantidad_base = 0;
                 $idCategoriaProducto = intval($productoInfo['idcategoria'] ?? 0);
 
-                if ($idCategoriaProducto === 1) { // Materiales por Peso
-                    // La conversión a booleano de 'no_usa_vehiculo' debe ser robusta
+                if ($idCategoriaProducto === 1) { 
                     $noUsaVehiculo = filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN);
                     if ($noUsaVehiculo) {
                         $peso_neto_calculado = floatval($item['peso_neto_directo'] ?? 0);
@@ -235,7 +232,7 @@ class Compras extends Controllers
                         $peso_neto_calculado = $peso_bruto_val - $peso_vehiculo_val;
                     }
                     $cantidad_base = $peso_neto_calculado;
-                } else { // Productos por Unidad
+                } else { 
                     $cantidad_base = floatval($item['cantidad_unidad'] ?? 0);
                 }
 
@@ -252,7 +249,7 @@ class Compras extends Controllers
 
                 $detallesParaGuardar[] = [
                     "idproducto" => $productoInfo['idproducto'],
-                    "descripcion_temporal_producto" => $productoInfo['nombre_producto'], // El modelo debe sanitizar para SQL
+                    "descripcion_temporal_producto" => $productoInfo['nombre_producto'],
                     "cantidad" => $cantidad_base,
                     "precio_unitario_compra" => floatval($item['precio_unitario'] ?? 0),
                     "idmoneda_detalle" => intval($item['idmoneda_item'] ?? $idmoneda_general),

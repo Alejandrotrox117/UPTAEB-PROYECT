@@ -81,7 +81,7 @@
             <div id="listaResultadosProveedorModal" class="mt-2 border border-gray-300 rounded-md max-h-10 overflow-y-auto hidden">
             </div>
         </div>
-        <button type="button" id="btnAbrirModalNuevoProveedorDENTRO" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-blue-700 transition text-base font-medium">
+        <button type="button" onclick="abrirModalProveedor('Registrar Proveedor', 'proveedorForm', 'POST', 'proveedores/createProveedor')" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-blue-700 transition text-base font-medium">
             <i class="fas fa-user-plus mr-2"></i>Registrar Nuevo Proveedor
         </button>
 
@@ -162,47 +162,80 @@
 </div>
 
 <!-- Modal para Registrar Nuevo Proveedor -->
-<div id="modalNuevoProveedor" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 opacity-0 pointer-events-none transition-opacity duration-300 z-[60] p-4">
-  <div class="bg-white rounded-lg shadow-xl overflow-hidden w-full max-w-xl transform transition-all">
-    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-      <h3 class="text-lg leading-6 font-medium text-gray-900">
-          <i class="fas fa-user-plus mr-2 text-blue-600"></i>Registrar Nuevo Proveedor
-      </h3>
-      <button id="btnCerrarModalNuevoProveedor" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
-        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+<!-- Modal para Registrar/Editar Proveedor -->
+<div id="proveedorModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-4xl"> 
+    <div class="px-8 py-6 border-b flex justify-between items-center">
+      <h3 id="modalProveedorTitulo" class="text-2xl font-bold text-gray-800">Registrar Proveedor</h3>
+      <button onclick="cerrarModalProveedor()" class="text-gray-600 hover:text-gray-800 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
-    <form id="formNuevoProveedor" class="px-6 py-5 max-h-[calc(100vh-180px)] overflow-y-auto space-y-4 text-sm">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+
+    <form id="proveedorForm" class="px-8 py-6 max-h-[70vh] overflow-y-auto">
+      <input type="hidden" id="idproveedor" name="idproveedor"> 
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
         <div>
-          <label for="identificacion_proveedor_nuevo" class="form-label">Identificación <span class="text-red-500">*</span></label>
-          <input type="text" name="identificacion_proveedor_nuevo" id="identificacion_proveedor_nuevo" class="form-input-field" required>
-        </div>
-        <div>
-          <label for="nombre_proveedor_nuevo" class="form-label">Nombre(s) <span class="text-red-500">*</span></label>
-          <input type="text" name="nombre_proveedor_nuevo" id="nombre_proveedor_nuevo" class="form-input-field" required>
-        </div>
-        <div>
-          <label for="apellido_proveedor_nuevo" class="form-label">Apellido(s)</label>
-          <input type="text" name="apellido_proveedor_nuevo" id="apellido_proveedor_nuevo" class="form-input-field">
+          <label class="block text-gray-700 font-medium mb-1">Nombre o Razón Social <span class="text-red-500">*</span></label>
+          <input type="text" id="nombre" name="nombre" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500" required>
         </div>
         <div>
-          <label for="telefono_proveedor_nuevo" class="form-label">Teléfono Principal</label>
-          <input type="text" name="telefono_proveedor_nuevo" id="telefono_proveedor_nuevo" class="form-input-field">
+          <label class="block text-gray-700 font-medium mb-1">Apellido (Contacto, si aplica)</label>
+          <input type="text" id="apellido" name="apellido" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500">
         </div>
-        <div class="sm:col-span-2">
-          <label for="correo_proveedor_nuevo" class="form-label">Correo Electrónico</label>
-          <input type="email" name="correo_proveedor_nuevo" id="correo_proveedor_nuevo" class="form-input-field">
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Identificación (RIF/CI) <span class="text-red-500">*</span></label>
+          <input type="text" id="identificacion" name="identificacion" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500" required>
         </div>
-        <div class="sm:col-span-2">
-          <label for="direccion_proveedor_nuevo" class="form-label">Dirección</label>
-          <textarea name="direccion_proveedor_nuevo" id="direccion_proveedor_nuevo" rows="2" class="form-textarea-field"></textarea>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Teléfono Principal <span class="text-red-500">*</span></label>
+          <input type="text" id="telefono_principal" name="telefono_principal" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500" required>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Correo Electrónico</label>
+          <input type="email" id="correo_electronico" name="correo_electronico" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500">
+        </div>
+         <div>
+          <label class="block text-gray-700 font-medium mb-1">Género (Contacto, si aplica)</label>
+          <select id="genero" name="genero" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="">Seleccione...</option>
+            <option value="masculino">Masculino</option>
+            <option value="femenino">Femenino</option>
+            <option value="no_aplica">No Aplica</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="md:col-span-2"> 
+          <label class="block text-gray-700 font-medium mb-1">Dirección</label>
+          <textarea id="direccion" name="direccion" rows="2" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Fecha de Nacimiento/Constitución</label>
+          <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500">
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Estatus</label>
+          <select id="estatus" name="estatus" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500">
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+          </select>
+        </div>
+        <div class="md:col-span-2"> 
+          <label class="block text-gray-700 font-medium mb-1">Observaciones</label>
+          <textarea id="observaciones" name="observaciones" rows="3" class="w-full border rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
         </div>
       </div>
 
-      <div class="bg-gray-50 px-6 py-4 mt-6 border-t border-gray-200 flex justify-end space-x-3 -mx-6 -mb-5 rounded-b-lg">
-        <button type="button" id="btnCancelarModalNuevoProveedor" class="btn-neutral">Cancelar</button>
-        <button type="submit" class="btn-success">Guardar Proveedor</button>
+      <div class="flex justify-end space-x-4 mt-8">
+        <button type="button" onclick="cerrarModalProveedor()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-base font-medium">
+          Cancelar
+        </button>
+        <button type="submit" id="btnSubmitProveedor" class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-base font-medium">
+          Registrar
+        </button>
       </div>
     </form>
   </div>

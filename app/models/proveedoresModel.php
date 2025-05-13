@@ -99,6 +99,61 @@ class ProveedoresModel
         return $consulta;
     }
 
+    public function insertProveedorbackid($data)
+    {
+        if (!$this->db) {
+            error_log("ProveedoresModel: No hay conexión a la base de datos en insertProveedor.");
+            return false;
+        }
+
+        $sql = "INSERT INTO proveedor (
+                    nombre, apellido, identificacion, fecha_nacimiento, direccion,
+                    correo_electronico, estatus, telefono_principal, observaciones, genero,
+                    fecha_cracion, fecha_modificacion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        $return = false;
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $fechaActual = date('Y-m-d H:i:s');
+
+            $arrValues = [
+                $data['nombre'] ?? null,
+                $data['apellido'] ?? null,
+                $data['identificacion'] ?? null,
+                $data['fecha_nacimiento'] ?? null,
+                $data['direccion'] ?? null,
+                $data['correo_electronico'] ?? null,
+                $data['estatus'] ?? 'ACTIVO',
+                $data['telefono_principal'] ?? null,
+                $data['observaciones'] ?? null,
+                $data['genero'] ?? null,
+                $fechaActual,
+                $fechaActual
+            ];
+            
+            $consulta = $stmt->execute($arrValues);
+            
+            if ($consulta) {
+                $lastId = $this->db->lastInsertId();
+                error_log("Último ID insertado: " . $lastId);
+                return [
+                    "status" => true,
+                    "message" => "Proveedor registrado con éxito.",
+                    "idproveedor" => $lastId
+                ];
+            } else {
+                error_log("ProveedoresModel: Error al ejecutar la inserción: " . implode(", ", $stmt->errorInfo()));
+            }
+        } catch (PDOException $e) {
+            error_log("ProveedoresModel: PDOException en insertProveedorbackid: " . $e->getMessage());
+            return false;
+        }
+        
+        return $return;
+    }
+
     public function updateProveedor() {
         if (!$this->db || !$this->getIdproveedor()) { 
             error_log("ProveedoresModel: No hay conexión o ID para actualizar proveedor.");

@@ -72,6 +72,74 @@ class Proveedores extends Controllers
         die();
     }
 
+   public function createProveedorinCompras()
+    {
+        $response = ['status' => false, 'message' => 'Error desconocido.'];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'nombre' => filter_var($_POST['nombre'] ?? null, FILTER_SANITIZE_STRING),
+                'apellido' => filter_var($_POST['apellido'] ?? null, FILTER_SANITIZE_STRING),
+                'identificacion' => filter_var($_POST['identificacion'] ?? null, FILTER_SANITIZE_STRING),
+                'telefono_principal' => filter_var($_POST['telefono_principal'] ?? null, FILTER_SANITIZE_STRING),
+                'correo_electronico' => filter_var($_POST['correo_electronico'] ?? null, FILTER_SANITIZE_EMAIL),
+                'direccion' => filter_var($_POST['direccion'] ?? null, FILTER_SANITIZE_STRING),
+                'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?? null,
+                'genero' => filter_var($_POST['genero'] ?? null, FILTER_SANITIZE_STRING),
+                'estatus' => filter_var($_POST['estatus'] ?? 'ACTIVO', FILTER_SANITIZE_STRING),
+                'observaciones' => filter_var($_POST['observaciones'] ?? null, FILTER_SANITIZE_STRING),
+            ];
+
+            if (!empty($data['correo_electronico']) && !filter_var($data['correo_electronico'], FILTER_VALIDATE_EMAIL)) {
+                $response = ['status' => false, 'message' => 'Formato de correo electrónico inválido.'];
+                header('Content-Type: application/json');
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+            
+            if (!empty($data['fecha_nacimiento'])) {
+                $d = DateTime::createFromFormat('Y-m-d', $data['fecha_nacimiento']);
+                if (!$d || $d->format('Y-m-d') !== $data['fecha_nacimiento']) {
+                    $response = ['status' => false, 'message' => 'Formato de fecha de nacimiento inválido. Use YYYY-MM-DD.'];
+                    header('Content-Type: application/json');
+                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+            }
+
+            if (empty($data['nombre']) || empty($data['identificacion']) || empty($data['telefono_principal'])) {
+                 $response = ['status' => false, 'message' => 'Nombre, Identificación y Teléfono son obligatorios.'];
+                 header('Content-Type: application/json');
+                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                 die();
+            }
+
+            $request = $this->model->insertProveedorbackid($data);
+
+            if ($request !== false && $request > 0) {
+                $response = [
+                    'status' => true,
+                    'message' => 'Proveedor registrado con éxito.',
+                    'idproveedor' => $request['idproveedor'] ?? null
+                ];
+            } elseif ($request === false) {
+                $response = ['status' => false, 'message' => 'Error al registrar el proveedor.'];
+            } elseif (is_array($request) && isset($request['error'])) {
+                $response = ['status' => false, 'message' => $request['error']];
+
+            } else {
+                $response = ['status' => false, 'message' => 'Error al registrar el proveedor en la base de datos.'];
+            }
+        } else {
+            $response = ['status' => false, 'message' => 'Método no permitido.'];
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        die();
+    }
+
+
     public function getProveedorById(int $idproveedor)
     {
         $id = intval($idproveedor);

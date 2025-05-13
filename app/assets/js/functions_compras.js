@@ -598,86 +598,109 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     });
   }
 
-// --- Lógica del Modal de Nuevo Proveedor ---
-const modalNuevoProveedor = document.getElementById("modalNuevoProveedor");
-const btnAbrirModalNuevoProveedorDENTRO = document.getElementById(
-  "btnAbrirModalNuevoProveedorDENTRO",
-);
-const btnCerrarModalNuevoProveedor = document.getElementById( // Asegúrate que estos también estén definidos si los usas
-  "btnCerrarModalNuevoProveedor",
-);
-const btnCancelarModalNuevoProveedor = document.getElementById( // Asegúrate que estos también estén definidos si los usas
-  "btnCancelarModalNuevoProveedor",
-);
-const formNuevoProveedor = document.getElementById("formNuevoProveedor"); // Definir aquí
+const modalProveedor = document.getElementById("proveedorModal");
+    const formProveedor = document.getElementById("proveedorForm");
+    const modalTitulo = document.getElementById("modalProveedorTitulo");
+    const btnSubmitProveedor = document.getElementById("btnSubmitProveedor");
+    const inputIdPersona = document.getElementById("idproveedor");
 
-function abrirModalProv() {
-  if (formNuevoProveedor) { // Verificar si el formulario existe
-      formNuevoProveedor.reset();
-  } else {
-      console.warn("El formulario 'formNuevoProveedor' no fue encontrado para resetear.");
-  }
-  if (modalNuevoProveedor) { // Verificar si el modal existe
-      modalNuevoProveedor.classList.remove("opacity-0", "pointer-events-none");
-      // Podrías querer enfocar el primer input del modal de proveedor aquí
-      // const primerInput = modalNuevoProveedor.querySelector('input[type="text"], input[type="email"]');
-      // if (primerInput) primerInput.focus();
-  } else {
-      console.warn("El modal 'modalNuevoProveedor' no fue encontrado.");
-  }
-}
+       window.abrirModalProveedor = function (titulo = "Registrar Proveedor", formAction = "proveedores/createProveedor") {
+        formProveedor.reset(); // 
+        inputIdPersona.value = ""; 
+        modalTitulo.textContent = titulo;
+        formProveedor.setAttribute("data-action", formAction); 
+        btnSubmitProveedor.textContent = "Registrar";
+        modalProveedor.classList.remove("opacity-0", "pointer-events-none");
+    };
 
-  function cerrarModalProv() {
-    modalNuevoProveedor.classList.add("opacity-0", "pointer-events-none");
-  }
+    // Cerrar modal de proveedor
+    window.cerrarModalProveedor = function () {
+        modalProveedor.classList.add("opacity-0", "pointer-events-none");
+        formProveedor.reset();
+        inputIdPersona.value = "";
+    };
 
-  if (btnAbrirModalNuevoProveedorDENTRO)
-    btnAbrirModalNuevoProveedorDENTRO.addEventListener("click", abrirModalProv);
-  if (btnCerrarModalNuevoProveedor)
-    btnCerrarModalNuevoProveedor.addEventListener("click", cerrarModalProv);
-  if (btnCancelarModalNuevoProveedor)
-    btnCancelarModalNuevoProveedor.addEventListener("click", cerrarModalProv);
+    // Enviar formulario FORMULARIO (Crear o Actualizar)
+    formProveedor.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const actionUrl = "proveedores/createProveedorinCompras";
+        const method = "POST"; 
 
-  if (formNuevoProveedor) {
-    formNuevoProveedor.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const formData = new FormData(formNuevoProveedor);
-      // Aquí podrías añadir una validación simple antes de enviar
-      const btnSubmitProveedor = formNuevoProveedor.querySelector('button[type="submit"]');
-      btnSubmitProveedor.disabled = true;
-      btnSubmitProveedor.textContent = "Guardando...";
-
-      try {
-        const response = await fetch(
-          `compras/registrarNuevoProveedor`,
-          {
-            method: "POST",
-            body: formData,
-          },
-        );
-        const data = await response.json();
-        alert(data.message);
-        if (data.status) {
-          // Actualizar el campo de proveedor en el modal de compra
-          hiddenIdProveedorModal.value = data.idproveedor;
-          const nombreCompletoProv = `${formData.get("nombre_proveedor_nuevo")} ${formData.get("apellido_proveedor_nuevo") || ""}`.trim();
-          divInfoProveedorModal
-            .html(
-              `Sel: <strong>${nombreCompletoProv}</strong> (ID: ${formData.get("identificacion_proveedor_nuevo")})`,
-            )
-            .removeClass("hidden");
-          inputBuscarProveedorModal.value = `${nombreCompletoProv} (${formData.get("identificacion_proveedor_nuevo")})`;
-          cerrarModalProv();
+        if (!actionUrl) {
+            Swal.fire("Error Interno", "URL de acción no definida para el formulario.", "error");
+            console.error("El atributo data-action del formulario está vacío o no existe.");
+            return;
         }
-      } catch (error) {
-        console.error("Error al registrar proveedor:", error);
-        alert("Error de conexión al registrar proveedor.");
-      } finally {
-        btnSubmitProveedor.disabled = false;
-        btnSubmitProveedor.textContent = "Guardar Proveedor";
-      }
+
+        // Validaciones básicas
+        const nombre = formData.get('nombre');
+        const identificacion = formData.get('identificacion');
+        const telefono_principal = formData.get('telefono_principal');
+
+        if (!nombre || !identificacion || !telefono_principal) {
+            Swal.fire("Atención", "Nombre, Identificación y Teléfono son obligatorios.", "warning");
+            return;
+        }
+        
+
+        fetch(actionUrl, {
+            method: method,
+            body: formData // Enviar FormData directamente
+        })
+        .then((response) => {
+            if (!response.ok) {
+                
+                return response.json().then(errData => {
+                    
+                    const error = new Error(errData.message || `Error HTTP: ${response.status}`);
+                    error.data = errData; 
+                    error.status = response.status;
+                    throw error; 
+                }).catch(() => {
+                    
+                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+                });
+            }
+            return response.json(); 
+        })
+        .then(async (result) => {
+    if (result.status) {
+        Swal.fire("¡Éxito!", result.message, "success");
+        // Obtener los datos completos del proveedor recién creado
+        try {
+            const response = await fetch(`proveedores/getProveedorById/${encodeURIComponent(result.idproveedor)}`);
+            if (!response.ok) throw new Error('No se pudo obtener el proveedor');
+            const proveedor = await response.json();
+            // Llenar los campos como si se hubiera seleccionado desde el autocompletado
+            hiddenIdProveedorModal.value = proveedor.data.idproveedor;
+            divInfoProveedorModal.innerHTML = `Sel: <strong>${proveedor.data.nombre} ${proveedor.data.apellido}</strong> (ID: ${proveedor.data.identificacion})`;
+            divInfoProveedorModal.classList.remove('hidden');
+            inputCriterioProveedorModal.value = `${proveedor.data.nombre} ${proveedor.data.apellido} (${proveedor.data.identificacion})`;
+
+            cerrarModalProveedor();
+        } catch (error) {
+            console.error("Error al obtener proveedor:", error);
+            Swal.fire("Error", "Proveedor registrado, pero no se pudo mostrar la información.", "warning");
+            cerrarModalProveedor();
+        }
+    } else {
+        Swal.fire("Error", result.message || "Respuesta no exitosa del servidor.", "error");
+    }
+})
+
+        .catch((error) => {
+            console.error("Error en fetch:", error);
+            let errorMessage = "Ocurrió un error al procesar la solicitud.";
+            
+            if (error.data && error.data.message) {
+                errorMessage = error.data.message;
+            } else if (error.message) { 
+                errorMessage = error.message;
+            }
+            Swal.fire("Error", errorMessage, "error");
+        });
     });
-  }
 }); 
 
 function verCompra(idcompra) {
