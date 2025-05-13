@@ -207,29 +207,17 @@ public function insertCliente()
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Método para eliminar lógicamente una persona
-    public function deletePersona($idpersona)
+    // Método para eliminar lógicamente un cliente
+    public function deleteCliente($clienteId)
     {
-        $sql = "UPDATE personas SET estatus = 'INACTIVO' WHERE idpersona = ?";
+        $sql = "UPDATE cliente SET estatus = 'INACTIVO' WHERE idcliente = ?";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$idpersona]);
+        return $stmt->execute([$clienteId]);
+    
+    
+        $sql = "UPDATE cliente SET estatus = 'INACTIVO' WHERE idcliente = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$this->getIdcliente()]);
     }
 
     // Método para actualizar una persona

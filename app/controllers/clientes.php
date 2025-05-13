@@ -119,34 +119,59 @@ public function createcliente()
 
 
 
-    public function deletecliente()
-    {
-        $json = file_get_contents('php://input'); // Lee los datos JSON enviados por el frontend
-        $data = json_decode($json, true); // Decodifica los datos JSON
+public function deletecliente()
+{
+    try {
+        // Leer los datos JSON enviados por el frontend
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
 
-        // Extraer el ID de la cliente a desactivar
-        $idcliente = trim($data['idcliente']) ?? null;
-
-        // Validar que el ID no esté vacío
-        if (empty($idcliente)) {
-            $response = ["status" => false, "message" => "ID de cliente no proporcionado."];
-            echo json_encode($response);
+        // Validar que los datos sean válidos
+        if (!$data || !isset($data['idcliente'])) {
+            echo json_encode([
+                "status" => false,
+                "message" => "ID de cliente no proporcionado o datos inválidos."
+            ], JSON_UNESCAPED_UNICODE);
             return;
         }
 
-        // Desactivar la cliente usando el modelo
-        $deleteData = $this->get_model()->deletecliente($idcliente);
+        // Extraer el ID del cliente
+        $idcliente = trim($data['idcliente']);
+
+        // Validar que el ID no esté vacío
+        if (empty($idcliente)) {
+            echo json_encode([
+                "status" => false,
+                "message" => "El ID del cliente no puede estar vacío."
+            ], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+
+        // Desactivar el cliente usando el modelo
+        $deleteData = $this->get_model()->deleteCliente($idcliente);
 
         // Respuesta al cliente
         if ($deleteData) {
-            $response = ["status" => true, "message" => "cliente desactivada correctamente."];
+            echo json_encode([
+                "status" => true,
+                "message" => "Cliente eliminado correctamente."
+            ], JSON_UNESCAPED_UNICODE);
         } else {
-            $response = ["status" => false, "message" => "Error al desactivar la cliente. Intenta nuevamente."];
+            echo json_encode([
+                "status" => false,
+                "message" => "Error al eliminar el cliente. Intenta nuevamente."
+            ], JSON_UNESCAPED_UNICODE);
         }
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
+    } catch (Exception $e) {
+        // Manejo de errores inesperados
+        echo json_encode([
+            "status" => false,
+            "message" => "Error inesperado: " . $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
     }
+
+    exit();
+}
 
     public function updatecliente()
     {

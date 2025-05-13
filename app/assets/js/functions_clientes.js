@@ -1,3 +1,9 @@
+import { validarCampo } from "./validaciones.js";
+import { abrirModal, cerrarModal } from "./exporthelpers.js";
+
+import { reglasValidacion } from "./regex.js";
+
+
 document.addEventListener("DOMContentLoaded", function () {
   $("#Tablaclientes").DataTable({
     processing: true,
@@ -61,13 +67,25 @@ document.addEventListener("DOMContentLoaded", function () {
     order: [[0, "asc"]],
   });
 });
+// Botón para abrir el modal de registro
+  document.getElementById("abrirModalBtn").addEventListener("click", function () {
+    abrirModal("clienteModal");
+  });
 
+  // Botón para cerrar el modal
+  document.getElementById("cerrarModalBtn").addEventListener("click", function () {
+    cerrarModal("clienteModal");
+  });
 document.addEventListener("DOMContentLoaded", function () {
+ 
+ 
+ 
+ 
   let formCliente = document.querySelector("#clienteForm");
 
   if (formCliente) {
-    formCliente.onsubmit = function (e) {
-      e.preventDefault(); // Evita que el formulario se envíe de forma tradicional
+    document.getElementById("registrarClienteBtn").addEventListener("click", function () {
+      // Evita que el formulario se envíe de forma tradicional
 
        try {
         // Obtener los valores de los campos para validar
@@ -80,6 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
           { id: "estatus", nombre: "Estatus" },
           { id: "observaciones", nombre: "Observaciones" },
         ];
+        
 
         // Validar campos vacíos
         for (let campo of campos) {
@@ -123,11 +142,6 @@ document.addEventListener("DOMContentLoaded", function () {
           .getElementById("estatus")
           .value.trim();
 
-
-        console.log("Datos del formulario:", datosFormulario); // Depuración
-         console.log("Valor de cédula:", datosFormulario["cedula"]);
-    
-   
 
   
   
@@ -180,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         
       }
-    };
+    });
   } else {
     console.error(
       "El formulario con ID 'clienteForm' no se encontró en el DOM."
@@ -189,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
  });
 
 function eliminarcliente(idcliente) {
-  fetch(`clientes/deletecliente`, {
+  fetch(`clientes/deleteCliente`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idcliente }),
@@ -197,23 +211,60 @@ function eliminarcliente(idcliente) {
     .then((response) => response.json())
     .then((result) => {
       if (result.status) {
-        alert(result.message); // Muestra mensaje de éxito
-        $("#Tablaclientes").DataTable().ajax.reload(); // Recarga la tabla
+        // Notificación de éxito con SweetAlert
+        Swal.fire({
+          title: "¡Éxito!",
+          text: result.message || "Cliente eliminado correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          // Recargar la tabla después de cerrar la alerta
+          $("#Tablaclientes").DataTable().ajax.reload();
+        });
       } else {
-        alert(result.message); // Muestra mensaje de error
+        // Notificación de error con SweetAlert
+        Swal.fire({
+          title: "¡Error!",
+          text: result.message || "No se pudo eliminar el cliente.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
       }
     })
-    .catch((error) => console.error("Error:", error));
+    .catch((error) => {
+      console.error("Error:", error);
+      // Notificación de error con SweetAlert
+      Swal.fire({
+        title: "¡Error!",
+        text: "Ocurrió un error al intentar eliminar el cliente.",
+        icon: "error",
+        confirmButtonText: "Aceptar",
+      });
+    });
 }
 
+// Evento para manejar el clic en el botón de eliminar
 document.addEventListener("click", function (e) {
   if (e.target.closest(".eliminar-btn")) {
     const idcliente = e.target
       .closest(".eliminar-btn")
       .getAttribute("data-idcliente");
-    if (confirm("¿Estás seguro de desactivar esta cliente?")) {
-      eliminarcliente(idcliente);
-    }
+
+    // Confirmación antes de eliminar
+    Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción desactivará al cliente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        eliminarcliente(idcliente);
+      }
+    });
   }
 });
 

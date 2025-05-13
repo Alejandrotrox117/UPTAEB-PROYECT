@@ -13,7 +13,7 @@
         <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
             <div class="flex justify-between items-center mb-4">
                 <!-- Botón para abrir el modal de Registro -->
-                <button onclick="abrirModalcliente()" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
+                <button id="abrirModalBtn"  class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
                     Registrar
                 </button>
             </div>
@@ -56,7 +56,7 @@
         <!-- Encabezado -->
         <div class="px-4 py-4 border-b flex justify-between items-center">
             <h3 class="text-xl font-bold text-gray-800">Registrar cliente</h3>
-            <button onclick="cerrarModalcliente()" class="text-gray-600 hover:text-gray-800 transition-colors">
+            <button id="clienteForm" class="text-gray-600 hover:text-gray-800 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -69,7 +69,8 @@
                 <div class="">
                     <label for="cedula" class="block text-gray-700 font-medium mb-2">Cedula</label>
                     <input type="text" id="cedula" name="cedula" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none">
-                    <p class="text-red-500 text-sm mt-1"></p>
+                     <small id="error-cedula-vacio" style="display: none; color: red;">El campo cédula no puede estar vacío.</small>
+                    <small id="error-cedula-formato" style="display: none; color: red;">La cédula debe tener entre 7 y 10 dígitos.</small>
                 </div>
                 <div class="">
                     <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre</label>
@@ -85,7 +86,7 @@
                     <input type="text" id="telefono_principal" name="telefono_principal" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none">
                 </div>
 
-                <div class="flex-1 min-w-[155%] my-10">
+                <div class="flex-1 min-w-[150%]">
                     <label for="estatus" class="block text-gray-700 font-medium mb-2">Estatus</label>
                     <select id="estatus" name="estatus"
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -105,12 +106,12 @@
                 </div>
             <div class="grid grid-cols-2 md:grid-cols-2  gap-4 mt-4">
                 <div class="">
-                    <button type="button" onclick="cerrarModalcliente()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
+                    <button type="button" id="cerrarModalBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
                         Cancelar
                     </button>
                 </div>
                 <div class="flex justify-end">
-                    <button type="submit" class="px-4 ml-10 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
+                    <button type="button" id="registrarClienteBtn" class="px-4 ml-10 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
                         Registrar
                     </button>
                 </div>
@@ -151,4 +152,3 @@
             </button>
         </div>
     </div>
-</div>
