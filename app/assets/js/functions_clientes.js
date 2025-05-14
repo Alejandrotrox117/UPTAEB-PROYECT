@@ -8,10 +8,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // Definir campos y validaciones
   const campos = [
     { id: "cedula", regex: expresiones.cedula, mensaje: " La Cédula debe contener la estructura V-XXXXX No debe contener espacios y solo números." },
-    { id: "nombre", regex: expresiones.nombre, mensaje: "El nombre debe tener entre 2 y 50 caracteres alfabéticos." },
-    { id: "apellido", regex: expresiones.apellido, mensaje: "El apellido debe tener entre 2 y 50 caracteres alfabéticos." },
-    { id: "telefono_principal", regex: expresiones.telefono_principal, mensaje: "El teléfono debe tener exactamente 10 dígitos." },
-    { id: "direccion", regex: expresiones.direccion, mensaje: "La dirección debe tener entre 5 y 100 caracteres." },
+    { id: "nombre", regex: expresiones.nombre, mensaje: "El nombre debe tener entre 10 y 20 caracteres alfabéticos." },
+    { id: "apellido", regex: expresiones.apellido, mensaje: "El apellido debe tener entre 10 y 20 caracteres alfabéticos." },
+    { id: "telefono_principal", regex: expresiones.telefono_principal, mensaje: "El teléfono debe tener exactamente 11 dígitos. No debe contener letras." },
+    { id: "direccion", regex: expresiones.direccion, mensaje: "La dirección debe tener entre 20 y 50 caracteres." },
     { id: "estatus", regex: expresiones.estatus, mensaje: "El estatus debe ser 'Activo' o 'Inactivo'." },
     { id: "observaciones", regex: expresiones.observaciones, mensaje: "Las observaciones no deben exceder los 200 caracteres." },
   ];
@@ -121,17 +121,24 @@ function inicializarDataTable() {
 
 // Función para manejar el registro de clientes
 function manejarRegistro(campos) {
-  let formularioValido = true;
+  // Validar si hay campos vacíos
+  const formularioValido = validarCamposVacios(campos);
+  if (!formularioValido) {
+    return; // Detener el proceso si hay campos vacíos
+  }
 
+  // Validar el formato de los campos
+  let formatoValido = true;
   campos.forEach((campo) => {
     const input = document.getElementById(campo.id);
     if (input) {
       const valido = validarCampo(input, campo.regex, campo.mensaje);
-      if (!valido) formularioValido = false;
+      if (!valido) formatoValido = false;
     }
   });
 
-  if (!formularioValido) {
+  // Si el formato no es válido, mostrar alerta y detener el proceso
+  if (!formatoValido) {
     Swal.fire({
       title: "¡Error!",
       text: "Por favor, corrige los errores en el formulario.",
@@ -188,7 +195,6 @@ function manejarRegistro(campos) {
       });
     });
 }
-
 // Función para confirmar la eliminación de un cliente
 function confirmarEliminacion(idcliente) {
   Swal.fire({
@@ -282,4 +288,37 @@ function abrirModalclienteParaEdicion(idcliente) {
         confirmButtonText: "Aceptar",
       });
     });
+}
+
+
+function validarCamposVacios(campos) {
+  let formularioValido = true; // Variable para rastrear si el formulario es válido
+
+  // Validar campos vacíos
+  for (let campo of campos) {
+    // Omitir la validación del campo idcliente
+    if (campo.id === "idcliente") {
+      continue;
+    }
+
+    // Obtener el valor del campo
+    const input = document.getElementById(campo.id);
+    if (!input) {
+      console.warn(`El campo con ID "${campo.id}" no existe en el DOM.`);
+      continue;
+    }
+
+    let valor = input.value.trim();
+    if (valor === "") {
+      Swal.fire({
+        title: "¡Error!",
+        text: `El campo "${campo.id}" no puede estar vacío.`,
+        icon: "error",
+        confirmButtonText: "Aceptar",
+      });
+      formularioValido = false; // Marcar el formulario como no válido
+    }
+  }
+
+  return formularioValido; // Retornar true si todos los campos son válidos, false si no
 }

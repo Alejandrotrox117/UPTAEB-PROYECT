@@ -65,9 +65,9 @@
             <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
                 <div class="">
                     <input type="hidden" id="idcliente" name="idcliente" value="">
-                    <label for="cedula" class="block text-gray-700 font-medium mb-2">Cédula</label>
+                    <label for="cedula" class="block  font-medium mb-2">Cédula</label>
                     <input type="text" id="cedula" name="cedula" 
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                        class="w-full border rounded-lg px-4 py-2 text-lg  focus:ring-2 focus:ring-green-400">
                     <div id="error-cedula-vacio" class="text-red-500 text-sm mt-1 hidden">
                         
                     </div>
