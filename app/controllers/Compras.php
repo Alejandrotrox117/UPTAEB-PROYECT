@@ -280,10 +280,10 @@ class Compras extends Controllers
 
                 $detallesParaGuardar[] = [
                     "idproducto" => $productoInfo['idproducto'],
-                    "descripcion_temporal_producto" => $productoInfo['nombre_producto'],
+                    "descripcion_temporal_producto" => $productoInfo['nombre'],
                     "cantidad" => $cantidad_base,
                     "precio_unitario_compra" => floatval($item['precio_unitario'] ?? 0),
-                    "idmoneda_detalle" => intval($item['idmoneda_item'] ?? $idmoneda_general),
+                    "idmoneda_detalle" => intval($item['moneda'] ?? $idmoneda_general),
                     "subtotal_linea" => floatval($item['subtotal_linea'] ?? 0),
                     "peso_vehiculo" => ($idCategoriaProducto === 1 && !filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN)) ? floatval($item['peso_vehiculo'] ?? 0) : null,
                     "peso_bruto" => ($idCategoriaProducto === 1 && !filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN)) ? floatval($item['peso_bruto'] ?? 0) : null,
@@ -303,6 +303,7 @@ class Compras extends Controllers
                 $response = ["status" => true, "message" => "Compra registrada correctamente con Nro: " . htmlspecialchars($nro_compra, ENT_QUOTES, 'UTF-8'), "idcompra" => $idCompraInsertada];
             } else {
                 $response = ["status" => false, "message" => "Error al registrar la compra en la base de datos. Revise los logs del servidor."];
+                $response['debug'] = error_get_last();
             }
             echo json_encode($response, JSON_UNESCAPED_UNICODE);
         } else {

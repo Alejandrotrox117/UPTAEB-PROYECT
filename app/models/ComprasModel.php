@@ -263,14 +263,14 @@ class ComprasModel
 
     public function getProductoById(int $idproducto)
     {
-        $sql = "SELECT p.idproducto, p.nombre_producto, p.idcategoria,
-                       p.precio_referencia_compra, p.idmoneda_referencia,
-                       m.simbolo as moneda_simbolo, m.codigo_iso as moneda_codigo,
-                       cp.nombre_categoria
-                FROM productos p
-                JOIN categorias_producto cp ON p.idcategoria = cp.idcategoria
-                LEFT JOIN monedas m ON p.idmoneda_referencia = m.idmoneda
-                WHERE p.idproducto = :idproducto AND p.estatus = 1";
+        $sql = "SELECT p.idproducto, p.nombre, p.idcategoria,
+                       p.precio, p.moneda,
+                       m.codigo_moneda as codigo_moneda,
+                       cp.nombre
+                FROM producto p
+                JOIN categoria cp ON p.idcategoria = cp.idcategoria
+                LEFT JOIN monedas m ON p.moneda = m.codigo_moneda
+                WHERE p.idproducto = :idproducto AND p.estatus = 'activo'";
         try {
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':idproducto', $idproducto, PDO::PARAM_INT);
@@ -298,6 +298,16 @@ class ComprasModel
         }
     }
 
+    public function getIdMonedaByCodigo($codigoMoneda)
+    {
+        $sql = "SELECT idmoneda FROM monedas WHERE codigo_moneda = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$codigoMoneda]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row;
+    }
+
+
     public function insertarCompra(array $datosCompra, array $detallesCompra)
     {
         try {
@@ -306,6 +316,14 @@ class ComprasModel
 
             $subtotalGeneralBs = 0;
             foreach ($detallesCompra as &$detalle) {
+                // Conversión de código de moneda a ID si es necesario
+                if (!is_numeric($detalle['idmoneda_detalle'])) {
+                    $idMoneda = $this->getIdMonedaByCodigo($detalle['idmoneda_detalle']);
+                    if ($idMoneda === null) {
+                        throw new Exception("Código de moneda inválido: " . $detalle['idmoneda_detalle']);
+                    }
+                    $detalle['idmoneda_detalle'] = $idMoneda;
+                }
                 $idMoneda = $detalle['idmoneda_detalle'];
                 $subtotalLinea = floatval($detalle['subtotal_linea']);
                 $tasa = isset($tasas[$idMoneda]) ? $tasas[$idMoneda] : 1;
@@ -335,13 +353,13 @@ class ComprasModel
 
             if (!$stmtCompra->execute()) {
                 $this->db->rollBack();
-                error_log("ComprasModel::insertarCompra - Error al insertar cabecera: " . implode(", ", $stmtCompra->errorInfo()));
-                return false;
+                $errorInfo = $stmtCompra->errorInfo();
+                throw new Exception("Error al insertar cabecera: " . implode(" | ", $errorInfo));
             }
             $idCompra = $this->db->lastInsertId();
 
-            $sqlDetalle = "INSERT INTO detalle_compras (idcompra, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_compra, idmoneda_detalle, subtotal_linea, subtotal_linea_bs, peso_vehiculo, peso_bruto, peso_neto)
-                        VALUES (:idcompra, :idproducto, :descripcion, :cantidad, :precio_unitario, :idmoneda_detalle, :subtotal_linea, :subtotal_linea_bs, :peso_vehiculo, :peso_bruto, :peso_neto)";
+            $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
+                        VALUES (:idcompra, :idproducto, :descripcion, :cantidad, :precio_unitario, :idmoneda_detalle, :subtotal_linea, :peso_vehiculo, :peso_bruto, :peso_neto)";
             $stmtDetalle = $this->db->prepare($sqlDetalle);
 
             foreach ($detallesCompra as $detalle) {
@@ -352,29 +370,32 @@ class ComprasModel
                 $stmtDetalle->bindParam(':precio_unitario', $detalle['precio_unitario_compra']);
                 $stmtDetalle->bindParam(':idmoneda_detalle', $detalle['idmoneda_detalle'], PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':subtotal_linea', $detalle['subtotal_linea']);
-                $stmtDetalle->bindParam(':subtotal_linea_bs', $detalle['subtotal_linea_bs']);
                 $stmtDetalle->bindParam(':peso_vehiculo', $detalle['peso_vehiculo']);
                 $stmtDetalle->bindParam(':peso_bruto', $detalle['peso_bruto']);
                 $stmtDetalle->bindParam(':peso_neto', $detalle['peso_neto']);
 
                 if (!$stmtDetalle->execute()) {
                     $this->db->rollBack();
-                    error_log("ComprasModel::insertarCompra - Error al insertar detalle: " . implode(", ", $stmtDetalle->errorInfo()) . " para producto ID: " . $detalle['idproducto']);
-                    return false;
+                    $errorInfo = $stmtDetalle->errorInfo();
+                    throw new Exception(
+                        "Error al insertar detalle: " . implode(" | ", $errorInfo) .
+                        " para producto ID: " . $detalle['idproducto']
+                    );
                 }
             }
 
             $this->db->commit();
             return $idCompra;
 
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
-            error_log("ComprasModel::insertarCompra - Error de BD general: " . $e->getMessage());
-            return false;
+            throw new Exception("ComprasModel::insertarCompra - Error: " . $e->getMessage());
         }
     }
+
+
 
 
     public function getTasasMonedas()
