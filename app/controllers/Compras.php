@@ -81,7 +81,22 @@ class Compras extends Controllers
         $monedas = $modelo->getMonedasActivas();
         echo json_encode($monedas);
         exit();
+
     }
+
+    public function getTasasMonedasPorFecha()
+{
+    header('Content-Type: application/json');
+    if (!isset($_GET['fecha'])) {
+        echo json_encode(['status' => false, 'message' => 'Fecha requerida']);
+        exit();
+    }
+    $fecha = $_GET['fecha'];
+    $tasas = $this->get_model()->getTasasPorFecha($fecha);
+    echo json_encode(['status' => true, 'tasas' => $tasas]);
+    exit();
+}
+
 
     public function getListaProductosParaFormulario() {
         header('Content-Type: application/json');
@@ -152,6 +167,8 @@ class Compras extends Controllers
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
+
+    
 
     public function setCompra()
     {
@@ -280,4 +297,6 @@ class Compras extends Controllers
         }
         exit();
     }
+    
+
 }

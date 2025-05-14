@@ -59,6 +59,7 @@
                 <div>
                     <label for="fecha_compra_modal" class="form-label">Fecha Compra <span class="text-red-500">*</span></label>
                     <input type="date" id="fecha_compra_modal" name="fecha_compra" class="w-1/3 border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                    <div id="tasaDelDiaInfo" class="text-xs text-blue-700 font-semibold my-2"></div>
                 </div>
                 <div>
                     <label for="idmoneda_general_compra_modal" class="form-label">Moneda General <span class="text-red-500">*</span></label>

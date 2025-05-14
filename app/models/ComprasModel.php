@@ -301,22 +301,38 @@ class ComprasModel
     public function insertarCompra(array $datosCompra, array $detallesCompra)
     {
         try {
+            $tasas = $this->getTasasMonedas();
             $this->db->beginTransaction();
 
+            $subtotalGeneralBs = 0;
+            foreach ($detallesCompra as &$detalle) {
+                $idMoneda = $detalle['idmoneda_detalle'];
+                $subtotalLinea = floatval($detalle['subtotal_linea']);
+                $tasa = isset($tasas[$idMoneda]) ? $tasas[$idMoneda] : 1;
+                $subtotalBs = ($idMoneda == 3) ? $subtotalLinea : $subtotalLinea * $tasa;
+                $detalle['subtotal_linea_bs'] = $subtotalBs;
+                $subtotalGeneralBs += $subtotalBs;
+            }
+            unset($detalle);
+
+            $descuentoPorcentaje = floatval($datosCompra['descuento_porcentaje_compra']);
+            $montoDescuento = ($subtotalGeneralBs * $descuentoPorcentaje) / 100;
+            $totalGeneralBs = $subtotalGeneralBs - $montoDescuento;
+
             $sqlCompra = "INSERT INTO compra (nro_compra, fecha, idproveedor, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, total_general, observaciones_compra, estatus_compra)
-                          VALUES (:nro_compra, :fecha, :idproveedor, :idmoneda_general, :subtotal_general, :descuento_porcentaje, :monto_descuento, :total_general, :observaciones, 'Pendiente')";
+                        VALUES (:nro_compra, :fecha, :idproveedor, :idmoneda_general, :subtotal_general, :descuento_porcentaje, :monto_descuento, :total_general, :observaciones, 'Pendiente')";
             
             $stmtCompra = $this->db->prepare($sqlCompra);
             $stmtCompra->bindParam(':nro_compra', $datosCompra['nro_compra']);
             $stmtCompra->bindParam(':fecha', $datosCompra['fecha_compra']);
             $stmtCompra->bindParam(':idproveedor', $datosCompra['idproveedor'], PDO::PARAM_INT);
             $stmtCompra->bindParam(':idmoneda_general', $datosCompra['idmoneda_general'], PDO::PARAM_INT);
-            $stmtCompra->bindParam(':subtotal_general', $datosCompra['subtotal_general_compra']);
-            $stmtCompra->bindParam(':descuento_porcentaje', $datosCompra['descuento_porcentaje_compra']);
-            $stmtCompra->bindParam(':monto_descuento', $datosCompra['monto_descuento_compra']);
-            $stmtCompra->bindParam(':total_general', $datosCompra['total_general_compra']);
+            $stmtCompra->bindParam(':subtotal_general', $subtotalGeneralBs);
+            $stmtCompra->bindParam(':descuento_porcentaje', $descuentoPorcentaje);
+            $stmtCompra->bindParam(':monto_descuento', $montoDescuento);
+            $stmtCompra->bindParam(':total_general', $totalGeneralBs);
             $stmtCompra->bindParam(':observaciones', $datosCompra['observaciones_compra']);
-            
+
             if (!$stmtCompra->execute()) {
                 $this->db->rollBack();
                 error_log("ComprasModel::insertarCompra - Error al insertar cabecera: " . implode(", ", $stmtCompra->errorInfo()));
@@ -324,14 +340,8 @@ class ComprasModel
             }
             $idCompra = $this->db->lastInsertId();
 
-            if (!$idCompra) {
-                $this->db->rollBack();
-                error_log("ComprasModel::insertarCompra - No se pudo obtener lastInsertId para la compra.");
-                return false;
-            }
-
-            $sqlDetalle = "INSERT INTO detalle_compras (idcompra, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
-                           VALUES (:idcompra, :idproducto, :descripcion, :cantidad, :precio_unitario, :idmoneda_detalle, :subtotal_linea, :peso_vehiculo, :peso_bruto, :peso_neto)";
+            $sqlDetalle = "INSERT INTO detalle_compras (idcompra, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_compra, idmoneda_detalle, subtotal_linea, subtotal_linea_bs, peso_vehiculo, peso_bruto, peso_neto)
+                        VALUES (:idcompra, :idproducto, :descripcion, :cantidad, :precio_unitario, :idmoneda_detalle, :subtotal_linea, :subtotal_linea_bs, :peso_vehiculo, :peso_bruto, :peso_neto)";
             $stmtDetalle = $this->db->prepare($sqlDetalle);
 
             foreach ($detallesCompra as $detalle) {
@@ -342,6 +352,7 @@ class ComprasModel
                 $stmtDetalle->bindParam(':precio_unitario', $detalle['precio_unitario_compra']);
                 $stmtDetalle->bindParam(':idmoneda_detalle', $detalle['idmoneda_detalle'], PDO::PARAM_INT);
                 $stmtDetalle->bindParam(':subtotal_linea', $detalle['subtotal_linea']);
+                $stmtDetalle->bindParam(':subtotal_linea_bs', $detalle['subtotal_linea_bs']);
                 $stmtDetalle->bindParam(':peso_vehiculo', $detalle['peso_vehiculo']);
                 $stmtDetalle->bindParam(':peso_bruto', $detalle['peso_bruto']);
                 $stmtDetalle->bindParam(':peso_neto', $detalle['peso_neto']);
@@ -364,4 +375,42 @@ class ComprasModel
             return false;
         }
     }
+
+
+    public function getTasasMonedas()
+    {
+        $sql = "SELECT idmoneda, valor FROM monedas WHERE estado = 'activo'";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $tasas = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $tasas[$row['idmoneda']] = floatval($row['valor']);
+            }
+            return $tasas;
+        } catch (PDOException $e) {
+            error_log("ComprasModel::getTasasMonedas - Error de BD: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getTasasPorFecha($fecha)
+{
+    $sql = "SELECT codigo_moneda, tasa_a_bs FROM historial_tasas_bcv WHERE fecha_publicacion_bcv = :fecha";
+    try {
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':fecha', $fecha, PDO::PARAM_STR);
+        $stmt->execute();
+        $tasas = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $tasas[$row['codigo_moneda']] = floatval($row['tasa_a_bs']);
+        }
+        return $tasas;
+    } catch (PDOException $e) {
+        error_log("ComprasModel::getTasasPorFecha - Error de BD: " . $e->getMessage());
+        return [];
+    }
+}
+
+
 }

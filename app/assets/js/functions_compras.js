@@ -125,6 +125,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function abrirModalNuevaCompra() {
     // Resetear formulario y cargar datos iniciales
+    fechaCompraModal.valueAsDate = new Date();
+  fechaActualCompra = fechaCompraModal.value;
+  cargarTasasPorFecha(fechaActualCompra);
     formNuevaCompraModal.reset();
     detalleCompraItemsModal = [];
     renderizarTablaDetalleModal(); // Limpia la tabla de detalles
@@ -146,6 +149,46 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.classList.remove("overflow-hidden");
   }
 
+let tasasMonedas = {}; // { USD: 93.58, EUR: 100.00, ... }
+let fechaActualCompra = null;
+
+async function cargarTasasPorFecha(fecha) {
+  const divTasa = document.getElementById("tasaDelDiaInfo");
+  divTasa.textContent = "Cargando tasas del día...";
+  try {
+    const response = await fetch(`compras/getTasasMonedasPorFecha?fecha=${encodeURIComponent(fecha)}`);
+    const data = await response.json();
+    if (data.status && data.tasas) {
+      tasasMonedas = data.tasas;
+      // Mostrar texto
+      let texto = `Tasa del día (${fecha.split('-').reverse().join('/')})`;
+      let tasasArr = [];
+      for (const [moneda, tasa] of Object.entries(tasasMonedas)) {
+        tasasArr.push(`1 ${moneda} = ${Number(tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})} Bs.`);
+      }
+      texto += ": " + tasasArr.join(" | ");
+      divTasa.textContent = texto;
+      calcularTotalesGeneralesModal();
+    } else {
+      divTasa.textContent = "No hay tasas registradas para esta fecha.";
+      tasasMonedas = {};
+      calcularTotalesGeneralesModal();
+    }
+  } catch (e) {
+    divTasa.textContent = "Error al cargar tasas del día.";
+    tasasMonedas = {};
+    calcularTotalesGeneralesModal();
+  }
+}
+
+// Al cambiar la fecha de compra
+fechaCompraModal.addEventListener("change", function () {
+  fechaActualCompra = this.value;
+  if (fechaActualCompra) {
+    cargarTasasPorFecha(fechaActualCompra);
+  }
+});
+
   if (btnAbrirModalNuevaCompra)
     btnAbrirModalNuevaCompra.addEventListener("click", abrirModalNuevaCompra);
   if (btnCerrarModalNuevaCompra)
@@ -160,36 +203,40 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  async function cargarMonedasParaModal() {
-    selectMonedaGeneralModal.innerHTML =
-      '<option value="">Cargando...</option>';
-    try {
-      const response = await fetch(
-        'compras/getListaMonedasParaFormulario'
-      );
-      if (!response.ok) throw new Error("Error en respuesta de monedas");
-      const monedas = await response.json();
-      selectMonedaGeneralModal.innerHTML =
-        '<option value="">Seleccione Moneda</option>';
-      monedas.forEach((moneda) => {
-        const option = document.createElement("option");
-        option.value = moneda.idmoneda;
-        if(moneda.codigo_moneda === "USD") {
-          $simbolo = "$";
-        }else if(moneda.codigo_moneda === "EUR") {
-          $simbolo = "€";
-        }else if(moneda.codigo_moneda === "VES") {
-          $simbolo = "Bs.";
-        }
-        option.textContent = `${moneda.codigo_moneda} (${$simbolo})`;
-        selectMonedaGeneralModal.appendChild(option);
-      });
-    } catch (error) {
-      console.error("Error al cargar monedas:", error);
-      selectMonedaGeneralModal.innerHTML =
-        '<option value="">Error al cargar</option>';
-    }
+
+function calcularSubtotalLineaItemModal(item) {
+  const precioUnitario = parseFloat(item.precio_unitario) || 0;
+  let cantidadBase = 0;
+  if (item.idcategoria === 1) {
+    cantidadBase = calcularPesoNetoItemModal(item);
+  } else {
+    cantidadBase = parseFloat(item.cantidad_unidad) || 0;
   }
+  const subtotalOriginal = cantidadBase * precioUnitario;
+  item.subtotal_linea = subtotalOriginal;
+  item.subtotal_linea_bs = convertirAMonedaBase(subtotalOriginal, item.idmoneda_item);
+  return item.subtotal_linea;
+}
+
+function calcularTotalesGeneralesModal() {
+  let subtotalGeneralBs = 0;
+  detalleCompraItemsModal.forEach((item) => {
+    subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+  });
+
+  subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toFixed(2)}`;
+  subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
+
+  const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
+  const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
+  montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toFixed(2)}`;
+  montoDescuentoInputModal.value = montoDescuento.toFixed(2);
+
+  const totalGeneral = subtotalGeneralBs - montoDescuento;
+  totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toFixed(2)}`;
+  totalGeneralInputModal.value = totalGeneral.toFixed(2);
+}
+
 
   async function cargarProductosParaModal() {
     selectProductoAgregarModal.innerHTML =
@@ -464,46 +511,79 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     return 0;
   }
 
-  function calcularSubtotalLineaItemModal(item) {
-    const precioUnitario = parseFloat(item.precio_unitario) || 0;
-    let cantidadBase = 0;
-    if (item.idcategoria === 1) {
-      cantidadBase = calcularPesoNetoItemModal(item);
-    } else {
-      cantidadBase = parseFloat(item.cantidad_unidad) || 0;
-    }
-    item.subtotal_linea = cantidadBase * precioUnitario;
-    return item.subtotal_linea;
-  }
-
-  function calcularTotalesGeneralesModal() {
-    let subtotalGeneral = 0;
-    const monedaGeneralOption =
-      selectMonedaGeneralModal.options[
-        selectMonedaGeneralModal.selectedIndex
-      ];
-    const monedaGeneralSimbolo = monedaGeneralOption
-      ? monedaGeneralOption.dataset.idmoneda_item
-      : "$";
-
-    detalleCompraItemsModal.forEach((item) => {
-      // TODO: Implementar conversión de moneda si item.idmoneda_item es diferente a selectMonedaGeneralModal.value
-      subtotalGeneral += parseFloat(item.subtotal_linea) || 0;
+async function cargarMonedasParaModal() {
+  selectMonedaGeneralModal.innerHTML = '<option value="">Cargando...</option>';
+  try {
+    const response = await fetch('compras/getListaMonedasParaFormulario');
+    if (!response.ok) throw new Error("Error en respuesta de monedas");
+    const monedas = await response.json();
+    tasasMonedas = {};
+    selectMonedaGeneralModal.innerHTML = '<option value="">Seleccione Moneda</option>';
+    monedas.forEach((moneda) => {
+      tasasMonedas[moneda.idmoneda] = parseFloat(moneda.valor);
+      let simbolo = "";
+      if (moneda.codigo_moneda === "USD") simbolo = "$";
+      else if (moneda.codigo_moneda === "EUR") simbolo = "€";
+      else if (moneda.codigo_moneda === "VES") simbolo = "Bs.";
+      const option = document.createElement("option");
+      option.value = moneda.idmoneda;
+      option.textContent = `${moneda.codigo_moneda} (${simbolo})`;
+      selectMonedaGeneralModal.appendChild(option);
     });
-
-    subtotalGeneralDisplayModal.value = `${monedaGeneralSimbolo} ${subtotalGeneral.toFixed(2)}`;
-    subtotalGeneralInputModal.value = subtotalGeneral.toFixed(2);
-
-    const descuentoPorcentaje =
-      parseFloat(descuentoPorcentajeInputModal.value) || 0;
-    const montoDescuento = (subtotalGeneral * descuentoPorcentaje) / 100;
-    montoDescuentoDisplayModal.value = `${monedaGeneralSimbolo} ${montoDescuento.toFixed(2)}`;
-    montoDescuentoInputModal.value = montoDescuento.toFixed(2);
-
-    const totalGeneral = subtotalGeneral - montoDescuento;
-    totalGeneralDisplayModal.value = `${monedaGeneralSimbolo} ${totalGeneral.toFixed(2)}`;
-    totalGeneralInputModal.value = totalGeneral.toFixed(2);
+    selectMonedaGeneralModal.value = "3"; // VES por defecto
+  } catch (error) {
+    console.error("Error al cargar monedas:", error);
+    selectMonedaGeneralModal.innerHTML = '<option value="">Error al cargar</option>';
   }
+}
+
+  function convertirAMonedaBase(monto, idmoneda) {
+  if (idmoneda == 3) return monto;
+  const tasa = tasasMonedas[idmoneda] || 1;
+  console.log("Convertir a moneda base: ", idmoneda);
+  console.log("Monto: ", monto);  
+  console.log("Tasas: ", tasasMonedas);
+  console.log("Tasa de moneda: ", tasasMonedas[idmoneda]);
+  console.log("Monto convertido: ", monto * tasa);
+  return monto * tasa;
+}
+
+  function calcularSubtotalLineaItemModal(item) {
+  const precioUnitario = parseFloat(item.precio_unitario) || 0;
+  let cantidadBase = 0;
+  if (item.idcategoria === 1) {
+    cantidadBase = calcularPesoNetoItemModal(item);
+  } else {
+    cantidadBase = parseFloat(item.cantidad_unidad) || 0;
+  }
+  const subtotalOriginal = cantidadBase * precioUnitario;
+  item.subtotal_linea = subtotalOriginal;
+  if (item.idmoneda_item == "USD") {
+    $moneda = 1;
+  }else if (item.idmoneda_item == "EUR") {
+    $moneda = 2;
+  } else if (item.idmoneda_item == "VES") {
+    $moneda = 3;
+  }
+  item.subtotal_linea_bs = convertirAMonedaBase(subtotalOriginal, $moneda);
+  return item.subtotal_linea;
+}
+
+function calcularTotalesGeneralesModal() {
+  let subtotalGeneralBs = 0;
+  detalleCompraItemsModal.forEach((item) => {
+    subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+  });
+  subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
+  const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
+  const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
+  montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  montoDescuentoInputModal.value = montoDescuento.toFixed(2);
+  const totalGeneral = subtotalGeneralBs - montoDescuento;
+  totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  totalGeneralInputModal.value = totalGeneral.toFixed(2);
+}
 
   if (descuentoPorcentajeInputModal)
     descuentoPorcentajeInputModal.addEventListener(
