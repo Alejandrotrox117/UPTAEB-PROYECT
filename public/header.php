@@ -53,12 +53,22 @@
                       <span class="ml-5">Romana</span>
                     </a>
                   </li>
-                  <li
-                    class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white"
-                  >
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                     <a href="/project/clasificacion" class="flex items-center text-sm">
                       <span><i class="fa-solid fa-layer-group icon"></i></span>
                       <span class="ml-5">Clasificacion de Materiales</span>
+                    </a>
+                  </li>
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/empleados" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-shield-halved icon"></i></span>
+                      <span class="ml-5">Empleados</span>
+                    </a>
+                  </li>
+                   <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/produccion" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-shield-halved icon"></i></span>
+                      <span class="ml-5">Produccion</span>
                     </a>
                   </li>
                 </ul>
