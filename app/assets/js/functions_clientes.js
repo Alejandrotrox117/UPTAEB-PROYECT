@@ -1,8 +1,66 @@
 import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import { expresiones, inicializarValidaciones } from "./validaciones.js";
-
+import { validarCampo } from "./validaciones.js";
 document.addEventListener("DOMContentLoaded", function () {
   // Inicializar DataTable
+  inicializarDataTable();
+
+  // Definir campos y validaciones
+  const campos = [
+    { id: "cedula", regex: expresiones.cedula, mensaje: " La Cédula debe contener la estructura V-XXXXX No debe contener espacios y solo números." },
+    { id: "nombre", regex: expresiones.nombre, mensaje: "El nombre debe tener entre 2 y 50 caracteres alfabéticos." },
+    { id: "apellido", regex: expresiones.apellido, mensaje: "El apellido debe tener entre 2 y 50 caracteres alfabéticos." },
+    { id: "telefono_principal", regex: expresiones.telefono_principal, mensaje: "El teléfono debe tener exactamente 10 dígitos." },
+    { id: "direccion", regex: expresiones.direccion, mensaje: "La dirección debe tener entre 5 y 100 caracteres." },
+    { id: "estatus", regex: expresiones.estatus, mensaje: "El estatus debe ser 'Activo' o 'Inactivo'." },
+    { id: "observaciones", regex: expresiones.observaciones, mensaje: "Las observaciones no deben exceder los 200 caracteres." },
+  ];
+
+  inicializarValidaciones(campos);
+
+  // Evento para el botón "Registrar"
+  document.getElementById("registrarClienteBtn").addEventListener("click", function () {
+    manejarRegistro(campos);
+  });
+
+  // Botón para abrir el modal de registro
+  document.getElementById("abrirModalBtn").addEventListener("click", function () {
+    abrirModal("clienteModal");
+  });
+
+  // Botón para cerrar el modal
+  document.getElementById("cerrarModalBtn").addEventListener("click", function () {
+    cerrarModal("clienteModal");
+  });
+
+  // Evento para manejar el clic en el botón de eliminar
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".eliminar-btn")) {
+      const idcliente = e.target.closest(".eliminar-btn").getAttribute("data-idcliente");
+      confirmarEliminacion(idcliente);
+    }
+  });
+
+  // Evento para manejar el clic en el botón de editar
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".editar-btn")) {
+      const idcliente = e.target.closest(".editar-btn").getAttribute("data-idcliente");
+      if (!idcliente || isNaN(idcliente)) {
+        Swal.fire({
+          title: "¡Error!",
+          text: "ID de cliente no válido.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
+        return;
+      }
+      abrirModalclienteParaEdicion(idcliente);
+    }
+  });
+});
+
+// Función para inicializar DataTable
+function inicializarDataTable() {
   $("#Tablaclientes").DataTable({
     processing: true,
     serverSide: true,
@@ -59,153 +117,97 @@ document.addEventListener("DOMContentLoaded", function () {
     pageLength: 10,
     order: [[0, "asc"]],
   });
+}
 
- 
+// Función para manejar el registro de clientes
+function manejarRegistro(campos) {
+  let formularioValido = true;
 
-  // Validar formulario en tiempo real
-  const validarCampo = (input, regex, mensaje) => {
-    const errorDiv = input.nextElementSibling;
-
-    if (!regex.test(input.value.trim())) {
-      // Agregar clases de error
-      input.classList.add("border-red-500", "focus:ring-red-500");
-      input.classList.remove("border-gray-300", "focus:ring-green-400");
-
-      // Mostrar mensaje de error
-      if (errorDiv) {
-        errorDiv.textContent = mensaje;
-        errorDiv.classList.remove("hidden");
-      }
-      return false;
-    } else {
-      // Quitar clases de error y restaurar las clases predeterminadas
-      input.classList.remove("border-red-500", "focus:ring-red-500");
-      input.classList.add("border-gray-300", "focus:ring-green-400");
-
-      // Ocultar mensaje de error
-      if (errorDiv) {
-        errorDiv.textContent = "";
-        errorDiv.classList.add("hidden");
-      }
-      return true;
+  campos.forEach((campo) => {
+    const input = document.getElementById(campo.id);
+    if (input) {
+      const valido = validarCampo(input, campo.regex, campo.mensaje);
+      if (!valido) formularioValido = false;
     }
-  };
+  });
 
-  const campos = [
-    { id: "cedula", regex: expresiones.cedula, mensaje: "Formato de cédula inválido." },
-    { id: "nombre", regex: expresiones.nombre, mensaje: "El nombre debe tener entre 2 y 50 caracteres alfabéticos." },
-    { id: "apellido", regex: expresiones.apellido, mensaje: "El apellido debe tener entre 2 y 50 caracteres alfabéticos." },
-    { id: "telefono_principal", regex: expresiones.telefono_principal, mensaje: "El teléfono debe tener exactamente 10 dígitos." },
-    { id: "direccion", regex: expresiones.direccion, mensaje: "La dirección debe tener entre 5 y 100 caracteres." },
-    { id: "estatus", regex: expresiones.estatus, mensaje: "El estatus debe ser 'Activo' o 'Inactivo'." },
-    { id: "observaciones", regex: expresiones.observaciones, mensaje: "Las observaciones no deben exceder los 200 caracteres." },
-  ];
-
-  inicializarValidaciones(campos);
-
-  // Validar formulario al enviar
-  document.getElementById("clienteForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-    let formularioValido = true;
-
-    campos.forEach((campo) => {
-      const input = document.getElementById(campo.id);
-      if (input) {
-        const valido = validarCampo(input, campo.regex, campo.mensaje);
-        if (!valido) formularioValido = false;
-      }
+  if (!formularioValido) {
+    Swal.fire({
+      title: "¡Error!",
+      text: "Por favor, corrige los errores en el formulario.",
+      icon: "error",
+      confirmButtonText: "Aceptar",
     });
+    return;
+  }
 
-    if (!formularioValido) {
-      Swal.fire({
-        title: "¡Error!",
-        text: "Por favor, corrige los errores en el formulario.",
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
-      return;
-    }
+  // Si el formulario es válido, enviar los datos
+  const formData = new FormData(document.getElementById("clienteForm"));
+  const data = {};
+  formData.forEach((value, key) => {
+    data[key] = value;
+  });
 
-    // Si el formulario es válido, enviar los datos
-    const formData = new FormData(this);
-    const data = {};
-    formData.forEach((value, key) => {
-      data[key] = value;
-    });
+  const idcliente = document.getElementById("idcliente").value;
+  const url = idcliente ? "clientes/updateCliente" : "clientes/createCliente";
+  const method = idcliente ? "PUT" : "POST";
 
-    const idcliente = document.getElementById("idcliente").value;
-    const url = idcliente ? "clientes/updateCliente" : "clientes/createCliente";
-    const method = idcliente ? "PUT" : "POST";
-
-    fetch(url, {
-      method: method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        if (result.status) {
-          Swal.fire({
-            title: "¡Éxito!",
-            text: result.message || "Cliente registrado correctamente.",
-            icon: "success",
-            confirmButtonText: "Aceptar",
-          }).then(() => {
-            $("#Tablaclientes").DataTable().ajax.reload();
-            cerrarModalCliente();
-          });
-        } else {
-          Swal.fire({
-            title: "¡Error!",
-            text: result.message || "No se pudo registrar el cliente.",
-            icon: "error",
-            confirmButtonText: "Aceptar",
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
+  fetch(url, {
+    method: method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status) {
+        Swal.fire({
+          title: "¡Éxito!",
+          text: result.message || "Cliente registrado correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          $("#Tablaclientes").DataTable().ajax.reload();
+          cerrarModal("clienteModal");
+        });
+      } else {
         Swal.fire({
           title: "¡Error!",
-          text: "Ocurrió un error al procesar la solicitud.",
+          text: result.message || "No se pudo registrar el cliente.",
           icon: "error",
           confirmButtonText: "Aceptar",
         });
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      Swal.fire({
+        title: "¡Error!",
+        text: "Ocurrió un error al procesar la solicitud.",
+        icon: "error",
+        confirmButtonText: "Aceptar",
       });
-  });
-
-  // Botón para abrir el modal de registro
-  document.getElementById("abrirModalBtn").addEventListener("click", function () {
-    abrirModal("clienteModal");
-  });
-
-  // Botón para cerrar el modal
-  document.getElementById("cerrarModalBtn").addEventListener("click", function () {
-    cerrarModal("clienteModal");
-  });
-function abrirModal() {
-  const modal = document.getElementById("clienteModal");
-  modal.classList.remove("opacity-0", "pointer-events-none");
+    });
 }
 
-function cerrarModal() {
-  const modal = document.getElementById("clienteModal");
-  modal.classList.add("opacity-0", "pointer-events-none");
-  document.getElementById("clienteForm").reset();
+// Función para confirmar la eliminación de un cliente
+function confirmarEliminacion(idcliente) {
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: "Esta acción desactivará al cliente.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      eliminarcliente(idcliente);
+    }
+  });
 }
-  // // Funciones para abrir y cerrar el modal
-  // window.abrirModalCliente = function () {
-  //   const modal = document.getElementById("clienteModal");
-  //   modal.classList.remove("opacity-0", "pointer-events-none");
-  // };
 
-  // window.cerrarModalCliente = function () {
-  //   const modal = document.getElementById("clienteModal");
-  //   modal.classList.add("opacity-0", "pointer-events-none");
-  //   document.getElementById("clienteForm").reset();
-  // };
-});
-
+// Función para eliminar un cliente
 function eliminarcliente(idcliente) {
   fetch(`clientes/deleteCliente`, {
     method: "POST",
@@ -215,18 +217,15 @@ function eliminarcliente(idcliente) {
     .then((response) => response.json())
     .then((result) => {
       if (result.status) {
-        // Notificación de éxito con SweetAlert
         Swal.fire({
           title: "¡Éxito!",
           text: result.message || "Cliente eliminado correctamente.",
           icon: "success",
           confirmButtonText: "Aceptar",
         }).then(() => {
-          // Recargar la tabla después de cerrar la alerta
           $("#Tablaclientes").DataTable().ajax.reload();
         });
       } else {
-        // Notificación de error con SweetAlert
         Swal.fire({
           title: "¡Error!",
           text: result.message || "No se pudo eliminar el cliente.",
@@ -237,7 +236,6 @@ function eliminarcliente(idcliente) {
     })
     .catch((error) => {
       console.error("Error:", error);
-      // Notificación de error con SweetAlert
       Swal.fire({
         title: "¡Error!",
         text: "Ocurrió un error al intentar eliminar el cliente.",
@@ -247,35 +245,8 @@ function eliminarcliente(idcliente) {
     });
 }
 
-// Evento para manejar el clic en el botón de eliminar
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".eliminar-btn")) {
-    const idcliente = e.target
-      .closest(".eliminar-btn")
-      .getAttribute("data-idcliente");
-
-    // Confirmación antes de eliminar
-    Swal.fire({
-      title: "¿Estás seguro?",
-      text: "Esta acción desactivará al cliente.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        eliminarcliente(idcliente);
-      }
-    });
-  }
-});
-
+// Función para abrir el modal de edición de cliente
 function abrirModalclienteParaEdicion(idcliente) {
-  console.log("ID de cliente recibido para edición:", idcliente); // Depuración
-
-  // Realizar la solicitud al backend para obtener los datos del cliente
   fetch(`clientes/getclienteById/${idcliente}`)
     .then((response) => {
       if (!response.ok) {
@@ -300,20 +271,10 @@ function abrirModalclienteParaEdicion(idcliente) {
       document.getElementById("observaciones").value = cliente.observaciones || "";
       document.getElementById("estatus").value = cliente.estatus || "";
 
-      // Guardar los valores originales en atributos data-*
-      document.getElementById("nombre").dataset.originalValue = cliente.nombre || "";
-      document.getElementById("apellido").dataset.originalValue = cliente.apellido || "";
-      document.getElementById("cedula").dataset.originalValue = cliente.cedula || "";
-      document.getElementById("telefono_principal").dataset.originalValue = cliente.telefono_principal || "";
-      document.getElementById("direccion").dataset.originalValue = cliente.direccion || "";
-      document.getElementById("observaciones").dataset.originalValue = cliente.observaciones || "";
-      document.getElementById("estatus").dataset.originalValue = cliente.estatus || "";
-
-      // Abrir el modal para edición
-      abrirModalcliente();
+      abrirModal("clienteModal");
     })
     .catch((error) => {
-      console.error("Error capturado al cargar los datos:", error.message); // Depuración
+      console.error("Error capturado al cargar los datos:", error.message);
       Swal.fire({
         title: "¡Error!",
         text: "Ocurrió un error al cargar los datos del cliente. Por favor, intenta nuevamente.",
@@ -322,24 +283,3 @@ function abrirModalclienteParaEdicion(idcliente) {
       });
     });
 }
-
-// Evento para manejar el clic en el botón de editar
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".editar-btn")) {
-    const idcliente = e.target
-      .closest(".editar-btn")
-      .getAttribute("data-idcliente");
-
-    if (!idcliente || isNaN(idcliente)) {
-      Swal.fire({
-        title: "¡Error!",
-        text: "ID de cliente no válido.",
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
-      return;
-    }
-
-    abrirModalclienteParaEdicion(idcliente);
-  }
-});

@@ -56,10 +56,7 @@
         <!-- Encabezado -->
         <div class="px-4 py-4 border-b flex justify-between items-center">
             <h3 class="text-xl font-bold text-gray-800">Registrar cliente</h3>
-            <button onclick="cerrarModalCliente()"  class="text-gray-600 hover:text-gray-800 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+            
             </button>
         </div>
 
@@ -72,10 +69,10 @@
                     <input type="text" id="cedula" name="cedula" 
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
                     <div id="error-cedula-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        El campo Cédula es obligatorio.
+                        
                     </div>
                     <div id="error-cedula-formato" class="text-red-500 text-sm mt-1 hidden">
-                        La Cédula debe contener la estructura V-XXXXX, E-XXXXX, J-XXXXX. No debe contener espacios y solo números. Máximo 10 dígitos.
+                       
                     </div>
                 </div>
                 <div class="">
@@ -83,10 +80,10 @@
                     <input type="text" id="nombre" name="nombre" 
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
                     <div id="error-nombre-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        El campo Nombre es obligatorio.
+                     
                     </div>
                     <div id="error-nombre-formato" class="text-red-500 text-sm mt-1 hidden">
-                        El Nombre debe tener entre 2 y 50 caracteres alfabéticos.
+                        
                     </div>
                 </div>
                 <div class="">
@@ -94,10 +91,10 @@
                     <input type="text" id="apellido" name="apellido" 
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
                     <div id="error-apellido-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        El campo Apellido es obligatorio.
+                     
                     </div>
                     <div id="error-apellido-formato" class="text-red-500 text-sm mt-1 hidden">
-                        El Apellido debe tener entre 2 y 50 caracteres alfabéticos.
+                       
                     </div>
                 </div>
                 <div class="">
@@ -105,10 +102,10 @@
                     <input type="text" id="telefono_principal" name="telefono_principal" 
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
                     <div id="error-telefono_principal-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        El campo Teléfono Principal es obligatorio.
+                      
                     </div>
                     <div id="error-telefono_principal-formato" class="text-red-500 text-sm mt-1 hidden">
-                        El Teléfono debe tener exactamente 10 dígitos.
+                     
                     </div>
                 </div>
                 <div class="flex-1 min-w-[150%]">
@@ -119,7 +116,7 @@
                         <option value="Inactivo">Inactivo</option>
                     </select>
                     <div id="error-estatus-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        El campo Estatus es obligatorio.
+                  
                     </div>
                 </div>
                 <div class="">
@@ -127,10 +124,10 @@
                     <input type="text" id="direccion" name="direccion" 
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
                     <div id="error-direccion-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        El campo Dirección es obligatorio.
+                      
                     </div>
                     <div id="error-direccion-formato" class="text-red-500 text-sm mt-1 hidden">
-                        La Dirección debe tener entre 5 y 100 caracteres.
+                    
                     </div>
                 </div>
             </div>
@@ -139,18 +136,18 @@
                 <input type="text" id="observaciones" name="observaciones" 
                     class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
                 <div id="error-observaciones-formato" class="text-red-500 text-sm mt-1 hidden">
-                    Las Observaciones no deben exceder los 200 caracteres.
+                  
                 </div>
             </div>
             <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mt-4">
                 <div class="">
-                    <button type="button" onclick="cerrarModalCliente()" 
+                    <button type="button" id="cerrarModalBtn" 
                         class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
                         Cancelar
                     </button>
                 </div>
                 <div class="flex justify-end">
-                    <button type="submit" 
+                    <button type="button" id="registrarClienteBtn"
                         class="px-4 ml-10 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
                         Registrar
                     </button>

@@ -10,9 +10,3 @@ export function cerrarModal(modalId) {
   if (form) form.reset();
 }
 
-export function asignarValoresFormulario(campos, valores) {
-  campos.forEach((campo) => {
-    const input = document.getElementById(campo);
-    if (input) input.value = valores[campo] || "";
-  });
-}

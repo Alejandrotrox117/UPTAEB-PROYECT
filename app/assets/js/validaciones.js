@@ -1,7 +1,7 @@
 // Expresiones regulares para validación
 const expresiones = {
-  cedula: /^(V|E|J)-\d{8,10}$/, // Formato de cédula
-  nombre: /^[a-zA-Z\s]{2,50}$/, // Nombre
+  cedula: /^(V|E|J)-\d{8}$/, // Formato de cédula
+  nombre: /^[a-zA-Z\s]{2,20}$/, // Nombre
   apellido: /^[a-zA-Z\s]{2,50}$/, // Apellido
   telefono_principal: /^\d{10}$/, // Teléfono
   direccion: /^.{5,100}$/, // Dirección
