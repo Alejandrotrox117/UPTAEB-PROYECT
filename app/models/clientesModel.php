@@ -7,7 +7,6 @@ class ClientesModel extends Mysql
     private $db;
     private $conexion;
 
-
     private $idcliente;
     private $nombre;
     private $apellido;
@@ -19,6 +18,7 @@ class ClientesModel extends Mysql
     private $observaciones;
     private $fecha_creacion;
     private $fecha_modificacion;
+
     public function __construct()
     {
         parent::__construct();
@@ -32,9 +32,9 @@ class ClientesModel extends Mysql
         return $this->idcliente;
     }
 
-    public function setIdcliente($idpersona)
+    public function setIdcliente($idcliente)
     {
-        $this->idcliente = $idpersona;
+        $this->idcliente = $idcliente;
     }
 
     public function getNombre()
@@ -57,7 +57,7 @@ class ClientesModel extends Mysql
         $this->apellido = $apellido;
     }
 
-    public function getcedula()
+    public function getCedula()
     {
         return $this->cedula;
     }
@@ -66,10 +66,6 @@ class ClientesModel extends Mysql
     {
         $this->cedula = $cedula;
     }
-
-
-
-
 
     public function getTelefonoPrincipal()
     {
@@ -101,32 +97,6 @@ class ClientesModel extends Mysql
         $this->direccion = $direccion;
     }
 
-    public function getObservaciones()
-    {
-        return $this->observaciones;
-    }
-    public function setObservaciones($observaciones)
-    {
-        $this->observaciones = $observaciones;
-    }
-    public function getFechaCreacion()
-    {
-        return $this->fecha_creacion;
-    }
-    public function setFechaCreacion($fecha_creacion)
-    {
-        $this->fecha_creacion = $fecha_creacion;
-    }
-    public function getFechaModificacion()
-    {
-        return $this->fecha_modificacion;
-    }
-    public function setFechaModificacion($fecha_modificacion)
-    {
-        $this->fecha_modificacion = $fecha_modificacion;
-    }
-
-
     public function getEstatus()
     {
         return $this->estatus;
@@ -137,75 +107,97 @@ class ClientesModel extends Mysql
         $this->estatus = $estatus;
     }
 
-
-// Método para seleccionar todos los clientes activos
-public function SelectAllclientes()
-{
-    $sql = "SELECT 
-                idcliente, 
-                cedula,
-                nombre, 
-                apellido, 
-                direccion, 
-                estatus,
-                telefono_principal,
-                observaciones
-            FROM cliente 
-            WHERE estatus = 'ACTIVO'";
-
-    $result = $this->searchAll($sql);
-
-    // Mapear los resultados a las propiedades de la clase
-    $clientes = [];
-    foreach ($result as $row) {
-        $cliente = new self();
-        $cliente->setIdcliente($row['idcliente']);
-        $cliente->setCedula($row['cedula']);
-        $cliente->setNombre($row['nombre']);
-        $cliente->setApellido($row['apellido']);
-        $cliente->setDireccion($row['direccion']);
-        $cliente->setEstatus($row['estatus']);
-        $cliente->setTelefonoPrincipal($row['telefono_principal']);
-        $cliente->setObservaciones($row['observaciones']);
-        $clientes[] = $cliente;
+    public function getObservaciones()
+    {
+        return $this->observaciones;
     }
 
-    return $clientes;
-}
-   
+    public function setObservaciones($observaciones)
+    {
+        $this->observaciones = $observaciones;
+    }
 
+    public function getFechaCreacion()
+    {
+        return $this->fecha_creacion;
+    }
 
-// Método para insertar un nuevo cliente
-public function insertCliente()
-{
-    $sql = "INSERT INTO cliente (
-                cedula,
-                nombre, 
-                apellido, 
-                 direccion, 
-                telefono_principal, 
-               estatus, 
-              observaciones
-               
-               
-                
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public function setFechaCreacion($fecha_creacion)
+    {
+        $this->fecha_creacion = $fecha_creacion;
+    }
 
-    $stmt = $this->db->prepare($sql);
-    $arrValues = [
-        $this->getCedula(),
-        $this->getNombre(),
-        $this->getApellido(),
-        $this->getTelefonoPrincipal(),
-    
-        $this->getDireccion(),
-        $this->getEstatus(),
-        $this->getObservaciones()
-    ];
+    public function getFechaModificacion()
+    {
+        return $this->fecha_modificacion;
+    }
 
-    return $stmt->execute($arrValues);
-}
+    public function setFechaModificacion($fecha_modificacion)
+    {
+        $this->fecha_modificacion = $fecha_modificacion;
+    }
 
+    // Método para seleccionar todos los clientes activos
+    public function selectAllClientes()
+    {
+        $sql = "SELECT 
+                    idcliente, 
+                    cedula,
+                    nombre, 
+                    apellido, 
+                    direccion, 
+                    estatus,
+                    telefono_principal,
+                    observaciones
+                FROM cliente 
+                WHERE estatus = 'ACTIVO'";
+
+        $result = $this->searchAll($sql);
+
+        // Mapear los resultados a las propiedades de la clase
+        $clientes = [];
+        foreach ($result as $row) {
+            $cliente = new self();
+            $cliente->setIdcliente($row['idcliente']);
+            $cliente->setCedula($row['cedula']);
+            $cliente->setNombre($row['nombre']);
+            $cliente->setApellido($row['apellido']);
+            $cliente->setDireccion($row['direccion']);
+            $cliente->setEstatus($row['estatus']);
+            $cliente->setTelefonoPrincipal($row['telefono_principal']);
+            $cliente->setObservaciones($row['observaciones']);
+            $clientes[] = $cliente;
+        }
+
+        return $clientes;
+    }
+
+    // Método para insertar un nuevo cliente
+    public function insertCliente()
+    {
+        $sql = "INSERT INTO cliente (
+                    cedula,
+                    nombre, 
+                    apellido, 
+                    direccion, 
+                    telefono_principal, 
+                    estatus, 
+                    observaciones
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        $stmt = $this->db->prepare($sql);
+        $arrValues = [
+            $this->getCedula(),
+            $this->getNombre(),
+            $this->getApellido(),
+            $this->getDireccion(),
+            $this->getTelefonoPrincipal(),
+            $this->getEstatus(),
+            $this->getObservaciones()
+        ];
+
+        return $stmt->execute($arrValues);
+    }
 
     // Método para eliminar lógicamente un cliente
     public function deleteCliente($clienteId)
@@ -213,14 +205,10 @@ public function insertCliente()
         $sql = "UPDATE cliente SET estatus = 'INACTIVO' WHERE idcliente = ?";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$clienteId]);
-    
-    
-        $sql = "UPDATE cliente SET estatus = 'INACTIVO' WHERE idcliente = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$this->getIdcliente()]);
     }
 
-   public function updateCliente()
+    // Método para actualizar un cliente
+    public function updateCliente()
     {
         $sql = "UPDATE cliente SET 
                     cedula = ?, 
@@ -241,12 +229,13 @@ public function insertCliente()
             $this->getTelefonoPrincipal(),
             $this->getEstatus(),
             $this->getObservaciones(),
-            $this->getIdcliente() // Usar el ID constante
+            $this->getIdcliente()
         ];
 
         return $stmt->execute($arrValues);
     }
 
+    // Método para obtener un cliente por su ID
     public function getClienteById($idcliente)
     {
         $sql = "SELECT 
@@ -260,13 +249,13 @@ public function insertCliente()
                     observaciones 
                 FROM cliente 
                 WHERE idcliente = ?";
-    
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$idcliente]);
-    
+
         // Obtener el resultado
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
         if ($result) {
             // Mapear los datos a las propiedades de la clase
             $this->setIdcliente($result['idcliente']);
@@ -275,14 +264,12 @@ public function insertCliente()
             $this->setApellido($result['apellido']);
             $this->setDireccion($result['direccion']);
             $this->setTelefonoPrincipal($result['telefono_principal']);
-           
             $this->setEstatus($result['estatus']);
             $this->setObservaciones($result['observaciones']);
-    
+
             return $result; // Retornar los datos como un array asociativo
         }
-    
+
         return null; // Retornar null si no se encuentra el cliente
     }
-
 }

@@ -13,7 +13,7 @@
         <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
             <div class="flex justify-between items-center mb-4">
                 <!-- Botón para abrir el modal de Registro -->
-                <button id="abrirModalBtn"  class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
+                <button onclick="abrirModalCliente()"  class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
                     Registrar
                 </button>
             </div>
@@ -56,7 +56,7 @@
         <!-- Encabezado -->
         <div class="px-4 py-4 border-b flex justify-between items-center">
             <h3 class="text-xl font-bold text-gray-800">Registrar cliente</h3>
-            <button id="clienteForm" class="text-gray-600 hover:text-gray-800 transition-colors">
+            <button onclick="cerrarModalCliente()"  class="text-gray-600 hover:text-gray-800 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -65,54 +65,93 @@
 
         <!-- Formulario -->
         <form id="clienteForm" class="px-4 py-4">
-            <div class=" grid grid-cols-2 md:grid-cols-2  gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
                 <div class="">
-                    <input type="hidden" id="idcliente" name="idcliente">
-                    <label for="cedula" class="block text-gray-700 font-medium mb-2">Cedula</label>
-                    <input type="text" id="cedula" name="cedula" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none">
-                     <small id="error-cedula-vacio" style="display: none; color: red;">El campo cédula no puede estar vacío.</small>
-                    <small id="error-cedula-formato" style="display: none; color: red;">La cédula debe tener entre 7 y 10 dígitos.</small>
+                    <input type="hidden" id="idcliente" name="idcliente" value="">
+                    <label for="cedula" class="block text-gray-700 font-medium mb-2">Cédula</label>
+                    <input type="text" id="cedula" name="cedula" 
+                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <div id="error-cedula-vacio" class="text-red-500 text-sm mt-1 hidden">
+                        El campo Cédula es obligatorio.
+                    </div>
+                    <div id="error-cedula-formato" class="text-red-500 text-sm mt-1 hidden">
+                        La Cédula debe contener la estructura V-XXXXX, E-XXXXX, J-XXXXX. No debe contener espacios y solo números. Máximo 10 dígitos.
+                    </div>
                 </div>
                 <div class="">
                     <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre</label>
-                    <input type="text" id="nombre" name="nombre" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" >
-
+                    <input type="text" id="nombre" name="nombre" 
+                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <div id="error-nombre-vacio" class="text-red-500 text-sm mt-1 hidden">
+                        El campo Nombre es obligatorio.
+                    </div>
+                    <div id="error-nombre-formato" class="text-red-500 text-sm mt-1 hidden">
+                        El Nombre debe tener entre 2 y 50 caracteres alfabéticos.
+                    </div>
                 </div>
                 <div class="">
                     <label for="apellido" class="block text-gray-700 font-medium mb-2">Apellido</label>
-                    <input type="text" id="apellido" name="apellido" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" >
+                    <input type="text" id="apellido" name="apellido" 
+                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <div id="error-apellido-vacio" class="text-red-500 text-sm mt-1 hidden">
+                        El campo Apellido es obligatorio.
+                    </div>
+                    <div id="error-apellido-formato" class="text-red-500 text-sm mt-1 hidden">
+                        El Apellido debe tener entre 2 y 50 caracteres alfabéticos.
+                    </div>
                 </div>
                 <div class="">
                     <label for="telefono_principal" class="block text-gray-700 font-medium mb-2">Teléfono Principal</label>
-                    <input type="text" id="telefono_principal" name="telefono_principal" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none">
+                    <input type="text" id="telefono_principal" name="telefono_principal" 
+                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <div id="error-telefono_principal-vacio" class="text-red-500 text-sm mt-1 hidden">
+                        El campo Teléfono Principal es obligatorio.
+                    </div>
+                    <div id="error-telefono_principal-formato" class="text-red-500 text-sm mt-1 hidden">
+                        El Teléfono debe tener exactamente 10 dígitos.
+                    </div>
                 </div>
-
                 <div class="flex-1 min-w-[150%]">
                     <label for="estatus" class="block text-gray-700 font-medium mb-2">Estatus</label>
-                    <select id="estatus" name="estatus"
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                        required>
+                    <select id="estatus" name="estatus" 
+                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400" required>
                         <option value="Activo">Activo</option>
                         <option value="Inactivo">Inactivo</option>
                     </select>
+                    <div id="error-estatus-vacio" class="text-red-500 text-sm mt-1 hidden">
+                        El campo Estatus es obligatorio.
+                    </div>
                 </div>
                 <div class="">
                     <label for="direccion" class="block text-gray-700 font-medium mb-2">Dirección</label>
-                    <input type="text" id="direccion" name="direccion" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" >
+                    <input type="text" id="direccion" name="direccion" 
+                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <div id="error-direccion-vacio" class="text-red-500 text-sm mt-1 hidden">
+                        El campo Dirección es obligatorio.
+                    </div>
+                    <div id="error-direccion-formato" class="text-red-500 text-sm mt-1 hidden">
+                        La Dirección debe tener entre 5 y 100 caracteres.
+                    </div>
                 </div>
             </div>
-                <div class="grid-flow-row">
-                    <label for="direccion" class="block text-gray-700 font-medium mb-2">Observaciones</label>
-                    <input type="text" id="observaciones" name="observaciones" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none" >
+            <div class="grid-flow-row mt-4">
+                <label for="observaciones" class="block text-gray-700 font-medium mb-2">Observaciones</label>
+                <input type="text" id="observaciones" name="observaciones" 
+                    class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                <div id="error-observaciones-formato" class="text-red-500 text-sm mt-1 hidden">
+                    Las Observaciones no deben exceder los 200 caracteres.
                 </div>
-            <div class="grid grid-cols-2 md:grid-cols-2  gap-4 mt-4">
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mt-4">
                 <div class="">
-                    <button type="button" id="cerrarModalBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
+                    <button type="button" onclick="cerrarModalCliente()" 
+                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
                         Cancelar
                     </button>
                 </div>
                 <div class="flex justify-end">
-                    <button type="button" id="registrarClienteBtn" class="px-4 ml-10 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
+                    <button type="submit" 
+                        class="px-4 ml-10 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
                         Registrar
                     </button>
                 </div>
@@ -123,33 +162,3 @@
 
 
 
-
-<!-- Modal de Eliminación (fondo transparente con efecto de desenfoque leve) -->
-<div id="deletionModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-md">
-        <!-- Encabezado -->
-        <div class="px-8 py-6 border-b flex justify-between items-center">
-            <h3 class="text-2xl font-bold text-gray-800">Eliminar Elemento</h3>
-            <button id="deletionCloseBtn" class="text-gray-600 hover:text-gray-800 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-        <!-- Contenido -->
-        <div class="px-8 py-6">
-            <p class="text-gray-700 text-xl">
-                ¿Estás seguro de eliminar este elemento? Esta acción <span class="font-semibold">no se puede revertir</span>.
-            </p>
-        </div>
-        <!-- Acciones -->
-        <div class="px-8 py-6 border-t flex justify-end space-x-6">
-            <button id="deletionCancelBtn" class="px-6 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-xl">
-                Cancelar
-            </button>
-            <button id="deletionConfirmBtn" class="px-6 py-3 bg-red-500 text-white rounded hover:bg-red-600 transition text-xl">
-                Eliminar
-            </button>
-        </div>
-    </div>

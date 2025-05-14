@@ -68,7 +68,7 @@ public function getClientesData()
   
 
 
-public function createcliente()
+public function createCliente()
 {
     try {
         // Leer los datos JSON enviados por el frontend
@@ -173,7 +173,7 @@ public function deletecliente()
     exit();
 }
 
-public function updatecliente()
+public function updateCliente()
 {
     try {
         // Leer los datos JSON enviados por el frontend
@@ -246,4 +246,63 @@ public function updatecliente()
         }
         exit();
     }
+
+    // public function guardarCliente()
+    // {
+    //     try {
+    //         // Leer los datos JSON enviados por el frontend
+    //         $json = file_get_contents('php://input');
+    //         $data = json_decode($json, true);
+
+    //         // Validar que los datos sean válidos
+    //         if (!$data || !is_array($data)) {
+    //             echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
+    //             return;
+    //         }
+
+    //         // Validar campos obligatorios
+    //         if (empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula'])) {
+    //             echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
+    //             return;
+    //         }
+
+    //         // Obtener el modelo
+    //         $model = $this->get_model();
+
+    //         if (empty($data['idcliente'])) {
+    //             // Lógica para crear un nuevo cliente
+    //             $model->setCedula(trim($data['cedula']));
+    //             $model->setNombre(trim($data['nombre']));
+    //             $model->setApellido(trim($data['apellido']));
+    //             $model->setDireccion(trim($data['direccion'] ?? ''));
+    //             $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
+    //             $model->setEstatus(trim($data['estatus'] ?? 'ACTIVO'));
+    //             $model->setObservaciones(trim($data['observaciones'] ?? ''));
+
+    //             $result = $model->insertCliente();
+    //         } else {
+    //             // Lógica para actualizar un cliente existente
+    //             $model->setIdcliente(trim($data['idcliente']));
+    //             $model->setCedula(trim($data['cedula']));
+    //             $model->setNombre(trim($data['nombre']));
+    //             $model->setApellido(trim($data['apellido']));
+    //             $model->setDireccion(trim($data['direccion'] ?? ''));
+    //             $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
+    //             $model->setEstatus(trim($data['estatus'] ?? 'ACTIVO'));
+    //             $model->setObservaciones(trim($data['observaciones'] ?? ''));
+
+    //             $result = $model->updateCliente();
+    //         }
+
+    //         // Respuesta al cliente
+    //         if ($result) {
+    //             echo json_encode(["status" => true, "message" => "Operación realizada correctamente."]);
+    //         } else {
+    //             echo json_encode(["status" => false, "message" => "Error al guardar los datos del cliente."]);
+    //         }
+    //     } catch (Exception $e) {
+    //         echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+    //     }
+    //     exit();
+    // }
 }
