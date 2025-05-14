@@ -126,8 +126,8 @@ document.addEventListener("DOMContentLoaded", function () {
   function abrirModalNuevaCompra() {
     // Resetear formulario y cargar datos iniciales
     fechaCompraModal.valueAsDate = new Date();
-  fechaActualCompra = fechaCompraModal.value;
-  cargarTasasPorFecha(fechaActualCompra);
+    fechaActualCompra = fechaCompraModal.value;
+    cargarTasasPorFecha(fechaActualCompra);
     formNuevaCompraModal.reset();
     detalleCompraItemsModal = [];
     renderizarTablaDetalleModal(); // Limpia la tabla de detalles
@@ -149,45 +149,45 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.classList.remove("overflow-hidden");
   }
 
-let tasasMonedas = {}; // { USD: 93.58, EUR: 100.00, ... }
-let fechaActualCompra = null;
+  let tasasMonedas = {}; // { USD: 93.58, EUR: 100.00, ... }
+  let fechaActualCompra = null;
 
-async function cargarTasasPorFecha(fecha) {
-  const divTasa = document.getElementById("tasaDelDiaInfo");
-  divTasa.textContent = "Cargando tasas del día...";
-  try {
-    const response = await fetch(`compras/getTasasMonedasPorFecha?fecha=${encodeURIComponent(fecha)}`);
-    const data = await response.json();
-    if (data.status && data.tasas) {
-      tasasMonedas = data.tasas;
-      // Mostrar texto
-      let texto = `Tasa del día (${fecha.split('-').reverse().join('/')})`;
-      let tasasArr = [];
-      for (const [moneda, tasa] of Object.entries(tasasMonedas)) {
-        tasasArr.push(`1 ${moneda} = ${Number(tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})} Bs.`);
+  async function cargarTasasPorFecha(fecha) {
+    const divTasa = document.getElementById("tasaDelDiaInfo");
+    divTasa.textContent = "Cargando tasas del día...";
+    try {
+      const response = await fetch(`compras/getTasasMonedasPorFecha?fecha=${encodeURIComponent(fecha)}`);
+      const data = await response.json();
+      if (data.status && data.tasas) {
+        tasasMonedas = data.tasas;
+        // Mostrar texto
+        let texto = `Tasa del día (${fecha.split('-').reverse().join('/')})`;
+        let tasasArr = [];
+        for (const [moneda, tasa] of Object.entries(tasasMonedas)) {
+          tasasArr.push(`1 ${moneda} = ${Number(tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})} Bs.`);
+        }
+        texto += ": " + tasasArr.join(" | ");
+        divTasa.textContent = texto;
+        calcularTotalesGeneralesModal();
+      } else {
+        divTasa.textContent = "No hay tasas registradas para esta fecha.";
+        tasasMonedas = {};
+        calcularTotalesGeneralesModal();
       }
-      texto += ": " + tasasArr.join(" | ");
-      divTasa.textContent = texto;
-      calcularTotalesGeneralesModal();
-    } else {
-      divTasa.textContent = "No hay tasas registradas para esta fecha.";
+    } catch (e) {
+      divTasa.textContent = "Error al cargar tasas del día.";
       tasasMonedas = {};
       calcularTotalesGeneralesModal();
     }
-  } catch (e) {
-    divTasa.textContent = "Error al cargar tasas del día.";
-    tasasMonedas = {};
-    calcularTotalesGeneralesModal();
   }
-}
 
-// Al cambiar la fecha de compra
-fechaCompraModal.addEventListener("change", function () {
-  fechaActualCompra = this.value;
-  if (fechaActualCompra) {
-    cargarTasasPorFecha(fechaActualCompra);
-  }
-});
+  // Al cambiar la fecha de compra
+  fechaCompraModal.addEventListener("change", function () {
+    fechaActualCompra = this.value;
+    if (fechaActualCompra) {
+      cargarTasasPorFecha(fechaActualCompra);
+    }
+  });
 
   if (btnAbrirModalNuevaCompra)
     btnAbrirModalNuevaCompra.addEventListener("click", abrirModalNuevaCompra);
@@ -203,40 +203,38 @@ fechaCompraModal.addEventListener("change", function () {
     }
   });
 
-
-function calcularSubtotalLineaItemModal(item) {
-  const precioUnitario = parseFloat(item.precio_unitario) || 0;
-  let cantidadBase = 0;
-  if (item.idcategoria === 1) {
-    cantidadBase = calcularPesoNetoItemModal(item);
-  } else {
-    cantidadBase = parseFloat(item.cantidad_unidad) || 0;
+  function calcularSubtotalLineaItemModal(item) {
+    const precioUnitario = parseFloat(item.precio_unitario) || 0;
+    let cantidadBase = 0;
+    if (item.idcategoria === 1) {
+      cantidadBase = calcularPesoNetoItemModal(item);
+    } else {
+      cantidadBase = parseFloat(item.cantidad_unidad) || 0;
+    }
+    const subtotalOriginal = cantidadBase * precioUnitario;
+    item.subtotal_linea = subtotalOriginal;
+    item.subtotal_linea_bs = convertirAMonedaBase(subtotalOriginal, item.idmoneda_item);
+    return item.subtotal_linea;
   }
-  const subtotalOriginal = cantidadBase * precioUnitario;
-  item.subtotal_linea = subtotalOriginal;
-  item.subtotal_linea_bs = convertirAMonedaBase(subtotalOriginal, item.idmoneda_item);
-  return item.subtotal_linea;
-}
 
-function calcularTotalesGeneralesModal() {
-  let subtotalGeneralBs = 0;
-  detalleCompraItemsModal.forEach((item) => {
-    subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
-  });
+  function calcularTotalesGeneralesModal() {
+    let subtotalGeneralBs = 0;
+    detalleCompraItemsModal.forEach((item) => {
+      subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+    });
 
-  subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toFixed(2)}`;
-  subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
+    subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toFixed(2)}`;
+    subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
 
-  const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
-  const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
-  montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toFixed(2)}`;
-  montoDescuentoInputModal.value = montoDescuento.toFixed(2);
+    const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
+    const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
+    montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toFixed(2)}`;
+    montoDescuentoInputModal.value = montoDescuento.toFixed(2);
 
-  const totalGeneral = subtotalGeneralBs - montoDescuento;
-  totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toFixed(2)}`;
-  totalGeneralInputModal.value = totalGeneral.toFixed(2);
-}
-
+    const totalGeneral = subtotalGeneralBs - montoDescuento;
+    totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toFixed(2)}`;
+    totalGeneralInputModal.value = totalGeneral.toFixed(2);
+  }
 
   async function cargarProductosParaModal() {
     selectProductoAgregarModal.innerHTML =
@@ -267,59 +265,57 @@ function calcularTotalesGeneralesModal() {
   }
 
   // Autocompletar para buscar proveedor en el MODAL
-const inputCriterioProveedorModal = document.getElementById('inputCriterioProveedorModal');
-const btnBuscarProveedorModal = document.getElementById('btnBuscarProveedorModal');
-const listaResultadosProveedorModal = document.getElementById('listaResultadosProveedorModal');
+  const inputCriterioProveedorModal = document.getElementById('inputCriterioProveedorModal');
+  const btnBuscarProveedorModal = document.getElementById('btnBuscarProveedorModal');
+  const listaResultadosProveedorModal = document.getElementById('listaResultadosProveedorModal');
 
-
-if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
+  if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     btnBuscarProveedorModal.addEventListener('click', async function() {
-        const termino = inputCriterioProveedorModal.value.trim();
-        if (termino.length < 2) { // O la longitud mínima que desees
-            alert("Ingrese al menos 2 caracteres para buscar.");
-            return;
+      const termino = inputCriterioProveedorModal.value.trim();
+      if (termino.length < 2) { // O la longitud mínima que desees
+        Swal.fire("Atención", "Ingrese al menos 2 caracteres para buscar.", "warning");
+        return;
+      }
+
+      listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-gray-500">Buscando...</div>';
+      listaResultadosProveedorModal.classList.remove('hidden');
+
+      try {
+        const response = await fetch(`compras/buscarProveedores?term=${encodeURIComponent(termino)}`);
+        if (!response.ok) {
+          throw new Error('Error en la respuesta del servidor');
         }
+        const proveedores = await response.json();
 
-        listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-gray-500">Buscando...</div>';
-        listaResultadosProveedorModal.classList.remove('hidden');
+        listaResultadosProveedorModal.innerHTML = ''; // Limpiar
+        if (proveedores && proveedores.length > 0) {
+          proveedores.forEach(prov => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('p-2', 'text-xs', 'hover:bg-gray-100', 'cursor-pointer');
+            itemDiv.textContent = `${prov.nombre || ""} ${prov.apellido || ""} (${prov.identificacion || ""})`.trim();
+            itemDiv.dataset.idproveedor = prov.idproveedor;
+            itemDiv.dataset.nombre = `${prov.nombre || ""} ${prov.apellido || ""}`.trim();
+            itemDiv.dataset.identificacion = prov.identificacion || "";
 
-        try {
-            const response = await fetch(`compras/buscarProveedores?term=${encodeURIComponent(termino)}`);
-            if (!response.ok) {
-                throw new Error('Error en la respuesta del servidor');
-            }
-            const proveedores = await response.json();
-            
-            listaResultadosProveedorModal.innerHTML = ''; // Limpiar
-            if (proveedores && proveedores.length > 0) {
-                proveedores.forEach(prov => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.classList.add('p-2', 'text-xs', 'hover:bg-gray-100', 'cursor-pointer');
-                    itemDiv.textContent = `${prov.nombre || ""} ${prov.apellido || ""} (${prov.identificacion || ""})`.trim();
-                    itemDiv.dataset.idproveedor = prov.idproveedor;
-                    itemDiv.dataset.nombre = `${prov.nombre || ""} ${prov.apellido || ""}`.trim();
-                    itemDiv.dataset.identificacion = prov.identificacion || "";
-
-                    itemDiv.addEventListener('click', function() {
-                        hiddenIdProveedorModal.value = this.dataset.idproveedor;
-                        divInfoProveedorModal.innerHTML = `Sel: <strong>${this.dataset.nombre}</strong> (ID: ${this.dataset.identificacion})`;
-                        divInfoProveedorModal.classList.remove('hidden');
-                        inputCriterioProveedorModal.value = this.textContent; // Opcional: llenar el input con el seleccionado
-                        listaResultadosProveedorModal.classList.add('hidden');
-                        listaResultadosProveedorModal.innerHTML = ''; // Limpiar después de seleccionar
-                    });
-                    listaResultadosProveedorModal.appendChild(itemDiv);
-                });
-            } else {
-                listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-gray-500">No se encontraron proveedores.</div>';
-            }
-        } catch (error) {
-            console.error("Error al buscar proveedores:", error);
-            listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-red-500">Error al buscar. Intente de nuevo.</div>';
+            itemDiv.addEventListener('click', function() {
+              hiddenIdProveedorModal.value = this.dataset.idproveedor;
+              divInfoProveedorModal.innerHTML = `Sel: <strong>${this.dataset.nombre}</strong> (ID: ${this.dataset.identificacion})`;
+              divInfoProveedorModal.classList.remove('hidden');
+              inputCriterioProveedorModal.value = this.textContent; // Opcional: llenar el input con el seleccionado
+              listaResultadosProveedorModal.classList.add('hidden');
+              listaResultadosProveedorModal.innerHTML = ''; // Limpiar después de seleccionar
+            });
+            listaResultadosProveedorModal.appendChild(itemDiv);
+          });
+        } else {
+          listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-gray-500">No se encontraron proveedores.</div>';
         }
+      } catch (error) {
+        console.error("Error al buscar proveedores:", error);
+        listaResultadosProveedorModal.innerHTML = '<div class="p-2 text-xs text-red-500">Error al buscar. Intente de nuevo.</div>';
+      }
     });
-}
-
+  }
 
   // Lógica para agregar productos al detalle en el MODAL
   if (btnAgregarProductoDetalleModal && selectProductoAgregarModal) {
@@ -329,14 +325,14 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
           selectProductoAgregarModal.selectedIndex
         ];
       if (!selectedOption.value) {
-        alert("Seleccione un producto.");
+        Swal.fire("Atención", "Seleccione un producto.", "warning");
         return;
       }
       const idproducto = selectedOption.value;
       if (
         detalleCompraItemsModal.find((item) => item.idproducto === idproducto)
       ) {
-        alert("Este producto ya ha sido agregado.");
+        Swal.fire("Atención", "Este producto ya ha sido agregado.", "warning");
         return;
       }
 
@@ -441,10 +437,10 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
                 row.querySelector(".peso_bruto_modal").value = data.peso;
                 actualizarCalculosFilaModal(row, item);
               } else {
-                alert(data.message || "No se pudo obtener el peso.");
+                Swal.fire("Atención", data.message || "No se pudo obtener el peso.", "warning");
               }
             } catch (e) {
-              alert("Error al consultar la romana.");
+              Swal.fire("Error", "Error al consultar la romana.", "error");
             }
           });
         }
@@ -459,10 +455,10 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
                 row.querySelector(".peso_vehiculo_modal").value = data.peso;
                 actualizarCalculosFilaModal(row, item);
               } else {
-                alert(data.message || "No se pudo obtener el peso.");
+                Swal.fire("Atención", data.message || "No se pudo obtener el peso.", "warning");
               }
             } catch (e) {
-              alert("Error al consultar la romana.");
+              Swal.fire("Error", "Error al consultar la romana.", "error");
             }
           });
         }
@@ -554,79 +550,60 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     return 0;
   }
 
-async function cargarMonedasParaModal() {
-  selectMonedaGeneralModal.innerHTML = '<option value="">Cargando...</option>';
-  try {
-    const response = await fetch('compras/getListaMonedasParaFormulario');
-    if (!response.ok) throw new Error("Error en respuesta de monedas");
-    const monedas = await response.json();
-    tasasMonedas = {};
-    selectMonedaGeneralModal.innerHTML = '<option value="">Seleccione Moneda</option>';
-    monedas.forEach((moneda) => {
-      tasasMonedas[moneda.idmoneda] = parseFloat(moneda.valor);
-      let simbolo = "";
-      if (moneda.codigo_moneda === "USD") simbolo = "$";
-      else if (moneda.codigo_moneda === "EUR") simbolo = "€";
-      else if (moneda.codigo_moneda === "VES") simbolo = "Bs.";
-      const option = document.createElement("option");
-      option.value = moneda.idmoneda;
-      option.textContent = `${moneda.codigo_moneda} (${simbolo})`;
-      selectMonedaGeneralModal.appendChild(option);
-    });
-    selectMonedaGeneralModal.value = "3"; // VES por defecto
-  } catch (error) {
-    console.error("Error al cargar monedas:", error);
-    selectMonedaGeneralModal.innerHTML = '<option value="">Error al cargar</option>';
+  async function cargarMonedasParaModal() {
+    selectMonedaGeneralModal.innerHTML = '<option value="">Cargando...</option>';
+    try {
+      const response = await fetch('compras/getListaMonedasParaFormulario');
+      if (!response.ok) throw new Error("Error en respuesta de monedas");
+      const monedas = await response.json();
+      tasasMonedas = {};
+      selectMonedaGeneralModal.innerHTML = '<option value="">Seleccione Moneda</option>';
+      monedas.forEach((moneda) => {
+        tasasMonedas[moneda.idmoneda] = parseFloat(moneda.valor);
+        let simbolo = "";
+        if (moneda.codigo_moneda === "USD") simbolo = "$";
+        else if (moneda.codigo_moneda === "EUR") simbolo = "€";
+        else if (moneda.codigo_moneda === "VES") simbolo = "Bs.";
+        const option = document.createElement("option");
+        option.value = moneda.idmoneda;
+        option.textContent = `${moneda.codigo_moneda} (${simbolo})`;
+        selectMonedaGeneralModal.appendChild(option);
+      });
+      selectMonedaGeneralModal.value = "3"; // VES por defecto
+    } catch (error) {
+      console.error("Error al cargar monedas:", error);
+      selectMonedaGeneralModal.innerHTML = '<option value="">Error al cargar</option>';
+    }
   }
-}
 
   function convertirAMonedaBase(monto, idmoneda) {
-  if (idmoneda == 3) return monto;
-  const tasa = tasasMonedas[idmoneda] || 1;
-  console.log("Convertir a moneda base: ", idmoneda);
-  console.log("Monto: ", monto);  
-  console.log("Tasas: ", tasasMonedas);
-  console.log("Tasa de moneda: ", tasasMonedas[idmoneda]);
-  console.log("Monto convertido: ", monto * tasa);
-  return monto * tasa;
-}
-
-  function calcularSubtotalLineaItemModal(item) {
-  const precioUnitario = parseFloat(item.precio_unitario) || 0;
-  let cantidadBase = 0;
-  if (item.idcategoria === 1) {
-    cantidadBase = calcularPesoNetoItemModal(item);
-  } else {
-    cantidadBase = parseFloat(item.cantidad_unidad) || 0;
+    if (idmoneda == 3) return monto;
+    const tasa = tasasMonedas[idmoneda] || 1;
+    console.log("Convertir a moneda base: ", idmoneda);
+    console.log("Monto: ", monto);  
+    console.log("Tasas: ", tasasMonedas);
+    console.log("Tasa de moneda: ", tasasMonedas[idmoneda]);
+    console.log("Monto convertido: ", monto * tasa);
+    return monto * tasa;
   }
-  const subtotalOriginal = cantidadBase * precioUnitario;
-  item.subtotal_linea = subtotalOriginal;
-  if (item.idmoneda_item == "USD") {
-    $moneda = 1;
-  }else if (item.idmoneda_item == "EUR") {
-    $moneda = 2;
-  } else if (item.idmoneda_item == "VES") {
-    $moneda = 3;
-  }
-  item.subtotal_linea_bs = convertirAMonedaBase(subtotalOriginal, $moneda);
-  return item.subtotal_linea;
-}
 
-function calcularTotalesGeneralesModal() {
-  let subtotalGeneralBs = 0;
-  detalleCompraItemsModal.forEach((item) => {
-    subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
-  });
-  subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-  subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
-  const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
-  const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
-  montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-  montoDescuentoInputModal.value = montoDescuento.toFixed(2);
-  const totalGeneral = subtotalGeneralBs - montoDescuento;
-  totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-  totalGeneralInputModal.value = totalGeneral.toFixed(2);
-}
+  // (Eliminada la definición duplicada de calcularSubtotalLineaItemModal)
+
+  function calcularTotalesGeneralesModal() {
+    let subtotalGeneralBs = 0;
+    detalleCompraItemsModal.forEach((item) => {
+      subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+    });
+    subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
+    const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
+    const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
+    montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    montoDescuentoInputModal.value = montoDescuento.toFixed(2);
+    const totalGeneral = subtotalGeneralBs - montoDescuento;
+    totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    totalGeneralInputModal.value = totalGeneral.toFixed(2);
+  }
 
   if (descuentoPorcentajeInputModal)
     descuentoPorcentajeInputModal.addEventListener(
@@ -702,7 +679,11 @@ function calcularTotalesGeneralesModal() {
           body: formData,
         });
         const data = await response.json();
-        alert(data.message); // O usar un sistema de notificaciones más elegante
+        Swal.fire({
+          title: data.status ? "¡Éxito!" : "Error",
+          text: data.message,
+          icon: data.status ? "success" : "error",
+        });
         if (data.status) {
           cerrarModalNuevaCompra();
           $("#TablaCompras").DataTable().ajax.reload(); // Recargar DataTable
@@ -712,6 +693,7 @@ function calcularTotalesGeneralesModal() {
         }
       } catch (error) {
         console.error("Error al guardar compra:", error);
+        Swal.fire("Error", "Ocurrió un error de conexión al guardar.", "error");
         mensajeErrorFormCompraModal.textContent =
           "Ocurrió un error de conexión al guardar.";
       } finally {
@@ -721,111 +703,106 @@ function calcularTotalesGeneralesModal() {
     });
   }
 
-const modalProveedor = document.getElementById("proveedorModal");
-    const formProveedor = document.getElementById("proveedorForm");
-    const modalTitulo = document.getElementById("modalProveedorTitulo");
-    const btnSubmitProveedor = document.getElementById("btnSubmitProveedor");
-    const inputIdPersona = document.getElementById("idproveedor");
+  const modalProveedor = document.getElementById("proveedorModal");
+  const formProveedor = document.getElementById("proveedorForm");
+  const modalTitulo = document.getElementById("modalProveedorTitulo");
+  const btnSubmitProveedor = document.getElementById("btnSubmitProveedor");
+  const inputIdPersona = document.getElementById("idproveedor");
 
-       window.abrirModalProveedor = function (titulo = "Registrar Proveedor", formAction = "proveedores/createProveedor") {
-        formProveedor.reset(); // 
-        inputIdPersona.value = ""; 
-        modalTitulo.textContent = titulo;
-        formProveedor.setAttribute("data-action", formAction); 
-        btnSubmitProveedor.textContent = "Registrar";
-        modalProveedor.classList.remove("opacity-0", "pointer-events-none");
-    };
+  window.abrirModalProveedor = function (titulo = "Registrar Proveedor", formAction = "proveedores/createProveedor") {
+    formProveedor.reset(); // 
+    inputIdPersona.value = ""; 
+    modalTitulo.textContent = titulo;
+    formProveedor.setAttribute("data-action", formAction); 
+    btnSubmitProveedor.textContent = "Registrar";
+    modalProveedor.classList.remove("opacity-0", "pointer-events-none");
+  };
 
-    // Cerrar modal de proveedor
-    window.cerrarModalProveedor = function () {
-        modalProveedor.classList.add("opacity-0", "pointer-events-none");
-        formProveedor.reset();
-        inputIdPersona.value = "";
-    };
+  // Cerrar modal de proveedor
+window.cerrarModalProveedor = function () {
+  modalProveedor.classList.add("opacity-0", "pointer-events-none");
+  formProveedor.reset();
+  inputIdPersona.value = "";
+};
 
-    // Enviar formulario FORMULARIO (Crear o Actualizar)
-    formProveedor.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const actionUrl = "proveedores/createProveedorinCompras";
-        const method = "POST"; 
+// Enviar formulario FORMULARIO (Crear o Actualizar)
+formProveedor.addEventListener("submit", function (e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const actionUrl = "proveedores/createProveedorinCompras";
+  const method = "POST";
 
-        if (!actionUrl) {
-            Swal.fire("Error Interno", "URL de acción no definida para el formulario.", "error");
-            console.error("El atributo data-action del formulario está vacío o no existe.");
-            return;
-        }
+  if (!actionUrl) {
+    Swal.fire("Error Interno", "URL de acción no definida para el formulario.", "error");
+    console.error("El atributo data-action del formulario está vacío o no existe.");
+    return;
+  }
 
-        // Validaciones básicas
-        const nombre = formData.get('nombre');
-        const identificacion = formData.get('identificacion');
-        const telefono_principal = formData.get('telefono_principal');
+  // Validaciones básicas
+  const nombre = formData.get('nombre');
+  const identificacion = formData.get('identificacion');
+  const telefono_principal = formData.get('telefono_principal');
 
-        if (!nombre || !identificacion || !telefono_principal) {
-            Swal.fire("Atención", "Nombre, Identificación y Teléfono son obligatorios.", "warning");
-            return;
-        }
-        
+  if (!nombre || !identificacion || !telefono_principal) {
+    Swal.fire("Atención", "Nombre, Identificación y Teléfono son obligatorios.", "warning");
+    return;
+  }
 
-        fetch(actionUrl, {
-            method: method,
-            body: formData // Enviar FormData directamente
-        })
-        .then((response) => {
-            if (!response.ok) {
-                
-                return response.json().then(errData => {
-                    
-                    const error = new Error(errData.message || `Error HTTP: ${response.status}`);
-                    error.data = errData; 
-                    error.status = response.status;
-                    throw error; 
-                }).catch(() => {
-                    
-                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
-                });
-            }
-            return response.json(); 
-        })
-        .then(async (result) => {
-    if (result.status) {
+  fetch(actionUrl, {
+    method: method,
+    body: formData // Enviar FormData directamente
+  })
+    .then((response) => {
+      if (!response.ok) {
+        return response.json().then(errData => {
+          const error = new Error(errData.message || `Error HTTP: ${response.status}`);
+          error.data = errData;
+          error.status = response.status;
+          throw error;
+        }).catch(() => {
+          throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        });
+      }
+      return response.json();
+    })
+    .then(async (result) => {
+      if (result.status) {
         Swal.fire("¡Éxito!", result.message, "success");
         // Obtener los datos completos del proveedor recién creado
         try {
-            const response = await fetch(`proveedores/getProveedorById/${encodeURIComponent(result.idproveedor)}`);
-            if (!response.ok) throw new Error('No se pudo obtener el proveedor');
-            const proveedor = await response.json();
-            // Llenar los campos como si se hubiera seleccionado desde el autocompletado
-            hiddenIdProveedorModal.value = proveedor.data.idproveedor;
-            divInfoProveedorModal.innerHTML = `Sel: <strong>${proveedor.data.nombre} ${proveedor.data.apellido}</strong> (ID: ${proveedor.data.identificacion})`;
-            divInfoProveedorModal.classList.remove('hidden');
-            inputCriterioProveedorModal.value = `${proveedor.data.nombre} ${proveedor.data.apellido} (${proveedor.data.identificacion})`;
+          const response = await fetch(`proveedores/getProveedorById/${encodeURIComponent(result.idproveedor)}`);
+          if (!response.ok) throw new Error('No se pudo obtener el proveedor');
+          const proveedor = await response.json();
+          // Llenar los campos como si se hubiera seleccionado desde el autocompletado
+          hiddenIdProveedorModal.value = proveedor.data.idproveedor;
+          divInfoProveedorModal.innerHTML = `Sel: <strong>${proveedor.data.nombre} ${proveedor.data.apellido}</strong> (ID: ${proveedor.data.identificacion})`;
+          divInfoProveedorModal.classList.remove('hidden');
+          inputCriterioProveedorModal.value = `${proveedor.data.nombre} ${proveedor.data.apellido} (${proveedor.data.identificacion})`;
 
-            cerrarModalProveedor();
+          cerrarModalProveedor();
         } catch (error) {
-            console.error("Error al obtener proveedor:", error);
-            Swal.fire("Error", "Proveedor registrado, pero no se pudo mostrar la información.", "warning");
-            cerrarModalProveedor();
+          console.error("Error al obtener proveedor:", error);
+          Swal.fire("Error", "Proveedor registrado, pero no se pudo mostrar la información.", "warning");
+          cerrarModalProveedor();
         }
-    } else {
+      } else {
         Swal.fire("Error", result.message || "Respuesta no exitosa del servidor.", "error");
-    }
-})
+      }
+    })
+    .catch((error) => {
+      console.error("Error en fetch:", error);
+      let errorMessage = "Ocurrió un error al procesar la solicitud.";
 
-        .catch((error) => {
-            console.error("Error en fetch:", error);
-            let errorMessage = "Ocurrió un error al procesar la solicitud.";
-            
-            if (error.data && error.data.message) {
-                errorMessage = error.data.message;
-            } else if (error.message) { 
-                errorMessage = error.message;
-            }
-            Swal.fire("Error", errorMessage, "error");
-        });
+      if (error.data && error.data.message) {
+        errorMessage = error.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      Swal.fire("Error", errorMessage, "error");
     });
-}); 
+});
 
 function verCompra(idcompra) {
-  alert("Ver detalle de la compra ID: " + idcompra);
+  Swal.fire("Detalle de compra", "Ver detalle de la compra ID: " + idcompra, "info");
 }
+})
