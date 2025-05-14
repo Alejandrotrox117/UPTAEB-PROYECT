@@ -697,7 +697,7 @@ function calcularTotalesGeneralesModal() {
       btnGuardarCompraModal.textContent = "Guardando...";
 
       try {
-        const response = await fetch(`${URL_BASE}/Compras/setCompra`, {
+        const response = await fetch(`compras/setCompra`, {
           method: "POST",
           body: formData,
         });
