@@ -383,21 +383,27 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
       if (item.idcategoria === 1) {
         // Materiales por Peso
         infoEspecificaHtml = `
-          <div class="space-y-1">
-            <div>
-              <label class="flex items-center text-xs">
-                <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_modal" ${item.no_usa_vehiculo ? "checked" : ""}> No usa vehículo
-              </label>
-            </div>
-            <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
-              P.Bru: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
-               P.Veh: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
-            </div>
-            <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
-              P.Neto: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
-            </div>
-            Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(item).toFixed(2)}</strong>
-          </div>`;
+        <div class="space-y-1">
+          <div>
+            <label class="flex items-center text-xs">
+              <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_modal" ${item.no_usa_vehiculo ? "checked" : ""}> No usa vehículo
+            </label>
+          </div>
+          <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
+            P.Bru: 
+            <input type="number" step="0.01" class="w-1/4 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
+            <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+            P.Veh: 
+            <input type="number" step="0.01" class="w-1/4 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
+            <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+          </div>
+          <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
+            P.Neto: <input type="number" step="0.01" class="w-1/4 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
+            <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+          </div>
+          Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(item).toFixed(2)}</strong>
+        </div>`;
+
       } else {
         infoEspecificaHtml = `
           <div>
@@ -424,6 +430,43 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     document
       .querySelectorAll("#cuerpoTablaDetalleCompraModal tr")
       .forEach((row) => {
+        const btnUltimoPesoBruto = row.querySelector(".btnUltimoPesoRomanaBruto");
+        if (btnUltimoPesoBruto) {
+          btnUltimoPesoBruto.addEventListener("click", async function () {
+            try {
+              const response = await fetch("compras/getUltimoPesoRomana");
+              const data = await response.json();
+              if (data.status) {
+                item.peso_bruto = data.peso;
+                row.querySelector(".peso_bruto_modal").value = data.peso;
+                actualizarCalculosFilaModal(row, item);
+              } else {
+                alert(data.message || "No se pudo obtener el peso.");
+              }
+            } catch (e) {
+              alert("Error al consultar la romana.");
+            }
+          });
+        }
+        const btnUltimoPesoVehiculo = row.querySelector(".btnUltimoPesoRomanaVehiculo");
+        if (btnUltimoPesoVehiculo) {
+          btnUltimoPesoVehiculo.addEventListener("click", async function () {
+            try {
+              const response = await fetch("compras/getUltimoPesoRomana");
+              const data = await response.json();
+              if (data.status) {
+                item.peso_vehiculo = data.peso;
+                row.querySelector(".peso_vehiculo_modal").value = data.peso;
+                actualizarCalculosFilaModal(row, item);
+              } else {
+                alert(data.message || "No se pudo obtener el peso.");
+              }
+            } catch (e) {
+              alert("Error al consultar la romana.");
+            }
+          });
+        }
+
         const index = parseInt(row.dataset.index);
         if (isNaN(index) || index >= detalleCompraItemsModal.length) return; // Safety check
         const item = detalleCompraItemsModal[index];

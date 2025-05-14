@@ -167,6 +167,20 @@ class Compras extends Controllers
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
+    
+    public function getUltimoPesoRomana()
+    {
+        header('Content-Type: application/json');
+        $modelo = $this->get_model();
+        $peso = $modelo->getUltimoPesoRomana();
+        if ($peso !== null) {
+            echo json_encode(['status' => true, 'peso' => $peso]);
+        } else {
+            echo json_encode(['status' => false, 'message' => 'No hay registros de peso.']);
+        }
+        exit();
+    }
+
 
     
 

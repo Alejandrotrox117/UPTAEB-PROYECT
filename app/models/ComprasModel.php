@@ -412,5 +412,22 @@ class ComprasModel
     }
 }
 
+    public function getUltimoPesoRomana()
+    {
+        $sql = "SELECT peso FROM historial_romana ORDER BY idromana DESC LIMIT 1";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row && isset($row['peso'])) {
+                return floatval($row['peso']);
+            } else {
+                return null;
+            }
+        } catch (PDOException $e) {
+            error_log("ComprasModel::getUltimoPesoRomana - Error de BD: " . $e->getMessage());
+            return null;
+        }
+    }
 
 }
