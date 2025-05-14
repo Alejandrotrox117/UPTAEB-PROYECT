@@ -1,3 +1,6 @@
+import { abrirModal, cerrarModal } from "./exporthelpers.js";
+import { expresiones, inicializarValidaciones } from "./validaciones.js";
+
 document.addEventListener("DOMContentLoaded", function () {
   // Inicializar DataTable
   $("#Tablaclientes").DataTable({
@@ -57,16 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
     order: [[0, "asc"]],
   });
 
-  // Expresiones regulares para validación
-  const expresiones = {
-    cedula: /^(V|E|J)-\d{8,10}$/, // Formato de cédula
-    nombre: /^[a-zA-Z\s]{2,50}$/, // Nombre
-    apellido: /^[a-zA-Z\s]{2,50}$/, // Apellido
-    telefono_principal: /^\d{10}$/, // Teléfono
-    direccion: /^.{5,100}$/, // Dirección
-    estatus: /^(Activo|Inactivo)$/, // Estatus
-    observaciones: /^.{0,200}$/, // Observaciones
-  };
+ 
 
   // Validar formulario en tiempo real
   const validarCampo = (input, regex, mensaje) => {
@@ -107,14 +101,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { id: "observaciones", regex: expresiones.observaciones, mensaje: "Las observaciones no deben exceder los 200 caracteres." },
   ];
 
-  campos.forEach((campo) => {
-    const input = document.getElementById(campo.id);
-    if (input) {
-      input.addEventListener("input", () => {
-        validarCampo(input, campo.regex, campo.mensaje);
-      });
-    }
-  });
+  inicializarValidaciones(campos);
 
   // Validar formulario al enviar
   document.getElementById("clienteForm").addEventListener("submit", function (e) {
@@ -187,17 +174,36 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 
-  // Funciones para abrir y cerrar el modal
-  window.abrirModalCliente = function () {
-    const modal = document.getElementById("clienteModal");
-    modal.classList.remove("opacity-0", "pointer-events-none");
-  };
+  // Botón para abrir el modal de registro
+  document.getElementById("abrirModalBtn").addEventListener("click", function () {
+    abrirModal("clienteModal");
+  });
 
-  window.cerrarModalCliente = function () {
-    const modal = document.getElementById("clienteModal");
-    modal.classList.add("opacity-0", "pointer-events-none");
-    document.getElementById("clienteForm").reset();
-  };
+  // Botón para cerrar el modal
+  document.getElementById("cerrarModalBtn").addEventListener("click", function () {
+    cerrarModal("clienteModal");
+  });
+function abrirModal() {
+  const modal = document.getElementById("clienteModal");
+  modal.classList.remove("opacity-0", "pointer-events-none");
+}
+
+function cerrarModal() {
+  const modal = document.getElementById("clienteModal");
+  modal.classList.add("opacity-0", "pointer-events-none");
+  document.getElementById("clienteForm").reset();
+}
+  // // Funciones para abrir y cerrar el modal
+  // window.abrirModalCliente = function () {
+  //   const modal = document.getElementById("clienteModal");
+  //   modal.classList.remove("opacity-0", "pointer-events-none");
+  // };
+
+  // window.cerrarModalCliente = function () {
+  //   const modal = document.getElementById("clienteModal");
+  //   modal.classList.add("opacity-0", "pointer-events-none");
+  //   document.getElementById("clienteForm").reset();
+  // };
 });
 
 function eliminarcliente(idcliente) {

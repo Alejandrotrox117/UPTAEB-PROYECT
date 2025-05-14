@@ -13,7 +13,7 @@
         <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
             <div class="flex justify-between items-center mb-4">
                 <!-- Botón para abrir el modal de Registro -->
-                <button onclick="abrirModalCliente()"  class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
+                <button id="abrirModalBtn"   class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
                     Registrar
                 </button>
             </div>
