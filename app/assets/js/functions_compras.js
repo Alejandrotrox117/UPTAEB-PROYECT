@@ -125,6 +125,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function abrirModalNuevaCompra() {
     // Resetear formulario y cargar datos iniciales
+    fechaCompraModal.valueAsDate = new Date();
+  fechaActualCompra = fechaCompraModal.value;
+  cargarTasasPorFecha(fechaActualCompra);
     formNuevaCompraModal.reset();
     detalleCompraItemsModal = [];
     renderizarTablaDetalleModal(); // Limpia la tabla de detalles
@@ -146,6 +149,46 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.classList.remove("overflow-hidden");
   }
 
+let tasasMonedas = {}; // { USD: 93.58, EUR: 100.00, ... }
+let fechaActualCompra = null;
+
+async function cargarTasasPorFecha(fecha) {
+  const divTasa = document.getElementById("tasaDelDiaInfo");
+  divTasa.textContent = "Cargando tasas del día...";
+  try {
+    const response = await fetch(`compras/getTasasMonedasPorFecha?fecha=${encodeURIComponent(fecha)}`);
+    const data = await response.json();
+    if (data.status && data.tasas) {
+      tasasMonedas = data.tasas;
+      // Mostrar texto
+      let texto = `Tasa del día (${fecha.split('-').reverse().join('/')})`;
+      let tasasArr = [];
+      for (const [moneda, tasa] of Object.entries(tasasMonedas)) {
+        tasasArr.push(`1 ${moneda} = ${Number(tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})} Bs.`);
+      }
+      texto += ": " + tasasArr.join(" | ");
+      divTasa.textContent = texto;
+      calcularTotalesGeneralesModal();
+    } else {
+      divTasa.textContent = "No hay tasas registradas para esta fecha.";
+      tasasMonedas = {};
+      calcularTotalesGeneralesModal();
+    }
+  } catch (e) {
+    divTasa.textContent = "Error al cargar tasas del día.";
+    tasasMonedas = {};
+    calcularTotalesGeneralesModal();
+  }
+}
+
+// Al cambiar la fecha de compra
+fechaCompraModal.addEventListener("change", function () {
+  fechaActualCompra = this.value;
+  if (fechaActualCompra) {
+    cargarTasasPorFecha(fechaActualCompra);
+  }
+});
+
   if (btnAbrirModalNuevaCompra)
     btnAbrirModalNuevaCompra.addEventListener("click", abrirModalNuevaCompra);
   if (btnCerrarModalNuevaCompra)
@@ -160,36 +203,40 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  async function cargarMonedasParaModal() {
-    selectMonedaGeneralModal.innerHTML =
-      '<option value="">Cargando...</option>';
-    try {
-      const response = await fetch(
-        'compras/getListaMonedasParaFormulario'
-      );
-      if (!response.ok) throw new Error("Error en respuesta de monedas");
-      const monedas = await response.json();
-      selectMonedaGeneralModal.innerHTML =
-        '<option value="">Seleccione Moneda</option>';
-      monedas.forEach((moneda) => {
-        const option = document.createElement("option");
-        option.value = moneda.idmoneda;
-        if(moneda.codigo_moneda === "USD") {
-          $simbolo = "$";
-        }else if(moneda.codigo_moneda === "EUR") {
-          $simbolo = "€";
-        }else if(moneda.codigo_moneda === "VES") {
-          $simbolo = "Bs.";
-        }
-        option.textContent = `${moneda.codigo_moneda} (${$simbolo})`;
-        selectMonedaGeneralModal.appendChild(option);
-      });
-    } catch (error) {
-      console.error("Error al cargar monedas:", error);
-      selectMonedaGeneralModal.innerHTML =
-        '<option value="">Error al cargar</option>';
-    }
+
+function calcularSubtotalLineaItemModal(item) {
+  const precioUnitario = parseFloat(item.precio_unitario) || 0;
+  let cantidadBase = 0;
+  if (item.idcategoria === 1) {
+    cantidadBase = calcularPesoNetoItemModal(item);
+  } else {
+    cantidadBase = parseFloat(item.cantidad_unidad) || 0;
   }
+  const subtotalOriginal = cantidadBase * precioUnitario;
+  item.subtotal_linea = subtotalOriginal;
+  item.subtotal_linea_bs = convertirAMonedaBase(subtotalOriginal, item.idmoneda_item);
+  return item.subtotal_linea;
+}
+
+function calcularTotalesGeneralesModal() {
+  let subtotalGeneralBs = 0;
+  detalleCompraItemsModal.forEach((item) => {
+    subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+  });
+
+  subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toFixed(2)}`;
+  subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
+
+  const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
+  const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
+  montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toFixed(2)}`;
+  montoDescuentoInputModal.value = montoDescuento.toFixed(2);
+
+  const totalGeneral = subtotalGeneralBs - montoDescuento;
+  totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toFixed(2)}`;
+  totalGeneralInputModal.value = totalGeneral.toFixed(2);
+}
+
 
   async function cargarProductosParaModal() {
     selectProductoAgregarModal.innerHTML =
@@ -336,21 +383,27 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
       if (item.idcategoria === 1) {
         // Materiales por Peso
         infoEspecificaHtml = `
-          <div class="space-y-1">
-            <div>
-              <label class="flex items-center text-xs">
-                <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_modal" ${item.no_usa_vehiculo ? "checked" : ""}> No usa vehículo
-              </label>
-            </div>
-            <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
-              P.Bru: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
-               P.Veh: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
-            </div>
-            <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
-              P.Neto: <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
-            </div>
-            Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(item).toFixed(2)}</strong>
-          </div>`;
+        <div class="space-y-1">
+          <div>
+            <label class="flex items-center text-xs">
+              <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_modal" ${item.no_usa_vehiculo ? "checked" : ""}> No usa vehículo
+            </label>
+          </div>
+          <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
+            P.Bru: 
+            <input type="number" step="0.01" class="w-1/4 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
+            <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+            P.Veh: 
+            <input type="number" step="0.01" class="w-1/4 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
+            <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+          </div>
+          <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
+            P.Neto: <input type="number" step="0.01" class="w-1/4 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
+            <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+          </div>
+          Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(item).toFixed(2)}</strong>
+        </div>`;
+
       } else {
         infoEspecificaHtml = `
           <div>
@@ -377,6 +430,43 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     document
       .querySelectorAll("#cuerpoTablaDetalleCompraModal tr")
       .forEach((row) => {
+        const btnUltimoPesoBruto = row.querySelector(".btnUltimoPesoRomanaBruto");
+        if (btnUltimoPesoBruto) {
+          btnUltimoPesoBruto.addEventListener("click", async function () {
+            try {
+              const response = await fetch("compras/getUltimoPesoRomana");
+              const data = await response.json();
+              if (data.status) {
+                item.peso_bruto = data.peso;
+                row.querySelector(".peso_bruto_modal").value = data.peso;
+                actualizarCalculosFilaModal(row, item);
+              } else {
+                alert(data.message || "No se pudo obtener el peso.");
+              }
+            } catch (e) {
+              alert("Error al consultar la romana.");
+            }
+          });
+        }
+        const btnUltimoPesoVehiculo = row.querySelector(".btnUltimoPesoRomanaVehiculo");
+        if (btnUltimoPesoVehiculo) {
+          btnUltimoPesoVehiculo.addEventListener("click", async function () {
+            try {
+              const response = await fetch("compras/getUltimoPesoRomana");
+              const data = await response.json();
+              if (data.status) {
+                item.peso_vehiculo = data.peso;
+                row.querySelector(".peso_vehiculo_modal").value = data.peso;
+                actualizarCalculosFilaModal(row, item);
+              } else {
+                alert(data.message || "No se pudo obtener el peso.");
+              }
+            } catch (e) {
+              alert("Error al consultar la romana.");
+            }
+          });
+        }
+
         const index = parseInt(row.dataset.index);
         if (isNaN(index) || index >= detalleCompraItemsModal.length) return; // Safety check
         const item = detalleCompraItemsModal[index];
@@ -464,46 +554,79 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     return 0;
   }
 
-  function calcularSubtotalLineaItemModal(item) {
-    const precioUnitario = parseFloat(item.precio_unitario) || 0;
-    let cantidadBase = 0;
-    if (item.idcategoria === 1) {
-      cantidadBase = calcularPesoNetoItemModal(item);
-    } else {
-      cantidadBase = parseFloat(item.cantidad_unidad) || 0;
-    }
-    item.subtotal_linea = cantidadBase * precioUnitario;
-    return item.subtotal_linea;
-  }
-
-  function calcularTotalesGeneralesModal() {
-    let subtotalGeneral = 0;
-    const monedaGeneralOption =
-      selectMonedaGeneralModal.options[
-        selectMonedaGeneralModal.selectedIndex
-      ];
-    const monedaGeneralSimbolo = monedaGeneralOption
-      ? monedaGeneralOption.dataset.idmoneda_item
-      : "$";
-
-    detalleCompraItemsModal.forEach((item) => {
-      // TODO: Implementar conversión de moneda si item.idmoneda_item es diferente a selectMonedaGeneralModal.value
-      subtotalGeneral += parseFloat(item.subtotal_linea) || 0;
+async function cargarMonedasParaModal() {
+  selectMonedaGeneralModal.innerHTML = '<option value="">Cargando...</option>';
+  try {
+    const response = await fetch('compras/getListaMonedasParaFormulario');
+    if (!response.ok) throw new Error("Error en respuesta de monedas");
+    const monedas = await response.json();
+    tasasMonedas = {};
+    selectMonedaGeneralModal.innerHTML = '<option value="">Seleccione Moneda</option>';
+    monedas.forEach((moneda) => {
+      tasasMonedas[moneda.idmoneda] = parseFloat(moneda.valor);
+      let simbolo = "";
+      if (moneda.codigo_moneda === "USD") simbolo = "$";
+      else if (moneda.codigo_moneda === "EUR") simbolo = "€";
+      else if (moneda.codigo_moneda === "VES") simbolo = "Bs.";
+      const option = document.createElement("option");
+      option.value = moneda.idmoneda;
+      option.textContent = `${moneda.codigo_moneda} (${simbolo})`;
+      selectMonedaGeneralModal.appendChild(option);
     });
-
-    subtotalGeneralDisplayModal.value = `${monedaGeneralSimbolo} ${subtotalGeneral.toFixed(2)}`;
-    subtotalGeneralInputModal.value = subtotalGeneral.toFixed(2);
-
-    const descuentoPorcentaje =
-      parseFloat(descuentoPorcentajeInputModal.value) || 0;
-    const montoDescuento = (subtotalGeneral * descuentoPorcentaje) / 100;
-    montoDescuentoDisplayModal.value = `${monedaGeneralSimbolo} ${montoDescuento.toFixed(2)}`;
-    montoDescuentoInputModal.value = montoDescuento.toFixed(2);
-
-    const totalGeneral = subtotalGeneral - montoDescuento;
-    totalGeneralDisplayModal.value = `${monedaGeneralSimbolo} ${totalGeneral.toFixed(2)}`;
-    totalGeneralInputModal.value = totalGeneral.toFixed(2);
+    selectMonedaGeneralModal.value = "3"; // VES por defecto
+  } catch (error) {
+    console.error("Error al cargar monedas:", error);
+    selectMonedaGeneralModal.innerHTML = '<option value="">Error al cargar</option>';
   }
+}
+
+  function convertirAMonedaBase(monto, idmoneda) {
+  if (idmoneda == 3) return monto;
+  const tasa = tasasMonedas[idmoneda] || 1;
+  console.log("Convertir a moneda base: ", idmoneda);
+  console.log("Monto: ", monto);  
+  console.log("Tasas: ", tasasMonedas);
+  console.log("Tasa de moneda: ", tasasMonedas[idmoneda]);
+  console.log("Monto convertido: ", monto * tasa);
+  return monto * tasa;
+}
+
+  function calcularSubtotalLineaItemModal(item) {
+  const precioUnitario = parseFloat(item.precio_unitario) || 0;
+  let cantidadBase = 0;
+  if (item.idcategoria === 1) {
+    cantidadBase = calcularPesoNetoItemModal(item);
+  } else {
+    cantidadBase = parseFloat(item.cantidad_unidad) || 0;
+  }
+  const subtotalOriginal = cantidadBase * precioUnitario;
+  item.subtotal_linea = subtotalOriginal;
+  if (item.idmoneda_item == "USD") {
+    $moneda = 1;
+  }else if (item.idmoneda_item == "EUR") {
+    $moneda = 2;
+  } else if (item.idmoneda_item == "VES") {
+    $moneda = 3;
+  }
+  item.subtotal_linea_bs = convertirAMonedaBase(subtotalOriginal, $moneda);
+  return item.subtotal_linea;
+}
+
+function calcularTotalesGeneralesModal() {
+  let subtotalGeneralBs = 0;
+  detalleCompraItemsModal.forEach((item) => {
+    subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+  });
+  subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
+  const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
+  const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
+  montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  montoDescuentoInputModal.value = montoDescuento.toFixed(2);
+  const totalGeneral = subtotalGeneralBs - montoDescuento;
+  totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  totalGeneralInputModal.value = totalGeneral.toFixed(2);
+}
 
   if (descuentoPorcentajeInputModal)
     descuentoPorcentajeInputModal.addEventListener(
@@ -598,86 +721,109 @@ if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     });
   }
 
-// --- Lógica del Modal de Nuevo Proveedor ---
-const modalNuevoProveedor = document.getElementById("modalNuevoProveedor");
-const btnAbrirModalNuevoProveedorDENTRO = document.getElementById(
-  "btnAbrirModalNuevoProveedorDENTRO",
-);
-const btnCerrarModalNuevoProveedor = document.getElementById( // Asegúrate que estos también estén definidos si los usas
-  "btnCerrarModalNuevoProveedor",
-);
-const btnCancelarModalNuevoProveedor = document.getElementById( // Asegúrate que estos también estén definidos si los usas
-  "btnCancelarModalNuevoProveedor",
-);
-const formNuevoProveedor = document.getElementById("formNuevoProveedor"); // Definir aquí
+const modalProveedor = document.getElementById("proveedorModal");
+    const formProveedor = document.getElementById("proveedorForm");
+    const modalTitulo = document.getElementById("modalProveedorTitulo");
+    const btnSubmitProveedor = document.getElementById("btnSubmitProveedor");
+    const inputIdPersona = document.getElementById("idproveedor");
 
-function abrirModalProv() {
-  if (formNuevoProveedor) { // Verificar si el formulario existe
-      formNuevoProveedor.reset();
-  } else {
-      console.warn("El formulario 'formNuevoProveedor' no fue encontrado para resetear.");
-  }
-  if (modalNuevoProveedor) { // Verificar si el modal existe
-      modalNuevoProveedor.classList.remove("opacity-0", "pointer-events-none");
-      // Podrías querer enfocar el primer input del modal de proveedor aquí
-      // const primerInput = modalNuevoProveedor.querySelector('input[type="text"], input[type="email"]');
-      // if (primerInput) primerInput.focus();
-  } else {
-      console.warn("El modal 'modalNuevoProveedor' no fue encontrado.");
-  }
-}
+       window.abrirModalProveedor = function (titulo = "Registrar Proveedor", formAction = "proveedores/createProveedor") {
+        formProveedor.reset(); // 
+        inputIdPersona.value = ""; 
+        modalTitulo.textContent = titulo;
+        formProveedor.setAttribute("data-action", formAction); 
+        btnSubmitProveedor.textContent = "Registrar";
+        modalProveedor.classList.remove("opacity-0", "pointer-events-none");
+    };
 
-  function cerrarModalProv() {
-    modalNuevoProveedor.classList.add("opacity-0", "pointer-events-none");
-  }
+    // Cerrar modal de proveedor
+    window.cerrarModalProveedor = function () {
+        modalProveedor.classList.add("opacity-0", "pointer-events-none");
+        formProveedor.reset();
+        inputIdPersona.value = "";
+    };
 
-  if (btnAbrirModalNuevoProveedorDENTRO)
-    btnAbrirModalNuevoProveedorDENTRO.addEventListener("click", abrirModalProv);
-  if (btnCerrarModalNuevoProveedor)
-    btnCerrarModalNuevoProveedor.addEventListener("click", cerrarModalProv);
-  if (btnCancelarModalNuevoProveedor)
-    btnCancelarModalNuevoProveedor.addEventListener("click", cerrarModalProv);
+    // Enviar formulario FORMULARIO (Crear o Actualizar)
+    formProveedor.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const actionUrl = "proveedores/createProveedorinCompras";
+        const method = "POST"; 
 
-  if (formNuevoProveedor) {
-    formNuevoProveedor.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const formData = new FormData(formNuevoProveedor);
-      // Aquí podrías añadir una validación simple antes de enviar
-      const btnSubmitProveedor = formNuevoProveedor.querySelector('button[type="submit"]');
-      btnSubmitProveedor.disabled = true;
-      btnSubmitProveedor.textContent = "Guardando...";
-
-      try {
-        const response = await fetch(
-          `compras/registrarNuevoProveedor`,
-          {
-            method: "POST",
-            body: formData,
-          },
-        );
-        const data = await response.json();
-        alert(data.message);
-        if (data.status) {
-          // Actualizar el campo de proveedor en el modal de compra
-          hiddenIdProveedorModal.value = data.idproveedor;
-          const nombreCompletoProv = `${formData.get("nombre_proveedor_nuevo")} ${formData.get("apellido_proveedor_nuevo") || ""}`.trim();
-          divInfoProveedorModal
-            .html(
-              `Sel: <strong>${nombreCompletoProv}</strong> (ID: ${formData.get("identificacion_proveedor_nuevo")})`,
-            )
-            .removeClass("hidden");
-          inputBuscarProveedorModal.value = `${nombreCompletoProv} (${formData.get("identificacion_proveedor_nuevo")})`;
-          cerrarModalProv();
+        if (!actionUrl) {
+            Swal.fire("Error Interno", "URL de acción no definida para el formulario.", "error");
+            console.error("El atributo data-action del formulario está vacío o no existe.");
+            return;
         }
-      } catch (error) {
-        console.error("Error al registrar proveedor:", error);
-        alert("Error de conexión al registrar proveedor.");
-      } finally {
-        btnSubmitProveedor.disabled = false;
-        btnSubmitProveedor.textContent = "Guardar Proveedor";
-      }
+
+        // Validaciones básicas
+        const nombre = formData.get('nombre');
+        const identificacion = formData.get('identificacion');
+        const telefono_principal = formData.get('telefono_principal');
+
+        if (!nombre || !identificacion || !telefono_principal) {
+            Swal.fire("Atención", "Nombre, Identificación y Teléfono son obligatorios.", "warning");
+            return;
+        }
+        
+
+        fetch(actionUrl, {
+            method: method,
+            body: formData // Enviar FormData directamente
+        })
+        .then((response) => {
+            if (!response.ok) {
+                
+                return response.json().then(errData => {
+                    
+                    const error = new Error(errData.message || `Error HTTP: ${response.status}`);
+                    error.data = errData; 
+                    error.status = response.status;
+                    throw error; 
+                }).catch(() => {
+                    
+                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+                });
+            }
+            return response.json(); 
+        })
+        .then(async (result) => {
+    if (result.status) {
+        Swal.fire("¡Éxito!", result.message, "success");
+        // Obtener los datos completos del proveedor recién creado
+        try {
+            const response = await fetch(`proveedores/getProveedorById/${encodeURIComponent(result.idproveedor)}`);
+            if (!response.ok) throw new Error('No se pudo obtener el proveedor');
+            const proveedor = await response.json();
+            // Llenar los campos como si se hubiera seleccionado desde el autocompletado
+            hiddenIdProveedorModal.value = proveedor.data.idproveedor;
+            divInfoProveedorModal.innerHTML = `Sel: <strong>${proveedor.data.nombre} ${proveedor.data.apellido}</strong> (ID: ${proveedor.data.identificacion})`;
+            divInfoProveedorModal.classList.remove('hidden');
+            inputCriterioProveedorModal.value = `${proveedor.data.nombre} ${proveedor.data.apellido} (${proveedor.data.identificacion})`;
+
+            cerrarModalProveedor();
+        } catch (error) {
+            console.error("Error al obtener proveedor:", error);
+            Swal.fire("Error", "Proveedor registrado, pero no se pudo mostrar la información.", "warning");
+            cerrarModalProveedor();
+        }
+    } else {
+        Swal.fire("Error", result.message || "Respuesta no exitosa del servidor.", "error");
+    }
+})
+
+        .catch((error) => {
+            console.error("Error en fetch:", error);
+            let errorMessage = "Ocurrió un error al procesar la solicitud.";
+            
+            if (error.data && error.data.message) {
+                errorMessage = error.data.message;
+            } else if (error.message) { 
+                errorMessage = error.message;
+            }
+            Swal.fire("Error", errorMessage, "error");
+        });
     });
-  }
 }); 
 
 function verCompra(idcompra) {
