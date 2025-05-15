@@ -11,27 +11,26 @@ class Tasas extends Controllers
     
     }
 
-    public function set_model($model) { $this->model = $model; }
-    public function get_model() { return $this->model; }
+    public function set_model($model) {
+        $this->model = $model; 
+    }
+
+    public function get_model() {
+        return $this->model; 
+    }
 
 
-    public function index()
-    {
-
+    public function index(){
         $data['page_title'] = "Gestión de Histórico de Tasas";
         $data['page_name'] = "Tasas BCV";
         $data['page_functions_js'] = "functions_tasas_bcv.js"; 
         $this->views->getView($this, "tasas", $data);
     }
 
-    // Endpoint para que el JS obtenga los datos iniciales de las tablas
-    public function getTasas() // Renombrado desde tu getTasasData para coincidir con el JS
-    {
+    public function getTasas(){
         header('Content-Type: application/json');
-        // Asegúrate de que $this->model es una instancia de TasasModel
         if (!($this->get_model() instanceof TasasModel)) {
-             // Si tu framework no carga el modelo automáticamente, hazlo aquí:
-             $this->set_model(new TasasModel()); // O usa tu método loadModel
+             $this->set_model(new TasasModel());
         }
 
         $tasasUsd = $this->get_model()->obtenerTasasPorMoneda('USD', 5);
@@ -48,17 +47,14 @@ class Tasas extends Controllers
         exit;
     }
 
-    // Endpoint para actualizar AMBAS tasas (USD y EUR)
-    public function actualizarTasasBCV() // Nuevo nombre para el método unificado
-    {
+    public function actualizarTasasBCV(){
         header('Content-Type: application/json');
         
-        // Asegúrate de que $this->model es una instancia de TasasModel
         if (!($this->get_model() instanceof TasasModel)) {
             $this->set_model(new TasasModel());
         }
 
-        $bcvScraper = new BcvScraperModel(); // Instanciamos el scraper
+        $bcvScraper = new BcvScraperModel(); 
         $monedasParaActualizar = ['USD', 'EUR'];
         $respuestasIndividuales = [];
         $huboExitoGeneral = false;
@@ -80,7 +76,7 @@ class Tasas extends Controllers
                 } elseif ($resultadoGuardado === 'duplicado') {
                     $respuestasIndividuales[] = "Tasa para {$moneda} (Fecha BCV: {$datosTasa['fecha_bcv']}) ya estaba registrada.";
                     $huboAdvertencia = true;
-                } else { // false (error al guardar)
+                } else { 
                     $respuestasIndividuales[] = "Error al intentar guardar la tasa para {$moneda}.";
                 }
             } else {
@@ -88,26 +84,24 @@ class Tasas extends Controllers
             }
         }
 
-        $tipoRespuestaGeneral = 'error'; // Por defecto
+        $tipoRespuestaGeneral = 'error';
         if ($huboExitoGeneral) {
             $tipoRespuestaGeneral = 'exito';
-        } elseif ($huboAdvertencia && !$huboExitoGeneral) { // Solo advertencia si no hubo ningún éxito
+        } elseif ($huboAdvertencia && !$huboExitoGeneral) { 
             $tipoRespuestaGeneral = 'advertencia';
         }
         
-        // Si no hay mensajes, es un error genérico de que no se procesó nada
         if (empty($respuestasIndividuales)) {
              $respuestasIndividuales[] = "No se procesó ninguna actualización. Verifique la conexión o los logs.";
         }
 
         echo json_encode([
             'tipo' => $tipoRespuestaGeneral,
-            'texto' => implode("<br>", $respuestasIndividuales) // Unir mensajes con <br> para display
+            'texto' => implode("<br>", $respuestasIndividuales) 
         ]);
         exit;
     }
 
-    // El método getTasasData para DataTables (si aún lo usas para otra cosa)
     public function getTasasData()
     {
         if (!($this->get_model() instanceof TasasModel)) {
