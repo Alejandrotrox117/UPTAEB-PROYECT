@@ -225,7 +225,6 @@ class Compras extends Controllers
                 "total_general_compra" => $total_general_compra,
                 "observaciones_compra" => $observaciones_compra
             ];
-
             $detallesCompraInput = json_decode($_POST['productos_detalle'], true);
             if (json_last_error() !== JSON_ERROR_NONE || empty($detallesCompraInput)) {
                  $response['message'] = "No hay productos en el detalle o el formato es incorrecto.";
