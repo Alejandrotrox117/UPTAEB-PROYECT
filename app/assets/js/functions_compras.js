@@ -153,33 +153,36 @@ document.addEventListener("DOMContentLoaded", function () {
   let fechaActualCompra = null;
 
   async function cargarTasasPorFecha(fecha) {
-    const divTasa = document.getElementById("tasaDelDiaInfo");
-    divTasa.textContent = "Cargando tasas del día...";
-    try {
-      const response = await fetch(`compras/getTasasMonedasPorFecha?fecha=${encodeURIComponent(fecha)}`);
-      const data = await response.json();
-      if (data.status && data.tasas) {
-        tasasMonedas = data.tasas;
-        // Mostrar texto
-        let texto = `Tasa del día (${fecha.split('-').reverse().join('/')})`;
-        let tasasArr = [];
-        for (const [moneda, tasa] of Object.entries(tasasMonedas)) {
-          tasasArr.push(`1 ${moneda} = ${Number(tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})} Bs.`);
-        }
-        texto += ": " + tasasArr.join(" | ");
-        divTasa.textContent = texto;
-        calcularTotalesGeneralesModal();
-      } else {
-        divTasa.textContent = "No hay tasas registradas para esta fecha.";
-        tasasMonedas = {};
-        calcularTotalesGeneralesModal();
+  const divTasa = document.getElementById("tasaDelDiaInfo");
+  divTasa.textContent = "Cargando tasas del día...";
+  try {
+    const response = await fetch(`compras/getTasasMonedasPorFecha?fecha=${encodeURIComponent(fecha)}`);
+    const data = await response.json();
+    if (data.status && data.tasas && Object.keys(data.tasas).length > 0) {
+      tasasMonedas = data.tasas;
+      // Mostrar texto
+      let texto = `Tasa del día (${fecha.split('-').reverse().join('/')})`;
+      let tasasArr = [];
+      for (const [moneda, tasa] of Object.entries(tasasMonedas)) {
+        tasasArr.push(`1 ${moneda} = ${Number(tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})} Bs.`);
       }
-    } catch (e) {
-      divTasa.textContent = "Error al cargar tasas del día.";
+      texto += ": " + tasasArr.join(" | ");
+      divTasa.textContent = texto;
+      calcularTotalesGeneralesModal();
+    } else {
+      divTasa.textContent = "No hay tasas registradas para esta fecha.";
       tasasMonedas = {};
       calcularTotalesGeneralesModal();
+      Swal.fire("Atención", "No hay tasas registradas para la fecha seleccionada.", "warning");
     }
+  } catch (e) {
+    divTasa.textContent = "Error al cargar tasas del día.";
+    tasasMonedas = {};
+    calcularTotalesGeneralesModal();
+    Swal.fire("Error", "Ocurrió un error al cargar las tasas del día.", "error");
   }
+}
+
 
   // Al cambiar la fecha de compra
   fechaCompraModal.addEventListener("change", function () {
