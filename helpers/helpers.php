@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Caracas');
 //permite fragmentar el header del html principal
 function headerAdmin($data = "")
 {
