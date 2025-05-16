@@ -19,12 +19,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" /> <!-- DataTables -->
 </head>
 
-<body class="bg-blue-50">
-    <div class="flex h-screen">
+<body class="bg-blue-50 min-h-screen">
+    <div class="flex min-h-screen">
 <!-- Sidebar -->
-<aside class="w-84 flex flex-col bg-white p-5 shadow-md">
-<img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="text-2xl font-bold text-green-600">
-        <nav>
+<aside class="flex flex-col bg-white p-2 shadow-md">
+<img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="logo-sidebar">
+        <nav class="text-sm">
           <ul class="space-y-1">
             <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
               <a href="/project/dashboard" class="flex items-center">
@@ -58,7 +58,7 @@
                   >
                     <a href="/project/clasificacion" class="flex items-center text-sm">
                       <span><i class="fa-solid fa-layer-group icon"></i></span>
-                      <span class="ml-5">Clasificacion de Materiales</span>
+                      <span class="ml-4">Clasificacion de Materiales</span>
                     </a>
                   </li>
                 </ul>

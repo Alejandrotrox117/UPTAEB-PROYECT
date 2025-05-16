@@ -19,8 +19,7 @@ class Compras extends Controllers
     }
 
 
-    public function index() // data para vistas y js
-    {
+    public function index(){
         $data['page_title'] = "Gestión de Compras";
         $data['page_name'] = "Listado de Compras";
         $data['page_functions_js'] = "functions_compras.js";
@@ -84,19 +83,17 @@ class Compras extends Controllers
 
     }
 
-    public function getTasasMonedasPorFecha()
-{
-    header('Content-Type: application/json');
-    if (!isset($_GET['fecha'])) {
-        echo json_encode(['status' => false, 'message' => 'Fecha requerida']);
+    public function getTasasMonedasPorFecha(){
+        header('Content-Type: application/json');
+        if (!isset($_GET['fecha'])) {
+            echo json_encode(['status' => false, 'message' => 'Fecha requerida']);
+            exit();
+        }
+        $fecha = $_GET['fecha'];
+        $tasas = $this->get_model()->getTasasPorFecha($fecha);
+        echo json_encode(['status' => true, 'tasas' => $tasas]);
         exit();
     }
-    $fecha = $_GET['fecha'];
-    $tasas = $this->get_model()->getTasasPorFecha($fecha);
-    echo json_encode(['status' => true, 'tasas' => $tasas]);
-    exit();
-}
-
 
     public function getListaProductosParaFormulario() {
         header('Content-Type: application/json');
@@ -180,9 +177,6 @@ class Compras extends Controllers
         }
         exit();
     }
-
-
-    
 
     public function setCompra()
     {
