@@ -7,13 +7,13 @@
     </div>
 
     <div class="min-h-screen mt-4">
-        <h1 class="text-3xl font-bold text-gray-900">Gestión de Clientes</h1>
-        <p class="text-green-500 text-lg">Clientes</p>
+        <h1 class="text-3xl font-bold text-gray-900">Gestión de Ventas</h1>
+        <p class="text-green-500 text-lg">Ventas</p>
 
         <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
             <div class="flex justify-between items-center mb-4">
                 <!-- Botón para abrir el modal de Registro -->
-                <button id="abrirModalBtn"   class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
+                <button id="abrirModalBtn" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
                     Registrar
                 </button>
             </div>
@@ -26,13 +26,13 @@
                             <th class="py-2">Fecha</th>
                             <th class="py-2">Cantidad </th>
 
-                           
+
                             <th class="py-2">Descuento</th>
 
                             <th class="py-2">Total</th>
 
                             <th class="py-2">Estatus</th>
-                           
+
 
 
                         </tr>
@@ -51,87 +51,53 @@
 
 
 <!-- Modal -->
-<div id="clienteModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+<div id="ventaModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-md">
         <!-- Encabezado -->
         <div class="px-4 py-4 border-b flex justify-between items-center">
-            <h3 class="text-xl font-bold text-gray-800">Registrar cliente</h3>
-            
-            </button>
+            <h3 class="text-xl font-bold text-gray-800">Registrar Venta</h3>
         </div>
-
         <!-- Formulario -->
-        <form id="clienteForm" class="px-4 py-4">
-            <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
-                <div class="">
-                    <input type="hidden" id="idcliente" name="idcliente" value="">
-                    <label for="cedula" class="block  font-medium mb-2">Cédula</label>
-                    <input type="text" id="cedula" name="cedula" 
-                        class="w-full border rounded-lg px-4 py-2 text-lg  focus:ring-2 focus:ring-green-400">
-                    <div id="error-cedula-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        
-                    </div>
-                    <div id="error-cedula-formato" class="text-red-500 text-sm mt-1 hidden">
-                       
-                    </div>
-                </div>
-                <div class="">
-                    <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre</label>
-                    <input type="text" id="nombre" name="nombre" 
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
-                    <div id="error-nombre-vacio" class="text-red-500 text-sm mt-1 hidden">
-                     
-                    </div>
-                    <div id="error-nombre-formato" class="text-red-500 text-sm mt-1 hidden">
-                        
-                    </div>
-                </div>
-                <div class="">
-                    <label for="apellido" class="block text-gray-700 font-medium mb-2">Apellido</label>
-                    <input type="text" id="apellido" name="apellido" 
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
-                    <div id="error-apellido-vacio" class="text-red-500 text-sm mt-1 hidden">
-                     
-                    </div>
-                    <div id="error-apellido-formato" class="text-red-500 text-sm mt-1 hidden">
-                       
-                    </div>
-                </div>
-                <div class="">
-                    <label for="telefono_principal" class="block text-gray-700 font-medium mb-2">Teléfono Principal</label>
-                    <input type="text" id="telefono_principal" name="telefono_principal" 
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
-                    <div id="error-telefono_principal-vacio" class="text-red-500 text-sm mt-1 hidden">
-                      
-                    </div>
-                    <div id="error-telefono_principal-formato" class="text-red-500 text-sm mt-1 hidden">
-                     
-                    </div>
-                </div>
-                <div class="flex-1 min-w-[150%]">
-                    <label for="estatus" class="block text-gray-700 font-medium mb-2">Estatus</label>
-                    <select id="estatus" name="estatus" 
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                        <option value="Activo">Activo</option>
-                        <option value="Inactivo">Inactivo</option>
-                    </select>
-                    <div id="error-estatus-vacio" class="text-red-500 text-sm mt-1 hidden">
-                  
-                    </div>
-                </div>
-                <div class="">
-                    <label for="direccion" class="block text-gray-700 font-medium mb-2">Dirección</label>
-                    <input type="text" id="direccion" name="direccion" 
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
-                    <div id="error-direccion-vacio" class="text-red-500 text-sm mt-1 hidden">
-                      
-                    </div>
-                    <div id="error-direccion-formato" class="text-red-500 text-sm mt-1 hidden">
-                    
-                    </div>
-                </div>
+        <form id="ventaForm" class="px-4 py-4">
+          <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
+          <div>      
+          <input type="hidden" id="idventa" name="idventa">
+                <label for="nro_venta" class="block font-medium mb-2">Nro Venta</label>
+                <input type="text" id="nro_venta" name="nro_venta"
+                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
             </div>
-            <div class="grid-flow-row mt-4">
+            
+            <div class="">
+                <label for="subtotal_general" class="block font-medium mb-2">Subtotal</label>
+                <input type="number" id="subtotal_general" name="subtotal_general"
+                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
+            </div>
+            <div class="">
+                <label for="descuento_porcentaje_general" class="block font-medium mb-2">Descuento (%)</label>
+                <input type="number" id="descuento_porcentaje_general" name="descuento_porcentaje_general"
+                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
+            </div>
+            <div class="">
+                <label for="monto_descuento_general" class="block font-medium mb-2">Monto Descuento</label>
+                <input type="number" id="monto_descuento_general" name="monto_descuento_general"
+                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
+            </div>
+            <div class="">
+                <label for="estatus" class="block font-medium mb-2">Estatus</label>
+                <select id="estatus" name="estatus"
+                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+            <div class="">
+                <label for="total_general" class="block font-medium mb-2">Total</label>
+                <input type="number" id="total_general" name="total_general"
+                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
+            </div>
+            
+    </div>
+     <div class="grid-flow-row mt-4">
                 <label for="observaciones" class="block text-gray-700 font-medium mb-2">Observaciones</label>
                 <input type="text" id="observaciones" name="observaciones" 
                     class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
@@ -139,23 +105,20 @@
                   
                 </div>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mt-4">
-                <div class="">
-                    <button type="button" id="cerrarModalBtn" 
-                        class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
-                        Cancelar
-                    </button>
-                </div>
-                <div class="flex justify-end">
-                    <button type="button" id="registrarClienteBtn"
-                        class="px-4 ml-10 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
-                        Registrar
-                    </button>
-                </div>
-            </div>
-        </form>
+    <div class="grid grid-cols-2 gap-4 mt-4">
+        <div class="">
+            <button type="button" id="cerrarModalBtn"
+                class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
+                Cancelar
+            </button>
+        </div>
+        <div class="flex justify-end">
+            <button type="button" id="registrarVentaBtn"
+                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
+                Registrar
+            </button>
+        </div>
     </div>
+    </form>
 </div>
-
-
-
+</div>

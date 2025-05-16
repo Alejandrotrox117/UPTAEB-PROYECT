@@ -16,7 +16,7 @@
     <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet"> <!-- DataTables -->
     <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
     <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" /> <!-- DataTables -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" /> DataTables -->
 </head>
 
 <body class="bg-blue-50">
