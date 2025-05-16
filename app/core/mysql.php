@@ -11,7 +11,11 @@ class Mysql extends Conexion{
         $this->conexionGeneral = $conexionGeneral;
     }
 
-   
+   // Cierra la conexión a la base de datos
+    public function __destruct()
+    {
+        $this->conexionGeneral = null; // Cierra la conexión a la base de datos
+    }
 
     public function set_query($query){
         $this->query = $query;
@@ -128,12 +132,17 @@ class Mysql extends Conexion{
    
     
 
-    public function searchAll(string $query){
-        $this->set_query($query);
-        $select = $this->get_conexionGeneral()->prepare($this->get_query());
-        $select->execute();
-        $data = $select->fetchAll(PDO::FETCH_ASSOC);
-        return $data;
+    public function searchAll(string $query)
+    {
+        try {
+            $this->set_query($query);
+            $select = $this->get_conexionGeneral()->prepare($this->get_query());
+            $select->execute();
+            $data = $select->fetchAll(PDO::FETCH_ASSOC);
+            return $data;
+        } finally {
+            $this->conexionGeneral = null; // Cierra la conexión
+        }
     }
 
    
@@ -145,5 +154,6 @@ class Mysql extends Conexion{
         $data = $select->fetchAll(PDO::FETCH_ASSOC);
         return $data;
     }
+
 }
 ?>
