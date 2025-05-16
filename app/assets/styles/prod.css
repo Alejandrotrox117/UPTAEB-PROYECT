@@ -1,6 +1,7 @@
 /* @tailwind base ; */
 
 @tailwind utilities;
+@tailwind overflow;
 @tailwind components;
 @tailwind screens;
 @tailwind forms;
@@ -45,4 +46,10 @@
     text-align: center; /* Centrar los botones horizontalmente */
   }
 
-  
+  .btn-azul {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+  }

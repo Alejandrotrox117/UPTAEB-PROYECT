@@ -75,6 +75,7 @@ class TasasModel {
                     VALUES (:codigo_moneda, :tasa_valor, :fecha_publicacion_bcv, :fecha_creacion_actual)";
             
             $stmt = $this->db->prepare($sql);
+            date_default_timezone_set('America/Caracas');
             $fechaActual = date('Y-m-d H:i:s');
 
             $exito = $stmt->execute([

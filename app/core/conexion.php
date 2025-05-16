@@ -59,6 +59,7 @@ class Conexion
             $dsn = "mysql:host={$this->servidor};dbname={$this->database};charset=utf8";
             $this->conn = new PDO($dsn, $this->username, $this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             return $this->conn;
         } catch (PDOException $e) {
             die("Error de conexión: " . $e->getMessage());
