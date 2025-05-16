@@ -71,7 +71,6 @@ class BcvScraperModel
             error_log("Actualizacion (BCV): No se pudo obtener el JSON de la API para {$codigoMoneda}.");
             return null;
         }
-
         $data = json_decode($jsonData, true);
 
         if (json_last_error() !== JSON_ERROR_NONE || !$data) {
@@ -94,9 +93,9 @@ class BcvScraperModel
         $monitorKey = strtolower($codigoMoneda); // La API usa 'usd', 'eur' como claves
 
         if (isset($data['monitors'][$monitorKey]['price'])) {
-            $tasaApi = $data['monitors'][$monitorKey]['price'];
+            $tasaApi = round($data['monitors'][$monitorKey]['price'], 4);
             if (is_numeric($tasaApi)) {
-                $valorTasa = (float) $tasaApi;
+                $valorTasa = round($tasaApi, 4);
             } else {
                 error_log("Actualizacion (BCV): El valor de la tasa para {$codigoMoneda} no es numérico: " . print_r($tasaApi, true));
             }
@@ -104,7 +103,7 @@ class BcvScraperModel
             error_log("Actualizacion (BCV): No se encontró la tasa para la moneda '{$monitorKey}' en la respuesta de la API.");
         }
 
-        if ($valorTasa !== null && $fechaPublicacion !== null) {
+        if ($valorTasa !== null && $fechaPublicacion !== null) {   
             return ['tasa' => $valorTasa, 'fecha_bcv' => $fechaPublicacion];
         }
         
