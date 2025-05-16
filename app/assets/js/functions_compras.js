@@ -390,11 +390,11 @@ document.addEventListener("DOMContentLoaded", function () {
           </div>
           <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
             P.Bru: 
-            <input type="number" step="0.01" class="w-1/4 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
-            <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+            <input type="number" step="0.01" class="w-1/4 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
+            <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
             P.Veh: 
             <input type="number" step="0.01" class="w-1/4 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
-            <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+            <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           </div>
           <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
             P.Neto: <input type="number" step="0.01" class="w-1/4 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
@@ -414,10 +414,10 @@ document.addEventListener("DOMContentLoaded", function () {
         <td class="py-1 px-1 text-xs">${item.nombre}</td>
         <td class="py-1 px-1 text-xs">${infoEspecificaHtml}</td>
         <td class="py-1 px-1 text-xs">
-            ${item.idmoneda_item} <input type="number" step="0.01" class="w-1/4 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
+            ${item.idmoneda_item} <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
         </td>
         <td class="py-1 px-1 text-xs subtotal_linea_display_modal">${item.idmoneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
-        <td class="py-1 px-1"><button type="button" class="text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs">X</button></td>
+        <td class="py-1 px-1 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs"></button></td>
       `;
       cuerpoTablaDetalleCompraModal.appendChild(tr);
     });
