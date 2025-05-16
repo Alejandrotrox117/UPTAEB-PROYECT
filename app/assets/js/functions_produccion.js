@@ -107,17 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
 
-  function abrirModalProduccion() {
-  const modal = document.getElementById("produccionModal");
-  modal.classList.remove("opacity-0", "pointer-events-none");
-}
-
-// Función para cerrar el modal de empleado
-function cerrarModalProduccion() {
-  const modal = document.getElementById("produccionModal");
-  modal.classList.add("opacity-0", "pointer-events-none");
-  document.getElementById("produccionForm").reset();
-}
+  
   // Manejador de clic para botones de edición
   document.addEventListener("click", function (e) {
     if (e.target.closest(".editar-btn")) {
@@ -131,7 +121,17 @@ function cerrarModalProduccion() {
       abrirModalProduccionParaEdicion(idproduccion);
     }
   });
+function abrirModalProduccion() {
+  const modal = document.getElementById("produccionModal");
+  modal.classList.remove("opacity-0", "pointer-events-none");
+}
 
+// Función para cerrar el modal de empleado
+function cerrarModalProduccion() {
+  const modal = document.getElementById("produccionModal");
+  modal.classList.add("opacity-0", "pointer-events-none");
+  document.getElementById("produccionForm").reset();
+}
   // Función para abrir el modal de edición
   function abrirModalProduccionParaEdicion(idproduccion) {
     fetch(`produccion/getProduccionById/${idproduccion}`)

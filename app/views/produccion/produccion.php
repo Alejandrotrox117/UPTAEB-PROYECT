@@ -36,7 +36,7 @@
   </div>
 </main>
 <?php footerAdmin($data); ?>
-<!-- Modal para Registrar Producción -->
+
 <div id="produccionModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
   <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-5xl">
     <!-- Encabezado -->
@@ -143,3 +143,16 @@
     </form>
   </div>
 </div>
+<script>
+  function abrirModalProduccion() {
+  const modal = document.getElementById("produccionModal");
+  modal.classList.remove("opacity-0", "pointer-events-none");
+}
+
+// Función para cerrar el modal de empleado
+function cerrarModalProduccion() {
+  const modal = document.getElementById("produccionModal");
+  modal.classList.add("opacity-0", "pointer-events-none");
+  document.getElementById("produccionForm").reset();
+}
+</script>
