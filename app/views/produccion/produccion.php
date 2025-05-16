@@ -35,10 +35,10 @@
     </div>
   </div>
 </main>
-<?php footerAdmin($data); ?>
+
 
 <div id="produccionModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
-  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-5xl">
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-[95%] max-w-7xl"> <!-- Aumentamos el ancho máximo -->
     <!-- Encabezado -->
     <div class="px-8 py-6 border-b flex justify-between items-center">
       <h3 class="text-2xl font-bold text-gray-800">Registrar Producción</h3>
@@ -49,7 +49,8 @@
       </button>
     </div>
     <!-- Formulario -->
-    <form id="produccionForm" class="px-8 py-6">
+    <form id="produccionForm" class="px-8 py-6 space-y-6">
+      <!-- Primera fila: Producto y Empleado -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-gray-700 font-medium mb-2">Producto</label>
@@ -61,12 +62,17 @@
         <div>
           <label class="block text-gray-700 font-medium mb-2">Empleado</label>
           <select id="idempleado" name="idempleado" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            <option value="">Seleccione un empleado</option>
-            <!-- Opciones de empleados se cargarán dinámicamente -->
+            <option value="">Cargando Empleado...</option>
           </select>
         </div>
+      </div>
+
+      <!-- Segunda fila: Cantidad, Fechas y Estado -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
           <label class="block text-gray-700 font-medium mb-2">Cantidad a Producir</label>
+                    <input type="hidden" id="idproduccion" name="idproduccion" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
+
           <input type="number" id="cantidad_a_realizar" name="cantidad_a_realizar" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
         </div>
         <div>
@@ -77,6 +83,10 @@
           <label class="block text-gray-700 font-medium mb-2">Fecha de Fin</label>
           <input type="date" id="fecha_fin" name="fecha_fin" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
         </div>
+      </div>
+
+      <!-- Tercera fila: Estado -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-gray-700 font-medium mb-2">Estado</label>
           <select id="estado" name="estado" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
@@ -87,6 +97,54 @@
           </select>
         </div>
       </div>
+
+      <!-- Tabla de Detalle de Producción -->
+     <div class="max-w-[720px] mx-auto">
+
+  
+
+
+
+  <!-- Tabla de Detalle de Producción -->
+  <div class="relative flex flex-col w-full h-full overflow-scroll text-gray-700 bg-white shadow-md rounded-lg bg-clip-border">
+    <table id="TablaDetalleProduccion" class="w-full text-left table-auto min-w-max">
+      <thead>
+        <tr class="border-b border-slate-300 bg-slate-50">
+          <th class="p-4 text-sm font-normal leading-none text-slate-500">Insumo</th>
+          <th class="p-4 text-sm font-normal leading-none text-slate-500">Cantidad</th>
+          <th class="p-4 text-sm font-normal leading-none text-slate-500">Cantidad Utilizada</th>
+          <th class="p-4 text-sm font-normal leading-none text-slate-500">Categoría</th>
+          <th class="p-4 text-sm font-normal leading-none text-slate-500">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="hover:bg-slate-50">
+          <td class="p-4 border-b border-slate-200 py-5">
+            <p class="text-sm text-slate-500">100 kg</p>
+          </td>
+          <td class="p-4 border-b border-slate-200 py-5">
+            <p class="text-sm text-slate-500">100 kg</p>
+          </td>
+          <td class="p-4 border-b border-slate-200 py-5">
+            <p class="text-sm text-slate-500">80 kg</p>
+          </td>
+          <td class="p-4 border-b border-slate-200 py-5">
+            <p class="text-sm text-slate-500">Materia Prima</p>
+          </td>
+          <td class="p-4 border-b border-slate-200 py-5">
+            <button type="button" class="text-slate-500 hover:text-slate-700">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </td>
+        </tr>
+       
+      </tbody>
+    </table>
+  </div>
+</div>
+
       <!-- Botones -->
       <div class="flex justify-end space-x-6 mt-6">
         <button type="button" onclick="cerrarModalProduccion()" class="px-6 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-xl">
@@ -100,59 +158,5 @@
   </div>
 </div>
 
-<!-- Modal para Agregar Detalles de Producción -->
-<div id="detalleModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
-  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-5xl">
-    <!-- Encabezado -->
-    <div class="px-8 py-6 border-b flex justify-between items-center">
-      <h3 class="text-2xl font-bold text-gray-800">Agregar Detalle de Producción</h3>
-      <button onclick="cerrarModalDetalle()" class="text-gray-600 hover:text-gray-800 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-    <!-- Formulario -->
-    <form id="detalleForm" class="px-8 py-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-gray-700 font-medium mb-2">Material</label>
-          <select id="idmaterial" name="idmaterial" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-            <option value="">Seleccione un material</option>
-            <!-- Opciones de materiales se cargarán dinámicamente -->
-          </select>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-2">Cantidad Requerida</label>
-          <input type="number" id="cantidad" name="cantidad" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-2">Unidad de Medida</label>
-          <input type="text" id="unidad_medida" name="unidad_medida" class="w-full border rounded-lg px-6 py-4 text-xl focus:outline-none">
-        </div>
-      </div>
-      <!-- Botones -->
-      <div class="flex justify-end space-x-6 mt-6">
-        <button type="button" onclick="cerrarModalDetalle()" class="px-6 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-xl">
-          Cancelar
-        </button>
-        <button type="submit" class="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600 transition text-xl">
-          Agregar
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-<script>
-  function abrirModalProduccion() {
-  const modal = document.getElementById("produccionModal");
-  modal.classList.remove("opacity-0", "pointer-events-none");
-}
 
-// Función para cerrar el modal de empleado
-function cerrarModalProduccion() {
-  const modal = document.getElementById("produccionModal");
-  modal.classList.add("opacity-0", "pointer-events-none");
-  document.getElementById("produccionForm").reset();
-}
-</script>
+<?php footerAdmin($data); ?>

@@ -133,7 +133,20 @@ class ProduccionModel extends Mysql
                 WHERE p.estado = 'borrador'";
         return $this->searchAll($sql);
     }
-
+public function SelectAlldetalleProducciones($idproduccion)
+{
+    $sql = "SELECT 
+                p.nombre AS nombre_producto, 
+                p.unidad_medida, 
+                dp.cantidad, 
+                dp.cantidad_consumida, 
+                dp.observaciones
+            FROM detalle_produccion dp
+            INNER JOIN producto p ON dp.idproducto = p.idproducto
+            WHERE dp.idproduccion = $idproduccion";
+       return $this->searchAll($sql);
+   
+}
     // Método para insertar una nueva producción
     public function insertProduccion($data)
     {
@@ -205,13 +218,36 @@ class ProduccionModel extends Mysql
                     cantidad_a_realizar, 
                     fecha_inicio, 
                     fecha_fin, 
-                    estado, 
-                    fecha_creacion, 
-                    fecha_modificacion 
+                    estado
                 FROM produccion 
                 WHERE idproduccion = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$idproduccion]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+     public function SelectAllEmpleado()
+    {
+        $sql = "SELECT * FROM empleado WHERE estatus = 'activo'";
+        try {
+            $stmt = $this->db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("EmpleadoModel: Error al seleccionar todos las Empleado- " . $e->getMessage());
+            return [];
+        }
+    }
+    public function SelectAllProducto()
+    {
+        $sql = "SELECT * FROM producto WHERE estatus = 'activo'";
+        try {
+            $stmt = $this->db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("ProductoModel: Error al seleccionar todos los productos- " . $e->getMessage());
+            return [];
+        }
+    }
+
+    
 }

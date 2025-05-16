@@ -22,12 +22,13 @@ document.addEventListener("DOMContentLoaded", function () {
         orderable: false,
         render: function (data, type, row) {
           return `
-            <button class="editar-btn bg-blue-500 text-white px-4 py-2 rounded" data-idproduccion="${row.idproduccion}">
-              Editar
-            </button>
-            <button class="eliminar-btn bg-red-500 text-white px-4 py-2 rounded ml-2" data-idproduccion="${row.idproduccion}">
-              Eliminar
-            </button>
+            <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idproduccion="${row.idproduccion}">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" data-idproduccion="${row.idproduccion}">
+                  <i class="fas fa-trash"></i>
+                </button>
+
           `;
         },
       },
@@ -71,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Datos a enviar:", data); // Depuración
 
     // Validar campos obligatorios
-    if (!data.idproducto || !data.idempleado || !data.cantidad_a_realizar || !data.fecha_inicio) {
+    if ( !data.cantidad_a_realizar || !data.fecha_inicio) {
       alert("Por favor, completa todos los campos obligatorios.");
       return;
     }
@@ -119,52 +120,59 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       abrirModalProduccionParaEdicion(idproduccion);
+      cargarDetalle(idproduccion)
     }
   });
-function abrirModalProduccion() {
-  const modal = document.getElementById("produccionModal");
-  modal.classList.remove("opacity-0", "pointer-events-none");
-}
 
-// Función para cerrar el modal de empleado
-function cerrarModalProduccion() {
-  const modal = document.getElementById("produccionModal");
-  modal.classList.add("opacity-0", "pointer-events-none");
-  document.getElementById("produccionForm").reset();
-}
   // Función para abrir el modal de edición
-  function abrirModalProduccionParaEdicion(idproduccion) {
+ function abrirModalProduccionParaEdicion(idproduccion) {
+    cargarEmpleado();
+  cargarProducto();
+    console.log("ID de producción recibido:", idproduccion); // Depuración
+
     fetch(`produccion/getProduccionById/${idproduccion}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Error HTTP: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (!data.status) {
-          throw new Error(data.message || "Error al cargar los datos.");
-        }
+        .then((response) => {
+            console.log("Respuesta HTTP:", response); // Depuración
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.text(); // Obtiene la respuesta como texto
+        })
+        .then((text) => {
+            console.log("Contenido de la respuesta:", text); // Depuración
+            try {
+                const data = JSON.parse(text); // Intenta parsear como JSON
+                console.log("Datos recibidos del backend:", data);
 
-        const produccion = data.data;
+                if (!data.status) {
+                    throw new Error(data.message || "Error al cargar los datos.");
+                }
 
-        // Asigna los valores a los campos del formulario
-        document.getElementById("idproduccion").value = produccion.idproduccion || "";
-        document.getElementById("idproducto").value = produccion.idproducto || "";
+                const produccion = data.data;
+
+                // Asigna los valores a los campos del formulario
+                document.getElementById("idproduccion").value = produccion.idproduccion || "";
+               setTimeout(() => { // Esperar a que se carguen las opciones
         document.getElementById("idempleado").value = produccion.idempleado || "";
-        document.getElementById("cantidad_a_realizar").value = produccion.cantidad_a_realizar || "";
-        document.getElementById("fecha_inicio").value = produccion.fecha_inicio || "";
-        document.getElementById("fecha_fin").value = produccion.fecha_fin || "";
-        document.getElementById("estado").value = produccion.estado || "";
+        document.getElementById("idproducto").value = produccion.idproducto || "";
+      }, 500);
+                document.getElementById("cantidad_a_realizar").value = produccion.cantidad_a_realizar || "";
+                document.getElementById("fecha_inicio").value = produccion.fecha_inicio || "";
+                document.getElementById("fecha_fin").value = produccion.fecha_fin || "";
+                document.getElementById("estado").value = produccion.estado || "";
 
-        // Abre el modal
-        abrirModalProduccion();
-      })
-      .catch((error) => {
-        console.error("Error capturado:", error.message);
-        alert("Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.");
-      });
-  }
+                // Abre el modal
+                abrirModalProduccion();
+            } catch (error) {
+                console.error("La respuesta no es un JSON válido:", text);
+                throw new Error("La respuesta del servidor no es un JSON válido.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error capturado:", error.message);
+            alert("Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.");
+        });
+}
 
   // Manejador de clic para botones de eliminación
   document.addEventListener("click", function (e) {
@@ -195,3 +203,155 @@ function cerrarModalProduccion() {
       .catch((error) => console.error("Error:", error));
   }
 });
+
+function cargarEmpleado() {
+  return new Promise((resolve, reject) => {
+    fetch("produccion/getEmpleado")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.status) {
+          const selectEmpleado = document.getElementById("idempleado");
+          if (!selectEmpleado) {
+            throw new Error("El elemento 'idempleado' no fue encontrado en el DOM.");
+          }
+
+          selectEmpleado.innerHTML = ""; // Limpiar opciones existentes
+
+          const optionDefault = document.createElement("option");
+          optionDefault.value = "";
+          optionDefault.textContent = "Seleccione un Empleado a cargo";
+          selectEmpleado.appendChild(optionDefault);
+
+          data.data.forEach((empleado) => {
+            const option = document.createElement("option");
+            option.value = empleado.idempleado;
+            option.textContent = empleado.nombre;
+            selectEmpleado.appendChild(option);
+          });
+
+          resolve(); // Resuelve la promesa cuando se completa
+        } else {
+          reject(data.message || "Error al cargar los empleados.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        reject("Ocurrió un error al cargar los empleados.");
+      });
+  });
+}
+function cargarProducto() {
+  return new Promise((resolve, reject) => {
+    fetch("produccion/getProductos") // Endpoint del backend
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.status) {
+          const selectProducto = document.getElementById("idproducto");
+          if (!selectProducto) {
+            throw new Error("El elemento 'idproducto' no fue encontrado en el DOM.");
+          }
+
+       
+          selectProducto.innerHTML = "";
+
+          
+          const optionDefault = document.createElement("option");
+          optionDefault.value = "";
+          optionDefault.textContent = "Seleccione un Producto";
+          selectProducto.appendChild(optionDefault);
+
+          
+          data.data.forEach((producto) => {
+            const option = document.createElement("option");
+            option.value = producto.idproducto; // Valor del producto (ID)
+            option.textContent = producto.nombre; // Nombre visible del producto
+            selectProducto.appendChild(option);
+          });
+
+          resolve(); 
+        } else {
+          reject(data.message || "Error al cargar los productos.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        reject("Ocurrió un error al cargar los productos.");
+      });
+  });
+}
+ function abrirModalProduccion() {
+  const modal = document.getElementById("produccionModal");
+  cargarEmpleado()
+  cargarProducto()
+  modal.classList.remove("opacity-0", "pointer-events-none");
+  // Inicialización de DataTables para la tabla de producción
+  
+}
+function cargarDetalle(idproduccion) {
+$(document).ready(function () {
+    const tablaProduccion = $("#TablaDetalleProduccion").DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: `produccion/getDetalleProduccionData/${idproduccion}`,
+            type: "GET",
+            dataSrc: "data", // Clave donde están los datos en la respuesta JSON
+        },
+        columns: [
+            { data: "nombre_producto", title: "Producto" },
+            { data: "unidad_medida", title: "Unidad de medida" },
+            { data: "cantidad", title: "Cantidad" },
+            { data: "cantidad_consumida", title: "Cantidad Consumida" },
+            { data: "observaciones", title: "Observaciones" },
+        ],
+        language: {
+            decimal: "",
+            emptyTable: "No hay datos disponibles para mostrar.",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+            infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+            infoFiltered: "(filtrado de _MAX_ entradas totales)",
+            infoPostFix: "",
+            thousands: ",",
+            lengthMenu: "Mostrar _MENU_ entradas",
+            loadingRecords: "Cargando datos, por favor espere...",
+            processing: "Procesando...",
+            search: "Buscar:",
+            zeroRecords: "No se encontraron registros coincidentes.",
+            paginate: {
+                first: "Primero",
+                last: "Último",
+                next: "Siguiente",
+                previous: "Anterior",
+            },
+        },
+        destroy: true,
+        responsive: true,
+        pageLength: 10,
+        order: [[0, "asc"]],
+    });
+
+    // Evento para verificar cuando los datos se cargan
+    $('#TablaDetalleProduccion').on('init.dt', function () {
+        console.log("Datos cargados correctamente");
+    });
+});
+
+}
+
+
+// Función para cerrar el modal de empleado
+function cerrarModalProduccion() {
+  const modal = document.getElementById("produccionModal");
+  modal.classList.add("opacity-0", "pointer-events-none");
+  document.getElementById("produccionForm").reset();
+}
