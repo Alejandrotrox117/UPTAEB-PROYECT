@@ -47,78 +47,137 @@
         </div>
 </main>
 </div>
+
+
+
+
+
+<!-- Modal para Registrar Nueva Venta -->
+<div id="ventaModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-4xl max-h-screen">
+    <!-- Encabezado del Modal -->
+    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="text-2xl font-bold text-gray-800">
+        <i class="fas fa-shopping-cart mr-1 text-green-600"></i>Registrar Nueva Venta
+      </h3>
+      <button id="btnCerrarModalNuevaVenta" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
+        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414 1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Contenido del Modal -->
+    <div class="px-8 py-6 max-h-[80vh] overflow-y-auto">
+      <form id="ventaForm">
+        <!-- Sección Datos Generales -->
+        <div>
+          <h4 class="text-base font-semibold text-gray-700 mb-3 border-b pb-2">Datos Generales</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+            <div>
+              <label for="fecha_venta_modal" class="form-label">Fecha Venta <span class="text-red-500">*</span></label>
+              <input type="date" id="fecha_venta_modal" name="fecha_venta" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required>
+            </div>
+            <div>
+              <label for="idmoneda_general" class="form-label">Moneda General <span class="text-red-500">*</span></label>
+              <select id="idmoneda_general" name="idmoneda_general" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                <option value="">Seleccione...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección Cliente -->
+        <div class="mb-4">
+          <label for="buscar_cliente_modal" class="form-label">Buscar Cliente <span class="text-red-500">*</span></label>
+          <div class="flex gap-4">
+            <input type="text" id="inputCriterioClienteModal" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Nombre, Apellido o Identificación...">
+            <button type="button" id="btnBuscarClienteModal" class="btn-success px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-base">Buscar</button>
+          </div>
+          <input type="hidden" id="idcliente" name="idcliente">
+          <div id="cliente_seleccionado_info_modal" class="mt-2 p-2 border border-gray-200 rounded-md bg-gray-50 text-xs hidden"></div>
+          <div id="listaResultadosClienteModal" class="mt-2 border border-gray-300 rounded-md max-h-10 overflow-y-auto hidden"></div>
+        </div>
+        <button type="button" onclick="abrirModalCliente('Registrar Cliente', 'clienteForm', 'POST', 'clientes/createCliente')" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-blue-700 transition text-base font-medium">
+          <i class="fas fa-user-plus mr-2"></i>Registrar Nuevo Cliente
+        </button>
+
+        <!-- Sección Detalle de la Venta -->
+        <div>
+          <h4 class="text-base font-semibold text-gray-700 mb-3 border-b pb-2">Detalle de la Venta</h4>
+          <div class="flex flex-col sm:flex-row items-end gap-3 mb-4">
+            <div class="flex-grow w-full sm:w-auto">
+              <label for="select_producto_agregar_modal" class="form-label">Agregar Producto <span class="text-red-500">*</span></label>
+              <select id="select_producto_agregar_modal" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                <option value="">Seleccione un producto...</option>
+              </select>
+            </div>
+            <button type="button" id="btnAgregarProductoDetalleModal" class="btn-primary-solid w-full sm:w-auto">
+              <i class="fas fa-plus mr-2"></i>Agregar al Detalle
+            </button>
+          </div>
+          <div class="overflow-x-auto border border-gray-200 rounded-md">
+            <table id="detalleVentaTable" class="w-full text-xs">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium text-gray-600">Producto</th>
+                  <th class="px-3 py-2 text-left font-medium text-gray-600">Descripción</th>
+                  <th class="px-3 py-2 text-left font-medium text-gray-600">Cantidad</th>
+                  <th class="px-3 py-2 text-left font-medium text-gray-600">Precio U.</th>
+                  <th class="px-3 py-2 text-left font-medium text-gray-600">Subtotal</th>
+                  <th class="px-3 py-2 text-center font-medium text-gray-600">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="detalleVentaBody" class="divide-y divide-gray-200">
+              </tbody>
+            </table>
+            <p id="noDetallesMensaje" class="text-center text-gray-500 py-4 text-xs hidden">No hay productos en el detalle.</p>
+          </div>
+        </div>
+
+        <!-- Sección Resumen y Observaciones -->
+        <div>
+          <h4 class="text-base font-semibold text-gray-700 mb-3 border-b pb-2">Resumen y Observaciones</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 content-evenly mb-4">
+            <div>
+              <label for="subtotal_general_display_modal" class="block text-gray-700 font-medium mb-1">Subtotal</label>
+              <input type="text" id="subtotal_general_display_modal" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" readonly>
+              <input type="hidden" id="subtotal_general" name="subtotal_general">
+            </div>
+            <div>
+              <label for="descuento_porcentaje_general" class="block text-gray-700 font-medium mb-1">Descuento (%)</label>
+              <input type="number" id="descuento_porcentaje_general" name="descuento_porcentaje_general" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" value="0" min="0" max="100" step="0.01">
+            </div>
+            <div>
+              <label for="monto_descuento_general" class="block text-gray-700 font-medium mb-1">Monto Descuento</label>
+              <input type="text" id="monto_descuento_general" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" readonly>
+            </div>
+          </div>
+          <div class="mb-4 bg-gray-100 p-3 rounded-md">
+            <label for="total_general_display_modal" class="block text-xs font-medium text-gray-500 uppercase mb-0.5">Total General</label>
+            <input type="text" id="total_general_display_modal" class="w-full bg-transparent text-xl font-bold text-green-600 focus:outline-none p-0 border-0" readonly>
+            <input type="hidden" id="total_general" name="total_general">
+          </div>
+          <div>
+            <label for="observaciones" class="form-label">Observaciones</label>
+            <textarea id="observaciones" name="observaciones" rows="3" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+          </div>
+        </div>
+        <div id="mensajeErrorFormVentaModal" class="text-red-600 text-xs mt-4 text-center font-medium"></div>
+      </form>
+    </div>
+
+    <!-- Pie del Modal -->
+    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+      <button type="button" id="cerrarModalBtn" class="btn-neutral px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-base font-medium">
+        Cancelar
+      </button>
+      <button type="button" id="registrarVentaBtn" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-base font-medium">
+        <i class="fas fa-save mr-2"></i> Guardar Venta
+      </button>
+    </div>
+  </div>
+</div>
+
+
 <?php footerAdmin($data); ?>
-
-
-<!-- Modal -->
-<div id="ventaModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-md">
-        <!-- Encabezado -->
-        <div class="px-4 py-4 border-b flex justify-between items-center">
-            <h3 class="text-xl font-bold text-gray-800">Registrar Venta</h3>
-        </div>
-        <!-- Formulario -->
-        <form id="ventaForm" class="px-4 py-4">
-          <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
-          <div>      
-          <input type="hidden" id="idventa" name="idventa">
-                <label for="nro_venta" class="block font-medium mb-2">Nro Venta</label>
-                <input type="text" id="nro_venta" name="nro_venta"
-                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
-            </div>
-            
-            <div class="">
-                <label for="subtotal_general" class="block font-medium mb-2">Subtotal</label>
-                <input type="number" id="subtotal_general" name="subtotal_general"
-                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
-            </div>
-            <div class="">
-                <label for="descuento_porcentaje_general" class="block font-medium mb-2">Descuento (%)</label>
-                <input type="number" id="descuento_porcentaje_general" name="descuento_porcentaje_general"
-                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
-            </div>
-            <div class="">
-                <label for="monto_descuento_general" class="block font-medium mb-2">Monto Descuento</label>
-                <input type="number" id="monto_descuento_general" name="monto_descuento_general"
-                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
-            </div>
-            <div class="">
-                <label for="estatus" class="block font-medium mb-2">Estatus</label>
-                <select id="estatus" name="estatus"
-                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
-                    <option value="activo">Activo</option>
-                    <option value="inactivo">Inactivo</option>
-                </select>
-            </div>
-            <div class="">
-                <label for="total_general" class="block font-medium mb-2">Total</label>
-                <input type="number" id="total_general" name="total_general"
-                    class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
-            </div>
-            
-    </div>
-     <div class="grid-flow-row mt-4">
-                <label for="observaciones" class="block text-gray-700 font-medium mb-2">Observaciones</label>
-                <input type="text" id="observaciones" name="observaciones" 
-                    class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
-                <div id="error-observaciones-formato" class="text-red-500 text-sm mt-1 hidden">
-                  
-                </div>
-            </div>
-    <div class="grid grid-cols-2 gap-4 mt-4">
-        <div class="">
-            <button type="button" id="cerrarModalBtn"
-                class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
-                Cancelar
-            </button>
-        </div>
-        <div class="flex justify-end">
-            <button type="button" id="registrarVentaBtn"
-                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
-                Registrar
-            </button>
-        </div>
-    </div>
-    </form>
-</div>
-</div>

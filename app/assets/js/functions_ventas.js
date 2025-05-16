@@ -1,27 +1,125 @@
 import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import { expresiones, inicializarValidaciones } from "./validaciones.js";
 import { validarCampo } from "./validaciones.js";
+
 document.addEventListener("DOMContentLoaded", function () {
+  const abrirModalBtn = document.getElementById("abrirModalBtn");
+  const cerrarModalBtn = document.getElementById("cerrarModalBtn");
+  const ventaModal = document.getElementById("ventaModal");
+
+  // Función para abrir el modal
+  function abrirModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.remove("opacity-0", "pointer-events-none");
+      modal.classList.add("opacity-100", "pointer-events-auto");
+    }
+  }
+
+  // Función para cerrar el modal
+  function cerrarModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.classList.add("opacity-0", "pointer-events-none");
+      modal.classList.remove("opacity-100", "pointer-events-auto");
+    }
+  }
+
+  // Evento para abrir el modal
+  if (abrirModalBtn) {
+    abrirModalBtn.addEventListener("click", function () {
+      abrirModal("ventaModal");
+    });
+  }
+
+  // Evento para cerrar el modal
+  if (cerrarModalBtn) {
+    cerrarModalBtn.addEventListener("click", function () {
+      cerrarModal("ventaModal");
+    });
+  }
+
+  // Función para manejar el registro de la venta
+  const registrarVentaBtn = document.getElementById("registrarVentaBtn");
+  if (registrarVentaBtn) {
+    registrarVentaBtn.addEventListener("click", function () {
+      manejarRegistro();
+    });
+  }
+
+  // Función para manejar el registro
+  function manejarRegistro() {
+    const form = document.getElementById("ventaForm");
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    // Simulación de envío al backend
+    console.log("Datos enviados:", data);
+
+    // Aquí puedes usar fetch para enviar los datos al servidor
+    // Ejemplo:
+    // fetch('/ruta-del-servidor', {
+    //   method: 'POST',
+    //   body: JSON.stringify(data),
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   }
+    // }).then(response => response.json())
+    //   .then(result => {
+    //     console.log(result);
+    //   });
+
+    // Cerrar el modal después del registro
+    cerrarModal("ventaModal");
+  }
+
+  // Función para calcular totales
+  const descuentoInput = document.getElementById("descuento_porcentaje_general");
+  if (descuentoInput) {
+    descuentoInput.addEventListener("input", function () {
+      calcularTotales();
+    });
+  }
+
+  function calcularTotales() {
+    const subtotalInput = document.getElementById("subtotal_general");
+    const descuentoInput = document.getElementById("descuento_porcentaje_general");
+    const montoDescuentoInput = document.getElementById("monto_descuento_general");
+    const totalInput = document.getElementById("total_general");
+
+    if (!subtotalInput || !descuentoInput || !montoDescuentoInput || !totalInput) return;
+
+    const subtotal = parseFloat(subtotalInput.value) || 0;
+    const descuento = parseFloat(descuentoInput.value) || 0;
+
+    const montoDescuento = (subtotal * descuento) / 100;
+    const total = subtotal - montoDescuento;
+
+    montoDescuentoInput.value = montoDescuento.toFixed(2);
+    totalInput.value = total.toFixed(2);
+  }
+
   // Inicializar DataTable
   inicializarDataTable();
 
   // Definir campos y validaciones
   const campos = [
-    { id: "cedula", regex: expresiones.cedula, mensaje: " La Cédula debe contener la estructura V-XXXXX No debe contener espacios y solo números." },
-    { id: "nombre", regex: expresiones.nombre, mensaje: "El nombre debe tener entre 10 y 20 caracteres alfabéticos." },
-    { id: "apellido", regex: expresiones.apellido, mensaje: "El apellido debe tener entre 10 y 20 caracteres alfabéticos." },
-    { id: "telefono_principal", regex: expresiones.telefono_principal, mensaje: "El teléfono debe tener exactamente 11 dígitos. No debe contener letras." },
-    { id: "direccion", regex: expresiones.direccion, mensaje: "La dirección debe tener entre 20 y 50 caracteres." },
-    { id: "estatus", regex: expresiones.estatus, mensaje: "El estatus debe ser 'Activo' o 'Inactivo'." },
+    { id: "fecha_venta_modal", regex: expresiones.fecha, mensaje: "La fecha es obligatoria." },
+    { id: "idmoneda_general", regex: expresiones.moneda, mensaje: "Debe seleccionar una moneda válida." },
+    { id: "idcliente", regex: expresiones.id, mensaje: "Debe seleccionar un cliente válido." },
+    { id: "subtotal_general", regex: expresiones.numero, mensaje: "El subtotal debe ser un número válido." },
+    { id: "descuento_porcentaje_general", regex: expresiones.numero, mensaje: "El descuento debe ser un número válido." },
+    { id: "monto_descuento_general", regex: expresiones.numero, mensaje: "El monto de descuento debe ser un número válido." },
+    { id: "total_general", regex: expresiones.numero, mensaje: "El total debe ser un número válido." },
     { id: "observaciones", regex: expresiones.observaciones, mensaje: "Las observaciones no deben exceder los 200 caracteres." },
   ];
 
   inicializarValidaciones(campos);
-
-  // Evento para el botón "Registrar"
-  document.getElementById("registrarVentaBtn").addEventListener("click", function () {
-    manejarRegistro(campos);
-  });
 
   // Botón para abrir el modal de registro
   document.getElementById("abrirModalBtn").addEventListener("click", function () {
@@ -31,6 +129,22 @@ document.addEventListener("DOMContentLoaded", function () {
   // Botón para cerrar el modal
   document.getElementById("cerrarModalBtn").addEventListener("click", function () {
     cerrarModal("ventaModal");
+    limpiarFormulario();
+  });
+
+  // Botón para registrar la venta
+  document.getElementById("registrarVentaBtn").addEventListener("click", function () {
+    manejarRegistro(campos);
+  });
+
+  // Botón para agregar un producto al detalle
+  document.getElementById("agregarDetalleBtn").addEventListener("click", function () {
+    agregarProductoDetalle();
+  });
+
+  // Evento para recalcular totales cuando cambie el descuento
+  document.getElementById("descuento_porcentaje_general").addEventListener("input", function () {
+    calcularTotales();
   });
 
   // Evento para manejar el clic en el botón de eliminar
@@ -57,6 +171,138 @@ document.addEventListener("DOMContentLoaded", function () {
       abrirModalventaParaEdicion(idventa);
     }
   });
+
+  // Función para agregar un producto al detalle
+  function agregarProductoDetalle() {
+    const detalleVentaBody = document.getElementById("detalleVentaBody");
+    const nuevaFila = `
+      <tr>
+        <td><input type="text" name="producto[]" class="border rounded-lg px-2 py-1 w-full"></td>
+        <td><input type="text" name="descripcion[]" class="border rounded-lg px-2 py-1 w-full"></td>
+        <td><input type="number" name="cantidad[]" class="border rounded-lg px-2 py-1 w-full cantidad-input" value="1" min="1"></td>
+        <td><input type="number" name="precio_unitario[]" class="border rounded-lg px-2 py-1 w-full precio-input" value="0" min="0"></td>
+        <td><input type="number" name="subtotal[]" class="border rounded-lg px-2 py-1 w-full subtotal-input" value="0" readonly></td>
+        <td>
+          <button type="button" class="eliminar-detalle-btn text-red-500 hover:text-red-700">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+    detalleVentaBody.insertAdjacentHTML("beforeend", nuevaFila);
+    actualizarEventosDetalle();
+  }
+
+  // Función para actualizar eventos en los inputs del detalle
+  function actualizarEventosDetalle() {
+    const detalleVentaBody = document.getElementById("detalleVentaBody");
+    const cantidadInputs = detalleVentaBody.querySelectorAll(".cantidad-input");
+    const precioInputs = detalleVentaBody.querySelectorAll(".precio-input");
+    const eliminarBtns = detalleVentaBody.querySelectorAll(".eliminar-detalle-btn");
+
+    cantidadInputs.forEach(input => {
+      input.addEventListener("input", calcularSubtotal);
+    });
+
+    precioInputs.forEach(input => {
+      input.addEventListener("input", calcularSubtotal);
+    });
+
+    eliminarBtns.forEach(btn => {
+      btn.addEventListener("click", function (e) {
+        e.target.closest("tr").remove();
+        calcularTotales();
+      });
+    });
+  }
+
+  // Función para calcular el subtotal de cada fila
+  function calcularSubtotal() {
+    const fila = this.closest("tr");
+    const cantidad = fila.querySelector(".cantidad-input").value || 0;
+    const precio = fila.querySelector(".precio-input").value || 0;
+    const subtotal = fila.querySelector(".subtotal-input");
+
+    subtotal.value = (cantidad * precio).toFixed(2);
+    calcularTotales();
+  }
+
+  // Función para calcular los totales generales
+  function calcularTotales() {
+    const detalleVentaBody = document.getElementById("detalleVentaBody");
+    let subtotalGeneral = 0;
+
+    // Sumar todos los subtotales
+    detalleVentaBody.querySelectorAll(".subtotal-input").forEach(input => {
+      subtotalGeneral += parseFloat(input.value) || 0;
+    });
+
+    // Calcular el descuento
+    const descuentoPorcentaje = parseFloat(document.getElementById("descuento_porcentaje_general").value) || 0;
+    const montoDescuento = (subtotalGeneral * descuentoPorcentaje) / 100;
+
+    // Calcular el total general
+    const totalGeneral = subtotalGeneral - montoDescuento;
+
+    // Actualizar los campos
+    document.getElementById("subtotal_general").value = subtotalGeneral.toFixed(2);
+    document.getElementById("monto_descuento_general").value = montoDescuento.toFixed(2);
+    document.getElementById("total_general").value = totalGeneral.toFixed(2);
+  }
+
+  // Función para manejar el registro de ventas
+  function manejarRegistro(campos) {
+    const formularioValido = validarCamposVacios(campos);
+    if (!formularioValido) return;
+
+    const formData = new FormData(document.getElementById("ventaForm"));
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    fetch("ventas/createventa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+      .then(response => response.json())
+      .then(result => {
+        if (result.status) {
+          Swal.fire({
+            title: "¡Éxito!",
+            text: result.message || "Venta registrada correctamente.",
+            icon: "success",
+            confirmButtonText: "Aceptar",
+          }).then(() => {
+            $("#Tablaventas").DataTable().ajax.reload();
+            cerrarModal("ventaModal");
+          });
+        } else {
+          Swal.fire({
+            title: "¡Error!",
+            text: result.message || "No se pudo registrar la venta.",
+            icon: "error",
+            confirmButtonText: "Aceptar",
+          });
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        Swal.fire({
+          title: "¡Error!",
+          text: "Ocurrió un error al procesar la solicitud.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
+      });
+  }
+
+  // Función para limpiar el formulario
+  function limpiarFormulario() {
+    document.getElementById("ventaForm").reset();
+    document.getElementById("detalleVentaBody").innerHTML = "";
+  }
 });
 
 // Función para inicializar DataTable
@@ -76,10 +322,7 @@ function inicializarDataTable() {
       { data: "cantidad", title: "Cantidad" },
       { data: "descuento", title: "Descuento" },
       { data: "total", title: "Total" },
-        
-
       { data: "estatus", title: "Estatus" },
-     
       {
         data: null,
         title: "Acciones",
