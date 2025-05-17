@@ -58,3 +58,9 @@
     border-radius: 5px;
     text-decoration: none;
   }
+ /* Estilos para imagen en header */
+  .logo-sidebar {
+    display: block;
+    margin: 1rem auto 0;
+    max-width: 250px;
+  }

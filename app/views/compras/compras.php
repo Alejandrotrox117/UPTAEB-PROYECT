@@ -6,7 +6,7 @@
     <h2 class="text-xl font-semibold">Gestión de Compras</h2>
   </div>
 
-  <div class="min-h-screen mt-4">
+  <div>
     <h1 class="text-3xl font-bold text-gray-900"><?= $data['page_name'] ?></h1>
     <p class="text-green-500 text-lg">Registro y consulta de compras de materiales</p>
 
