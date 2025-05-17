@@ -2,6 +2,10 @@ import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import { expresiones, inicializarValidaciones } from "./validaciones.js";
 import { validarCampo } from "./validaciones.js";
 
+
+
+//cargamos todo el en dom
+
 document.addEventListener("DOMContentLoaded", function () {
   const abrirModalBtn = document.getElementById("abrirModalBtn");
   const cerrarModalBtn = document.getElementById("cerrarModalBtn");
@@ -58,23 +62,10 @@ document.addEventListener("DOMContentLoaded", function () {
       data[key] = value;
     });
 
-    // Simulación de envío al backend
+ 
     console.log("Datos enviados:", data);
 
-    // Aquí puedes usar fetch para enviar los datos al servidor
-    // Ejemplo:
-    // fetch('/ruta-del-servidor', {
-    //   method: 'POST',
-    //   body: JSON.stringify(data),
-    //   headers: {
-    //     'Content-Type': 'application/json'
-    //   }
-    // }).then(response => response.json())
-    //   .then(result => {
-    //     console.log(result);
-    //   });
-
-    // Cerrar el modal después del registro
+   
     cerrarModal("ventaModal");
   }
 
@@ -364,82 +355,7 @@ function inicializarDataTable() {
   });
 }
 
-// Función para manejar el registro de ventas
-function manejarRegistro(campos) {
-  // Validar si hay campos vacíos
-  const formularioValido = validarCamposVacios(campos);
-  if (!formularioValido) {
-    return; // Detener el proceso si hay campos vacíos
-  }
 
-  // Validar el formato de los campos
-  let formatoValido = true;
-  campos.forEach((campo) => {
-    const input = document.getElementById(campo.id);
-    if (input) {
-      const valido = validarCampo(input, campo.regex, campo.mensaje);
-      if (!valido) formatoValido = false;
-    }
-  });
-
-  // Si el formato no es válido, mostrar alerta y detener el proceso
-  if (!formatoValido) {
-    Swal.fire({
-      title: "¡Error!",
-      text: "Por favor, corrige los errores en el formulario.",
-      icon: "error",
-      confirmButtonText: "Aceptar",
-    });
-    return;
-  }
-
-  // Si el formulario es válido, enviar los datos
-  const formData = new FormData(document.getElementById("ventaForm"));
-  const data = {};
-  formData.forEach((value, key) => {
-    data[key] = value;
-  });
-
-  const idventa = document.getElementById("idventa").value;
-  const url = idventa ? "ventas/updateventa" : "ventas/createventa";
-  const method = idventa ? "PUT" : "POST";
-
-  fetch(url, {
-    method: method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        Swal.fire({
-          title: "¡Éxito!",
-          text: result.message || "venta registrado correctamente.",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        }).then(() => {
-          $("#Tablaventas").DataTable().ajax.reload();
-          cerrarModal("ventaModal");
-        });
-      } else {
-        Swal.fire({
-          title: "¡Error!",
-          text: result.message || "No se pudo registrar el venta.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire({
-        title: "¡Error!",
-        text: "Ocurrió un error al procesar la solicitud.",
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
-    });
-}
 // Función para confirmar la eliminación de un venta
 function confirmarEliminacion(idventa) {
   Swal.fire({

@@ -53,7 +53,7 @@
 
 
 <!-- Modal para Registrar Nueva Venta -->
-<div id="ventaModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+<div id="ventaModal" class="fixed inset-0 flex items-center justify-center transparent backdrop-blur-[2px] transition-opacity duration-300 z-50 bg-opacity-50 opacity-0 pointer-events-none ">
   <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-4xl max-h-screen">
     <!-- Encabezado del Modal -->
     <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -68,8 +68,8 @@
     </div>
 
     <!-- Contenido del Modal -->
-    <div class="px-8 py-6 max-h-[80vh] overflow-y-auto">
-      <form id="ventaForm">
+    <div class="px-8 ">
+      <form id="ventaForm" class="px-8 py-6 max-h-[70vh] overflow-y-auto">
         <!-- Sección Datos Generales -->
         <div>
           <h4 class="text-base font-semibold text-gray-700 mb-3 border-b pb-2">Datos Generales</h4>

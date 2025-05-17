@@ -7,6 +7,9 @@ const expresiones = {
   direccion: /^.{5,100}$/, // Dirección
   estatus: /^(Activo|Inactivo)$/, // Estatus
   observaciones: /^.{0,200}$/, // Observaciones
+  email: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, // Email
+  fecha: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, // Fecha
+  
 };
 
 function validarCampo(input, regex, mensaje) {
