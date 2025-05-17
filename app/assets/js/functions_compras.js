@@ -1,60 +1,43 @@
 document.addEventListener("DOMContentLoaded", function () {
   // --- DataTable (se mantiene igual que antes) ---
-  $("#TablaCompras").DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: {
-      url: "compras/getComprasDataTable",
-      type: "GET",
-      dataSrc: "data",
-    },
-    columns: [
-      { data: "nro_compra", title: "Nro" },
-      { data: "fecha", title: "Fecha" },
-      { data: "proveedor_nombre", title: "Proveedor" },
-      { data: "total_general", title: "Total" },
-      {
-        data: null,
-        title: "Acciones",
-        orderable: false,
-        render: function (data, type, row) {
-          // Generar botones con íconos de Font Awesome
-          return `
-                <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idpersona="${row.idcompra}">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" data-idpersona="${row.idcompra}">
-                  <i class="fas fa-trash"></i>
-                </button>
-              `;
+  let TablaCompras;
+  tablaCompras = $("#TablaCompras").DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "compras/getComprasDataTable",
+            type: "GET", 
+            dataSrc: "data", 
         },
-      },
-    ],
-    language: {
-      decimal: "",
-      emptyTable: "No hay información",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
-      infoEmpty: "Mostrando 0 to 0 of 0 Entradas",
-      infoFiltered: "(Filtrado de _MAX_ total entradas)",
-      infoPostFix: "",
-      thousands: ",",
-      lengthMenu: "Mostrar _MENU_ Entradas",
-      loadingRecords: "Cargando...",
-      processing: "Procesando...",
-      search: "Buscar:",
-      zeroRecords: "Sin resultados encontrados",
-      paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior",
-      },
-    },
-    destroy: true,
-    responsive: true,
-    pageLength: 10,
-    order: [[0, "asc"]],
-  });
+        columns: [
+            { data: "nro_compra", title: "Nro. Compra" },
+            { data: "fecha", title: "Fecha" },
+            { data: "idproveedor", title: "Proveedor" },
+            { data: "total_general", title: "Total" },
+            
+            {
+                data: null,
+                title: "Acciones",
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return `
+                        <button class="editar-proveedor-btn text-blue-500 hover:text-blue-700 p-1" data-idcompra="${row.idcompra}" title="Editar">
+                            <i class="fas fa-edit fa-lg"></i>
+                        </button>
+                        <button class="eliminar-proveedor-btn text-red-500 hover:text-red-700 p-1 ml-2" data-idcompra="${row.idcompra}" title="Eliminar">
+                            <i class="fas fa-trash fa-lg"></i>
+                        </button>
+                    `;
+                },
+            },
+        ],
+        language: {  },
+        destroy: true,
+        responsive: true,
+        pageLength: 10,
+        order: [[0, "asc"]],
+    });
 
   // --- Lógica del Modal de Nueva Compra ---
   const modalNuevaCompra = document.getElementById("modalNuevaCompra");

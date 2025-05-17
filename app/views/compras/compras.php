@@ -79,10 +79,10 @@
             </div>
             <input type="hidden" id="idproveedor_seleccionado_modal" name="idproveedor_seleccionado">
             <div id="proveedor_seleccionado_info_modal" class="mt-2 p-2 border border-gray-200 rounded-md bg-gray-50 text-xs hidden"></div>
-            <div id="listaResultadosProveedorModal" class="mt-2 border border-gray-300 rounded-md max-h-10 overflow-y-auto hidden">
+            <div id="listaResultadosProveedorModal" class="mt-2 border border-gray-300 rounded-md max-h-20 overflow-y-auto hidden">
             </div>
         </div>
-        <button type="button" onclick="abrirModalProveedor('Registrar Proveedor', 'proveedorForm', 'POST', 'proveedores/createProveedor')" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-blue-700 transition text-base font-medium">
+        <button type="button" onclick="abrirModalProveedor('Registrar Proveedor', 'proveedorForm', 'POST', 'proveedores/createProveedor')" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-700 transition text-base font-medium">
             <i class="fas fa-user-plus mr-2"></i>Registrar Nuevo Proveedor
         </button>
 
@@ -163,7 +163,6 @@
 </div>
 
 <!-- Modal para Registrar Nuevo Proveedor -->
-<!-- Modal para Registrar/Editar Proveedor -->
 <div id="proveedorModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
   <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-4xl"> 
     <div class="px-8 py-6 border-b flex justify-between items-center">

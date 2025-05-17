@@ -29,48 +29,8 @@ class Compras extends Controllers
     public function getComprasDataTable()
     {
         header('Content-Type: application/json');
-        $modelo = $this->get_model();
-
-        $draw = isset($_GET['draw']) ? intval($_GET['draw']) : 0;
-        $start = isset($_GET['start']) ? intval($_GET['start']) : 0;
-        $length = isset($_GET['length']) ? intval($_GET['length']) : 10;
-        $searchValue = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
-
-        $orderColumnIndex = isset($_GET['order'][0]['column']) ? intval($_GET['order'][0]['column']) : 0;
-        $orderDir = isset($_GET['order'][0]['dir']) ? $_GET['order'][0]['dir'] : 'asc';
-        $columnMapping = [
-            0 => 'c.nro_compra',
-            1 => 'c.fecha',
-            2 => 'p.nombre', 
-            3 => 'c.total_general',
-        ];
-        $orderColumnName = $columnMapping[$orderColumnIndex] ?? 'c.nro_compra'; // Orden por defecto
-
-        $datosFilas = $modelo->getComprasServerSide(
-            $start,
-            $length,
-            $searchValue,
-            $orderColumnName,
-            $orderDir
-        );
-
-        $recordsTotal = $modelo->countAllCompras();
-        $recordsFiltered = $modelo->countFilteredCompras($searchValue);
-
-        $dataParaEnviar = [];
-        foreach ($datosFilas as $fila) {
-            $fila['total_general'] = ($fila['moneda_simbolo'] ?? '$') . ' ' . number_format(floatval($fila['total_general']), 2);
-            $dataParaEnviar[] = $fila;
-        }
-
-        $response = [
-            "draw" => $draw,
-            "recordsTotal" => $recordsTotal,
-            "recordsFiltered" => $recordsFiltered,
-            "data" => $dataParaEnviar,
-        ];
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        $arrData = $this->get_model()->selectAllCompras();
+        echo json_encode(['data' => $arrData], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
