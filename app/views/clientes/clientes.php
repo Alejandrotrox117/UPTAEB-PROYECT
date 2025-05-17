@@ -47,7 +47,7 @@
         </div>
 </main>
 </div>
-<?php footerAdmin($data); ?>
+
 
 
 <!-- Modal -->
@@ -159,3 +159,4 @@
 
 
 
+<?php footerAdmin($data); ?>

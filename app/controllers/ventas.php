@@ -1,9 +1,7 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
-//ini_set('display_errors', 1);
-//ini_set('display_startup_errors', 1);
-//error_reporting(E_ALL);
+
 class Ventas extends Controllers
 {
 
@@ -36,10 +34,10 @@ class Ventas extends Controllers
 public function getventasData()
 {
     try {
-        // Obtener los datos del modelo
+        
         $arrData = $this->get_model()->SelectAllventas();
 
-        // Formatear los datos en un arreglo asociativo
+      
         $data = [];
         foreach ($arrData as $venta) {
             $data[] = [
@@ -54,7 +52,7 @@ public function getventasData()
             ];
         }
 
-        // Preparar la respuesta para el DataTable
+       
         $response = [
             "draw" => intval($_GET['draw'] ?? 1),
             "recordsTotal" => count($data),
@@ -62,10 +60,10 @@ public function getventasData()
             "data" => $data
         ];
 
-        // Enviar la respuesta como JSON
+    
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
-        // Manejo de errores
+    
         echo json_encode([
             "status" => false,
             "message" => "Error al obtener los datos: " . $e->getMessage()

@@ -1,7 +1,6 @@
 /* @tailwind base ; */
 
 @tailwind utilities;
-<<<<<<< HEAD
 @tailwind overflow;
 @tailwind components;
 @tailwind screens;
@@ -11,12 +10,8 @@
 @tailwind aspect-ratio;
 @tailwind line-clamp;
 @tailwind modals;
-@tailwind accordion;
 
-=======
-@tailwind modals;
-@tailwind forms;
->>>>>>> a9e99dac77f21b6828f4efae6dfbd970a60a70f2
+
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 

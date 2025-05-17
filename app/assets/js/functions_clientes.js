@@ -120,7 +120,7 @@ function inicializarDataTable() {
 }
 
 // Función para manejar el registro de clientes
-function manejarRegistro(campos) {
+ function manejarRegistro(campos) {
   // Validar si hay campos vacíos
   const formularioValido = validarCamposVacios(campos);
   if (!formularioValido) {
