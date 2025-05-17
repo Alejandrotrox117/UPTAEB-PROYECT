@@ -11,7 +11,7 @@
     <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
       <div class="flex justify-between items-center mb-4">
         <!-- Botón para abrir el modal de Registro -->
-        <button   onclick="abrirModalProduccion()"  class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
+        <button   id="abrirModalBtn"  class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
           Registrar Producción
         </button>
       </div>
@@ -147,10 +147,10 @@
 
       <!-- Botones -->
       <div class="flex justify-end space-x-6 mt-6">
-        <button type="button" onclick="cerrarModalProduccion()" class="px-6 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-xl">
+        <button type="button" id="cerrarModalBtn" class="px-6 py-3 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-xl">
           Cancelar
         </button>
-        <button type="submit" class="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600 transition text-xl">
+        <button type="button"  id="registrarProduccionBtn" class="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600 transition text-xl">
           Registrar
         </button>
       </div>

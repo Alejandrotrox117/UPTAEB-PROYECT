@@ -238,10 +238,13 @@ function abrirModalEmpleadoParaEdicion(idempleado) {
       document.getElementById("direccion").value = empleado.direccion || "";
       document.getElementById("fecha_nacimiento").value =
         empleado.fecha_nacimiento || "";
-      document.getElementById("genero").value = empleado.genero || "";
+     
       document.getElementById("puesto").value = empleado.puesto || "";
       document.getElementById("salario").value = empleado.salario || "";
+      setTimeout(() => { 
       document.getElementById("estatus").value = empleado.estatus || "";
+       document.getElementById("genero").value = empleado.genero || "";
+      }, 5000);
       document.getElementById("fecha_inicio").value =
         empleado.fecha_inicio || "";
       document.getElementById("fecha_fin").value = empleado.fecha_fin || "";
