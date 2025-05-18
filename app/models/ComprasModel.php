@@ -559,4 +559,80 @@ class ComprasModel
         }
     }
 
+    //BUSCAR COMPRA POR ID
+    public function getCompraById($idcompra){
+        $sql = "SELECT c.*, p.nombre as proveedor FROM compra c JOIN proveedor p ON c.idproveedor = p.idproveedor WHERE c.idcompra = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$this->getIdCompra($idcompra)]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    //BUSCAR DETALLE DE COMPRA POR ID
+    public function getDetalleCompraById($idcompra){
+        $sql = "SELECT * FROM detalle_compra WHERE idcompra = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$this->getIdCompra($idcompra)]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    //EDITAR COMPRA
+    public function editarCompra(array $datosCompra, array $detallesCompra){
+        $this->setIdCompra($datosCompra['idcompra']);
+        $this->setNroCompra($datosCompra['nro_compra']);
+        $this->setFecha($datosCompra['fecha_compra']);
+        $this->setIdProveedor($datosCompra['idproveedor']);
+        $this->setIdMonedaGeneral($datosCompra['idmoneda_general']);
+        $this->setSubtotalGeneral($datosCompra['subtotal_general_compra']);
+        $this->setDescuentoPorcentajeGeneral($datosCompra['descuento_porcentaje_compra']);
+        $this->setMontoDescuentoGeneral($datosCompra['monto_descuento_compra']);
+        $this->setTotalGeneral($datosCompra['total_general_compra']);
+        $this->setObservacionesCompra($datosCompra['observaciones_compra']);
+
+        try {
+            $tasas = $this->getTasasMonedas();
+            $this->db->beginTransaction();
+
+            // Validar y convertir monedas en los detalles
+            foreach ($detallesCompra as &$detalle) {
+                if (!is_numeric($detalle['idmoneda_detalle'])) {
+                    $idMoneda = $this->getIdMonedaByCodigo($detalle['idmoneda_detalle']);
+                    if ($idMoneda === null) {
+                        throw new Exception("Código de moneda inválido: " . $detalle['idmoneda_detalle']);
+                    }
+                    $detalle['idmoneda_detalle'] = $idMoneda;
+                }
+            }
+            unset($detalle);
+
+            // Actualizar la compra
+            $sqlCompra = "UPDATE compra SET nro_compra = ?, fecha = ?, idproveedor = ?, idmoneda_general = ?, subtotal_general = ?, descuento_porcentaje_general = ?, monto_descuento_general = ?, total_general = ?, observaciones_compra = ? WHERE idcompra = ?";
+            $arrDataCompra = [
+                $this->getNroCompra(),
+                $this->getFecha(),
+                $this->getIdProveedor(),
+                $this->getIdMonedaGeneral(),
+                $this->getSubtotalGeneral(),
+                $this->getDescuentoPorcentajeGeneral(),
+                $this->getMontoDescuentoGeneral(),
+                $this->getTotalGeneral(),
+                $this->getObservacionesCompra(),
+                $this->getIdCompra()
+            ];
+
+            $stmtCompra = $this->db->prepare($sqlCompra);
+            if (!$stmtCompra->execute($arrDataCompra)) {
+                $this->db->rollBack();
+                $errorInfo = $stmtCompra->errorInfo();
+                throw new Exception("Error al actualizar cabecera: " . implode(" | ", $errorInfo));
+            }
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            $this->conexionObjeto->disconnect(); // Cierra la conexión
+            throw new Exception("Editar Compras - Error: " . $e->getMessage());
+        }
+    }
+
+
 }

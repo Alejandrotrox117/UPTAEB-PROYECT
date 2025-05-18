@@ -22,6 +22,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 searchable: false,
                 render: function (data, type, row) {
                     return `
+                        <button class="ver-compra-btn text-green-600 hover:text-green-800 p-1" data-idcompra="${row.idcompra}" title="Ver Detalle">
+                            <i class="fas fa-eye fa-lg"></i>
+                        </button>
                         <button class="editar-proveedor-btn text-blue-500 hover:text-blue-700 p-1" data-idcompra="${row.idcompra}" title="Editar">
                             <i class="fas fa-edit fa-lg"></i>
                         </button>
@@ -103,6 +106,156 @@ document.addEventListener("DOMContentLoaded", function () {
   const mensajeErrorFormCompraModal = document.getElementById(
     "mensajeErrorFormCompraModal",
   );
+
+  // Event listener para botones de Editar
+    document.getElementById("TablaCompras").addEventListener("click", function (e) {
+        const target = e.target;
+        if (target.closest(".ver-compra-btn")) {
+            const idCompra = target.closest(".ver-compra-btn").getAttribute("data-idcompra");
+            if (idCompra) {
+               verCompra(idCompra);
+            }
+        }else if (target.closest(".eliminar-compra-btn")) {
+             const idCompra = target.closest(".eliminar-compra-btn").getAttribute("data-idcompra");
+             if (idCompra) {
+                editarCompra(idCompra);
+            }
+         }
+    });
+
+async function editarCompra(idcompra) {
+    try {
+        const response = await fetch(`compras/getDetalleCompra/${idcompra}`);
+        const data = await response.json();
+
+        if (!data.status) {
+            Swal.fire("Error", data.message || "No se pudo obtener el detalle.", "error");
+            return;
+        }
+
+        // 1. Llena los campos de la cabecera
+        document.getElementById("fecha_compra_modal").value = data.compra.fecha;
+        document.getElementById("idmoneda_general_compra_modal").value = data.compra.idmoneda_general;
+        document.getElementById("observaciones_compra_modal").value = data.compra.observaciones_compra || "";
+
+        // 2. Proveedor
+        document.getElementById("idproveedor_seleccionado_modal").value = data.compra.idproveedor;
+        document.getElementById("proveedor_seleccionado_info_modal").innerHTML = `Sel: <strong>${data.compra.proveedor}</strong>`;
+        document.getElementById("proveedor_seleccionado_info_modal").classList.remove("hidden");
+
+        // 3. Detalle de productos
+        detalleCompraItemsModal = data.detalle.map(item => ({
+            idproducto: item.idproducto,
+            nombre: item.descripcion_temporal_producto,
+            idcategoria: item.idcategoria || 1, // Ajusta según tu modelo
+            precio_unitario: parseFloat(item.precio_unitario_compra),
+            idmoneda_item: item.idmoneda_detalle,
+            simbolo_moneda_item: "", // Puedes obtenerlo si lo necesitas
+            no_usa_vehiculo: false, // Ajusta si tienes este dato
+            peso_vehiculo: parseFloat(item.peso_vehiculo) || 0,
+            peso_bruto: parseFloat(item.peso_bruto) || 0,
+            peso_neto_directo: parseFloat(item.peso_neto) || 0,
+            cantidad_unidad: parseFloat(item.cantidad) || 1,
+            subtotal_linea: parseFloat(item.subtotal_linea) || 0,
+            subtotal_linea_bs: parseFloat(item.subtotal_linea) || 0,
+        }));
+
+        renderizarTablaDetalleModal();
+        calcularTotalesGeneralesModal();
+
+        // 4. Cambia el modo del modal a "Editar"
+        document.getElementById("btnGuardarCompraModal").textContent = "Actualizar Compra";
+        document.getElementById("btnGuardarCompraModal").onclick = function () {
+            guardarEdicionCompra(idcompra);
+        };
+
+        // 5. Abre el modal
+        abrirModalNuevaCompra();
+
+    } catch (error) {
+        Swal.fire("Error", "Ocurrió un error al obtener la compra.", "error");
+    }
+}
+
+
+// Mostrar el modal con los datos
+  async function verCompra(idcompra) {
+      try {
+          const response = await fetch(`compras/getDetalleCompra/${idcompra}`);
+          const data = await response.json();  
+          console.log(data);  
+
+          if (!data.status) {
+              Swal.fire("Error", data.message || "No se pudo obtener el detalle.", "error");
+              return;
+          }
+
+          let html = `
+              <div class="mb-4">
+                  <strong>Nro. Compra:</strong> ${data.compra.nro_compra}<br>
+                  <strong>Fecha:</strong> ${data.compra.fecha}<br>
+                  <strong>Proveedor:</strong> ${data.compra.proveedor}<br>
+                  <strong>Total:</strong> ${data.compra.total_general}<br>
+                  <strong>Observaciones:</strong> ${data.compra.observaciones_compra || '-'}
+              </div>
+              <hr>
+              <div class="mt-4">
+                  <strong>Detalle de Productos:</strong>
+                  <div class="overflow-x-auto">
+                  <table class="w-full text-xs mt-2 border">
+                      <thead class="bg-gray-100">
+                          <tr>
+                              <th class="px-2 py-1 border">Producto</th>
+                              <th class="px-2 py-1 border">Cantidad</th>
+                              <th class="px-2 py-1 border">Precio U.</th>
+                              <th class="px-2 py-1 border">Subtotal</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+          `;
+          data.detalle.forEach(item => {
+              html += `
+                  <tr>
+                      <td class="px-2 py-1 border">${item.descripcion_temporal_producto}</td>
+                      <td class="px-2 py-1 border">${item.cantidad}</td>
+                      <td class="px-2 py-1 border">${item.precio_unitario_compra}</td>
+                      <td class="px-2 py-1 border">${item.subtotal_linea}</td>
+                  </tr>
+              `;
+          });
+          html += `
+                      </tbody>
+                  </table>
+                  </div>
+              </div>
+          `;
+
+          document.getElementById("contenidoModalDetalleCompra").innerHTML = html;
+          abrirModalDetalleCompra();
+      } catch (error) {
+          Swal.fire("Error", "Ocurrió un error al obtener el detalle.", "error");
+      }
+  }
+
+  // Funciones para abrir/cerrar el modal
+  function abrirModalDetalleCompra() {
+      const modal = document.getElementById("modalDetalleCompra");
+      modal.classList.remove("opacity-0", "pointer-events-none");
+      document.body.classList.add("overflow-hidden");
+  }
+  function cerrarModalDetalleCompra() {
+      const modal = document.getElementById("modalDetalleCompra");
+      modal.classList.add("opacity-0", "pointer-events-none");
+      document.body.classList.remove("overflow-hidden");
+  }
+
+  // Eventos para cerrar el modal
+  document.getElementById("btnCerrarModalDetalleCompra").addEventListener("click", cerrarModalDetalleCompra);
+  document.getElementById("btnCerrarModalDetalleCompra2").addEventListener("click", cerrarModalDetalleCompra);
+  document.getElementById("modalDetalleCompra").addEventListener("click", function(e) {
+      if (e.target === this) cerrarModalDetalleCompra();
+  });
+
 
   let detalleCompraItemsModal = []; // Array para los ítems del detalle en el modal
 
@@ -788,7 +941,4 @@ formProveedor.addEventListener("submit", function (e) {
     });
 });
 
-function verCompra(idcompra) {
-  Swal.fire("Detalle de compra", "Ver detalle de la compra ID: " + idcompra, "info");
-}
 })
