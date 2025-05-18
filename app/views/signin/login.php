@@ -1,10 +1,3 @@
-
- 
- 
- 
- 
- 
- <!-- filepath: c:\xampp\htdocs\project\app\views\inicio sesion\inicio.php -->
 <!DOCTYPE html>
 <html lang="es">
 <head>

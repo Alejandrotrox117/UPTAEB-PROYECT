@@ -1,14 +1,18 @@
 <?php
+require_once("app/core/conexion.php"); 
 
 class Usuario
 {
-    private $usuario;
+    private $db;
+    private $conexion;
+
     private $username;
     private $password;
 
     public function __construct()
     {
-        $this->usuario = new Conexion();
+        $this->conexion = new Conexion();
+        $this->db = $this->conexion->connect();
     }
 
     // SETTERS
@@ -35,7 +39,7 @@ class Usuario
 
     public function PostUser()
     {
-        $conn = $this->usuario->connect();
+        $conn = $this->db;
         
         $sql = "SELECT * FROM usuarios WHERE correo = :correo AND status1 = 1";
         $stmt = $conn->prepare($sql);
@@ -72,13 +76,6 @@ class Usuario
         } catch (PDOException $e) {
             return 'error_en_la_consulta';
         }
-    }
-
-
-
-    public function usuario()
-    {
-        $conn = $this->usuario->connect();
     }
 }
 ?>

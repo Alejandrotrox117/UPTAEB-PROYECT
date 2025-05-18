@@ -1,9 +1,11 @@
 <?php
+require_once("app/core/conexion.php");
 
 
 class bitacoraModel 
 {
     private $db;
+    private $conexion;
 
     // Propiedades que corresponden a cada columna de la tabla
     private $idbitacora;
@@ -14,7 +16,8 @@ class bitacoraModel
 
     public function __construct()
     {
-        $this->db = (new Conexion())->connect();
+        $this->conexion = new Conexion();
+        $this->db = $this->conexion->connect();
     }
 
     // Getters y Setters

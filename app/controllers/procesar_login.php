@@ -1,10 +1,7 @@
 <?php
-require "../models/Usuario.php";
-require "../models/bitacoraModel.php";
-require "../core/conexion.php";
-?>
+require_once("../models/Usuario.php");
+require_once("../models/bitacoraModel.php");
 
-<?php
 if (isset($_POST['ingresar'])) {
     $username = $_POST['email'];
     $password = $_POST['password'];
@@ -54,7 +51,7 @@ if (isset($_POST['ingresar'])) {
             // Registrar en bitácora
             require_once '../models/bitacoraModel.php';
             $bitacora = new bitacoraModel();
-            $bitacora->setTabla("usuario");
+            $bitacora->setTabla($idUsuario);
             $bitacora->setAccion("iniciar sesión");
             $bitacora->setIdusuario($idUsuario);
             $bitacora->insertar(); // Guardamos en la base de datos
