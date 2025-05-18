@@ -1,5 +1,4 @@
 <?php
-require_once('../core/conexion.php');
 
 class Usuario
 {
@@ -73,6 +72,13 @@ class Usuario
         } catch (PDOException $e) {
             return 'error_en_la_consulta';
         }
+    }
+
+
+
+    public function usuario()
+    {
+        $conn = $this->usuario->connect();
     }
 }
 ?>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -169,6 +168,7 @@
                 </span>
               </summary>
               <ul class="ml-5 mt-1 space-y-1">
+                <!-- Roles -->
                 <li
                   class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/roles" class="flex items-center text-sm">
@@ -176,12 +176,30 @@
                     <span class="ml-5">Roles</span>
                   </a>
                 </li>
-              </ul>
 
-          </details>
+                <!-- Módulos -->
+                <li
+                  class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/modulos" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-puzzle-piece icon"></i></span>
+                    <span class="ml-5">Módulos</span>
+                  </a>
+                </li>
+
+                <!-- Permisos -->
+                <li
+                  class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/permisos" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-key icon"></i></span>
+                    <span class="ml-5">Permisos</span>
+                  </a>
+                </li>
+              </ul>
+            </details>
           </li>
-               <li class="menu-item rounded-lg p-3 hover:bg-green-600 hover:text-white">
-                <a href="/project/logout" class="flex items-center text-sm">
+
+          <li class="menu-item rounded-lg p-3 hover:bg-green-600 hover:text-white">
+            <a href="/project/logout" class="flex items-center text-sm">
               <span><i class="fa-solid fa-right-from-bracket icon"></i></span>
               <span class="ml-5">Salir</span>
             </a>

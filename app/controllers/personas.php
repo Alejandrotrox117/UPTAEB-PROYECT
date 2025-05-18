@@ -132,26 +132,26 @@ class personas extends Controllers
 
 
     public function guardar()
-{ 
-    // Asegúrate de que la solicitud sea POST
-    try {
-        header("Content-Type: application/json");
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Methods: POST");
-        header("Access-Control-Allow-Headers: Content-Type");
-        
-        $data = json_decode(file_get_contents('php://input'), true);
+    {
+        // Asegúrate de que la solicitud sea POST
+        try {
+            header("Content-Type: application/json");
+            header("Access-Control-Allow-Origin: *");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Allow-Headers: Content-Type");
+
+            $data = json_decode(file_get_contents('php://input'), true);
             // Obtener los datos JSON del cuerpo de la solicitud
-           
-            
+
+
             // Si los datos no son válidos, devolver un error
             if (!$data) {
                 echo json_encode(['success' => false, 'message' => 'Datos no válidos.']);
                 return;
             }
 
-            
-    
+
+
             // Recibir datos del formulario desde el JSON
             $nombre = $data['nombre'] ?? '';
             $apellido = $data['apellido'] ?? '';
@@ -168,21 +168,21 @@ class personas extends Controllers
             $crearUsuario = $data['crear_usuario'] ?? '0';
             $correo = $data['correo_electronico'] ?? '';
             $clave = $data['clave'] ?? '';
-            $rol = $data['rol'] ??'';
-    
+            $rol = $data['rol'] ?? '';
+
             // Validar datos (ejemplo simple)
             if (empty($nombre) || empty($apellido) || empty($cedula)) {
                 echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
                 return;
             }
-    
+
             // Si se crea un usuario, encriptar la clave
             if ($crearUsuario == '1' && !empty($clave)) {
                 $clave = password_hash($clave, PASSWORD_DEFAULT);
             } else {
                 $clave = null;
             }
-    
+
             // Llamar al modelo para insertar en la base de datos
             $resultado = $this->model->guardar_usuario([
                 'nombre' => $nombre,
@@ -199,21 +199,145 @@ class personas extends Controllers
                 'observaciones' => $observaciones,
                 'correo' => $correo,
                 'clave' => $clave,
-                'rol'=>$rol,
+                'rol' => $rol,
                 'crear_usuario' => $crearUsuario
             ]);
-    
+
             if ($resultado) {
                 echo json_encode(['success' => true, 'message' => 'Registro exitoso.']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'No se pudo registrar.']);
             }
-    } catch (\Throwable $th) {
-        echo json_encode(['success' => false, 'message' => $th->getMessage()]);
+        } catch (\Throwable $th) {
+            echo json_encode(['success' => false, 'message' => $th->getMessage()]);
+
+        }
 
     }
-   
+
+
+    public function obtenerPersonaPorId()
+    {
+        $id = $_GET['id'] ?? null;
+    header('Content-Type: application/json');
+
+    if ($id === null) {
+        echo json_encode(['success' => false, 'message' => 'Falta el parámetro id']);
+        exit;
+    }
+
+    $resultado = $this->model->buscarunapersona($id);
+
+    // Si $resultado es un arreglo con 'success', es error
+    if (isset($resultado['success']) && $resultado['success'] === false) {
+        echo json_encode($resultado);
+        exit;
+    }
+
+    // En caso contrario, devolvemos success true con los datos
+    echo json_encode(['success' => true, 'usuario' => $resultado]);
+    exit;
+    }
+
+
+
+   public function editar()
+{
+
+    header("Content-Type: application/json");
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Methods: POST");
+        header("Access-Control-Allow-Headers: Content-Type");
+
+    // Suponiendo que recibes datos por POST con JSON
+    $json = file_get_contents('php://input');
+    $datos = json_decode($json, true);
+
+    // Validación manual
+    $errores = [];
+
+  
+    if (empty($datos['nombre']) || !preg_match('/^[a-zA-ZÁÉÍÓÚÑáéíóúñ\s]{2,50}$/u', $datos['nombre'])) {
+        $errores[] = 'Nombre inválido.';
+    }
+
+    if (empty($datos['apellido']) || !preg_match('/^[a-zA-ZÁÉÍÓÚÑáéíóúñ\s]{2,50}$/u', $datos['apellido'])) {
+        $errores[] = 'Apellido inválido.';
+    }
+
+    if (empty($datos['cedula']) || !preg_match('/^\d{5,12}$/', $datos['cedula'])) {
+        $errores[] = 'Cédula inválida.';
+    }
+
+    if (empty($datos['rif']) || !preg_match('/^[VEJPG]-\d{6,10}$/', $datos['rif'])) {
+        $errores[] = 'RIF inválido.';
+    }
+
+    if (empty($datos['telefono_principal']) || !preg_match('/^\d{10,15}$/', $datos['telefono_principal'])) {
+        $errores[] = 'Teléfono inválido.';
+    }
+
+    if (empty($datos['tipo']) || !in_array($datos['tipo'], ['admin', 'usuario', 'otro'])) {
+        $errores[] = 'Tipo inválido.';
+    }
+
+    if (empty($datos['genero']) || !in_array($datos['genero'], ['masculino', 'femenino', 'otro'])) {
+        $errores[] = 'Género inválido.';
+    }
+
+    if (empty($datos['fecha_nacimiento']) || !strtotime($datos['fecha_nacimiento'])) {
+        $errores[] = 'Fecha de nacimiento inválida.';
+    }
+
+    if (empty($datos['estado']) || strlen($datos['estado']) > 100) {
+        $errores[] = 'Estado inválido.';
+    }
+
+    if (empty($datos['ciudad']) || strlen($datos['ciudad']) > 100) {
+        $errores[] = 'Ciudad inválida.';
+    }
+
+    if (empty($datos['pais']) || strlen($datos['pais']) > 100) {
+        $errores[] = 'País inválido.';
+    }
+
+    if (!empty($datos['observaciones']) && strlen($datos['observaciones']) > 500) {
+        $errores[] = 'Observaciones demasiado largas.';
+    }
+
+    if (empty($datos['correo_electronico']) || !filter_var($datos['correo_electronico'], FILTER_VALIDATE_EMAIL)) {
+        $errores[] = 'Correo electrónico inválido.';
+    }
+
+    if (empty($datos['clave']) || strlen($datos['clave']) < 6 || strlen($datos['clave']) > 16) {
+        $errores[] = 'Clave inválida.';
+    }
+
+    if (empty($datos['rol']) || !in_array($datos['rol'], ['admin', 'moderador', 'cliente'])) {
+        $errores[] = 'Rol inválido.';
+    }
+
+    // Si hay errores, devolverlos
+    if (!empty($errores)) {
+        header('Content-Type: application/json');
+        http_response_code(400);
+        echo json_encode(['errores' => $errores]);
+        return;
+    }
+
+    
+
+    $resultado = $this->model->actualizarUsuario($datos);
+
+    if ($resultado) {
+        echo json_encode(['mensaje' => 'Usuario actualizado correctamente.']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'Error al actualizar usuario.']);
+    }
 }
+
+
 
 
 
