@@ -1,5 +1,8 @@
 <?php require_once('helpers/helpers.php');
-headerAdmin($data); ?>
+headerAdmin($data);
+
+
+?>
 
 <!-- Scripts y estilos externos -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -55,88 +58,25 @@ headerAdmin($data); ?>
 <?php footerAdmin($data); ?>
 
 
-<!-- Modal Editar Rol -->
-<div id="modalEditar"
-    class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
-        <div class="flex justify-between items-center px-6 py-4 border-b">
-            <h3 class="text-2xl font-bold text-gray-800">Editar Rol</h3>
-            <button onclick="cerrarModalEditar()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-
-        <div id="loader" class="flex justify-center items-center my-4" style="display: none;">
-            <div class="dot-flashing"></div>
-        </div>
-
-        <div class="px-6 py-6">
-            <form id="formEditarRol" class="space-y-4">
-                <!-- Campo oculto para el ID del rol -->
-                <input type="hidden" id="idRolEditar" name="id">
-
-                <div class="flex flex-wrap gap-4">
-                    <div class="flex-1 min-w-[45%]">
-                        <label for="nombreRolEditar" class="block text-sm font-medium text-gray-700 mb-1">Nombre del
-                            Rol</label>
-                        <input type="text" id="nombreRolEditar" name="nombre"
-                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
-                            required>
-                    </div>
-
-                    <div class="flex-1 min-w-[45%]">
-                        <label for="estatusRolEditar"
-                            class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
-                        <select id="estatusRolEditar" name="estatus"
-                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
-                            required>
-                            <option value="Activo">Activo</option>
-                            <option value="Inactivo">Inactivo</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="descripcionRolEditar"
-                        class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                    <textarea id="descripcionRolEditar" name="descripcion" rows="3"
-                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"></textarea>
-                </div>
-
-                <div class="flex justify-end pt-4">
-                    <button type="submit" id="submitRol"
-                        class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
-                        Actualizar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-</div>
 
 
 <!-- modal eliminar -->
 <div id="modalEliminar" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center z-50">
     <div class="bg-white p-6 rounded-lg shadow-lg w-96">
 
-        <!-- Loader mientras carga (opcional) -->
+        <!-- Loader mientras carga -->
         <div id="loaderEliminar" class="flex justify-center items-center my-4" style="display: none;">
             <div class="dot-flashing"></div>
         </div>
 
-        <!-- Texto con el nombre del rol que se eliminará -->
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">¿Seguro que quieres desactivar el rol <span
-                id="nombreRolEliminar" class="text-red-500 font-bold"></span>?</h2>
+        <!-- Texto estático sin nombre -->
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+            ¿Seguro que quieres desactivar este permiso?
+        </h2>
 
         <!-- Botones -->
         <div class="flex justify-end space-x-4 mt-6">
             <button class="px-4 py-2 bg-gray-400 text-white rounded" onclick="cerrarModalEliminar()">Cancelar</button>
-            <!-- Botón de eliminación con el id guardado en data-id -->
             <button id="botonEliminar" class="px-4 py-2 bg-red-600 text-white rounded"
                 onclick="confirmarEliminar()">Eliminar</button>
         </div>
@@ -148,58 +88,123 @@ headerAdmin($data); ?>
 
 
 
-<!-- Modal Registrar Rol -->
-<div id="rolModal"
+
+
+
+<!-- Modal Registrar Permiso -->
+<div id="permisoModal" 
     class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
+    <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-3xl relative">
         <div class="flex justify-between items-center px-6 py-4 border-b">
-            <h3 class="text-2xl font-bold text-gray-800">Registrar Rol</h3>
-            <button onclick="cerrarModalRol()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
+            <h3 class="text-2xl font-bold text-gray-800">Registrar Permiso</h3>
+            <button onclick="cerrarModalPermiso()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                    stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
         </div>
 
         <div class="px-6 py-6">
-            <form id="formRegistrarRol" class="space-y-4">
+            <form id="formRegistrarPermiso" class="space-y-4">
+
                 <div class="flex flex-wrap gap-4">
-                    <div class="flex-1 min-w-[45%]">
-                        <label for="nombreRol" class="block text-sm font-medium text-gray-700 mb-1">Nombre del
-                            Rol</label>
-                        <input type="text" id="nombreRol" name="nombre"
-                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
-                            required>
+                    <div class="flex-1 min-w-[30%]">
+                        <label for="selectUsuario" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                        <select id="selectUsuario" name="idusuario" required
+                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400">
+                            <option value="">-- Seleccionar Usuario --</option>
+                        </select>
                     </div>
 
-                    <div class="flex-1 min-w-[45%]">
-                        <label for="estatusRol" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
-                        <select id="estatusRol" name="estatus"
-                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
-                            required>
-                            <option value="Activo">Activo</option>
-                            <option value="Inactivo">Inactivo</option>
+                    <div class="flex-1 min-w-[30%]">
+                        <label for="selectRol" class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                        <select id="selectRol" name="idrol" required
+                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400">
+                            <option value="">-- Seleccionar Rol --</option>
+                        </select>
+                    </div>
+
+                    <div class="flex-1 min-w-[30%]">
+                        <label for="selectModulo" class="block text-sm font-medium text-gray-700 mb-1">Módulo</label>
+                        <select id="selectModulo" name="idmodulo" required
+                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400">
+                            <option value="">-- Seleccionar Módulo --</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
-                    <label for="descripcionRol" class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                    <textarea id="descripcionRol" name="descripcion" rows="3"
-                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"></textarea>
+                    <label for="nombrePermiso" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Permiso</label>
+                    <input type="text" id="nombrePermiso" name="nombre" required
+                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400" maxlength="20">
+                </div>
+
+                <div>
+                    <label for="estatusPermiso" class="block text-sm font-medium text-gray-700 mb-1">Estatus</label>
+                    <select id="estatusPermiso" name="estatus" required
+                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400">
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
                 </div>
 
                 <div class="flex justify-end pt-4">
-                    <button type="submit" id="submitRol"
+                    <button type="submit" id="submitPermiso"
                         class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
-                        Guardar Rol
+                        Guardar Permiso
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    async function cargarDatosSelects() {
+    try {
+        // Cargar usuarios
+        const resUsuarios = await fetch('ruta_api/usuarios');
+        const usuarios = await resUsuarios.json();
+        const selectUsuario = document.getElementById('selectUsuario');
+        selectUsuario.innerHTML = '<option value="">-- Seleccionar Usuario --</option>';
+        usuarios.forEach(u => {
+            const option = document.createElement('option');
+            option.value = u.idusuario;  // usa el campo correcto
+            option.textContent = u.nombre; // o el campo que identifique
+            selectUsuario.appendChild(option);
+        });
+
+        // Cargar roles
+        const resRoles = await fetch('ruta_api/roles');
+        const roles = await resRoles.json();
+        const selectRol = document.getElementById('selectRol');
+        selectRol.innerHTML = '<option value="">-- Seleccionar Rol --</option>';
+        roles.forEach(r => {
+            const option = document.createElement('option');
+            option.value = r.idrol;
+            option.textContent = r.nombre;
+            selectRol.appendChild(option);
+        });
+
+        // Cargar modulos
+        const resModulos = await fetch('ruta_api/modulos');
+        const modulos = await resModulos.json();
+        const selectModulo = document.getElementById('selectModulo');
+        selectModulo.innerHTML = '<option value="">-- Seleccionar Módulo --</option>';
+        modulos.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m.idmodulo;
+            option.textContent = m.nombre;
+            selectModulo.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error('Error cargando datos:', error);
+    }
+}
+
+</script>
+
 
 <script>
     document.getElementById("formRegistrarRol").addEventListener("submit", function (e) {
@@ -313,50 +318,40 @@ headerAdmin($data); ?>
 <script>
     /* eliminar roles */
     function modalEliminar(id) {
-        const modal = document.getElementById('modalEliminar');
-        const nombreRolEliminar = document.getElementById('nombreRolEliminar'); // Elemento para mostrar el nombre del rol
-        const loaderEliminar = document.getElementById('loaderEliminar'); // Loader para cuando se esté cargando la información
-        const botonEliminar = document.getElementById('botonEliminar'); // Botón de eliminar
+    const modal = document.getElementById('modalEliminar');
+    const loaderEliminar = document.getElementById('loaderEliminar'); // Loader mientras carga
+    const botonEliminar = document.getElementById('botonEliminar');   // Botón de eliminar
 
-        modal.classList.remove('opacity-0', 'pointer-events-none'); // Abrir modal
+    modal.classList.remove('opacity-0', 'pointer-events-none'); // Abrir modal
 
-        // Mostrar loader mientras se realiza la búsqueda
-        if (loaderEliminar) loaderEliminar.style.display = 'flex';
-        if (nombreRolEliminar) nombreRolEliminar.textContent = ''; // Limpiar nombre del rol
+    // Mostrar loader mientras se realiza la búsqueda
+    if (loaderEliminar) loaderEliminar.style.display = 'flex';
 
-        // Realizamos la consulta para obtener el nombre del rol por ID
-        fetch(`Roles/consultarunrol?id=${id}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+    // Realizamos la consulta (opcional, por si necesitas validar algo antes de eliminar)
+    fetch(`permisos/desactivar?id=${id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (loaderEliminar) loaderEliminar.style.display = 'none';
+
+            if (data.success) {
+                // Guardar el ID en el botón de eliminar para usarlo al confirmar
+                if (botonEliminar) {
+                    botonEliminar.setAttribute('data-id', id);
+                }
+            } else {
+                console.error('Error al preparar la eliminación:', data.message);
+                // Puedes mostrar un mensaje de error aquí si quieres
+            }
         })
-            .then(response => response.json())
-            .then(data => {
-                if (loaderEliminar) loaderEliminar.style.display = 'none'; // Ocultar el loader
+        .catch(error => {
+            console.error('Error de conexión:', error);
+            if (loaderEliminar) loaderEliminar.style.display = 'none';
+        });
+}
 
-                if (data.success) {
-                    const rol = data.rol;
-                    if (nombreRolEliminar) {
-                        nombreRolEliminar.textContent = rol.nombre; // Colocar el nombre del rol en el modal
-                    }
-                    // Asignamos el id al botón para usarlo más tarde
-                    if (botonEliminar) {
-                        botonEliminar.setAttribute('data-id', id);
-                    }
-                } else {
-                    console.error('Error al cargar el rol para eliminar:', data.message);
-                    if (nombreRolEliminar) {
-                        nombreRolEliminar.textContent = 'Error al cargar el nombre del rol.';
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error de conexión al buscar rol para eliminar:', error);
-                if (loaderEliminar) loaderEliminar.style.display = 'none'; // Ocultar loader en caso de error
-                if (nombreRolEliminar) {
-                    nombreRolEliminar.textContent = 'Error de conexión.';
-                }
-            });
-    }
 
 
 
@@ -384,7 +379,7 @@ headerAdmin($data); ?>
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Rol eliminado correctamente.');
+                    alert('permiso eliminado correctamente.');
                     // Cerrar el modal y actualizar la vista si es necesario
                     cerrarModalEliminar();
                     cargarRoles();
@@ -475,7 +470,7 @@ headerAdmin($data); ?>
         loader.style.display = 'flex';
         tbody.innerHTML = '';  // Limpiar el contenido de la tabla
 
-        fetch('Roles/ConsultarRol', {
+        fetch('Permisos/ConsultarPermisos', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
         })
@@ -483,36 +478,41 @@ headerAdmin($data); ?>
             .then(data => {
                 loader.style.display = 'none';
                 if (data.success) {
-                    if (data.roles.length > 0) {
-                        data.roles.forEach((rol, index) => {
+                    if (data.permisos.length > 0) {
+                        data.permisos.forEach((rol, index) => {
                             const row = `
-            <tr class="border-b">
-              <td class="py-2">${index + 1}</td>
-              <td class="py-2">${rol.nombre}</td>
-              <td class="py-2">${rol.estatus}</td>
-              <td class="py-2">${rol.descripcion}</td>
-              <td class="py-2">
-                <button  class="bg-blue-500 text-white px-2 py-1 rounded editar-rol" 
+<tr class="border-b">
+  <td class="py-2">${index + 1}</td>
+   <td class="py-2">${rol.rol}</td>
+  <td class="py-2">${rol.modulo}</td>
+  <td class="py-2">${rol.usuario_correo}</td>
+  <td class="py-2">${rol.permiso_nombre}</td>
+  <td class="py-2">${rol.permiso_estatus}</td>
+  <td class="py-2">${rol.fecha_creacion}</td>
+  <td class="py-2">${rol.ultima_modificacion}</td>
+ 
+<td class="py-2">
+               <button  class="bg-blue-500 text-white px-2 py-1 rounded editar-rol" 
                   data-id="${rol.idrol}" 
-                  data-nombre="${rol.nombre}" 
+                  data-nombre="${rol.usuario_correo}" 
                   data-estatus="${rol.estatus}" 
-                  data-descripcion="${rol.descripcion}"
-                  onclick="abrirModalEditar(${rol.idrol})">
+                  onclick="abrirModalEditar(${rol.idpermiso})">
                   Editar
                 </button>
                 <button class="bg-red-500 text-white px-2 py-1 rounded eliminar-rol" 
-                  data-id="${rol.idrol}" 
-                  data-nombre="${rol.nombre}"
-                  onclick="modalEliminar(${rol.idrol})">
+                  data-id="${rol.idpermiso}" 
+                  data-nombre="${rol.usuario_correo}"
+                  onclick="modalEliminar(${rol.idpermiso})">
                   Eliminar
                 </button>
               </td>
-            </tr>`;
-                            tbody.insertAdjacentHTML('beforeend', row); // Insertar fila
+</tr>`;
+ tbody.innerHTML += row;
+
                         });
                         agregarEventos(); // Agregar eventos a los botones de la tabla
                     } else {
-                        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No Hay Roles Disponibles.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">No Hay Permisos Disponibles.</td></tr>`;
                     }
                 } else {
                     tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">${data.message}</td></tr>`;
@@ -520,9 +520,9 @@ headerAdmin($data); ?>
                 }
             })
             .catch(error => {
-                console.error('Error de conexión al cargar roles:', error);
+                console.error('Error de conexión al cargar Permisos:', error);
                 loader.style.display = 'none';
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error de conexión al cargar roles.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error de conexión al cargar Permisos.</td></tr>`;
             });
     }
 

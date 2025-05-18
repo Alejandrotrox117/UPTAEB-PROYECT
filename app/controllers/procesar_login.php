@@ -1,6 +1,10 @@
-<?php require "../models/Usuario.php"; ?>
+<?php
+require "../models/Usuario.php";
+require "../models/bitacoraModel.php";
+require "../core/conexion.php";
+?>
 
-<?php  
+<?php
 if (isset($_POST['ingresar'])) {
     $username = $_POST['email'];
     $password = $_POST['password'];
@@ -11,10 +15,12 @@ if (isset($_POST['ingresar'])) {
     }
 
     // Validamos que sea un correo válido y que el password tenga letras, números y símbolos
-    if (filter_var($username, FILTER_VALIDATE_EMAIL) && 
-        preg_match('/[a-zA-Z]/', $password) && 
-        preg_match('/[0-9]/', $password) && 
-        preg_match('/[^a-zA-Z0-9]/', $password)) {
+    if (
+        filter_var($username, FILTER_VALIDATE_EMAIL) &&
+        preg_match('/[a-zA-Z]/', $password) &&
+        preg_match('/[0-9]/', $password) &&
+        preg_match('/[^a-zA-Z0-9]/', $password)
+    ) {
 
         // Usamos la nueva clase con getters y setters
         $Model = new Usuario(); // Asegúrate que el nombre coincide con la clase (con mayúscula)
@@ -42,9 +48,22 @@ if (isset($_POST['ingresar'])) {
         $_SESSION['user'] = $user;
 
         if (isset($_SESSION['user'])) {
+            // Obtenemos el ID del usuario logueado
+            $idUsuario = $_SESSION['user']['idusuario']; // Ajusta según la estructura real
+
+            // Registrar en bitácora
+            require_once '../models/bitacoraModel.php';
+            $bitacora = new bitacoraModel();
+            $bitacora->setTabla("usuario");
+            $bitacora->setAccion("iniciar sesión");
+            $bitacora->setIdusuario($idUsuario);
+            $bitacora->insertar(); // Guardamos en la base de datos
+
+            // Redirigir al home
             header('Location: ../views/home/home.php');
             exit;
         }
+
     } else {
         echo "<script>alert('Lo siento, ha colocado un dato inválido');</script>";
         echo "<script>window.location = '../../index.php';</script>";

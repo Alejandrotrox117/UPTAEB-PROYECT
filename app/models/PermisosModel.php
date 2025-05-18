@@ -1,6 +1,6 @@
 <?php
 require_once("app/core/conexion.php");
-
+require_once("app/core/mysql.php");
 class PermisosModel extends Mysql
 {
     // Atributos de la tabla permisos
@@ -13,9 +13,11 @@ class PermisosModel extends Mysql
     private $fecha_creacion;
     private $ultima_modificacion;
 
-    public  function __construct()
+    private $db;
+
+    public function __construct()
     {
-        $this->conexion  = new Conexion();
+        $this->db = (new Conexion())->connect();
     }
 
     // Métodos Getters y Setters para cada propiedad
@@ -100,7 +102,55 @@ class PermisosModel extends Mysql
         $this->ultima_modificacion = $ultima_modificacion;
     }
 
-   
-   
+
+ public function obtenerTodosLosPermisos()
+{
+    $sql = "SELECT
+  u.idusuario,
+  p.idpermiso,
+  p.estatus,
+  u.correo AS usuario_correo,
+  r.nombre AS rol,
+  m.titulo AS modulo,
+  p.nombre AS permiso_nombre,
+  p.estatus AS permiso_estatus,
+  p.fecha_creacion,
+  p.ultima_modificacion
+FROM permisos p
+JOIN usuarios u ON p.idusuario = u.idusuario
+JOIN roles r ON p.idrol = r.idrol
+JOIN modulos m ON p.idmodulo = m.idmodulo
+ORDER BY u.idusuario, m.titulo;
+";
+
+    $stmt = $this->db->query($sql);
+    $todosPermisos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    return ['success' => true, 'permisos' => $todosPermisos];
+}
+
+
+ public function desactivarPermiso($id)
+    {
+        try {
+            $sql = "UPDATE permisos SET estatus = 'Inactivo' WHERE idpermiso = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            // Puedes loguear el error si deseas
+            return false;
+        }
+    }
+
+
+
+
+
+
+
+
+
 }
 ?>
