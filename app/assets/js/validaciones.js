@@ -1,12 +1,12 @@
 // Expresiones regulares para validación
 const expresiones = {
   cedula: /^(V|E|J)-\d{8}$/, // Formato de cédula
-  nombre: /^[a-zA-Z\s]{2,20}$/, // Nombre
-  apellido: /^[a-zA-Z\s]{2,50}$/, // Apellido
+  nombre: /^[a-zA-Z\s]{5,30}$/, // Nombre
+  apellido: /^[a-zA-Z\s]{5,30}$/, // Apellido
   telefono_principal: /^\d{11}$/, // Teléfono
   direccion: /^.{5,100}$/, // Dirección
   estatus: /^(Activo|Inactivo)$/, // Estatus
-  observaciones: /^.{0,200}$/, // Observaciones
+  observaciones: /^.{0,50}$/, // Observaciones
   email: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, // Email
   fecha: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, // Fecha
   
@@ -178,33 +178,41 @@ function validarFecha(input, mensajes) {
 //   });
 // };
 
-const inicializarValidaciones = (campos) => {
+const inicializarValidaciones = (campos, formId = null) => {
   campos.forEach((campo) => {
-    const input = document.getElementById(campo.id);
+    // Si se pasa formId, busca el input solo dentro de ese formulario
+    let input;
+    if (formId) {
+      const form = document.getElementById(formId);
+      input = form ? form.querySelector(`#${campo.id}`) : null;
+    } else {
+      input = document.getElementById(campo.id);
+    }
     if (input) {
       input.addEventListener("blur", () => {
         validarCampo(input, campo.regex, campo.mensajes);
       });
     }
   });
-};7
+};
 
 
-//FUNCIONES DE VALIDACIONES
-function validarCamposVacios(campos) {
+//FUNCIONES DE VALIDACIONES CAMPOS VACIOS
+function validarCamposVacios(campos, formId = null) {
   let formularioValido = true; // Variable para rastrear si el formulario es válido
 
   // Validar campos vacíos
   for (let campo of campos) {
-    // Omitir la validación del campo idventa
-    if (campo.id === "idventa") {
-      continue;
+    let input;
+    if (formId) {
+      const form = document.getElementById(formId);
+      input = form ? form.querySelector(`#${campo.id}`) : null;
+    } else {
+      input = document.getElementById(campo.id);
     }
 
-    // Obtener el valor del campo
-    const input = document.getElementById(campo.id);
-    if (!input) {
-      console.warn(`El campo con ID "${campo.id}" no existe en el DOM.`);
+    // Solo valida si el input existe y está visible
+    if (!input || input.offsetParent === null) {
       continue;
     }
 
@@ -222,6 +230,73 @@ function validarCamposVacios(campos) {
 
   return formularioValido; // Retornar true si todos los campos son válidos, false si no
 }
+
+export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError }) {
+  let formularioValido = true;
+
+  campos.forEach((campo) => {
+    const input = document.getElementById(campo.id);
+    if (input) {
+      let esValido = false;
+      if (campo.tipo === "date") {
+        esValido = validarFecha(input, campo.mensajes);
+      } else if (campo.tipo === "select") {
+        esValido = validarSelect(input, campo.mensajes);
+      } else {
+        esValido = validarCamposVacios([campo]);
+      }
+      if (!esValido) formularioValido = false;
+    }
+  });
+
+  if (!formularioValido) return;
+
+  const formData = new FormData(document.getElementById(formId));
+  const data = {};
+  formData.forEach((value, key) => {
+    data[key] = value;
+  });
+
+  fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status) {
+        if (typeof onSuccess === "function") onSuccess(result);
+      } else {
+        if (typeof onError === "function") onError(result);
+        else {
+          Swal.fire({
+            title: "¡Error!",
+            text: result.message || "No se pudo registrar.",
+            icon: "error",
+            confirmButtonText: "Aceptar",
+          });
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      Swal.fire({
+        title: "¡Error!",
+        text: "Ocurrió un error al procesar la solicitud.",
+        icon: "error",
+        confirmButtonText: "Aceptar",
+      });
+    });
+}
+
+
+
+
+
+
+
+
+
 
 // Exportar las funciones y expresiones
 export { expresiones, validarCampo, inicializarValidaciones,validarCamposVacios,validarFecha,validarSelect };

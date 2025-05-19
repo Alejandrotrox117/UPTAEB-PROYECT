@@ -176,6 +176,9 @@
           <div>
             <label for="observaciones" class="form-label">Observaciones</label>
             <textarea id="observaciones" name="observaciones" rows="3" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+           <div id="error-observaciones-formato" class="text-red-500 text-sm mt-1 hidden">
+            </div>
+           
           </div>
         </div>
         <div id="mensajeErrorFormVentaModal" class="text-red-600 text-xs mt-4 text-center font-medium"></div>
@@ -201,6 +204,10 @@
     <div class="px-4 py-4 border-b flex justify-between items-center">
       <h3 class="text-xl font-bold text-gray-800">Registrar cliente</h3>
 
+     <button id="btnCerrarModalCliente" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
+        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414 1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
       </button>
     </div>
 
@@ -222,7 +229,7 @@
         <div class="">
           <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre</label>
           <input type="text" id="nombre" name="nombre"
-            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+            class="w-full border rounded-lg px-4 py-2 text-lg  focus:ring-2 focus:ring-green-400">
           <div id="error-nombre-vacio" class="text-red-500 text-sm mt-1 hidden">
 
           </div>
@@ -277,15 +284,15 @@
       </div>
       <div class="grid-flow-row mt-4">
         <label for="observaciones" class="block text-gray-700 font-medium mb-2">Observaciones</label>
-        <input type="text" id="observaciones" name="observaciones"
-          class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
-        <div id="error-observaciones-formato" class="text-red-500 text-sm mt-1 hidden">
-
+        <input type="text" id="observacionesCliente" name="observacionesCliente"
+          class="w-full border rounded-lg px-4 py-2 text-lg  focus:ring-2 focus:ring-green-400">
+        <div id="error-observacionesCliente-formato" class="text-red-500 text-sm mt-1 hidden">
+ <div id="error-observacionesCliente-vacio" class="text-red-500 text-sm mt-1 hidden">
         </div>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mt-4">
         <div class="">
-          <button type="button" id="cerrarModalBtn"
+          <button type="button" id="cerrarModalClienteBtn"
             class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
             Cancelar
           </button>

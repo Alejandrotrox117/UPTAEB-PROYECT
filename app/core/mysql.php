@@ -147,13 +147,21 @@ class Mysql extends Conexion{
 
    
     
-    public function searchAllPersona(string $query, array $params = []) {
+   
+   
+//Esta es una funcion que sirve para buscar con parametros a un cliente, proveedor o usuario en los controladores
+public function searchAllParams(string $query, array $params = [])
+{
+    try {
         $this->set_query($query);
         $select = $this->get_conexionGeneral()->prepare($this->get_query());
         $select->execute($params);
         $data = $select->fetchAll(PDO::FETCH_ASSOC);
         return $data;
+    } finally {
+        $this->conexionGeneral = null; // Cierra la conexión
     }
+}
 
 }
 ?>

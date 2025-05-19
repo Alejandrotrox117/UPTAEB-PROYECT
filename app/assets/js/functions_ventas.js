@@ -1,19 +1,27 @@
 import { abrirModal, cerrarModal } from "./exporthelpers.js";
-import { expresiones, inicializarValidaciones,validarCamposVacios,validarFecha,validarSelect } from "./validaciones.js";
+import {
+  expresiones,
+  inicializarValidaciones,
+  validarCamposVacios,
+  validarFecha,
+  validarSelect,
+  registrarEntidad
+} from "./validaciones.js";
+
 
 document.addEventListener("DOMContentLoaded", function () {
-// Inicializar DataTable
+  // Inicializar DataTable
   inicializarDataTable();
-   // campos y validaciones importados del archivo validaciones.js
-  // 
- const campos = [
+  // campos y validaciones importados del archivo validaciones.js
+  //
+  const camposVentas = [
     {
       id: "fecha_venta_modal",
-    tipo: "date",
-    mensajes: {
-      vacio: "La fecha es obligatoria.",
-      fechaPosterior: "La fecha no puede ser posterior a hoy.",
-    },
+      tipo: "date",
+      mensajes: {
+        vacio: "La fecha es obligatoria.",
+        fechaPosterior: "La fecha no puede ser posterior a hoy.",
+      },
     },
     {
       id: "idmoneda_general",
@@ -31,13 +39,69 @@ document.addEventListener("DOMContentLoaded", function () {
         formato: "El nombre debe tener entre 2 y 20 caracteres.",
       },
     },
+    
+   
+    {
+      id: "observaciones",
+      tipo: "textarea",
+      regex: expresiones.observaciones,
+      mensajes: {
+        vacio: "Las observaciones son obligatorias.",
+        formato: "Las observaciones no deben exceder los 50 caracteres.",
+      },
+    },
+    {
+      id: "estatus",
+      tipo: "select",
+      mensajes: {
+        vacio: "Debe seleccionar un estatus.",
+      },
+    },
+  ];
+  
+  const camposClientes = [
+    
+ {
+      id: "cedula",
+      tipo: "input",
+      regex: expresiones.cedula,
+      mensajes: {
+        vacio: "La cédula es obligatoria.",
+        formato:
+          "La Cédula debe contener la estructura V-XXXXX No debe contener espacios y solo números.",
+      },
+    },
+    {
+      id: "nombre",
+      tipo: "input",
+      regex: expresiones.nombre,
+      mensajes: {
+        vacio: "El nombre es obligatorio.",
+        formato:
+          "El nombre debe tener entre 5 y 30 caracteres. No debe contener números.",
+      },
+    },
+    {
+      id: "apellido",
+      tipo: "input",
+      regex: expresiones.apellido,
+      mensajes: {
+        vacio: "El apellido es obligatorio.",
+        formato:
+          "El apellido debe tener entre 5 y 30 caracteres. No debe contener números.",
+      },
+    },
+    
+   
+   
     {
       id: "telefono_principal",
       tipo: "input",
       regex: expresiones.telefono_principal,
       mensajes: {
         vacio: "El teléfono es obligatorio.",
-        formato: "El teléfono debe tener exactamente 11 dígitos. No debe contener letras.",
+        formato:
+          "El teléfono debe tener exactamente 11 dígitos. No debe contener letras.",
       },
     },
     {
@@ -50,14 +114,15 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     },
     {
-      id: "observaciones",
+      id: "observacionesCliente",
       tipo: "input",
       regex: expresiones.observaciones,
       mensajes: {
         vacio: "Las observaciones son obligatorias.",
-        formato: "Las observaciones no deben exceder los 200 caracteres.",
+        formato: "Las observaciones no deben exceder los 50 caracteres.",
       },
     },
+    
     {
       id: "estatus",
       tipo: "select",
@@ -65,269 +130,285 @@ document.addEventListener("DOMContentLoaded", function () {
         vacio: "Debe seleccionar un estatus.",
       },
     },
-  ];
-  //inicializamos la funcion con los campos para validar cada input
-  inicializarValidaciones(campos);
+  
+     {
+      id: "observaciones",
+      tipo: "input",
+      regex: expresiones.observaciones,
+      mensajes: {
+        vacio: "Las observaciones son obligatorias.",
+        formato: "Las observaciones no deben exceder los 50 caracteres.",
+      },
+    },
+    
+    ];
+
+  
 
 
+  inicializarValidaciones(camposVentas,"ventaForm");
+  inicializarValidaciones(camposClientes,"clienteForm");
 
-
-//FUNCIONES////
-// CREAR VENTA NUEVA 
-  function RegistrarNuevaVenta(campos) {
-  let formularioValido = true;
-
-  campos.forEach((campo) => {
-    const input = document.getElementById(campo.id);
-    if (input) {
-      let esValido = false;
-      if (campo.tipo === "date") {
-        esValido = validarFecha(input, campo.mensajes);
-      }
-
-      if (!esValido) {
-        formularioValido = false;
-      }
-    }
-  });
-
-  if (!formularioValido) return;
-
-  const formData = new FormData(document.getElementById("ventaForm"));
-  const data = {};
-  formData.forEach((value, key) => {
-    data[key] = value;
-  });
-
-  fetch("ventas/createventa", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        Swal.fire({
-          title: "¡Éxito!",
-          text: result.message || "Venta registrada correctamente.",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        }).then(() => {
-          $("#Tablaventas").DataTable().ajax.reload();
-          cerrarModal("ventaModal");
-          formData.reset();
-          limpiarFormulario();
-        });
-      } else {
-        Swal.fire({
-          title: "¡Error!",
-          text: result.message || "No se pudo registrar la venta.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
+  
+  
+//REGISTRAR VENTA
+document.getElementById("registrarVentaBtn").addEventListener("click", function () {
+  if(!validarCamposVacios(camposVentas))return;
+  validarSelect(camposVentas);
+  registrarEntidad({
+    formId: "ventaForm",
+    endpoint: "ventas/createventa",
+    campos: camposVentas,
+    onSuccess: (result) => {
       Swal.fire({
-        title: "¡Error!",
-        text: "Ocurrió un error al procesar la solicitud.",
-        icon: "error",
+        title: "¡Éxito!",
+        text: result.message || "Venta registrada correctamente.",
+        icon: "success",
         confirmButtonText: "Aceptar",
+      }).then(() => {
+        $("#Tablaventas").DataTable().ajax.reload();
+        cerrarModal("ventaModal");
+        limpiarFormulario();
       });
-    });
-}
-
-
-function inicializarBuscadorCliente() {
-  // Buscar clientes al hacer clic en el botón
-  const btnBuscar = document.getElementById("btnBuscarClienteModal");
-  const inputCriterio = document.getElementById("inputCriterioClienteModal");
-  const listaResultados = document.getElementById("listaResultadosClienteModal");
-  const infoSeleccionado = document.getElementById("cliente_seleccionado_info_modal");
-  const inputIdCliente = document.getElementById("idcliente");
-
-  if (!btnBuscar || !inputCriterio || !listaResultados || !infoSeleccionado || !inputIdCliente) return;
-
-  btnBuscar.addEventListener("click", function () {
-    const criterio = inputCriterio.value.trim();
-    listaResultados.innerHTML = "";
-    infoSeleccionado.classList.add("hidden");
-    inputIdCliente.value = "";
-
-    if (criterio.length < 2) {
-      listaResultados.innerHTML = "<div class='p-2 text-red-500'>Ingrese al menos 2 caracteres.</div>";
-      listaResultados.classList.remove("hidden");
-      return;
-    }
-
-    fetch(`/clientes/getclienteById=${encodeURIComponent(criterio)}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!Array.isArray(data) || data.length === 0) {
-          listaResultados.innerHTML = "<div class='p-2 text-gray-500'>No se encontraron clientes.</div>";
-        } else {
-          listaResultados.innerHTML = data.map(cliente => `
-            <div class="p-2 hover:bg-green-100 cursor-pointer border-b" data-id="${cliente.id}" data-nombre="${cliente.nombre}" data-apellido="${cliente.apellido}" data-cedula="${cliente.cedula}">
-              <span class="font-semibold">${cliente.nombre} ${cliente.apellido}</span> - <span class="text-gray-600">${cliente.cedula}</span>
-            </div>
-          `).join('');
-        }
-        listaResultados.classList.remove("hidden");
-      })
-      .catch(() => {
-        listaResultados.innerHTML = "<div class='p-2 text-red-500'>Error al buscar clientes.</div>";
-        listaResultados.classList.remove("hidden");
-      });
-  });
-
-  // Seleccionar cliente de la lista
-  listaResultados.addEventListener("click", function (e) {
-    const item = e.target.closest("[data-id]");
-    if (item) {
-      inputIdCliente.value = item.dataset.id;
-      infoSeleccionado.innerHTML = `
-        <span class="font-semibold">${item.dataset.nombre} ${item.dataset.apellido}</span>
-        <span class="ml-2 text-gray-600">${item.dataset.cedula}</span>
-      `;
-      infoSeleccionado.classList.remove("hidden");
-      listaResultados.classList.add("hidden");
     }
   });
+});
 
-  // Limpiar selección si el usuario cambia el criterio
-  inputCriterio.addEventListener("input", function () {
-    inputIdCliente.value = "";
-    infoSeleccionado.classList.add("hidden");
-    listaResultados.classList.add("hidden");
-  });
-}
-
-// Llama a esta función cuando abras el modal de ventas
-
-
-
-
-
-
-
-
+  
   //NOTIFICACION PARA CONFIRMACION DE ELIMINACION DE VENTA
-function confirmarEliminacion(idventa) {
-  Swal.fire({
-    title: "¿Estás seguro?",
-    text: "Esta acción desactivará al venta.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Sí, eliminar",
-    cancelButtonText: "Cancelar",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      eliminarventa(idventa);
-    }
-  });
-}
-
-// ELIMINAR VENTA
-function eliminarventa(idventa) {
-  fetch(`ventas/deleteventa`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idventa }),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        Swal.fire({
-          title: "¡Éxito!",
-          text: result.message || "venta eliminado correctamente.",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        }).then(() => {
-          $("#Tablaventas").DataTable().ajax.reload();
-        });
-      } else {
-        Swal.fire({
-          title: "¡Error!",
-          text: result.message || "No se pudo eliminar el venta.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
+  function confirmarEliminacion(idventa) {
+    Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción desactivará al venta.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        eliminarventa(idventa);
       }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire({
-        title: "¡Error!",
-        text: "Ocurrió un error al intentar eliminar el venta.",
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
-    });
-}
-
-
-
-
-// MODIFICAR VENTA 
-function abrirModalventaParaEdicion(idventa) {
-  fetch(`ventas/getventaById/${idventa}`)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      if (!data.status) {
-        throw new Error(data.message || "Error al cargar los datos del venta.");
-      }
-
-      const venta = data.data;
-
-      // Asignar los valores a los campos del formulario
-      document.getElementById("idventa").value = venta.idventa || "";
-      document.getElementById("nombre").value = venta.nombre || "";
-      document.getElementById("apellido").value = venta.apellido || "";
-      document.getElementById("cedula").value = venta.cedula || "";
-      document.getElementById("telefono_principal").value = venta.telefono_principal || "";
-      document.getElementById("direccion").value = venta.direccion || "";
-      document.getElementById("observaciones").value = venta.observaciones || "";
-      document.getElementById("estatus").value = venta.estatus || "";
-
-      abrirModal("ventaModal");
-    })
-    .catch((error) => {
-      console.error("Error capturado al cargar los datos:", error.message);
-      Swal.fire({
-        title: "¡Error!",
-        text: "Ocurrió un error al cargar los datos del venta. Por favor, intenta nuevamente.",
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
-    });
-}
-
-
-
-
-
-
-
-
-  // Función para manejar el registro de la venta
-  const registrarVentaBtn = document.getElementById("registrarVentaBtn");
-  if (registrarVentaBtn) {
-    registrarVentaBtn.addEventListener("click", function () {
-      RegistrarNuevaVenta(campos);
     });
   }
 
- 
+  // ELIMINAR VENTA
+  function eliminarventa(idventa) {
+    fetch(`ventas/deleteventa`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idventa }),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.status) {
+          Swal.fire({
+            title: "¡Éxito!",
+            text: result.message || "venta eliminado correctamente.",
+            icon: "success",
+            confirmButtonText: "Aceptar",
+          }).then(() => {
+            $("#Tablaventas").DataTable().ajax.reload();
+          });
+        } else {
+          Swal.fire({
+            title: "¡Error!",
+            text: result.message || "No se pudo eliminar el venta.",
+            icon: "error",
+            confirmButtonText: "Aceptar",
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        Swal.fire({
+          title: "¡Error!",
+          text: "Ocurrió un error al intentar eliminar el venta.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
+      });
+  }
+
+  // MODIFICAR VENTA
+  function abrirModalventaParaEdicion(idventa) {
+    fetch(`ventas/getventaById/${idventa}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (!data.status) {
+          throw new Error(
+            data.message || "Error al cargar los datos del venta."
+          );
+        }
+
+        const venta = data.data;
+
+        // Asignar los valores a los campos del formulario
+        document.getElementById("idventa").value = venta.idventa || "";
+        document.getElementById("nombre").value = venta.nombre || "";
+        document.getElementById("apellido").value = venta.apellido || "";
+        document.getElementById("cedula").value = venta.cedula || "";
+        document.getElementById("telefono_principal").value =
+          venta.telefono_principal || "";
+        document.getElementById("direccion").value = venta.direccion || "";
+        document.getElementById("observaciones").value =
+          venta.observaciones || "";
+        document.getElementById("estatus").value = venta.estatus || "";
+
+        abrirModal("ventaModal");
+      })
+      .catch((error) => {
+        console.error("Error capturado al cargar los datos:", error.message);
+        Swal.fire({
+          title: "¡Error!",
+          text: "Ocurrió un error al cargar los datos del venta. Por favor, intenta nuevamente.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
+      });
+  }
+
+
+
+
+//AGREGAR CLIENTE
+ //Boton registrar cliente
+  document
+    .getElementById("registrarClienteBtn")
+    .addEventListener("click", function () {
+      //VALIDACIONES
+     if (!validarCamposVacios(camposClientes, "clienteForm")) return;
+      validarSelect(camposClientes);
+      //--                       //
+       
+      registrarEntidad({
+    formId: "clienteForm",
+    endpoint: "clientes/createcliente",
+    campos: camposClientes,
+    onSuccess: (result) => {
+      Swal.fire({
+        title: "¡Éxito!",
+        text: result.message || "Cliente registrada correctamente.",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+      }).then(() => {
+        limpiarValidaciones(camposClientes);
+        cerrarModal("ventaModal");
+        limpiarFormulario();
+      });
+    }
+  });
+  
+      
+      
+    });
+
+
+
+
+
+
+
+
+
+  //BUSCADOR DE CLIENTES 
+function inicializarBuscadorCliente() {
+    const inputCriterioClienteModal = document.getElementById(
+      "inputCriterioClienteModal"
+    );
+    const btnBuscarClienteModal = document.getElementById(
+      "btnBuscarClienteModal"
+    );
+    const listaResultadosClienteModal = document.getElementById(
+      "listaResultadosClienteModal"
+    );
+    const inputIdCliente = document.getElementById("idcliente");
+    const divInfoClienteModal = document.getElementById(
+      "cliente_seleccionado_info_modal"
+    );
+
+    if (!btnBuscarClienteModal || !inputCriterioClienteModal) return;
+
+    btnBuscarClienteModal.addEventListener("click", async function () {
+      const criterio = inputCriterioClienteModal.value.trim();
+      if (criterio.length < 2) {
+        Swal.fire(
+          "Atención",
+          "Ingrese al menos 2 caracteres para buscar.",
+          "warning"
+        );
+        return;
+      }
+
+      listaResultadosClienteModal.innerHTML =
+        '<div class="p-2 text-xs text-gray-500">Buscando...</div>';
+      listaResultadosClienteModal.classList.remove("hidden");
+
+      try {
+        const response = await fetch(
+          `clientes/buscar?criterio=${encodeURIComponent(criterio)}`
+        );
+        if (!response.ok) {
+          throw new Error("Error en la respuesta del servidor");
+        }
+        const clientes = await response.json();
+
+        listaResultadosClienteModal.innerHTML = "";
+        if (clientes && clientes.length > 0) {
+          clientes.forEach((cli) => {
+            const itemDiv = document.createElement("div");
+            itemDiv.textContent = `${cli.nombre || ""} ${cli.apellido || ""} (${
+              cli.cedula || ""
+            })`.trim();
+            itemDiv.dataset.idcliente = cli.id;
+            itemDiv.dataset.nombre = cli.nombre || "";
+            itemDiv.dataset.apellido = cli.apellido || "";
+            itemDiv.dataset.cedula = cli.cedula || "";
+
+            itemDiv.addEventListener("click", function () {
+              inputIdCliente.value = this.dataset.idcliente;
+              divInfoClienteModal.innerHTML = `Sel: <strong>${this.dataset.nombre} ${this.dataset.apellido}</strong> (C.I.: ${this.dataset.cedula})`;
+              divInfoClienteModal.classList.remove("hidden");
+              inputCriterioClienteModal.value = this.textContent;
+              listaResultadosClienteModal.classList.add("hidden");
+              listaResultadosClienteModal.innerHTML = "";
+            });
+            listaResultadosClienteModal.appendChild(itemDiv);
+          });
+        } else {
+          listaResultadosClienteModal.innerHTML =
+            '<div class="p-2 text-xs text-gray-500">No se encontraron clientes.</div>';
+        }
+      } catch (error) {
+        console.error("Error al buscar clientes:", error);
+        listaResultadosClienteModal.innerHTML =
+          '<div class="p-2 text-xs text-red-500">Error al buscar. Intente de nuevo.</div>';
+      }
+    });
+
+    // Limpiar selección si se escribe otro cliente en el input
+    inputCriterioClienteModal.addEventListener("input", function () {
+      inputIdCliente.value = "";
+      divInfoClienteModal.classList.add("hidden");
+      listaResultadosClienteModal.classList.add("hidden");
+    });
+  }
+
+
+
+
+  
+
   // Función para calcular totales
-  const descuentoInput = document.getElementById("descuento_porcentaje_general");
+  const descuentoInput = document.getElementById(
+    "descuento_porcentaje_general"
+  );
   if (descuentoInput) {
     descuentoInput.addEventListener("input", function () {
       calcularTotales();
@@ -336,11 +417,21 @@ function abrirModalventaParaEdicion(idventa) {
 
   function calcularTotales() {
     const subtotalInput = document.getElementById("subtotal_general");
-    const descuentoInput = document.getElementById("descuento_porcentaje_general");
-    const montoDescuentoInput = document.getElementById("monto_descuento_general");
+    const descuentoInput = document.getElementById(
+      "descuento_porcentaje_general"
+    );
+    const montoDescuentoInput = document.getElementById(
+      "monto_descuento_general"
+    );
     const totalInput = document.getElementById("total_general");
 
-    if (!subtotalInput || !descuentoInput || !montoDescuentoInput || !totalInput) return;
+    if (
+      !subtotalInput ||
+      !descuentoInput ||
+      !montoDescuentoInput ||
+      !totalInput
+    )
+      return;
 
     const subtotal = parseFloat(subtotalInput.value) || 0;
     const descuento = parseFloat(descuentoInput.value) || 0;
@@ -352,54 +443,89 @@ function abrirModalventaParaEdicion(idventa) {
     totalInput.value = total.toFixed(2);
   }
 
+  //Registrar cliente
+  function registrarCliente() {
   
+  }
 
- 
+  // BOTONES DE MODAL DE VENTAS
+  document
+    .getElementById("abrirModalBtn")
+    .addEventListener("click", function () {
+      abrirModal("ventaModal");
+    });
 
-
-  //Funciones de apertura y cierre de modal al igual que el formateo del mismo.
-  
-// Botón para abrir el modal de registro
-  document.getElementById("abrirModalBtn").addEventListener("click", function () {
-    abrirModal("ventaModal");
-  });
-// Botón buscar clietnte
-  document.getElementById("btnBuscarClienteModal").addEventListener("click", function () {
-     inicializarBuscadorCliente();
-
-  });
   // Botón para cerrar el modal
-  document.getElementById("cerrarModalBtn").addEventListener("click", function () {
-    cerrarModal("ventaModal");
-    limpiarValidaciones(campos);
-    limpiarFormulario();
-  });
- 
- 
- 
+  document
+    .getElementById("cerrarModalBtn")
+    .addEventListener("click", function () {
+      cerrarModal("ventaModal");
+      limpiarValidaciones(camposVentas);
+      limpiarFormulario();
+    });
+
   // Botón para registrar la venta
-  document.getElementById("registrarVentaBtn").addEventListener("click", function () {
-    RegistrarNuevaVenta(campos);
-  });
+  // document
+  //   .getElementById("registrarVentaBtn")
+  //   .addEventListener("click", function () {
+  //     RegistrarNuevaVenta(campos);
+  //   });
 
   // Botón para agregar un producto al detalle
-  document.getElementById("agregarDetalleBtn").addEventListener("click", function () {
-    agregarProductoDetalle();
-  });
+  // document.getElementById("agregarDetalleBtn").addEventListener("click", function () {
+  //   agregarProductoDetalle();
+  // });
 
-  document.getElementById("registrarClienteVentaBtn").addEventListener("click", function (e) {
+  //BOTONES DE FORMULARIO CLIENTE
+  document
+    .getElementById("abrirModalCliente")
+    .addEventListener("click", function () {
+      abrirModal("clienteModal");
+    });
+  // Botón buscar clietnte
+  document
+    .getElementById("btnBuscarClienteModal")
+    .addEventListener("click", function () {
+      inicializarBuscadorCliente();
+    });
+  document
+    .getElementById("btnCerrarModalCliente")
+    .addEventListener("click", function (e) {
+      cerrarModal("clienteModal");
+      limpiarValidaciones(camposClientes);
+    });
+    document
+    .getElementById("cerrarModalClienteBtn")
+    .addEventListener("click", function (e) {
+      cerrarModal("clienteModal");
+      limpiarValidaciones(camposClientes);
+    });
+ 
+ 
+   
   
-  });
+    
+  //FIN DE BOTONES DE FORMULARIO CLIENTE
+
+
+
+
+
+
 
   // Evento para recalcular totales cuando cambie el descuento
-  document.getElementById("descuento_porcentaje_general").addEventListener("input", function () {
-    calcularTotales();
-  });
+  document
+    .getElementById("descuento_porcentaje_general")
+    .addEventListener("input", function () {
+      calcularTotales();
+    });
 
   // Evento para manejar el clic en el botón de eliminar
   document.addEventListener("click", function (e) {
     if (e.target.closest(".eliminar-btn")) {
-      const idventa = e.target.closest(".eliminar-btn").getAttribute("data-idventa");
+      const idventa = e.target
+        .closest(".eliminar-btn")
+        .getAttribute("data-idventa");
       confirmarEliminacion(idventa);
     }
   });
@@ -407,7 +533,9 @@ function abrirModalventaParaEdicion(idventa) {
   // Evento para manejar el clic en el botón de editar
   document.addEventListener("click", function (e) {
     if (e.target.closest(".editar-btn")) {
-      const idventa = e.target.closest(".editar-btn").getAttribute("data-idventa");
+      const idventa = e.target
+        .closest(".editar-btn")
+        .getAttribute("data-idventa");
       if (!idventa || isNaN(idventa)) {
         Swal.fire({
           title: "¡Error!",
@@ -447,17 +575,19 @@ function abrirModalventaParaEdicion(idventa) {
     const detalleVentaBody = document.getElementById("detalleVentaBody");
     const cantidadInputs = detalleVentaBody.querySelectorAll(".cantidad-input");
     const precioInputs = detalleVentaBody.querySelectorAll(".precio-input");
-    const eliminarBtns = detalleVentaBody.querySelectorAll(".eliminar-detalle-btn");
+    const eliminarBtns = detalleVentaBody.querySelectorAll(
+      ".eliminar-detalle-btn"
+    );
 
-    cantidadInputs.forEach(input => {
+    cantidadInputs.forEach((input) => {
       input.addEventListener("input", calcularSubtotal);
     });
 
-    precioInputs.forEach(input => {
+    precioInputs.forEach((input) => {
       input.addEventListener("input", calcularSubtotal);
     });
 
-    eliminarBtns.forEach(btn => {
+    eliminarBtns.forEach((btn) => {
       btn.addEventListener("click", function (e) {
         e.target.closest("tr").remove();
         calcularTotales();
@@ -482,58 +612,80 @@ function abrirModalventaParaEdicion(idventa) {
     let subtotalGeneral = 0;
 
     // Sumar todos los subtotales
-    detalleVentaBody.querySelectorAll(".subtotal-input").forEach(input => {
+    detalleVentaBody.querySelectorAll(".subtotal-input").forEach((input) => {
       subtotalGeneral += parseFloat(input.value) || 0;
     });
 
     // Calcular el descuento
-    const descuentoPorcentaje = parseFloat(document.getElementById("descuento_porcentaje_general").value) || 0;
+    const descuentoPorcentaje =
+      parseFloat(
+        document.getElementById("descuento_porcentaje_general").value
+      ) || 0;
     const montoDescuento = (subtotalGeneral * descuentoPorcentaje) / 100;
 
     // Calcular el total general
     const totalGeneral = subtotalGeneral - montoDescuento;
 
     // Actualizar los campos
-    document.getElementById("subtotal_general").value = subtotalGeneral.toFixed(2);
-    document.getElementById("monto_descuento_general").value = montoDescuento.toFixed(2);
+    document.getElementById("subtotal_general").value =
+      subtotalGeneral.toFixed(2);
+    document.getElementById("monto_descuento_general").value =
+      montoDescuento.toFixed(2);
     document.getElementById("total_general").value = totalGeneral.toFixed(2);
   }
 
-  
+  function limpiarFormulario() {
+    // Reiniciar el formulario completo
+    const formulario = document.getElementById("ventaForm");
+    if (formulario) {
+      formulario.reset();
+    }
 
-function limpiarFormulario() {
-  // Reiniciar el formulario completo
-  const formulario = document.getElementById("ventaForm");
-  if (formulario) {
-    formulario.reset();
+    // Reiniciar los selects
+    const selects = formulario.querySelectorAll("select");
+    selects.forEach((select) => {
+      select.value = ""; // Reinicia el valor del select
+      select.classList.remove("border-red-500", "focus:ring-red-500");
+      select.classList.add("border-gray-300", "focus:ring-green-400");
+    });
+
+    // Reiniciar los inputs de tipo date
+    const dateInputs = formulario.querySelectorAll('input[type="date"]');
+    dateInputs.forEach((input) => {
+      input.value = ""; // Reinicia el valor del input de tipo date
+      input.classList.remove("border-red-500", "focus:ring-red-500");
+      input.classList.add("border-gray-300", "focus:ring-green-400");
+    });
+
+    // Limpiar el cuerpo del detalle de la venta (si aplica)
+    const detalleVentaBody = document.getElementById("detalleVentaBody");
+    if (detalleVentaBody) {
+      detalleVentaBody.innerHTML = ""; // Elimina todas las filas del detalle
+    }
+
+    // Reiniciar el buscador de clientes
+    const inputCriterioClienteModal = document.getElementById(
+      "inputCriterioClienteModal"
+    );
+    const listaResultadosClienteModal = document.getElementById(
+      "listaResultadosClienteModal"
+    );
+    const inputIdCliente = document.getElementById("idcliente");
+    const divInfoClienteModal = document.getElementById(
+      "cliente_seleccionado_info_modal"
+    );
+
+    if (inputCriterioClienteModal) inputCriterioClienteModal.value = "";
+    if (listaResultadosClienteModal) {
+      listaResultadosClienteModal.innerHTML = "";
+      listaResultadosClienteModal.classList.add("hidden");
+    }
+    if (inputIdCliente) inputIdCliente.value = "";
+    if (divInfoClienteModal) {
+      divInfoClienteModal.innerHTML = "";
+      divInfoClienteModal.classList.add("hidden");
+    }
   }
-
-  // Reiniciar los selects
-  const selects = formulario.querySelectorAll("select");
-  selects.forEach((select) => {
-    select.value = ""; // Reinicia el valor del select
-    select.classList.remove("border-red-500", "focus:ring-red-500");
-    select.classList.add("border-gray-300", "focus:ring-green-400");
-  });
-
-  // Reiniciar los inputs de tipo date
-  const dateInputs = formulario.querySelectorAll('input[type="date"]');
-  dateInputs.forEach((input) => {
-    input.value = ""; // Reinicia el valor del input de tipo date
-    input.classList.remove("border-red-500", "focus:ring-red-500");
-    input.classList.add("border-gray-300", "focus:ring-green-400");
-  });
-
-  // Limpiar el cuerpo del detalle de la venta (si aplica)
-  const detalleVentaBody = document.getElementById("detalleVentaBody");
-  if (detalleVentaBody) {
-    detalleVentaBody.innerHTML = ""; // Elimina todas las filas del detalle
-  }
-}
-
-
-
-  
 });
 
 // Función para inicializar DataTable
@@ -594,7 +746,6 @@ function inicializarDataTable() {
   });
 }
 
-
 function limpiarValidaciones(campos) {
   campos.forEach((campo) => {
     const input = document.getElementById(campo.id);
@@ -613,6 +764,3 @@ function limpiarValidaciones(campos) {
     }
   });
 }
-
-
-

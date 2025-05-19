@@ -272,4 +272,18 @@ class ClientesModel extends Mysql
 
         return null; // Retornar null si no se encuentra el cliente
     }
+
+
+
+public function buscarClientes($criterio)
+{
+    $sql = "SELECT idcliente, nombre, apellido, cedula
+            FROM cliente
+            WHERE (nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ?)
+            AND estatus = 'activo'
+            LIMIT 10";
+    $param = "%{$criterio}%";
+    return $this->searchAllParams($sql, [$param, $param, $param]);
+}
+
 }
