@@ -5,7 +5,7 @@ import {
   validarCamposVacios,
   validarFecha,
   validarSelect,
-  registrarEntidad
+  registrarEntidad,limpiarValidaciones
 } from "./validaciones.js";
 
 
@@ -131,30 +131,27 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     },
   
-     {
-      id: "observaciones",
-      tipo: "input",
-      regex: expresiones.observaciones,
-      mensajes: {
-        vacio: "Las observaciones son obligatorias.",
-        formato: "Las observaciones no deben exceder los 50 caracteres.",
-      },
-    },
+     
+  
     
     ];
 
   
 
 
-  inicializarValidaciones(camposVentas,"ventaForm");
-  inicializarValidaciones(camposClientes,"clienteForm");
+  
+  
 
   
   
 //REGISTRAR VENTA
 document.getElementById("registrarVentaBtn").addEventListener("click", function () {
-  if(!validarCamposVacios(camposVentas))return;
-  validarSelect(camposVentas);
+  if(!validarCamposVacios(camposVentas,"ventaForm"))return;
+  camposVentas.forEach((campo) => {
+  if (campo.tipo === "select") {
+    validarSelect(campo.id, campo.mensajes, "ventaForm");
+  }
+});
   registrarEntidad({
     formId: "ventaForm",
     endpoint: "ventas/createventa",
@@ -284,8 +281,14 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
     .addEventListener("click", function () {
       //VALIDACIONES
      if (!validarCamposVacios(camposClientes, "clienteForm")) return;
-      validarSelect(camposClientes);
-      //--                       //
+      // Validar selects SOLO del formulario de cliente
+    camposClientes.forEach((campo) => {
+      if (campo.tipo === "select") {
+        const form = document.getElementById("clienteForm");
+        const input = form ? form.querySelector(`#${campo.id}`) : null;
+        if (input) validarSelect(input, campo.mensajes);
+      }
+    });
        
       registrarEntidad({
     formId: "clienteForm",
@@ -298,8 +301,8 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
         icon: "success",
         confirmButtonText: "Aceptar",
       }).then(() => {
-        limpiarValidaciones(camposClientes);
-        cerrarModal("ventaModal");
+        limpiarValidaciones(camposClientes,"clienteForm");
+        cerrarModal("clienteModal");
         limpiarFormulario();
       });
     }
@@ -443,16 +446,14 @@ function inicializarBuscadorCliente() {
     totalInput.value = total.toFixed(2);
   }
 
-  //Registrar cliente
-  function registrarCliente() {
   
-  }
 
   // BOTONES DE MODAL DE VENTAS
   document
     .getElementById("abrirModalBtn")
     .addEventListener("click", function () {
       abrirModal("ventaModal");
+      inicializarValidaciones(camposVentas,"ventaForm");
     });
 
   // Botón para cerrar el modal
@@ -460,7 +461,7 @@ function inicializarBuscadorCliente() {
     .getElementById("cerrarModalBtn")
     .addEventListener("click", function () {
       cerrarModal("ventaModal");
-      limpiarValidaciones(camposVentas);
+      limpiarValidaciones(camposVentas,"ventaForm");
       limpiarFormulario();
     });
 
@@ -481,6 +482,7 @@ function inicializarBuscadorCliente() {
     .getElementById("abrirModalCliente")
     .addEventListener("click", function () {
       abrirModal("clienteModal");
+      inicializarValidaciones(camposClientes,"clienteForm");
     });
   // Botón buscar clietnte
   document
@@ -492,13 +494,13 @@ function inicializarBuscadorCliente() {
     .getElementById("btnCerrarModalCliente")
     .addEventListener("click", function (e) {
       cerrarModal("clienteModal");
-      limpiarValidaciones(camposClientes);
+      limpiarValidaciones(camposClientes,"clienteForm");
     });
     document
     .getElementById("cerrarModalClienteBtn")
     .addEventListener("click", function (e) {
       cerrarModal("clienteModal");
-      limpiarValidaciones(camposClientes);
+      limpiarValidaciones(camposClientes,"clienteForm");
     });
  
  
@@ -746,21 +748,4 @@ function inicializarDataTable() {
   });
 }
 
-function limpiarValidaciones(campos) {
-  campos.forEach((campo) => {
-    const input = document.getElementById(campo.id);
-    if (input) {
-      const errorDiv = input.nextElementSibling; // Div donde se muestra el mensaje de error
 
-      // Limpiar mensajes de error
-      if (errorDiv) {
-        errorDiv.textContent = "";
-        errorDiv.classList.add("hidden");
-      }
-
-      // Restaurar estilos del campo
-      input.classList.remove("border-red-500", "focus:ring-red-500");
-      input.classList.add("border-gray-300", "focus:ring-green-400");
-    }
-  });
-}

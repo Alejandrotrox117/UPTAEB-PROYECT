@@ -12,7 +12,12 @@ const expresiones = {
   
 };
 function validarCampo(input, regex, mensajes) {
-  const errorDiv = input.nextElementSibling; // Div donde se muestra el mensaje de error
+  // Solo valida si el input está visible
+  if (!input || input.offsetParent === null) {
+    return true; // Considera válido si está oculto
+  }
+
+  const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
   // Limpiar mensajes de error previos
@@ -59,17 +64,30 @@ function validarCampo(input, regex, mensajes) {
   return true;
 }
 
-function validarSelect(select, mensajes) {
-  const errorDiv = select.nextElementSibling; // Div donde se muestra el mensaje de error
-  const valor = select.value.trim();
+function validarSelect(select, mensajes, formId = null) {
+  let input = select;
+  // Si se pasa formId y select es un string (id), busca el select dentro del formulario
+  if (formId && typeof select === "string") {
+    const form = document.getElementById(formId);
+    input = form ? form.querySelector(`#${select}`) : null;
+  } else if (typeof select === "string") {
+    input = document.getElementById(select);
+  }
+
+  if (!input || input.offsetParent === null) {
+    return false;
+  }
+
+  const errorDiv = input.nextElementSibling;
+  const valor = input.value.trim();
 
   // Limpiar mensajes de error previos
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
   }
-  select.classList.remove("border-red-500", "focus:ring-red-500");
-  select.classList.add("border-gray-300", "focus:ring-green-400");
+  input.classList.remove("border-red-500", "focus:ring-red-500");
+  input.classList.add("border-gray-300", "focus:ring-green-400");
 
   // Validar si el campo está vacío
   if (valor === "") {
@@ -78,8 +96,8 @@ function validarSelect(select, mensajes) {
         errorDiv.textContent = mensajes.vacio;
         errorDiv.classList.remove("hidden");
       }
-      select.classList.add("border-red-500", "focus:ring-red-500");
-      select.classList.remove("border-gray-300", "focus:ring-green-400");
+      input.classList.add("border-red-500", "focus:ring-red-500");
+      input.classList.remove("border-gray-300", "focus:ring-green-400");
       return false;
     }
   }
@@ -89,11 +107,10 @@ function validarSelect(select, mensajes) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
   }
-  select.classList.remove("border-red-500", "focus:ring-red-500");
-  select.classList.add("border-green-300", "focus:ring-green-400");
+  input.classList.remove("border-red-500", "focus:ring-red-500");
+  input.classList.add("border-green-300", "focus:ring-green-400");
   return true;
 }
-
 function validarFecha(input, mensajes) {
   const errorDiv = input.nextElementSibling; // Div donde se muestra el mensaje de error
   const valor = input.value.trim();
@@ -144,43 +161,10 @@ function validarFecha(input, mensajes) {
   input.classList.add("border-green-300", "focus:ring-green-400");
   return true;
 }
-// function validarCampo(input, regex, mensaje) {
-//   const errorDiv = input.nextElementSibling; // Div donde se muestra el mensaje de error
 
-//   if (!regex.test(input.value.trim())) {
-//     if (errorDiv) {
-//       errorDiv.textContent = mensaje;
-//       errorDiv.classList.remove("hidden");
-//     }
-//     input.classList.add("focus:invalid:border-red-500", "focus:ring-red-700");
-//     input.classList.remove("border-gray-300", "focus:ring-green-400");
-//     return false;
-//   } else {
-//     if (errorDiv) {
-//       errorDiv.textContent = "";
-//       errorDiv.classList.add("hidden");
-//     }
-//     input.classList.remove("border-red-500", "focus:ring-red-500");
-//     input.classList.add("border-green-300", "focus:ring-green-400");
-//     return true;
-//   }
-// }
-
-// // Función para inicializar las validaciones en tiempo real
-// const inicializarValidaciones = (campos) => {
-//   campos.forEach((campo) => {
-//     const input = document.getElementById(campo.id);
-//     if (input) {
-//       input.addEventListener("input", () => {
-//         validarCampo(input, campo.regex, campo.mensaje);
-//       });
-//     }
-//   });
-// };
 
 const inicializarValidaciones = (campos, formId = null) => {
   campos.forEach((campo) => {
-    // Si se pasa formId, busca el input solo dentro de ese formulario
     let input;
     if (formId) {
       const form = document.getElementById(formId);
@@ -190,7 +174,10 @@ const inicializarValidaciones = (campos, formId = null) => {
     }
     if (input) {
       input.addEventListener("blur", () => {
-        validarCampo(input, campo.regex, campo.mensajes);
+        // Solo valida si está visible
+        if (input.offsetParent !== null) {
+          validarCampo(input, campo.regex, campo.mensajes);
+        }
       });
     }
   });
@@ -235,15 +222,21 @@ export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError 
   let formularioValido = true;
 
   campos.forEach((campo) => {
-    const input = document.getElementById(campo.id);
+    let input = null;
+    if (formId) {
+      const form = document.getElementById(formId);
+      input = form ? form.querySelector(`#${campo.id}`) : null;
+    } else {
+      input = document.getElementById(campo.id);
+    }
     if (input) {
       let esValido = false;
       if (campo.tipo === "date") {
         esValido = validarFecha(input, campo.mensajes);
       } else if (campo.tipo === "select") {
-        esValido = validarSelect(input, campo.mensajes);
+        esValido = validarSelect(campo.id, campo.mensajes, formId);
       } else {
-        esValido = validarCamposVacios([campo]);
+        esValido = validarCamposVacios([campo], formId);
       }
       if (!esValido) formularioValido = false;
     }
@@ -290,8 +283,26 @@ export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError 
 }
 
 
-
-
+export function limpiarValidaciones(campos, formId = null) {
+  campos.forEach((campo) => {
+    let input;
+    if (formId) {
+      const form = document.getElementById(formId);
+      input = form ? form.querySelector(`#${campo.id}`) : null;
+    } else {
+      input = document.getElementById(campo.id);
+    }
+    if (input) {
+      const errorDiv = input.nextElementSibling;
+      if (errorDiv) {
+        errorDiv.textContent = "";
+        errorDiv.classList.add("hidden");
+      }
+      input.classList.remove("border-red-500", "focus:ring-red-500");
+      input.classList.add("border-gray-300", "focus:ring-green-400");
+    }
+  });
+}
 
 
 

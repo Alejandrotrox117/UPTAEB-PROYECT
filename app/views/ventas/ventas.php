@@ -283,7 +283,7 @@
         </div>
       </div>
       <div class="grid-flow-row mt-4">
-        <label for="observaciones" class="block text-gray-700 font-medium mb-2">Observaciones</label>
+        <label for="observacionesCliente" class="block text-gray-700 font-medium mb-2">Observaciones</label>
         <input type="text" id="observacionesCliente" name="observacionesCliente"
           class="w-full border rounded-lg px-4 py-2 text-lg  focus:ring-2 focus:ring-green-400">
         <div id="error-observacionesCliente-formato" class="text-red-500 text-sm mt-1 hidden">
