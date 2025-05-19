@@ -244,7 +244,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '<option value="">Cargando...</option>';
     try {
       const response = await fetch(
-        `compras/getListaProductosParaFormulario`,
+        `productos/getListaProductosParaFormulario`,
       ); // Necesitarás este endpoint
       if (!response.ok) throw new Error("Error en respuesta de productos");
       const productos = await response.json();

@@ -95,13 +95,13 @@ class Compras extends Controllers
         exit();
     }
 
-    public function getListaProductosParaFormulario() {
-        header('Content-Type: application/json');
-        $modelo = $this->get_model();
-        $productos = $modelo->getProductosConCategoria();
-        echo json_encode($productos);
-        exit();
-    }
+    // public function getListaProductosParaFormulario() {
+    //     header('Content-Type: application/json');
+    //     $modelo = $this->get_model();
+    //     $productos = $modelo->getProductosConCategoria();
+    //     echo json_encode($productos);
+    //     exit();
+    // }
 
     public function buscarProveedores() {
         header('Content-Type: application/json');

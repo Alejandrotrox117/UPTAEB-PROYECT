@@ -234,32 +234,32 @@ class ComprasModel
         }
     }
 
-    public function getProductosConCategoria()
-    {
-        $sql = "SELECT
-                    p.idproducto,
-                    p.nombre AS nombre_producto,
-                    p.idcategoria,
-                    cp.nombre AS nombre_categoria,
-                    p.precio AS precio_referencia_compra,
-                    p.moneda AS idmoneda_producto 
-                FROM
-                    producto p
-                JOIN
-                    categoria cp ON p.idcategoria = cp.idcategoria
-                LEFT JOIN
-                    monedas m ON p.moneda = m.idmoneda 
-                WHERE
-                    p.estatus = 'activo'";
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("ComprasModel::getProductosConCategoria - Error de BD: " . $e->getMessage());
-            return [];
-        }
-    }
+    // public function getProductosConCategoria()
+    // {
+    //     $sql = "SELECT
+    //                 p.idproducto,
+    //                 p.nombre AS nombre_producto,
+    //                 p.idcategoria,
+    //                 cp.nombre AS nombre_categoria,
+    //                 p.precio AS precio_referencia_compra,
+    //                 p.moneda AS idmoneda_producto 
+    //             FROM
+    //                 producto p
+    //             JOIN
+    //                 categoria cp ON p.idcategoria = cp.idcategoria
+    //             LEFT JOIN
+    //                 monedas m ON p.moneda = m.idmoneda 
+    //             WHERE
+    //                 p.estatus = 'activo'";
+    //     try {
+    //         $stmt = $this->db->prepare($sql);
+    //         $stmt->execute();
+    //         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    //     } catch (PDOException $e) {
+    //         error_log("ComprasModel::getProductosConCategoria - Error de BD: " . $e->getMessage());
+    //         return [];
+    //     }
+    // }
 
     public function getProductoById(int $idproducto)
     {

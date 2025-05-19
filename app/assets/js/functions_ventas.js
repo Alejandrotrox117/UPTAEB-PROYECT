@@ -270,9 +270,33 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
         });
       });
   }
+function cargarSelectProductos() {
+  const selectProducto = document.getElementById("select_producto_agregar_modal");
+  if (!selectProducto) return;
+
+  // Limpia el select antes de cargar
+  selectProducto.innerHTML = '<option value="">Seleccione un producto...</option>';
+
+  fetch("productos/getListaProductosParaFormulario")
+    .then(response => response.json())
+    .then(productos => {
+      if (Array.isArray(productos)) {
+        productos.forEach(producto => {
+          const option = document.createElement("option");
+          option.value = producto.idproducto || producto.id || "";
+          option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria})`;
+          selectProducto.appendChild(option);
+        });
+      }
+    })
+    .catch(error => {
+      console.error("Error al cargar productos:", error);
+      // Puedes mostrar un mensaje de error si lo deseas
+    });
+}
 
 
-
+//FIN VENTAS//
 
 //AGREGAR CLIENTE
  //Boton registrar cliente
@@ -311,12 +335,6 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
       
       
     });
-
-
-
-
-
-
 
 
 
@@ -454,6 +472,7 @@ function inicializarBuscadorCliente() {
     .addEventListener("click", function () {
       abrirModal("ventaModal");
       inicializarValidaciones(camposVentas,"ventaForm");
+      cargarSelectProductos(); // <-- Aquí cargas los productos
     });
 
   // Botón para cerrar el modal
@@ -465,12 +484,7 @@ function inicializarBuscadorCliente() {
       limpiarFormulario();
     });
 
-  // Botón para registrar la venta
-  // document
-  //   .getElementById("registrarVentaBtn")
-  //   .addEventListener("click", function () {
-  //     RegistrarNuevaVenta(campos);
-  //   });
+ 
 
   // Botón para agregar un producto al detalle
   // document.getElementById("agregarDetalleBtn").addEventListener("click", function () {
