@@ -13,20 +13,16 @@ import {
 export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError }) {
   let formularioValido = true;
 
+  const form = document.getElementById(formId);
+
   campos.forEach((campo) => {
-    let input = null;
-    if (formId) {
-      const form = document.getElementById(formId);
-      input = form ? form.querySelector(`#${campo.id}`) : null;
-    } else {
-      input = document.getElementById(campo.id);
-    }
+    let input = form ? form.querySelector(`#${campo.id}`) : null;
     if (input) {
       let esValido = false;
       if (campo.tipo === "date") {
         esValido = validarFecha(input, campo.mensajes);
       } else if (campo.tipo === "select") {
-        esValido = validarSelect(campo.id, campo.mensajes, formId);
+        esValido = validarSelect(input, campo.mensajes); // <-- pásale el elemento, no el id
       } else {
         esValido = validarCamposVacios([campo], formId);
       }
@@ -36,7 +32,7 @@ export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError 
 
   if (!formularioValido) return;
 
-  const formData = new FormData(document.getElementById(formId));
+  const formData = new FormData(form);
   const data = {};
   formData.forEach((value, key) => {
     data[key] = value;
@@ -73,6 +69,7 @@ export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError 
       });
     });
 }
+
 //CONSULTAR EN UN SELECT
 export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, placeholder = "Seleccione...", onLoaded = null}) {
   const select = document.getElementById(selectId);

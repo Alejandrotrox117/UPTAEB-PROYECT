@@ -51,13 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
         formato: "Las observaciones no deben exceder los 50 caracteres.",
       },
     },
-    {
-      id: "estatus",
-      tipo: "select",
-      mensajes: {
-        vacio: "Debe seleccionar un estatus.",
-      },
-    },
+    
     {
       id: "select_producto_agregar_modal",
       tipo: "select",
@@ -320,6 +314,19 @@ document.addEventListener("DOMContentLoaded", function () {
     totalInput.value = total.toFixed(2);
   }
 
+  
+function setFormularioHabilitado(formId, habilitar = true) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  const elementos = form.querySelectorAll("input, select, textarea, button");
+  elementos.forEach(el => {
+    if (habilitar) {
+      el.removeAttribute("disabled");
+    } else {
+      el.setAttribute("disabled", "disabled");
+    }
+  });
+}
   // BOTONES DE MODAL DE VENTAS
   document
     .getElementById("abrirModalBtn")
@@ -653,6 +660,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .addEventListener("click", function () {
       abrirModal("clienteModal");
       inicializarValidaciones(camposClientes, "clienteForm");
+      setFormularioHabilitado("clienteForm", true);
     });
   // Botón buscar clietnte
   document
@@ -665,12 +673,14 @@ document.addEventListener("DOMContentLoaded", function () {
     .addEventListener("click", function (e) {
       cerrarModal("clienteModal");
       limpiarValidaciones(camposClientes, "clienteForm");
+      setFormularioHabilitado("clienteForm", false);
     });
   document
     .getElementById("cerrarModalClienteBtn")
     .addEventListener("click", function (e) {
       cerrarModal("clienteModal");
       limpiarValidaciones(camposClientes, "clienteForm");
+      setFormularioHabilitado("clienteForm", false);
     });
 
   //FIN DE BOTONES DE FORMULARIO CLIENTE
@@ -788,4 +798,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-// Función para inicializar DataTable
+
