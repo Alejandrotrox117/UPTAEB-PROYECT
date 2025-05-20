@@ -35,7 +35,7 @@ class moneda extends Controllers
         $arrData = $this->get_model()->SelectAllMoneda();
 
         $response = [
-           
+
             "recordsTotal" => count($arrData),
             "recordsFiltered" => count($arrData),
             "data" => $arrData
@@ -44,7 +44,17 @@ class moneda extends Controllers
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
-
+    // Obtener todas las monedas activas
+    public function getMonedasActivas()
+    {
+        try {
+            $monedas = $this->model->getMonedas();
+            echo json_encode(["status" => true, "data" => $monedas]);
+        } catch (Exception $e) {
+            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+        }
+        exit();
+    }
     // Crear un nuevo moneda
     public function crearMoneda()
     {

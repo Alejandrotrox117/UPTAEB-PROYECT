@@ -233,7 +233,7 @@ public function SelectAllProductos() {
                     p.nombre AS nombre_producto,
                     p.idcategoria,
                     cp.nombre AS nombre_categoria,
-                    p.precio AS precio_referencia_compra,
+                    p.precio AS precio_unitario,
                     p.moneda AS idmoneda_producto 
                 FROM
                     producto p
@@ -248,7 +248,7 @@ public function SelectAllProductos() {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log("ComprasModel::getProductosConCategoria - Error de BD: " . $e->getMessage());
+            error_log("ventasModel::getProductosConCategoria - Error de BD: " . $e->getMessage());
             return [];
         }
     }

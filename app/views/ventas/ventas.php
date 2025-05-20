@@ -123,9 +123,13 @@
               <label for="select_producto_agregar_modal" class="form-label">Agregar Producto <span class="text-red-500">*</span></label>
               <select id="select_producto_agregar_modal" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
                 <option value="">Seleccione un producto...</option>
+                  
               </select>
+              <div id="error-select_producto_agregar_modal-vacio" class="text-red-500 text-sm mt-1 hidden">
+
+          </div>
             </div>
-            <button type="button" id="btnAgregarProductoDetalleModal" class="btn-primary-solid w-full sm:w-auto">
+            <button type="button" id="agregarDetalleBtn" class="btn-primary-solid w-full sm:w-auto">
               <i class="fas fa-plus mr-2"></i>Agregar al Detalle
             </button>
           </div>
@@ -134,7 +138,7 @@
               <thead class="bg-gray-100">
                 <tr>
                   <th class="px-3 py-2 text-left font-medium text-gray-600">Producto</th>
-                  <th class="px-3 py-2 text-left font-medium text-gray-600">Descripción</th>
+                  <!-- <th class="px-3 py-2 text-left font-medium text-gray-600">Descripción</th> -->
                   <th class="px-3 py-2 text-left font-medium text-gray-600">Cantidad</th>
                   <th class="px-3 py-2 text-left font-medium text-gray-600">Precio U.</th>
                   <th class="px-3 py-2 text-left font-medium text-gray-600">Subtotal</th>

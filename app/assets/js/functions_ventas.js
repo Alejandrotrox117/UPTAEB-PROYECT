@@ -1,13 +1,15 @@
 import { abrirModal, cerrarModal } from "./exporthelpers.js";
+import { } from "./functions_entidades.js";
 import {
   expresiones,
   inicializarValidaciones,
   validarCamposVacios,
-  validarFecha,
+  validarDetalleVenta,
   validarSelect,
-  registrarEntidad,limpiarValidaciones
+  validarFecha,
+  limpiarValidaciones,
+  cargarSelect, registrarEntidad 
 } from "./validaciones.js";
-
 
 document.addEventListener("DOMContentLoaded", function () {
   // Inicializar DataTable
@@ -39,8 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
         formato: "El nombre debe tener entre 2 y 20 caracteres.",
       },
     },
-    
-   
+
     {
       id: "observaciones",
       tipo: "textarea",
@@ -57,11 +58,17 @@ document.addEventListener("DOMContentLoaded", function () {
         vacio: "Debe seleccionar un estatus.",
       },
     },
+    {
+      id: "select_producto_agregar_modal",
+      tipo: "select",
+      mensajes: {
+        vacio: "Debe seleccionar un producto.",
+      },
+    },
   ];
-  
+
   const camposClientes = [
-    
- {
+    {
       id: "cedula",
       tipo: "input",
       regex: expresiones.cedula,
@@ -91,9 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
           "El apellido debe tener entre 5 y 30 caracteres. No debe contener números.",
       },
     },
-    
-   
-   
+
     {
       id: "telefono_principal",
       tipo: "input",
@@ -122,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
         formato: "Las observaciones no deben exceder los 50 caracteres.",
       },
     },
-    
+
     {
       id: "estatus",
       tipo: "select",
@@ -130,48 +135,55 @@ document.addEventListener("DOMContentLoaded", function () {
         vacio: "Debe seleccionar un estatus.",
       },
     },
-  
-     
-  
-    
-    ];
+  ];
+  //Lista global para almacenar los productos seleccionados
+  let listaProductos = [];
 
-  
+  //REGISTRAR VENTA
+  document
+  .getElementById("registrarVentaBtn")
+  .addEventListener("click", function () {
+    if (!validarCamposVacios(camposVentas, "ventaForm")) return;
 
+    let fechasValidas = true;
+    camposVentas.forEach((campo) => {
+      if (campo.tipo === "select") {
+        validarSelect(campo.id, campo.mensajes, "ventaForm");
+      }
+      // Validar fechas
+      if (campo.tipo === "date") {
+        const form = document.getElementById("ventaForm");
+        const input = form ? form.querySelector(`#${campo.id}`) : null;
+        if (input && !validarFecha(input, campo.mensajes)) {
+          fechasValidas = false;
+        }
+      }
+    });
 
-  
-  
+    if (!fechasValidas) return;
 
-  
-  
-//REGISTRAR VENTA
-document.getElementById("registrarVentaBtn").addEventListener("click", function () {
-  if(!validarCamposVacios(camposVentas,"ventaForm"))return;
-  camposVentas.forEach((campo) => {
-  if (campo.tipo === "select") {
-    validarSelect(campo.id, campo.mensajes, "ventaForm");
-  }
-});
-  registrarEntidad({
-    formId: "ventaForm",
-    endpoint: "ventas/createventa",
-    campos: camposVentas,
-    onSuccess: (result) => {
-      Swal.fire({
-        title: "¡Éxito!",
-        text: result.message || "Venta registrada correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
-      }).then(() => {
-        $("#Tablaventas").DataTable().ajax.reload();
-        cerrarModal("ventaModal");
-        limpiarFormulario();
-      });
-    }
+    // Validar la tabla de detalle
+    if (!validarDetalleVenta()) return;
+
+    registrarEntidad({
+      formId: "ventaForm",
+      endpoint: "ventas/createventa",
+      campos: camposVentas,
+      onSuccess: (result) => {
+        Swal.fire({
+          title: "¡Éxito!",
+          text: result.message || "Venta registrada correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        }).then(() => {
+          $("#Tablaventas").DataTable().ajax.reload();
+          cerrarModal("ventaModal");
+          limpiarFormulario();
+        });
+      },
+    });
   });
-});
 
-  
   //NOTIFICACION PARA CONFIRMACION DE ELIMINACION DE VENTA
   function confirmarEliminacion(idventa) {
     Swal.fire({
@@ -270,76 +282,289 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
         });
       });
   }
-function cargarSelectProductos() {
-  const selectProducto = document.getElementById("select_producto_agregar_modal");
-  if (!selectProducto) return;
-
-  // Limpia el select antes de cargar
-  selectProducto.innerHTML = '<option value="">Seleccione un producto...</option>';
-
-  fetch("productos/getListaProductosParaFormulario")
-    .then(response => response.json())
-    .then(productos => {
-      if (Array.isArray(productos)) {
-        productos.forEach(producto => {
-          const option = document.createElement("option");
-          option.value = producto.idproducto || producto.id || "";
-          option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria})`;
-          selectProducto.appendChild(option);
-        });
-      }
-    })
-    .catch(error => {
-      console.error("Error al cargar productos:", error);
-      // Puedes mostrar un mensaje de error si lo deseas
+// Función para calcular totales
+  const descuentoInput = document.getElementById(
+    "descuento_porcentaje_general"
+  );
+  if (descuentoInput) {
+    descuentoInput.addEventListener("input", function () {
+      calcularTotales();
     });
-}
+  }
 
+  function calcularTotales() {
+    const subtotalInput = document.getElementById("subtotal_general");
+    const descuentoInput = document.getElementById(
+      "descuento_porcentaje_general"
+    );
+    const montoDescuentoInput = document.getElementById(
+      "monto_descuento_general"
+    );
+    const totalInput = document.getElementById("total_general");
 
-//FIN VENTAS//
+    if (
+      !subtotalInput ||
+      !descuentoInput ||
+      !montoDescuentoInput ||
+      !totalInput
+    )
+      return;
 
-//AGREGAR CLIENTE
- //Boton registrar cliente
+    const subtotal = parseFloat(subtotalInput.value) || 0;
+    const descuento = parseFloat(descuentoInput.value) || 0;
+
+    const montoDescuento = (subtotal * descuento) / 100;
+    const total = subtotal - montoDescuento;
+
+    montoDescuentoInput.value = montoDescuento.toFixed(2);
+    totalInput.value = total.toFixed(2);
+  }
+
+  // BOTONES DE MODAL DE VENTAS
+  document
+    .getElementById("abrirModalBtn")
+    .addEventListener("click", function () {
+      abrirModal("ventaModal");
+      
+      //CARGAR EL SELECT DE MONEDAS
+      cargarSelect({
+        selectId: "idmoneda_general",
+        endpoint: "moneda/getMonedasActivas",
+
+        optionTextFn: (m) => `${m.codigo_moneda} (${m.valor})`,
+        optionValueFn: (m) => m.idmoneda,
+        placeholder: "Seleccione una moneda...",
+      });
+      inicializarValidaciones(camposVentas, "ventaForm");
+      cargarSelect({
+        selectId: "select_producto_agregar_modal",
+        endpoint: "productos/getListaProductosParaFormulario",
+        optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
+        optionValueFn: (p) => p.idproducto || p.id || "",
+        placeholder: "Seleccione un producto...",
+        onLoaded: (productos) => {
+          listaProductos = productos;
+        },
+      });
+    });
+
+  // Botón para cerrar el modal
+  document
+    .getElementById("cerrarModalBtn")
+    .addEventListener("click", function () {
+      cerrarModal("ventaModal");
+      limpiarValidaciones(camposVentas, "ventaForm");
+      limpiarFormulario();
+    });
+
+  document
+    .getElementById("agregarDetalleBtn")
+    .addEventListener("click", function () {});
+
+     // Evento para recalcular totales cuando cambie el descuento
+  document
+    .getElementById("descuento_porcentaje_general")
+    .addEventListener("input", function () {
+      calcularTotales();
+    });
+
+  // Evento para manejar el clic en el botón de eliminar
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".eliminar-btn")) {
+      const idventa = e.target
+        .closest(".eliminar-btn")
+        .getAttribute("data-idventa");
+      confirmarEliminacion(idventa);
+    }
+  });
+
+  // Evento para manejar el clic en el botón de editar
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".editar-btn")) {
+      const idventa = e.target
+        .closest(".editar-btn")
+        .getAttribute("data-idventa");
+      if (!idventa || isNaN(idventa)) {
+        Swal.fire({
+          title: "¡Error!",
+          text: "ID de venta no válido.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
+        return;
+      }
+      abrirModalventaParaEdicion(idventa);
+    }
+  });
+
+  // Función para agregar un producto al detalle
+  document
+    .getElementById("agregarDetalleBtn")
+    .addEventListener("click", function () {
+      const selectProducto = document.getElementById(
+        "select_producto_agregar_modal"
+      );
+      const idProducto = selectProducto.value;
+      if (!idProducto) {
+        Swal.fire(
+          "Atención",
+          "Seleccione un producto para agregar al detalle.",
+          "warning"
+        );
+        return;
+      }
+
+      // Buscar el producto en la lista global
+      const producto = listaProductos.find(
+        (p) => String(p.idproducto || p.id) === String(idProducto)
+      );
+      if (!producto) {
+        Swal.fire("Error", "Producto no encontrado.", "error");
+        return;
+      }
+
+      // Construir la fila con los datos del producto seleccionado
+      const detalleVentaBody = document.getElementById("detalleVentaBody");
+      const selectHTML = `<select name="producto[]" class="select-producto border rounded-lg px-2 py-1 w-full" disabled>
+    <option value="${producto.idproducto || producto.id}" selected>
+      ${producto.nombre_producto} (${producto.nombre_categoria})
+    </option>
+  </select>`;
+
+      const nuevaFila = `
+    <tr>
+      <td>${selectHTML}</td>
+      <td><input type="number" name="cantidad[]" class="border rounded-lg px-2 py-1 w-full cantidad-input" value="1" min="1"></td>
+      <td><input type="number" name="precio_unitario[]" class="border rounded-lg px-2 py-1 w-full precio-input" value="${
+        producto.precio_unitario || 0
+      }" min="0" readonly></td>
+<td><input type="number" name="subtotal[]" class="border rounded-lg px-2 py-1 w-full subtotal-input" value="${
+        producto.precio_unitario || 0
+      }" readonly></td>
+      <td>
+      <div class="flex justify-center">
+        <button type="button" class="eliminar-detalle-btn text-red-500 hover:text-red-700 ">
+          <i class="fas fa-trash "></i>
+        </button>
+        </div>
+      </td>
+    </tr>
+  `;
+      detalleVentaBody.insertAdjacentHTML("beforeend", nuevaFila);
+      actualizarEventosDetalle();
+      calcularTotales();
+    });
+
+  // Función para actualizar eventos en los inputs del detalle
+  function actualizarEventosDetalle() {
+    const detalleVentaBody = document.getElementById("detalleVentaBody");
+    const cantidadInputs = detalleVentaBody.querySelectorAll(".cantidad-input");
+    const eliminarBtns = detalleVentaBody.querySelectorAll(
+      ".eliminar-detalle-btn"
+    );
+
+    cantidadInputs.forEach((input) => {
+      input.oninput = function () {
+        const fila = this.closest("tr");
+        const precio =
+          parseFloat(fila.querySelector(".precio-input").value) || 0;
+        const cantidad = parseFloat(this.value) || 0;
+        const subtotal = fila.querySelector(".subtotal-input");
+        subtotal.value = (cantidad * precio).toFixed(2);
+        calcularTotales();
+      };
+    });
+
+    eliminarBtns.forEach((btn) => {
+      btn.onclick = function (e) {
+        e.target.closest("tr").remove();
+        calcularTotales();
+      };
+    });
+  }
+  // Función para calcular el subtotal de cada fila
+  function calcularSubtotal() {
+    const fila = this.closest("tr");
+    const cantidad = fila.querySelector(".cantidad-input").value || 0;
+    const precio = fila.querySelector(".precio-input").value || 0;
+    const subtotal = fila.querySelector(".subtotal-input");
+
+    subtotal.value = (cantidad * precio).toFixed(2);
+    calcularTotales();
+  }
+
+  // Función para calcular los totales generales
+  function calcularTotales() {
+    const detalleVentaBody = document.getElementById("detalleVentaBody");
+    let subtotalGeneral = 0;
+
+    // Sumar todos los subtotales
+    detalleVentaBody.querySelectorAll(".subtotal-input").forEach((input) => {
+      subtotalGeneral += parseFloat(input.value) || 0;
+    });
+
+    // Calcular el descuento
+    const descuentoPorcentaje =
+      parseFloat(
+        document.getElementById("descuento_porcentaje_general").value
+      ) || 0;
+    const montoDescuento = (subtotalGeneral * descuentoPorcentaje) / 100;
+
+    // Calcular el total general
+    const totalGeneral = subtotalGeneral - montoDescuento;
+
+    // Actualizar los campos ocultos y visibles
+    document.getElementById("subtotal_general").value =
+      subtotalGeneral.toFixed(2);
+    document.getElementById("subtotal_general_display_modal").value =
+      subtotalGeneral.toFixed(2);
+
+    document.getElementById("monto_descuento_general").value =
+      montoDescuento.toFixed(2);
+
+    document.getElementById("total_general").value = totalGeneral.toFixed(2);
+    document.getElementById("total_general_display_modal").value =
+      totalGeneral.toFixed(2);
+  }
+  //FIN VENTAS//
+
+  //AGREGAR CLIENTE
+  //Boton registrar cliente
   document
     .getElementById("registrarClienteBtn")
     .addEventListener("click", function () {
       //VALIDACIONES
-     if (!validarCamposVacios(camposClientes, "clienteForm")) return;
+      if (!validarCamposVacios(camposClientes, "clienteForm")) return;
       // Validar selects SOLO del formulario de cliente
-    camposClientes.forEach((campo) => {
-      if (campo.tipo === "select") {
-        const form = document.getElementById("clienteForm");
-        const input = form ? form.querySelector(`#${campo.id}`) : null;
-        if (input) validarSelect(input, campo.mensajes);
-      }
-    });
-       
-      registrarEntidad({
-    formId: "clienteForm",
-    endpoint: "clientes/createcliente",
-    campos: camposClientes,
-    onSuccess: (result) => {
-      Swal.fire({
-        title: "¡Éxito!",
-        text: result.message || "Cliente registrada correctamente.",
-        icon: "success",
-        confirmButtonText: "Aceptar",
-      }).then(() => {
-        limpiarValidaciones(camposClientes,"clienteForm");
-        cerrarModal("clienteModal");
-        limpiarFormulario();
+      camposClientes.forEach((campo) => {
+        if (campo.tipo === "select") {
+          const form = document.getElementById("clienteForm");
+          const input = form ? form.querySelector(`#${campo.id}`) : null;
+          if (input) validarSelect(input, campo.mensajes);
+        }
       });
-    }
-  });
-  
-      
-      
+
+      registrarEntidad({
+        formId: "clienteForm",
+        endpoint: "clientes/createcliente",
+        campos: camposClientes,
+        onSuccess: (result) => {
+          Swal.fire({
+            title: "¡Éxito!",
+            text: result.message || "Cliente registrada correctamente.",
+            icon: "success",
+            confirmButtonText: "Aceptar",
+          }).then(() => {
+            limpiarValidaciones(camposClientes, "clienteForm");
+            cerrarModal("clienteModal");
+            limpiarFormulario();
+          });
+        },
+      });
     });
 
-
-
-  //BUSCADOR DE CLIENTES 
-function inicializarBuscadorCliente() {
+  //BUSCADOR DE CLIENTES
+  function inicializarBuscadorCliente() {
     const inputCriterioClienteModal = document.getElementById(
       "inputCriterioClienteModal"
     );
@@ -421,82 +646,13 @@ function inicializarBuscadorCliente() {
     });
   }
 
-
-
-
   
-
-  // Función para calcular totales
-  const descuentoInput = document.getElementById(
-    "descuento_porcentaje_general"
-  );
-  if (descuentoInput) {
-    descuentoInput.addEventListener("input", function () {
-      calcularTotales();
-    });
-  }
-
-  function calcularTotales() {
-    const subtotalInput = document.getElementById("subtotal_general");
-    const descuentoInput = document.getElementById(
-      "descuento_porcentaje_general"
-    );
-    const montoDescuentoInput = document.getElementById(
-      "monto_descuento_general"
-    );
-    const totalInput = document.getElementById("total_general");
-
-    if (
-      !subtotalInput ||
-      !descuentoInput ||
-      !montoDescuentoInput ||
-      !totalInput
-    )
-      return;
-
-    const subtotal = parseFloat(subtotalInput.value) || 0;
-    const descuento = parseFloat(descuentoInput.value) || 0;
-
-    const montoDescuento = (subtotal * descuento) / 100;
-    const total = subtotal - montoDescuento;
-
-    montoDescuentoInput.value = montoDescuento.toFixed(2);
-    totalInput.value = total.toFixed(2);
-  }
-
-  
-
-  // BOTONES DE MODAL DE VENTAS
-  document
-    .getElementById("abrirModalBtn")
-    .addEventListener("click", function () {
-      abrirModal("ventaModal");
-      inicializarValidaciones(camposVentas,"ventaForm");
-      cargarSelectProductos(); // <-- Aquí cargas los productos
-    });
-
-  // Botón para cerrar el modal
-  document
-    .getElementById("cerrarModalBtn")
-    .addEventListener("click", function () {
-      cerrarModal("ventaModal");
-      limpiarValidaciones(camposVentas,"ventaForm");
-      limpiarFormulario();
-    });
-
- 
-
-  // Botón para agregar un producto al detalle
-  // document.getElementById("agregarDetalleBtn").addEventListener("click", function () {
-  //   agregarProductoDetalle();
-  // });
-
   //BOTONES DE FORMULARIO CLIENTE
   document
     .getElementById("abrirModalCliente")
     .addEventListener("click", function () {
       abrirModal("clienteModal");
-      inicializarValidaciones(camposClientes,"clienteForm");
+      inicializarValidaciones(camposClientes, "clienteForm");
     });
   // Botón buscar clietnte
   document
@@ -508,147 +664,18 @@ function inicializarBuscadorCliente() {
     .getElementById("btnCerrarModalCliente")
     .addEventListener("click", function (e) {
       cerrarModal("clienteModal");
-      limpiarValidaciones(camposClientes,"clienteForm");
+      limpiarValidaciones(camposClientes, "clienteForm");
     });
-    document
+  document
     .getElementById("cerrarModalClienteBtn")
     .addEventListener("click", function (e) {
       cerrarModal("clienteModal");
-      limpiarValidaciones(camposClientes,"clienteForm");
+      limpiarValidaciones(camposClientes, "clienteForm");
     });
- 
- 
-   
-  
-    
+
   //FIN DE BOTONES DE FORMULARIO CLIENTE
 
-
-
-
-
-
-
-  // Evento para recalcular totales cuando cambie el descuento
-  document
-    .getElementById("descuento_porcentaje_general")
-    .addEventListener("input", function () {
-      calcularTotales();
-    });
-
-  // Evento para manejar el clic en el botón de eliminar
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".eliminar-btn")) {
-      const idventa = e.target
-        .closest(".eliminar-btn")
-        .getAttribute("data-idventa");
-      confirmarEliminacion(idventa);
-    }
-  });
-
-  // Evento para manejar el clic en el botón de editar
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".editar-btn")) {
-      const idventa = e.target
-        .closest(".editar-btn")
-        .getAttribute("data-idventa");
-      if (!idventa || isNaN(idventa)) {
-        Swal.fire({
-          title: "¡Error!",
-          text: "ID de venta no válido.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
-        return;
-      }
-      abrirModalventaParaEdicion(idventa);
-    }
-  });
-
-  // Función para agregar un producto al detalle
-  function agregarProductoDetalle() {
-    const detalleVentaBody = document.getElementById("detalleVentaBody");
-    const nuevaFila = `
-      <tr>
-        <td><input type="text" name="producto[]" class="border rounded-lg px-2 py-1 w-full"></td>
-        <td><input type="text" name="descripcion[]" class="border rounded-lg px-2 py-1 w-full"></td>
-        <td><input type="number" name="cantidad[]" class="border rounded-lg px-2 py-1 w-full cantidad-input" value="1" min="1"></td>
-        <td><input type="number" name="precio_unitario[]" class="border rounded-lg px-2 py-1 w-full precio-input" value="0" min="0"></td>
-        <td><input type="number" name="subtotal[]" class="border rounded-lg px-2 py-1 w-full subtotal-input" value="0" readonly></td>
-        <td>
-          <button type="button" class="eliminar-detalle-btn text-red-500 hover:text-red-700">
-            <i class="fas fa-trash"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-    detalleVentaBody.insertAdjacentHTML("beforeend", nuevaFila);
-    actualizarEventosDetalle();
-  }
-
-  // Función para actualizar eventos en los inputs del detalle
-  function actualizarEventosDetalle() {
-    const detalleVentaBody = document.getElementById("detalleVentaBody");
-    const cantidadInputs = detalleVentaBody.querySelectorAll(".cantidad-input");
-    const precioInputs = detalleVentaBody.querySelectorAll(".precio-input");
-    const eliminarBtns = detalleVentaBody.querySelectorAll(
-      ".eliminar-detalle-btn"
-    );
-
-    cantidadInputs.forEach((input) => {
-      input.addEventListener("input", calcularSubtotal);
-    });
-
-    precioInputs.forEach((input) => {
-      input.addEventListener("input", calcularSubtotal);
-    });
-
-    eliminarBtns.forEach((btn) => {
-      btn.addEventListener("click", function (e) {
-        e.target.closest("tr").remove();
-        calcularTotales();
-      });
-    });
-  }
-
-  // Función para calcular el subtotal de cada fila
-  function calcularSubtotal() {
-    const fila = this.closest("tr");
-    const cantidad = fila.querySelector(".cantidad-input").value || 0;
-    const precio = fila.querySelector(".precio-input").value || 0;
-    const subtotal = fila.querySelector(".subtotal-input");
-
-    subtotal.value = (cantidad * precio).toFixed(2);
-    calcularTotales();
-  }
-
-  // Función para calcular los totales generales
-  function calcularTotales() {
-    const detalleVentaBody = document.getElementById("detalleVentaBody");
-    let subtotalGeneral = 0;
-
-    // Sumar todos los subtotales
-    detalleVentaBody.querySelectorAll(".subtotal-input").forEach((input) => {
-      subtotalGeneral += parseFloat(input.value) || 0;
-    });
-
-    // Calcular el descuento
-    const descuentoPorcentaje =
-      parseFloat(
-        document.getElementById("descuento_porcentaje_general").value
-      ) || 0;
-    const montoDescuento = (subtotalGeneral * descuentoPorcentaje) / 100;
-
-    // Calcular el total general
-    const totalGeneral = subtotalGeneral - montoDescuento;
-
-    // Actualizar los campos
-    document.getElementById("subtotal_general").value =
-      subtotalGeneral.toFixed(2);
-    document.getElementById("monto_descuento_general").value =
-      montoDescuento.toFixed(2);
-    document.getElementById("total_general").value = totalGeneral.toFixed(2);
-  }
+ 
 
   function limpiarFormulario() {
     // Reiniciar el formulario completo
@@ -702,10 +729,7 @@ function inicializarBuscadorCliente() {
       divInfoClienteModal.classList.add("hidden");
     }
   }
-});
-
-// Función para inicializar DataTable
-function inicializarDataTable() {
+  function inicializarDataTable() {
   $("#Tablaventas").DataTable({
     processing: true,
     serverSide: true,
@@ -762,4 +786,6 @@ function inicializarDataTable() {
   });
 }
 
+});
 
+// Función para inicializar DataTable

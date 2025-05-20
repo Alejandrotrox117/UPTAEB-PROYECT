@@ -185,10 +185,9 @@ const inicializarValidaciones = (campos, formId = null) => {
 
 
 //FUNCIONES DE VALIDACIONES CAMPOS VACIOS
-function validarCamposVacios(campos, formId = null) {
-  let formularioValido = true; // Variable para rastrear si el formulario es válido
+export function validarCamposVacios(campos, formId = null) {
+  let formularioValido = true;
 
-  // Validar campos vacíos
   for (let campo of campos) {
     let input;
     if (formId) {
@@ -200,24 +199,84 @@ function validarCamposVacios(campos, formId = null) {
 
     // Solo valida si el input existe y está visible
     if (!input || input.offsetParent === null) {
-      continue;
+      continue; // Salta campos ocultos o que no existen o están ocultos
     }
 
     let valor = input.value.trim();
+    let nombreCampo = campo.id;
+    // Busca el label asociado al input
+    const label = document.querySelector(`label[for="${campo.id}"]`);
+    if (label) {
+      nombreCampo = label.textContent.replace(/[*:]/g, "").trim();
+    }
+
     if (valor === "") {
       Swal.fire({
         title: "¡Error!",
-        text: `El campo "${campo.id}" no puede estar vacío.`,
+        text: `El campo "${nombreCampo}" no puede estar vacío.`,
         icon: "error",
         confirmButtonText: "Aceptar",
       });
-      formularioValido = false; // Marcar el formulario como no válido
+      formularioValido = false;
+      input.classList.add("border-red-500");
+      break; // Opcional: detener en el primer error
+    } else {
+      input.classList.remove("border-red-500");
     }
   }
 
-  return formularioValido; // Retornar true si todos los campos son válidos, false si no
+  return formularioValido;
 }
 
+export function limpiarValidaciones(campos, formId = null) {
+  campos.forEach((campo) => {
+    let input;
+    if (formId) {
+      const form = document.getElementById(formId);
+      input = form ? form.querySelector(`#${campo.id}`) : null;
+    } else {
+      input = document.getElementById(campo.id);
+    }
+    if (input) {
+      const errorDiv = input.nextElementSibling;
+      if (errorDiv) {
+        errorDiv.textContent = "";
+        errorDiv.classList.add("hidden");
+      }
+      input.classList.remove("border-red-500", "focus:ring-red-500");
+      input.classList.add("border-gray-300", "focus:ring-green-400");
+    }
+  });
+}
+
+export function validarDetalleVenta() {
+  const detalleVentaBody = document.getElementById("detalleVentaBody");
+  const filas = detalleVentaBody ? detalleVentaBody.querySelectorAll("tr") : [];
+  if (filas.length === 0) {
+    Swal.fire("Atención", "Debe agregar al menos un producto al detalle.", "warning");
+    return false;
+  }
+  let valido = true;
+  filas.forEach((fila) => {
+    const cantidad = fila.querySelector(".cantidad-input");
+    const precio = fila.querySelector(".precio-input");
+    if (!cantidad || !precio || cantidad.value <= 0 || precio.value <= 0) {
+      valido = false;
+      cantidad && cantidad.classList.add("border-red-500");
+      precio && precio.classList.add("border-red-500");
+    } else {
+      cantidad.classList.remove("border-red-500");
+      precio.classList.remove("border-red-500");
+    }
+  });
+  if (!valido) {
+    Swal.fire("Atención", "Verifique que todas las cantidades y precios sean mayores a 0.", "warning");
+  }
+  return valido;
+}
+
+
+//REGISTRAR
 export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError }) {
   let formularioValido = true;
 
@@ -281,33 +340,36 @@ export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError 
       });
     });
 }
+//CONSULTAR EN UN SELECT
+export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, placeholder = "Seleccione...", onLoaded = null}) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
 
+  select.innerHTML = `<option value="">${placeholder}</option>`;
 
-export function limpiarValidaciones(campos, formId = null) {
-  campos.forEach((campo) => {
-    let input;
-    if (formId) {
-      const form = document.getElementById(formId);
-      input = form ? form.querySelector(`#${campo.id}`) : null;
-    } else {
-      input = document.getElementById(campo.id);
-    }
-    if (input) {
-      const errorDiv = input.nextElementSibling;
-      if (errorDiv) {
-        errorDiv.textContent = "";
-        errorDiv.classList.add("hidden");
+  fetch(endpoint)
+    .then(response => response.json())
+    .then(items => {
+      // Soporta respuesta tipo {data: [...]}
+      if (items && typeof items === "object" && Array.isArray(items.data)) {
+        items = items.data;
       }
-      input.classList.remove("border-red-500", "focus:ring-red-500");
-      input.classList.add("border-gray-300", "focus:ring-green-400");
-    }
-  });
+      if (Array.isArray(items)) {
+        items.forEach(item => {
+          const option = document.createElement("option");
+          option.value = optionValueFn(item);
+          option.className = "text-gray-700";
+          option.textContent = optionTextFn(item);
+          select.appendChild(option);
+        });
+        if (typeof onLoaded === "function") onLoaded(items);
+      }
+    })
+    .catch(error => {
+      console.error(`Error al cargar ${selectId}:`, error);
+    });
 }
 
 
-
-
-
-
 // Exportar las funciones y expresiones
-export { expresiones, validarCampo, inicializarValidaciones,validarCamposVacios,validarFecha,validarSelect };
+export { expresiones, validarCampo, inicializarValidaciones,validarFecha,validarSelect };
