@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // --- DataTable (se mantiene igual que antes) ---
+  // --- DataTable (se mantiene igual que antes) nada ---
   let TablaCompras;
   tablaCompras = $("#TablaCompras").DataTable({
         processing: true,
