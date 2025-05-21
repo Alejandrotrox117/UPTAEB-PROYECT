@@ -2,22 +2,21 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <link rel="shortcut icon" href="/project/app/assets/img/favicon.svg" type="image/x-icon">
-  <title>Recuperadora</title>
-  <meta name="description" content="Recuperadora de materiales reciclables">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> -->
-  <link rel="stylesheet" href="/project/app/assets/styles/styles.css">
-  <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
-  <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
-  <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
-  <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
-  <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet"> <!-- DataTables -->
-  <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
-  <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" /> <!-- DataTables -->
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="/project/app/assets/img/favicon.svg" type="image/x-icon">
+    <title>Recuperadora</title>
+    <meta name="description" content="Recuperadora de materiales reciclables">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> -->
+    <link rel="stylesheet" href="/project/app/assets/styles/styles.css">
+    <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
+    <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet"> <!-- DataTables -->
+    <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
+    <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" /> DataTables -->
 </head>
 
 <body class="bg-blue-50 min-h-screen">
@@ -54,12 +53,22 @@
                       <span class="ml-5">Romana</span>
                     </a>
                   </li>
-                  <li
-                    class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white"
-                  >
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                     <a href="/project/clasificacion" class="flex items-center text-sm">
                       <span><i class="fa-solid fa-layer-group icon"></i></span>
                       <span class="ml-4">Clasificacion de Materiales</span>
+                    </a>
+                  </li>
+                  <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/empleados" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-shield-halved icon"></i></span>
+                      <span class="ml-5">Empleados</span>
+                    </a>
+                  </li>
+                   <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                    <a href="/project/produccion" class="flex items-center text-sm">
+                      <span><i class="fa-solid fa-shield-halved icon"></i></span>
+                      <span class="ml-5">Produccion</span>
                     </a>
                   </li>
                 </ul>
@@ -257,5 +266,5 @@
     });
 
 
-  });
-</script>
+      });
+    </script>

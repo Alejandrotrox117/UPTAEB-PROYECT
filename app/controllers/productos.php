@@ -197,4 +197,15 @@ class Productos extends Controllers
         }
         exit(); // Asegura que la respuesta termine aquí
     }
+
+
+    public function getListaProductosParaFormulario() {
+        header('Content-Type: application/json');
+        $modelo = $this->get_model();
+        $productos = $modelo->getProductosConCategoria();
+        echo json_encode($productos);
+        exit();
+    }
+
+    
 }
