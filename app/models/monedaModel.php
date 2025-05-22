@@ -1,10 +1,8 @@
 <?php
-
-
 require_once("app/core/conexion.php");
 require_once("app/core/mysql.php");
 
-class monedaModel extends \Mysql
+class monedaModel extends Mysql
 {
     private $db;
     private $conexion;
@@ -15,9 +13,9 @@ class monedaModel extends \Mysql
     private $estatus;
     public function __construct()
     {
+          parent::__construct();
         $this->conexion = new Conexion();
-        $this->db = $this->conexion->connectGeneral();
-        parent::__construct();
+        $this->db = (new Conexion())->connect();
     }
 
     // Métodos Getters y Setters
@@ -73,6 +71,30 @@ class monedaModel extends \Mysql
         ];
     
         return $stmt->execute($arrValues);
+    }
+ public function getMonedas()
+    {
+        // Asumiendo que tu tabla monedas tiene un campo 'estatus'
+        $sql = "SELECT idmoneda, codigo_moneda, valor FROM monedas WHERE estado = 'activo'";
+        // Si no tiene estatus, simplemente:
+        // $sql = "SELECT idmoneda, nombre_moneda, simbolo, codigo_iso FROM monedas";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("ComprasModel::getMonedasActivas - Error de BD: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getIdMonedaByCodigo($codigoMoneda)
+    {
+        $sql = "SELECT idmoneda FROM monedas WHERE codigo_moneda = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$codigoMoneda]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row;
     }
 
     // Método para eliminar lógicamente un categoria
