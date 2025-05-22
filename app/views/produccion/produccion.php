@@ -106,43 +106,29 @@
 
 
   <!-- Tabla de Detalle de Producción -->
-  <div class="relative flex flex-col w-full h-full overflow-scroll text-gray-700 bg-white shadow-md rounded-lg bg-clip-border">
-    <table id="TablaDetalleProduccion" class="w-full text-left table-auto min-w-max">
-      <thead>
-        <tr class="border-b border-slate-300 bg-slate-50">
-          <th class="p-4 text-sm font-normal leading-none text-slate-500">Insumo</th>
-          <th class="p-4 text-sm font-normal leading-none text-slate-500">Cantidad</th>
-          <th class="p-4 text-sm font-normal leading-none text-slate-500">Cantidad Utilizada</th>
-          <th class="p-4 text-sm font-normal leading-none text-slate-500">Categoría</th>
-          <th class="p-4 text-sm font-normal leading-none text-slate-500">Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="hover:bg-slate-50">
-          <td class="p-4 border-b border-slate-200 py-5">
-            <p class="text-sm text-slate-500">100 kg</p>
-          </td>
-          <td class="p-4 border-b border-slate-200 py-5">
-            <p class="text-sm text-slate-500">100 kg</p>
-          </td>
-          <td class="p-4 border-b border-slate-200 py-5">
-            <p class="text-sm text-slate-500">80 kg</p>
-          </td>
-          <td class="p-4 border-b border-slate-200 py-5">
-            <p class="text-sm text-slate-500">Materia Prima</p>
-          </td>
-          <td class="p-4 border-b border-slate-200 py-5">
-            <button type="button" class="text-slate-500 hover:text-slate-700">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </td>
-        </tr>
-       
-      </tbody>
-    </table>
-  </div>
+ <!-- Botón para agregar insumos -->
+<!-- Tabla de Detalle de Producción -->
+<div class="max-w-[720px] mx-auto">
+  <table id="TablaDetalleProduccion" class="w-full text-left table-auto border-collapse min-w-max">
+    <thead>
+      <tr class="border-b border-slate-300 bg-slate-50">
+        <th class="p-4 text-sm font-normal leading-none text-slate-500">Producto</th>
+        <th class="p-4 text-sm font-normal leading-none text-slate-500">Cantidad</th>
+        <th class="p-4 text-sm font-normal leading-none text-slate-500">Cantidad Utilizada</th>
+        <th class="p-4 text-sm font-normal leading-none text-slate-500">Observaciones</th>
+        <th class="p-4 text-sm font-normal leading-none text-slate-500">Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="detalleProduccionBody">
+      <!-- Aquí se cargarán los insumos dinámicamente -->
+    </tbody>
+  </table>
+</div>
+
+<!-- Botón para agregar insumos -->
+<button type="button" id="agregarInsumoBtn" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+  + Agregar Insumo
+</button>
 </div>
 
       <!-- Botones -->
@@ -157,6 +143,88 @@
     </form>
   </div>
 </div>
+<script>
+ document.getElementById("agregarInsumoBtn").addEventListener("click", () => {
+    if (!productosCargados) {
+        alert("Espere a que se carguen los productos...");
+        return;
+    }
 
+    const tbody = document.getElementById("detalleProduccionBody");
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+        <td>
+            <select name="idproducto_insumo[]" class="w-full border rounded p-2" required>
+                ${productos.map(p => `<option value="${p.idproducto}">${p.nombre}</option>`).join('')}
+            </select>
+        </td>
+        <td>
+            <input type="number" name="cantidad_insumo[]" class="w-full border rounded p-2" min="0" step="0.01" required />
+        </td>
+        <td>
+            <input type="number" name="cantidad_utilizada[]" class="w-full border rounded p-2" min="0" step="0.01" required />
+        </td>
+        <td>
+            <button type="button" class="eliminarInsumoBtn text-red-500"><i class="fas fa-trash"></i></button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+});
+
+// Eliminar insumo
+document.addEventListener("click", function (e) {
+    if (e.target.closest(".eliminarInsumoBtn")) {
+        e.target.closest("tr").remove();
+    }
+});
+let productos = []; // Variable global para almacenar productos
+let productosCargados = false;
+
+function cargarProductosParaInsumos() {
+    fetch("produccion/getProductos")
+        .then(res => res.json())
+        .then(data => {
+            if (data.status) {
+                productos = data.data;
+                productosCargados = true;
+            } else {
+                alert("No se pudieron cargar productos para insumos.");
+            }
+        })
+        .catch(err => {
+            console.error("Error al cargar productos:", err);
+            alert("Error al cargar productos.");
+        });
+}
+
+// Llama a la función al cargar la página
+cargarProductosParaInsumos();
+const formData = new FormData(document.getElementById("produccionForm"));
+const data = {};
+formData.forEach((value, key) => {
+    data[key] = value;
+});
+
+// Obtener insumos
+const insumos = [];
+const filas = document.querySelectorAll("#detalleProduccionBody tr");
+
+filas.forEach(fila => {
+    const idproducto = fila.querySelector("select[name='idproducto_insumo[]']").value;
+    const cantidad = fila.querySelector("input[name='cantidad_insumo[]']").value;
+    const cantidad_utilizada = fila.querySelector("input[name='cantidad_utilizada[]']").value;
+
+    if (idproducto && cantidad && cantidad_utilizada) {
+        insumos.push({
+            idproducto,
+            cantidad,
+            cantidad_utilizada
+        });
+    }
+});
+
+data.insumos = insumos;
+</script>
 
 <?php footerAdmin($data); ?>

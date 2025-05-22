@@ -48,74 +48,94 @@ class Produccion extends Controllers
 
     public function getDetalleProduccionData($idproduccion)
     {
-        $arrData = $this->get_model()->SelectAlldetalleProducciones($idproduccion);
-
-        $response = [
-           
-            "recordsTotal" => count($arrData),
-            "recordsFiltered" => count($arrData),
-            "data" => $arrData
-        ];
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-    }
-    // Método para registrar una nueva producción
-    public function createProduccion()
-    {
         try {
-            // Leer los datos JSON enviados por el frontend
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true); // Decodificar los datos JSON
+            $produccion = $this->get_model()->SelectDetalleProduccion($idproduccion);
 
-            // Validar que los datos no sean nulos
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-                exit();
-            }
-
-            // Extraer los datos del JSON
-            $idempleado = trim($data['idempleado'] ?? '');
-            $idproducto = trim($data['idproducto'] ?? '');
-            $cantidad_a_realizar = trim($data['cantidad_a_realizar'] ?? '');
-            $fecha_inicio = trim($data['fecha_inicio'] ?? '');
-            $fecha_fin = trim($data['fecha_fin'] ?? '');
-            $estado = trim($data['estado'] ?? '');
-
-            // Validar campos obligatorios
-            if (empty($cantidad_a_realizar) || empty($fecha_inicio) || empty($estado)) {
-                echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-                exit();
-            }
-
-            // Insertar los datos usando el modelo
-            $insertData = $this->model->insertProduccion([
-                "idempleado" => $idempleado,
-                "idproducto" => $idproducto,
-                "cantidad_a_realizar" => $cantidad_a_realizar,
-                "fecha_inicio" => $fecha_inicio,
-                "fecha_fin" => $fecha_fin,
-                "estado" => $estado
-            ]);
-
-            // Respuesta al cliente
-            if ($insertData) {
-                echo json_encode(["status" => true, "message" => "Producción registrada correctamente."]);
+            if ($produccion) {
+                echo json_encode(["status" => true, "data" => $produccion]);
             } else {
-                echo json_encode(["status" => false, "message" => "Error al registrar la producción. Intenta nuevamente."]);
+                echo json_encode(["status" => false, "message" => "Produccion no encontrado."]);
             }
         } catch (Exception $e) {
             echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
         }
         exit();
     }
+   
+    // Método para registrar una nueva producción
+    public function createProduccion()
+{
+    try {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (!$data || !is_array($data)) {
+            echo json_encode(["status" => false, "message" => "Datos inválidos."]);
+            exit();
+        }
+
+        // Extraer campos básicos
+        $idempleado = trim($data['idempleado'] ?? '');
+        $idproducto = trim($data['idproducto'] ?? '');
+        $cantidad_a_realizar = trim($data['cantidad_a_realizar'] ?? '');
+        $fecha_inicio = trim($data['fecha_inicio'] ?? '');
+        $fecha_fin = trim($data['fecha_fin'] ?? '');
+        $estado = trim($data['estado'] ?? 'borrador');
+
+        // Validaciones
+        if (empty($idproducto) || empty($cantidad_a_realizar) || empty($fecha_inicio)) {
+            echo json_encode(["status" => false, "message" => "Campos incompletos."]);
+            exit();
+        }
+
+        // Obtener insumos del arreglo POST
+        $insumos = [];
+
+        if (!empty($data['idproducto_insumo']) && is_array($data['idproducto_insumo'])) {
+            foreach ($data['idproducto_insumo'] as $i => $idproductoInsumo) {
+                $insumos[] = [
+                    'idproducto' => $idproductoInsumo,
+                    'cantidad' => $data['cantidad_insumo'][$i] ?? 0,
+                    'cantidad_utilizada' => $data['cantidad_utilizada'][$i] ?? 0,
+                    'observaciones' => ''
+                ];
+            }
+        }
+
+        // Insertar producción
+        $insertId = $this->model->insertProduccion([
+            "idempleado" => $idempleado,
+            "idproducto" => $idproducto,
+            "cantidad_a_realizar" => $cantidad_a_realizar,
+            "fecha_inicio" => $fecha_inicio,
+            "fecha_fin" => $fecha_fin,
+            "estado" => $estado,
+            "insumos" => $insumos
+        ]);
+
+        if ($insertId) {
+            echo json_encode(["status" => true, "message" => "Producción registrada.", "idproduccion" => $insertId]);
+        } else {
+            echo json_encode(["status" => false, "message" => "Error al registrar producción."]);
+        }
+
+    } catch (Exception $e) {
+        echo json_encode(["status" => false, "message" => "Error: " . $e->getMessage()]);
+    }
+    exit();
+}
 
     // Método para actualizar una producción existente
    public function updateProduccion()
 {
-    $json = file_get_contents('php://input'); // Lee los datos JSON enviados por la vista
-    $data = json_decode($json, true); // Decodifica los datos JSON
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
 
-    // Extraer los datos del JSON
+    if (!$data || !is_array($data)) {
+        echo json_encode(["status" => false, "message" => "Datos inválidos."]);
+        exit();
+    }
+
     $idproduccion = trim($data['idproduccion']) ?? null;
     $idempleado = trim($data['idempleado']) ?? null;
     $idproducto = trim($data['idproducto']) ?? null;
@@ -123,24 +143,21 @@ class Produccion extends Controllers
     $fecha_inicio = trim($data['fecha_inicio']) ?? null;
     $fecha_fin = trim($data['fecha_fin']) ?? null;
     $estado = trim($data['estado']) ?? null;
-    $fecha_modificacion = date("Y-m-d H:i:s"); // Fecha actual
+    $insumos = $data['insumos'] ?? [];
+    $fecha_modificacion = date("Y-m-d H:i:s");
 
-    // Validar campos obligatorios
-    if (empty($idproduccion) || empty($idempleado) || empty($idproducto) || empty($cantidad_a_realizar) || empty($fecha_inicio) || empty($estado)) {
-        $response = ["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."];
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        return;
+    if (empty($idproduccion) || empty($idproducto) || empty($cantidad_a_realizar) || empty($fecha_inicio) || empty($estado)) {
+        echo json_encode(["status" => false, "message" => "Datos incompletos."]);
+        exit();
     }
 
-    // Validar que la cantidad a realizar sea un número válido
     if (!is_numeric($cantidad_a_realizar) || $cantidad_a_realizar <= 0) {
-        $response = ["status" => false, "message" => "La cantidad a realizar debe ser un número positivo."];
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        return;
+        echo json_encode(["status" => false, "message" => "La cantidad debe ser un número positivo."]);
+        exit();
     }
 
-    // Actualizar los datos usando el modelo
-    $updateData = $this->get_model()->updateProduccion([
+    // Actualizar producción
+    $result = $this->model->updateProduccion([
         "idproduccion" => $idproduccion,
         "idempleado" => $idempleado,
         "idproducto" => $idproducto,
@@ -149,16 +166,14 @@ class Produccion extends Controllers
         "fecha_fin" => $fecha_fin,
         "estado" => $estado,
         "fecha_modificacion" => $fecha_modificacion,
+        "insumos" => $insumos
     ]);
 
-    // Respuesta al cliente
-    if ($updateData) {
-        $response = ["status" => true, "message" => "Producción actualizada correctamente."];
+    if ($result) {
+        echo json_encode(["status" => true, "message" => "Producción actualizada."]);
     } else {
-        $response = ["status" => false, "message" => "Error al actualizar la producción. Intenta nuevamente."];
+        echo json_encode(["status" => false, "message" => "Error al actualizar."]);
     }
-
-    echo json_encode($response, JSON_UNESCAPED_UNICODE);
     exit();
 }
 
