@@ -1,7 +1,8 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "vendor/autoload.php";
-$url = !empty($_GET['url']) ? $_GET['url'] : 'home/home'; // URL
+require_once "helpers/helpers.php";
+$url = !empty($_GET['url']) ? $_GET['url'] : 'dashboard/dashboard'; // URL
 
 $arrUrl = explode('/', $url);
 $controller = ucfirst($arrUrl[0]); // Controlador

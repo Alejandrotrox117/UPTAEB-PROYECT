@@ -1,57 +1,20 @@
 <?php
-
-require_once "app/core/Controllers.php";
-require_once "helpers/helpers.php";
-require_once "app/models/bitacoraModel.php"; 
-class logout extends Controllers
-{
-    public function set_model($model)
-    {
-        $this->model = $model;
-    }
-
-    public function get_model()
-    {
-        return $this->model;
-    }
-
+require_once 'helpers\helpers.php';
+class Logout{
     public function __construct()
     {
-        parent::__construct();
-    }
-
-    public function index()
-    {
-        $this->cerrarSesion();
-    }
-
-
-    private function cerrarSesion()
-    {
         session_start();
-        $bitacora = new BitacoraModel();
-
-        $idusuario = $_SESSION['user']['idusuario'] ?? null;
-
-        if ($idusuario) {
-            $bitacora->setTabla("usuario");
-            $bitacora->setAccion("Salida del sistema");
-            $bitacora->setIdUsuario($idusuario);
-            // Si quieres puedes también setear la fecha manualmente, pero no es necesario
-            $bitacora->setFecha(date("Y-m-d H:i:s"));
-            $bitacora->insertar2();
+        $_SESSION = array();
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
         }
-
-        session_unset();
         session_destroy();
-
-        // Redirigir al index o login principal
-        header("Location: ./");
-        exit();
+        header("location: ".base_url()."/login");
+        exit;
     }
-
-
-
 }
-
 ?>

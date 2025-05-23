@@ -1,73 +1,110 @@
 <?php
+
 class Conexion
 {
     private $servidor;
     private $username;
     private $password;
-    private $database;
-    private $conn;
+    private $databaseGeneral;
+    private $databaseSeguridad;
+    private $conectSeguridad;
+    private $conectGeneral;
 
-    public function __construct($servidor = 'localhost', $username = 'root', $password = '', $database = 'bd_pda')
-    {
+    public function __construct(
+        $servidor = 'localhost',
+        $username = 'root',
+        $password = '',
+        $databaseGeneral = 'bd_pda',
+        $databaseSeguridad = 'bd_pda_seguridad'
+    ) {
         $this->servidor = $servidor;
         $this->username = $username;
         $this->password = $password;
-        $this->database = $database;
+        $this->databaseGeneral = $databaseGeneral;
+        $this->databaseSeguridad = $databaseSeguridad;
     }
 
     // Getters
+    public function get_conectSeguridad() {
+        return $this->conectSeguridad;
+    }
+    public function get_conectGeneral() {
+        return $this->conectGeneral;
+    }
     public function getServidor() {
         return $this->servidor;
     }
-
     public function getUsername() {
         return $this->username;
     }
-
     public function getPassword() {
         return $this->password;
     }
-
-    public function getDatabase() {
-        return $this->database;
+    public function getDatabaseGeneral() {
+        return $this->databaseGeneral;
     }
-
-    public function getConnection() {
-        return $this->conn;
+    public function getDatabaseSeguridad() {
+        return $this->databaseSeguridad;
     }
 
     // Setters
     public function setServidor($servidor) {
         $this->servidor = $servidor;
     }
-
     public function setUsername($username) {
         $this->username = $username;
     }
-
     public function setPassword($password) {
         $this->password = $password;
     }
-
-    public function setDatabase($database) {
-        $this->database = $database;
+    public function setDatabaseGeneral($database) {
+        $this->databaseGeneral = $database;
+    }
+    public function setDatabaseSeguridad($database) {
+        $this->databaseSeguridad = $database;
+    }
+    public function set_conectSeguridad($conectSeguridad) {
+        $this->conectSeguridad = $conectSeguridad;
+    }
+    public function set_conectGeneral($conectGeneral) {
+        $this->conectGeneral = $conectGeneral;
     }
 
-    // Método para conectar con PDO
+    // Conexión a ambas bases de datos
     public function connect() {
         try {
-            $dsn = "mysql:host={$this->servidor};dbname={$this->database};charset=utf8";
-            $this->conn = new PDO($dsn, $this->username, $this->password);
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-            return $this->conn;
-        } catch (PDOException $e) {
-            die("Error de conexión: " . $e->getMessage());
+            // Conexión a la base de datos de seguridad
+            $connectionStringSeguridad = "mysql:host={$this->servidor};dbname={$this->databaseSeguridad};charset=utf8";
+            $conectSeguridad = new PDO(
+                $connectionStringSeguridad,
+                $this->username,
+                $this->password
+            );
+            $conectSeguridad->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            // Conexión a la base de datos general
+            $connectionStringGeneral = "mysql:host={$this->servidor};dbname={$this->databaseGeneral};charset=utf8";
+            $conectGeneral = new PDO(
+                $connectionStringGeneral,
+                $this->username,
+                $this->password
+            );
+            $conectGeneral->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            // Guardar las conexiones
+            $this->set_conectSeguridad($conectSeguridad);
+            $this->set_conectGeneral($conectGeneral);
+
+        } catch(PDOException $e) {
+            error_log("Error de conexión a la base de datos: " . $e->getMessage());
+            echo "Error de conexión a la base de datos.";
+            throw new Exception("Error de conexión a la base de datos.");
         }
     }
 
     public function disconnect() {
-        $this->conn = null;
+        $this->conectSeguridad = null;
+        $this->conectGeneral = null;
     }
 }
 ?>
