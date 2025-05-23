@@ -1,4 +1,5 @@
 <?php
+require_once 'helpers\helpers.php';
 class Logout{
 
     public function __construct()

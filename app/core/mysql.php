@@ -2,38 +2,48 @@
 
 require_once __DIR__ . "/conexion.php";
 
-class Mysql extends Conexion{
+class Mysql extends Conexion
+{
     private $conexionGeneral;
     private $conexionSeguridad;
     private $query;
     private $arrValues;
 
-    public function set_conexionGeneral($conexionGeneral){
+    public function set_conexionGeneral($conexionGeneral)
+    {
         $this->conexionGeneral = $conexionGeneral;
     }
-    public function set_conexionSeguridad($conexionSeguridad){
+    public function set_conexionSeguridad($conexionSeguridad)
+    {
         $this->conexionSeguridad = $conexionSeguridad;
     }
-    public function set_query($query){
+    public function set_query($query)
+    {
         $this->query = $query;
     }
-    public function set_arrValues($arrValues){
+    public function set_arrValues($arrValues)
+    {
         $this->arrValues = $arrValues;
     }
-    public function get_conexionGeneral(){
+    public function get_conexionGeneral()
+    {
         return $this->conexionGeneral;
     }
-    public function get_conexionSeguridad(){
+    public function get_conexionSeguridad()
+    {
         return $this->conexionSeguridad;
     }
-    public function get_query(){
+    public function get_query()
+    {
         return $this->query;
     }
-    public function get_arrValues(){
+    public function get_arrValues()
+    {
         return $this->arrValues;
     }
 
-    public function __construct(){
+    public function __construct()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $this->set_conexionGeneral($conexion->get_conectGeneral());
@@ -42,7 +52,8 @@ class Mysql extends Conexion{
 
     // ----------- MÉTODOS PARA BASE GENERAL -----------
 
-    public function insert(string $query, array $arrValues) {
+    public function insert(string $query, array $arrValues)
+    {
         try {
             $this->set_query($query);
             $this->set_arrValues($arrValues);
@@ -64,7 +75,8 @@ class Mysql extends Conexion{
         }
     }
 
-    public function insertPerson(string $query, array $arrValues) {
+    public function insertPerson(string $query, array $arrValues)
+    {
         try {
             $this->set_query($query);
             $this->set_arrValues($arrValues);
@@ -82,7 +94,8 @@ class Mysql extends Conexion{
         }
     }
 
-    public function update(string $query, array $arrValues){
+    public function update(string $query, array $arrValues)
+    {
         $this->set_query($query);
         $this->set_arrValues($arrValues);
         $update = $this->get_conexionGeneral()->prepare($this->get_query());
@@ -90,40 +103,45 @@ class Mysql extends Conexion{
         return $update->rowCount();
     }
 
-    public function updateOne($query) {
+    public function updateOne($query)
+    {
         try {
             $this->set_query($query);
             $update = $this->get_conexionGeneral()->prepare($this->get_query());
             $update->execute();
             return $update->rowCount();
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             echo "Error en la consulta de actualización: " . $e->getMessage();
             return false;
         }
     }
 
-    public function delete(string $query){
+    public function delete(string $query)
+    {
         $this->set_query($query);
         $delete = $this->get_conexionGeneral()->prepare($this->get_query());
         $delete->execute();
         return $delete->rowCount();
     }
 
-    public function search(string $query){
+    public function search(string $query)
+    {
         $this->set_query($query);
         $select = $this->get_conexionGeneral()->prepare($this->get_query());
         $select->execute();
         return $select->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function searchAll(string $query){
+    public function searchAll(string $query)
+    {
         $this->set_query($query);
         $select = $this->get_conexionGeneral()->prepare($this->get_query());
         $select->execute();
         return $select->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function searchAllPersona(string $query, array $params = []) {
+    public function searchAllPersona(string $query, array $params = [])
+    {
         $this->set_query($query);
         $select = $this->get_conexionGeneral()->prepare($this->get_query());
         $select->execute($params);
@@ -132,7 +150,8 @@ class Mysql extends Conexion{
 
     // ----------- MÉTODOS PARA BASE SEGURIDAD -----------
 
-    public function insertSeguridad(string $query, array $arrValues){
+    public function insertSeguridad(string $query, array $arrValues)
+    {
         $this->set_query($query);
         $this->set_arrValues($arrValues);
         $insert = $this->get_conexionSeguridad()->prepare($this->get_query());
@@ -140,7 +159,8 @@ class Mysql extends Conexion{
         return $this->get_conexionSeguridad()->lastInsertId();
     }
 
-    public function updateSeguridad(string $query, array $arrValues){
+    public function updateSeguridad(string $query, array $arrValues)
+    {
         $this->set_query($query);
         $this->set_arrValues($arrValues);
         $update = $this->get_conexionSeguridad()->prepare($this->get_query());
@@ -148,37 +168,56 @@ class Mysql extends Conexion{
         return $update->rowCount();
     }
 
-    public function updateOneSeguridad($query) {
+    public function updateOneSeguridad($query)
+    {
         try {
             $this->set_query($query);
             $update = $this->get_conexionSeguridad()->prepare($this->get_query());
             $update->execute();
             return $update->rowCount();
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             echo "Error en la consulta de actualización: " . $e->getMessage();
             return false;
         }
     }
 
-    public function deleteSeguridad(string $query){
+    public function deleteSeguridad(string $query)
+    {
         $this->set_query($query);
         $delete = $this->get_conexionSeguridad()->prepare($this->get_query());
         $delete->execute();
         return $delete->rowCount();
     }
 
-    public function searchSeguridad(string $query){
+    public function searchSeguridad(string $query)
+    {
         $this->set_query($query);
         $select = $this->get_conexionSeguridad()->prepare($this->get_query());
         $select->execute();
         return $select->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function searchAllSeguridad(string $query){
+    public function searchAllSeguridad(string $query)
+    {
         $this->set_query($query);
         $select = $this->get_conexionSeguridad()->prepare($this->get_query());
         $select->execute();
         return $select->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function searchSeguridadParams(string $query, array $params = [])
+    {
+        $this->set_query($query);
+        $select = $this->get_conexionSeguridad()->prepare($this->get_query());
+        $select->execute($params);
+        return $select->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function searchAllSeguridadParams(string $query, array $params = [])
+    {
+        $this->set_query($query);
+        $select = $this->get_conexionSeguridad()->prepare($this->get_query());
+        $select->execute($params);
+        return $select->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
-?>

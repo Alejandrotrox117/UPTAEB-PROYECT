@@ -1,3 +1,6 @@
+<script>
+  const base_url = "<?= base_url(); ?>";
+</script>
 
 <!-- Font Awesome -->
 <script src="/project/app/assets/fontawesome/js/fontawesome.js" crossorigin="anonymous"></script>

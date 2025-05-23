@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="/project/app/assets/img/favicon.svg" type="image/x-icon">
+    <title>Recuperadora</title>
+    <meta name="description" content="Recuperadora de materiales reciclables">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/project/app/assets/styles/styles.css">
+
+    <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
+    <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet">
+    <!-- <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet"> -->
+    <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
+</head>
+<body id="bodyLogin">
+    <div class="login-container">
+        <img src="/project/app/assets/img/favicon.svg"  class="mx-auto" alt="Logo Empresa">
+        <h2 class="text-">Bienvenido</h2>
+        <form action="<?= base_url() ?>/login/loginUser" method="POST" id="formLogin">
+            <label for="email">Correo Electrónico:</label>
+            <input type="email" id="txtEmail" name="txtEmail" >
+            
+            <label for="password">Contraseña:</label>
+            <div class="password-container">
+               <input type="password" id="txtPass" name="txtPass">
+                <span class="eye-icon" onclick="togglePassword()">
+                    <i class="fas fa-eye"></i>  <!-- Ojo abierto de Font Awesome -->
+                </span>
+            </div>
+            <button type="submit" >Iniciar Sesión</button>
+        </form>
+        <a href="recuperar_contraseña.php">¿Olvidaste tu contraseña?</a>
+    </div>
+
+<!-- Font Awesome -->
+<script src="/project/app/assets/fontawesome/js/fontawesome.js" crossorigin="anonymous"></script>
+<!-- jQuery -->
+
+<!-- sweetAlerts -->
+<script type="text/javascript" src="app\assets\sweetAlert\sweetalert2.all.min.js"></script>
+<!-- Archivo dinámico de validaciones -->
+ <script type="module" src="/project/app/assets/js/validaciones.js"></script>
+ <script type="module" src="/project/app/assets/js/exporthelpers.js"></script>
+
+ <!-- Expresiones regulares -->
+<!-- <script type="module" src="/project/app/assets/js/regex.js"></script> -->
+<?php if (isset($data['page_functions_js'])): ?>
+  <script type="module" src="/project/app/assets/js/<?php echo $data['page_functions_js']; ?>"></script>
+<?php endif; ?>
+<script>
+  const base_url = "<?= base_url(); ?>";
+</script>
+
+</div>
+</body>
+
+</html>
