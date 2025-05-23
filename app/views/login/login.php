@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -18,46 +17,55 @@
     <!-- <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet"> -->
     <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
 </head>
+
 <body id="bodyLogin">
     <div class="login-container">
-        <img src="/project/app/assets/img/favicon.svg"  class="mx-auto" alt="Logo Empresa">
+        <img src="/project/app/assets/img/favicon.svg" class="mx-auto" alt="Logo Empresa">
         <h2 class="text-">Bienvenido</h2>
         <form action="<?= base_url() ?>/login/loginUser" method="POST" id="formLogin">
-            <label for="email">Correo Electrónico:</label>
-            <input type="email" id="txtEmail" name="txtEmail" >
-            
-            <label for="password">Contraseña:</label>
-            <div class="password-container">
-               <input type="password" id="txtPass" name="txtPass">
-                <span class="eye-icon" onclick="togglePassword()">
-                    <i class="fas fa-eye"></i>  <!-- Ojo abierto de Font Awesome -->
-                </span>
+            <label for="txtEmail" >Correo Electrónico:</label>
+            <input type="email" id="txtEmail" name="txtEmail">
+            <div id="error-email-vacio" class="text-red-500 text-sm mt-1 hidden">
             </div>
-            <button type="submit" >Iniciar Sesión</button>
+            <div id="error-email-formato" class="text-red-500 text-sm mt-1 hidden">
+
+            </div>
+            <label for="txtPass">Contraseña:</label>
+            <div class="password-container">
+                <input type="password" id="txtPass" name="txtPass">
+
+                <div id="error-txtPass-vacio" class="text-red-500 text-sm mt-1 hidden">
+                </div>
+                <div id="error-txtPass-formato" class="text-red-500 text-sm mt-1 hidden">
+
+                </div>
+               
+            </div>
+            <button type="submit">Iniciar Sesión</button>
         </form>
         <a href="recuperar_contraseña.php">¿Olvidaste tu contraseña?</a>
     </div>
 
-<!-- Font Awesome -->
-<script src="/project/app/assets/fontawesome/js/fontawesome.js" crossorigin="anonymous"></script>
-<!-- jQuery -->
+    <!-- Font Awesome -->
+    <script src="/project/app/assets/fontawesome/js/fontawesome.js" crossorigin="anonymous"></script>
+    <!-- jQuery -->
 
-<!-- sweetAlerts -->
-<script type="text/javascript" src="app\assets\sweetAlert\sweetalert2.all.min.js"></script>
-<!-- Archivo dinámico de validaciones -->
- <script type="module" src="/project/app/assets/js/validaciones.js"></script>
- <script type="module" src="/project/app/assets/js/exporthelpers.js"></script>
+    <!-- sweetAlerts -->
+    <script type="text/javascript" src="app\assets\sweetAlert\sweetalert2.all.min.js"></script>
+    <!-- Archivo dinámico de validaciones -->
+    <script type="module" src="/project/app/assets/js/validaciones.js"></script>
+    <script type="module" src="/project/app/assets/js/exporthelpers.js"></script>
 
- <!-- Expresiones regulares -->
-<!-- <script type="module" src="/project/app/assets/js/regex.js"></script> -->
-<?php if (isset($data['page_functions_js'])): ?>
-  <script type="module" src="/project/app/assets/js/<?php echo $data['page_functions_js']; ?>"></script>
-<?php endif; ?>
-<script>
-  const base_url = "<?= base_url(); ?>";
-</script>
+    <!-- Expresiones regulares -->
+    <!-- <script type="module" src="/project/app/assets/js/regex.js"></script> -->
+    <?php if (isset($data['page_functions_js'])): ?>
+        <script type="module" src="/project/app/assets/js/<?php echo $data['page_functions_js']; ?>"></script>
+    <?php endif; ?>
+    <script>
+        const base_url = "<?= base_url(); ?>";
+    </script>
 
-</div>
+    </div>
 </body>
 
 </html>

@@ -7,8 +7,8 @@
     </div>
 
     <div class="min-h-screen mt-4">
-        <h1 class="text-3xl font-bold text-gray-900">Gestión de Clientes</h1>
-        <p class="text-green-500 text-lg">Clientes</p>
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p class="text-green-500 text-lg">Dashboard</p>
 
         <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
             <div class="flex justify-between items-center mb-4">

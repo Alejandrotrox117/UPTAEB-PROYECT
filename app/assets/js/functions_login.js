@@ -1,4 +1,4 @@
-import { expresiones, validarCamposVacios } from "./validaciones.js";
+import { expresiones, validarCamposVacios ,inicializarValidaciones} from "./validaciones.js";
 
 // Define los campos a validar para el login
 const camposLogin = [
@@ -19,7 +19,7 @@ const camposLogin = [
     },
   },
 ];
-
+inicializarValidaciones(camposLogin, "formLogin");
 // Evento submit del formulario de login
 document.getElementById('formLogin').addEventListener('submit', function(e) {
     e.preventDefault();
