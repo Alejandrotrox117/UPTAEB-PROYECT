@@ -1,9 +1,10 @@
 <?php
-require_once "app/core/Conexion.php"; // Asegúrate que esta ruta sea correcta
+require_once "app/core/Conexion.php";
+require_once "app/core/Mysql.php";
 
-class ComprasModel
+class ComprasModel extends Mysql
 {
-    private $db; // Este será el objeto PDO
+    private $db; 
     private $conexionObjeto;
 
      // Compra
@@ -225,11 +226,12 @@ class ComprasModel
     // Constructor
     public function __construct()
     {
+        parent::__construct();
         $this->conexionObjeto = new Conexion();
-        $this->db = $this->conexionObjeto->connect();
-        if (!$this->db) {
-            error_log("ComprasModel: Fallo al conectar a la base de datos.") ;
-        }
+        $this->conexionObjeto->connect(); // Asegúrate de conectar antes de obtener la conexión
+        $this->db = $this->conexionObjeto->get_conectGeneral();
+       
+
     }
 
     //GET COMPRAS DATATABLE

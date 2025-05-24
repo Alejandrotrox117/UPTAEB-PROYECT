@@ -1,7 +1,9 @@
 <?php
 require_once("app/core/conexion.php"); 
+require_once("app/core/mysql.php");
 
-class TasasModel {
+
+class TasasModel extends Mysql{
     private $db;
     private $conexionObjeto;
     private $id;
@@ -46,8 +48,12 @@ class TasasModel {
 
     public function __construct()
     {
+        parent::__construct();
         $this->conexionObjeto = new Conexion();
-        $this->db = $this->conexionObjeto->connect();
+        $this->conexionObjeto->connect(); // Asegúrate de conectar antes de obtener la conexión
+        $this->db = $this->conexionObjeto->get_conectGeneral();
+       
+
     }
 
     public function guardarTasa(string $codigoMoneda, float $tasa, string $fechaBcv){
