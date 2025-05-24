@@ -59,66 +59,57 @@ public function loginUser()
     }
 }
 
-    // public function resetPass()
-    // {
-    //     if (!empty($_POST)) {
-    //         if (empty($_POST['txtEmailReset'])) {
-    //             $arrResponse = array("status" => false, "msg" => "Datos vacíos");
-    //         } else {
-    //             $token = token();
-    //             $strEmail = strtolower($_POST['txtEmailReset']);
-    //             $arrData = $this->model->getUsuarioEmail($strEmail);
+public function resetPass()
+{
+    if (!empty($_POST)) {
+        if (empty($_POST['txtEmailReset'])) {
+            $arrResponse = array("status" => false, "msg" => "El correo es obligatorio");
+        } else {
+            $strEmail = strtolower(strClean($_POST['txtEmailReset']));
+            $arrData = $this->model->getUsuarioEmail($strEmail);
 
-    //             if (empty($arrData)) {
-    //                 $arrResponse = array("status" => false, "msg" => "El usuario no existe");
-    //             } else {
-    //                 $idUsuario = $arrData['idusuario'];
-    //                 $nombreUsuario = $arrData['usuario'];
+            if (empty($arrData)) {
+                $arrResponse = array("status" => false, "msg" => "El usuario no existe");
+            } else {
+                $idUsuario = $arrData['idusuario'];
+                $nombreUsuario = $arrData['usuario'];
+                $token = bin2hex(random_bytes(20)); // Genera un token seguro
 
-    //                 $url_recovery = base_url() . '/login/confirmUser/' . $strEmail . '/' . $token;
-    //                 $requestUpdate = $this->model->setTokenUser($idUsuario, $token);
+                $url_recovery = base_url() . '/login/confirmUser/' . $strEmail . ',' . $token;
+                $requestUpdate = $this->model->setTokenUser($idUsuario, $token);
 
-    //                 $dataUsuario = array(
-    //                     'usuario' => $nombreUsuario,
-    //                     'correo' => $strEmail,
-    //                     'asunto' => 'Recuperar cuenta - ' . NOMBRE_REMITENTE,
-    //                     'url_recovery' => $url_recovery
-    //                 );
+                $dataUsuario = array(
+                    'usuario' => $nombreUsuario,
+                    'correo' => $strEmail,
+                    'asunto' => 'Recuperar cuenta - Recuperadora',
+                    'url_recovery' => $url_recovery
+                );
 
-    //                 if ($requestUpdate) {
-    //                     $sendEmail = sendEmailLocal($dataUsuario, 'email_cambioPassword');
-
-    //                     if ($sendEmail === "Mensaje Enviado") {
-    //                         $arrResponse = array(
-    //                             'status' => true,
-    //                             'msg' => 'Se ha enviado un email a tu cuenta de correo para cambiar tu contraseña.'
-    //                         );
-    //                     } else {
-
-    //                         $arrResponse = array(
-    //                             'status' => false,
-    //                             'msg' => 'No es posible realizar el proceso, intenta más tarde.......'
-    //                         );
-    //                     }
-    //                 } else {
-    //                     $arrResponse = array(
-    //                         'status' => false,
-    //                         'msg' => 'No es posible realizar el proceso, intenta más tarde'
-    //                     );
-    //                 }
-    //             }
-    //         }
-
-    //         // Agrega "echo" antes de "json_encode" para enviar la respuesta
-    //         // dep($_POST);
-    //         // dep($arrResponse);
-    //         // var_dump($sendEmail);
-    //         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-    //     }
-
-    //     exit();
-    // }
-
+                if ($requestUpdate) {
+                    $sendEmail = sendEmailLocal($dataUsuario, 'email_cambioPassword');
+                    if ($sendEmail === "Mensaje Enviado") {
+                        $arrResponse = array(
+                            'status' => true,
+                            'msg' => 'Se ha enviado un email a tu cuenta de correo para cambiar tu contraseña.'
+                        );
+                    } else {
+                        $arrResponse = array(
+                            'status' => false,
+                            'msg' => 'No es posible realizar el proceso, intenta más tarde.'
+                        );
+                    }
+                } else {
+                    $arrResponse = array(
+                        'status' => false,
+                        'msg' => 'No es posible realizar el proceso, intenta más tarde'
+                    );
+                }
+            }
+        }
+        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+}
     //Funcion para confirmar el usuario
     public function confirmUser(string $params)
     {
