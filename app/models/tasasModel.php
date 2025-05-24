@@ -2,8 +2,7 @@
 require_once("app/core/conexion.php"); 
 require_once("app/core/mysql.php");
 
-
-class TasasModel extends Mysql{
+class TasasModel extends Mysql {
     private $db;
     private $conexionObjeto;
     private $id;
@@ -28,6 +27,7 @@ class TasasModel extends Mysql{
     public function setFechaCaptura($fechaCaptura){
         $this->fechaCaptura = $fechaCaptura;
     }
+    
     //GETTERS
     public function getId(){
         return $this->id;
