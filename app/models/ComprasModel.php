@@ -243,7 +243,7 @@ class ComprasModel extends Mysql
             $stmt = $this->db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log("ProveedoresModel: Error al seleccionar todos los proveedores - " . $e->getMessage());
+            error_log("ComprasModel: Error al seleccionar todos los proveedores - " . $e->getMessage());
             $this->conexionObjeto->disconnect(); // Cierra la conexión
             return [];
         }

@@ -29,7 +29,11 @@ class PersonasModel extends Mysql
     public function __construct()
     {
         parent::__construct();
-        $this->db = (new Conexion())->connect();
+        $this->conexion = new Conexion();
+        $this->conexion->connect(); // Asegúrate de conectar antes de obtener la conexión
+        $this->db = $this->conexion->get_conectGeneral();
+       
+
     }
 
     // Métodos Getters y Setters
@@ -204,61 +208,24 @@ class PersonasModel extends Mysql
     }
 
     // Método para consultar personas basado en el rol del usuario
-    public function ConsultarPersonas($userRole)
-    {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
+    public function ConsultarPersonas(){
+        $sql = "SELECT u.idusuario, p.idpersona, p.nombre AS persona_nombre, p.genero, 
+                                                 p.apellido AS persona_apellido,
+                p.identificacion, p.telefono_principal, u.correo, 
+                                                 r.nombre AS rol, 
+                                                 p.estatus AS persona_estatus, 
+                                                 u.estatus AS usuario_estatus 
+                FROM personas p LEFT JOIN bd_pda_seguridad.usuario u ON p.idpersona = u.personaId
+                LEFT JOIN bd_pda_seguridad.roles r ON u.idrol = r.idrol";
+
+        try {
+            $stmt = $this->db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Personas: Error al seleccionar - " . $e->getMessage());
+            $this->conexion->disconnect(); // Cierra la conexión
+            return [];
         }
-
-        if (!isset($_SESSION['user']) || !isset($_SESSION['user']['idpersona'])) {
-            echo json_encode(['success' => false, 'message' => 'No estás autenticado.']);
-            return;
-        }
-
-        $usuarioAutenticadoId = $_SESSION['user']['idpersona'];
-
-        // Consulta dependiendo del rol del usuario
-        if ($userRole == 3) {
-            $sql = "SELECT u.idusuario, p.idpersona, p.nombre AS persona_nombre, p.genero, p.apellido AS persona_apellido,
-                           p.cedula, p.rif, p.tipo, p.telefono, u.correo, r.nombre AS rol, p.estatus AS persona_estatus,
-                           u.status1 AS usuario_estatus
-                    FROM personas p
-                    LEFT JOIN usuarios u ON p.idpersona = u.idpersona
-                    LEFT JOIN roles r ON u.idrol = r.idrol";
-        } elseif ($userRole == 1) {
-            $sql = "SELECT u.idusuario, p.idpersona, p.nombre AS persona_nombre, p.genero, p.apellido AS persona_apellido,
-                           p.cedula, p.rif, p.tipo, p.telefono, u.correo, r.nombre AS rol, p.estatus AS persona_estatus,
-                           u.status1 AS usuario_estatus
-                    FROM personas p
-                    LEFT JOIN usuarios u ON p.idpersona = u.idpersona
-                    LEFT JOIN roles r ON u.idrol = r.idrol
-                    WHERE p.estatus = 'Activo' AND (u.status1 = 1 OR u.idusuario IS NULL) AND u.idrol != 3";
-        } else {
-            return null;
-        }
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-
-        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Modificar resultados según lógica adicional
-        foreach ($resultados as &$usuario) {
-            if (!$usuario['idusuario']) {
-                $usuario['correo'] = 'N/A';
-                $usuario['rol'] = 'No asignado';
-                $usuario['usuario_estatus'] = 'N/A';
-                $usuario['mostrar_boton_eliminar'] = false;
-            }
-
-            if ($usuario['idpersona'] == $usuarioAutenticadoId || $usuario['rol'] == 'root') {
-                $usuario['mostrar_boton_eliminar'] = false;
-            } else {
-                $usuario['mostrar_boton_eliminar'] = true;
-            }
-        }
-
-        return $resultados;
     }
 
     // Método para obtener una persona por ID

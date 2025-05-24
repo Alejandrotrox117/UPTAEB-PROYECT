@@ -36,9 +36,9 @@ class personas extends Controllers
     public function ConsultarPersonas()
     {
         session_start();
-        $user = $_SESSION['user']['idrol'];
+        
+        $user = $_SESSION['userData']['idrol'];
 
-        // Llamar a la función ConsultarPersonas y obtener los resultados
         $resultados = $this->model->ConsultarPersonas($user);
 
         // Verificar si se encontraron resultados

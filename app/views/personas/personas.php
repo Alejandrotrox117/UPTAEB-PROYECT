@@ -1,12 +1,6 @@
 <?php require_once('helpers/helpers.php'); ?>
 <?php headerAdmin($data); ?>
 
-<!-- Scripts y estilos externos -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- SweetAlert CDN -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 
 <main class="flex-1 p-6">
     <div class="flex justify-between items-center">
@@ -59,11 +53,12 @@
 
 <!-- Modal Registrar Usuario -->
 <div id="usuarioModal"
-    class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
-        <div class="flex justify-between items-center px-6 py-4 border-b">
-            <h3 class="text-2xl font-bold text-gray-800">Registrar Usuario</h3>
-            <button onclick="cerrarModalUsuario()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
+    class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+    <!-- CAMBIOS AQUÍ: max-w-3xl, h-auto, max-h-[90vh] -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-3xl h-[93vh]">
+        <div class="px-4 py-4 border-b flex justify-between items-center">
+            <h3 class="text-2xl font-bold text-gray-800">Registrar Persona</h3>
+            <button onclick="cerrarModalUsuario()" class="text-gray-600 hover:text-gray-800 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -72,7 +67,8 @@
         </div>
 
         <div class="px-6 py-6">
-            <form id="formRegistrarUsuario" class="space-y-4">
+            <!-- El formulario ya tiene max-h-[70vh] overflow-y-auto, lo cual es bueno -->
+            <form id="formRegistrarUsuario" class="px-8 py-6 h-[65vh] overflow-y-auto">
                 <div class="flex flex-wrap gap-4">
                     <!-- Campos para persona -->
                     <div class="flex-1 min-w-[45%]">
@@ -231,14 +227,16 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="flex justify-end pt-4">
-                    <button type="submit" id="submitUsuario"
-                        class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
-                        Guardar
+            </form>
+            <!-- Pie del Modal (Acciones) -->
+                <div class=" mr-4 bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                    <button type="button" onclick="cerrarModalUsuario()" class="btn-neutral px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-base font-medium">
+                        Cancelar
+                    </button>
+                    <button type="button" id="submitUsuario" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-base font-medium">
+                        <i class="fas fa-save mr-2"> </i> Guardar Compra
                     </button>
                 </div>
-            </form>
         </div>
     </div>
 </div>
@@ -262,7 +260,8 @@
 <!-- Modal Actualizar Usuario -->
 <div id="actualizarUsuarioModal"
     class="fixed inset-0 flex items-center justify-center z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative">
+    <!-- CAMBIOS AQUÍ: h-auto, max-h-[90vh] -->
+    <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl relative h-auto max-h-[90vh]">
         <div class="flex justify-between items-center px-6 py-4 border-b">
             <h3 class="text-2xl font-bold text-gray-800">Actualizar Usuario</h3>
             <button onclick="cerrarModaleditpersona()" class="text-gray-600 hover:text-gray-800 absolute top-4 right-4">
@@ -274,7 +273,8 @@
         </div>
 
         <div class="px-6 py-6">
-            <form id="formActualizarUsuario" class="space-y-4">
+             <!-- CAMBIOS AQUÍ: max-h-[70vh] overflow-y-auto -->
+            <form id="formActualizarUsuario" class="space-y-4 max-h-[70vh] overflow-y-auto">
                 <input type="hidden" id="idUsuario" name="id">
 
                 <!-- Nombre y Apellido -->
@@ -705,9 +705,9 @@
 
             // Mapa de roles con keys en minúsculas
             const rolesMap = {
-                'Root': '3',
-                'Administrador': '1',
-                'Empleado': '2'
+                'root': '3',
+                'administrador': '1',
+                'empleado': '2'
             };
             document.getElementById('rolActualizar').value = rolesMap[(usuario.rol || '').toLowerCase()] || '';
 
