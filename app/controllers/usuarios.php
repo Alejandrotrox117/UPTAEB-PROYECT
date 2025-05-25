@@ -13,10 +13,15 @@ class Usuarios extends Controllers
         if (empty($_SESSION['login'])) {
             header('Location: ' . base_url() . '/login');
         }
-        // getPermisos(7);
 
         $this->model = new usuariosModel();
     }
+
+    public function index(){
+        $data['page_title'] = "Gestión de Histórico de Tasas";
+        $data['page_name'] = "Tasas BCV";
+        $data['page_functions_js'] = "functions_usuarios.js"; 
+        $this->views->getView($this, "usuarios", $data);}
 
     public function getModel()
     {
