@@ -1,6 +1,5 @@
 // Expresiones regulares para validación
 const expresiones = {
-  cedula: /^(V|E|J)-\d{8}$/, // Formato de cédula
   nombre: /^[a-zA-Z\s]{5,30}$/, // Nombre
   apellido: /^[a-zA-Z\s]{5,30}$/, // Apellido
   telefono_principal: /^\d{11}$/, // Teléfono
@@ -9,6 +8,10 @@ const expresiones = {
   observaciones: /^.{0,50}$/, // Observaciones
   email: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, // Email
   fecha: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, // Fecha
+  nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/,
+  cedula: /^(V|E|P|G|J)?-?\d{6,9}$/i, // Ejemplo: V-12345678 o 12345678
+  password: /^.{6,16}$/, // Mínimo 6, máximo 16 caracteres
+  textoGeneral: /^.{2,100}$/, // Para campos como estado, ciudad, país
   
 };
 function validarCampo(input, regex, mensajes) {

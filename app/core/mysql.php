@@ -8,6 +8,7 @@ class Mysql extends Conexion
     private $conexionSeguridad;
     private $query;
     private $arrValues;
+    private $currentDbName;
 
     public function set_conexionGeneral($conexionGeneral)
     {
@@ -219,5 +220,18 @@ class Mysql extends Conexion
         $select = $this->get_conexionSeguridad()->prepare($this->get_query());
         $select->execute($params);
         return $select->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getDbName($conexion = null) {
+        if ($conexion) {
+            try {
+                $stmt = $conexion->query("SELECT DATABASE()");
+                return $stmt->fetchColumn();
+            } catch (PDOException $e) {
+                error_log("Error al obtener dbname de conexión PDO: " . $e->getMessage());
+                return null; // No se pudo determinar
+            }
+        }
+        return $this->currentDbName;
     }
 }
