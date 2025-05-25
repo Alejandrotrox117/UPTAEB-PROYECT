@@ -190,6 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
     checkboxCrearUsuario.checked = false; // Reiniciar el checkbox al abrir el modal
     camposUsuarioContainer.classList.add('hidden');
     formRegistrar.reset();
+    inicializarValidaciones(camposFormularioPersona, "formRegistrarPersona");
   });
   btnCerrarModalRegistro.addEventListener("click", function () {
     cerrarModal("modalRegistrarPersona");
@@ -217,6 +218,171 @@ document.addEventListener("DOMContentLoaded", function () {
       console.warn("Contenedor con ID 'usuarioCamposRegistrar' no encontrado.");
     }
   }
+
+  //MODAL REGISTRAR PERSON
+  if (formRegistrar && checkboxCrearUsuario) {
+    formRegistrar.addEventListener("submit", function (e) {e.preventDefault();
+      const esCrearUsuario = checkboxCrearUsuario.checked;
+      if (typeof camposFormularioPersona === "undefined") {
+        console.error(
+          "La variable 'camposFormularioPersona' para validación no está definida.",
+        );
+        Swal.fire(
+          "Error de Configuración",
+          "Falta la configuración de validación.",
+          "error",
+        );
+        return;
+      }
+
+      const camposParaValidarVacios = camposFormularioPersona.filter((c) => {
+        const idsCamposUsuario = [
+          "correoUsuarioPersona",
+          "claveUsuarioPersona",
+          "rolUsuarioPersona",
+        ];
+        if (idsCamposUsuario.includes(c.id)) {
+          return esCrearUsuario; 
+        }
+        return true;
+      });
+
+      if (!validarCamposVacios(camposParaValidarVacios, "formRegistrarPersona")) {
+        return;
+      }
+
+      let formularioConErroresEspecificos = false;
+      for (const campo of camposFormularioPersona) {
+        const inputElement = formRegistrar.querySelector(`#${campo.id}`);
+        if (!inputElement) continue;
+
+        const idsCamposUsuario = [
+          "correoUsuarioPersona",
+          "claveUsuarioPersona",
+          "rolUsuarioPersona",
+        ];
+        if (idsCamposUsuario.includes(campo.id) && !esCrearUsuario) {
+          continue; // No validar específicamente si no se crea usuario
+        }
+
+        let esValidoEsteCampo = true;
+        if (campo.tipo === "select") {
+          esValidoEsteCampo = validarSelect(
+            campo.id,
+            campo.mensajes,
+            "formRegistrarPersona",
+          );
+        } else if (
+          ["input", "date", "email", "password", "textarea", "text"].includes(
+            campo.tipo,
+          )
+        ) {
+          // Asegúrate que validarCampo maneje estos tipos
+          esValidoEsteCampo = validarCampo(
+            inputElement,
+            campo.regex,
+            campo.mensajes,
+          );
+        }
+        if (!esValidoEsteCampo) {
+          formularioConErroresEspecificos = true;
+        }
+      }
+
+      if (formularioConErroresEspecificos) {
+        Swal.fire(
+          "Atención",
+          "Por favor, corrija los campos marcados.",
+          "warning",
+        );
+        return;
+      }
+
+      const formData = new FormData(formRegistrar);
+      const dataParaEnviar = {
+        persona: {},
+        usuario: null, 
+      };
+
+      dataParaEnviar.persona.nombre = formData.get("nombre") || "";
+      dataParaEnviar.persona.apellido = formData.get("apellido") || "";
+      dataParaEnviar.persona.identificacion = formData.get("identificacion") || "";
+      dataParaEnviar.persona.genero = formData.get("genero") || "";
+      dataParaEnviar.persona.fecha_nacimiento = formData.get("fecha_nacimiento") || null; // Enviar null si está vacío
+      dataParaEnviar.persona.correo_electronico = formData.get("correo_electronico") || "";
+      dataParaEnviar.persona.direccion = formData.get("direccion") || "";
+      dataParaEnviar.persona.observaciones = formData.get("observaciones") || "";
+      dataParaEnviar.persona.telefono_principal = formData.get("telefono_principal") || "";
+      
+      dataParaEnviar.crear_usuario_flag = esCrearUsuario ? "1" : "0";
+
+      if (esCrearUsuario) {
+        dataParaEnviar.usuario = {};
+       
+        dataParaEnviar.usuario.idrol = formData.get("idrol_usuario") || "";
+        dataParaEnviar.usuario.correo_login = formData.get("correo_electronico_usuario") || ""; 
+        dataParaEnviar.usuario.clave = formData.get("clave_usuario") || "";
+        dataParaEnviar.usuario.username = formData.get("correo_electronico_usuario") || "";
+      }
+
+      if (btnGuardarPersona) {
+        btnGuardarPersona.disabled = true;
+        btnGuardarPersona.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+      }
+
+      fetch("Personas/createPersona", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify(dataParaEnviar),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((errData) => {
+              throw { status: response.status, data: errData };
+            });
+          }
+          return response.json();
+        })
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Éxito!", result.message, "success");
+            cerrarModal("modalRegistrarPersona"); 
+            if (typeof tablaPersonas !== "undefined" && tablaPersonas.ajax) {
+              tablaPersonas.ajax.reload(null, false);
+            }
+          } else {
+            Swal.fire(
+              "Error",
+              result.message || "No se pudo registrar la persona.",
+              "error",
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error en fetch:", error);
+          let errorMessage = "Ocurrió un error de conexión.";
+          if (error.data && error.data.message) {
+            errorMessage = error.data.message;
+          } else if (error.status) {
+            errorMessage = `Error del servidor: ${error.status}.`;
+          }
+          Swal.fire("Error", errorMessage, "error");
+        })
+        .finally(() => {
+          if (btnGuardarPersona) {
+            btnGuardarPersona.disabled = false;
+            btnGuardarPersona.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Persona`;
+          }
+        });
+    });
+  } else {
+    if (!formRegistrar) console.warn("Formulario 'formRegistrarPersona' no encontrado.");
+    if (!checkboxCrearUsuario) console.warn("Checkbox 'crearUsuario' no encontrado.");
+  }
+
 
 
 });

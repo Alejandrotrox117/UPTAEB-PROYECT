@@ -1,4 +1,7 @@
 <?php
+require_once "app/core/conexion.php"; // Asegúrate que la ruta sea correcta
+require_once "app/core/mysql.php"; // Asegúrate que la ruta sea correcta
+
 class UsuariosModel extends Mysql
 {
     private $idusuario;
@@ -119,7 +122,7 @@ class UsuariosModel extends Mysql
         $this->strToken = $token;
     }
 
-    public function setPassword(string $password): void
+    public function setPassword($password)
     {
         $this->strPassword = $password;
     }

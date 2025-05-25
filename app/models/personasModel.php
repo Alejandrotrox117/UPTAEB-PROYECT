@@ -4,7 +4,7 @@ require_once "app/core/mysql.php"; // Asegúrate que la ruta sea correcta
 
 class PersonasModel extends mysql
 {
-    private $conexionObjetoPrincipal;
+    private $conexion;
     private $dbPrincipal; // Para la tabla 'personas'
 
     private $conexionObjetoSeguridad;
@@ -30,133 +30,183 @@ class PersonasModel extends mysql
     private $telefono_principal;
 
 
-    public function get_conect_principal(){
-        return $this->principal;
-    }
-
-
     public function __construct()
     {
-        $this->conexionObjetoPrincipal = new Conexion();
-        $this->conexionObjetoPrincipal->connect();
-        $this->dbPrincipal = $this->conexionObjetoPrincipal->get_conectGeneral();  // Asumo que esta función devuelve la conexión principal
-
-        $this->conexionObjetoSeguridad = new Conexion();
-
-        $this->dbSeguridad = $this->conexionObjetoSeguridad->get_conectSeguridad();
-    }
-
-    public function __destruct()
-    {
-        if ($this->conexionObjetoPrincipal) {
-            $this->conexionObjetoPrincipal->disconnect();
-        }
-        if ($this->conexionObjetoSeguridad && $this->conexionObjetoSeguridad !== $this->conexionObjetoPrincipal) {
-            $this->conexionObjetoSeguridad->disconnect();
-        }
+        $this->conexion = new Conexion();
+        $this->conexion->connect();
+        $this->dbPrincipal = $this->conexion->get_conectGeneral();  // Asumo que esta función devuelve la conexión principal
     }
 
     // Getters y Setters para propiedades de Persona (igual que antes)
     // ... (coloca aquí todos los getters y setters que tenías)
 
-    public function insertPersonaConUsuario(array $data): array
-    {
-        if (!$this->dbPrincipal || !$this->dbSeguridad) {
-            return ["status" => false, "message" => "Error de conexión a una o ambas bases de datos."];
-        }
+    // Asumiendo que tienes una instancia de Conexion
+public function insertPersona(array $data): array
+{
+    try {
+        $dbGeneral = $this->conexion->get_conectGeneral();
+        $dbGeneral->beginTransaction();
 
-        $this->dbPrincipal->beginTransaction();
-        $this->dbSeguridad->beginTransaction();
-        try {
-            // Insertar en tabla personas (DB Principal)
-            // Usaré 'identificacion' para la cédula en la tabla 'personas' según tu DDL de seguridad.
-            $sqlPersona = "INSERT INTO personas (
-                                nombre, apellido, identificacion, rif, genero, fecha_nacimiento, 
-                                correo_electronico, direccion, estado_residencia, ciudad_residencia, pais_residencia,
-                                tipo_persona, observaciones, estatus, telefono_principal, fecha_creacion, fecha_modificacion
-                           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-            $stmtPersona = $this->dbPrincipal->prepare($sqlPersona);
-            $arrValuesPersona = [
-                $data['nombre'],
-                $data['apellido'],
-                $data['cedula'], // Este valor va al campo 'identificacion' de la tabla 'personas'
-                $data['rif'] ?: null,
-                $data['genero'] ?: null,
-                $data['fecha_nacimiento'] ?: null,
-                $data['correo_electronico_persona'] ?: null,
-                $data['direccion'] ?: null,
-                $data['estado_residencia'] ?: null,
-                $data['ciudad_residencia'] ?: null,
-                $data['pais_residencia'] ?: null,
-                $data['tipo_persona'] ?: null,
-                $data['observaciones'] ?: null,
-                'ACTIVO', // Estatus por defecto
-                $data['telefono_principal']
+        $sqlPersona = "INSERT INTO personas (nombre, apellido, identificacion, genero, fecha_nacimiento, correo_electronico, direccion, observaciones, telefono_principal, estatus, fecha_creacion, fecha_modificacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        
+        $valoresPersona = [
+            $data['nombre'] ?? null,
+            $data['apellido'] ?? null,
+            $data['cedula'] ?? null,
+            $data['genero'] ?? null,
+            $data['fecha_nacimiento'] ?: null,
+            $data['correo_electronico_persona'] ?? null,
+            $data['direccion'] ?? null,
+            $data['observaciones'] ?? null,
+            $data['telefono_principal'] ?? null,
+            'activo'
+        ];
+        
+        $stmtPersona = $dbGeneral->prepare($sqlPersona);
+        $insertExitosoPersona = $stmtPersona->execute($valoresPersona);
+
+        $idPersonaInsertada = $dbGeneral->lastInsertId();
+
+        if (!$idPersonaInsertada) {
+            $dbGeneral->rollBack();
+            error_log("Error: No se pudo obtener el lastInsertId para la persona.");
+            return [
+                'status' => false, 
+                'message' => 'Error al obtener ID de persona tras registro.',
+                'persona_id' => null
             ];
-            $stmtPersona->execute($arrValuesPersona);
-            $idPersonaInsertada = $this->dbPrincipal->lastInsertId();
-
-            if (!$idPersonaInsertada) {
-                $this->dbPrincipal->rollBack();
-                $this->dbSeguridad->rollBack();
-                return ["status" => false, "message" => "Error al registrar la persona."];
-            }
-
-            // Si se marca "crear_usuario"
-            if (isset($data['crear_usuario']) && $data['crear_usuario'] == '1') {
-                if (empty($data['correo_electronico_usuario']) || empty($data['clave_usuario']) || empty($data['idrol_usuario'])) {
-                    $this->dbPrincipal->rollBack();
-                    $this->dbSeguridad->rollBack();
-                    return ["status" => false, "message" => "Faltan datos para crear el usuario (correo, clave o rol)."];
-                }
-
-                // 'personaId' en la tabla 'usuario' es la cédula/identificación de la persona.
-                $personaIdParaUsuario = $data['cedula'];
-                $claveHasheada = password_hash($data['clave_usuario'], PASSWORD_DEFAULT);
-
-                $sqlUsuario = "INSERT INTO usuario (idrol, usuario, clave, correo, personaId, estatus, token) 
-                               VALUES (?, ?, ?, ?, ?, ?, '')"; // Token vacío inicialmente
-                $stmtUsuario = $this->dbSeguridad->prepare($sqlUsuario);
-                $arrValuesUsuario = [
-                    $data['idrol_usuario'],
-                    $data['correo_electronico_usuario'], // Usando correo como nombre de usuario
-                    $claveHasheada,
-                    $data['correo_electronico_usuario'],
-                    $personaIdParaUsuario,
-                    'ACTIVO'
-                ];
-                $stmtUsuario->execute($arrValuesUsuario);
-
-                if ($stmtUsuario->rowCount() == 0) {
-                    $this->dbPrincipal->rollBack();
-                    $this->dbSeguridad->rollBack();
-                    return ["status" => false, "message" => "Error al registrar el usuario asociado."];
-                }
-            }
-
-            $this->dbPrincipal->commit();
-            $this->dbSeguridad->commit();
-            return ["status" => true, "message" => "Persona registrada exitosamente.", "idpersona_pk" => $idPersonaInsertada];
-
-        } catch (PDOException $e) {
-            $this->dbPrincipal->rollBack();
-            $this->dbSeguridad->rollBack();
-            error_log("PersonasModel::insertPersonaConUsuario -> " . $e->getMessage());
-            $errorMessage = "Error interno del servidor";
-             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                if (strpos($e->getMessage(), "'usuario'") !== false || strpos($e->getMessage(), "'correo'") !== false) {
-                    $errorMessage = "El nombre de usuario o correo electrónico para el usuario ya existe.";
-                } elseif (strpos($e->getMessage(), "'identificacion'") !== false) { // Asumiendo que 'identificacion' es la cédula en 'personas' y es UNIQUE
-                    $errorMessage = "La cédula/identificación de la persona ya existe.";
-                } else {
-                    $errorMessage = "Error de duplicidad: " . $e->getMessage();
-                }
-            } else {
-                $errorMessage = "Error interno del servidor: " . $e->getMessage();
-            }
-            return ["status" => false, "message" => $errorMessage];
         }
+
+        $dbGeneral->commit();
+
+        return [
+            'status' => true, 
+            'message' => 'Persona registrada exitosamente (ID: ' . $idPersonaInsertada . ').',
+            'persona_id' => $idPersonaInsertada
+        ];
+
+    } catch (PDOException $e) {
+        if ($dbGeneral->inTransaction()) {
+            $dbGeneral->rollBack();
+        }
+        error_log("Error al insertar persona: " . $e->getMessage());
+        return [
+            'status' => false, 
+            'message' => 'Error de base de datos al registrar persona: ' . $e->getMessage(),
+            'persona_id' => null
+        ];
     }
+}
+
+public function insertUsuario(int $personaId, array $dataUsuario): array
+{
+    try {
+        $dbSeguridad = $this->conexion->get_conectSeguridad();
+        $dbSeguridad->beginTransaction();
+
+        $claveHasheada = password_hash($dataUsuario['clave_usuario'], PASSWORD_DEFAULT);
+        $correoTablaUsuario = $dataUsuario['correo_electronico_usuario'];  
+        $rol = $dataUsuario['idrol_usuario'];
+
+        $sqlUsuario = "INSERT INTO usuario (idrol, clave, correo, personaId, estatus) VALUES (?, ?, ?, ?, ?)";
+        
+        $valoresUsuario = [
+            $rol,
+            $claveHasheada,
+            $correoTablaUsuario,  
+            $personaId, 
+            'activo'
+        ];
+
+        $stmtUsuario = $dbSeguridad->prepare($sqlUsuario);
+        $insertExitosoUsuario = $stmtUsuario->execute($valoresUsuario);
+        
+        if (!$insertExitosoUsuario || $stmtUsuario->rowCount() === 0) {
+            $dbSeguridad->rollBack();
+            $errorInfo = $stmtUsuario->errorInfo();
+            error_log("Error al insertar usuario: " . print_r($errorInfo, true));
+            return [
+                'status' => false, 
+                'message' => 'Error SQL al registrar usuario: ' . $errorInfo[2]
+            ];
+        }
+
+        $dbSeguridad->commit();
+
+        return [
+            'status' => true, 
+            'message' => 'Usuario registrado exitosamente para persona ID: ' . $personaId
+        ];
+
+    } catch (PDOException $e) {
+        if ($dbSeguridad->inTransaction()) {
+            $dbSeguridad->rollBack();
+        }
+        error_log("Error al insertar usuario: " . $e->getMessage());
+        return [
+            'status' => false, 
+            'message' => 'Error de base de datos al registrar usuario: ' . $e->getMessage()
+        ];
+    }
+}
+
+// Función coordinadora que maneja transacciones distribuidas
+public function insertPersonaConUsuario(array $data): array
+{
+    $personaId = null;
+    $personaCreada = false;
+    $usuarioCreado = false;
+
+    try {
+        // Registrar persona
+        $resultadoPersona = $this->insertPersona($data);
+        
+        if (!$resultadoPersona['status']) {
+            return $resultadoPersona;
+        }
+
+        $personaId = $resultadoPersona['persona_id'];
+        $personaCreada = true;
+        
+        // Si se debe crear usuario
+        if (isset($data['crear_usuario']) && $data['crear_usuario'] == "1") {
+            $resultadoUsuario = $this->insertUsuario($personaId, $data);
+            
+            if (!$resultadoUsuario['status']) {
+                
+                return [
+                    'status' => false,
+                    'message' => 'Error al crear usuario. Se revirtieron todos los cambios: ' . $resultadoUsuario['message'],
+                    'persona_id' => null
+                ];
+            }
+            
+            $usuarioCreado = true;
+            
+            return [
+                'status' => true,
+                'message' => 'Persona (ID: ' . $personaId . ') y usuario registrados exitosamente.',
+                'persona_id' => $personaId
+            ];
+        }
+        
+        return [
+            'status' => true,
+            'message' => 'Persona registrada exitosamente (ID: ' . $personaId . '). No se creó usuario.',
+            'persona_id' => $personaId
+        ];
+
+    } catch (Exception $e) {
+        error_log("Error en insertPersonaConUsuario: " . $e->getMessage());
+        
+        return [
+            'status' => false,
+            'message' => 'Error general en el proceso. Se revirtieron todos los cambios.',
+            'persona_id' => null
+        ];
+    }
+}
+
 
     public function updatePersonaConUsuario(array $data): array
     {
@@ -340,8 +390,8 @@ class PersonasModel extends mysql
                     u.correo as correo_usuario_login, p.telefono_principal, p.estatus as persona_estatus,
                     r.nombre as rol_nombre
                 FROM personas p
-                LEFT JOIN {$this->conexionObjetoPrincipal->getDatabaseSeguridad()}.usuario u ON p.identificacion = u.personaId
-                LEFT JOIN {$this->conexionObjetoPrincipal->getDatabaseSeguridad()}.roles r ON u.idrol = r.idrol
+                LEFT JOIN {$this->conexion->getDatabaseSeguridad()}.usuario u ON p.identificacion = u.personaId
+                LEFT JOIN {$this->conexion->getDatabaseSeguridad()}.roles r ON u.idrol = r.idrol
                 WHERE p.estatus = 'ACTIVO'
                 ORDER BY p.nombre ASC, p.apellido ASC"; // Un orden por defecto
 

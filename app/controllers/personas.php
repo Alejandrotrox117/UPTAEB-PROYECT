@@ -42,39 +42,20 @@ class Personas extends Controllers
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
-            // Validaciones básicas en el controlador
-            if (empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula']) || empty($data['telefono_principal'])) {
-                $response = ["status" => false, "message" => "Campos obligatorios (nombre, apellido, cédula, teléfono) no pueden estar vacíos."];
-                echo json_encode($response, JSON_UNESCAPED_UNICODE);
-                die();
-            }
-            if (isset($data['crear_usuario']) && $data['crear_usuario'] == '1') {
-                if (empty($data['correo_electronico']) || empty($data['clave']) || empty($data['rol'])) {
-                     $response = ["status" => false, "message" => "Para crear usuario, se requiere correo, clave y rol."];
-                     echo json_encode($response, JSON_UNESCAPED_UNICODE);
-                     die();
-                }
-            }
-
             $personaData = [
-                'nombre' => trim($data['nombre']),
-                'apellido' => trim($data['apellido']),
-                'cedula' => trim($data['cedula']), // Este es el que se usará como 'identificacion' en tabla personas y 'personaId' en tabla usuario
-                'rif' => trim($data['rif'] ?? ''),
-                'genero' => $data['genero'] ?? null,
-                'fecha_nacimiento' => $data['fecha_nacimiento'] ?: null,
-                'correo_electronico_persona' => trim($data['correo_electronico_persona'] ?? ''), // Correo informativo de la persona
-                'direccion' => trim($data['direccion'] ?? ''), // Si tienes este campo en el form
-                'estado_residencia' => trim($data['estado'] ?? ''),
-                'ciudad_residencia' => trim($data['ciudad'] ?? ''),
-                'pais_residencia' => trim($data['pais'] ?? ''),
-                'tipo_persona' => $data['tipo'] ?? null,
-                'observaciones' => trim($data['observaciones'] ?? ''),
-                'telefono_principal' => trim($data['telefono_principal']),
-                'crear_usuario' => $data['crear_usuario'] ?? '0',
-                'correo_electronico_usuario' => trim($data['correo_electronico'] ?? ''), // Correo para login y tabla usuario
-                'clave_usuario' => $data['clave'] ?? '',
-                'idrol_usuario' => $data['rol'] ?? null
+                'nombre' => trim($data['persona']['nombre']),
+                'apellido' => trim($data['persona']['apellido']),
+                'cedula' => trim($data['persona']['identificacion']),
+                'genero' => $data['persona']['genero'] ?? null,
+                'fecha_nacimiento' => $data['persona']['fecha_nacimiento'] ?: null,
+                'correo_electronico_persona' => trim($data['persona']['correo_electronico'] ?? ''), 
+                'direccion' => trim($data['persona']['direccion'] ?? ''), 
+                'observaciones' => trim($data['persona']['observaciones'] ?? ''),
+                'telefono_principal' => trim($data['persona']['telefono_principal']),
+                'crear_usuario' => $data['crear_usuario_flag'] ?? '0',
+                'correo_electronico_usuario' => trim($data['usuario']['correo_login'] ?? ''), 
+                'clave_usuario' => $data['usuario']['clave'] ?? '',
+                'idrol_usuario' => $data['usuario']['idrol'] ?? null
             ];
 
             $request = $this->model->insertPersonaConUsuario($personaData);
