@@ -22,7 +22,7 @@ class VentasModel extends Mysql
     {
         parent::__construct();
         $this->conexion = new Conexion();
-        $this->conexion->connect(); // Asegúrate de conectar antes de obtener la conexión
+        $this->conexion->connect();
         $this->db = $this->conexion->get_conectGeneral();
        
 

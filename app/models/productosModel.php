@@ -17,10 +17,16 @@ class productosModel extends Mysql
     private $moneda;
     private $estatus;
 
+    
+    
+    
     public function __construct()
     {
+        parent::__construct();
         $this->conexionObjeto = new Conexion();
-        $this->db = $this->conexionObjeto->connect();
+        $this->conexionObjeto->connect();
+       
+        $this->db = $this->conexionObjeto->get_conectGeneral();
     }
 
     public function __destruct()
