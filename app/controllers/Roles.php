@@ -1,22 +1,39 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
-/* require_once "app/models/RolesModel.php"; // Asegúrate de tener esto */
+require_once "app/models/bitacoraModel.php"; 
 
 class Roles extends Controllers
 {
     protected $model;
+    protected $bitacora;
 
     public function __construct()
     {
         parent::__construct();
         $this->model = new RolesModel();
+        $this->bitacora = new bitacoraModel();
     }
 
-    public function index()
-    {
-        $this->views->getView($this, "roles");
+   public function index()
+{
+    session_start();
+    $bitacora = new BitacoraModel();
+
+    $idusuario = $_SESSION['user']['idusuario'] ?? null;
+
+    if ($idusuario) {
+        $bitacora->setTabla("rol");
+        $bitacora->setAccion("vista");
+        $bitacora->setIdUsuario($idusuario);
+        // Si quieres puedes también setear la fecha manualmente, pero no es necesario
+        $bitacora->setFecha(date("Y-m-d H:i:s"));
+        $bitacora->insertar2();
     }
+
+    $this->views->getView($this, "roles");
+}
+
 
     public function guardarRol()
     {
@@ -59,8 +76,8 @@ class Roles extends Controllers
     public function ConsultarRol()
 {
     header("Content-Type: application/json");
-
-    $userRole = $_SESSION['usuario']['rol_id'] ?? 1;
+    session_start();
+    $userRole = $_SESSION['user']['idrol'];
     $roles = $this->model->getRoles($userRole);
 
     echo json_encode([

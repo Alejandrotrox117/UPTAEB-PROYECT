@@ -214,6 +214,7 @@ class ProveedoresModel
             return [];
         }
     }
+    
     public function getProveedorById($idproveedor_param) {
         if (!$this->db) {
             error_log("ProveedoresModel: No hay conexión para getProveedorById.");

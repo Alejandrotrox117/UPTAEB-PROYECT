@@ -1,60 +1,59 @@
+import { } from "./functions_entidades.js";
+import {
+  expresiones,
+  inicializarValidaciones,
+  validarCamposVacios,
+  validarDetalleVenta,
+  validarSelect,
+  validarFecha,
+  limpiarValidaciones,
+  cargarSelect, registrarEntidad 
+} from "./validaciones.js";
+
+
 document.addEventListener("DOMContentLoaded", function () {
-  // --- DataTable (se mantiene igual que antes) ---
-  $("#TablaCompras").DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: {
-      url: "compras/getComprasDataTable",
-      type: "GET",
-      dataSrc: "data",
-    },
-    columns: [
-      { data: "nro_compra", title: "Nro" },
-      { data: "fecha", title: "Fecha" },
-      { data: "proveedor_nombre", title: "Proveedor" },
-      { data: "total_general", title: "Total" },
-      {
-        data: null,
-        title: "Acciones",
-        orderable: false,
-        render: function (data, type, row) {
-          // Generar botones con íconos de Font Awesome
-          return `
-                <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idpersona="${row.idcompra}">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" data-idpersona="${row.idcompra}">
-                  <i class="fas fa-trash"></i>
-                </button>
-              `;
+  // --- DataTable (se mantiene igual que antes) nada ---
+  let tablaCompras;
+  tablaCompras = $("#TablaCompras").DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "compras/getComprasDataTable",
+            type: "GET", 
+            dataSrc: "data", 
         },
-      },
-    ],
-    language: {
-      decimal: "",
-      emptyTable: "No hay información",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
-      infoEmpty: "Mostrando 0 to 0 of 0 Entradas",
-      infoFiltered: "(Filtrado de _MAX_ total entradas)",
-      infoPostFix: "",
-      thousands: ",",
-      lengthMenu: "Mostrar _MENU_ Entradas",
-      loadingRecords: "Cargando...",
-      processing: "Procesando...",
-      search: "Buscar:",
-      zeroRecords: "Sin resultados encontrados",
-      paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior",
-      },
-    },
-    destroy: true,
-    responsive: true,
-    pageLength: 10,
-    order: [[0, "asc"]],
-  });
+        columns: [
+            { data: "nro_compra", title: "Nro. Compra" },
+            { data: "fecha", title: "Fecha" },
+            { data: "idproveedor", title: "Proveedor" },
+            { data: "total_general", title: "Total" },
+            
+            {
+                data: null,
+                title: "Acciones",
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row) {
+                    return `
+                        <button class="ver-compra-btn text-green-600 hover:text-green-800 p-1" data-idcompra="${row.idcompra}" title="Ver Detalle">
+                            <i class="fas fa-eye fa-lg"></i>
+                        </button>
+                        <button class="editar-proveedor-btn text-blue-500 hover:text-blue-700 p-1" data-idcompra="${row.idcompra}" title="Editar">
+                            <i class="fas fa-edit fa-lg"></i>
+                        </button>
+                        <button class="eliminar-proveedor-btn text-red-500 hover:text-red-700 p-1 ml-2" data-idcompra="${row.idcompra}" title="Eliminar">
+                            <i class="fas fa-trash fa-lg"></i>
+                        </button>
+                    `;
+                },
+            },
+        ],
+        language: {  },
+        destroy: true,
+        responsive: true,
+        pageLength: 10,
+        order: [[0, "asc"]],
+    });
 
   // --- Lógica del Modal de Nueva Compra ---
   const modalNuevaCompra = document.getElementById("modalNuevaCompra");
@@ -120,6 +119,167 @@ document.addEventListener("DOMContentLoaded", function () {
   const mensajeErrorFormCompraModal = document.getElementById(
     "mensajeErrorFormCompraModal",
   );
+
+  const camposCompras = [
+    {
+      id: "observaciones_compra_modal",
+      tipo: "textarea",
+      regex: expresiones.observaciones,
+      mensajes: {
+        formato: "Las observaciones no deben exceder los 100 caracteres.",
+      },
+    },
+  ];
+
+  // Event listener para botones de Editar
+    document.getElementById("TablaCompras").addEventListener("click", function (e) {
+        const target = e.target;
+        if (target.closest(".ver-compra-btn")) {
+            const idCompra = target.closest(".ver-compra-btn").getAttribute("data-idcompra");
+            if (idCompra) {
+               verCompra(idCompra);
+            }
+        }else if (target.closest(".eliminar-compra-btn")) {
+             const idCompra = target.closest(".eliminar-compra-btn").getAttribute("data-idcompra");
+             if (idCompra) {
+                editarCompra(idCompra);
+            }
+         }
+    });
+
+async function editarCompra(idcompra) {
+    try {
+        const response = await fetch(`compras/getDetalleCompra/${idcompra}`);
+        const data = await response.json();
+
+        if (!data.status) {
+            Swal.fire("Error", data.message || "No se pudo obtener el detalle.", "error");
+            return;
+        }
+
+        // 1. Llena los campos de la cabecera
+        document.getElementById("fecha_compra_modal").value = data.compra.fecha;
+        document.getElementById("idmoneda_general_compra_modal").value = data.compra.idmoneda_general;
+        document.getElementById("observaciones_compra_modal").value = data.compra.observaciones_compra || "";
+
+        // 2. Proveedor
+        document.getElementById("idproveedor_seleccionado_modal").value = data.compra.idproveedor;
+        document.getElementById("proveedor_seleccionado_info_modal").innerHTML = `Sel: <strong>${data.compra.proveedor}</strong>`;
+        document.getElementById("proveedor_seleccionado_info_modal").classList.remove("hidden");
+
+        // 3. Detalle de productos
+        detalleCompraItemsModal = data.detalle.map(item => ({
+            idproducto: item.idproducto,
+            nombre: item.descripcion_temporal_producto,
+            idcategoria: item.idcategoria || 1, // Ajusta según tu modelo
+            precio_unitario: parseFloat(item.precio_unitario_compra),
+            idmoneda_item: item.idmoneda_detalle,
+            simbolo_moneda_item: "", // Puedes obtenerlo si lo necesitas
+            no_usa_vehiculo: false, // Ajusta si tienes este dato
+            peso_vehiculo: parseFloat(item.peso_vehiculo) || 0,
+            peso_bruto: parseFloat(item.peso_bruto) || 0,
+            peso_neto_directo: parseFloat(item.peso_neto) || 0,
+            cantidad_unidad: parseFloat(item.cantidad) || 1,
+            subtotal_linea: parseFloat(item.subtotal_linea) || 0,
+            subtotal_linea_bs: parseFloat(item.subtotal_linea) || 0,
+        }));
+
+        renderizarTablaDetalleModal();
+        calcularTotalesGeneralesModal();
+
+        // 4. Cambia el modo del modal a "Editar"
+        document.getElementById("btnGuardarCompraModal").textContent = "Actualizar Compra";
+        document.getElementById("btnGuardarCompraModal").onclick = function () {
+            guardarEdicionCompra(idcompra);
+        };
+
+        // 5. Abre el modal
+        abrirModalNuevaCompra();
+
+    } catch (error) {
+        Swal.fire("Error", "Ocurrió un error al obtener la compra.", "error");
+    }
+}
+
+
+// Mostrar el modal con los datos
+  async function verCompra(idcompra) {
+      try {
+          const response = await fetch(`compras/getDetalleCompra/${idcompra}`);
+          const data = await response.json();  
+          console.log(data);  
+
+          if (!data.status) {
+              Swal.fire("Error", data.message || "No se pudo obtener el detalle.", "error");
+              return;
+          }
+
+          let html = `
+              <div class="mb-4">
+                  <strong>Nro. Compra:</strong> ${data.compra.nro_compra}<br>
+                  <strong>Fecha:</strong> ${data.compra.fecha}<br>
+                  <strong>Proveedor:</strong> ${data.compra.proveedor}<br>
+                  <strong>Total:</strong> ${data.compra.total_general}<br>
+                  <strong>Observaciones:</strong> ${data.compra.observaciones_compra || '-'}
+              </div>
+              <hr>
+              <div class="mt-4">
+                  <strong>Detalle de Productos:</strong>
+                  <div class="overflow-x-auto">
+                  <table class="w-full text-xs mt-2 border">
+                      <thead class="bg-gray-100">
+                          <tr>
+                              <th class="px-2 py-1 border">Producto</th>
+                              <th class="px-2 py-1 border">Cantidad</th>
+                              <th class="px-2 py-1 border">Precio U.</th>
+                              <th class="px-2 py-1 border">Subtotal</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+          `;
+          data.detalle.forEach(item => {
+              html += `
+                  <tr>
+                      <td class="px-2 py-1 border">${item.descripcion_temporal_producto}</td>
+                      <td class="px-2 py-1 border">${item.cantidad}</td>
+                      <td class="px-2 py-1 border">${item.precio_unitario_compra}</td>
+                      <td class="px-2 py-1 border">${item.subtotal_linea}</td>
+                  </tr>
+              `;
+          });
+          html += `
+                      </tbody>
+                  </table>
+                  </div>
+              </div>
+          `;
+
+          document.getElementById("contenidoModalDetalleCompra").innerHTML = html;
+          abrirModalDetalleCompra();
+      } catch (error) {
+          Swal.fire("Error", "Ocurrió un error al obtener el detalle.", "error");
+      }
+  }
+
+  // Funciones para abrir/cerrar el modal
+  function abrirModalDetalleCompra() {
+      const modal = document.getElementById("modalDetalleCompra");
+      modal.classList.remove("opacity-0", "pointer-events-none");
+      document.body.classList.add("overflow-hidden");
+  }
+  function cerrarModalDetalleCompra() {
+      const modal = document.getElementById("modalDetalleCompra");
+      modal.classList.add("opacity-0", "pointer-events-none");
+      document.body.classList.remove("overflow-hidden");
+  }
+
+  // Eventos para cerrar el modal
+  document.getElementById("btnCerrarModalDetalleCompra").addEventListener("click", cerrarModalDetalleCompra);
+  document.getElementById("btnCerrarModalDetalleCompra2").addEventListener("click", cerrarModalDetalleCompra);
+  document.getElementById("modalDetalleCompra").addEventListener("click", function(e) {
+      if (e.target === this) cerrarModalDetalleCompra();
+  });
+
 
   let detalleCompraItemsModal = []; // Array para los ítems del detalle en el modal
 
@@ -193,18 +353,32 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   if (btnAbrirModalNuevaCompra)
-    btnAbrirModalNuevaCompra.addEventListener("click", abrirModalNuevaCompra);
-  if (btnCerrarModalNuevaCompra)
-    btnCerrarModalNuevaCompra.addEventListener("click", cerrarModalNuevaCompra);
-  if (btnCancelarCompraModal)
-    btnCancelarCompraModal.addEventListener("click", cerrarModalNuevaCompra);
+    btnAbrirModalNuevaCompra.addEventListener("click", function () {
+      abrirModalNuevaCompra();
+      inicializarValidaciones(camposCompras, "formNuevaCompraModal");
+    });
 
-  // Cerrar modal si se hace clic fuera del contenido (en el overlay)
-  modalNuevaCompra.addEventListener("click", (e) => {
-    if (e.target === modalNuevaCompra) {
+  if (btnCerrarModalNuevaCompra)
+    btnCerrarModalNuevaCompra.addEventListener("click", function () {
       cerrarModalNuevaCompra();
-    }
-  });
+      limpiarValidaciones(camposCompras, "formNuevaCompraModal");
+      formNuevaCompraModal.reset();
+    });
+
+  if (btnCancelarCompraModal)
+    btnCancelarCompraModal.addEventListener("click", function () {
+      cerrarModalNuevaCompra();
+      limpiarValidaciones(camposCompras, "formNuevaCompraModal");
+      formNuevaCompraModal.reset();
+    });
+    // Cerrar modal si se hace clic fuera del contenido (en el overlay)
+    modalNuevaCompra.addEventListener("click", (e) => {
+      if (e.target === modalNuevaCompra) {
+        cerrarModalNuevaCompra();
+        limpiarValidaciones(camposCompras, "formNuevaCompraModal");
+        formNuevaCompraModal.reset();
+      }
+    });
 
   function calcularSubtotalLineaItemModal(item) {
     const precioUnitario = parseFloat(item.precio_unitario) || 0;
@@ -244,7 +418,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '<option value="">Cargando...</option>';
     try {
       const response = await fetch(
-        `productos/getListaProductosParaFormulario`,
+        `compras/getListaProductosParaFormulario`,
       ); // Necesitarás este endpoint
       if (!response.ok) throw new Error("Error en respuesta de productos");
       const productos = await response.json();
@@ -591,6 +765,74 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // (Eliminada la definición duplicada de calcularSubtotalLineaItemModal)
+function validarDetalleCompra() {
+  if (detalleCompraItemsModal.length === 0) {
+    mensajeErrorFormCompraModal.textContent =
+      "Debe agregar al menos un producto al detalle.";
+    return false;
+  }
+  for (const item of detalleCompraItemsModal) {
+    if (!item.idproducto || parseFloat(item.precio_unitario) <= 0) {
+      mensajeErrorFormCompraModal.textContent =
+        `El producto "${item.nombre}" tiene precio inválido.`;
+      return false;
+    }
+
+    if (item.idcategoria === 1) {
+      // Si es por peso
+      if (item.no_usa_vehiculo) {
+        // Solo valida el peso neto directo
+        if (!item.peso_neto_directo || parseFloat(item.peso_neto_directo) <= 0) {
+          mensajeErrorFormCompraModal.textContent =
+            `El producto "${item.nombre}" debe tener un peso neto válido.`;
+          return false;
+        }
+      } else {
+        // Valida peso bruto y peso vehículo
+        if (
+          item.peso_bruto === undefined ||
+          item.peso_vehiculo === undefined ||
+          item.peso_bruto === "" ||
+          item.peso_vehiculo === "" ||
+          isNaN(item.peso_bruto) ||
+          isNaN(item.peso_vehiculo)
+        ) {
+          mensajeErrorFormCompraModal.textContent =
+            `El producto "${item.nombre}" debe tener peso bruto y peso vehículo.`;
+          return false;
+        }
+        const pesoBruto = parseFloat(item.peso_bruto);
+        const pesoVehiculo = parseFloat(item.peso_vehiculo);
+
+        if (pesoBruto <= 0 || pesoVehiculo <= 0) {
+          mensajeErrorFormCompraModal.textContent =
+            `El producto "${item.nombre}" debe tener peso bruto y peso vehículo mayores a cero.`;
+          return false;
+        }
+        if (pesoVehiculo >= pesoBruto) {
+          mensajeErrorFormCompraModal.textContent =
+            `En "${item.nombre}", el peso del vehículo debe ser menor que el peso bruto.`;
+          return false;
+        }
+        // Además, el peso neto calculado debe ser mayor a cero
+        if (pesoBruto - pesoVehiculo <= 0) {
+          mensajeErrorFormCompraModal.textContent =
+            `El producto "${item.nombre}" debe tener un peso neto mayor a cero.`;
+          return false;
+        }
+      }
+    } else {
+      // Por unidad
+      if (!item.cantidad_unidad || parseFloat(item.cantidad_unidad) <= 0) {
+        mensajeErrorFormCompraModal.textContent =
+          `El producto "${item.nombre}" debe tener una cantidad válida.`;
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 
   function calcularTotalesGeneralesModal() {
     let subtotalGeneralBs = 0;
@@ -623,12 +865,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btnGuardarCompraModal) {
     btnGuardarCompraModal.addEventListener("click", async function () {
       // Validaciones
+      if (!validarCamposVacios(camposCompras, "formNuevaCompraModal")) return;
       mensajeErrorFormCompraModal.textContent = "";
-      if (!hiddenIdProveedorModal.value) {
-        mensajeErrorFormCompraModal.textContent =
-          "Debe seleccionar un proveedor.";
-        return;
-      }
       if (detalleCompraItemsModal.length === 0) {
         mensajeErrorFormCompraModal.textContent =
           "Debe agregar al menos un producto al detalle.";
@@ -713,7 +951,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const inputIdPersona = document.getElementById("idproveedor");
 
   window.abrirModalProveedor = function (titulo = "Registrar Proveedor", formAction = "proveedores/createProveedor") {
-    formProveedor.reset(); // 
+    formProveedor.reset(); 
     inputIdPersona.value = ""; 
     modalTitulo.textContent = titulo;
     formProveedor.setAttribute("data-action", formAction); 
@@ -805,7 +1043,4 @@ formProveedor.addEventListener("submit", function (e) {
     });
 });
 
-function verCompra(idcompra) {
-  Swal.fire("Detalle de compra", "Ver detalle de la compra ID: " + idcompra, "info");
-}
 })

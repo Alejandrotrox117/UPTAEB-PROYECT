@@ -26,13 +26,9 @@ class Proveedores extends Controllers
         $this->views->getView($this, "proveedores", $data); // Tu nueva vista HTML
     }
 
-    public function getProveedoresData()
-    {
-        // if (!is_ajax()) { /* Redirigir o mostrar error si no es AJAX */ }
-        $arrData = $this->model->selectAllProveedores(); // Asume que este método existe y funciona
+    public function getProveedoresData(){
+        $arrData = $this->model->selectAllProveedores(); 
 
-        // Formato para DataTables server-side (simplificado para client-side en el JS actual)
-        // Si DataTables está en serverSide: true, necesitas devolver draw, recordsTotal, recordsFiltered
         echo json_encode(['data' => $arrData], JSON_UNESCAPED_UNICODE);
         die();
     }

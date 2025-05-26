@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Selectores existentes
+    // Selectores
     const tbodyTasasUsd = document.getElementById('tbodyTasasUsd');
     const tbodyTasasEur = document.getElementById('tbodyTasasEur');
     const mensajeNoDatosUsd = document.getElementById('mensajeNoDatosUsd');
@@ -7,17 +7,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const contenedorMensajesFlash = document.getElementById('contenedorMensajesFlash');
     const formActualizarUSD = document.getElementById('formActualizarUSD');
     const formActualizarEUR = document.getElementById('formActualizarEUR');
-
-    // Selectores para las pestañas y sus contenidos
-    const tabsContainer = document.getElementById('tabsHistorial'); // El <nav> que contiene los botones de pestañas
-    const tabButtons = document.querySelectorAll('.tab-button');    // Todos los botones con la clase 'tab-button'
-    const historialUSDDiv = document.getElementById('historialUSD'); // El div que contiene la tabla del dólar
-    const historialEURDiv = document.getElementById('historialEUR'); // El div que contiene la tabla del euro
+    const tabsContainer = document.getElementById('tabsHistorial');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const historialUSDDiv = document.getElementById('historialUSD');
+    const historialEURDiv = document.getElementById('historialEUR');
 
     const URL_OBTENER_DATOS = "tasas/getTasas";
     const URL_ACTUALIZAR_TASAS_BCV = "tasas/actualizarTasasBCV";
-    console.log('URL_ACTUALIZAR_TASAS_BCV:', URL_ACTUALIZAR_TASAS_BCV);
 
+    let dataTasasUsd = [];
+    let dataTasasEur = [];
+    let dataTableUsd = null;
+    let dataTableEur = null;
+    let monedaActiva = 'USD'; // Por defecto
+
+    // SweetAlert
     function mostrarAlertaSweet(tipo, titulo, textoHtml = '') {
         let icono;
         switch (tipo) {
@@ -36,14 +40,11 @@ document.addEventListener('DOMContentLoaded', function () {
             default:
                 icono = 'question';
         }
-
         Swal.fire({
             icon: icono,
             title: titulo,
-            html: textoHtml, // Usamos html para permitir <br> u otro formato
+            html: textoHtml,
             confirmButtonText: 'Entendido',
-            // timer: tipo === 'exito' ? 2500 : undefined, // Opcional: cerrar automáticamente en éxito
-            // timerProgressBar: tipo === 'exito',
         });
     }
 
@@ -71,12 +72,11 @@ document.addEventListener('DOMContentLoaded', function () {
             mensajeNoDatosElement.classList.add('hidden');
             tasas.forEach((tasa) => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b border-gray-200 hover:bg-gray-50';
                 tr.innerHTML = `
-                    <td class="py-3 px-4">${tasa.codigo_moneda}</td>
-                    <td class="py-3 px-4">${parseFloat(tasa.tasa_a_ves).toLocaleString('es-VE', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
-                    <td class="py-3 px-4">${formatearFecha(tasa.fecha_publicacion_bcv)}</td>
-                    <td class="py-3 px-4">${formatearFechaHora(tasa.fecha_captura)}</td>
+                    <td>${tasa.codigo_moneda}</td>
+                    <td>${parseFloat(tasa.tasa_a_ves).toLocaleString('es-VE', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
+                    <td>${formatearFecha(tasa.fecha_publicacion_bcv)}</td>
+                    <td>${formatearFechaHora(tasa.fecha_captura)}</td>
                 `;
                 tbodyElement.appendChild(tr);
             });
@@ -85,42 +85,116 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // MEJORADO: Garantiza la destrucción correcta de DataTables
+    function limpiarDataTable(tablaId) {
+        // Método más seguro para destruir un DataTable
+        try {
+            const tabla = $('#' + tablaId);
+            if ($.fn.DataTable.isDataTable(tabla)) {
+                tabla.DataTable().destroy();
+                console.log(`DataTable ${tablaId} destruido correctamente`);
+            }
+        } catch (error) {
+            console.error(`Error al destruir DataTable ${tablaId}:`, error);
+        }
+    }
+
+    function inicializarDataTable(tablaId, instancia) {
+        // Primero destruimos completamente
+        limpiarDataTable(tablaId);
+
+        console.log(`Inicializando DataTable para ${tablaId}`);
+        return $('#' + tablaId).DataTable({
+            destroy: true,
+            pageLength: 10,
+            language: {
+                decimal: "",
+                emptyTable: "No hay información",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
+                infoEmpty: "Mostrando 0 a 0 de 0 Entradas",
+                infoFiltered: "(Filtrado de _MAX_ total entradas)",
+                infoPostFix: "",
+                thousands: ",",
+                lengthMenu: "Mostrar _MENU_ Entradas",
+                loadingRecords: "Cargando...",
+                processing: "Procesando...",
+                search: "Buscar:",
+                zeroRecords: "Sin resultados encontrados",
+                paginate: {
+                    first: "Primero",
+                    last: "Último",
+                    next: "Siguiente",
+                    previous: "Anterior",
+                },
+                aria: {
+                    sortAscending: ": activar para ordenar la columna ascendente",
+                    sortDescending: ": activar para ordenar la columna descendente"
+                }
+            },
+            order: [[0, "asc"]],
+            columns: [
+                { title: "Código" },
+                { title: "Tasa a VES" },
+                { title: "Fecha Publicación BCV" },
+                { title: "Fecha Captura" }
+            ]
+        });
+    }
+
+    // MEJORADO: Reinicializa explícitamente los DataTables
     async function cargarDatosTasas() {
         try {
+            // Destruir DataTables antes de cargar nuevos datos
+            limpiarDataTable('tablaTasasUsd');
+            limpiarDataTable('tablaTasasEur');
+
             const response = await fetch(URL_OBTENER_DATOS);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
 
             if (data.mensajeFlash && data.mensajeFlash.texto) {
-                 mostrarAlertaSweet(data.mensajeFlash.tipo, 
-                                   data.mensajeFlash.tipo.charAt(0).toUpperCase() + data.mensajeFlash.tipo.slice(1) + "!", 
-                                   data.mensajeFlash.texto);
+                mostrarAlertaSweet(
+                    data.mensajeFlash.tipo,
+                    data.mensajeFlash.tipo.charAt(0).toUpperCase() + data.mensajeFlash.tipo.slice(1) + "!",
+                    data.mensajeFlash.texto
+                );
             }
-            renderizarTabla(tbodyTasasUsd, data.tasasUsd, mensajeNoDatosUsd);
-            renderizarTabla(tbodyTasasEur, data.tasasEur, mensajeNoDatosEur);
-            
-            // Después de cargar los datos, asegurar que la pestaña correcta esté activa y visible
-            actualizarVistaPestana(); 
+
+            dataTasasUsd = data.tasasUsd || [];
+            dataTasasEur = data.tasasEur || [];
+
+            // Renderizar datos
+            renderizarTabla(tbodyTasasUsd, dataTasasUsd, mensajeNoDatosUsd);
+            renderizarTabla(tbodyTasasEur, dataTasasEur, mensajeNoDatosEur);
+
+            // Esperar a que el DOM se actualice
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Reinicializar ambos DataTables
+            dataTableUsd = inicializarDataTable('tablaTasasUsd', dataTableUsd);
+            dataTableEur = inicializarDataTable('tablaTasasEur', dataTableEur);
+
+            console.log('DataTables reinicializados con éxito');
         } catch (error) {
             console.error('Error al cargar datos de tasas:', error);
             mostrarAlertaSweet('error', 'Error de Carga', 'No se pudieron cargar los datos de las tasas. Intente más tarde o revise la consola.');
         }
     }
 
+    // MEJORADO: Garantiza actualización correcta después de operación
     async function manejarActualizacionGeneralBCV(event) {
         event.preventDefault();
         const form = event.currentTarget;
-        const submitButton = form.querySelector('#moneda');
-        const originalButtonText = submitButton.textContent;
-
-        submitButton.disabled = true;
-        submitButton.textContent = 'Actualizando...';
-
+        const submitButton = form.querySelector('button[type="submit"], #moneda');
         if (!submitButton) {
             console.error("No se encontró el botón de submit en el formulario:", form);
             mostrarAlertaSweet('error', 'Error Interno', 'No se pudo encontrar el botón de acción.');
             return;
         }
+
+        const originalButtonText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Actualizando...';
 
         try {
             const response = await fetch(URL_ACTUALIZAR_TASAS_BCV, { method: 'POST' });
@@ -129,19 +203,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 try { errorData = await response.json(); } catch (e) { /* no es json */ }
                 throw errorData;
             }
+            
             const resultado = await response.json();
-            mostrarAlertaSweet(resultado.tipo, 
-                               resultado.tipo.charAt(0).toUpperCase() + resultado.tipo.slice(1) + "!", 
-                               resultado.texto);
+            mostrarAlertaSweet(
+                resultado.tipo,
+                resultado.tipo.charAt(0).toUpperCase() + resultado.tipo.slice(1) + "!",
+                resultado.texto
+            );
+            
             if (resultado.tipo === 'exito' || resultado.tipo === 'advertencia') {
-                cargarDatosTasas();
+                // Forzar recarga de datos y DataTables
+                console.log("Actualizando datos después de operación exitosa...");
+                await cargarDatosTasas();
+                console.log("Datos actualizados con éxito.");
             }
         } catch (error) {
             console.error('Error al actualizar tasas BCV:', error);
             if (error && error.tipo && error.texto) {
-                mostrarAlertaSweet(error.tipo, 
-                                   error.tipo.charAt(0).toUpperCase() + error.tipo.slice(1) + "!", 
-                                   error.texto);
+                mostrarAlertaSweet(
+                    error.tipo,
+                    error.tipo.charAt(0).toUpperCase() + error.tipo.slice(1) + "!",
+                    error.texto
+                );
             } else {
                 mostrarAlertaSweet('error', 'Error de Actualización', 'Ocurrió un error inesperado al intentar actualizar las tasas.');
             }
@@ -151,30 +234,25 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- LÓGICA PARA LAS PESTAÑAS (SWITCH) ---
     function actualizarEstilosPestana(pestanaActiva) {
         tabButtons.forEach(button => {
             const esActiva = button === pestanaActiva;
             button.setAttribute('aria-selected', esActiva.toString());
 
-            // Clases para estado activo (basadas en tu HTML para el botón Dólar por defecto)
+            // Clases para estado activo
             const clasesActivo = ['text-yellow-600', 'shadow', 'bg-white', 'dark:text-white', 'dark:bg-yellow-600'];
-            // Clases para estado inactivo (basadas en tu HTML para el botón Euro por defecto)
+            // Clases para estado inactivo
             const clasesInactivoHoverFocus = [
-                'hover:text-gray-800', 
-                // 'focus:text-yellow-600', // El focus:ring-yellow-500 ya maneja el foco visual
-                'dark:text-gray-400', 
-                'dark:hover:text-gray-300', 
-                // 'dark:focus:text-gray-400'
+                'hover:text-gray-800',
+                'dark:text-gray-400',
+                'dark:hover:text-gray-300',
             ];
-             // Quitar todas las clases de estilo relevantes primero
             button.classList.remove(...clasesActivo, ...clasesInactivoHoverFocus, 'text-gray-600');
-
 
             if (esActiva) {
                 button.classList.add(...clasesActivo);
             } else {
-                button.classList.add('text-gray-600', ...clasesInactivoHoverFocus); // Color base para inactivo
+                button.classList.add('text-gray-600', ...clasesInactivoHoverFocus);
             }
         });
     }
@@ -190,44 +268,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Función para establecer el estado inicial de las pestañas o actualizarlo
-    function actualizarVistaPestana() {
-        let pestanaActiva = tabsContainer ? tabsContainer.querySelector('.tab-button[aria-selected="true"]') : null;
-        
-        // Si no hay ninguna pestaña marcada como activa, seleccionar la primera por defecto
-        if (!pestanaActiva && tabButtons.length > 0) {
-            pestanaActiva = tabButtons[0]; // Tomar el primer botón de pestaña
-            pestanaActiva.setAttribute('aria-selected', 'true'); // Marcarlo como seleccionado
-        }
-
-        if (pestanaActiva) {
-            const monedaSeleccionada = pestanaActiva.dataset.moneda;
-            actualizarEstilosPestana(pestanaActiva);
-            mostrarContenidoPestana(monedaSeleccionada);
-        }
+    function actualizarVistaPestana(moneda) {
+        monedaActiva = moneda;
+        mostrarContenidoPestana(moneda);
+        const pestanaActiva = Array.from(tabButtons).find(btn => btn.dataset.moneda === moneda);
+        if (pestanaActiva) actualizarEstilosPestana(pestanaActiva);
     }
 
-    // Event listener para el contenedor de las pestañas (delegación de eventos)
+    // Pestañas
     if (tabsContainer) {
-        tabsContainer.addEventListener('click', function(event) {
+        tabsContainer.addEventListener('click', function (event) {
             const botonPestanaClickeado = event.target.closest('.tab-button');
-            if (!botonPestanaClickeado) return; // Si el clic no fue en un botón de pestaña
-
+            if (!botonPestanaClickeado) return;
             const moneda = botonPestanaClickeado.dataset.moneda;
-            actualizarEstilosPestana(botonPestanaClickeado);
-            mostrarContenidoPestana(moneda);
+            actualizarVistaPestana(moneda);
         });
     }
-    // --- FIN LÓGICA PARA LAS PESTAÑAS ---
 
-    // Cargar datos iniciales (esto ya llama a actualizarVistaPestana)
-    cargarDatosTasas();
-
-    // Event Listeners para los formularios de actualización
+    // Inicialización de formularios
     if (formActualizarUSD) {
         formActualizarUSD.addEventListener('submit', manejarActualizacionGeneralBCV);
+        // CORREGIDO: Eliminada la llamada redundante a cargarDatosTasas()
     }
     if (formActualizarEUR) {
         formActualizarEUR.addEventListener('submit', manejarActualizacionGeneralBCV);
+        // CORREGIDO: Eliminada la llamada redundante a cargarDatosTasas()
     }
+
+    // Carga inicial de datos
+    cargarDatosTasas();
 });

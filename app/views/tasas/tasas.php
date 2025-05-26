@@ -38,47 +38,42 @@
                     type="button"
                     data-moneda="EUR"
                     class="tab-button flex whitespace-nowrap items-center h-8 w-36 sm:w-40 px-4 font-medium rounded-lg outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-inset hover:text-gray-800 focus:text-yellow-600 dark:text-gray-400 dark:hover:text-gray-300 dark:focus:text-gray-400"
+                    aria-selected="false"
                 >
                     Euro (€)
                 </button>
             </nav>
         </div>
-            <!-- Contenedores de Historial (se mostrará/ocultará con JS) -->
-            <div id="historialUSD" class="historial-contenido mb-8 mt-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Historial Reciente Dólar (USD)</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-gray-600 text-sm border-b border-gray-300">
-                                <th class="py-3 px-4 font-semibold">Moneda</th>
-                                <th class="py-3 px-4 font-semibold">Tasa en Bolivares</th>
-                                <th class="py-3 px-4 font-semibold">Fecha Publicación BCV</th>
-                                <th class="py-3 px-4 font-semibold">Fecha de Captura</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyTasasUsd" class="text-gray-700"></tbody>
-                    </table>
-                </div>
-                <p id="mensajeNoDatosUsd" class="text-gray-600 italic hidden">No hay datos históricos para USD.</p>
-            </div>
+        <!-- Contenido de cada pestaña -->
+        <div id="historialUSD">
+            <table id="tablaTasasUsd" class="w-full">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Tasa a VES</th>
+                        <th>Fecha Publicación BCV</th>
+                        <th>Fecha Captura</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyTasasUsd"></tbody>
+            </table>
+            <div id="mensajeNoDatosUsd" class="hidden">No hay datos USD</div>
+        </div>
 
-            <div id="historialEUR" class="historial-contenido mb-8 mt-6 hidden">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Historial Reciente Euro (EUR)</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-gray-600 text-sm border-b border-gray-300">
-                                <th class="py-3 px-4 font-semibold">Moneda</th>
-                                <th class="py-3 px-4 font-semibold">Tasa a Bolivares</th>
-                                <th class="py-3 px-4 font-semibold">Fecha Publicación BCV</th>
-                                <th class="py-3 px-4 font-semibold">Fecha de Captura</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyTasasEur" class="text-gray-700"></tbody>
-                    </table>
-                </div>
-                <p id="mensajeNoDatosEur" class="text-gray-600 italic hidden">No hay datos históricos para EUR.</p>
-            </div>
+        <div id="historialEUR" class="hidden">
+            <table id="tablaTasasEur" class="w-full">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Tasa a VES</th>
+                        <th>Fecha Publicación BCV</th>
+                        <th>Fecha Captura</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyTasasEur"></tbody>
+            </table>
+            <div id="mensajeNoDatosEur" class="hidden">No hay datos EUR</div>
+        </div>
 
             <p class="mt-8 text-sm text-gray-500">
                 <strong>Nota Importante:</strong> La obtención de tasas depende de la estructura del sitio web del BCV...

@@ -26,54 +26,15 @@ class Compras extends Controllers
         $this->views->getView($this, "compras", $data);
     }
 
-    public function getComprasDataTable()
-    {
+    //DATATABLE DE COMPRAS
+    public function getComprasDataTable(){
         header('Content-Type: application/json');
-        $modelo = $this->get_model();
-
-        $draw = isset($_GET['draw']) ? intval($_GET['draw']) : 0;
-        $start = isset($_GET['start']) ? intval($_GET['start']) : 0;
-        $length = isset($_GET['length']) ? intval($_GET['length']) : 10;
-        $searchValue = isset($_GET['search']['value']) ? $_GET['search']['value'] : '';
-
-        $orderColumnIndex = isset($_GET['order'][0]['column']) ? intval($_GET['order'][0]['column']) : 0;
-        $orderDir = isset($_GET['order'][0]['dir']) ? $_GET['order'][0]['dir'] : 'asc';
-        $columnMapping = [
-            0 => 'c.nro_compra',
-            1 => 'c.fecha',
-            2 => 'p.nombre', 
-            3 => 'c.total_general',
-        ];
-        $orderColumnName = $columnMapping[$orderColumnIndex] ?? 'c.nro_compra'; // Orden por defecto
-
-        $datosFilas = $modelo->getComprasServerSide(
-            $start,
-            $length,
-            $searchValue,
-            $orderColumnName,
-            $orderDir
-        );
-
-        $recordsTotal = $modelo->countAllCompras();
-        $recordsFiltered = $modelo->countFilteredCompras($searchValue);
-
-        $dataParaEnviar = [];
-        foreach ($datosFilas as $fila) {
-            $fila['total_general'] = ($fila['moneda_simbolo'] ?? '$') . ' ' . number_format(floatval($fila['total_general']), 2);
-            $dataParaEnviar[] = $fila;
-        }
-
-        $response = [
-            "draw" => $draw,
-            "recordsTotal" => $recordsTotal,
-            "recordsFiltered" => $recordsFiltered,
-            "data" => $dataParaEnviar,
-        ];
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        $arrData = $this->get_model()->selectAllCompras();
+        echo json_encode(['data' => $arrData], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
+    //BUSCAR MONEDAS
     public function getListaMonedasParaFormulario() {
         header('Content-Type: application/json');
         $modelo = $this->get_model();
@@ -83,6 +44,7 @@ class Compras extends Controllers
 
     }
 
+    //BUSCAR TASAS DE MONEDAS POR FECHA
     public function getTasasMonedasPorFecha(){
         header('Content-Type: application/json');
         if (!isset($_GET['fecha'])) {
@@ -95,14 +57,16 @@ class Compras extends Controllers
         exit();
     }
 
-    // public function getListaProductosParaFormulario() {
-    //     header('Content-Type: application/json');
-    //     $modelo = $this->get_model();
-    //     $productos = $modelo->getProductosConCategoria();
-    //     echo json_encode($productos);
-    //     exit();
-    // }
+    //BUSCAR PRODUCTOS
+    public function getListaProductosParaFormulario() {
+        header('Content-Type: application/json');
+        $modelo = $this->get_model();
+        $productos = $modelo->getProductosConCategoria();
+        echo json_encode($productos);
+        exit();
+    }
 
+    //BUSCAR PROVEEDORES
     public function buscarProveedores() {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['term'])) {
@@ -116,6 +80,7 @@ class Compras extends Controllers
         exit();
     }
 
+    //REGISTRAR NUEVO PROVEEDOR
     public function registrarNuevoProveedor() {
         header('Content-Type: application/json');
         $response = ["status" => false, "message" => "Datos incompletos o incorrectos."];
@@ -165,8 +130,8 @@ class Compras extends Controllers
         exit();
     }
     
-    public function getUltimoPesoRomana()
-    {
+    //BUSCAR ULTIMO PESO DE ROMANA
+    public function getUltimoPesoRomana(){
         header('Content-Type: application/json');
         $modelo = $this->get_model();
         $peso = $modelo->getUltimoPesoRomana();
@@ -178,8 +143,8 @@ class Compras extends Controllers
         exit();
     }
 
-    public function setCompra()
-    {
+    //GUARDAR COMPRA
+    public function setCompra(){
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -305,6 +270,80 @@ class Compras extends Controllers
         }
         exit();
     }
-    
+
+    //BUSCAR DETALLE DE COMPRA
+    public function getDetalleCompra($idcompra){
+        header('Content-Type: application/json');
+
+        if (!$idcompra) {
+            echo json_encode(['status' => false, 'message' => 'ID de compra inválido']);
+            exit();
+        }
+
+        $this->get_model()->setIdCompra(intval($idcompra));
+        $compra = $this->get_model()->getCompraById($idcompra);
+
+        if (!$compra) {
+            echo json_encode(['status' => false, 'message' => 'Compra no encontrada']);
+            exit();
+        }
+
+        $detalles = $this->get_model()->getDetalleCompraById($idcompra);
+
+        if (!$detalles) {
+            echo json_encode(['status' => false, 'message' => 'Detalles de compra no encontrados']);
+            exit();
+        }
+
+        // Solo un echo json_encode con toda la información
+        echo json_encode([
+            'status' => true,
+            'compra' => $compra,
+            'detalle' => $detalles
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    //EDITAR COMPRA
+    public function editarCompra() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $modelo = $this->get_model();
+            $response = ["status" => false, "message" => "Error desconocido."];
+
+            $idcompra = intval($_POST['idcompra'] ?? 0);
+            $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
+            $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
+            $idmoneda_general = intval($_POST['idmoneda_general_compra'] ?? 0);
+            $observaciones_compra = $_POST['observaciones_compra'] ?? '';
+            $subtotal_general_compra = floatval($_POST['subtotal_general_input'] ?? 0);
+            $descuento_porcentaje_compra = floatval($_POST['descuento_porcentaje_input'] ?? 0);
+            $monto_descuento_compra = floatval($_POST['monto_descuento_input'] ?? 0);
+            $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
+            $datosCompra = [
+                "idcompra" => $idcompra,
+                "fecha_compra" => $fecha_compra,
+                "idproveedor" => $idproveedor,
+                "idmoneda_general" => $idmoneda_general,
+                "subtotal_general_compra" => $subtotal_general_compra,
+                "descuento_porcentaje_compra" => $descuento_porcentaje_compra,
+                "monto_descuento_compra" => $monto_descuento_compra,
+                "total_general_compra" => $total_general_compra,
+                "observaciones_compra" => $observaciones_compra,
+            ];
+
+
+            // Llama al modelo
+            try {
+                $modelo->editarCompra($datosCompra);
+                $response = ["status" => true, "message" => "Compra actualizada correctamente."];
+            } catch (Exception $e) {
+                $response = ["status" => false, "message" => $e->getMessage()];
+            }
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        }
+        exit();
+    }
+
 
 }
