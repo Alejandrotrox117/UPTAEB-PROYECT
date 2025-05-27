@@ -313,24 +313,9 @@ class PersonasModel extends mysql
                 return $resultadoPersona;
             }
 
-            // Obtener el ID de identificación para el usuario
-            $sqlGetIdentificacion = "SELECT identificacion FROM personas WHERE idpersona = ?";
-            $stmtGetIdentificacion = $this->dbPrincipal->prepare($sqlGetIdentificacion);
-            $stmtGetIdentificacion->execute([$idpersona_pk]);
-            $personaData = $stmtGetIdentificacion->fetch(PDO::FETCH_ASSOC);
-
-            if (!$personaData) {
-                return [
-                    'status' => false,
-                    'message' => 'No se pudo obtener la información de la persona.',
-                ];
-            }
-
-            $personaIdentificacion = $personaData['identificacion'];
-
             // Actualizar usuario si se proporcionan datos
             if (isset($data['actualizar_usuario']) && $data['actualizar_usuario'] == "1") {
-                $resultadoUsuario = $this->updateUsuario($personaIdentificacion, $data);
+                $resultadoUsuario = $this->updateUsuario($idpersona_pk, $data);
                 
                 if (!$resultadoUsuario['status']) {
                     return [
