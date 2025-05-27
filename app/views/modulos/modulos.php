@@ -19,7 +19,7 @@
             <div class="flex justify-between items-center mb-6">
                 <button id="btnAbrirModalRegistrarModulo"
                     class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
-                    <i class="fas fa-plus mr-2"></i> Registrar Módulo
+                    <i class="mr-2"></i> Registrar Módulo
                 </button>
                 <button id="btnVerControladores"
                     class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
@@ -153,7 +153,7 @@
             <button type="button" id="btnCancelarModalActualizar" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-base font-medium">
                 Cancelar
             </button>
-            <button type="submit" id="btnActualizarModulo" form="formActualizarModulo" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-base font-medium">
+            <button type="submit" id="btnActualizarModulo" form="formActualizarModulo" class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-base font-medium">
                 <i class="fas fa-save mr-2"></i> Actualizar Módulo
             </button>
         </div>
