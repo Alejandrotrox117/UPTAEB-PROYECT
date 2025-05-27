@@ -71,7 +71,7 @@ class VentasModel extends Mysql
     {
         try {
             $sql = "SELECT idcliente, nombre, apellido, cedula 
-                    FROM clientes 
+                    FROM cliente
                     WHERE estatus = 'Activo' 
                     ORDER BY nombre, apellido";
             return $this->searchAll($sql);
@@ -138,13 +138,13 @@ class VentasModel extends Mysql
             }
             
             // Verificar que el cliente existe
-            $cliente = $this->search("SELECT COUNT(*) as count FROM clientes WHERE idcliente = ?", [$idcliente]);
+            $cliente = $this->search("SELECT COUNT(*) as count FROM cliente WHERE idcliente = ?", [$idcliente]);
             if ($cliente['count'] == 0) {
                 throw new Exception("El cliente especificado no existe.");
             }
             
             // Insertar la venta
-            $sqlVenta = "INSERT INTO ventas (idcliente, fecha_venta, total_venta, estatus, fecha_creacion) 
+            $sqlVenta = "INSERT INTO venta (idcliente, fecha_venta, total_venta, estatus, fecha_creacion) 
                          VALUES (?, ?, ?, 'Activo', NOW())";
             
             $idventa = $this->insert($sqlVenta, [$idcliente, $fecha_venta, $total_venta]);
@@ -154,7 +154,7 @@ class VentasModel extends Mysql
             }
             
             // Insertar los detalles
-            $sqlDetalle = "INSERT INTO detalle_ventas (idventa, idproducto, cantidad, precio, total) 
+            $sqlDetalle = "INSERT INTO detalle_venta (idventa, idproducto, cantidad, precio, total) 
                            VALUES (?, ?, ?, ?, ?)";
             
             foreach ($detalles as $detalle_item) {
@@ -181,34 +181,17 @@ class VentasModel extends Mysql
         });
     }
 
-    // Método para obtener todas las ventas
-    public function obtenerVentas()
-    {
-        try {
-            $sql = "SELECT v.idventa, v.fecha_venta, v.total_venta, v.estatus,
-                           c.nombre as cliente_nombre, c.apellido as cliente_apellido
-                    FROM ventas v
-                    INNER JOIN clientes c ON v.idcliente = c.idcliente
-                    ORDER BY v.idventa DESC";
-            return $this->searchAll($sql);
-        } catch (Exception $e) {
-            error_log("Error al obtener ventas: " . $e->getMessage());
-            throw new Exception("Error al obtener ventas: " . $e->getMessage());
-        }
-    }
-
-    // Método para obtener todas las ventas con información del cliente (para DataTables)
-    public function obtenerTodasLasVentasConCliente()
+   public function obtenerTodasLasVentasConCliente()
     {
         try {
             $sql = "SELECT v.idventa,
-                           CONCAT('V-', LPAD(v.idventa, 6, '0')) as nro_venta,
+                           CONCAT('V-', LPAD(v.idventa, 6, '0')) as nro_venta, -- o v.nro_venta si ya está formateado en la tabla
                            CONCAT(c.nombre, ' ', c.apellido) as cliente_nombre,
-                           DATE_FORMAT(v.fecha_venta, '%d/%m/%Y') as fecha_venta,
-                           FORMAT(v.total_venta, 2) as total_general,
+                           DATE_FORMAT(v.fecha_creacion, '%d/%m/%Y') as fecha_venta,
+                           FORMAT(v.total_general, 2) as total_formateado, -- total_general es el nombre de la columna
                            v.estatus
-                    FROM ventas v
-                    INNER JOIN clientes c ON v.idcliente = c.idcliente
+                    FROM venta v
+                    INNER JOIN cliente c ON v.idcliente = c.idcliente
                     ORDER BY v.idventa DESC";
             return $this->searchAll($sql);
         } catch (Exception $e) {
@@ -223,8 +206,8 @@ class VentasModel extends Mysql
         try {
             $sql = "SELECT v.idventa, v.fecha_venta, v.total_venta, v.estatus,
                            c.nombre as cliente_nombre, c.apellido as cliente_apellido
-                    FROM ventas v
-                    INNER JOIN clientes c ON v.idcliente = c.idcliente
+                    FROM venta v
+                    INNER JOIN cliente c ON v.idcliente = c.idcliente
                     WHERE v.idventa = ?";
             return $this->search($sql, [$idventa]);
         } catch (Exception $e) {
@@ -241,7 +224,7 @@ class VentasModel extends Mysql
                            dv.precio as detalle_precio, 
                            dv.total as detalle_total, 
                            p.nombre as producto_nombre
-                    FROM detalle_ventas dv
+                    FROM detalle_venta dv
                     INNER JOIN productos p ON dv.idproducto = p.idproducto
                     WHERE dv.idventa = ?
                     ORDER BY p.nombre";
@@ -258,13 +241,13 @@ class VentasModel extends Mysql
         return $this->executeTransaction(function($mysql) use ($idventa) {
             
             // Verificar que la venta existe
-            $venta = $this->search("SELECT COUNT(*) as count FROM ventas WHERE idventa = ?", [$idventa]);
+            $venta = $this->search("SELECT COUNT(*) as count FROM venta WHERE idventa = ?", [$idventa]);
             if ($venta['count'] == 0) {
                 throw new Exception("La venta especificada no existe.");
             }
             
             // En lugar de eliminar físicamente, cambiar el estatus
-            $sqlUpdate = "UPDATE ventas SET estatus = 'Inactivo', fecha_modificacion = NOW() WHERE idventa = ?";
+            $sqlUpdate = "UPDATE venta SET estatus = 'Inactivo', fecha_modificacion = NOW() WHERE idventa = ?";
             $result = $this->update($sqlUpdate, [$idventa]);
             
             if ($result > 0) {
@@ -280,7 +263,7 @@ class VentasModel extends Mysql
     {
         try {
             $sql = "SELECT idcliente as id, nombre, apellido, cedula
-                    FROM clientes 
+                    FROM cliente
                     WHERE estatus = 'Activo' 
                     AND (nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ?)
                     ORDER BY nombre, apellido

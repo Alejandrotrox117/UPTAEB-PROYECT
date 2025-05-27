@@ -1,9 +1,10 @@
 
-<?php headerAdmin($data); ?>
+<?php headerAdmin($data); 
+$permisos = $data['permisos'] ?? []; ?>
 <!-- Main Content -->
 <main class="flex-1 p-6">
   <div class="flex justify-between items-center">
-    <h2 class="text-xl font-semibold">Hola, Richard 👋</h2>
+    <h2 class="text-xl font-semibold">Hola, <?= $_SESSION['usuario_nombre'] ?? 'Usuario' ?> 👋</h2>
     <input type="text" placeholder="Search" class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none">
   </div>
 
@@ -13,9 +14,27 @@
 
     <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
       <div class="flex justify-between items-center mb-4">
+       <?php if ($permisos['puede_crear']): ?>
         <button id="abrirModalBtn" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
           Registrar Venta
         </button>
+        <?php else: ?>
+          <div class="text-gray-500 text-sm">
+          <i class="fas fa-lock mr-2"></i>No tiene permisos para registrar ventas
+        </div>
+        <?php endif; ?>
+        <?php if (!$permisos['puede_ver']): ?>
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm">Acceso limitado: Solo puede ver la información básica.</p>
+            </div>
+          </div>
+        </div>
+        <?php endif; ?>
       </div>
       <div style="overflow-x: auto;">
         <table id="Tablaventas" class="w-full text-left border-collapse mt-6 ">
@@ -26,7 +45,9 @@
               <th class="py-2">Fecha</th>
               <th class="py-2">Total</th>
               <th class="py-2">Estatus</th>
+              <?php if ($permisos['puede_editar'] || $permisos['puede_eliminar']): ?>
               <th class="py-2">Acciones</th>
+              <?php endif; ?>
             </tr>
           </thead>
           <tbody class="text-gray-900">
@@ -37,7 +58,7 @@
     </div>
 </main>
 </div>
-
+<?php if ($permisos['puede_crear']): ?>
 <!-- Modal para Registrar Nueva Venta -->
 <div id="ventaModal" class="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 opacity-0 pointer-events-none transparent backdrop-blur-[2px] transition-opacity duration-300">
   <div class="w-11/12 max-w-4xl max-h-screen overflow-hidden bg-white rounded-xl shadow-lg">
@@ -227,7 +248,17 @@
     </div>
   </div>
 </div>
+<?php endif; ?>
 
 
+<script>
+window.PERMISOS_USUARIO = {
+    puede_ver: <?= json_encode($permisos['puede_ver'] ?? false) ?>,
+    puede_crear: <?= json_encode($permisos['puede_crear'] ?? false) ?>,
+    puede_editar: <?= json_encode($permisos['puede_editar'] ?? false) ?>,
+    puede_eliminar: <?= json_encode($permisos['puede_eliminar'] ?? false) ?>,
+    acceso_total: <?= json_encode($permisos['acceso_total'] ?? false) ?>
+};
+</script>
 
 <?php footerAdmin($data); ?>

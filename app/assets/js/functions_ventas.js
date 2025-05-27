@@ -743,66 +743,113 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- Inicialización DataTable ---
-  function inicializarDataTable() {
-    if (typeof $ === 'undefined' || !$("#Tablaventas").length) {
-      console.warn("jQuery o tabla de ventas no encontrada");
-      return;
-    }
 
-    $("#Tablaventas").DataTable({
-      processing: true, 
-      serverSide: true,
-      ajax: { 
-        url: "ventas/getventasData", 
-        type: "GET", 
-        dataSrc: "data" 
+  function inicializarDataTable() {
+    let columnsConfig = [
+      { data: "nro_venta", title: "Nro. Venta" },
+      { data: "cliente_nombre", title: "Cliente" },
+      { data: "fecha_venta", title: "Fecha" },
+      { 
+        data: "total_general", 
+        title: "Total",
+        render: function(data, type, row) {
+          return parseFloat(data).toFixed(2); 
+        }
       },
-      columns: [
-        { data: "nro_venta", title: "Nro Venta" },
-        { data: "cliente_nombre", title: "Cliente" },
-        { data: "fecha_venta", title: "Fecha" },
-        { data: "total_general", title: "Total" },
-        { data: "estatus", title: "Estatus" },
-        { 
-          data: null, 
-          title: "Acciones", 
-          orderable: false, 
-          render: function (data, type, row) {
-            return `
-              <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" 
-                      data-idventa="${row.idventa}">
+      { 
+        data: "estatus", 
+        title: "Estatus",
+        render: function(data, type, row) {
+          if (data === 'Activo' || data === 'Pagada') { 
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${data}</span>`;
+          } else if (data === 'Inactivo' || data === 'Anulada') {
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">${data}</span>`;
+          } else {
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${data}</span>`;
+          }
+        }
+      },
+    ];
+
+    const tienePermisoEditar = typeof window.PERMISOS_USUARIO !== 'undefined' && window.PERMISOS_USUARIO.puede_editar;
+    const tienePermisoEliminar = typeof window.PERMISOS_USUARIO !== 'undefined' && window.PERMISOS_USUARIO.puede_eliminar;
+
+    if (tienePermisoEditar || tienePermisoEliminar) {
+      columnsConfig.push({
+        data: null,
+        title: "Acciones",
+        orderable: false,
+        searchable: false,
+        render: function (data, type, row) {
+          let botonesHtml = '<div class="flex justify-center items-center gap-x-2">'; 
+
+          if (tienePermisoEditar) {
+            botonesHtml += `
+              <button 
+                type="button"
+                class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full focus:outline-none" 
+                data-idventa="${row.idventa}" 
+                title="Editar Venta">
                 <i class="fas fa-edit"></i>
               </button>
-              <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" 
-                      data-idventa="${row.idventa}">
+            `;
+          }
+
+          if (tienePermisoEliminar) {
+            botonesHtml += `
+              <button 
+                type="button"
+                class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full focus:outline-none" 
+                data-idventa="${row.idventa}" 
+                title="Eliminar Venta">
                 <i class="fas fa-trash"></i>
               </button>
             `;
-          },
+          }
+          botonesHtml += '</div>';
+          return botonesHtml;
         },
-      ],
+      });
+    }
+
+    $("#Tablaventas").DataTable({
+      processing: true,
+      serverSide: false, 
+      ajax: {
+        url: "ventas/getventasData", 
+        type: "GET",
+        dataSrc: "data", 
+        error: function(xhr, status, error) { 
+          console.error("Error al cargar datos para DataTable:", status, error, xhr.responseText);
+          $("#Tablaventas_processing").hide(); 
+           var table = $("#Tablaventas").DataTable();
+           table.clear().draw();
+        }
+      },
+      columns: columnsConfig, 
       language: {
+        decimal: "",
+        emptyTable: "No hay información disponible en la tabla.",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
+        infoEmpty: "Mostrando 0 a 0 de 0 Entradas",
+        infoFiltered: "(Filtrado de _MAX_ total entradas)",
+        lengthMenu: "Mostrar _MENU_ Entradas",
+        loadingRecords: "Cargando...",
         processing: "Procesando...",
         search: "Buscar:",
-        lengthMenu: "Mostrar _MENU_ registros",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-        infoEmpty: "Mostrando 0 a 0 de 0 registros",
-        infoFiltered: "(filtrado de _MAX_ registros)",
-        loadingRecords: "Cargando...",
-        zeroRecords: "No se encontraron registros",
-        emptyTable: "No hay datos disponibles",
+        zeroRecords: "No se encontraron registros coincidentes.",
         paginate: {
           first: "Primero",
-          previous: "Anterior",
+          last: "Último",
           next: "Siguiente",
-          last: "Último"
-        }
+          previous: "Anterior",
+        },
       },
       destroy: true, 
       responsive: true, 
       pageLength: 10, 
-      order: [[0, "desc"]],
+      order: [[0, "desc"]], 
     });
   }
+  
 });
