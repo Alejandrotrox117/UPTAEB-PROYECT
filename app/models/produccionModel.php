@@ -25,119 +25,169 @@ class ProduccionModel extends Mysql
     }
 
     // Métodos Getters y Setters
-    public function getIdProduccion() { return $this->idproduccion; }
-    public function setIdProduccion($id) { $this->idproduccion = $id; }
+    public function getIdProduccion()
+    {
+        return $this->idproduccion;
+    }
+    public function setIdProduccion($id)
+    {
+        $this->idproduccion = $id;
+    }
 
-    public function getIdEmpleado() { return $this->idempleado; }
-    public function setIdEmpleado($id) { $this->idempleado = $id; }
+    public function getIdEmpleado()
+    {
+        return $this->idempleado;
+    }
+    public function setIdEmpleado($id)
+    {
+        $this->idempleado = $id;
+    }
 
-    public function getIdProducto() { return $this->idproducto; }
-    public function setIdProducto($id) { $this->idproducto = $id; }
+    public function getIdProducto()
+    {
+        return $this->idproducto;
+    }
+    public function setIdProducto($id)
+    {
+        $this->idproducto = $id;
+    }
 
-    public function getCantidadARealizar() { return $this->cantidad_a_realizar; }
-    public function setCantidadARealizar($cant) { $this->cantidad_a_realizar = $cant; }
+    public function getCantidadARealizar()
+    {
+        return $this->cantidad_a_realizar;
+    }
+    public function setCantidadARealizar($cant)
+    {
+        $this->cantidad_a_realizar = $cant;
+    }
 
-    public function getFechaInicio() { return $this->fecha_inicio; }
-    public function setFechaInicio($fecha) { $this->fecha_inicio = $fecha; }
+    public function getFechaInicio()
+    {
+        return $this->fecha_inicio;
+    }
+    public function setFechaInicio($fecha)
+    {
+        $this->fecha_inicio = $fecha;
+    }
 
-    public function getFechaFin() { return $this->fecha_fin; }
-    public function setFechaFin($fecha) { $this->fecha_fin = $fecha; }
+    public function getFechaFin()
+    {
+        return $this->fecha_fin;
+    }
+    public function setFechaFin($fecha)
+    {
+        $this->fecha_fin = $fecha;
+    }
 
-    public function getEstado() { return $this->estado; }
-    public function setEstado($estado) { $this->estado = $estado; }
+    public function getEstado()
+    {
+        return $this->estado;
+    }
+    public function setEstado($estado)
+    {
+        $this->estado = $estado;
+    }
 
-    public function getFechaCreacion() { return $this->fecha_creacion; }
-    public function setFechaCreacion($fecha) { $this->fecha_creacion = $fecha; }
+    public function getFechaCreacion()
+    {
+        return $this->fecha_creacion;
+    }
+    public function setFechaCreacion($fecha)
+    {
+        $this->fecha_creacion = $fecha;
+    }
 
-    public function getFechaModificacion() { return $this->fecha_modificacion; }
-    public function setFechaModificacion($fecha) { $this->fecha_modificacion = $fecha; }
+    public function getFechaModificacion()
+    {
+        return $this->fecha_modificacion;
+    }
+    public function setFechaModificacion($fecha)
+    {
+        $this->fecha_modificacion = $fecha;
+    }
 
     // Método para insertar una nueva producción
-    public function insertProduccion(array $data)
+   public function insertProduccion($data)
 {
     try {
-        $this->db->beginTransaction();
-
         // Insertar producción principal
         $sql = "INSERT INTO produccion (
-                    idempleado, 
-                    idproducto, 
-                    cantidad_a_realizar, 
-                    fecha_inicio, 
-                    fecha_fin, 
+                    idempleado,
+                    idproducto,
+                    cantidad_a_realizar,
+                    fecha_inicio,
+                    fecha_fin,
                     estado,
-                    numero_produccion,
                     fecha_creacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
-            $data['idempleado'] ?? null,
-            $data['idproducto'] ?? null,
-            $data['cantidad_a_realizar'] ?? null,
-            $data['fecha_inicio'] ?? null,
-            $data['fecha_fin'] ?? null,
-            $data['estado'] ?? 'borrador',
-            $this->generarNumeroProduccion(), // Método opcional
-            date("Y-m-d H:i:s") // fecha_creacion
+            $data['idempleado'],
+            $data['idproducto'],
+            $data['cantidad_a_realizar'],
+            $data['fecha_inicio'],
+            $data['fecha_fin'],
+            $data['estado'],
+            date("Y-m-d H:i:s") // Fecha de creación
         ]);
 
         $idproduccion = $this->db->lastInsertId();
 
-        // Si hay insumos, insertamos el detalle
+        // Insertar detalles de producción si existen
         if (!empty($data['insumos'])) {
             foreach ($data['insumos'] as $insumo) {
+                // Insertar detalle
                 $this->insertDetalleProduccion($idproduccion, $insumo);
             }
         }
 
-        $this->db->commit();
-        return $idproduccion;
-
+        return $idproduccion; // Retornamos el ID de producción
     } catch (Exception $e) {
-        $this->db->rollBack();
         error_log("ProduccionModel: Error al insertar producción - " . $e->getMessage());
         return false;
     }
 }
 
-// Método auxiliar para insertar cada fila del detalle
-private function insertDetalleProduccion($idproduccion, $insumo)
+
+  private function insertDetalleProduccion($idproduccion, $insumo)
 {
     try {
+        // Insertar detalle de producción
         $sql = "INSERT INTO detalle_produccion (
-                    idproduccion, 
-                    idproducto, 
-                    cantidad, 
-                    unidad_medida, 
-                    cantidad_consumida, 
+                    idproduccion,
+                    idproducto,
+                    cantidad,
+                    cantidad_consumida,
                     observaciones,
                     fecha_creacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                ) VALUES (?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             $idproduccion,
             $insumo['idproducto'],
             $insumo['cantidad'],
-            $insumo['unidad_medida'] ?? 'kg', // Por defecto kg
-            $insumo['cantidad_utilizada'] ?? 0,
-            $insumo['observaciones'] ?? '',
-            date("Y-m-d H:i:s")
+            $insumo['cantidad_utilizada'],
+            '', // Observaciones vacías
+            date("Y-m-d H:i:s") // Fecha de creación
         ]);
-        return true;
 
+        return true;
     } catch (Exception $e) {
         error_log("ProduccionModel: Error al insertar detalle - " . $e->getMessage());
         return false;
     }
 }
 
-// Generador de número de producción (opcional)
-private function generarNumeroProduccion()
-{
-    return "PROD-" . date("YmdHis");
-}
+
+
+
+    // Generador de número de producción (opcional)
+    private function generarNumeroProduccion()
+    {
+        return "PROD-" . date("YmdHis");
+    }
 
     // Método para actualizar una producción
     public function updateProduccion(array $data)
@@ -178,7 +228,6 @@ private function generarNumeroProduccion()
 
             $this->db->commit();
             return true;
-
         } catch (Exception $e) {
             $this->db->rollBack();
             error_log("ProduccionModel: Error al actualizar producción - " . $e->getMessage());
@@ -193,7 +242,6 @@ private function generarNumeroProduccion()
             $sql = "DELETE FROM detalle_produccion WHERE idproduccion = ?";
             $stmt = $this->db->prepare($sql);
             return $stmt->execute([$idproduccion]);
-
         } catch (Exception $e) {
             error_log("ProduccionModel: Error al eliminar detalle - " . $e->getMessage());
             return false;
@@ -315,7 +363,6 @@ private function generarNumeroProduccion()
 
             $this->db->commit();
             return true;
-
         } catch (Exception $e) {
             $this->db->rollBack();
             error_log("ProduccionModel: Error al ajustar inventario - " . $e->getMessage());

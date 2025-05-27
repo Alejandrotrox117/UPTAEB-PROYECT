@@ -8,9 +8,21 @@ document.addEventListener("DOMContentLoaded", function () {
   // Campos a validar en tiempo real
   const campos = [
     { id: "idproducto", regex: null, mensaje: "Debe seleccionar un producto." },
-    { id: "cantidad_a_realizar", regex: /^[0-9]+(\.[0-9]{1,2})?$/, mensaje: "La cantidad debe ser un número válido." },
-    { id: "fecha_inicio", regex: /^\d{4}-\d{2}-\d{2}$/, mensaje: "Fecha de inicio inválida. Use el formato YYYY-MM-DD." },
-    { id: "fecha_fin", regex: /^(\d{4}-\d{2}-\d{2})?$|null/, mensaje: "Fecha de fin inválida. Use el formato YYYY-MM-DD." }
+    {
+      id: "cantidad_a_realizar",
+      regex: /^[0-9]+(\.[0-9]{1,2})?$/,
+      mensaje: "La cantidad debe ser un número válido.",
+    },
+    {
+      id: "fecha_inicio",
+      regex: /^\d{4}-\d{2}-\d{2}$/,
+      mensaje: "Fecha de inicio inválida. Use el formato YYYY-MM-DD.",
+    },
+    {
+      id: "fecha_fin",
+      regex: /^(\d{4}-\d{2}-\d{2})?$|null/,
+      mensaje: "Fecha de fin inválida. Use el formato YYYY-MM-DD.",
+    },
   ];
 
   inicializarValidaciones(campos);
@@ -22,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ajax: {
       url: "produccion/getProduccionData",
       type: "GET",
-      dataSrc: "data"
+      dataSrc: "data",
     },
     columns: [
       { data: "idproduccion", title: "ID Producción" },
@@ -44,8 +56,8 @@ document.addEventListener("DOMContentLoaded", function () {
             <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" data-idproduccion="${row.idproduccion}">
               <i class="fas fa-trash"></i>
             </button>`;
-        }
-      }
+        },
+      },
     ],
     language: {
       decimal: "",
@@ -57,35 +69,37 @@ document.addEventListener("DOMContentLoaded", function () {
         first: "Primero",
         last: "Último",
         next: "Siguiente",
-        previous: "Anterior"
+        previous: "Anterior",
       },
-      zeroRecords: "Sin resultados encontrados"
+      zeroRecords: "Sin resultados encontrados",
     },
     destroy: true,
     responsive: true,
     pageLength: 10,
-    order: [[0, "asc"]]
+    order: [[0, "asc"]],
   });
-document.addEventListener("click", function (e) {
-  if (e.target.closest(".eliminarInsumoBtn")) {
-    e.target.closest("tr").remove();
-  }
-});
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".eliminarInsumoBtn")) {
+      e.target.closest("tr").remove();
+    }
+  });
 
-document.getElementById("agregarInsumoBtn").addEventListener("click", () => {
-  if (!window.productos) {
-    alert("Espere a que se carguen los productos...");
-    return;
-  }
+  document.getElementById("agregarInsumoBtn").addEventListener("click", () => {
+    if (!window.productos) {
+      alert("Espere a que se carguen los productos...");
+      return;
+    }
 
-  const tbody = document.getElementById("detalleProduccionBody");
+    const tbody = document.getElementById("detalleProduccionBody");
 
-  const tr = document.createElement("tr");
-  tr.innerHTML = `
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
     <td>
       <select name="idproducto_insumo[]" class="w-full border rounded p-2" required>
         <option value="">Seleccione un producto</option>
-        ${window.productos.map(p => `<option value="${p.idproducto}">${p.nombre}</option>`).join('')}
+        ${window.productos
+          .map((p) => `<option value="${p.idproducto}">${p.nombre}</option>`)
+          .join("")}
       </select>
     </td>
     <td>
@@ -101,101 +115,121 @@ document.getElementById("agregarInsumoBtn").addEventListener("click", () => {
       <button type="button" class="eliminarInsumoBtn text-red-500"><i class="fas fa-trash"></i></button>
     </td>
   `;
-  tbody.appendChild(tr);
-});
-  // Evento del botón Registrar
-  document.getElementById("registrarProduccionBtn").addEventListener("click", function () {
-    manejarRegistro(campos);
+    tbody.appendChild(tr);
   });
+  // Evento del botón Registrar
+  document
+    .getElementById("registrarProduccionBtn")
+    .addEventListener("click", function () {
+      manejarRegistro(campos);
+    });
 
   // Abrir modal
-  document.getElementById("abrirModalBtn").addEventListener("click", function () {
-    abrirModal("produccionModal");
-    cargarEmpleado();
-    cargarProducto();
-  });
+  document
+    .getElementById("abrirModalBtn")
+    .addEventListener("click", function () {
+      abrirModal("produccionModal");
+      cargarEmpleado();
+      cargarProducto();
+    });
 
   // Cerrar modal
-  document.getElementById("cerrarModalBtn").addEventListener("click", function () {
-    cerrarModal("produccionModal");
-  });
+  document
+    .getElementById("cerrarModalBtn")
+    .addEventListener("click", function () {
+      cerrarModal("produccionModal");
+    });
 
   // Manejador de envío del formulario
-  document.getElementById("produccionForm").addEventListener("submit", function (e) {
-  e.preventDefault(); // Evita el envío tradicional
+  document
+    .getElementById("produccionForm")
+    .addEventListener("submit", function (e) {
+      e.preventDefault(); // Evita el envío tradicional
 
-  const formData = new FormData(document.getElementById("produccionForm"));
-  const data = {};
-  formData.forEach((value, key) => {
-    if (!key.includes("[]")) {
-      data[key] = value;
-    }
-  });
-
-  // Agregar insumos manualmente como array de objetos
-  data.insumos = [];
-  document.querySelectorAll("#detalleProduccionBody tr").forEach(fila => {
-    const idproductoInsumo = fila.querySelector("select[name='idproducto_insumo[]']");
-    const cantidadInsumo = fila.querySelector("input[name='cantidad_insumo[]']");
-    const cantidadUtilizada = fila.querySelector("input[name='cantidad_utilizada[]']");
-
-    if (idproductoInsumo && cantidadInsumo && cantidadUtilizada) {
-      data.insumos.push({
-        idproducto: idproductoInsumo.value,
-        cantidad: cantidadInsumo.value,
-        cantidad_utilizada: cantidadUtilizada.value
+      const formData = new FormData(document.getElementById("produccionForm"));
+      const data = {};
+      formData.forEach((value, key) => {
+        if (!key.includes("[]")) {
+          data[key] = value;
+        }
       });
-    }
-  });
 
-  console.log("Datos a enviar:", data); // Depuración
+      // Agregar insumos manualmente como array de objetos
+      data.insumos = [];
+      document.querySelectorAll("#detalleProduccionBody tr").forEach((fila) => {
+        const idproductoInsumo = fila.querySelector(
+          "select[name='idproducto_insumo[]']"
+        );
+        const cantidadInsumo = fila.querySelector(
+          "input[name='cantidad_insumo[]']"
+        );
+        const cantidadUtilizada = fila.querySelector(
+          "input[name='cantidad_utilizada[]']"
+        );
 
-  const idproduccion = document.getElementById("idproduccion").value;
-  const url = idproduccion 
-    ? "produccion/updateProduccion" 
-    : "produccion/createProduccion";
-  const method = idproduccion ? "PUT" : "POST";
+        if (idproductoInsumo && cantidadInsumo && cantidadUtilizada) {
+          data.insumos.push({
+            idproducto: idproductoInsumo.value,
+            cantidad: cantidadInsumo.value,
+            cantidad_utilizada: cantidadUtilizada.value,
+          });
+        }
+      });
 
-  fetch(url, {
-    method: method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  })
-  .then(response => {
-    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-    return response.json();
-  })
-  .then(result => {
-    if (result.status) {
-      alert(result.message);
-      cerrarModalProduccion();
-      tablaProduccion.ajax.reload();
-    } else {
-      alert(result.message || "Error al procesar la solicitud.");
-    }
-  })
-  .catch(error => {
-    console.error("Error:", error);
-    alert("Ocurrió un error al procesar la solicitud.");
-  });
-});
+      console.log("Datos a enviar:", data); // Depuración
+
+      const idproduccion = document.getElementById("idproduccion").value;
+      const url = idproduccion
+        ? "produccion/updateProduccion"
+        : "produccion/createProduccion";
+      const method = idproduccion ? "PUT" : "POST";
+
+      fetch(url, {
+        method: method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+          return response.json();
+        })
+        .then((result) => {
+          if (result.status) {
+            alert(result.message);
+            cerrarModalProduccion();
+            tablaProduccion.ajax.reload();
+          } else {
+            alert(result.message || "Error al procesar la solicitud.");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Ocurrió un error al procesar la solicitud.");
+        });
+    });
 
   // Manejador de edición
   document.addEventListener("click", function (e) {
     if (e.target.closest(".editar-btn")) {
-      const idproduccion = e.target.closest(".editar-btn").getAttribute("data-idproduccion");
+      const idproduccion = e.target
+        .closest(".editar-btn")
+        .getAttribute("data-idproduccion");
       if (!idproduccion || isNaN(idproduccion)) {
         alert("ID de producción no válido.");
         return;
       }
       abrirModalProduccionParaEdicion(idproduccion);
+      cargarEmpleado();
+      cargarProducto();
     }
   });
 
   // Manejador de eliminación
   document.addEventListener("click", function (e) {
     if (e.target.closest(".eliminar-btn")) {
-      const idproduccion = e.target.closest(".eliminar-btn").getAttribute("data-idproduccion");
+      const idproduccion = e.target
+        .closest(".eliminar-btn")
+        .getAttribute("data-idproduccion");
       if (confirm("¿Estás seguro de eliminar esta producción?")) {
         eliminarProduccion(idproduccion);
       }
@@ -220,7 +254,7 @@ function validarCamposVacios(campos) {
         title: "¡Error!",
         text: `El campo "${campo.id}" no puede estar vacío.`,
         icon: "error",
-        confirmButtonText: "Aceptar"
+        confirmButtonText: "Aceptar",
       });
       formularioValido = false;
     }
@@ -237,49 +271,80 @@ function manejarRegistro(campos) {
   const form = document.getElementById("produccionForm");
   const formData = new FormData(form);
   const data = {};
+  const insumos = [];
 
   formData.forEach((value, key) => {
-    data[key] = value;
+    // Capturar insumos como arrays: idproducto_insumo[], cantidad_insumo[], cantidad_utilizada[]
+    if (key.includes("idproducto_insumo")) insumos.push({ idproducto: value });
   });
 
+  formData.forEach((value, key) => {
+    if (key.includes("cantidad_insumo")) {
+      insumos.forEach((item, i) => (item.cantidad = value.split(",")[i] ?? 0));
+    } else if (key.includes("cantidad_utilizada")) {
+      insumos.forEach(
+        (item, i) => (item.cantidad_utilizada = value.split(",")[i] ?? 0)
+      );
+    } else if (!key.includes("[]")) {
+      data[key] = value;
+    }
+  });
+  // Convertir campos con [] en arrays
+  for (const [key, value] of formData.entries()) {
+    if (key.endsWith("[]")) {
+      const cleanKey = key.replace("[]", "");
+      if (!data[cleanKey]) data[cleanKey] = [];
+      data[cleanKey].push(value);
+    } else {
+      data[key] = value;
+    }
+  }
+
+  data.insumos = insumos;
+
   const idproduccion = document.getElementById("idproduccion").value;
-  const url = idproduccion ? "produccion/updateProduccion" : "produccion/createProduccion";
+  const url = idproduccion
+    ? "produccion/updateProduccion"
+    : "produccion/createProduccion";
   const method = idproduccion ? "PUT" : "POST";
+
+  console.log("Datos a enviar:", JSON.stringify(data));
 
   fetch(url, {
     method: method,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   })
-  .then(response => {
-    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-    return response.json();
-  })
-  .then(result => {
-    if (result.status) {
-      alert(result.message);
-      cerrarModalProduccion();
-      tablaProduccion.ajax.reload();
-    } else {
-      alert(result.message);
-    }
-  })
-  .catch(error => {
-    console.error("Error:", error);
-    alert("Ocurrió un error al procesar la solicitud.");
-  });
+    .then((response) => {
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return response.json();
+    })
+    .then((result) => {
+      if (result.status) {
+        alert(result.message);
+        cerrarModalProduccion();
+        tablaProduccion.ajax.reload();
+      } else {
+        alert(result.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Ocurrió un error al procesar la solicitud.");
+    });
 }
 
 // Cargar empleado
 function cargarEmpleado() {
   return new Promise((resolve, reject) => {
     fetch("produccion/getEmpleado")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.status) {
           const selectEmpleado = document.getElementById("idempleado");
-          selectEmpleado.innerHTML = "<option value=''>Seleccione Empleado</option>";
-          data.data.forEach(emp => {
+          selectEmpleado.innerHTML =
+            "<option value=''>Seleccione Empleado</option>";
+          data.data.forEach((emp) => {
             const option = document.createElement("option");
             option.value = emp.idempleado;
             option.textContent = emp.nombre;
@@ -290,7 +355,7 @@ function cargarEmpleado() {
           reject("Error al cargar empleados.");
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error al cargar empleados:", err);
         reject("Error al cargar empleados.");
       });
@@ -301,12 +366,13 @@ function cargarEmpleado() {
 function cargarProducto() {
   return new Promise((resolve, reject) => {
     fetch("produccion/getProductos")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.status) {
           const selectProducto = document.getElementById("idproducto");
-          selectProducto.innerHTML = "<option value=''>Seleccione Producto</option>";
-          data.data.forEach(prod => {
+          selectProducto.innerHTML =
+            "<option value=''>Seleccione Producto</option>";
+          data.data.forEach((prod) => {
             const option = document.createElement("option");
             option.value = prod.idproducto;
             option.textContent = prod.nombre;
@@ -317,7 +383,7 @@ function cargarProducto() {
           reject("Error al cargar productos.");
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error al cargar productos:", err);
         reject("Error al cargar productos.");
       });
@@ -326,84 +392,94 @@ function cargarProducto() {
 
 // Cargar datos de producción al editar
 function abrirModalProduccionParaEdicion(idproduccion) {
-  // Después de cargar los datos principales
-fetch(`produccion/getDetalleProduccionData?idproduccion=${idproduccion}`)
-  .then(res => res.json())
-  .then(detalle => {
-    const tbody = document.getElementById("detalleProduccionBody");
-    tbody.innerHTML = ""; // Limpiar antes de cargar nuevos
+  const tbody = document.getElementById("detalleProduccionBody");
+  tbody.innerHTML = "";
 
-    if (detalle.data && detalle.data.length > 0) {
-      detalle.data.forEach(insumo => {
+  fetch(`produccion/getDetalleProduccionData?idproduccion=${idproduccion}`)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const type = res.headers.get("content-type");
+      if (type && type.includes("application/json")) {
+        return res.json();
+      } else {
+        return res.text().then(text => {
+          console.error("Respuesta no JSON:", text);
+          throw new Error("Respuesta no válida: " + text);
+        });
+      }
+    })
+    .then((detalle) => {
+      if (detalle.status && detalle.data.length > 0) {
+        detalle.data.forEach((insumo) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>
+              <select name="idproducto_insumo[]" class="w-full border rounded p-2" required>
+                ${window.productos.map(p => `<option value="${p.idproducto}" ${p.nombre === insumo.nombre_producto ? "selected" : ""}>${p.nombre}</option>`).join("")}
+              </select>
+            </td>
+            <td><input type="number" name="cantidad_insumo[]" class="w-full border rounded p-2" value="${insumo.cantidad}" required></td>
+            <td><input type="number" name="cantidad_utilizada[]" class="w-full border rounded p-2" value="${insumo.cantidad_consumida}" required></td>
+            <td><input type="text" name="observaciones[]" class="w-full border rounded p-2" value="${insumo.observaciones || ""}"></td>
+            <td><button type="button" class="eliminarInsumoBtn text-red-500"><i class="fas fa-trash"></i></button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>
-            <select name="idproducto_insumo[]" class="w-full border rounded p-2" required>
-              ${window.productos.map(p => `<option value="${p.idproducto}">${p.nombre}</option>`).join('')}
-            </select>
-          </td>
-          <td>
-            <input type="number" name="cantidad_insumo[]" class="w-full border rounded p-2" min="0" step="0.01" value="${insumo.cantidad}" required />
-          </td>
-          <td>
-            <input type="number" name="cantidad_utilizada[]" class="w-full border rounded p-2" min="0" step="0.01" value="${insumo.cantidad_consumida}" required />
-          </td>
-          <td>
-            <input type="text" name="observaciones[]" class="w-full border rounded p-2" value="${insumo.observaciones || ''}" />
-          </td>
-          <td>
-            <button type="button" class="eliminarInsumoBtn text-red-500"><i class="fas fa-trash"></i></button>
-          </td>
-        `;
+        tr.innerHTML = `<td colspan="5" class="text-center p-2">No hay insumos registrados.</td>`;
         tbody.appendChild(tr);
-      });
-    } else {
-      // Si no hay insumos, puedes dejar vacío o mostrar un mensaje
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="5" class="text-center p-2">No hay insumos registrados.</td>`;
-      tbody.appendChild(tr);
-    }
-  });
+      }
+    })
+    .catch(err => {
+      console.error("Error al obtener detalle:", err);
+      alert("Error al cargar los insumos.");
+    });
+
+  // Producción general
   fetch(`produccion/getProduccionById/${idproduccion}`)
     .then(res => res.json())
     .then(data => {
       if (data.status) {
-        const produccion = data.data;
-        document.getElementById("idproduccion").value = produccion.idproduccion || "";
-        document.getElementById("idempleado").value = produccion.idempleado || "";
-        document.getElementById("idproducto").value = produccion.idproducto || "";
-        document.getElementById("cantidad_a_realizar").value = produccion.cantidad_a_realizar || "";
-        document.getElementById("fecha_inicio").value = produccion.fecha_inicio || "";
-        document.getElementById("fecha_fin").value = produccion.fecha_fin || "";
-        document.getElementById("estado").value = produccion.estado || "";
+        const p = data.data;
+        document.getElementById("idproduccion").value = p.idproduccion;
+        document.getElementById("idempleado").value = p.idempleado;
+        document.getElementById("idproducto").value = p.idproducto;
+        document.getElementById("cantidad_a_realizar").value = p.cantidad_a_realizar;
+        document.getElementById("fecha_inicio").value = p.fecha_inicio;
+        document.getElementById("fecha_fin").value = p.fecha_fin;
+        document.getElementById("estado").value = p.estado;
+
         abrirModal("produccionModal");
       } else {
-        alert("Error al cargar los datos.");
+        alert("Producción no encontrada.");
       }
     })
     .catch(err => {
-      console.error("Error al cargar producción:", err);
-      alert("Ocurrió un error al cargar los datos.");
+      console.error("Error al obtener producción:", err);
+      alert("Error al cargar los datos de la producción.");
     });
 }
+
+
 
 // Eliminar producción
 function eliminarProduccion(idproduccion) {
   fetch("produccion/deleteProduccion", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idproduccion })
+    body: JSON.stringify({ idproduccion }),
   })
-  .then(res => res.json())
-  .then(result => {
-    if (result.status) {
-      alert(result.message);
-      tablaProduccion.ajax.reload();
-    } else {
-      alert(result.message);
-    }
-  })
-  .catch(err => console.error("Error al eliminar:", err));
+    .then((res) => res.json())
+    .then((result) => {
+      if (result.status) {
+        alert(result.message);
+        tablaProduccion.ajax.reload();
+      } else {
+        alert(result.message);
+      }
+    })
+    .catch((err) => console.error("Error al eliminar:", err));
 }
 
 // Cerrar modal
