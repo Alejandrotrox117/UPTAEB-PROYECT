@@ -1,391 +1,237 @@
 <?php
-require_once "app/core/conexion.php"; // Asegúrate que la ruta sea correcta
-require_once "app/core/mysql.php"; // Asegúrate que la ruta sea correcta
+require_once "app/core/conexion.php";
+require_once "app/core/mysql.php";
 
-class UsuariosModel extends Mysql
+class UsuariosModel extends mysql
 {
-    private $idusuario;
-    private $strNombreUsuario;
-    private $strApellido;
-    private $connect;
-
-    private $strEmail;
-    private $strToken;
-    private $strPassword;
-    private $intRol;
-    private $intStatus;
-
-    private $personaId;
-    private $nombre;
-    private $telefono;
-    private $direccion;
-
-    public function setTelefono(int $telefono) {
-        $this->telefono = $telefono;
-    }
-
-
-    // Getters
-    public function getIdUsuario(): int
-    {
-        return isset($this->idusuario) ? intval($this->idusuario) : 0;
-    }
-
-    public function get_connect()
-    {
-        return $this->connect;
-    }
-    public function getNombreUsuario(): string
-    {
-        return $this->strNombreUsuario;
-    }
-
-    public function getNombre(): string
-    {
-        return $this->nombre;
-    }
-
-    public function getApellido(): string
-    {
-        return $this->strApellido;
-    }
-
-    public function getEmail(): string
-    {
-        return $this->strEmail;
-    }
-
-    public function getToken(): string
-    {
-        return $this->strToken;
-    }
-
-    public function getPassword(): string
-    {
-        return $this->strPassword;
-    }
-
-    public function getRol(): int
-    {
-        return $this->intRol;
-    }
-
-    public function getStatus(): int
-    {
-        return $this->intStatus;
-    }
-
-    public function getIdPersona(): string
-    {
-        return $this->personaId;
-    }
-
-    public function getDireccion(): string
-    {
-        return $this->direccion;
-    }
-
-    public function getTelefono() {
-        return $this->telefono;
-    }
-
-    
-
-    // Setters
-    public function setIdUsuario(int $idusuario): void
-    {
-        $this->idusuario = $idusuario;
-    }
-
-    public function setNombreUsuario(string $nombreUsuario): void
-    {
-        $this->strNombreUsuario = $nombreUsuario;
-    }
-
-    public function setNombre(string $nombre): void
-    {
-        $this->nombre = $nombre;
-    }
-
-    public function setApellido(string $apellido): void
-    {
-        $this->strApellido = $apellido;
-    }
-
-    public function setEmail(string $email): void
-    {
-        $this->strEmail = $email;
-    }
-
-    public function setToken(string $token): void
-    {
-        $this->strToken = $token;
-    }
-
-    public function setPassword($password)
-    {
-        $this->strPassword = $password;
-    }
-
-    public function setRol(int $rol)
-    {
-        $this->intRol = $rol;
-    }
-
-    public function setStatus(int $estado): void
-    {
-        $this->intStatus = $estado;
-    }
-    public function set_connect($connect)
-    {
-        $this->connect = $connect;
-    }
-    public function setIdPersona($personaId)
-    {
-        $this->personaId = $personaId;
-    }
-
-    public function setDireccion($direccion)
-    {
-        $this->direccion = $direccion;
-    }
+    private $conexion;
+    private $dbPrincipal;
+    private $dbSeguridad;
 
     public function __construct()
     {
-        parent::__construct();
-        $this->set_connect((new Conexion())->get_conectSeguridad());
-
+        $this->conexion = new Conexion();
+        $this->conexion->connect();
+        $this->dbPrincipal = $this->conexion->get_conectGeneral();
+        $this->dbSeguridad = $this->conexion->get_conectSeguridad();
     }
 
-    public function insertUsuario(
-        int $rolId,
-        string $usuario,
-        string $password,
-        int $estado,
-        string $email,
-        string $idPersona
-    ) {
-        $this->setNombreUsuario($usuario);
-        $this->setEmail($email);
-        $this->setPassword($password);
-        $this->setStatus($estado);
-        $this->setRol($rolId);
-        $this->setIdPersona($idPersona);
-    
-        // Verificar si el email o nombre de usuario ya existen
-        $sql = "SELECT * FROM usuario WHERE correo = '{$this->getEmail()}' OR usuario = '{$this->getNombreUsuario()}'";
-        $request = $this->searchAllSeguridad($sql);
-    
-        if (empty($request)) {
-            $query_insert = "INSERT INTO usuario (rolId, usuario, clave, estado, correo, personaId) VALUES (?, ?, ?, ?, ?, ?)";
-            $arrData = array(
-                $this->getRol(),
-                $this->getNombreUsuario(),
-                $this->getPassword(),
-                $this->getStatus(),
-                $this->getEmail(),
-                $this->getIdPersona()
-
-            );
-            $request_insert = $this->insertSeguridad($query_insert, $arrData);
-            $response = $request_insert;
-        } 
-        else {
-            $response = false;
-        }
-    
-        return $response;
-    }
-
-    public function selectPersonaByCedula($cedula) {
-        $this->setIdPersona($cedula);
-        $sql = "SELECT * FROM persona WHERE personaId = '{$this->getIdPersona()}'";
-        $request = $this->search($sql);
-        return array($request);
-    }
-
-    public function insertPersona($cedula, $nombres, $apellidos, $telefono, $email, $direccion) {
-        $this->setIdPersona($cedula);
-        $this->setNombre($nombres);
-        $this->setApellido($apellidos);
-        $this->setTelefono($telefono);
-        $this->setEmail($email);
-        $this->setDireccion($direccion);
-        
-        $sql = "INSERT INTO persona (personaId, nombres, apellidos, telefono, email, direccion) VALUES (?, ?, ?, ?, ?, ?)";
-        $arrData = array( $this->getIdPersona(), $this->getNombre(), $this->getApellido(), $this->getTelefono(), $this->getEmail(), $this->getDireccion());
-        return $this->insertPerson($sql, $arrData);
-    }
-
-    public function PutInfoPerson($personaId, 
-                                    $txtnombres, 
-                                    $txtnombrespersonas, 
-                                    $txtapellidospersonas,
-                                    $txtdireccionpersonas,
-                                    int $txttelefonopersonas,
-                                    $email,
-                                    $txtpassword) {
-                    // Asignar valores a las propiedades de la clase
-                    $this->setIdPersona($personaId);
-                    $this->setNombreUsuario($txtnombres);
-                    $this->setNombre($txtnombrespersonas);
-                    $this->setApellido($txtapellidospersonas);
-                    $this->setDireccion($txtdireccionpersonas);
-                    $this->setTelefono($txttelefonopersonas); 
-                    $this->setEmail($email); 
-                    $this->setPassword($txtpassword);
-
-                    // Construir la consulta SQL
-                    $sql = "UPDATE db_celtech_seguridad.usuario u
-                            JOIN db_celtech.persona p ON u.personaId = p.personaId
-                            SET u.usuario = ?,
-                            p.nombres = ?,
-                            p.apellidos = ?, 
-                            p.direccion = ?,
-                            p.telefono = ?,
-                            p.email = ?,
-                            u.correo = ?";
-
-                    // Crear el array de parámetros
-                    $arr = [
-                    $this->getNombreUsuario(), 
-                    $this->getNombre(), 
-                    $this->getApellido(), 
-                    $this->getDireccion(),
-                    $this->getTelefono(),
-                    $this->getEmail(),
-                    $this->getEmail()
-                    ];
-
-                    // Agregar la contraseña si no está vacía
-                    if (!empty($txtpassword)) {
-                    $sql .= ", u.clave = ?";
-                    $arr[] = $this->getPassword();
-                    }
-
-                    // Agregar la condición WHERE
-                    $sql .= " WHERE u.personaId = ?";
-                    $arr[] = $this->getIdPersona();
-
-                    // Ejecutar la consulta
-                    $request = $this->updateSeguridad($sql, $arr);
-                    return $request;
-}
-
-    public function getIdUser($idusuario)
+    public function insertUsuario(array $data): array
     {
-        $this->setIdUsuario($idusuario);
-
-        $sql = "SELECT * FROM usuario WHERE idusuario = '{$this->getIdUsuario()}'";
-        $request = $this->searchAllSeguridad($sql);
-        return $request;
-    }
-    public function selectUsuario(int $idusuario)
-    {
-        $this->setIdUsuario($idusuario);
-        $sql = "SELECT u.idusuario, u.rolId, u.usuario, u.clave,u.token, u.correo, u.estado FROM usuario u WHERE u.idusuario = {$this->getIdUsuario()}";
-        $request = $this->searchSeguridad($sql);
-        return $request;
-    }
-
-    public function selectUsuarioPersona(int $idusuario)
-    {
-        $this->setIdUsuario($idusuario);
-                $sql = "SELECT u.idusuario, u.rolId, u.usuario, u.clave, u.token, u.correo, u.estado, r.rolId, r.nombre, p.personaId, p.nombres, p.apellidos, p.telefono, p.direccion 
-                FROM db_celtech_seguridad.usuario u
-                JOIN db_celtech_seguridad.rol r ON u.rolId = r.rolId
-                JOIN db_celtech.persona p ON u.personaId = p.personaId 
-                WHERE u.idusuario = {$this->getIdUsuario()}";
-        $request = $this->searchSeguridad($sql);
-        return $request;
-    }
-
-    public function selectUsuarios()
-    {
-        $whereAdmin = "";
-        if($_SESSION['idusuario'] != 1){
-            $whereAdmin = " WHERE idusuario != 1";
-        }
-        $sql = "SELECT * FROM usuario" . $whereAdmin;
-        $request = $this->searchAllSeguridad($sql);
-        return $request;
-    }
-
-    public function actualizarUsuario(
-        int $idusuario,
-        int $rolId,
-        string $usuario,
-        string $password,
-        int $estado,
-        string $email,
-        string $idPersona
-    ) {
-        $this->setIdUsuario($idusuario);
-        $this->setEmail($email);
-        $this->setPassword($password);
-        $this->setRol($rolId);
-        $this->setStatus($estado);
-        $this->setNombreUsuario($usuario);
-        $this->setIdPersona($idPersona);
-        $sql = "SELECT * FROM usuario WHERE (correo = '{$this->getEmail()}' AND idusuario != {$this->getIdUsuario()})";
-        $request = $this->searchAllSeguridad($sql);
-        if (!empty($request)) {
-            return "exist";
-        }
         try {
-            if (empty($request)) {
-                if ($this->getPassword() != "") {
-                    $sql = "UPDATE usuario SET idusuario=?,rolId=?,usuario=?, clave=?, estado=?,correo=?,personaId=? WHERE idusuario = {$this->getIdUsuario()}";
-                    $arrData = array(
-                        $this->getIdUsuario(),
-                        $this->getRol(),
-                        $this->getNombreUsuario(),
-                        $this->getPassword(),
-                        $this->getStatus(),
-                        $this->getEmail(),
-                        $this->getIdPersona()
-                    );
-                } else {
-                    $sql = "UPDATE usuario SET idusuario=?,rolId=?,usuario=?,estado=?,correo=?,personaId=? WHERE idusuario = {$this->getIdUsuario()}";
-                    $arrData = array(
-                        $this->getIdUsuario(),
-                        $this->getRol(),
-                        $this->getNombreUsuario(),
-                        $this->getStatus(),
-                        $this->getEmail(),
-                        $this->getIdPersona()  
-                    );
-                }
-                $request = $this->updateSeguridad($sql, $arrData);
-            }
-        } catch (Exception $e) {
-            // Manejo de errores
-            $request = "error";
-        }
-        return $request ?: false;
+            $this->dbSeguridad->beginTransaction();
 
+            $claveHasheada = password_hash($data['clave'], PASSWORD_DEFAULT);
+
+            $sql = "INSERT INTO usuario (idrol, usuario, clave, correo, personaId, estatus, token) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            
+            $valores = [
+                $data['idrol'],
+                $data['usuario'],
+                $claveHasheada,
+                $data['correo'],
+                $data['personaId'] ?: null,
+                'ACTIVO',
+                ''
+            ];
+            
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $insertExitoso = $stmt->execute($valores);
+
+            $idUsuarioInsertado = $this->dbSeguridad->lastInsertId();
+
+            if (!$idUsuarioInsertado) {
+                $this->dbSeguridad->rollBack();
+                error_log("Error: No se pudo obtener el lastInsertId para el usuario.");
+                return [
+                    'status' => false, 
+                    'message' => 'Error al obtener ID de usuario tras registro.',
+                    'usuario_id' => null
+                ];
+            }
+
+            $this->dbSeguridad->commit();
+
+            return [
+                'status' => true, 
+                'message' => 'Usuario registrado exitosamente (ID: ' . $idUsuarioInsertado . ').',
+                'usuario_id' => $idUsuarioInsertado
+            ];
+
+        } catch (PDOException $e) {
+            if ($this->dbSeguridad->inTransaction()) {
+                $this->dbSeguridad->rollBack();
+            }
+            error_log("Error al insertar usuario: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error de base de datos al registrar usuario: ' . $e->getMessage(),
+                'usuario_id' => null
+            ];
+        }
     }
 
-    public function deleteUsuario(int $idusuario)
+    public function updateUsuario(int $idusuario, array $data): array
     {
-        $this->setIdUsuario($idusuario);
-        $query = "SELECT * FROM usuario WHERE idusuario = {$this->getIdUsuario()}";
-        $request = $this->searchAllSeguridad($query);
-    
-        if (!empty($request)) {
-            $sql = "UPDATE usuario SET estado = 0 WHERE idusuario = {$this->getIdUsuario()}";
-            $request = $this->deleteSeguridad($sql);
-    
-            if ($request) {
-                $arrResponse = array("status" => true, "msg" => "Usuario desactivado correctamente.");
-            } else {
-                $arrResponse = array("status" => false, "msg" => "No se pudo eliminar el usuario.");
+        try {
+            $this->dbSeguridad->beginTransaction();
+
+            $sql = "UPDATE usuario SET idrol = ?, usuario = ?, correo = ?, personaId = ?";
+            $valores = [
+                $data['idrol'],
+                $data['usuario'],
+                $data['correo'],
+                $data['personaId'] ?: null
+            ];
+
+            // Solo actualizar clave si se proporciona
+            if (!empty($data['clave'])) {
+                $claveHasheada = password_hash($data['clave'], PASSWORD_DEFAULT);
+                $sql .= ", clave = ?";
+                $valores[] = $claveHasheada;
             }
-        } else {
-            $arrResponse = array("status" => false, "msg" => "Usuario no encontrado.");
+
+            $sql .= " WHERE idusuario = ?";
+            $valores[] = $idusuario;
+            
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $updateExitoso = $stmt->execute($valores);
+
+            if (!$updateExitoso || $stmt->rowCount() === 0) {
+                $this->dbSeguridad->rollBack();
+                return [
+                    'status' => false, 
+                    'message' => 'No se pudo actualizar el usuario o no se realizaron cambios.'
+                ];
+            }
+
+            $this->dbSeguridad->commit();
+
+            return [
+                'status' => true, 
+                'message' => 'Usuario actualizado exitosamente.'
+            ];
+
+        } catch (PDOException $e) {
+            if ($this->dbSeguridad->inTransaction()) {
+                $this->dbSeguridad->rollBack();
+            }
+            error_log("Error al actualizar usuario: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error de base de datos al actualizar usuario: ' . $e->getMessage()
+            ];
         }
-    
-        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-        exit();
+    }
+
+    public function selectUsuarioById(int $idusuario)
+    {
+        $sql = "SELECT 
+                    u.idusuario, 
+                    u.idrol, 
+                    u.usuario, 
+                    u.correo, 
+                    u.personaId, 
+                    u.estatus,
+                    r.nombre AS rol_nombre,
+                    p.nombre AS persona_nombre,
+                    p.apellido AS persona_apellido,
+                    p.identificacion AS persona_cedula,
+                    CONCAT(p.nombre, ' ', p.apellido) AS persona_nombre_completo
+                FROM usuario u
+                LEFT JOIN roles r ON u.idrol = r.idrol
+                LEFT JOIN {$this->conexion->getDatabaseGeneral()}.personas p ON u.personaId = p.identificacion
+                WHERE u.idusuario = ?";
+        try {
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute([$idusuario]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("UsuariosModel::selectUsuarioById -> " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteUsuarioById(int $idusuario): bool
+    {
+        try {
+            $this->dbSeguridad->beginTransaction();
+
+            $sql = "UPDATE usuario SET estatus = 'INACTIVO' WHERE idusuario = ?";
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute([$idusuario]);
+            
+            $this->dbSeguridad->commit();
+            return $stmt->rowCount() > 0;
+
+        } catch (PDOException $e) {
+            $this->dbSeguridad->rollBack();
+            error_log("UsuariosModel::deleteUsuarioById -> " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function selectAllUsuariosActivos()
+    {
+        $sql = "SELECT 
+                    u.idusuario, 
+                    u.usuario, 
+                    u.correo, 
+                    u.estatus,
+                    r.nombre AS rol_nombre,
+                    p.nombre AS persona_nombre,
+                    p.apellido AS persona_apellido,
+                    CONCAT(p.nombre, ' ', p.apellido) AS persona_nombre_completo
+                FROM usuario u
+                LEFT JOIN roles r ON u.idrol = r.idrol
+                LEFT JOIN {$this->conexion->getDatabaseGeneral()}.personas p ON u.personaId = p.identificacion
+                WHERE u.estatus = 'ACTIVO'
+                ORDER BY u.usuario ASC";
+
+        try {
+            $stmt = $this->dbSeguridad->query($sql);
+            $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ["status" => true, "message" => "Usuarios obtenidos.", "data" => $usuarios];
+        } catch (PDOException $e) {
+            error_log("UsuariosModel::selectAllUsuariosActivos - Error al seleccionar usuarios: " . $e->getMessage());
+            return ["status" => false, "message" => "Error al obtener usuarios: " . $e->getMessage(), "data" => []];
+        }
+    }
+
+    public function selectAllRoles()
+    {
+        $sql = "SELECT idrol, nombre FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC";
+        
+        try {
+            $stmt = $this->dbSeguridad->query($sql);
+            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ["status" => true, "message" => "Roles obtenidos.", "data" => $roles];
+        } catch (PDOException $e) {
+            error_log("UsuariosModel::selectAllRoles - Error al seleccionar roles: " . $e->getMessage());
+            return ["status" => false, "message" => "Error al obtener roles: " . $e->getMessage(), "data" => []];
+        }
+    }
+
+    public function selectAllPersonasActivas()
+    {
+        $sql = "SELECT 
+                    idpersona, 
+                    identificacion, 
+                    CONCAT(nombre, ' ', apellido) AS nombre_completo,
+                    nombre,
+                    apellido
+                FROM {$this->conexion->getDatabaseGeneral()}.personas 
+                WHERE estatus = 'ACTIVO'
+                ORDER BY nombre ASC, apellido ASC";
+        
+        try {
+            $stmt = $this->dbSeguridad->query($sql);
+            $personas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ["status" => true, "message" => "Personas obtenidas.", "data" => $personas];
+        } catch (PDOException $e) {
+            error_log("UsuariosModel::selectAllPersonasActivas - Error al seleccionar personas: " . $e->getMessage());
+            return ["status" => false, "message" => "Error al obtener personas: " . $e->getMessage(), "data" => []];
+        }
     }
 }
+?>

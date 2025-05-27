@@ -190,6 +190,14 @@
               </summary>
               <ul class="ml-5 mt-1 space-y-1">
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/usuarios" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-user-shield icon"></i></span>
+                    <span class="ml-5">Usuarios</span>
+                  </a>
+                </li>
+              </ul>
+              <ul class="ml-5 mt-1 space-y-1">
+                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/roles" class="flex items-center text-sm">
                     <span><i class="fa-solid fa-user-shield icon"></i></span>
                     <span class="ml-5">Roles</span>
