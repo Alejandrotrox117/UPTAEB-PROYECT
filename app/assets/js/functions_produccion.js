@@ -1,34 +1,18 @@
 import { abrirModal, cerrarModal } from "./exporthelpers.js";
-import { expresiones, inicializarValidaciones } from "./validaciones.js";
-import { validarCampo } from "./validaciones.js";
-
-let tablaProduccion;
+import {
+  expresiones,
+  inicializarValidaciones,
+  validarCamposVacios,
+  validarSelect,
+  validarFecha,
+  limpiarValidaciones,
+  cargarSelect,
+  registrarEntidad,
+} from "./validaciones.js";
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Campos a validar en tiempo real
-  const campos = [
-    { id: "idproducto", regex: null, mensaje: "Debe seleccionar un producto." },
-    {
-      id: "cantidad_a_realizar",
-      regex: /^[0-9]+(\.[0-9]{1,2})?$/,
-      mensaje: "La cantidad debe ser un número válido.",
-    },
-    {
-      id: "fecha_inicio",
-      regex: /^\d{4}-\d{2}-\d{2}$/,
-      mensaje: "Fecha de inicio inválida. Use el formato YYYY-MM-DD.",
-    },
-    {
-      id: "fecha_fin",
-      regex: /^(\d{4}-\d{2}-\d{2})?$|null/,
-      mensaje: "Fecha de fin inválida. Use el formato YYYY-MM-DD.",
-    },
-  ];
-
-  inicializarValidaciones(campos);
-
   // Inicialización de DataTables
-  tablaProduccion = $("#TablaProduccion").DataTable({
+  $("#TablaProduccion").DataTable({
     processing: true,
     serverSide: true,
     ajax: {
@@ -78,415 +62,391 @@ document.addEventListener("DOMContentLoaded", function () {
     pageLength: 10,
     order: [[0, "asc"]],
   });
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".eliminarInsumoBtn")) {
-      e.target.closest("tr").remove();
-    }
-  });
+  // Campos a validar en el formulario de producción
 
-  document.getElementById("agregarInsumoBtn").addEventListener("click", () => {
-    if (!window.productos) {
-      alert("Espere a que se carguen los productos...");
+  let detalleProduccionItems = []; // Lista global de ítems del detalle
+
+  const camposProduccion = [
+    {
+      id: "fecha_inicio",
+      tipo: "date",
+      mensajes: {
+        vacio: "La fecha de inicio es obligatoria.",
+        fechaPosterior: "La fecha no puede ser posterior a hoy.",
+      },
+    },
+    {
+      id: "estado",
+      tipo: "select",
+      mensajes: {
+        vacio: "Debe seleccionar un estado.",
+      },
+    },
+    {
+      id: "idempleado_seleccionado",
+      tipo: "hidden",
+      mensajes: {
+        vacio: "Debe seleccionar un empleado.",
+      },
+    },
+    {
+      id: "idproducto",
+      tipo: "hidden",
+      mensajes: {
+        vacio: "Debe seleccionar un producto terminado.",
+      },
+    },
+  ];
+
+  // BOTÓN PARA ABRIR EL MODAL DE PRODUCCIÓN
+  document
+    .getElementById("abrirModalProduccion")
+    .addEventListener("click", function () {
+      abrirModal("produccionModal");
+
+      // Cargar select de PRODUCTO TERMINADO (el principal)
+      cargarSelect({
+        selectId: "select_producto_principal",
+        endpoint: "productos/getListaProductosParaFormulario",
+        optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
+        optionValueFn: (p) => p.idproducto || "",
+        placeholder: "Seleccione un producto...",
+        onLoaded: (productos) => {
+          listaProductos = productos;
+        },
+      });
+
+      // Inicializar buscador de empleados
+      inicializarBuscadorEmpleado();
+
+      // Inicializar validaciones
+      inicializarValidaciones(camposProduccion, "formRegistrarProduccion");
+    });
+
+  // BOTÓN PARA CERRAR EL MODAL
+  document
+    .getElementById("btnCerrarModalProduccion")
+    .addEventListener("click", function () {
+      cerrarModal("produccionModal");
+      limpiarValidaciones(camposProduccion, "formRegistrarProduccion");
+      limpiarFormularioProduccion();
+    });
+
+  // BOTÓN CANCELAR DEL MODAL
+  document
+    .getElementById("btnCancelarProduccion")
+    .addEventListener("click", function () {
+      cerrarModal("produccionModal");
+      limpiarValidaciones(camposProduccion, "formRegistrarProduccion");
+      limpiarFormularioProduccion();
+    });
+
+  // ACTUALIZAR CAMPO OCULTO CUANDO SE SELECCIONA UN PRODUCTO PRINCIPAL
+  const selectProductoPrincipal = document.getElementById(
+    "select_producto_principal"
+  );
+  if (selectProductoPrincipal) {
+    selectProductoPrincipal.addEventListener("change", function () {
+      const selectedOption = this.options[this.selectedIndex];
+      const hiddenInput = document.getElementById("idproducto");
+      if (selectedOption.value) {
+        hiddenInput.value = selectedOption.value;
+      } else {
+        hiddenInput.value = "";
+      }
+    });
+  }
+
+  // BOTÓN AGREGAR INSUMOS AL DETALLE
+  document
+    .getElementById("btnAgregarProductoDetalleProduccion")
+    .addEventListener("click", function () {
+      const selectInsumo = document.getElementById(
+        "select_producto_agregar_detalle"
+      );
+      const selectedOption = selectInsumo.options[selectInsumo.selectedIndex];
+
+      if (!selectedOption.value) {
+        Swal.fire("Atención", "Seleccione un insumo.", "warning");
+        return;
+      }
+
+      const idproducto = selectedOption.value;
+      const nombreProducto = selectedOption.textContent;
+
+      // Verificar si ya existe
+      if (
+        detalleProduccionItems.some((item) => item.idproducto === idproducto)
+      ) {
+        Swal.fire("Atención", "Este insumo ya fue agregado.", "warning");
+        return;
+      }
+
+      detalleProduccionItems.push({
+        idproducto: idproducto,
+        nombre: nombreProducto,
+        cantidad: 1,
+        cantidad_consumida: 0,
+        observaciones: "",
+      });
+
+      renderizarTablaDetalleProduccion();
+      selectInsumo.value = ""; // Limpiar select
+    });
+
+  // BOTÓN GUARDAR PRODUCCIÓN
+ document.getElementById("btnGuardarProduccion").addEventListener("click", function () {
+    if (!validarCamposVacios(camposProduccion, "formRegistrarProduccion")) return;
+
+    // Validar selects
+    camposProduccion.forEach((campo) => {
+        if (campo.tipo === "select") {
+            validarSelect(campo.id, campo.mensajes, "formRegistrarProduccion");
+        }
+    });
+
+    // Validar insumos
+    if (detalleProduccionItems.length === 0) {
+        Swal.fire("Atención", "Debe agregar al menos un insumo al detalle.", "warning");
+        return;
+    }
+
+    const form = document.getElementById("formRegistrarProduccion");
+    const formData = new FormData(form);
+
+    // Obtener valores directamente del DOM para asegurarlos
+    const idempleado_seleccionado = document.getElementById("idempleado_seleccionado")?.value.trim();
+    const idproducto = document.getElementById("select_producto")?.value.trim();
+    const cantidad_a_realizar = document.getElementById("cantidad_a_realizar")?.value.trim();
+    const fecha_inicio = document.getElementById("fecha_inicio")?.value;
+    const fecha_fin = document.getElementById("fecha_fin")?.value || null;
+    const estado = document.getElementById("estado")?.value || "borrador";
+const data = {
+        idempleado: idempleado_seleccionado,
+        idproducto,
+        cantidad_a_realizar,
+        fecha_inicio,
+        fecha_fin,
+        estado,
+        insumos: detalleProduccionItems
+    };
+
+    console.log("Datos completos a enviar:", data);
+    // Validación manual de campos obligatorios
+    if (!idproducto || !cantidad_a_realizar || !fecha_inicio) {
+        Swal.fire("Error", "Faltan campos obligatorios.", "error");
+        console.warn("Campos faltantes:", { idproducto, cantidad_a_realizar, fecha_inicio });
+        return;
+    }
+
+    // Enviar también los insumos como array, no como string JSON
+    
+
+    // Registrar producción
+   // Enviar datos al servidor con fetch()
+fetch("produccion/createProduccion", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(data)
+})
+.then(res => res.json())
+.then(result => {
+  if (result.status) {
+    Swal.fire("Éxito", result.message, "success");
+    $("#TablaProducciones").DataTable().ajax.reload();
+    cerrarModal("produccionModal");
+    limpiarFormularioProduccion();
+  } else {
+    Swal.fire("Error", result.message, "error");
+  }
+})
+.catch(err => {
+  console.error("Error al enviar:", err);
+  Swal.fire("Error", "Hubo un problema al procesar la solicitud.", "error");
+});
+});
+
+  // FUNCIÓN PARA INICIALIZAR BUSCADOR DE EMPLEADOS
+  function inicializarBuscadorEmpleado() {
+    const inputCriterioEmpleado = document.getElementById(
+      "inputCriterioEmpleado"
+    );
+    const btnBuscarEmpleado = document.getElementById("btnBuscarEmpleado");
+    const listaResultadosEmpleado = document.getElementById(
+      "listaResultadosEmpleado"
+    );
+    const inputIdEmpleado = document.getElementById("idempleado_seleccionado");
+    const divInfoEmpleado = document.getElementById(
+      "empleado_seleccionado_info"
+    );
+
+    if (!btnBuscarEmpleado || !inputCriterioEmpleado) return;
+
+    btnBuscarEmpleado.addEventListener("click", async function () {
+      const criterio = inputCriterioEmpleado.value.trim();
+      if (criterio.length < 2) {
+        Swal.fire(
+          "Atención",
+          "Ingrese al menos 2 caracteres para buscar.",
+          "warning"
+        );
+        return;
+      }
+
+      listaResultadosEmpleado.innerHTML =
+        '<div class="p-2 text-xs text-gray-500">Buscando...</div>';
+      listaResultadosEmpleado.classList.remove("hidden");
+
+      try {
+        const response = await fetch(`produccion/getEmpleado`);
+        const data = await response.json(); // ✅ Aquí defines 'data'
+
+        listaResultadosEmpleado.innerHTML = "";
+
+        if (data.status && Array.isArray(data.data)) {
+          // ✅ Ahora sí puedes usar data
+          data.data.forEach((emp) => {
+            const itemDiv = document.createElement("div");
+            itemDiv.textContent = `${emp.nombre} ${emp.apellido} (${emp.identificacion})`;
+            itemDiv.dataset.id = emp.idempleado;
+            itemDiv.dataset.nombre = emp.nombre;
+            itemDiv.dataset.apellido = emp.apellido;
+            itemDiv.dataset.cedula = emp.identificacion;
+
+            itemDiv.addEventListener("click", function () {
+              inputIdEmpleado.value = this.dataset.id;
+              divInfoEmpleado.innerHTML = `Sel: <strong>${this.dataset.nombre} ${this.dataset.apellido}</strong> (C.I.: ${this.dataset.cedula})`;
+              divInfoEmpleado.classList.remove("hidden");
+              inputCriterioEmpleado.value = this.textContent;
+              listaResultadosEmpleado.classList.add("hidden");
+              listaResultadosEmpleado.innerHTML = "";
+            });
+
+            listaResultadosEmpleado.appendChild(itemDiv);
+          });
+        } else {
+          listaResultadosEmpleado.innerHTML =
+            '<div class="p-2 text-xs text-gray-500">No se encontraron empleados.</div>';
+        }
+      } catch (error) {
+        console.error("Error al buscar empleados:", error);
+        listaResultadosEmpleado.innerHTML =
+          '<div class="p-2 text-xs text-red-500">Error al buscar. Intente de nuevo.</div>';
+      }
+    });
+
+    inputCriterioEmpleado.addEventListener("input", function () {
+      inputIdEmpleado.value = "";
+      divInfoEmpleado.classList.add("hidden");
+      listaResultadosEmpleado.classList.add("hidden");
+    });
+  }
+
+  // RENDERIZAR TABLA DE DETALLE
+  function renderizarTablaDetalleProduccion() {
+    const tbody = document.getElementById("cuerpoTablaDetalleProduccion");
+    const noDetallesMensaje = document.getElementById(
+      "noDetallesMensajeProduccion"
+    );
+
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    if (detalleProduccionItems.length === 0) {
+      noDetallesMensaje.classList.remove("hidden");
       return;
     }
 
-    const tbody = document.getElementById("detalleProduccionBody");
+    noDetallesMensaje.classList.add("hidden");
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-    <td>
-      <select name="idproducto_insumo[]" class="w-full border rounded p-2" required>
-        <option value="">Seleccione un producto</option>
-        ${window.productos
-          .map((p) => `<option value="${p.idproducto}">${p.nombre}</option>`)
-          .join("")}
-      </select>
-    </td>
-    <td>
-      <input type="number" name="cantidad_insumo[]" class="w-full border rounded p-2" min="0" step="0.01" required />
-    </td>
-    <td>
-      <input type="number" name="cantidad_utilizada[]" class="w-full border rounded p-2" min="0" step="0.01" required />
-    </td>
-    <td>
-      <input type="text" name="observaciones[]" class="w-full border rounded p-2" />
-    </td>
-    <td>
-      <button type="button" class="eliminarInsumoBtn text-red-500"><i class="fas fa-trash"></i></button>
-    </td>
-  `;
-    tbody.appendChild(tr);
-  });
-  // Evento del botón Registrar
-  document
-    .getElementById("registrarProduccionBtn")
-    .addEventListener("click", function () {
-      manejarRegistro(campos);
+    detalleProduccionItems.forEach((item, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="px-3 py-2">${item.nombre}</td>
+        <td class="px-3 py-2"><input type="number" value="${item.cantidad}" min="1" step="1" class="w-24 border rounded-md px-2 py-1 text-sm cantidad-requerida-input" data-index="${index}"></td>
+        <td class="px-3 py-2"><input type="number" value="${item.cantidad_consumida}" min="0" step="1" class="w-24 border rounded-md px-2 py-1 text-sm cantidad-usada-input" data-index="${index}"></td>
+        <td class="px-3 py-2"><input type="text" value="${item.observaciones}" class="w-full border rounded-md px-2 py-1 text-sm observaciones-input" data-index="${index}"></td>
+        <td class="px-3 py-2 text-center">
+          <button class="eliminar-detalle-btn text-red-500 hover:text-red-700" data-index="${index}">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
 
-  // Abrir modal
-  document
-    .getElementById("abrirModalBtn")
-    .addEventListener("click", function () {
-      abrirModal("produccionModal");
-      cargarEmpleado();
-      cargarProducto();
-    });
-
-  // Cerrar modal
-  document
-    .getElementById("cerrarModalBtn")
-    .addEventListener("click", function () {
-      cerrarModal("produccionModal");
-    });
-
-  // Manejador de envío del formulario
-  document
-    .getElementById("produccionForm")
-    .addEventListener("submit", function (e) {
-      e.preventDefault(); // Evita el envío tradicional
-
-      const formData = new FormData(document.getElementById("produccionForm"));
-      const data = {};
-      formData.forEach((value, key) => {
-        if (!key.includes("[]")) {
-          data[key] = value;
-        }
+    // Eventos de edición
+    document.querySelectorAll(".cantidad-requerida-input").forEach((input) => {
+      input.addEventListener("input", function () {
+        const index = parseInt(this.getAttribute("data-index"));
+        detalleProduccionItems[index].cantidad = parseFloat(this.value) || 1;
       });
-
-      // Agregar insumos manualmente como array de objetos
-      data.insumos = [];
-      document.querySelectorAll("#detalleProduccionBody tr").forEach((fila) => {
-        const idproductoInsumo = fila.querySelector(
-          "select[name='idproducto_insumo[]']"
-        );
-        const cantidadInsumo = fila.querySelector(
-          "input[name='cantidad_insumo[]']"
-        );
-        const cantidadUtilizada = fila.querySelector(
-          "input[name='cantidad_utilizada[]']"
-        );
-
-        if (idproductoInsumo && cantidadInsumo && cantidadUtilizada) {
-          data.insumos.push({
-            idproducto: idproductoInsumo.value,
-            cantidad: cantidadInsumo.value,
-            cantidad_utilizada: cantidadUtilizada.value,
-          });
-        }
-      });
-
-      console.log("Datos a enviar:", data); // Depuración
-
-      const idproduccion = document.getElementById("idproduccion").value;
-      const url = idproduccion
-        ? "produccion/updateProduccion"
-        : "produccion/createProduccion";
-      const method = idproduccion ? "PUT" : "POST";
-
-      fetch(url, {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-        .then((response) => {
-          if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-          return response.json();
-        })
-        .then((result) => {
-          if (result.status) {
-            alert(result.message);
-            cerrarModalProduccion();
-            tablaProduccion.ajax.reload();
-          } else {
-            alert(result.message || "Error al procesar la solicitud.");
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          alert("Ocurrió un error al procesar la solicitud.");
-        });
     });
 
-  // Manejador de edición
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".editar-btn")) {
-      const idproduccion = e.target
-        .closest(".editar-btn")
-        .getAttribute("data-idproduccion");
-      if (!idproduccion || isNaN(idproduccion)) {
-        alert("ID de producción no válido.");
-        return;
-      }
-      abrirModalProduccionParaEdicion(idproduccion);
-      cargarEmpleado();
-      cargarProducto();
-    }
-  });
+    document.querySelectorAll(".cantidad-usada-input").forEach((input) => {
+      input.addEventListener("input", function () {
+        const index = parseInt(this.getAttribute("data-index"));
+        detalleProduccionItems[index].cantidad_consumida =
+          parseFloat(this.value) || 0;
+      });
+    });
 
-  // Manejador de eliminación
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".eliminar-btn")) {
-      const idproduccion = e.target
-        .closest(".eliminar-btn")
-        .getAttribute("data-idproduccion");
-      if (confirm("¿Estás seguro de eliminar esta producción?")) {
-        eliminarProduccion(idproduccion);
-      }
-    }
-  });
+    document.querySelectorAll(".observaciones-input").forEach((input) => {
+      input.addEventListener("input", function () {
+        const index = parseInt(this.getAttribute("data-index"));
+        detalleProduccionItems[index].observaciones = this.value;
+      });
+    });
+
+    document.querySelectorAll(".eliminar-detalle-btn").forEach((btn) => {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const index = parseInt(this.getAttribute("data-index"));
+        detalleProduccionItems.splice(index, 1);
+        renderizarTablaDetalleProduccion();
+      });
+    });
+  }
+
+  // CARGAR SELECT DE INSUMOS (para el detalle)
+  const selectInsumos = document.getElementById(
+    "select_producto_agregar_detalle"
+  );
+  if (selectInsumos) {
+    cargarSelect({
+      selectId: "select_producto_agregar_detalle",
+      endpoint: "productos/getListaProductosParaFormulario",
+      optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
+      optionValueFn: (p) => p.idproducto || "",
+      placeholder: "Seleccione un insumo...",
+      onLoaded: (productos) => {
+        // Puedes filtrar aquí si deseas solo insumos o categorías específicas
+      },
+    });
+  }
+  // CARGAR SELECT DE INSUMOS (para el detalle)
+  const selectProductoterminado = document.getElementById("select_producto");
+  if (selectInsumos) {
+    cargarSelect({
+      selectId: "select_producto",
+      endpoint: "productos/getListaProductosParaFormulario",
+      optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
+      optionValueFn: (p) => p.idproducto || "",
+      placeholder: "Seleccione un producto terminado...",
+      onLoaded: (productos) => {
+        // Puedes filtrar aquí si deseas solo insumos o categorías específicas
+      },
+    });
+  }
+
+  // LIMPIAR FORMULARIO
+  function limpiarFormularioProduccion() {
+    const form = document.getElementById("formRegistrarProduccion");
+    if (form) form.reset();
+
+    // Limpiar lista de insumos
+    detalleProduccionItems = [];
+    renderizarTablaDetalleProduccion(); // Si usas esta función
+  }
 });
-
-// Función para validar campos vacíos
-function validarCamposVacios(campos) {
-  let formularioValido = true;
-
-  for (let campo of campos) {
-    const input = document.getElementById(campo.id);
-    if (!input) {
-      console.warn(`El campo con ID "${campo.id}" no existe en el DOM.`);
-      continue;
-    }
-
-    const valor = input.value.trim();
-    if (valor === "") {
-      Swal.fire({
-        title: "¡Error!",
-        text: `El campo "${campo.id}" no puede estar vacío.`,
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
-      formularioValido = false;
-    }
-  }
-
-  return formularioValido;
-}
-
-// Función para manejar registro/edición
-function manejarRegistro(campos) {
-  const esValido = validarCamposVacios(campos);
-  if (!esValido) return;
-
-  const form = document.getElementById("produccionForm");
-  const formData = new FormData(form);
-  const data = {};
-  const insumos = [];
-
-  formData.forEach((value, key) => {
-    // Capturar insumos como arrays: idproducto_insumo[], cantidad_insumo[], cantidad_utilizada[]
-    if (key.includes("idproducto_insumo")) insumos.push({ idproducto: value });
-  });
-
-  formData.forEach((value, key) => {
-    if (key.includes("cantidad_insumo")) {
-      insumos.forEach((item, i) => (item.cantidad = value.split(",")[i] ?? 0));
-    } else if (key.includes("cantidad_utilizada")) {
-      insumos.forEach(
-        (item, i) => (item.cantidad_utilizada = value.split(",")[i] ?? 0)
-      );
-    } else if (!key.includes("[]")) {
-      data[key] = value;
-    }
-  });
-  // Convertir campos con [] en arrays
-  for (const [key, value] of formData.entries()) {
-    if (key.endsWith("[]")) {
-      const cleanKey = key.replace("[]", "");
-      if (!data[cleanKey]) data[cleanKey] = [];
-      data[cleanKey].push(value);
-    } else {
-      data[key] = value;
-    }
-  }
-
-  data.insumos = insumos;
-
-  const idproduccion = document.getElementById("idproduccion").value;
-  const url = idproduccion
-    ? "produccion/updateProduccion"
-    : "produccion/createProduccion";
-  const method = idproduccion ? "PUT" : "POST";
-
-  console.log("Datos a enviar:", JSON.stringify(data));
-
-  fetch(url, {
-    method: method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  })
-    .then((response) => {
-      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-      return response.json();
-    })
-    .then((result) => {
-      if (result.status) {
-        alert(result.message);
-        cerrarModalProduccion();
-        tablaProduccion.ajax.reload();
-      } else {
-        alert(result.message);
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      alert("Ocurrió un error al procesar la solicitud.");
-    });
-}
-
-// Cargar empleado
-function cargarEmpleado() {
-  return new Promise((resolve, reject) => {
-    fetch("produccion/getEmpleado")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status) {
-          const selectEmpleado = document.getElementById("idempleado");
-          selectEmpleado.innerHTML =
-            "<option value=''>Seleccione Empleado</option>";
-          data.data.forEach((emp) => {
-            const option = document.createElement("option");
-            option.value = emp.idempleado;
-            option.textContent = emp.nombre;
-            selectEmpleado.appendChild(option);
-          });
-          resolve();
-        } else {
-          reject("Error al cargar empleados.");
-        }
-      })
-      .catch((err) => {
-        console.error("Error al cargar empleados:", err);
-        reject("Error al cargar empleados.");
-      });
-  });
-}
-
-// Cargar producto
-function cargarProducto() {
-  return new Promise((resolve, reject) => {
-    fetch("produccion/getProductos")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status) {
-          const selectProducto = document.getElementById("idproducto");
-          selectProducto.innerHTML =
-            "<option value=''>Seleccione Producto</option>";
-          data.data.forEach((prod) => {
-            const option = document.createElement("option");
-            option.value = prod.idproducto;
-            option.textContent = prod.nombre;
-            selectProducto.appendChild(option);
-          });
-          resolve();
-        } else {
-          reject("Error al cargar productos.");
-        }
-      })
-      .catch((err) => {
-        console.error("Error al cargar productos:", err);
-        reject("Error al cargar productos.");
-      });
-  });
-}
-
-// Cargar datos de producción al editar
-function abrirModalProduccionParaEdicion(idproduccion) {
-  const tbody = document.getElementById("detalleProduccionBody");
-  tbody.innerHTML = "";
-
-  fetch(`produccion/getDetalleProduccionData?idproduccion=${idproduccion}`)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      const type = res.headers.get("content-type");
-      if (type && type.includes("application/json")) {
-        return res.json();
-      } else {
-        return res.text().then(text => {
-          console.error("Respuesta no JSON:", text);
-          throw new Error("Respuesta no válida: " + text);
-        });
-      }
-    })
-    .then((detalle) => {
-      if (detalle.status && detalle.data.length > 0) {
-        detalle.data.forEach((insumo) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>
-              <select name="idproducto_insumo[]" class="w-full border rounded p-2" required>
-                ${window.productos.map(p => `<option value="${p.idproducto}" ${p.nombre === insumo.nombre_producto ? "selected" : ""}>${p.nombre}</option>`).join("")}
-              </select>
-            </td>
-            <td><input type="number" name="cantidad_insumo[]" class="w-full border rounded p-2" value="${insumo.cantidad}" required></td>
-            <td><input type="number" name="cantidad_utilizada[]" class="w-full border rounded p-2" value="${insumo.cantidad_consumida}" required></td>
-            <td><input type="text" name="observaciones[]" class="w-full border rounded p-2" value="${insumo.observaciones || ""}"></td>
-            <td><button type="button" class="eliminarInsumoBtn text-red-500"><i class="fas fa-trash"></i></button></td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } else {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td colspan="5" class="text-center p-2">No hay insumos registrados.</td>`;
-        tbody.appendChild(tr);
-      }
-    })
-    .catch(err => {
-      console.error("Error al obtener detalle:", err);
-      alert("Error al cargar los insumos.");
-    });
-
-  // Producción general
-  fetch(`produccion/getProduccionById/${idproduccion}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.status) {
-        const p = data.data;
-        document.getElementById("idproduccion").value = p.idproduccion;
-        document.getElementById("idempleado").value = p.idempleado;
-        document.getElementById("idproducto").value = p.idproducto;
-        document.getElementById("cantidad_a_realizar").value = p.cantidad_a_realizar;
-        document.getElementById("fecha_inicio").value = p.fecha_inicio;
-        document.getElementById("fecha_fin").value = p.fecha_fin;
-        document.getElementById("estado").value = p.estado;
-
-        abrirModal("produccionModal");
-      } else {
-        alert("Producción no encontrada.");
-      }
-    })
-    .catch(err => {
-      console.error("Error al obtener producción:", err);
-      alert("Error al cargar los datos de la producción.");
-    });
-}
-
-
-
-// Eliminar producción
-function eliminarProduccion(idproduccion) {
-  fetch("produccion/deleteProduccion", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idproduccion }),
-  })
-    .then((res) => res.json())
-    .then((result) => {
-      if (result.status) {
-        alert(result.message);
-        tablaProduccion.ajax.reload();
-      } else {
-        alert(result.message);
-      }
-    })
-    .catch((err) => console.error("Error al eliminar:", err));
-}
-
-// Cerrar modal
-function cerrarModalProduccion() {
-  const modal = document.getElementById("produccionModal");
-  if (modal) {
-    modal.classList.add("opacity-0", "pointer-events-none");
-    document.getElementById("produccionForm").reset();
-  }
-}

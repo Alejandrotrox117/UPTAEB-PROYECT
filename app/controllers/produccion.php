@@ -1,28 +1,17 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
-require_once "app/models/produccionModel.php"; // Ajusta la ruta según tu estructura
+require_once "app/models/produccionModel.php";
 
 class Produccion extends Controllers
 {
-    public function set_model($model)
-    {
-        $this->model = $model;
-    }
-
-    public function get_model()
-    {
-        return $this->model;
-    }
-
     public function __construct()
     {
         parent::__construct();
-        // Inicializa el modelo correspondiente
-        $this->set_model(new produccionModel());
+        $this->model = new produccionModel();
     }
 
-    // Método para mostrar la vista principal de gestión de producción
+    // Vista principal
     public function index()
     {
         $data['page_title'] = "Gestión de Producción";
@@ -31,214 +20,271 @@ class Produccion extends Controllers
         $this->views->getView($this, "produccion", $data);
     }
 
-    // Método para obtener datos de producciones para DataTables
+    // Obtener listado de producciones para DataTables
     public function getProduccionData()
     {
-        $arrData = $this->get_model()->SelectAllProducciones();
+        try {
+            $arrData = $this->model->SelectAllProducciones();
 
-        $response = [
-            "draw" => intval($_GET['draw']),
-            "recordsTotal" => count($arrData),
-            "recordsFiltered" => count($arrData),
-            "data" => $arrData
-        ];
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            echo json_encode([
+                "draw" => intval($_GET['draw']),
+                "recordsTotal" => count($arrData),
+                "recordsFiltered" => count($arrData),
+                "data" => $arrData
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => false,
+                "message" => "Error al obtener los datos: " . $e->getMessage()
+            ]);
+        }
+        exit();
     }
 
- public function getDetalleProduccionData($idproduccion)
-{
-    header('Content-Type: application/json');
-    try {
-        $detalle = $this->get_model()->SelectDetalleProduccion($idproduccion);
+    // Obtener detalle de una producción
+    public function getDetalleProduccionData($idproduccion)
+    {
+        try {
+            if (!is_numeric($idproduccion)) {
+                throw new Exception("ID inválido.");
+            }
 
-        echo json_encode([
-            "status" => true,
-            "data" => $detalle
-        ]);
-    } catch (Exception $e) {
-        echo json_encode([
-            "status" => false,
-            "message" => "Error inesperado: " . $e->getMessage()
-        ]);
+            $detalle = $this->model->SelectDetalleProduccion($idproduccion);
+
+            echo json_encode([
+                "status" => true,
+                "data" => $detalle
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => false,
+                "message" => "Error al obtener el detalle: " . $e->getMessage()
+            ]);
+        }
+        exit();
     }
-    exit();
-}
 
+    // Obtener producción por ID
+    public function getProduccionById($idproduccion)
+    {
+        try {
+            if (!is_numeric($idproduccion)) {
+                throw new Exception("ID inválido.");
+            }
 
-public function getProduccionById($idproduccion)
-{
-    header('Content-Type: application/json');
-    try {
-        $produccion = $this->get_model()->getProduccionById($idproduccion);
+            $produccion = $this->model->getProduccionById($idproduccion);
 
-        if ($produccion) {
+            if (!$produccion) {
+                throw new Exception("Producción no encontrada.");
+            }
+
             echo json_encode([
                 "status" => true,
                 "data" => $produccion
             ]);
-        } else {
+        } catch (Exception $e) {
             echo json_encode([
                 "status" => false,
-                "message" => "Producción no encontrada."
+                "message" => $e->getMessage()
             ]);
         }
-    } catch (Exception $e) {
-        echo json_encode([
-            "status" => false,
-            "message" => "Error inesperado: " . $e->getMessage()
-        ]);
-    }
-    exit();
-}
-
-
-
-   
-    // Método para registrar una nueva producción
-public function createProduccion()
-{
-    try {
-        // Recibimos los datos
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-        
-        // Verificamos que los datos sean válidos
-        if (!$data || !is_array($data)) {
-            echo json_encode(["status" => false, "message" => "Datos inválidos."]);
-            exit();
-        }
-
-        // Validamos los campos principales
-        $idempleado = trim($data['idempleado'] ?? '');
-        $idproducto = trim($data['idproducto'] ?? '');
-        $cantidad_a_realizar = trim($data['cantidad_a_realizar'] ?? '');
-        $fecha_inicio = trim($data['fecha_inicio'] ?? '');
-        $fecha_fin = trim($data['fecha_fin'] ?? '');
-        $estado = trim($data['estado'] ?? 'borrador');
-
-        // Verificamos que los campos principales no estén vacíos
-        if (empty($idproducto) || empty($cantidad_a_realizar) || empty($fecha_inicio)) {
-            echo json_encode(["status" => false, "message" => "Campos incompletos."]);
-            exit();
-        }
-
-        // Insertar producción
-        $insertId = $this->model->insertProduccion([
-            "idempleado" => $idempleado,
-            "idproducto" => $idproducto,
-            "cantidad_a_realizar" => $cantidad_a_realizar,
-            "fecha_inicio" => $fecha_inicio,
-            "fecha_fin" => $fecha_fin,
-            "estado" => $estado,
-            "insumos" => $data['insumos'] ?? []  // Usamos directamente 'insumos'
-        ]);
-
-        if ($insertId) {
-            echo json_encode(["status" => true, "message" => "Producción registrada.", "idproduccion" => $insertId]);
-        } else {
-            echo json_encode(["status" => false, "message" => "Error al registrar producción."]);
-        }
-
-    } catch (Exception $e) {
-        echo json_encode(["status" => false, "message" => "Error: " . $e->getMessage()]);
-    }
-    exit();
-}
-
-
-
-    // Método para actualizar una producción existente
-   public function updateProduccion()
-{
-    $json = file_get_contents('php://input');
-    $data = json_decode($json, true);
-
-    if (!$data || !is_array($data)) {
-        echo json_encode(["status" => false, "message" => "Datos inválidos."]);
         exit();
     }
 
-    $idproduccion = trim($data['idproduccion']) ?? null;
-    $idempleado = trim($data['idempleado']) ?? null;
-    $idproducto = trim($data['idproducto']) ?? null;
-    $cantidad_a_realizar = trim($data['cantidad_a_realizar']) ?? null;
-    $fecha_inicio = trim($data['fecha_inicio']) ?? null;
-    $fecha_fin = trim($data['fecha_fin']) ?? null;
-    $estado = trim($data['estado']) ?? null;
-    $insumos = $data['insumos'] ?? [];
-    $fecha_modificacion = date("Y-m-d H:i:s");
+    // Registrar nueva producción
+    public function createProduccion()
+    {
 
-    if (empty($idproduccion) || empty($idproducto) || empty($cantidad_a_realizar) || empty($fecha_inicio) || empty($estado)) {
-        echo json_encode(["status" => false, "message" => "Datos incompletos."]);
-        exit();
-    }
+        try {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+            
+            if (!$data || !is_array($data)) {
+                throw new Exception("Datos inválidos.");
+            }
 
-    if (!is_numeric($cantidad_a_realizar) || $cantidad_a_realizar <= 0) {
-        echo json_encode(["status" => false, "message" => "La cantidad debe ser un número positivo."]);
+            // Campos obligatorios
+            $requiredFields = ['idproducto', 'cantidad_a_realizar', 'fecha_inicio'];
+            foreach ($requiredFields as $field) {
+                if (!isset($data[$field]) || empty(trim($data[$field]))) {
+                    throw new Exception("El campo '$field' es obligatorio.");
+                }
+            }
+
+            $idempleado = trim($data['idempleado'] ?? '');
+            $idproducto = trim($data['idproducto']);
+            $cantidad_a_realizar = floatval($data['cantidad_a_realizar']);
+            $fecha_inicio = date("Y-m-d", strtotime($data['fecha_inicio']));
+            $fecha_fin = $data['fecha_fin'] ? date("Y-m-d", strtotime($data['fecha_fin'])) : null;
+            $estado = trim($data['estado'] ?? 'borrador');
+            $insumos = $data['insumos'] ?? [];
+
+            if ($cantidad_a_realizar <= 0) {
+                throw new Exception("La cantidad debe ser mayor a cero.");
+            }
+
+            $insertId = $this->model->insertProduccion([
+                "idempleado" => $idempleado,
+                "idproducto" => $idproducto,
+                "cantidad_a_realizar" => $cantidad_a_realizar,
+                "fecha_inicio" => $fecha_inicio,
+                "fecha_fin" => $fecha_fin,
+                "estado" => $estado,
+                "insumos" => $insumos
+            ]);
+
+            if ($insertId) {
+                echo json_encode([
+                    "status" => true,
+                    "message" => "Producción registrada correctamente.",
+                    "idproduccion" => $insertId
+                ]);
+            } else {
+                throw new Exception("No se pudo registrar la producción.");
+            }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => false,
+                "message" => $e->getMessage()
+            ]);
+        }
         exit();
     }
 
     // Actualizar producción
-    $result = $this->model->updateProduccion([
-        "idproduccion" => $idproduccion,
-        "idempleado" => $idempleado,
-        "idproducto" => $idproducto,
-        "cantidad_a_realizar" => $cantidad_a_realizar,
-        "fecha_inicio" => $fecha_inicio,
-        "fecha_fin" => $fecha_fin,
-        "estado" => $estado,
-        "fecha_modificacion" => $fecha_modificacion,
-        "insumos" => $insumos
-    ]);
-
-    if ($result) {
-        echo json_encode(["status" => true, "message" => "Producción actualizada."]);
-    } else {
-        echo json_encode(["status" => false, "message" => "Error al actualizar."]);
-    }
-    exit();
-}
-
-    // Método para eliminar una producción
-    public function deleteProduccion()
+    public function updateProduccion()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $idproduccion = $_POST['idproduccion'];
+        try {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
 
-            // Eliminar la producción de la base de datos
-            $result = $this->get_model()->deleteProduccion($idproduccion);
+            if (!$data || !is_array($data)) {
+                throw new Exception("Datos inválidos.");
+            }
+
+            $idproduccion = trim($data['idproduccion']) ?? null;
+            if (!$idproduccion || !is_numeric($idproduccion)) {
+                throw new Exception("ID de producción inválido.");
+            }
+
+            $idproducto = trim($data['idproducto']);
+            $cantidad_a_realizar = floatval($data['cantidad_a_realizar']);
+            $fecha_inicio = date("Y-m-d", strtotime($data['fecha_inicio']));
+            $fecha_fin = $data['fecha_fin'] ? date("Y-m-d", strtotime($data['fecha_fin'])) : null;
+            $estado = trim($data['estado']);
+            $insumos = $data['insumos'] ?? [];
+
+            if (!$idproducto || $cantidad_a_realizar <= 0 || !$fecha_inicio || !$estado) {
+                throw new Exception("Campos incompletos.");
+            }
+
+            $result = $this->model->updateProduccion([
+                "idproduccion" => $idproduccion,
+                "idempleado" => $data['idempleado'] ?? '',
+                "idproducto" => $idproducto,
+                "cantidad_a_realizar" => $cantidad_a_realizar,
+                "fecha_inicio" => $fecha_inicio,
+                "fecha_fin" => $fecha_fin,
+                "estado" => $estado,
+                "fecha_modificacion" => date("Y-m-d H:i:s"),
+                "insumos" => $insumos
+            ]);
 
             if ($result) {
-                echo json_encode(["status" => true, "message" => "Producción eliminada exitosamente"]);
+                echo json_encode([
+                    "status" => true,
+                    "message" => "Producción actualizada correctamente."
+                ]);
             } else {
-                echo json_encode(["status" => false, "message" => "Error al eliminar la producción"]);
+                throw new Exception("No se pudo actualizar la producción.");
             }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => false,
+                "message" => $e->getMessage()
+            ]);
         }
+        exit();
     }
 
-    // Método para cambiar el estado de una producción
-   
+    // Eliminar producción
+    public function deleteProduccion()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception("Método no permitido.");
+            }
+
+            $idproduccion = $_POST['idproduccion'] ?? '';
+            if (!$idproduccion || !is_numeric($idproduccion)) {
+                throw new Exception("ID inválido.");
+            }
+
+            $result = $this->model->deleteProduccion($idproduccion);
+
+            if ($result) {
+                echo json_encode([
+                    "status" => true,
+                    "message" => "Producción eliminada correctamente."
+                ]);
+            } else {
+                throw new Exception("No se pudo eliminar la producción.");
+            }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => false,
+                "message" => $e->getMessage()
+            ]);
+        }
+        exit();
+    }
+
+    // Buscar empleados
     public function getEmpleado()
     {
-        $empleados = $this->model->SelectAllEmpleado();
+        try {
+            $empleados = $this->model->SelectAllEmpleado();
 
-        if ($empleados) {
-            echo json_encode(["status" => true, "data" => $empleados]);
-        } else {
-            echo json_encode(["status" => false, "message" => "No se encontraron categorías."]);
+            if ($empleados) {
+                echo json_encode([
+                    "status" => true,
+                    "data" => $empleados
+                ]);
+            } else {
+                throw new Exception("No se encontraron empleados.");
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => false,
+                "message" => $e->getMessage()
+            ]);
         }
-        exit(); // Asegura que la respuesta termine aquí
+        exit();
     }
-     public function getProductos()
-    {
-        $producto = $this->model->SelectAllProducto();
 
-        if ($producto) {
-            echo json_encode(["status" => true, "data" => $producto]);
-        } else {
-            echo json_encode(["status" => false, "message" => "No se encontraron categorías."]);
+    // Buscar productos
+    public function getProductos()
+    {
+        try {
+            $productos = $this->model->SelectAllProducto();
+
+            if ($productos) {
+                echo json_encode([
+                    "status" => true,
+                    "data" => $productos
+                ]);
+            } else {
+                throw new Exception("No se encontraron productos.");
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => false,
+                "message" => $e->getMessage()
+            ]);
         }
-        exit(); // Asegura que la respuesta termine aquí
+        exit();
     }
 }
