@@ -1,181 +1,138 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
-require_once "app/models/bitacoraModel.php"; 
 
 class Roles extends Controllers
 {
-    protected $model;
-    protected $bitacora;
+    public function set_model($model)
+    {
+        $this->model = $model;
+    }
+
+    public function get_model()
+    {
+        return $this->model;
+    }
 
     public function __construct()
     {
         parent::__construct();
-        $this->model = new RolesModel();
-        $this->bitacora = new bitacoraModel();
     }
 
-   public function index()
-{
-    session_start();
-    $bitacora = new BitacoraModel();
-
-    $idusuario = $_SESSION['user']['idusuario'] ?? null;
-
-    if ($idusuario) {
-        $bitacora->setTabla("rol");
-        $bitacora->setAccion("vista");
-        $bitacora->setIdUsuario($idusuario);
-        // Si quieres puedes también setear la fecha manualmente, pero no es necesario
-        $bitacora->setFecha(date("Y-m-d H:i:s"));
-        $bitacora->insertar2();
-    }
-
-    $this->views->getView($this, "roles");
-}
-
-
-    public function guardarRol()
+    public function index()
     {
-        header("Content-Type: application/json");
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Methods: POST");
-        header("Access-Control-Allow-Headers: Content-Type");
+        $data['page_title'] = "Gestión de Roles";
+        $data['page_name'] = "Roles";
+        $data['page_functions_js'] = "functions_roles.js";
+        $this->views->getView($this, "roles", $data);
+    }
 
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            echo json_encode(['success' => false, 'message' => 'Error al procesar los datos JSON: ' . json_last_error_msg()]);
-            return;
+    public function getRolesData()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            $arrData = $this->model->selectAllRolesActivos();
+            echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
         }
+        die();
+    }
 
-        if (empty($data['nombre']) || empty($data['estatus']) || empty($data['descripcion'])) {
-            echo json_encode(['success' => false, 'message' => 'Faltan datos obligatorios.']);
-            return;
+    public function createRol()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+
+            $rolData = [
+                'nombre' => trim($data['nombre']),
+                'descripcion' => trim($data['descripcion']),
+                'estatus' => $data['estatus'] ?? 'ACTIVO'
+            ];
+
+            $request = $this->model->insertRol($rolData);
+            echo json_encode($request, JSON_UNESCAPED_UNICODE);
         }
+        die();
+    }
 
-        try {
-            // Usar setters del modelo
-            $this->model->setNombre($data['nombre']);
-            $this->model->setDescripcion($data['descripcion']);
-            $this->model->setEstatus($data['estatus']);
-
-            $resultado = $this->model->guardarRol();
-
-            if ($resultado) {
-                echo json_encode(['success' => true, 'message' => 'Rol guardado correctamente.']);
+    public function getRolById(int $idrol)
+    {
+        if ($idrol > 0) {
+            $arrData = $this->model->selectRolById($idrol);
+            if (empty($arrData)) {
+                $response = ["status" => false, "message" => "Datos no encontrados."];
             } else {
-                echo json_encode(['success' => false, 'message' => 'No se pudo guardar el rol.']);
+                $response = ["status" => true, "data" => $arrData];
             }
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        }
+        die();
+    }
+
+    public function updateRol()
+    {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$input) {
+                echo json_encode(['status' => false, 'message' => 'Datos no válidos']);
+                return;
+            }
+
+            $idRol = intval($input['idrol'] ?? 0);
+            if ($idRol <= 0) {
+                echo json_encode(['status' => false, 'message' => 'ID de rol no válido']);
+                return;
+            }
+
+            $dataParaModelo = [
+                'nombre' => trim($input['nombre'] ?? ''),
+                'descripcion' => trim($input['descripcion'] ?? ''),
+                'estatus' => trim($input['estatus'] ?? ''),
+            ];
+
+            $resultado = $this->model->updateRol($idRol, $dataParaModelo);
+            
+            echo json_encode($resultado);
+
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Error al guardar el rol: ' . $e->getMessage()]);
+            error_log("Error en updateRol: " . $e->getMessage());
+            echo json_encode([
+                'status' => false, 
+                'message' => 'Error interno del servidor'
+            ]);
         }
     }
 
-    public function ConsultarRol()
-{
-    header("Content-Type: application/json");
-    session_start();
-    $userRole = $_SESSION['user']['idrol'];
-    $roles = $this->model->getRoles($userRole);
-
-    echo json_encode([
-        'success' => true,
-        'roles' => $roles
-    ]);
-}
-
-
-public function consultarunrol()
-{
-    header("Content-Type: application/json");
-
-    if (!isset($_GET['id'])) {
-        echo json_encode(['success' => false, 'message' => 'Falta el parámetro ID.']);
-        return;
-    }
-
-    $rol = $this->model->getRolById($_GET['id']);
-
-    if ($rol) {
-        echo json_encode(['success' => true, 'rol' => $rol]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Rol no encontrado.']);
-    }
-}
-
-    public function eliminar()
+    public function deleteRol()
     {
-        header("Content-Type: application/json");
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+             $json = file_get_contents('php://input');
+             $data = json_decode($json, true);
+             $idrol = isset($data['idrol']) ? intval($data['idrol']) : 0;
 
-        if (!isset($_GET['id'])) {
-            echo json_encode(['success' => false, 'message' => 'Falta el parámetro ID.']);
-            return;
+            if ($idrol > 0) {
+                $requestDelete = $this->model->deleteRolById($idrol);
+                if ($requestDelete['status']) {
+                    $response = ["status" => true, "message" => $requestDelete['message']];
+                } else {
+                    $response = ["status" => false, "message" => $requestDelete['message']];
+                }
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            } else {
+                 $response = ["status" => false, "message" => "ID de rol no válido."];
+                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            }
         }
-
-        $result = $this->model->eliminarRol($_GET['id']);
-        if ($result) {
-            echo json_encode(['success' => true, 'message' => 'Rol eliminado correctamente.']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'No se pudo eliminar el rol.']);
-        }
+        die();
     }
 
-
-
-    public function actualizar()
+    public function getAllRoles()
     {
-        header("Content-Type: application/json");
-    
-        // Recibir y decodificar los datos JSON del cuerpo de la solicitud
-        $data = json_decode(file_get_contents('php://input'), true);
-    
-        // Validación de los datos recibidos
-        if (!isset($data['id'], $data['nombre'], $data['estatus'], $data['descripcion'])) {
-            echo json_encode(['success' => false, 'message' => 'Datos incompletos.']);
-            return;
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            $arrData = $this->model->selectAllRolesActivos();
+            echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
         }
-    
-        // Validación de campos vacíos
-        $nombre = trim($data['nombre']);
-        $descripcion = trim($data['descripcion']);
-        if (empty($nombre) || empty($descripcion)) {
-            echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
-            return;
-        }
-    
-        // Validación de nombre (solo letras y espacios permitidos)
-        $soloLetrasRegex = '/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/';
-        if (!preg_match($soloLetrasRegex, $nombre)) {
-            echo json_encode(['success' => false, 'message' => 'El nombre del rol solo debe contener letras.']);
-            return;
-        }
-    
-        // Validación de descripción (solo letras, números, espacios, punto y coma, coma, y punto)
-        $descripcionRegex = '/^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9.,\s]+$/';
-        if (!preg_match($descripcionRegex, $descripcion)) {
-            echo json_encode(['success' => false, 'message' => 'La descripción solo puede contener letras, números, espacios, punto y coma.']);
-            return;
-        }
-    
-        // Usar los métodos SET para asignar los valores de los datos recibidos
-        $this->model->setIdrol($data['id']);           // Asignar el id del rol
-        $this->model->setNombre($nombre);              // Asignar el nombre del rol
-        $this->model->setEstatus($data['estatus']);    // Asignar el estatus del rol
-        $this->model->setDescripcion($descripcion);    // Asignar la descripción del rol
-    
-        // Llamar al método actualizarrol() para realizar la actualización en la base de datos
-        $resultado = $this->model->actualizarrol();
-    
-        // Verificar si la actualización fue exitosa y enviar la respuesta
-        if ($resultado) {
-            echo json_encode(['success' => true, 'message' => 'Rol actualizado.']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Error al actualizar.']);
-        }
+        die();
     }
-    
-
 }
 ?>

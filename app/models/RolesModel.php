@@ -1,157 +1,228 @@
 <?php
-require_once("app/core/conexion.php");
+require_once "app/core/conexion.php";
+require_once "app/core/mysql.php";
 
-class RolesModel
+class RolesModel extends mysql
 {
-    private $conn;
-    private $idrol;
-    private $nombre;
-    private $estatus;
-    private $descripcion;
-    private $fecha_creacion;
-    private $ultima_modificacion;
+    private $conexion;
+    private $dbSeguridad;
 
     public function __construct()
     {
-        $this->conn = (new Conexion())->connect();
+        $this->conexion = new Conexion();
+        $this->conexion->connect();
+        $this->dbSeguridad = $this->conexion->get_conectSeguridad();
     }
 
-    // Métodos GET
-    public function getIdrol()
+    public function insertRol(array $data): array
     {
-        return $this->idrol;
-    }
-    public function getNombre()
-    {
-        return $this->nombre;
-    }
-    public function getEstatus()
-    {
-        return $this->estatus;
-    }
-    public function getDescripcion()
-    {
-        return $this->descripcion;
-    }
-    public function getFechaCreacion()
-    {
-        return $this->fecha_creacion;
-    }
-    public function getUltimaModificacion()
-    {
-        return $this->ultima_modificacion;
-    }
+        try {
+            $this->dbSeguridad->beginTransaction();
 
-    // Métodos SET
-    public function setIdrol($idrol)
-    {
-        $this->idrol = $idrol;
-    }
-    public function setNombre($nombre)
-    {
-        $this->nombre = $nombre;
-    }
-    public function setEstatus($estatus)
-    {
-        $this->estatus = $estatus;
-    }
-    public function setDescripcion($descripcion)
-    {
-        $this->descripcion = $descripcion;
-    }
-    public function setFechaCreacion($fecha)
-    {
-        $this->fecha_creacion = $fecha;
-    }
-    public function setUltimaModificacion($fecha)
-    {
-        $this->ultima_modificacion = $fecha;
-    }
+            // Verificar si ya existe un rol con el mismo nombre
+            $sqlCheck = "SELECT idrol FROM roles WHERE nombre = ? AND estatus = 'ACTIVO'";
+            $stmtCheck = $this->dbSeguridad->prepare($sqlCheck);
+            $stmtCheck->execute([$data['nombre']]);
+            
+            if ($stmtCheck->fetch()) {
+                $this->dbSeguridad->rollBack();
+                return [
+                    'status' => false, 
+                    'message' => 'Ya existe un rol activo con ese nombre.',
+                ];
+            }
 
-    // Guardar un nuevo rol
-    public function guardarRol()
-    {
-        $this->setFechaCreacion(date('Y-m-d H:i:s'));
-        $sql = "INSERT INTO roles (nombre, estatus, descripcion, fecha_creacion)
-                VALUES (:nombre, :estatus, :descripcion, :fecha_creacion)";
+            $sqlRol = "INSERT INTO roles (nombre, descripcion, estatus, fecha_creacion, ultima_modificacion) VALUES (?, ?, ?, NOW(), NOW())";
+            
+            $valoresRol = [
+                $data['nombre'],
+                $data['descripcion'],
+                $data['estatus']
+            ];
+            
+            $stmtRol = $this->dbSeguridad->prepare($sqlRol);
+            $insertExitoso = $stmtRol->execute($valoresRol);
 
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
-            ':nombre' => $this->getNombre(),
-            ':estatus' => $this->getEstatus(),
-            ':descripcion' => $this->getDescripcion(),
-            ':fecha_creacion' => $this->getFechaCreacion()
-        ]);
-    }
+            $idRolInsertado = $this->dbSeguridad->lastInsertId();
 
-    // Obtener todos los roles según el ID del rol del usuario
-    public function getRoles($userRole)
-    {
-        if ($userRole == 3) {
-            $sql = "SELECT idrol, nombre, estatus, descripcion FROM roles";
-        } elseif ($userRole == 1) {
-            $sql = "SELECT idrol, nombre, estatus, descripcion FROM roles WHERE estatus = 'Activo' AND idrol != 3";
-        } else {
-            return null;
+            if (!$idRolInsertado) {
+                $this->dbSeguridad->rollBack();
+                error_log("Error: No se pudo obtener el lastInsertId para el rol.");
+                return [
+                    'status' => false, 
+                    'message' => 'Error al obtener ID de rol tras registro.',
+                ];
+            }
+
+            $this->dbSeguridad->commit();
+
+            return [
+                'status' => true, 
+                'message' => 'Rol registrado exitosamente.',
+                'rol_id' => $idRolInsertado
+            ];
+
+        } catch (PDOException $e) {
+            if ($this->dbSeguridad->inTransaction()) {
+                $this->dbSeguridad->rollBack();
+            }
+            error_log("Error al insertar rol: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error de base de datos al registrar rol: ' . $e->getMessage(),
+            ];
         }
-
-        $stmt = $this->conn->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Obtener un rol por ID
-    public function getRolById($id)
+    public function updateRol(int $idrol, array $data): array
     {
-        $sql = "SELECT * FROM roles WHERE idrol = :id";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([':id' => $id]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $this->dbSeguridad->beginTransaction();
 
-        if ($data) {
-            $this->setIdrol($data['idrol']);
-            $this->setNombre($data['nombre']);
-            $this->setEstatus($data['estatus']);
-            $this->setDescripcion($data['descripcion']);
-            $this->setFechaCreacion($data['fecha_creacion']);
-            $this->setUltimaModificacion($data['ultima_modificacion']);
+            // Verificar si ya existe otro rol con el mismo nombre
+            $sqlCheck = "SELECT idrol FROM roles WHERE nombre = ? AND estatus = 'ACTIVO' AND idrol != ?";
+            $stmtCheck = $this->dbSeguridad->prepare($sqlCheck);
+            $stmtCheck->execute([$data['nombre'], $idrol]);
+            
+            if ($stmtCheck->fetch()) {
+                $this->dbSeguridad->rollBack();
+                return [
+                    'status' => false, 
+                    'message' => 'Ya existe otro rol activo con ese nombre.',
+                ];
+            }
+
+            $sql = "UPDATE roles SET 
+                    nombre = ?, 
+                    descripcion = ?, 
+                    estatus = ?, 
+                    ultima_modificacion = NOW() 
+                    WHERE idrol = ?";
+            
+            $valores = [
+                $data['nombre'],
+                $data['descripcion'],
+                $data['estatus'],
+                $idrol
+            ];
+            
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $updateExitoso = $stmt->execute($valores);
+
+            if (!$updateExitoso || $stmt->rowCount() === 0) {
+                $this->dbSeguridad->rollBack();
+                return [
+                    'status' => false, 
+                    'message' => 'No se pudo actualizar el rol o no se realizaron cambios.'
+                ];
+            }
+
+            $this->dbSeguridad->commit();
+
+            return [
+                'status' => true, 
+                'message' => 'Rol actualizado exitosamente.'
+            ];
+
+        } catch (PDOException $e) {
+            if ($this->dbSeguridad->inTransaction()) {
+                $this->dbSeguridad->rollBack();
+            }
+            error_log("Error al actualizar rol: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error de base de datos al actualizar rol: ' . $e->getMessage()
+            ];
         }
-
-        return $data;
     }
 
-    // Eliminar (inhabilitar) un rol
-    public function eliminarRol($id)
+    public function selectRolById(int $idrol)
     {
-        $this->setUltimaModificacion(date('Y-m-d H:i:s'));
-
-        $sql = "UPDATE roles SET estatus = 'Inactivo', ultima_modificacion = :fecha WHERE idrol = :id";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
-            ':id' => $id,
-            ':fecha' => $this->getUltimaModificacion()
-        ]);
+        $sql = "SELECT idrol, nombre, descripcion, estatus, fecha_creacion, ultima_modificacion 
+                FROM roles 
+                WHERE idrol = ?";
+        try {
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute([$idrol]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("RolesModel::selectRolById -> " . $e->getMessage());
+            return false;
+        }
     }
 
-
-    public function actualizarrol()
+    public function deleteRolById(int $idrol): array
     {
-        $this->setUltimaModificacion(date('Y-m-d H:i:s'));  // Establecer la fecha de la última modificación
+        if (!$this->dbSeguridad) {
+            error_log("RolesModel::deleteRolById -> Conexión a la base de datos no establecida.");
+            return ['status' => false, 'message' => 'Error de conexión a la base de datos.'];
+        }
+        
+        try {
+            $this->dbSeguridad->beginTransaction();
 
-        $sql = "UPDATE roles 
-            SET nombre = :nombre, estatus = :estatus, descripcion = :descripcion, ultima_modificacion = :ultima_modificacion
-            WHERE idrol = :idrol";  // Consulta SQL para actualizar los datos
+            // Verificar si el rol está siendo usado por usuarios
+            $sqlCheckUsers = "SELECT COUNT(*) as count FROM usuario WHERE idrol = ? AND estatus = 'ACTIVO'";
+            $stmtCheckUsers = $this->dbSeguridad->prepare($sqlCheckUsers);
+            $stmtCheckUsers->execute([$idrol]);
+            $userCount = $stmtCheckUsers->fetch(PDO::FETCH_ASSOC);
 
-        $stmt = $this->conn->prepare($sql);  // Preparar la consulta SQL
+            if ($userCount['count'] > 0) {
+                $this->dbSeguridad->rollBack();
+                return [
+                    'status' => false, 
+                    'message' => 'No se puede eliminar el rol porque está siendo usado por usuarios activos.'
+                ];
+            }
 
-        // Ejecutar la consulta pasando los valores de los setters
-        return $stmt->execute([
-            ':idrol' => $this->getIdrol(),
-            ':nombre' => $this->getNombre(),
-            ':estatus' => $this->getEstatus(),
-            ':descripcion' => $this->getDescripcion(),
-            ':ultima_modificacion' => $this->getUltimaModificacion()
-        ]);
+            $sql = "UPDATE roles SET estatus = 'INACTIVO', ultima_modificacion = NOW() WHERE idrol = ?";
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute([$idrol]);
+            
+            if ($stmt->rowCount() > 0) {
+                $this->dbSeguridad->commit();
+                return ['status' => true, 'message' => 'Rol desactivado correctamente.'];
+            } else {
+                $this->dbSeguridad->rollBack();
+                return ['status' => false, 'message' => 'No se encontró el rol o no se pudo desactivar.'];
+            }
+
+        } catch (PDOException $e) {
+            $this->dbSeguridad->rollBack();
+            error_log("RolesModel::deleteRolById -> " . $e->getMessage());
+            return ['status' => false, 'message' => 'Error de base de datos al desactivar el rol.'];
+        }
     }
 
+    public function selectAllRolesActivos()
+    {
+        $sql = "SELECT idrol, nombre, descripcion, estatus, fecha_creacion, ultima_modificacion 
+                FROM roles 
+                WHERE estatus = 'ACTIVO' 
+                ORDER BY nombre ASC";
+
+        try {
+            $stmt = $this->dbSeguridad->query($sql);
+            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ["status" => true, "message" => "Roles obtenidos.", "data" => $roles];
+        } catch (PDOException $e) {
+            error_log("RolesModel::selectAllRolesActivos - Error al seleccionar roles: " . $e->getMessage());
+            return ["status" => false, "message" => "Error al obtener roles: " . $e->getMessage(), "data" => []];
+        }
+    }
+
+    public function selectAllRolesForSelect()
+    {
+        $sql = "SELECT idrol, nombre FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC";
+        
+        try {
+            $stmt = $this->dbSeguridad->query($sql);
+            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ["status" => true, "message" => "Roles obtenidos.", "data" => $roles];
+        } catch (PDOException $e) {
+            error_log("RolesModel::selectAllRolesForSelect - Error al seleccionar roles: " . $e->getMessage());
+            return ["status" => false, "message" => "Error al obtener roles: " . $e->getMessage(), "data" => []];
+        }
+    }
 }
 ?>
