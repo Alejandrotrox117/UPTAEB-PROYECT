@@ -160,7 +160,7 @@
               <select id="select_producto_agregar_modal" name="select_producto_agregar_modal" class="w-full px-4 py-2 text-sm bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                 <option value="">Seleccione un producto...</option>
               </select>
-              <div id="error-select_producto_agregar_modal-vacio" class="mt-1 hidden text-xs text-red-500"></div>
+              <!-- <div id="error-select_producto_agregar_modal-vacio" class="mt-1 hidden text-xs text-red-500"></div> -->
             </div>
             <button type="button" id="agregarDetalleBtn" class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 sm:w-auto transition">
               <i class="mr-2 fas fa-plus"></i>Agregar al Detalle

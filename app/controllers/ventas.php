@@ -1,13 +1,11 @@
 <?php
 require_once "app/core/Controllers.php";
+
 require_once "helpers/helpers.php";
 
 class Ventas extends Controllers
 {
-
-
-
-    public function set_model($model)
+     public function set_model($model)
     {
         $this->model = $model;
     }
@@ -19,8 +17,14 @@ class Ventas extends Controllers
 
     public function __construct()
     {
-        parent::__construct();
+     parent::__construct();
+    // Cargar el modelo aquí si no se hace automáticamente
+    $this->load_model('VentasModel'); // Asumiendo que tienes un método loadModel
+    // O directamente:
+    // require_once "models/VentasModel.php"; // Ajusta la ruta
+    // $this->set_model(new VentasModel());
     }
+
 
     public function index()
     {
@@ -29,279 +33,249 @@ class Ventas extends Controllers
         $data['page_functions_js'] = "functions_ventas.js";
         $this->views->getView($this, "ventas", $data);
     }
-    
-   
-public function getventasData()
-{
-    try {
-        
-        $arrData = $this->get_model()->SelectAllventas();
 
-      
-        $data = [];
-        foreach ($arrData as $venta) {
-            $data[] = [
-                'idventa' => $venta->getIdventa(),
-                'nombre_producto' => $venta->getIdProducto(),
-                'fecha' => $venta->getFecha(),
-                'cantidad' => $venta->getCantidad(),
-                'estatus' => $venta->getEstatus(),
-                'descuento' => $venta->getDescuento(),
-                'total' => $venta->getTotal(),
-                'fecha_creacion' => $venta->getFechaCreacion(),
-            ];
-        }
-
-       
-        $response = [
-            "draw" => intval($_GET['draw'] ?? 1),
-            "recordsTotal" => count($data),
-            "recordsFiltered" => count($data),
-            "data" => $data
-        ];
-
-    
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-    } catch (Exception $e) {
-    
-        echo json_encode([
-            "status" => false,
-            "message" => "Error al obtener los datos: " . $e->getMessage()
-        ], JSON_UNESCAPED_UNICODE);
-    }
-    exit();
-}
-  
-
-
-public function createventa()
-{
-    try {
-        // Leer los datos JSON enviados por el frontend
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-
-        // Depuración: Verifica los datos recibidos
-        error_log("Datos recibidos en createventa:");
-        error_log(print_r($data, true));
-
-        // Validar que los datos no sean nulos
-        if (!$data || !is_array($data)) {
-            echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-            exit();
-        }
-
-        // Validar campos obligatorios
-        if (empty($data['cedula'])) {
-            echo json_encode(["status" => false, "message" => "El campo 'cedula' es obligatorio."]);
-            exit();
-        }
-
-        // Usar los métodos set del modelo para establecer los valores
-        $model = $this->get_model();
-        $model->setNombre(trim($data['nombre'] ?? ''));
-        $model->setApellido(trim($data['apellido'] ?? ''));
-        $model->setCedula(trim($data['cedula'] ?? ''));
-        $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-        $model->setDireccion(trim($data['direccion'] ?? ''));
-        $model->setEstatus(trim($data['estatus'] ?? ''));
-        $model->setObservaciones(trim($data['observaciones'] ?? ''));
-
-        // Insertar los datos usando el modelo
-        $insertData = $model->insertventa();
-
-        // Respuesta al venta
-        if ($insertData) {
-            echo json_encode(["status" => true, "message" => "venta registrado correctamente."]);
-        } else {
-            echo json_encode(["status" => false, "message" => "Error al registrar el venta. Intenta nuevamente."]);
-        }
-    } catch (Exception $e) {
-        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-    }
-    exit();
-}
-
-
-
-
-public function deleteventa()
-{
-    try {
-        // Leer los datos JSON enviados por el frontend
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-
-        // Validar que los datos sean válidos
-        if (!$data || !isset($data['idventa'])) {
-            echo json_encode([
-                "status" => false,
-                "message" => "ID de venta no proporcionado o datos inválidos."
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        // Extraer el ID del venta
-        $idventa = trim($data['idventa']);
-
-        // Validar que el ID no esté vacío
-        if (empty($idventa)) {
-            echo json_encode([
-                "status" => false,
-                "message" => "El ID del venta no puede estar vacío."
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        // Desactivar el venta usando el modelo
-        $deleteData = $this->get_model()->deleteventa($idventa);
-
-        // Respuesta al venta
-        if ($deleteData) {
-            echo json_encode([
-                "status" => true,
-                "message" => "venta eliminado correctamente."
-            ], JSON_UNESCAPED_UNICODE);
-        } else {
-            echo json_encode([
-                "status" => false,
-                "message" => "Error al eliminar el venta. Intenta nuevamente."
-            ], JSON_UNESCAPED_UNICODE);
-        }
-    } catch (Exception $e) {
-        // Manejo de errores inesperados
-        echo json_encode([
-            "status" => false,
-            "message" => "Error inesperado: " . $e->getMessage()
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    exit();
-}
-
-public function updateventa()
-{
-    try {
-        // Leer los datos JSON enviados por el frontend
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-
-        // Validar que los datos sean válidos
-        if (!$data || !is_array($data)) {
-            echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-            return;
-        }
-
-        // Validar campos obligatorios
-        if (empty($data['idventa']) || empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula'])) {
-            echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-            return;
-        }
-
-       
-
-        // Usar los métodos set del modelo para establecer los valores
-        $model = $this->get_model();
-        $model->setIdventa(trim($data['idventa']));
-        $model->setNombre(trim($data['nombre']));
-        $model->setApellido(trim($data['apellido']));
-        $model->setCedula(trim($data['cedula']));
-        $model->setFechaNacimiento(trim($data['fecha_nacimiento'] ?? ''));
-        $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-        
-        $model->setDireccion(trim($data['direccion'] ?? ''));
-     
-        $model->setEstatus(trim($data['estatus'] ?? ''));
-
-        // Actualizar los datos usando el modelo
-        $updateData = $model->updateventa();
-
-        // Respuesta al venta
-        if ($updateData) {
-            echo json_encode(["status" => true, "message" => "venta actualizado correctamente."]);
-        } else {
-            echo json_encode(["status" => false, "message" => "Error al actualizar el venta. Intenta nuevamente."]);
-        }
-    } catch (Exception $e) {
-        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-    }
-    exit();
-}
-
-    
-    public function getventaById($idventa)
+    // Método para obtener datos de ventas para DataTables
+    public function getventasData()
     {
         try {
-            // Validar que el ID del venta sea válido
-            if (empty($idventa) || !is_numeric($idventa)) {
-                echo json_encode(["status" => false, "message" => "ID de venta no válido."]);
-                return;
-            }
+            $arrData = $this->model->obtenerTodasLasVentasConCliente();
 
-            // Obtener los datos del venta desde el modelo
-            $venta = $this->get_model()->getventaById($idventa);
+            $response = [
+                "draw" => intval($_GET['draw'] ?? 0) + 1,
+                "recordsTotal" => count($arrData),
+                "recordsFiltered" => count($arrData),
+                "data" => $arrData ?: []
+            ];
 
-            // Validar si se encontró el venta
-            if ($venta) {
-                echo json_encode(["status" => true, "data" => $venta], JSON_UNESCAPED_UNICODE);
-            } else {
-                echo json_encode(["status" => false, "message" => "venta no encontrado."], JSON_UNESCAPED_UNICODE);
-            }
+            header('Content-Type: application/json');
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+            header('Content-Type: application/json');
+            echo json_encode([
+                "status" => false,
+                "message" => "Error al obtener los datos de ventas: " . $e->getMessage(),
+                "data" => []
+            ], JSON_UNESCAPED_UNICODE);
         }
         exit();
     }
 
-    // public function guardarventa()
-    // {
-    //     try {
-    //         // Leer los datos JSON enviados por el frontend
-    //         $json = file_get_contents('php://input');
-    //         $data = json_decode($json, true);
+    // Método para procesar las peticiones tipo API
+    public function procesarPeticion()
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+        
+        if ($method === 'GET') {
+            $this->manejarGET();
+        } elseif ($method === 'POST') {
+            $this->manejarPOST();
+        } else {
+            $this->responderError("Método no permitido", 405);
+        }
+    }
 
-    //         // Validar que los datos sean válidos
-    //         if (!$data || !is_array($data)) {
-    //             echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-    //             return;
-    //         }
+    private function manejarGET()
+    {
+        $accion = $_GET['accion'] ?? '';
+        
+        try {
+            switch ($accion) {
+                case 'listar':
+                    $ventas = $this->model->obtenerVentas();
+                    $this->responderExito(['ventas' => $ventas]);
+                    break;
+                    
+                case 'obtener_clientes':
+                    $clientes = $this->model->obtenerClientes();
+                    $this->responderJSON($clientes);
+                    break;
+                    
+                case 'obtener_productos':
+                    $productos = $this->model->obtenerProductos();
+                    $this->responderJSON($productos);
+                    break;
+                    
+                case 'obtener_detalle':
+                    $id = $_GET['id'] ?? 0;
+                    if ($id > 0) {
+                        $detalle = $this->model->obtenerDetalleVenta($id);
+                        $venta = $this->model->obtenerVentaPorId($id);
+                        $this->responderExito(['detalle' => $detalle, 'venta' => $venta]);
+                    } else {
+                        $this->responderError('ID de venta no válido');
+                    }
+                    break;
+                    
+                default:
+                    $this->responderError('Acción no válida');
+                    break;
+            }
+        } catch (Exception $e) {
+            error_log("Error en manejarGET: " . $e->getMessage());
+            $this->responderError($e->getMessage());
+        }
+    }
 
-    //         // Validar campos obligatorios
-    //         if (empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula'])) {
-    //             echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-    //             return;
-    //         }
+    private function manejarPOST()
+    {
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+        
+        if (!$data) {
+            $this->responderError('Datos JSON no válidos');
+            return;
+        }
+        
+        $accion = $data['accion'] ?? '';
+        
+        try {
+            switch ($accion) {
+                case 'crear':
+                    $this->crearVenta($data);
+                    break;
+                    
+                case 'eliminar':
+                    $this->eliminarVenta($data);
+                    break;
+                    
+                default:
+                    $this->responderError('Acción no válida');
+                    break;
+            }
+        } catch (Exception $e) {
+            error_log("Error en manejarPOST: " . $e->getMessage());
+            $this->responderError($e->getMessage());
+        }
+    }
 
-    //         // Obtener el modelo
-    //         $model = $this->get_model();
-    //             $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-    //             $model->setEstatus(trim($data['estatus'] ?? 'ACTIVO'));
-    //             $model->setObservaciones(trim($data['observaciones'] ?? ''));
+    // Método para crear venta (compatible con el frontend JavaScript)
+    private function crearVenta($data)
+    {
+        // Validar datos requeridos
+        if (empty($data['idcliente']) || empty($data['fecha_venta']) || empty($data['detalles'])) {
+            $this->responderError('Faltan datos requeridos');
+            return;
+        }
 
-    //             $result = $model->insertventa();
-    //         } else {
-    //             // Lógica para actualizar un venta existente
-    //             $model->setIdventa(trim($data['idventa']));
-    //             $model->setCedula(trim($data['cedula']));
-    //             $model->setNombre(trim($data['nombre']));
-    //             $model->setApellido(trim($data['apellido']));
-    //             $model->setDireccion(trim($data['direccion'] ?? ''));
-    //             $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-    //             $model->setEstatus(trim($data['estatus'] ?? 'ACTIVO'));
-    //             $model->setObservaciones(trim($data['observaciones'] ?? ''));
+        $idcliente = $data['idcliente'];
+        $fecha_venta = $data['fecha_venta'];
+        $total_venta = $data['total_venta'] ?? 0;
+        $detalles = $data['detalles'];
 
-    //             $result = $model->updateventa();
-    //         }
+        // Validar que hay detalles
+        if (!is_array($detalles) || empty($detalles)) {
+            $this->responderError('La venta debe tener al menos un producto');
+            return;
+        }
 
-    //         // Respuesta al venta
-    //         if ($result) {
-    //             echo json_encode(["status" => true, "message" => "Operación realizada correctamente."]);
-    //         } else {
-    //             echo json_encode(["status" => false, "message" => "Error al guardar los datos del venta."]);
-    //         }
-    //     } catch (Exception $e) {
-    //         echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-    //     }
-    //     exit();
-    // }
+        $resultado = $this->model->crearVenta($idcliente, $fecha_venta, $total_venta, $detalles);
+        
+        if ($resultado['success']) {
+            $this->responderExito($resultado);
+        } else {
+            $this->responderError($resultado['message']);
+        }
+    }
+
+    // Método para eliminar/desactivar venta
+    private function eliminarVenta($data)
+    {
+        $id = $data['id'] ?? 0;
+        
+        if ($id <= 0) {
+            $this->responderError('ID de venta no válido');
+            return;
+        }
+
+        $resultado = $this->model->eliminarVenta($id);
+        
+        if ($resultado['success']) {
+            $this->responderExito($resultado);
+        } else {
+            $this->responderError($resultado['message']);
+        }
+    }
+
+    // Métodos para endpoints específicos (compatibles con el nuevo frontend)
+    public function buscar()
+    {
+        try {
+            $criterio = $_GET['criterio'] ?? '';
+            
+            if (strlen($criterio) < 2) {
+                $this->responderJSON([]);
+                return;
+            }
+
+            $clientes = $this->model->buscarClientes($criterio);
+            $this->responderJSON($clientes);
+        } catch (Exception $e) {
+            error_log("Error en buscar clientes: " . $e->getMessage());
+            $this->responderError($e->getMessage());
+        }
+    }
+
+    public function getListaProductosParaFormulario()
+    {
+        try {
+            $productos = $this->model->getListaProductosParaFormulario();
+            $this->responderJSON($productos);
+        } catch (Exception $e) {
+            error_log("Error al obtener productos: " . $e->getMessage());
+            $this->responderError($e->getMessage());
+        }
+    }
+
+    public function getMonedasActivas()
+    {
+        try {
+            $monedas = $this->model->getMonedasActivas();
+            $this->responderJSON($monedas);
+        } catch (Exception $e) {
+            error_log("Error al obtener monedas: " . $e->getMessage());
+            $this->responderError($e->getMessage());
+        }
+    }
+
+    // Métodos públicos para compatibilidad con el frontend anterior
+    public function createventa()
+    {
+        $this->procesarPeticion();
+    }
+
+    public function deleteventa()
+    {
+        $this->procesarPeticion();
+    }
+
+    // Métodos de respuesta
+    private function responderJSON($data)
+    {
+        header('Content-Type: application/json');
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    private function responderExito($data = [], $mensaje = 'Operación exitosa')
+    {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => $mensaje,
+            'data' => $data
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    private function responderError($mensaje, $codigo = 400)
+    {
+        http_response_code($codigo);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => $mensaje
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
 }
+?>
