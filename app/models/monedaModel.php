@@ -11,11 +11,14 @@ class monedaModel extends Mysql
     private $nombre;
     private $valor;
     private $estatus;
-    public function __construct()
+  public function __construct()
     {
-          parent::__construct();
+        parent::__construct();
         $this->conexion = new Conexion();
-        $this->db = (new Conexion())->connect();
+        $this->conexion->connect();
+        $this->db = $this->conexion->get_conectGeneral();
+       
+
     }
 
     // Métodos Getters y Setters

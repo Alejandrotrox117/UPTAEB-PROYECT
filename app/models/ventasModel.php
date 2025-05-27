@@ -22,7 +22,10 @@ class VentasModel extends Mysql
     {
         parent::__construct();
         $this->conexion = new Conexion();
-        $this->db = (new Conexion())->connect();
+        $this->conexion->connect();
+        $this->db = $this->conexion->get_conectGeneral();
+       
+
     }
 
     // Métodos Getters y Setters
