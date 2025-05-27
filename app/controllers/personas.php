@@ -64,14 +64,14 @@ class Personas extends Controllers
         die();
     }
 
-    public function getPersonaById(int $idpersona_pk) // Recibe el PK de la tabla personas
+    public function getPersonaById(int $idpersona_pk)
     {
         if ($idpersona_pk > 0) {
             $arrData = $this->model->selectPersonaById($idpersona_pk);
             if (empty($arrData)) {
                 $response = ["status" => false, "message" => "Datos no encontrados."];
             } else {
-                if (!empty($arrData['persona_fecha'])) { // Ajustado al alias del modelo
+                if (!empty($arrData['persona_fecha'])) {
                     $arrData['fecha_nacimiento_formato'] = date('Y-m-d', strtotime($arrData['persona_fecha']));
                 } else {
                     $arrData['fecha_nacimiento_formato'] = '';
@@ -85,42 +85,57 @@ class Personas extends Controllers
 
     public function updatePersona()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
-
-            if (empty($data['idpersona_pk']) || empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula']) || empty($data['telefono_principal'])) {
-                $response = ["status" => false, "message" => "ID y campos obligatorios no pueden estar vacíos."];
-                echo json_encode($response, JSON_UNESCAPED_UNICODE);
-                die();
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$input) {
+                echo json_encode(['status' => false, 'message' => 'Datos no válidos']);
+                return;
             }
 
-            $personaData = [
-                'idpersona_pk' => intval($data['idpersona_pk']), // PK de la tabla personas
-                'nombre' => trim($data['nombre']),
-                'apellido' => trim($data['apellido']),
-                'cedula' => trim($data['cedula']), // Nueva cédula
-                'cedula_original' => trim($data['cedula_original'] ?? $data['cedula']), // Cédula original para buscar usuario
-                'rif' => trim($data['rif'] ?? ''),
-                'genero' => $data['genero'] ?? null,
-                'fecha_nacimiento' => $data['fecha_nacimiento'] ?: null,
-                'correo_electronico_persona' => trim($data['correo_electronico_persona'] ?? ''),
-                'direccion' => trim($data['direccion'] ?? ''),
-                'estado_residencia' => trim($data['estado'] ?? ''),
-                'ciudad_residencia' => trim($data['ciudad'] ?? ''),
-                'pais_residencia' => trim($data['pais'] ?? ''),
-                'tipo_persona' => $data['tipo'] ?? null,
-                'observaciones' => trim($data['observaciones'] ?? ''),
-                'telefono_principal' => trim($data['telefono_principal']),
-                'correo_electronico_usuario' => trim($data['correo_electronico_usuario'] ?? ''),
-                'clave_usuario' => $data['clave_usuario'] ?? '',
-                'idrol_usuario' => $data['idrol_usuario'] ?? null
-            ];
+            $idPersona = intval($input['idpersona_pk'] ?? 0);
+            if ($idPersona <= 0) {
+                echo json_encode(['status' => false, 'message' => 'ID de persona no válido']);
+                return;
+            }
 
-            $request = $this->model->updatePersonaConUsuario($personaData);
-            echo json_encode($request, JSON_UNESCAPED_UNICODE);
+            // Preparar datos para el modelo
+            $dataParaModelo = [];
+            
+            if (isset($input['persona'])) {
+                $dataParaModelo = array_merge($dataParaModelo, [
+                    'nombre' => trim($input['persona']['nombre'] ?? ''),
+                    'apellido' => trim($input['persona']['apellido'] ?? ''),
+                    'identificacion' => trim($input['persona']['identificacion'] ?? ''),
+                    'genero' => trim($input['persona']['genero'] ?? ''),
+                    'fecha_nacimiento' => trim($input['persona']['fecha_nacimiento'] ?? ''),
+                    'correo_electronico_persona' => trim($input['persona']['correo_electronico'] ?? ''),
+                    'direccion' => trim($input['persona']['direccion'] ?? ''),
+                    'observaciones' => trim($input['persona']['observaciones'] ?? ''),
+                    'telefono_principal' => trim($input['persona']['telefono_principal'] ?? ''),
+                ]);
+            }
+
+            if (isset($input['actualizar_usuario_flag']) && $input['actualizar_usuario_flag'] == "1" && isset($input['usuario'])) {
+                $dataParaModelo = array_merge($dataParaModelo, [
+                    'actualizar_usuario' => "1",
+                    'correo_electronico_usuario' => trim($input['usuario']['correo_electronico_usuario'] ?? ''),
+                    'clave_usuario' => trim($input['usuario']['clave_usuario'] ?? ''),
+                    'idrol_usuario' => trim($input['usuario']['idrol_usuario'] ?? ''),
+                ]);
+            }
+
+            $resultado = $this->model->updatePersonaConUsuario($idPersona, $dataParaModelo);
+            
+            echo json_encode($resultado);
+
+        } catch (Exception $e) {
+            error_log("Error en updatePersona: " . $e->getMessage());
+            echo json_encode([
+                'status' => false, 
+                'message' => 'Error interno del servidor'
+            ]);
         }
-        die();
     }
 
     public function deletePersona()
@@ -128,7 +143,7 @@ class Personas extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
              $json = file_get_contents('php://input');
              $data = json_decode($json, true);
-             $idpersona_pk = isset($data['idpersona_pk']) ? intval($data['idpersona_pk']) : 0; // PK de la tabla personas
+             $idpersona_pk = isset($data['idpersona_pk']) ? intval($data['idpersona_pk']) : 0;
 
             if ($idpersona_pk > 0) {
                 $requestDelete = $this->model->deletePersonaById($idpersona_pk);
@@ -142,6 +157,15 @@ class Personas extends Controllers
                  $response = ["status" => false, "message" => "ID de persona no válido."];
                  echo json_encode($response, JSON_UNESCAPED_UNICODE);
             }
+        }
+        die();
+    }
+
+    public function getRoles()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            $arrData = $this->model->selectAllRoles();
+            echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
         }
         die();
     }
