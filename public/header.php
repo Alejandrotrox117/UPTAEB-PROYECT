@@ -136,9 +136,9 @@
           </li>
 
           <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-            <a href="/project/inventario" class="flex items-center">
+            <a href="/project/movimientos" class="flex items-center">
               <span><i class="fa-solid fa-warehouse icon"></i></span>
-              <span class="ml-5">Inventario</span>
+              <span class="ml-5">Movimientos de existencias</span>
             </a>
           </li>
           <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
