@@ -14,6 +14,7 @@ import {
 
 document.addEventListener("DOMContentLoaded", function () {
   // --- Inicialización General ---
+  
   inicializarDataTable();
   const ventaForm = document.getElementById("ventaForm");
 
@@ -753,19 +754,88 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
     });
   }
 
+//DETALLE DE VENTA
+document.addEventListener("click", async function (e) {
+  const verDetalleBtn = e.target.closest(".ver-detalle-btn");
+  if (verDetalleBtn) {
+    const idventa = verDetalleBtn.getAttribute("data-idventa");
+    if (!idventa) return;
 
+    // Mostrar el modal
+    const modal = document.getElementById("modalDetalleVenta");
+    modal.classList.remove("opacity-0", "pointer-events-none", "transparent");
+    modal.classList.add("opacity-100");
+
+    // Cargar datos de la venta
+    try {
+      const respVenta = await fetch(`ventas/getVentaDetalle?idventa=${idventa}`);
+      const data = await respVenta.json();
+      if (!data.status) throw new Error(data.message || "No se pudo obtener el detalle.");
+
+      // Renderizar los datos en el modal
+      document.getElementById("detalleVentaContenido").innerHTML = `
+        <div class="mb-4">
+          <h4 class="font-semibold text-gray-700 mb-2">Datos Generales</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div><b>Nro Venta:</b> ${data.venta.nro_venta}</div>
+            <div><b>Fecha:</b> ${data.venta.fecha_venta}</div>
+            <div><b>Cliente:</b> ${data.venta.cliente_nombre}</div>
+            <div><b>Moneda:</b> ${data.venta.moneda}</div>
+            <div><b>Estatus:</b> ${data.venta.estatus}</div>
+            <div><b>Observaciones:</b> ${data.venta.observaciones || '-'}</div>
+          </div>
+        </div>
+        <div class="mb-4">
+          <h4 class="font-semibold text-gray-700 mb-2">Detalle de Productos</h4>
+          <table class="w-full text-xs border">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-2 py-1">Producto</th>
+                <th class="px-2 py-1">Cantidad</th>
+                <th class="px-2 py-1">Precio U.</th>
+                <th class="px-2 py-1">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.detalle.map(d => `
+                <tr>
+                  <td class="px-2 py-1">${d.producto_nombre}</td>
+                  <td class="px-2 py-1">${d.cantidad}</td>
+                  <td class="px-2 py-1">${d.precio_unitario_venta}</td>
+                  <td class="px-2 py-1">${d.sutotal_linea}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="mb-2">
+          <b>Subtotal:</b> ${data.venta.subtotal_general} <br>
+          <b>Descuento (%):</b> ${data.venta.descuento_porcentaje_general} <br>
+          <b>Monto Descuento:</b> ${data.venta.monto_descuento_general} <br>
+          <b>Total General:</b> ${data.venta.total_general}
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById("detalleVentaContenido").innerHTML = `<div class="text-red-500">Error: ${err.message}</div>`;
+    }
+  }
+});
+
+// Cerrar el modal
+["cerrarModalDetalleVentaBtn", "cerrarModalDetalleVentaBtn2"].forEach(id => {
+  document.getElementById(id).addEventListener("click", function () {
+    const modal = document.getElementById("modalDetalleVenta");
+    modal.classList.add("opacity-0", "pointer-events-none", "transparent");
+    modal.classList.remove("opacity-100");
+    document.getElementById("detalleVentaContenido").innerHTML = "";
+  });
+});
   function inicializarDataTable() {
     let columnsConfig = [
       { data: "nro_venta", title: "Nro. Venta" },
       { data: "cliente_nombre", title: "Cliente" },
       { data: "fecha_venta", title: "Fecha" },
-      { 
-        data: "total_general", 
-        title: "Total",
-        render: function(data, type, row) {
-          return parseFloat(data).toFixed(2); 
-        }
-      },
+      
       { 
         data: "estatus", 
         title: "Estatus",
@@ -783,6 +853,7 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
 
     const tienePermisoEditar = typeof window.PERMISOS_USUARIO !== 'undefined' && window.PERMISOS_USUARIO.puede_editar;
     const tienePermisoEliminar = typeof window.PERMISOS_USUARIO !== 'undefined' && window.PERMISOS_USUARIO.puede_eliminar;
+
 
     if (tienePermisoEditar || tienePermisoEliminar) {
       columnsConfig.push({
@@ -802,6 +873,13 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
                 title="Editar Venta">
                 <i class="fas fa-edit"></i>
               </button>
+               <button 
+      type="button"
+      class="ver-detalle-btn text-indigo-500 hover:text-indigo-700 p-1 rounded-full focus:outline-none" 
+      data-idventa="${row.idventa}" 
+      title="Ver Detalle">
+      <i class="fas fa-eye"></i>
+    </button>
             `;
           }
 

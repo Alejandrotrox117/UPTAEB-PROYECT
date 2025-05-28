@@ -43,7 +43,7 @@ $permisos = $data['permisos'] ?? []; ?>
               <th class="py-2">Nro venta</th>
               <th class="py-2">Cliente</th>
               <th class="py-2">Fecha</th>
-              <th class="py-2">Total</th>
+          
               <th class="py-2">Estatus</th>
               <?php if ($permisos['puede_editar'] || $permisos['puede_eliminar']): ?>
               <th class="py-2">Acciones</th>
@@ -250,6 +250,26 @@ $permisos = $data['permisos'] ?? []; ?>
 </div>
 <?php endif; ?>
 
+
+<!-- Modal Detalle de Venta -->
+<div id="modalDetalleVenta" class="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 opacity-0 pointer-events-none transparent backdrop-blur-[2px] transition-opacity duration-300">
+  <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg">
+    <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-xl font-bold text-gray-800">
+        <i class="mr-1 text-indigo-600 fas fa-eye"></i>Detalle de Venta
+      </h3>
+      <button id="cerrarModalDetalleVentaBtn" class="p-1 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-200">
+        <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+      </button>
+    </div>
+    <div class="px-8 py-6 max-h-[70vh] overflow-y-auto" id="detalleVentaContenido">
+      <!-- Aquí se cargará el detalle por JS -->
+    </div>
+    <div class="flex justify-end px-6 py-3 bg-gray-50 border-t border-gray-200">
+      <button type="button" id="cerrarModalDetalleVentaBtn2" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 window.PERMISOS_USUARIO = {

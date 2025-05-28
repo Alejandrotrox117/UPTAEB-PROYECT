@@ -310,6 +310,30 @@ class Ventas extends Controllers
         exit();
     }
 
+public function getVentaDetalle()
+{
+    if (!$this->verificarUsuarioLogueado()) {
+        echo json_encode(['status' => false, 'message' => 'Usuario no autenticado']);
+        exit();
+    }
+    $idventa = intval($_GET['idventa'] ?? 0);
+    if ($idventa <= 0) {
+        echo json_encode(['status' => false, 'message' => 'ID de venta no válido']);
+        exit();
+    }
+    try {
+        $venta = $this->model->obtenerVentaPorId($idventa);
+        $detalle = $this->model->obtenerDetalleVenta($idventa);
+        echo json_encode([
+            'status' => true,
+            'venta' => $venta,
+            'detalle' => $detalle
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => false, 'message' => $e->getMessage()]);
+    }
+    exit();
+}
     public function getMonedasDisponibles()
     {
         if (!$this->verificarUsuarioLogueado()) {

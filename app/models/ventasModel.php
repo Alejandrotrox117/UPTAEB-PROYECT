@@ -187,40 +187,43 @@ class VentasModel extends Mysql
         }
     }
 
-    // Método para obtener una venta por ID
-    public function obtenerVentaPorId($idventa)
-    {
-        try {
-            $sql = "SELECT v.idventa, v.fecha_venta, v.total_venta, v.estatus,
-                           c.nombre as cliente_nombre, c.apellido as cliente_apellido
-                    FROM venta v
-                    INNER JOIN cliente c ON v.idcliente = c.idcliente
-                    WHERE v.idventa = ?";
-            return $this->search($sql, [$idventa]);
-        } catch (Exception $e) {
-            error_log("Error al obtener la venta: " . $e->getMessage());
-            throw new Exception("Error al obtener la venta: " . $e->getMessage());
-        }
+ 
+public function obtenerVentaPorId($idventa)
+{
+    try {
+        $sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda_general, v.subtotal_general, 
+                       v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
+                       c.nombre as cliente_nombre, c.apellido as cliente_apellido
+                FROM venta v
+                INNER JOIN cliente c ON v.idcliente = c.idcliente
+                WHERE v.idventa = ?";
+        return $this->search($sql, [$idventa]);
+    } catch (Exception $e) {
+        error_log("Error al obtener la venta: " . $e->getMessage());
+        throw new Exception("Error al obtener la venta: " . $e->getMessage());
     }
+}
 
     // Método para obtener el detalle de una venta
-    public function obtenerDetalleVenta($idventa)
-    {
-        try {
-            $sql = "SELECT dv.cantidad as detalle_cantidad, 
-                           dv.precio as detalle_precio, 
-                           dv.total as detalle_total, 
-                           p.nombre as producto_nombre
-                    FROM detalle_venta dv
-                    INNER JOIN productos p ON dv.idproducto = p.idproducto
-                    WHERE dv.idventa = ?
-                    ORDER BY p.nombre";
-            return $this->searchAll($sql, [$idventa]);
-        } catch (Exception $e) {
-            error_log("Error al obtener el detalle de la venta: " . $e->getMessage());
-            throw new Exception("Error al obtener el detalle de la venta: " . $e->getMessage());
-        }
+   
+public function obtenerDetalleVenta($idventa)
+{
+    try {
+        $sql = "SELECT dv.cantidad, 
+                       dv.precio_unitario_venta, 
+                       dv.subtotal_general, 
+                       dv.descripcion_temporal_producto,
+                       p.nombre as producto_nombre
+                FROM detalle_venta dv
+                INNER JOIN producto p ON dv.idproducto = p.idproducto
+                WHERE dv.id_venta = ?
+                ORDER BY p.nombre";
+        return $this->searchAll($sql, [$idventa]);
+    } catch (Exception $e) {
+        error_log("Error al obtener el detalle de la venta: " . $e->getMessage());
+        throw new Exception("Error al obtener el detalle de la venta: " . $e->getMessage());
     }
+}
 
     // Método para eliminar/desactivar venta
     public function eliminarVenta($idventa)
