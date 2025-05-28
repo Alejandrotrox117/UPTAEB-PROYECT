@@ -568,120 +568,130 @@ document.addEventListener("DOMContentLoaded", function () {
     limpiarFormularioVentaCompleto();
   });
 
-  // --- REGISTRAR VENTA PRINCIPAL ---
-  document.getElementById("registrarVentaBtn").addEventListener("click", function () {
-    const idClienteSeleccionado = document.getElementById("idcliente").value;
-    const nuevoClienteFormActivo = nuevoClienteContainer && !nuevoClienteContainer.classList.contains("hidden");
+ // --- REGISTRAR VENTA PRINCIPAL ---
+document.getElementById("registrarVentaBtn").addEventListener("click", function () {
+  const idClienteSeleccionado = document.getElementById("idcliente").value;
+  const nuevoClienteFormActivo = nuevoClienteContainer && !nuevoClienteContainer.classList.contains("hidden");
 
-    // Validar cliente seleccionado
-    if (!idClienteSeleccionado) {
-      if (nuevoClienteFormActivo) {
-        Swal.fire("Atención", "Guarde o cancele el nuevo cliente antes de proceder.", "warning");
-        const btnGuardarCliente = document.getElementById("registrarClienteInlineBtn");
-        if (btnGuardarCliente) btnGuardarCliente.focus();
-      } else {
-        Swal.fire("Atención", "Debe seleccionar un cliente para la venta.", "warning");
-        document.getElementById("inputCriterioClienteModal").focus();
+  // Validar cliente seleccionado
+  if (!idClienteSeleccionado) {
+    if (nuevoClienteFormActivo) {
+      Swal.fire("Atención", "Guarde o cancele el nuevo cliente antes de proceder.", "warning");
+      const btnGuardarCliente = document.getElementById("registrarClienteInlineBtn");
+      if (btnGuardarCliente) btnGuardarCliente.focus();
+    } else {
+      Swal.fire("Atención", "Debe seleccionar un cliente para la venta.", "warning");
+      document.getElementById("inputCriterioClienteModal").focus();
+    }
+    return;
+  }
+
+  // Validar campos de cabecera
+  if (!validarCamposVacios(camposCabeceraVenta, "ventaForm")) return;
+  
+  let cabeceraValida = true;
+  camposCabeceraVenta.forEach((campo) => {
+    const inputEl = ventaForm.querySelector(`#${campo.id}`);
+    if (inputEl && (inputEl.offsetParent !== null || inputEl.type === 'hidden')) {
+      let esValido = true;
+      if (campo.tipo === "select") {
+        esValido = validarSelect(inputEl, campo.mensajes);
+      } else if (campo.tipo === "date") {
+        esValido = validarFecha(inputEl, campo.mensajes);
+      } else if (campo.regex) {
+        esValido = validarCampo(inputEl, campo.regex, campo.mensajes);
       }
+      if (!esValido) cabeceraValida = false;
+    }
+  });
+  
+  if (!cabeceraValida) return;
+
+  // Validar detalle de venta
+  if (!validarDetalleVenta()) return;
+
+  // Validar que haya al menos un producto
+  const filas = detalleVentaBody.querySelectorAll("tr");
+  if (filas.length === 0) {
+    Swal.fire("Atención", "Debe agregar al menos un producto a la venta.", "warning");
+    return;
+  }
+
+  // Preparar datos para envío - FORMATO COMPATIBLE CON EL BACKEND PHP
+  const datosVentaFinal = {
+    idcliente: parseInt(idClienteSeleccionado),
+    fecha_venta: document.getElementById("fecha_venta_modal").value,
+    idmoneda_general: parseInt(document.getElementById("idmoneda_general").value),
+    subtotal_general: parseFloat(document.getElementById("subtotal_general").value || 0),
+    descuento_porcentaje_general: parseFloat(document.getElementById("descuento_porcentaje_general").value || 0),
+    monto_descuento_general: parseFloat(document.getElementById("monto_descuento_general").value || 0),
+    total_general: parseFloat(document.getElementById("total_general").value || 0),
+    estatus: 'activo',
+    observaciones: document.getElementById("observaciones")?.value || '',
+    detalles: []
+  };
+
+  // Recopilar detalles en el formato esperado por el backend PHP
+  filas.forEach(fila => {
+    const idProducto = fila.querySelector("input[name='detalle_idproducto[]']").value;
+    const cantidad = fila.querySelector("input[name='detalle_cantidad[]']").value;
+    const precio = fila.querySelector("input[name='detalle_precio_unitario_venta[]']").value;
+    const subtotal = fila.querySelector("input[name='detalle_subtotal[]']").value;
+
+    // Validar que los datos no estén vacíos
+    if (!idProducto || !cantidad || !precio || !subtotal) {
+      console.warn("Detalle con datos incompletos encontrado:", {idProducto, cantidad, precio, subtotal});
       return;
     }
 
-    // Validar campos de cabecera
-    if (!validarCamposVacios(camposCabeceraVenta, "ventaForm")) return;
-    
-    let cabeceraValida = true;
-    camposCabeceraVenta.forEach((campo) => {
-      const inputEl = ventaForm.querySelector(`#${campo.id}`);
-      if (inputEl && (inputEl.offsetParent !== null || inputEl.type === 'hidden')) {
-        let esValido = true;
-        if (campo.tipo === "select") {
-          esValido = validarSelect(inputEl, campo.mensajes);
-        } else if (campo.tipo === "date") {
-          esValido = validarFecha(inputEl, campo.mensajes);
-        } else if (campo.regex) {
-          esValido = validarCampo(inputEl, campo.regex, campo.mensajes);
-        }
-        if (!esValido) cabeceraValida = false;
-      }
-    });
-    
-    if (!cabeceraValida) return;
-
-    // Validar detalle de venta
-    if (!validarDetalleVenta()) return;
-
-    // Validar que haya al menos un producto
-    const filas = detalleVentaBody.querySelectorAll("tr");
-    if (filas.length === 0) {
-      Swal.fire("Atención", "Debe agregar al menos un producto a la venta.", "warning");
-      return;
-    }
-
-    // Preparar datos para envío - FORMATO COMPATIBLE CON EL BACKEND PHP
-    const datosVentaFinal = {
-      accion: 'crear',
-      idcliente: parseInt(idClienteSeleccionado),
-      fecha_venta: document.getElementById("fecha_venta_modal").value,
-      total_venta: parseFloat(document.getElementById("total_general").value || 0),
-      detalles: []
-    };
-
-    // Recopilar detalles en el formato esperado por el backend PHP
-    filas.forEach(fila => {
-      const idProducto = fila.querySelector("input[name='detalle_idproducto[]']").value;
-      const cantidad = fila.querySelector("input[name='detalle_cantidad[]']").value;
-      const precio = fila.querySelector("input[name='detalle_precio_unitario_venta[]']").value;
-      const subtotal = fila.querySelector("input[name='detalle_subtotal[]']").value;
-
-      // Validar que los datos no estén vacíos
-      if (!idProducto || !cantidad || !precio || !subtotal) {
-        console.warn("Detalle con datos incompletos encontrado:", {idProducto, cantidad, precio, subtotal});
-        return;
-      }
-
-      datosVentaFinal.detalles.push({
-        detalle_idproducto: parseInt(idProducto),
-        detalle_cantidad: parseInt(cantidad),
-        detalle_precio: parseFloat(precio),
-        detalle_total: parseFloat(subtotal)
-      });
-    });
-
-    // Validar que se agregaron detalles válidos
-    if (datosVentaFinal.detalles.length === 0) {
-      Swal.fire("Error", "No se encontraron productos válidos en el detalle.", "error");
-      return;
-    }
-
-    console.log("Datos Finales de VENTA a enviar:", datosVentaFinal);
-
-    // Enviar datos usando fetch directamente para compatibilidad con el backend PHP
-    fetch('ventas.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(datosVentaFinal)
-    })
-    .then(response => response.json())
-    .then(result => {
-      if (result.success) {
-        Swal.fire("¡Éxito!", result.message || "Venta registrada correctamente.", "success").then(() => {
-          if (typeof $ !== 'undefined' && $("#Tablaventas").length) {
-            $("#Tablaventas").DataTable().ajax.reload();
-          }
-          cerrarModal("ventaModal");
-          limpiarFormularioVentaCompleto();
-        });
-      } else {
-        Swal.fire("¡Error!", result.message || "No se pudo registrar la venta.", "error");
-      }
-    })
-    .catch(error => {
-      console.error("Error al registrar venta:", error);
-      Swal.fire("¡Error!", "Error de comunicación con el servidor.", "error");
+    datosVentaFinal.detalles.push({
+      idproducto: parseInt(idProducto),
+      cantidad: parseFloat(cantidad),
+      precio_unitario_venta: parseFloat(precio),
+      subtotal_general: parseFloat(subtotal),
+      descripcion_temporal_producto: '', // Completa si tienes este dato
+      id_moneda_detalle: datosVentaFinal.idmoneda_general, // O el valor correcto si es diferente
+      peso_vehiculo: 0,
+      peso_bruto: 0,
+      peso_neto: 0
     });
   });
+
+  // Validar que se agregaron detalles válidos
+  if (datosVentaFinal.detalles.length === 0) {
+    Swal.fire("Error", "No se encontraron productos válidos en el detalle.", "error");
+    return;
+  }
+
+  console.log("Datos Finales de VENTA a enviar:", datosVentaFinal);
+
+  // Enviar datos usando fetch directamente para compatibilidad con el backend PHP
+  fetch('ventas/insertVenta', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(datosVentaFinal)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.status || result.success) {
+      Swal.fire("¡Éxito!", result.message || "Venta registrada correctamente.", "success").then(() => {
+        if (typeof $ !== 'undefined' && $("#Tablaventas").length) {
+          $("#Tablaventas").DataTable().ajax.reload();
+        }
+        cerrarModal("ventaModal");
+        limpiarFormularioVentaCompleto();
+      });
+    } else {
+      Swal.fire("¡Error!", result.message || "No se pudo registrar la venta.", "error");
+    }
+  })
+  .catch(error => {
+    console.error("Error al registrar venta:", error);
+    Swal.fire("¡Error!", "Error de comunicación con el servidor.", "error");
+  });
+});
 
   // --- Eventos de Tabla y CRUD (Eliminar, Editar - placeholders) ---
   document.addEventListener("click", function (e) {

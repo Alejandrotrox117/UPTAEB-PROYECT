@@ -97,90 +97,77 @@ class VentasModel extends Mysql
     }
 
     // Método para crear una nueva venta
-    public function crearVenta($idcliente, $fecha_venta, $total_venta, $detalles)
+  private function generarNumeroVenta()
     {
-        return $this->executeTransaction(function($mysql) use ($idcliente, $fecha_venta, $total_venta, $detalles) {
-            
-            // Validar datos de entrada
-            if (empty($idcliente) || !is_numeric($idcliente)) {
-                throw new Exception("El ID del cliente es requerido y debe ser numérico.");
-            }
-            
-            if (empty($fecha_venta)) {
-                throw new Exception("La fecha de venta es requerida.");
-            }
-            
-            if (empty($total_venta) || !is_numeric($total_venta)) {
-                throw new Exception("El total de la venta es requerido y debe ser numérico.");
-            }
-            
-            if (empty($detalles) || !is_array($detalles)) {
-                throw new Exception("Los detalles de la venta son requeridos.");
-            }
-            
-            // Validar cada detalle
-            foreach ($detalles as $detalle_item) {
-                if (empty($detalle_item['detalle_idproducto']) || !is_numeric($detalle_item['detalle_idproducto'])) {
-                    throw new Exception("Faltan datos de detalle de la venta ('detalle_idproducto') o no tienen el formato correcto.");
-                }
-                
-                if (empty($detalle_item['detalle_cantidad']) || !is_numeric($detalle_item['detalle_cantidad'])) {
-                    throw new Exception("Faltan datos de detalle de la venta ('detalle_cantidad') o no tienen el formato correcto.");
-                }
-                
-                if (!isset($detalle_item['detalle_precio']) || !is_numeric($detalle_item['detalle_precio'])) {
-                    throw new Exception("Faltan datos de detalle de la venta ('detalle_precio') o no tienen el formato correcto.");
-                }
-                
-                if (!isset($detalle_item['detalle_total']) || !is_numeric($detalle_item['detalle_total'])) {
-                    throw new Exception("Faltan datos de detalle de la venta ('detalle_total') o no tienen el formato correcto.");
+        // Busca el último idventa registrado
+        $sql = "SELECT MAX(idventa) as ultimo_id FROM venta";
+        $result = $this->search($sql);
+        $ultimoId = isset($result['ultimo_id']) ? intval($result['ultimo_id']) : 0;
+        $nuevoId = $ultimoId + 1;
+        // Formato: V-000001
+        return 'V-' . str_pad($nuevoId, 6, '0', STR_PAD_LEFT);
+    }
+
+    // Método para crear una nueva venta
+    public function crearVenta($data, $detalles)
+    {
+        return $this->executeTransaction(function($mysql) use ($data, $detalles) {
+            // Validar datos obligatorios
+            $camposObligatorios = [
+                'idcliente', 'fecha_venta', 'idmoneda_general', 'subtotal_general',
+                'descuento_porcentaje_general', 'monto_descuento_general', 'total_general', 'estatus'
+            ];
+            foreach ($camposObligatorios as $campo) {
+                if (!isset($data[$campo])) {
+                    throw new Exception("Falta el campo obligatorio: $campo");
                 }
             }
-            
-            // Verificar que el cliente existe
-            $cliente = $this->search("SELECT COUNT(*) as count FROM cliente WHERE idcliente = ?", [$idcliente]);
-            if ($cliente['count'] == 0) {
-                throw new Exception("El cliente especificado no existe.");
-            }
-            
-            // Insertar la venta
-            $sqlVenta = "INSERT INTO venta (idcliente, fecha_venta, total_venta, estatus, fecha_creacion) 
-                         VALUES (?, ?, ?, 'Activo', NOW())";
-            
-            $idventa = $this->insert($sqlVenta, [$idcliente, $fecha_venta, $total_venta]);
-            
-            if (!$idventa) {
-                throw new Exception("No se pudo crear la venta.");
-            }
-            
-            // Insertar los detalles
-            $sqlDetalle = "INSERT INTO detalle_venta (idventa, idproducto, cantidad, precio, total) 
-                           VALUES (?, ?, ?, ?, ?)";
-            
-            foreach ($detalles as $detalle_item) {
-                // Verificar que el producto existe
-                $producto = $this->search("SELECT COUNT(*) as count FROM productos WHERE idproducto = ?", [$detalle_item['detalle_idproducto']]);
-                if ($producto['count'] == 0) {
-                    throw new Exception("El producto con ID {$detalle_item['detalle_idproducto']} no existe.");
-                }
-                
-                $resultDetalle = $this->insert($sqlDetalle, [
+
+            // Generar número de venta
+            $nro_venta = $this->generarNumeroVenta();
+
+            // Insertar venta
+            $sqlVenta = "INSERT INTO venta 
+                (nro_venta, idcliente, fecha_venta, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, estatus, total_general, observaciones, fecha_creacion, ultima_modificacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+            $paramsVenta = [
+                $nro_venta,
+                $data['idcliente'],
+                $data['fecha_venta'],
+                $data['idmoneda_general'],
+                $data['subtotal_general'],
+                $data['descuento_porcentaje_general'],
+                $data['monto_descuento_general'],
+                $data['estatus'],
+                $data['total_general'],
+                $data['observaciones'] ?? ''
+            ];
+            $idventa = $this->insert($sqlVenta, $paramsVenta);
+            if (!$idventa) throw new Exception("No se pudo crear la venta.");
+
+            // Insertar detalles (ajusta los campos según tu tabla)
+            $sqlDetalle = "INSERT INTO detalle_venta 
+                (id_venta, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_venta, id_moneda_detalle, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            foreach ($detalles as $detalle) {
+                $paramsDetalle = [
                     $idventa,
-                    $detalle_item['detalle_idproducto'],
-                    $detalle_item['detalle_cantidad'],
-                    $detalle_item['detalle_precio'],
-                    $detalle_item['detalle_total']
-                ]);
-                
-                if (!$resultDetalle) {
-                    throw new Exception("Error al insertar detalle de venta para producto ID {$detalle_item['detalle_idproducto']}.");
-                }
+                    $detalle['idproducto'],
+                    $detalle['descripcion_temporal_producto'] ?? '',
+                    $detalle['cantidad'],
+                    $detalle['precio_unitario_venta'],
+                    $detalle['id_moneda_detalle'],
+                    $detalle['subtotal_general'] ?? 0,
+                    $detalle['peso_vehiculo'] ?? 0,
+                    $detalle['peso_bruto'] ?? 0,
+                    $detalle['peso_neto'] ?? 0
+                ];
+                $this->insert($sqlDetalle, $paramsDetalle);
             }
-            
+
             return ['success' => true, 'message' => 'Venta creada exitosamente', 'idventa' => $idventa];
         });
     }
-
    public function obtenerTodasLasVentasConCliente()
     {
         try {
