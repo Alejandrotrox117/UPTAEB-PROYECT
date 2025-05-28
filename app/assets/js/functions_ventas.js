@@ -806,7 +806,9 @@ document.addEventListener("click", async function (e) {
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
       <div><b>Nro Venta:</b> ${data.venta.nro_venta}</div>
       <div><b>Fecha:</b> ${data.venta.fecha_venta}</div>
-      <div><b>Cliente:</b> ${data.venta.cliente_nombre}</div>
+      <div><b>Cliente:</b> ${data.venta.cliente_nombre + data.venta.cliente_apellido}</div>
+      <div><b>Cédula:</b> ${data.venta.cliente_cedula}</div>
+
  <div><b>Tasa usada:</b> ${data.venta.tasa_usada || '-'}</div>
       <div><b>Estatus:</b> ${data.venta.estatus}</div>
       <div><b>Observaciones:</b> ${data.venta.observaciones || '-'}</div>

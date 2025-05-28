@@ -205,11 +205,11 @@ $paramsVenta = [
  
 public function obtenerVentaPorId($idventa)
 {
-    try {
-       $sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
+    try {    
+$sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
                v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
-               v.tasa as tasa_usada, -- o el nombre real del campo
-               c.nombre as cliente_nombre, c.apellido as cliente_apellido
+               v.tasa as tasa_usada,
+               c.nombre as cliente_nombre, c.apellido as cliente_apellido, c.cedula as cliente_cedula
         FROM venta v
         INNER JOIN cliente c ON v.idcliente = c.idcliente
         WHERE v.idventa = ?";
