@@ -241,8 +241,8 @@ $permisos = $data['permisos'] ?? []; ?>
 
     <!-- Pie del Modal -->
     <div class="flex justify-end px-6 py-3 space-x-3 bg-gray-50 border-t border-gray-200">
-      <button type="button" id="cerrarModalBtn" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Cancelar</button>
-      <button type="button" id="registrarVentaBtn" class="px-5 py-2.5 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition">
+      <button type="button" id="cerrarModalBtn" class="btn-neutral px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-base font-medium">Cancelar</button>
+      <button type="button" id="registrarVentaBtn" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-base ">
         <i class="mr-2 fas fa-save"></i> Guardar Venta
       </button>
     </div>
@@ -271,14 +271,7 @@ $permisos = $data['permisos'] ?? []; ?>
   </div>
 </div>
 
-<script>
-window.PERMISOS_USUARIO = {
-    puede_ver: <?= json_encode($permisos['puede_ver'] ?? false) ?>,
-    puede_crear: <?= json_encode($permisos['puede_crear'] ?? false) ?>,
-    puede_editar: <?= json_encode($permisos['puede_editar'] ?? false) ?>,
-    puede_eliminar: <?= json_encode($permisos['puede_eliminar'] ?? false) ?>,
-    acceso_total: <?= json_encode($permisos['acceso_total'] ?? false) ?>
-};
-</script>
 
+
+<div id="permisosUsuario" data-permisos='<?= json_encode($permisos) ?>' style="display:none"></div>
 <?php footerAdmin($data); ?>

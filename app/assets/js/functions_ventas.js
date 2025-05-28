@@ -14,7 +14,16 @@ import {
 
 document.addEventListener("DOMContentLoaded", function () {
   // --- Inicialización General ---
-  
+  const permisosDiv = document.getElementById("permisosUsuario");
+let PERMISOS_USUARIO = {};
+if (permisosDiv) {
+  try {
+    PERMISOS_USUARIO = JSON.parse(permisosDiv.dataset.permisos);
+  } catch (e) {
+    PERMISOS_USUARIO = {};
+  }
+}
+window.PERMISOS_USUARIO = PERMISOS_USUARIO;
   inicializarDataTable();
   const ventaForm = document.getElementById("ventaForm");
 
@@ -846,7 +855,7 @@ document.addEventListener("click", async function (e) {
   </div>
   <div class="mb-2">
     <b>Subtotal:</b> ${data.venta.subtotal_general} <br>
-    <b>Descuento (%):</b> ${data.venta.descuento_porcentaje_general} <br>
+    <b>Descuento :</b> ${data.venta.descuento_porcentaje_general} (%)<br>
     <b>Monto Descuento:</b> ${data.venta.monto_descuento_general} <br>
     <b>Total General:</b> ${data.venta.total_general}
   </div>
