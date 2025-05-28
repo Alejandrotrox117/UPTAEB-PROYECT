@@ -128,7 +128,7 @@ class VentasModel extends Mysql
 
             // Insertar venta
             $sqlVenta = "INSERT INTO venta 
-                (nro_venta, idcliente, fecha_venta, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, estatus, total_general, observaciones, fecha_creacion, ultima_modificacion)
+                (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, monto_descuento_general, estatus, total_general, observaciones, fecha_creacion, ultima_modificacion)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
             $paramsVenta = [
                 $nro_venta,
@@ -147,7 +147,7 @@ class VentasModel extends Mysql
 
             // Insertar detalles (ajusta los campos según tu tabla)
             $sqlDetalle = "INSERT INTO detalle_venta 
-                (id_venta, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_venta, id_moneda_detalle, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
+                (idventa, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_venta, idmoneda, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             foreach ($detalles as $detalle) {
                 $paramsDetalle = [
@@ -191,7 +191,7 @@ class VentasModel extends Mysql
 public function obtenerVentaPorId($idventa)
 {
     try {
-        $sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda_general, v.subtotal_general, 
+        $sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
                        v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
                        c.nombre as cliente_nombre, c.apellido as cliente_apellido
                 FROM venta v
@@ -213,10 +213,12 @@ public function obtenerDetalleVenta($idventa)
                        dv.precio_unitario_venta, 
                        dv.subtotal_general, 
                        dv.descripcion_temporal_producto,
-                       p.nombre as producto_nombre
+                       p.nombre as producto_nombre,
+                       m.codigo_moneda
                 FROM detalle_venta dv
                 INNER JOIN producto p ON dv.idproducto = p.idproducto
-                WHERE dv.id_venta = ?
+                INNER JOIN monedas m ON dv.idmoneda = m.idmoneda
+                WHERE dv.idventa = ?
                 ORDER BY p.nombre";
         return $this->searchAll($sql, [$idventa]);
     } catch (Exception $e) {

@@ -650,6 +650,7 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
       cantidad: parseFloat(cantidad),
       precio_unitario_venta: parseFloat(precio),
       subtotal_general: parseFloat(subtotal),
+          descuento_porcentaje_general: 0, // Asignar 0 si no se aplica descuento por producto
       descripcion_temporal_producto: '', // Completa si tienes este dato
       id_moneda_detalle: datosVentaFinal.idmoneda_general, // O el valor correcto si es diferente
       peso_vehiculo: 0,
@@ -773,48 +774,51 @@ document.addEventListener("click", async function (e) {
       if (!data.status) throw new Error(data.message || "No se pudo obtener el detalle.");
 
       // Renderizar los datos en el modal
+      // Renderizar los datos en el modal
       document.getElementById("detalleVentaContenido").innerHTML = `
-        <div class="mb-4">
-          <h4 class="font-semibold text-gray-700 mb-2">Datos Generales</h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div><b>Nro Venta:</b> ${data.venta.nro_venta}</div>
-            <div><b>Fecha:</b> ${data.venta.fecha_venta}</div>
-            <div><b>Cliente:</b> ${data.venta.cliente_nombre}</div>
-            <div><b>Moneda:</b> ${data.venta.moneda}</div>
-            <div><b>Estatus:</b> ${data.venta.estatus}</div>
-            <div><b>Observaciones:</b> ${data.venta.observaciones || '-'}</div>
-          </div>
-        </div>
-        <div class="mb-4">
-          <h4 class="font-semibold text-gray-700 mb-2">Detalle de Productos</h4>
-          <table class="w-full text-xs border">
-            <thead class="bg-gray-100">
-              <tr>
-                <th class="px-2 py-1">Producto</th>
-                <th class="px-2 py-1">Cantidad</th>
-                <th class="px-2 py-1">Precio U.</th>
-                <th class="px-2 py-1">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.detalle.map(d => `
-                <tr>
-                  <td class="px-2 py-1">${d.producto_nombre}</td>
-                  <td class="px-2 py-1">${d.cantidad}</td>
-                  <td class="px-2 py-1">${d.precio_unitario_venta}</td>
-                  <td class="px-2 py-1">${d.sutotal_linea}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        <div class="mb-2">
-          <b>Subtotal:</b> ${data.venta.subtotal_general} <br>
-          <b>Descuento (%):</b> ${data.venta.descuento_porcentaje_general} <br>
-          <b>Monto Descuento:</b> ${data.venta.monto_descuento_general} <br>
-          <b>Total General:</b> ${data.venta.total_general}
-        </div>
-      `;
+  <div class="mb-4">
+    <h4 class="font-semibold text-gray-700 mb-2">Datos Generales</h4>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div><b>Nro Venta:</b> ${data.venta.nro_venta}</div>
+      <div><b>Fecha:</b> ${data.venta.fecha_venta}</div>
+      <div><b>Cliente:</b> ${data.venta.cliente_nombre}</div>
+   
+      <div><b>Estatus:</b> ${data.venta.estatus}</div>
+      <div><b>Observaciones:</b> ${data.venta.observaciones || '-'}</div>
+    </div>
+  </div>
+  <div class="mb-4">
+    <h4 class="font-semibold text-gray-700 mb-2">Detalle de Productos</h4>
+    <table class="w-full text-xs border border-collapse border-gray-300">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-2 py-1 border">Producto</th>
+          <th class="px-2 py-1 border">Cantidad</th>
+          <th class="px-2 py-1 border">Precio U.</th>
+          <th class="px-2 py-1 border">Subtotal</th>
+          <th class="px-2 py-1 border">Moneda</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.detalle.map(d => `
+          <tr>
+            <td class="px-2 py-1 border">${d.producto_nombre}</td>
+            <td class="px-2 py-1 border">${d.cantidad}</td>
+            <td class="px-2 py-1 border">${d.precio_unitario_venta}</td>
+            <td class="px-2 py-1 border">${d.subtotal_general || d.subtotal}</td>
+            <td class="px-2 py-1 border">${d.codigo_moneda}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+  <div class="mb-2">
+    <b>Subtotal:</b> ${data.venta.subtotal_general} <br>
+    <b>Descuento (%):</b> ${data.venta.descuento_porcentaje_general} <br>
+    <b>Monto Descuento:</b> ${data.venta.monto_descuento_general} <br>
+    <b>Total General:</b> ${data.venta.total_general}
+  </div>
+`;
     } catch (err) {
       document.getElementById("detalleVentaContenido").innerHTML = `<div class="text-red-500">Error: ${err.message}</div>`;
     }
@@ -875,7 +879,7 @@ document.addEventListener("click", async function (e) {
               </button>
                <button 
       type="button"
-      class="ver-detalle-btn text-indigo-500 hover:text-indigo-700 p-1 rounded-full focus:outline-none" 
+      class="ver-detalle-btn text-green-500 hover:text-indigo-700 p-1 rounded-full focus:outline-none" 
       data-idventa="${row.idventa}" 
       title="Ver Detalle">
       <i class="fas fa-eye"></i>
