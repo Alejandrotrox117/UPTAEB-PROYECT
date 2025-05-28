@@ -22,9 +22,56 @@ document.addEventListener("DOMContentLoaded", function () {
  
  inicializarDataTable();
  
- 
- 
- 
+  // Delegación para botón "Ver Detalle"
+  document.body.addEventListener("click", function (e) {
+    if (e.target.closest(".ver-detalle-btn")) {
+      const id = e.target.closest(".ver-detalle-btn").dataset.idmovimiento;
+      fetch(`movimientos/getDetalleMovimiento?idmovimiento=${id}`)
+        .then(res => res.json())
+        .then(res => {
+          if (res.status && res.data) {
+            const d = res.data;
+            document.getElementById("detalleMovimientoContenido").innerHTML = `
+              <div class="mb-2"><b>Nro. Movimiento:</b> ${d.idmovimiento}</div>
+              <div class="mb-2"><b>Producto:</b> ${d.nombre_producto}</div>
+              <div class="mb-2"><b>Tipo de Movimiento:</b> ${d.tipo_movimiento}</div>
+              <div class="mb-2"><b>Entrada:</b> ${d.entrada}</div>
+              <div class="mb-2"><b>Salida:</b> ${d.salida}</div>
+              <div class="mb-2"><b>Stock Resultante:</b> ${d.total}</div>
+              <div class="mb-2"><b>Estatus:</b> ${d.estatus}</div>
+             
+            `;
+            abrirModal("modalDetalleMovimiento");
+          } else {
+            document.getElementById("detalleMovimientoContenido").innerHTML = `<div class="text-red-500">No se encontró el movimiento.</div>`;
+            abrirModal("modalDetalleMovimiento");
+          }
+        });
+    }
+  });
+
+  // Cerrar modal con los botones del modal
+  document.getElementById("cerrarDetalleMovimiento").onclick = function () {
+    cerrarModal("modalDetalleMovimiento");
+  };
+  document.getElementById("cerrarDetalleMovimiento2").onclick = function () {
+    cerrarModal("modalDetalleMovimiento");
+  };
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
   function inicializarDataTable() {
   let columnsConfig = [
     { data: "idmovimiento", title: "Nro. Movimiento" },
@@ -142,17 +189,3 @@ document.addEventListener("DOMContentLoaded", function () {
     order: [[0, "desc"]],
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-});
-

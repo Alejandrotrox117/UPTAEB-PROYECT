@@ -116,7 +116,26 @@ class Movimientos extends Controllers
         $this->views->getView($this, "movimientos", $data);
     }
 
-   
+
+public function getDetalleMovimiento()
+{
+    if (!$this->verificarUsuarioLogueado()) {
+        echo json_encode(['status' => false, 'message' => 'No autenticado']);
+        exit;
+    }
+    $id = intval($_GET['idmovimiento'] ?? 0);
+    if ($id <= 0) {
+        echo json_encode(['status' => false, 'message' => 'ID inválido']);
+        exit;
+    }
+    $detalle = $this->model->obtenerMovimientoPorId($id);
+    if ($detalle) {
+        echo json_encode(['status' => true, 'data' => $detalle]);
+    } else {
+        echo json_encode(['status' => false, 'message' => 'No encontrado']);
+    }
+    exit;
+}
 public function getMovimientos()
 {
     if (!$this->verificarUsuarioLogueado()) {
