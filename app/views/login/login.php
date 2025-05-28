@@ -43,29 +43,9 @@
             </div>
             <button type="submit">Iniciar Sesión</button>
         </form>
-        <a href="recuperar_contraseña.php">¿Olvidaste tu contraseña?</a>
+        <a href="resetpass.php">¿Olvidaste tu contraseña?</a>
     </div>
 
-    <!-- Font Awesome -->
-    <script src="/project/app/assets/fontawesome/js/fontawesome.js" crossorigin="anonymous"></script>
-    <!-- jQuery -->
-
-    <!-- sweetAlerts -->
-    <script type="text/javascript" src="app\assets\sweetAlert\sweetalert2.all.min.js"></script>
-    <!-- Archivo dinámico de validaciones -->
-    <script type="module" src="/project/app/assets/js/validaciones.js"></script>
-    <script type="module" src="/project/app/assets/js/exporthelpers.js"></script>
-
-    <!-- Expresiones regulares -->
-    <!-- <script type="module" src="/project/app/assets/js/regex.js"></script> -->
-    <?php if (isset($data['page_functions_js'])): ?>
-        <script type="module" src="/project/app/assets/js/<?php echo $data['page_functions_js']; ?>"></script>
-    <?php endif; ?>
-    <script>
-        const base_url = "<?= base_url(); ?>";
-    </script>
-
     </div>
-</body>
 
-</html>
+<?php footerAdmin($data); ?>

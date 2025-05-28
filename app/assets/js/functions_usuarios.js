@@ -43,11 +43,11 @@ const camposFormularioUsuario = [
     tipo: "select",
     mensajes: { vacio: "Seleccione un rol." },
   },
-  {
-    id: "usuarioPersona",
-    tipo: "select",
-    mensajes: {},
-  },
+  // {
+  //   id: "usuarioPersona",
+  //   tipo: "select",
+  //   mensajes: {},
+  // },
 ];
 
 const camposFormularioActualizarUsuario = [

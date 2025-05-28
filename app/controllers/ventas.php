@@ -1,12 +1,11 @@
 <?php
 require_once "app/core/Controllers.php";
+require_once "helpers/permisosVerificar.php";
+require_once "helpers/PermisosHelper.php";
 require_once "helpers/helpers.php";
 
 class Ventas extends Controllers
 {
-
-
-
     public function set_model($model)
     {
         $this->model = $model;
@@ -17,291 +16,418 @@ class Ventas extends Controllers
         return $this->model;
     }
 
-    public function __construct()
+   public function __construct()
     {
         parent::__construct();
+        
+        // Asegurar que la sesión esté iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Verificar si el usuario está logueado antes de verificar permisos
+        if (!$this->verificarUsuarioLogueado()) {
+            $this->redirigirLogin();
+            return;
+        }
+        
+        // Solo verificar permisos si está logueado
+        permisosVerificar::verificarAccesoModulo('Ventas');
+    }
+
+    /**
+     * Verifica si el usuario está logueado
+     */
+    private function verificarUsuarioLogueado(): bool
+    {
+        // Verificar múltiples formas de identificar al usuario logueado
+        $tieneLogin = isset($_SESSION['login']) && $_SESSION['login'] === true;
+        $tieneIdUser = isset($_SESSION['idUser']) && !empty($_SESSION['idUser']);
+        $tieneUsuarioId = isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id']);
+        
+        return $tieneLogin && ($tieneIdUser || $tieneUsuarioId);
+    }
+
+    /**
+     * Obtiene el ID del usuario de la sesión
+     */
+    private function obtenerIdUsuario(): ?int
+    {
+        if (isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id'])) {
+            return intval($_SESSION['usuario_id']);
+        } elseif (isset($_SESSION['idUser']) && !empty($_SESSION['idUser'])) {
+            return intval($_SESSION['idUser']);
+        }
+        return null;
+    }
+
+    /**
+     * Redirige al login
+     */
+    private function redirigirLogin()
+    {
+        if (function_exists('base_url')) {
+            $loginUrl = base_url() . 'login';
+        } else {
+            $loginUrl = '/project/login';
+        }
+        
+        header('Location: ' . $loginUrl);
+        exit;
     }
 
     public function index()
     {
-        $data['page_title'] = "Listado de Ventas";
-        $data['page_name'] = "Ventas";
-        $data['page_functions_js'] = "functions_ventas.js";
-        $this->views->getView($this, "ventas", $data);
-    }
-    
-   
-public function getventasData()
-{
-    try {
-        
-        $arrData = $this->get_model()->SelectAllventas();
+        // Doble verificación de seguridad
+        if (!$this->verificarUsuarioLogueado()) {
+            $this->redirigirLogin();
+            return;
+        }
 
-      
-        $data = [];
-        foreach ($arrData as $venta) {
-            $data[] = [
-                'idventa' => $venta->getIdventa(),
-                'nombre_producto' => $venta->getIdProducto(),
-                'fecha' => $venta->getFecha(),
-                'cantidad' => $venta->getCantidad(),
-                'estatus' => $venta->getEstatus(),
-                'descuento' => $venta->getDescuento(),
-                'total' => $venta->getTotal(),
-                'fecha_creacion' => $venta->getFechaCreacion(),
+        // Obtener ID del usuario
+        $idUsuario = $this->obtenerIdUsuario();
+        
+        if (!$idUsuario) {
+            error_log("Ventas::index - No se pudo obtener ID de usuario");
+            $this->redirigirLogin();
+            return;
+        }
+
+        try {
+            $permisos = PermisosHelper::getPermisosDetalle($idUsuario, 'Ventas');
+        } catch (Exception $e) {
+            error_log("Error al obtener permisos: " . $e->getMessage());
+            // Permisos por defecto (sin acceso)
+            $permisos = [
+                'puede_ver' => false,
+                'puede_crear' => false,
+                'puede_editar' => false,
+                'puede_eliminar' => false,
+                'acceso_total' => false
             ];
         }
 
-       
-        $response = [
-            "draw" => intval($_GET['draw'] ?? 1),
-            "recordsTotal" => count($data),
-            "recordsFiltered" => count($data),
-            "data" => $data
-        ];
-
-    
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-    } catch (Exception $e) {
-    
-        echo json_encode([
-            "status" => false,
-            "message" => "Error al obtener los datos: " . $e->getMessage()
-        ], JSON_UNESCAPED_UNICODE);
-    }
-    exit();
-}
-  
-
-
-public function createventa()
-{
-    try {
-        // Leer los datos JSON enviados por el frontend
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-
-        // Depuración: Verifica los datos recibidos
-        error_log("Datos recibidos en createventa:");
-        error_log(print_r($data, true));
-
-        // Validar que los datos no sean nulos
-        if (!$data || !is_array($data)) {
-            echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-            exit();
-        }
-
-        // Validar campos obligatorios
-        if (empty($data['cedula'])) {
-            echo json_encode(["status" => false, "message" => "El campo 'cedula' es obligatorio."]);
-            exit();
-        }
-
-        // Usar los métodos set del modelo para establecer los valores
-        $model = $this->get_model();
-        $model->setNombre(trim($data['nombre'] ?? ''));
-        $model->setApellido(trim($data['apellido'] ?? ''));
-        $model->setCedula(trim($data['cedula'] ?? ''));
-        $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-        $model->setDireccion(trim($data['direccion'] ?? ''));
-        $model->setEstatus(trim($data['estatus'] ?? ''));
-        $model->setObservaciones(trim($data['observaciones'] ?? ''));
-
-        // Insertar los datos usando el modelo
-        $insertData = $model->insertventa();
-
-        // Respuesta al venta
-        if ($insertData) {
-            echo json_encode(["status" => true, "message" => "venta registrado correctamente."]);
-        } else {
-            echo json_encode(["status" => false, "message" => "Error al registrar el venta. Intenta nuevamente."]);
-        }
-    } catch (Exception $e) {
-        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-    }
-    exit();
-}
-
-
-
-
-public function deleteventa()
-{
-    try {
-        // Leer los datos JSON enviados por el frontend
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-
-        // Validar que los datos sean válidos
-        if (!$data || !isset($data['idventa'])) {
-            echo json_encode([
-                "status" => false,
-                "message" => "ID de venta no proporcionado o datos inválidos."
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        // Extraer el ID del venta
-        $idventa = trim($data['idventa']);
-
-        // Validar que el ID no esté vacío
-        if (empty($idventa)) {
-            echo json_encode([
-                "status" => false,
-                "message" => "El ID del venta no puede estar vacío."
-            ], JSON_UNESCAPED_UNICODE);
-            return;
-        }
-
-        // Desactivar el venta usando el modelo
-        $deleteData = $this->get_model()->deleteventa($idventa);
-
-        // Respuesta al venta
-        if ($deleteData) {
-            echo json_encode([
-                "status" => true,
-                "message" => "venta eliminado correctamente."
-            ], JSON_UNESCAPED_UNICODE);
-        } else {
-            echo json_encode([
-                "status" => false,
-                "message" => "Error al eliminar el venta. Intenta nuevamente."
-            ], JSON_UNESCAPED_UNICODE);
-        }
-    } catch (Exception $e) {
-        // Manejo de errores inesperados
-        echo json_encode([
-            "status" => false,
-            "message" => "Error inesperado: " . $e->getMessage()
-        ], JSON_UNESCAPED_UNICODE);
-    }
-
-    exit();
-}
-
-public function updateventa()
-{
-    try {
-        // Leer los datos JSON enviados por el frontend
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-
-        // Validar que los datos sean válidos
-        if (!$data || !is_array($data)) {
-            echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-            return;
-        }
-
-        // Validar campos obligatorios
-        if (empty($data['idventa']) || empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula'])) {
-            echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-            return;
-        }
-
-       
-
-        // Usar los métodos set del modelo para establecer los valores
-        $model = $this->get_model();
-        $model->setIdventa(trim($data['idventa']));
-        $model->setNombre(trim($data['nombre']));
-        $model->setApellido(trim($data['apellido']));
-        $model->setCedula(trim($data['cedula']));
-        $model->setFechaNacimiento(trim($data['fecha_nacimiento'] ?? ''));
-        $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
+        $data['page_id'] = 2;
+        $data['page_tag'] = "Ventas";
+        $data['page_title'] = "Página - Ventas";
+        $data['page_name'] = "ventas";
+        $data['page_functions_js'] = "functions_ventas.js";
         
-        $model->setDireccion(trim($data['direccion'] ?? ''));
-     
-        $model->setEstatus(trim($data['estatus'] ?? ''));
+        // Pasar permisos a la vista
+        $data['permisos'] = $permisos;
+        
+        $this->views->getView($this, "ventas", $data);
+    }
 
-        // Actualizar los datos usando el modelo
-        $updateData = $model->updateventa();
+    public function getventasData()
+    {
+        if (!$this->verificarUsuarioLogueado()) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                "status" => false,
+                "message" => "Usuario no autenticado",
+                "data" => []
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
 
-        // Respuesta al venta
-        if ($updateData) {
-            echo json_encode(["status" => true, "message" => "venta actualizado correctamente."]);
+        // Usar el nombre del módulo consistente con PermisosHelper
+        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                "status" => false,
+                "message" => "No tiene permisos para ver las ventas",
+                "data" => []
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        try {
+            $arrData = $this->model->obtenerTodasLasVentasConCliente();
+
+            // Para DataTables del lado del cliente, no necesitas draw, recordsTotal, recordsFiltered
+            // Solo necesitas el array de datos directamente si serverSide es false.
+            // Si tu DataTable está configurado con serverSide: false, la respuesta debería ser:
+            // echo json_encode(["data" => $arrData ?: []], JSON_UNESCAPED_UNICODE);
+
+            // Si mantienes serverSide: true o quieres una respuesta más completa:
+            $response = [
+                "draw" => intval($_GET['draw'] ?? 0) + 1, // Opcional si serverSide es false
+                "recordsTotal" => count($arrData),      // Opcional si serverSide es false
+                "recordsFiltered" => count($arrData),   // Opcional si serverSide es false
+                "data" => $arrData ?: []
+            ];
+
+            header('Content-Type: application/json');
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                "status" => false,
+                "message" => "Error al obtener los datos de ventas: " . $e->getMessage(),
+                "data" => []
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        exit();
+    }
+   public function insertVenta()
+{
+    if (!$this->verificarUsuarioLogueado()) {
+        echo json_encode([
+            'status' => false, 
+            'message' => 'Usuario no autenticado.'
+        ]);
+        return;
+    }
+
+    if (!permisosVerificar::verificarPermisoAccion('Ventas', 'crear')) {
+        echo json_encode([
+            'status' => false, 
+            'message' => 'No tiene permisos para crear ventas.'
+        ]);
+        return;
+    }
+
+    // Leer datos JSON
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+
+    if (!$data) {
+        echo json_encode(['status' => false, 'message' => 'Datos no válidos.']);
+        return;
+    }
+
+    // Validar que los campos principales estén presentes (opcional, ya lo hace el modelo)
+    $camposObligatorios = [
+        'idcliente', 'fecha_venta', 'idmoneda_general', 'subtotal_general',
+        'descuento_porcentaje_general', 'monto_descuento_general', 'total_general', 'estatus'
+    ];
+    foreach ($camposObligatorios as $campo) {
+        if (!isset($data[$campo])) {
+            echo json_encode(['status' => false, 'message' => "Falta el campo obligatorio: $campo"]);
+            return;
+        }
+    }
+
+    try {
+        $detalles = $data['detalles'] ?? [];
+        unset($data['detalles']);
+        $resultado = $this->model->crearVenta($data, $detalles);
+        if ($resultado['success']) {
+            echo json_encode([
+                'status' => true,
+                'message' => $resultado['message']
+            ]);
         } else {
-            echo json_encode(["status" => false, "message" => "Error al actualizar el venta. Intenta nuevamente."]);
+            echo json_encode([
+                'status' => false,
+                'message' => $resultado['message']
+            ]);
         }
     } catch (Exception $e) {
-        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+        echo json_encode([
+            'status' => false,
+            'message' => 'Error al procesar la venta: ' . $e->getMessage()
+        ]);
     }
     exit();
 }
 
-    
-    public function getventaById($idventa)
+    public function buscarClientes()
     {
-        try {
-            // Validar que el ID del venta sea válido
-            if (empty($idventa) || !is_numeric($idventa)) {
-                echo json_encode(["status" => false, "message" => "ID de venta no válido."]);
-                return;
-            }
+        if (!$this->verificarUsuarioLogueado()) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Usuario no autenticado'
+            ]);
+            return;
+        }
 
-            // Obtener los datos del venta desde el modelo
-            $venta = $this->get_model()->getventaById($idventa);
+        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para buscar clientes'
+            ]);
+            return;
+        }
 
-            // Validar si se encontró el venta
-            if ($venta) {
-                echo json_encode(["status" => true, "data" => $venta], JSON_UNESCAPED_UNICODE);
+        if ($_POST) {
+            $criterio = $_POST['criterio'] ?? '';
+            
+            if (strlen($criterio) >= 2) {
+                try {
+                    $clientes = $this->model->buscarClientes($criterio);
+                    echo json_encode([
+                        'status' => true,
+                        'data' => $clientes
+                    ]);
+                } catch (Exception $e) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'Error al buscar clientes: ' . $e->getMessage()
+                    ]);
+                }
             } else {
-                echo json_encode(["status" => false, "message" => "venta no encontrado."], JSON_UNESCAPED_UNICODE);
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Ingrese al menos 2 caracteres'
+                ]);
             }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
         }
         exit();
     }
 
-    // public function guardarventa()
-    // {
-    //     try {
-    //         // Leer los datos JSON enviados por el frontend
-    //         $json = file_get_contents('php://input');
-    //         $data = json_decode($json, true);
+    public function getProductosDisponibles()
+    {
+        if (!$this->verificarUsuarioLogueado()) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Usuario no autenticado'
+            ]);
+            return;
+        }
 
-    //         // Validar que los datos sean válidos
-    //         if (!$data || !is_array($data)) {
-    //             echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-    //             return;
-    //         }
+        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para ver productos'
+            ]);
+            return;
+        }
 
-    //         // Validar campos obligatorios
-    //         if (empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula'])) {
-    //             echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-    //             return;
-    //         }
+        try {
+            $productos = $this->model->getListaProductosParaFormulario();
+            echo json_encode([
+                'status' => true,
+                'data' => $productos
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al obtener productos: ' . $e->getMessage()
+            ]);
+        }
+        exit();
+    }
+public function getTasa()
+{
+    if (!$this->verificarUsuarioLogueado()) {
+        echo json_encode(['tasa' => 1]);
+        exit;
+    }
 
-    //         // Obtener el modelo
-    //         $model = $this->get_model();
-    //             $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-    //             $model->setEstatus(trim($data['estatus'] ?? 'ACTIVO'));
-    //             $model->setObservaciones(trim($data['observaciones'] ?? ''));
+    $codigo = $_GET['codigo_moneda'] ?? '';
+    $fecha = $_GET['fecha'] ?? date('Y-m-d');
+    if (!$codigo) {
+        echo json_encode(['tasa' => 1]);
+        exit;
+    }
 
-    //             $result = $model->insertventa();
-    //         } else {
-    //             // Lógica para actualizar un venta existente
-    //             $model->setIdventa(trim($data['idventa']));
-    //             $model->setCedula(trim($data['cedula']));
-    //             $model->setNombre(trim($data['nombre']));
-    //             $model->setApellido(trim($data['apellido']));
-    //             $model->setDireccion(trim($data['direccion'] ?? ''));
-    //             $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-    //             $model->setEstatus(trim($data['estatus'] ?? 'ACTIVO'));
-    //             $model->setObservaciones(trim($data['observaciones'] ?? ''));
-
-    //             $result = $model->updateventa();
-    //         }
-
-    //         // Respuesta al venta
-    //         if ($result) {
-    //             echo json_encode(["status" => true, "message" => "Operación realizada correctamente."]);
-    //         } else {
-    //             echo json_encode(["status" => false, "message" => "Error al guardar los datos del venta."]);
-    //         }
-    //     } catch (Exception $e) {
-    //         echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
-    //     }
-    //     exit();
-    // }
+    // Llama al modelo para obtener la tasa
+    $tasa = $this->model->getTasaPorCodigoYFecha($codigo, $fecha);
+    echo json_encode(['tasa' => $tasa]);
+    exit;
 }
+public function getVentaDetalle()
+{
+    if (!$this->verificarUsuarioLogueado()) {
+        echo json_encode(['status' => false, 'message' => 'Usuario no autenticado']);
+        exit();
+    }
+    $idventa = intval($_GET['idventa'] ?? 0);
+    if ($idventa <= 0) {
+        echo json_encode(['status' => false, 'message' => 'ID de venta no válido']);
+        exit();
+    }
+    try {
+        $venta = $this->model->obtenerVentaPorId($idventa);
+        $detalle = $this->model->obtenerDetalleVenta($idventa);
+        echo json_encode([
+            'status' => true,
+            'venta' => $venta,
+            'detalle' => $detalle
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => false, 'message' => $e->getMessage()]);
+    }
+    exit();
+}
+    public function getMonedasDisponibles()
+    {
+        if (!$this->verificarUsuarioLogueado()) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Usuario no autenticado'
+            ]);
+            return;
+        }
+
+        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para ver monedas'
+            ]);
+            return;
+        }
+
+        try {
+            $monedas = $this->model->getMonedasActivas();
+            echo json_encode([
+                'status' => true,
+                'data' => $monedas
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al obtener monedas: ' . $e->getMessage()
+            ]);
+        }
+        exit();
+    }
+
+    public function deleteVenta()
+    {
+        if (!$this->verificarUsuarioLogueado()) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Usuario no autenticado'
+            ]);
+            return;
+        }
+
+        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'eliminar')) {
+            echo json_encode([
+                'status' => false, 
+                'message' => 'No tiene permisos para eliminar ventas.'
+            ]);
+            return;
+        }
+
+        if ($_POST) {
+            $id = intval($_POST['id'] ?? 0);
+            
+            if ($id > 0) {
+                $resultado = $this->model->eliminarVenta($id);
+                
+                if ($resultado['success']) {
+                    echo json_encode([
+                        'status' => true,
+                        'message' => $resultado['message']
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => $resultado['message']
+                    ]);
+                }
+            } else {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'ID de venta no válido'
+                ]);
+            }
+        }
+        exit();
+    }
+}
+?>

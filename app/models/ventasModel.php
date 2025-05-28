@@ -4,31 +4,28 @@ require_once("app/core/mysql.php");
 
 class VentasModel extends Mysql
 {
-    private $db;
-    private $conexion;
     private $idventa;
     private $idcliente;
-    private $idproducto;
-    private $fecha;
-    private $cantidad;
+    private $fecha_venta;
+    private $total_venta;
     private $estatus;
-    private $descuento;
-    private $total;
-
-    private $fecha_creacion;
-    private $fecha_modificacion;
 
     public function __construct()
     {
         parent::__construct();
-        $this->conexion = new Conexion();
-        $this->conexion->connect(); // Asegúrate de conectar antes de obtener la conexión
-        $this->db = $this->conexion->get_conectGeneral();
-       
-
     }
 
-    // Métodos Getters y Setters
+    // Getters y Setters
+    public function getIdVenta()
+    {
+        return $this->idventa;
+    }
+
+    public function setIdVenta($idventa)
+    {
+        $this->idventa = $idventa;
+    }
+
     public function getIdcliente()
     {
         return $this->idcliente;
@@ -39,226 +36,287 @@ class VentasModel extends Mysql
         $this->idcliente = $idcliente;
     }
 
-    public function getIdVenta()
+    public function getFechaVenta()
     {
-        return $this->idventa;
+        return $this->fecha_venta;
     }
 
-    public function setIdVenta($idventa)
+    public function setFechaVenta($fecha_venta)
     {
-        $this->idventa = $idventa;
-    }
-    public function getIdProducto()
-    {
-        return $this->idproducto;
-    }
-    public function setIdProducto($idproducto)
-    {
-        $this->idproducto = $idproducto;
+        $this->fecha_venta = $fecha_venta;
     }
 
+    public function getTotalVenta()
+    {
+        return $this->total_venta;
+    }
 
-    public function getFecha()
+    public function setTotalVenta($total_venta)
     {
-        return $this->fecha;
+        $this->total_venta = $total_venta;
     }
-    public function setFecha($fecha)
-    {
-        $this->fecha = $fecha;
-    }
-    public function getCantidad()
-    {
-        return $this->cantidad;
-    }
-    public function setCantidad($cantidad)
-    {
-        $this->cantidad = $cantidad;
-    }
+
     public function getEstatus()
     {
         return $this->estatus;
     }
+
     public function setEstatus($estatus)
     {
         $this->estatus = $estatus;
     }
 
-
-    public function getDescuento()
+    // Método para obtener clientes activos
+    public function obtenerClientes()
     {
-        return $this->descuento;
-    }
-    public function setDescuento($descuento)
-    {
-        $this->descuento = $descuento;
-    }
-    public function getTotal()
-    {
-        return $this->total;
-    }
-    public function setTotal($total)
-    {
-        $this->total = $total;
-    }
-
-
-    public function getFechaCreacion()
-    {
-        return $this->fecha_creacion;
-    }
-
-    public function setFechaCreacion($fecha_creacion)
-    {
-        $this->fecha_creacion = $fecha_creacion;
-    }
-
-    public function getFechaModificacion()
-    {
-        return $this->fecha_modificacion;
-    }
-
-    public function setFechaModificacion($fecha_modificacion)
-    {
-        $this->fecha_modificacion = $fecha_modificacion;
-    }
-
-    // Método para seleccionar todos los clientes activos
-    public function selectAllVentas()
-    {
-        $sql = "SELECT 
-                    v.idventa,
-                    p.nombre AS nombre_producto,
-                    v.fecha,
-                    v.cantidad,
-                    v.estatus,
-                    v.descuento,
-                    v.total,
-                    v.fecha_creacion
-                FROM 
-                    venta v
-                INNER JOIN 
-                    producto p
-                ON 
-                    v.idproducto = p.idproducto";
-
-        $result = $this->searchAll($sql);
-
-        // Mapear los resultados a las propiedades de la clase
-        $ventas = [];
-        foreach ($result as $row) {
-            $venta = new self();
-            $venta->setIdVenta($row['idventa']);
-            $venta->setIdProducto($row['nombre_producto']); // Aquí puedes manejar el nombre del producto
-            $venta->setFecha($row['fecha']);
-            $venta->setCantidad($row['cantidad']);
-            $venta->setEstatus($row['estatus']);
-            $venta->setDescuento($row['descuento']);
-            $venta->setTotal($row['total']);
-            $venta->setFechaCreacion($row['fecha_creacion']);
-            $ventas[] = $venta; // Agregar el objeto correctamente al array
+        try {
+            $sql = "SELECT idcliente, nombre, apellido, cedula 
+                    FROM cliente
+                    WHERE estatus = 'Activo' 
+                    ORDER BY nombre, apellido";
+            return $this->searchAll($sql);
+        } catch (Exception $e) {
+            error_log("Error al obtener clientes: " . $e->getMessage());
+            throw new Exception("Error al obtener clientes: " . $e->getMessage());
         }
-
-        return $ventas;
     }
 
-    // // Método para insertar un nuevo cliente
-    // public function insertCliente()
-    // {
-    //     $sql = "INSERT INTO cliente (
-    //                 cedula,
-    //                 nombre, 
-    //                 apellido, 
-    //                 direccion, 
-    //                 telefono_principal, 
-    //                 estatus, 
-    //                 observaciones
-    //             ) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-    //     $stmt = $this->db->prepare($sql);
-    //     $arrValues = [
-    //         $this->getCedula(),
-    //         $this->getNombre(),
-    //         $this->getApellido(),
-    //         $this->getDireccion(),
-    //         $this->getTelefonoPrincipal(),
-    //         $this->getEstatus(),
-    //         $this->getObservaciones()
-    //     ];
-
-    //     return $stmt->execute($arrValues);
-    // }
-
-    // // Método para eliminar lógicamente un cliente
-    // public function deleteCliente($clienteId)
-    // {
-    //     $sql = "UPDATE cliente SET estatus = 'INACTIVO' WHERE idcliente = ?";
-    //     $stmt = $this->db->prepare($sql);
-    //     return $stmt->execute([$clienteId]);
-    // }
-
-    // // Método para actualizar un cliente
-    // public function updateCliente()
-    // {
-    //     $sql = "UPDATE cliente SET 
-    //                 cedula = ?, 
-    //                 nombre = ?, 
-    //                 apellido = ?, 
-    //                 direccion = ?, 
-    //                 telefono_principal = ?, 
-    //                 estatus = ?, 
-    //                 observaciones = ? 
-    //             WHERE idcliente = ?";
-
-    //     $stmt = $this->db->prepare($sql);
-    //     $arrValues = [
-    //         $this->getCedula(),
-    //         $this->getNombre(),
-    //         $this->getApellido(),
-    //         $this->getDireccion(),
-    //         $this->getTelefonoPrincipal(),
-    //         $this->getEstatus(),
-    //         $this->getObservaciones(),
-    //         $this->getIdcliente()
-    //     ];
-
-    //     return $stmt->execute($arrValues);
-    // }
-
-    // // Método para obtener un cliente por su ID
-    // public function getClienteById($idcliente)
-    // {
-    //     $sql = "SELECT 
-    //                 idcliente, 
-    //                 cedula, 
-    //                 nombre, 
-    //                 apellido, 
-    //                 direccion, 
-    //                 telefono_principal, 
-    //                 estatus, 
-    //                 observaciones 
-    //             FROM cliente 
-    //             WHERE idcliente = ?";
-
-    //     $stmt = $this->db->prepare($sql);
-    //     $stmt->execute([$idcliente]);
-
-    //     // Obtener el resultado
-    //     $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    //     if ($result) {
-    //         // Mapear los datos a las propiedades de la clase
-    //         $this->setIdcliente($result['idcliente']);
-    //         $this->setCedula($result['cedula']);
-    //         $this->setNombre($result['nombre']);
-    //         $this->setApellido($result['apellido']);
-    //         $this->setDireccion($result['direccion']);
-    //         $this->setTelefonoPrincipal($result['telefono_principal']);
-    //         $this->setEstatus($result['estatus']);
-    //         $this->setObservaciones($result['observaciones']);
-
-    //         return $result; // Retornar los datos como un array asociativo
-    //     }
-
-    //     return null; // Retornar null si no se encuentra el cliente
-    // }
+public function getTasaPorCodigoYFecha()
+{
+    $codigo = $_GET['codigo_moneda'] ?? '';
+    $fecha = $_GET['fecha'] ?? date('Y-m-d');
+    if (!$codigo) {
+        echo json_encode(['tasa' => 1]);
+        exit;
+    }
+    $sql = "SELECT tasa_a_bs FROM historial_tasas_bcv WHERE codigo_moneda = ? AND fecha_publicacion_bcv = ? LIMIT 1";
+    $result = $this->search($sql, [$codigo, $fecha]);
+    echo json_encode(['tasa' => $result['tasa_a_bs'] ?? 1]);
+    exit;
 }
+    // Método para obtener productos activos
+    public function obtenerProductos()
+    {
+        try {
+            $sql = "SELECT idproducto, nombre, precio 
+                    FROM productos 
+                    WHERE activo = 1 
+                    ORDER BY nombre";
+            return $this->searchAll($sql);
+        } catch (Exception $e) {
+            error_log("Error al obtener productos: " . $e->getMessage());
+            throw new Exception("Error al obtener productos: " . $e->getMessage());
+        }
+    }
+
+    // Método para crear una nueva venta
+  private function generarNumeroVenta()
+    {
+        // Busca el último idventa registrado
+        $sql = "SELECT MAX(idventa) as ultimo_id FROM venta";
+        $result = $this->search($sql);
+        $ultimoId = isset($result['ultimo_id']) ? intval($result['ultimo_id']) : 0;
+        $nuevoId = $ultimoId + 1;
+        // Formato: V-000001
+        return 'V-' . str_pad($nuevoId, 6, '0', STR_PAD_LEFT);
+    }
+
+    // Método para crear una nueva venta
+    public function crearVenta($data, $detalles)
+    {
+        return $this->executeTransaction(function($mysql) use ($data, $detalles) {
+            // Validar datos obligatorios
+            $camposObligatorios = [
+                'idcliente', 'fecha_venta', 'idmoneda_general', 'subtotal_general',
+                'descuento_porcentaje_general', 'monto_descuento_general', 'total_general', 'estatus'
+            ];
+            foreach ($camposObligatorios as $campo) {
+                if (!isset($data[$campo])) {
+                    throw new Exception("Falta el campo obligatorio: $campo");
+                }
+            }
+
+            // Generar número de venta
+            $nro_venta = $this->generarNumeroVenta();
+
+            // Insertar venta
+            $sqlVenta = "INSERT INTO venta 
+    (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, monto_descuento_general, estatus, total_general, observaciones, tasa, fecha_creacion, ultima_modificacion)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+$paramsVenta = [
+    $nro_venta,
+    $data['idcliente'],
+    $data['fecha_venta'],
+    $data['idmoneda_general'],
+    $data['subtotal_general'],
+    $data['descuento_porcentaje_general'],
+    $data['monto_descuento_general'],
+    $data['estatus'],
+    $data['total_general'],
+    $data['observaciones'] ?? '',
+    $data['tasa_usada'] ?? null // <-- Aquí la tasa
+            ];
+            $idventa = $this->insert($sqlVenta, $paramsVenta);
+            if (!$idventa) throw new Exception("No se pudo crear la venta.");
+
+            // Insertar detalles (ajusta los campos según tu tabla)
+            $sqlDetalle = "INSERT INTO detalle_venta 
+                (idventa, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_venta, idmoneda, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            foreach ($detalles as $detalle) {
+                $paramsDetalle = [
+                    $idventa,
+                    $detalle['idproducto'],
+                    $detalle['descripcion_temporal_producto'] ?? '',
+                    $detalle['cantidad'],
+                    $detalle['precio_unitario_venta'],
+                    $detalle['id_moneda_detalle'],
+                    $detalle['subtotal_general'] ?? 0,
+                    $detalle['peso_vehiculo'] ?? 0,
+                    $detalle['peso_bruto'] ?? 0,
+                    $detalle['peso_neto'] ?? 0,
+                    
+                ];
+                $this->insert($sqlDetalle, $paramsDetalle);
+            }
+
+            return ['success' => true, 'message' => 'Venta creada exitosamente', 'idventa' => $idventa];
+        });
+    }
+   public function obtenerTodasLasVentasConCliente()
+    {
+        try {
+            $sql = "SELECT v.idventa,
+                           CONCAT('V-', LPAD(v.idventa, 6, '0')) as nro_venta, -- o v.nro_venta si ya está formateado en la tabla
+                           CONCAT(c.nombre, ' ', c.apellido) as cliente_nombre,
+                           DATE_FORMAT(v.fecha_creacion, '%d/%m/%Y') as fecha_venta,
+                           FORMAT(v.total_general, 2) as total_formateado, -- total_general es el nombre de la columna
+                           v.estatus
+                    FROM venta v
+                    INNER JOIN cliente c ON v.idcliente = c.idcliente
+                    ORDER BY v.idventa DESC";
+            return $this->searchAll($sql);
+        } catch (Exception $e) {
+            error_log("Error al obtener ventas con cliente: " . $e->getMessage());
+            throw new Exception("Error al obtener ventas con cliente: " . $e->getMessage());
+        }
+    }
+
+ 
+public function obtenerVentaPorId($idventa)
+{
+    try {    
+$sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
+               v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
+               v.tasa as tasa_usada,
+               c.nombre as cliente_nombre, c.apellido as cliente_apellido, c.cedula as cliente_cedula
+        FROM venta v
+        INNER JOIN cliente c ON v.idcliente = c.idcliente
+        WHERE v.idventa = ?";
+        return $this->search($sql, [$idventa]);
+    } catch (Exception $e) {
+        error_log("Error al obtener la venta: " . $e->getMessage());
+        throw new Exception("Error al obtener la venta: " . $e->getMessage());
+    }
+}
+
+    // Método para obtener el detalle de una venta
+   
+public function obtenerDetalleVenta($idventa)
+{
+    try {
+        $sql = "SELECT dv.cantidad, 
+                       dv.precio_unitario_venta, 
+                       dv.subtotal_general, 
+                       dv.descripcion_temporal_producto,
+                       p.nombre as producto_nombre,
+                       m.codigo_moneda
+                FROM detalle_venta dv
+                INNER JOIN producto p ON dv.idproducto = p.idproducto
+                INNER JOIN monedas m ON dv.idmoneda = m.idmoneda
+                WHERE dv.idventa = ?
+                ORDER BY p.nombre";
+        return $this->searchAll($sql, [$idventa]);
+    } catch (Exception $e) {
+        error_log("Error al obtener el detalle de la venta: " . $e->getMessage());
+        throw new Exception("Error al obtener el detalle de la venta: " . $e->getMessage());
+    }
+}
+
+    // Método para eliminar/desactivar venta
+    public function eliminarVenta($idventa)
+    {
+        return $this->executeTransaction(function($mysql) use ($idventa) {
+            
+            // Verificar que la venta existe
+            $venta = $this->search("SELECT COUNT(*) as count FROM venta WHERE idventa = ?", [$idventa]);
+            if ($venta['count'] == 0) {
+                throw new Exception("La venta especificada no existe.");
+            }
+            
+            // En lugar de eliminar físicamente, cambiar el estatus
+            $sqlUpdate = "UPDATE venta SET estatus = 'Inactivo', fecha_modificacion = NOW() WHERE idventa = ?";
+            $result = $this->update($sqlUpdate, [$idventa]);
+            
+            if ($result > 0) {
+                return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
+            } else {
+                throw new Exception("No se pudo desactivar la venta.");
+            }
+        });
+    }
+
+    // Método para buscar clientes por criterio
+    public function buscarClientes($criterio)
+    {
+        try {
+            $sql = "SELECT idcliente as id, nombre, apellido, cedula
+                    FROM cliente
+                    WHERE estatus = 'Activo' 
+                    AND (nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ?)
+                    ORDER BY nombre, apellido
+                    LIMIT 20";
+            
+            $parametroBusqueda = '%' . $criterio . '%';
+            return $this->searchAll($sql, [$parametroBusqueda, $parametroBusqueda, $parametroBusqueda]);
+        } catch (Exception $e) {
+            error_log("Error al buscar clientes: " . $e->getMessage());
+            throw new Exception("Error al buscar clientes: " . $e->getMessage());
+        }
+    }
+
+    // Método para obtener productos para formulario
+    public function getListaProductosParaFormulario()
+    {
+        try {
+            $sql = "SELECT p.idproducto, 
+                           p.nombre as nombre_producto,
+                           p.precio as precio_unitario,
+                           c.nombre as nombre_categoria
+                    FROM productos p
+                    LEFT JOIN categorias c ON p.idcategoria = c.idcategoria
+                    WHERE p.activo = 1
+                    ORDER BY p.nombre";
+            return $this->searchAll($sql);
+        } catch (Exception $e) {
+            error_log("Error al obtener productos para formulario: " . $e->getMessage());
+            throw new Exception("Error al obtener productos para formulario: " . $e->getMessage());
+        }
+    }
+
+    // Método para obtener monedas activas
+    public function getMonedasActivas()
+    {
+        try {
+            $sql = "SELECT idmoneda, codigo_moneda, nombre_moneda, valor
+                    FROM monedas 
+                    WHERE estatus = 'Activo'
+                    ORDER BY codigo_moneda";
+            return $this->searchAll($sql);
+        } catch (Exception $e) {
+            error_log("Error al obtener monedas: " . $e->getMessage());
+            throw new Exception("Error al obtener monedas: " . $e->getMessage());
+        }
+    }
+}
+?>

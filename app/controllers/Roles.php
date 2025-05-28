@@ -1,5 +1,7 @@
 <?php
 require_once "app/core/Controllers.php";
+require_once "helpers/permisosVerificar.php";
+require_once "helpers/PermisosHelper.php";
 require_once "helpers/helpers.php";
 
 class Roles extends Controllers
@@ -17,18 +19,35 @@ class Roles extends Controllers
     public function __construct()
     {
         parent::__construct();
+        // Verificar acceso al módulo
+        permisosVerificar::verificarAccesoModulo('Roles');
     }
 
     public function index()
     {
+        // Obtener permisos del usuario para este módulo
+        $idUsuario = $_SESSION['usuario_id'];
+        $permisos = PermisosHelper::getPermisosDetalle($idUsuario, 'Roles');
+
         $data['page_title'] = "Gestión de Roles";
         $data['page_name'] = "Roles";
         $data['page_functions_js'] = "functions_roles.js";
+        $data['permisos'] = $permisos;
+        
         $this->views->getView($this, "roles", $data);
     }
 
     public function getRolesData()
     {
+        if (!permisosVerificar::verificarPermisoAccion('Roles', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para ver roles',
+                'data' => []
+            ]);
+            exit();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             $arrData = $this->model->selectAllRolesActivos();
             echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
@@ -38,6 +57,14 @@ class Roles extends Controllers
 
     public function createRol()
     {
+        if (!permisosVerificar::verificarPermisoAccion('Roles', 'crear')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para crear roles'
+            ]);
+            exit();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
@@ -56,6 +83,14 @@ class Roles extends Controllers
 
     public function getRolById(int $idrol)
     {
+        if (!permisosVerificar::verificarPermisoAccion('Roles', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para ver detalles de roles'
+            ]);
+            exit();
+        }
+
         if ($idrol > 0) {
             $arrData = $this->model->selectRolById($idrol);
             if (empty($arrData)) {
@@ -70,6 +105,14 @@ class Roles extends Controllers
 
     public function updateRol()
     {
+        if (!permisosVerificar::verificarPermisoAccion('Roles', 'editar')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para editar roles'
+            ]);
+            exit();
+        }
+
         try {
             $input = json_decode(file_get_contents('php://input'), true);
             
@@ -105,6 +148,14 @@ class Roles extends Controllers
 
     public function deleteRol()
     {
+        if (!permisosVerificar::verificarPermisoAccion('Roles', 'eliminar')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para eliminar roles'
+            ]);
+            exit();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
              $json = file_get_contents('php://input');
              $data = json_decode($json, true);
@@ -128,6 +179,15 @@ class Roles extends Controllers
 
     public function getAllRoles()
     {
+        if (!permisosVerificar::verificarPermisoAccion('Roles', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para ver roles',
+                'data' => []
+            ]);
+            exit();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             $arrData = $this->model->selectAllRolesActivos();
             echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
