@@ -309,7 +309,25 @@ class Ventas extends Controllers
         }
         exit();
     }
+public function getTasa()
+{
+    if (!$this->verificarUsuarioLogueado()) {
+        echo json_encode(['tasa' => 1]);
+        exit;
+    }
 
+    $codigo = $_GET['codigo_moneda'] ?? '';
+    $fecha = $_GET['fecha'] ?? date('Y-m-d');
+    if (!$codigo) {
+        echo json_encode(['tasa' => 1]);
+        exit;
+    }
+
+    // Llama al modelo para obtener la tasa
+    $tasa = $this->model->getTasaPorCodigoYFecha($codigo, $fecha);
+    echo json_encode(['tasa' => $tasa]);
+    exit;
+}
 public function getVentaDetalle()
 {
     if (!$this->verificarUsuarioLogueado()) {

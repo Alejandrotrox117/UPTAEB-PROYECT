@@ -535,12 +535,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     
     cargarSelect({
-      selectId: "idmoneda_general", 
-      endpoint: "moneda/getMonedasActivas",
-      optionTextFn: (m) => `${m.codigo_moneda} (${m.valor})`, 
-      optionValueFn: (m) => m.idmoneda,
-      placeholder: "Seleccione moneda...",
+  selectId: "idmoneda_general", 
+  endpoint: "moneda/getMonedasActivas",
+  optionTextFn: (m) => `${m.codigo_moneda} (${m.valor})`, 
+  optionValueFn: (m) => m.idmoneda,
+  placeholder: "Seleccione moneda...",
+  onLoaded: (monedas) => {
+    const select = document.getElementById("idmoneda_general");
+    monedas.forEach((m, i) => {
+      const option = select.options[i + 1]; // +1 si tienes placeholder
+      if (option) option.dataset.codigo = m.codigo_moneda;
     });
+  }
+});
     
     inicializarValidaciones(camposCabeceraVenta, "ventaForm");
     
@@ -569,8 +576,21 @@ document.addEventListener("DOMContentLoaded", function () {
     limpiarFormularioVentaCompleto();
   });
 
+
+async function obtenerTasaActualSeleccionada(idmoneda, fechaVenta) {
+  // Obtén el código de moneda desde el select
+  const selectMoneda = document.getElementById("idmoneda_general");
+  const option = selectMoneda.options[selectMoneda.selectedIndex];
+  const codigoMoneda = option.dataset.codigo || option.text.split(" ")[0]; // Ajusta según cómo cargues el select
+
+  // Llama al endpoint pasando código y fecha
+  const resp = await fetch(`ventas/getTasa?codigo_moneda=${codigoMoneda}&fecha=${fechaVenta}`);
+  const data = await resp.json();
+  return data.tasa || 1;
+}
+
  // --- REGISTRAR VENTA PRINCIPAL ---
-document.getElementById("registrarVentaBtn").addEventListener("click", function () {
+document.getElementById("registrarVentaBtn").addEventListener("click", async function () {
   const idClienteSeleccionado = document.getElementById("idcliente").value;
   const nuevoClienteFormActivo = nuevoClienteContainer && !nuevoClienteContainer.classList.contains("hidden");
 
@@ -632,13 +652,16 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
     detalles: []
   };
 
+
+  // Obtener la tasa actual de la moneda seleccionada
+datosVentaFinal.tasa_usada = await obtenerTasaActualSeleccionada(datosVentaFinal.idmoneda_general, datosVentaFinal.fecha_venta);
   // Recopilar detalles en el formato esperado por el backend PHP
   filas.forEach(fila => {
     const idProducto = fila.querySelector("input[name='detalle_idproducto[]']").value;
     const cantidad = fila.querySelector("input[name='detalle_cantidad[]']").value;
     const precio = fila.querySelector("input[name='detalle_precio_unitario_venta[]']").value;
     const subtotal = fila.querySelector("input[name='detalle_subtotal[]']").value;
-
+    const tasa = datosVentaFinal.tasa_usada || 1;
     // Validar que los datos no estén vacíos
     if (!idProducto || !cantidad || !precio || !subtotal) {
       console.warn("Detalle con datos incompletos encontrado:", {idProducto, cantidad, precio, subtotal});
@@ -650,12 +673,14 @@ document.getElementById("registrarVentaBtn").addEventListener("click", function 
       cantidad: parseFloat(cantidad),
       precio_unitario_venta: parseFloat(precio),
       subtotal_general: parseFloat(subtotal),
+
           descuento_porcentaje_general: 0, // Asignar 0 si no se aplica descuento por producto
       descripcion_temporal_producto: '', // Completa si tienes este dato
       id_moneda_detalle: datosVentaFinal.idmoneda_general, // O el valor correcto si es diferente
       peso_vehiculo: 0,
       peso_bruto: 0,
-      peso_neto: 0
+      peso_neto: 0,
+      tasa_usada: tasa, // Usar la tasa obtenida
     });
   });
 
@@ -782,7 +807,7 @@ document.addEventListener("click", async function (e) {
       <div><b>Nro Venta:</b> ${data.venta.nro_venta}</div>
       <div><b>Fecha:</b> ${data.venta.fecha_venta}</div>
       <div><b>Cliente:</b> ${data.venta.cliente_nombre}</div>
-   
+ <div><b>Tasa usada:</b> ${data.venta.tasa_usada || '-'}</div>
       <div><b>Estatus:</b> ${data.venta.estatus}</div>
       <div><b>Observaciones:</b> ${data.venta.observaciones || '-'}</div>
     </div>
@@ -797,6 +822,9 @@ document.addEventListener("click", async function (e) {
           <th class="px-2 py-1 border">Precio U.</th>
           <th class="px-2 py-1 border">Subtotal</th>
           <th class="px-2 py-1 border">Moneda</th>
+        
+
+         
         </tr>
       </thead>
       <tbody>
@@ -807,6 +835,8 @@ document.addEventListener("click", async function (e) {
             <td class="px-2 py-1 border">${d.precio_unitario_venta}</td>
             <td class="px-2 py-1 border">${d.subtotal_general || d.subtotal}</td>
             <td class="px-2 py-1 border">${d.codigo_moneda}</td>
+           
+
           </tr>
         `).join('')}
       </tbody>
@@ -871,19 +901,20 @@ document.addEventListener("click", async function (e) {
           if (tienePermisoEditar) {
             botonesHtml += `
               <button 
-                type="button"
-                class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full focus:outline-none" 
-                data-idventa="${row.idventa}" 
-                title="Editar Venta">
-                <i class="fas fa-edit"></i>
-              </button>
-               <button 
       type="button"
       class="ver-detalle-btn text-green-500 hover:text-indigo-700 p-1 rounded-full focus:outline-none" 
       data-idventa="${row.idventa}" 
       title="Ver Detalle">
       <i class="fas fa-eye"></i>
     </button>
+              <button 
+                type="button"
+                class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full focus:outline-none" 
+                data-idventa="${row.idventa}" 
+                title="Editar Venta">
+                <i class="fas fa-edit"></i>
+              </button>
+             
             `;
           }
 

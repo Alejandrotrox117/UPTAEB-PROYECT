@@ -87,7 +87,7 @@ $permisos = $data['permisos'] ?? []; ?>
             </div>
             <div>
               <label for="idmoneda_general" class="block text-sm font-medium text-gray-700">Moneda <span class="text-red-500">*</span></label>
-              <select id="idmoneda_general" name="idmoneda_general" class="w-full px-4 py-2 text-sm bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+              <select id="idmoneda_general" data-codigo name="idmoneda_general" class="w-full px-4 py-2 text-sm bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 <option value="">Seleccione...</option>
               </select>
               <div id="error-idmoneda_general-vacio" class="mt-1 hidden text-xs text-red-500"></div>

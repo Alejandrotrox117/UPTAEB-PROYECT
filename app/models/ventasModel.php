@@ -81,6 +81,19 @@ class VentasModel extends Mysql
         }
     }
 
+public function getTasaPorCodigoYFecha()
+{
+    $codigo = $_GET['codigo_moneda'] ?? '';
+    $fecha = $_GET['fecha'] ?? date('Y-m-d');
+    if (!$codigo) {
+        echo json_encode(['tasa' => 1]);
+        exit;
+    }
+    $sql = "SELECT tasa_a_bs FROM historial_tasas_bcv WHERE codigo_moneda = ? AND fecha_publicacion_bcv = ? LIMIT 1";
+    $result = $this->search($sql, [$codigo, $fecha]);
+    echo json_encode(['tasa' => $result['tasa_a_bs'] ?? 1]);
+    exit;
+}
     // Método para obtener productos activos
     public function obtenerProductos()
     {
@@ -128,19 +141,20 @@ class VentasModel extends Mysql
 
             // Insertar venta
             $sqlVenta = "INSERT INTO venta 
-                (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, monto_descuento_general, estatus, total_general, observaciones, fecha_creacion, ultima_modificacion)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-            $paramsVenta = [
-                $nro_venta,
-                $data['idcliente'],
-                $data['fecha_venta'],
-                $data['idmoneda_general'],
-                $data['subtotal_general'],
-                $data['descuento_porcentaje_general'],
-                $data['monto_descuento_general'],
-                $data['estatus'],
-                $data['total_general'],
-                $data['observaciones'] ?? ''
+    (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, monto_descuento_general, estatus, total_general, observaciones, tasa, fecha_creacion, ultima_modificacion)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+$paramsVenta = [
+    $nro_venta,
+    $data['idcliente'],
+    $data['fecha_venta'],
+    $data['idmoneda_general'],
+    $data['subtotal_general'],
+    $data['descuento_porcentaje_general'],
+    $data['monto_descuento_general'],
+    $data['estatus'],
+    $data['total_general'],
+    $data['observaciones'] ?? '',
+    $data['tasa_usada'] ?? null // <-- Aquí la tasa
             ];
             $idventa = $this->insert($sqlVenta, $paramsVenta);
             if (!$idventa) throw new Exception("No se pudo crear la venta.");
@@ -160,7 +174,8 @@ class VentasModel extends Mysql
                     $detalle['subtotal_general'] ?? 0,
                     $detalle['peso_vehiculo'] ?? 0,
                     $detalle['peso_bruto'] ?? 0,
-                    $detalle['peso_neto'] ?? 0
+                    $detalle['peso_neto'] ?? 0,
+                    
                 ];
                 $this->insert($sqlDetalle, $paramsDetalle);
             }
@@ -191,12 +206,13 @@ class VentasModel extends Mysql
 public function obtenerVentaPorId($idventa)
 {
     try {
-        $sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
-                       v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
-                       c.nombre as cliente_nombre, c.apellido as cliente_apellido
-                FROM venta v
-                INNER JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.idventa = ?";
+       $sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
+               v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
+               v.tasa as tasa_usada, -- o el nombre real del campo
+               c.nombre as cliente_nombre, c.apellido as cliente_apellido
+        FROM venta v
+        INNER JOIN cliente c ON v.idcliente = c.idcliente
+        WHERE v.idventa = ?";
         return $this->search($sql, [$idventa]);
     } catch (Exception $e) {
         error_log("Error al obtener la venta: " . $e->getMessage());
