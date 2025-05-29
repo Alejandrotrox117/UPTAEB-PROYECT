@@ -183,7 +183,7 @@ $permisos = $data['permisos'] ?? []; ?>
               </select>
               <!-- <div id="error-select_producto_agregar_modal-vacio" class="mt-1 hidden text-xs text-red-500"></div> -->
             </div>
-            <button type="button" id="agregarDetalleBtn" class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 sm:w-auto transition">
+            <button type="button" id="agregarDetalleBtn" class="w-full px-4 py-2 text-sm font-medium text-black bg-indigo-500 rounded-lg hover:bg-indigo-600 sm:w-auto transition">
               <i class="mr-2 fas fa-plus"></i>Agregar al Detalle
             </button>
           </div>
