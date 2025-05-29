@@ -108,7 +108,7 @@
                      
                     </div>
                 </div>
-                <div class="flex-1 min-w-[150%]">
+                <div class="flex-1 min-w-[100%]">
                     <label for="estatus" class="block text-gray-700 font-medium mb-2">Estatus</label>
                     <select id="estatus" name="estatus" 
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400" required>
