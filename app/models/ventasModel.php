@@ -202,7 +202,195 @@ $paramsVenta = [
         }
     }
 
- 
+ public function crearCliente($datosCliente)
+    {
+        try {
+            // Verificar si ya existe un cliente con la misma cédula
+            $sqlVerificar = "SELECT COUNT(*) as count FROM cliente WHERE cedula = ?";
+            $existe = $this->search($sqlVerificar, [$datosCliente['cedula']]);
+            
+            if ($existe['count'] > 0) {
+                throw new Exception("Ya existe un cliente con la cédula: " . $datosCliente['cedula']);
+            }
+
+            $sqlCliente = "INSERT INTO cliente 
+                          (cedula, nombre, apellido, telefono_principal, direccion, observaciones, estatus, fecha_creacion) 
+                          VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+            
+            $paramsCliente = [
+                $datosCliente['cedula'],
+                $datosCliente['nombre'],
+                $datosCliente['apellido'],
+                $datosCliente['telefono_principal'],
+                $datosCliente['direccion'],
+                $datosCliente['observaciones'] ?? '',
+                $datosCliente['estatus'] ?? 'Activo'
+            ];
+            
+            $idCliente = $this->insert($sqlCliente, $paramsCliente);
+            
+            if (!$idCliente) {
+                throw new Exception("No se pudo crear el cliente");
+            }
+            
+            return $idCliente;
+            
+        } catch (Exception $e) {
+            throw new Exception("Error al crear cliente: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Método para crear venta con cliente nuevo (si es necesario)
+     */
+    public function crearVentaConCliente($data, $detalles, $datosClienteNuevo = null)
+    {
+        return $this->executeTransaction(function($mysql) use ($data, $detalles, $datosClienteNuevo) {
+            $idCliente = $data['idcliente'];
+            
+            // Si no hay cliente seleccionado pero hay datos de cliente nuevo
+            if (!$idCliente && $datosClienteNuevo) {
+                // Crear el cliente primero
+                $idCliente = $this->crearCliente($datosClienteNuevo);
+                
+                // Actualizar los datos de la venta con el nuevo ID de cliente
+                $data['idcliente'] = $idCliente;
+            }
+            
+            // Validar que tenemos un cliente
+            if (!$idCliente) {
+                throw new Exception("No se pudo determinar el cliente para la venta");
+            }
+            
+            // Validar que el cliente existe
+            $clienteExiste = $this->search("SELECT COUNT(*) as count FROM cliente WHERE idcliente = ?", [$idCliente]);
+            if ($clienteExiste['count'] == 0) {
+                throw new Exception("El cliente especificado no existe");
+            }
+            
+            // Validar datos obligatorios de la venta
+            $camposObligatorios = [
+                'idcliente', 'fecha_venta', 'idmoneda_general', 'subtotal_general',
+                'descuento_porcentaje_general', 'monto_descuento_general', 'total_general', 'estatus'
+            ];
+            foreach ($camposObligatorios as $campo) {
+                if (!isset($data[$campo]) || $data[$campo] === '') {
+                    throw new Exception("Falta el campo obligatorio: $campo");
+                }
+            }
+
+            // Validar que hay detalles
+            if (empty($detalles)) {
+                throw new Exception("La venta debe tener al menos un producto");
+            }
+
+            // Generar número de venta
+            $nro_venta = $this->generarNumeroVenta();
+
+            // Insertar venta
+            $sqlVenta = "INSERT INTO venta 
+                (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, 
+                 monto_descuento_general, estatus, total_general, observaciones, tasa, fecha_creacion, ultima_modificacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                
+            $paramsVenta = [
+                $nro_venta,
+                $data['idcliente'],
+                $data['fecha_venta'],
+                $data['idmoneda_general'],
+                $data['subtotal_general'],
+                $data['descuento_porcentaje_general'],
+                $data['monto_descuento_general'],
+                $data['estatus'],
+                $data['total_general'],
+                $data['observaciones'] ?? '',
+                $data['tasa_usada'] ?? 1
+            ];
+            
+            $idventa = $this->insert($sqlVenta, $paramsVenta);
+            if (!$idventa) throw new Exception("No se pudo crear la venta.");
+
+            // Insertar detalles
+            $sqlDetalle = "INSERT INTO detalle_venta 
+                (idventa, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_venta, 
+                 idmoneda, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                
+            foreach ($detalles as $detalle) {
+                // Validar que el producto existe
+                $productoExiste = $this->search("SELECT COUNT(*) as count FROM producto WHERE idproducto = ?", [$detalle['idproducto']]);
+                if ($productoExiste['count'] == 0) {
+                    throw new Exception("El producto con ID " . $detalle['idproducto'] . " no existe");
+                }
+                
+                $paramsDetalle = [
+                    $idventa,
+                    $detalle['idproducto'],
+                    $detalle['descripcion_temporal_producto'] ?? '',
+                    $detalle['cantidad'],
+                    $detalle['precio_unitario_venta'],
+                    $detalle['id_moneda_detalle'] ?? $data['idmoneda_general'],
+                    $detalle['subtotal_general'] ?? 0,
+                    $detalle['peso_vehiculo'] ?? 0,
+                    $detalle['peso_bruto'] ?? 0,
+                    $detalle['peso_neto'] ?? 0
+                ];
+                
+                $detalleInsertado = $this->insert($sqlDetalle, $paramsDetalle);
+                if (!$detalleInsertado) {
+                    throw new Exception("No se pudo insertar el detalle del producto ID: " . $detalle['idproducto']);
+                }
+            }
+
+            return [
+                'success' => true, 
+                'message' => 'Venta y cliente registrados exitosamente', 
+                'idventa' => $idventa,
+                'idcliente' => $idCliente,
+                'nro_venta' => $nro_venta
+            ];
+        });
+    }
+
+    /**
+     * Validar datos de cliente antes de crear
+     */
+    public function validarDatosCliente($datos)
+    {
+        $errores = [];
+        
+        if (empty($datos['cedula'])) {
+            $errores[] = "La cédula es obligatoria";
+        } elseif (!preg_match('/^[VEJP]-\d{6,8}$/', $datos['cedula'])) {
+            $errores[] = "Formato de cédula inválido (ej: V-12345678)";
+        }
+        
+        if (empty($datos['nombre'])) {
+            $errores[] = "El nombre es obligatorio";
+        } elseif (strlen($datos['nombre']) < 2 || strlen($datos['nombre']) > 50) {
+            $errores[] = "El nombre debe tener entre 2 y 50 caracteres";
+        }
+        
+        if (empty($datos['apellido'])) {
+            $errores[] = "El apellido es obligatorio";
+        } elseif (strlen($datos['apellido']) < 2 || strlen($datos['apellido']) > 50) {
+            $errores[] = "El apellido debe tener entre 2 y 50 caracteres";
+        }
+        
+        if (empty($datos['telefono_principal'])) {
+            $errores[] = "El teléfono es obligatorio";
+        } elseif (!preg_match('/^\d{11}$/', $datos['telefono_principal'])) {
+            $errores[] = "El teléfono debe tener 11 dígitos";
+        }
+        
+        if (empty($datos['direccion'])) {
+            $errores[] = "La dirección es obligatoria";
+        } elseif (strlen($datos['direccion']) < 5 || strlen($datos['direccion']) > 200) {
+            $errores[] = "La dirección debe tener entre 5 y 200 caracteres";
+        }
+        
+        return $errores;
+    }
 public function obtenerVentaPorId($idventa)
 {
     try {    

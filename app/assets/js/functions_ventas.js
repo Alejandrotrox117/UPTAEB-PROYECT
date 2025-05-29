@@ -12,7 +12,6 @@ import {
   validarFecha,
   limpiarValidaciones,
   cargarSelect,
-  registrarEntidad,
   validarCampo,
 } from "./validaciones.js";
 
@@ -20,8 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- Inicialización General ---
   const PERMISOS_USUARIO = obtenerPermisosUsuario();
   window.PERMISOS_USUARIO = PERMISOS_USUARIO;
- 
-  
+
   inicializarDataTable();
   const ventaForm = document.getElementById("ventaForm");
 
@@ -141,12 +139,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const nuevoClienteContainer = document.getElementById(
     "nuevoClienteContainer"
   );
-  const registrarClienteInlineBtn = document.getElementById(
-    "registrarClienteInlineBtn"
-  );
-  const cancelarNuevoClienteBtn = document.getElementById(
-    "cancelarNuevoClienteBtn"
-  );
   const descuentoPorcentajeGeneralInput = document.getElementById(
     "descuento_porcentaje_general"
   );
@@ -160,9 +152,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const input = nuevoClienteContainer.querySelector(`#${campo.id}`);
       if (input) input.disabled = !habilitar;
     });
-    nuevoClienteContainer
-      .querySelectorAll("button")
-      .forEach((b) => (b.disabled = !habilitar));
     const inputCriterio = document.getElementById("inputCriterioClienteModal");
     const btnBuscar = document.getElementById("btnBuscarClienteModal");
     if (inputCriterio) inputCriterio.disabled = habilitar;
@@ -272,83 +261,48 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (registrarClienteInlineBtn && nuevoClienteContainer) {
-    registrarClienteInlineBtn.addEventListener("click", function () {
-      if (!validarCamposVacios(camposNuevoClienteEmbebido, "ventaForm")) return;
+  // --- Función para validar cliente nuevo (será usada en el registro de venta) ---
+  function validarClienteNuevo() {
+    if (!nuevoClienteContainer || nuevoClienteContainer.classList.contains("hidden")) {
+      return { esValido: true, datos: null };
+    }
 
-      let formClienteValido = true;
-      camposNuevoClienteEmbebido.forEach((campo) => {
-        const inputElement = ventaForm.querySelector(`#${campo.id}`);
-        if (inputElement && inputElement.offsetParent !== null) {
-          let esValidoEsteCampo = true;
-          if (campo.tipo === "select") {
-            esValidoEsteCampo = validarSelect(inputElement, campo.mensajes);
-          } else {
-            esValidoEsteCampo = validarCampo(
-              inputElement,
-              campo.regex,
-              campo.mensajes
-            );
-          }
-          if (!esValidoEsteCampo) formClienteValido = false;
+    // Validar campos vacíos
+    if (!validarCamposVacios(camposNuevoClienteEmbebido, "ventaForm")) {
+      return { esValido: false, datos: null };
+    }
+
+    // Validar formato de campos
+    let formClienteValido = true;
+    camposNuevoClienteEmbebido.forEach((campo) => {
+      const inputElement = ventaForm.querySelector(`#${campo.id}`);
+      if (inputElement && inputElement.offsetParent !== null) {
+        let esValidoEsteCampo = true;
+        if (campo.tipo === "select") {
+          esValidoEsteCampo = validarSelect(inputElement, campo.mensajes);
+        } else {
+          esValidoEsteCampo = validarCampo(
+            inputElement,
+            campo.regex,
+            campo.mensajes
+          );
         }
-      });
-
-      if (!formClienteValido) return;
-
-      const datosParaBackend = {};
-      camposNuevoClienteEmbebido.forEach((c) => {
-        const input = ventaForm.querySelector(`#${c.id}`);
-        if (input) datosParaBackend[c.backend_key] = input.value;
-      });
-
-      registrarEntidad({
-        formId: "ventaForm",
-        endpoint: "clientes/createcliente",
-        campos: camposNuevoClienteEmbebido,
-        datosParaEnviar: datosParaBackend,
-        onSuccess: (result) => {
-          if (result.status && result.data && result.data.id) {
-            Swal.fire(
-              "¡Éxito!",
-              result.message || "Cliente registrado.",
-              "success"
-            );
-            resetYDeshabilitarFormClienteEmbebido();
-            document.getElementById("idcliente").value = result.data.id;
-            const nombreCompleto = `${result.data.nombre || ""} ${
-              result.data.apellido || ""
-            } (C.I.: ${result.data.cedula || ""})`.trim();
-            document.getElementById("inputCriterioClienteModal").value =
-              nombreCompleto;
-            const divInfo = document.getElementById(
-              "cliente_seleccionado_info_modal"
-            );
-            divInfo.innerHTML = `Sel: <strong>${nombreCompleto}</strong>`;
-            divInfo.classList.remove("hidden");
-          } else {
-            Swal.fire(
-              "¡Error!",
-              result.message || "No se pudo registrar el cliente.",
-              "error"
-            );
-          }
-        },
-        onError: (err) =>
-          Swal.fire(
-            "¡Error!",
-            err.message || "Error registrando cliente.",
-            "error"
-          ),
-      });
+        if (!esValidoEsteCampo) formClienteValido = false;
+      }
     });
-  }
 
-  if (cancelarNuevoClienteBtn) {
-    cancelarNuevoClienteBtn.addEventListener(
-      "click",
-      resetYDeshabilitarFormClienteEmbebido
-    );
+    if (!formClienteValido) {
+      return { esValido: false, datos: null };
+    }
+
+    // Recopilar datos del cliente
+    const datosCliente = {};
+    camposNuevoClienteEmbebido.forEach((c) => {
+      const input = ventaForm.querySelector(`#${c.id}`);
+      if (input) datosCliente[c.backend_key] = input.value;
+    });
+
+    return { esValido: true, datos: datosCliente };
   }
 
   // --- Lógica de Buscador de Clientes ---
@@ -705,7 +659,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return data.tasa || 1;
   }
 
-  // --- REGISTRAR VENTA PRINCIPAL ---
+  // --- REGISTRAR VENTA PRINCIPAL CON CLIENTE AUTOMÁTICO ---
   document
     .getElementById("registrarVentaBtn")
     .addEventListener("click", async function () {
@@ -714,27 +668,30 @@ document.addEventListener("DOMContentLoaded", function () {
         nuevoClienteContainer &&
         !nuevoClienteContainer.classList.contains("hidden");
 
-      // Validar cliente seleccionado
-      if (!idClienteSeleccionado) {
-        if (nuevoClienteFormActivo) {
-          Swal.fire(
-            "Atención",
-            "Guarde o cancele el nuevo cliente antes de proceder.",
-            "warning"
-          );
-          const btnGuardarCliente = document.getElementById(
-            "registrarClienteInlineBtn"
-          );
-          if (btnGuardarCliente) btnGuardarCliente.focus();
-        } else {
-          Swal.fire(
-            "Atención",
-            "Debe seleccionar un cliente para la venta.",
-            "warning"
-          );
-          document.getElementById("inputCriterioClienteModal").focus();
-        }
+      // Validar cliente: debe haber un cliente seleccionado O datos de cliente nuevo
+      if (!idClienteSeleccionado && !nuevoClienteFormActivo) {
+        Swal.fire(
+          "Atención",
+          "Debe seleccionar un cliente existente o completar los datos del nuevo cliente.",
+          "warning"
+        );
+        document.getElementById("inputCriterioClienteModal").focus();
         return;
+      }
+
+      // Si se está registrando un nuevo cliente, validar sus datos
+      let datosClienteNuevo = null;
+      if (nuevoClienteFormActivo) {
+        const validacionCliente = validarClienteNuevo();
+        if (!validacionCliente.esValido) {
+          Swal.fire(
+            "Atención",
+            "Debe completar correctamente todos los datos del cliente.",
+            "warning"
+          );
+          return;
+        }
+        datosClienteNuevo = validacionCliente.datos;
       }
 
       // Validar campos de cabecera
@@ -777,7 +734,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Preparar datos para envío - FORMATO COMPATIBLE CON EL BACKEND PHP
       const datosVentaFinal = {
-        idcliente: parseInt(idClienteSeleccionado),
+        // Si hay cliente nuevo, se enviará null y se creará automáticamente
+        idcliente: idClienteSeleccionado ? parseInt(idClienteSeleccionado) : null,
+        cliente_nuevo: datosClienteNuevo, // Datos del cliente nuevo si aplica
         fecha_venta: document.getElementById("fecha_venta_modal").value,
         idmoneda_general: parseInt(
           document.getElementById("idmoneda_general").value
@@ -804,6 +763,7 @@ document.addEventListener("DOMContentLoaded", function () {
         datosVentaFinal.idmoneda_general,
         datosVentaFinal.fecha_venta
       );
+
       // Recopilar detalles en el formato esperado por el backend PHP
       filas.forEach((fila) => {
         const idProducto = fila.querySelector(
@@ -819,6 +779,7 @@ document.addEventListener("DOMContentLoaded", function () {
           "input[name='detalle_subtotal[]']"
         ).value;
         const tasa = datosVentaFinal.tasa_usada || 1;
+
         // Validar que los datos no estén vacíos
         if (!idProducto || !cantidad || !precio || !subtotal) {
           console.warn("Detalle con datos incompletos encontrado:", {
@@ -835,14 +796,13 @@ document.addEventListener("DOMContentLoaded", function () {
           cantidad: parseFloat(cantidad),
           precio_unitario_venta: parseFloat(precio),
           subtotal_general: parseFloat(subtotal),
-
-          descuento_porcentaje_general: 0, // Asignar 0 si no se aplica descuento por producto
-          descripcion_temporal_producto: "", // Completa si tienes este dato
-          id_moneda_detalle: datosVentaFinal.idmoneda_general, // O el valor correcto si es diferente
+          descuento_porcentaje_general: 0,
+          descripcion_temporal_producto: "",
+          id_moneda_detalle: datosVentaFinal.idmoneda_general,
           peso_vehiculo: 0,
           peso_bruto: 0,
           peso_neto: 0,
-          tasa_usada: tasa, // Usar la tasa obtenida
+          tasa_usada: tasa,
         });
       });
 
@@ -859,7 +819,7 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log("Datos Finales de VENTA a enviar:", datosVentaFinal);
 
       // Enviar datos usando fetch directamente para compatibilidad con el backend PHP
-      fetch("ventas/insertVenta", {
+      fetch("ventas/insertVentaConCliente", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -990,7 +950,6 @@ document.addEventListener("DOMContentLoaded", function () {
           throw new Error(data.message || "No se pudo obtener el detalle.");
 
         // Renderizar los datos en el modal
-        // Renderizar los datos en el modal
         document.getElementById("detalleVentaContenido").innerHTML = `
   <div class="mb-4">
     <h4 class="font-semibold text-gray-700 mb-2">Datos Generales</h4>
@@ -1001,8 +960,7 @@ document.addEventListener("DOMContentLoaded", function () {
         data.venta.cliente_nombre + data.venta.cliente_apellido
       }</div>
       <div><b>Cédula:</b> ${data.venta.cliente_cedula}</div>
-
- <div><b>Tasa usada:</b> ${data.venta.tasa_usada || "-"}</div>
+      <div><b>Tasa usada:</b> ${data.venta.tasa_usada || "-"}</div>
       <div><b>Estatus:</b> ${data.venta.estatus}</div>
       <div><b>Observaciones:</b> ${data.venta.observaciones || "-"}</div>
     </div>
@@ -1017,9 +975,6 @@ document.addEventListener("DOMContentLoaded", function () {
           <th class="px-2 py-1 border">Precio U.</th>
           <th class="px-2 py-1 border">Subtotal</th>
           <th class="px-2 py-1 border">Moneda</th>
-        
-
-         
         </tr>
       </thead>
       <tbody>
@@ -1034,8 +989,6 @@ document.addEventListener("DOMContentLoaded", function () {
               d.subtotal_general || d.subtotal
             }</td>
             <td class="px-2 py-1 border">${d.codigo_moneda}</td>
-           
-
           </tr>
         `
           )
@@ -1069,12 +1022,12 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   );
+
   function inicializarDataTable() {
     let columnsConfig = [
       { data: "nro_venta", title: "Nro. Venta" },
       { data: "cliente_nombre", title: "Cliente" },
       { data: "fecha_venta", title: "Fecha" },
-
       {
         data: "estatus",
         title: "Estatus",

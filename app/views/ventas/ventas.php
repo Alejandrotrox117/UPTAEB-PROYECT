@@ -165,10 +165,10 @@ $permisos = $data['permisos'] ?? []; ?>
                     <div id="error-estatus_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
                 </div>
             </div>
-            <div class="flex justify-end gap-2 pt-1.5 mt-2 border-t border-gray-100">
+            <!-- <div class="flex justify-end gap-2 pt-1.5 mt-2 border-t border-gray-100">
                 <button type="button" id="cancelarNuevoClienteBtn" class="px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition">Cancelar</button>
                 <button type="button" id="registrarClienteInlineBtn" class="px-2.5 py-1 text-xs font-medium text-white bg-green-500 rounded hover:bg-green-600 transition">Guardar Cliente</button>
-            </div>
+            </div> -->
         </div>
         <!-- FIN Contenedor para el formulario de nuevo cliente -->
 
