@@ -263,7 +263,7 @@ public function obtenerProductos()
             $sqlDetalle = "INSERT INTO detalle_venta 
                 (idventa, idproducto, cantidad, precio_unitario_venta, 
                  idmoneda, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             foreach ($detalles as $detalle) {
                 // Validar que el producto existe
