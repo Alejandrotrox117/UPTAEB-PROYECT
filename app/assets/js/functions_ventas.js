@@ -600,7 +600,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       cargarSelect({
         selectId: "idmoneda_general",
-        endpoint: "moneda/getMonedasActivas",
+        endpoint: "ventas/getMonedas",
         optionTextFn: (m) => `${m.codigo_moneda} (${m.valor})`,
         optionValueFn: (m) => m.idmoneda,
         placeholder: "Seleccione moneda...",
@@ -617,7 +617,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       cargarSelect({
         selectId: "select_producto_agregar_modal",
-        endpoint: "productos/getListaProductosParaFormulario",
+        endpoint: "ventas/getProductosLista",
         optionTextFn: (p) =>
           `${p.nombre_producto} (${p.nombre_categoria || "N/A"})`,
         optionValueFn: (p) => p.idproducto || p.id || "",
@@ -819,7 +819,7 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log("Datos Finales de VENTA a enviar:", datosVentaFinal);
 
       // Enviar datos usando fetch directamente para compatibilidad con el backend PHP
-      fetch("ventas/insertVentaConCliente", {
+      fetch("ventas/setVenta", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

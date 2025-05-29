@@ -81,21 +81,32 @@ class VentasModel extends Mysql
         exit;
     }
     // Método para obtener productos activos
-    public function obtenerProductos()
-    {
-        try {
-            $sql = "SELECT idproducto, nombre, precio 
-                    FROM productos 
-                    WHERE activo = 1 
-                    ORDER BY nombre";
-            return $this->searchAll($sql);
-        } catch (Exception $e) {
-            error_log("Error al obtener productos: " . $e->getMessage());
-            throw new Exception("Error al obtener productos: " . $e->getMessage());
-        }
+  
+public function obtenerProductos()
+{
+    $sql = "SELECT
+                p.idproducto,
+                p.nombre AS nombre_producto,
+                p.idcategoria,
+                c.nombre AS nombre_categoria,
+                p.precio AS precio_unitario,
+                p.moneda AS idmoneda_producto
+            FROM
+                producto p
+            JOIN
+                categoria c ON p.idcategoria = c.idcategoria
+            LEFT JOIN
+                monedas m ON p.moneda = m.idmoneda
+            WHERE
+                p.estatus = 'activo'";
+    try {
+        return $this->searchAll($sql);
+    } catch (Exception $e) {
+        error_log("ventasModel::obtenerProductos - Error de BD: " . $e->getMessage());
+        return [];
     }
+}
 
-    // Método para crear una nueva venta
     private function generarNumeroVenta()
     {
         // Busca el último idventa registrado
@@ -107,15 +118,15 @@ class VentasModel extends Mysql
         return 'V-' . str_pad($nuevoId, 6, '0', STR_PAD_LEFT);
     }
 
-   
-    public function obtenerTodasLasVentasConCliente()
+
+    public function getVentasDatatable()
     {
         try {
             $sql = "SELECT v.idventa,
-                           CONCAT('V-', LPAD(v.idventa, 6, '0')) as nro_venta, -- o v.nro_venta si ya está formateado en la tabla
+                           CONCAT('V-', LPAD(v.idventa, 6, '0')) as nro_venta, 
                            CONCAT(c.nombre, ' ', c.apellido) as cliente_nombre,
                            DATE_FORMAT(v.fecha_creacion, '%d/%m/%Y') as fecha_venta,
-                           FORMAT(v.total_general, 2) as total_formateado, -- total_general es el nombre de la columna
+                           FORMAT(v.total_general, 2) as total_formateado, 
                            v.estatus
                     FROM venta v
                     INNER JOIN cliente c ON v.idcliente = c.idcliente
@@ -167,7 +178,7 @@ class VentasModel extends Mysql
     /**
      * Método para crear venta con cliente nuevo (si es necesario)
      */
-    public function crearVentaConCliente($data, $detalles, $datosClienteNuevo = null)
+    public function insertVenta($data, $detalles, $datosClienteNuevo = null)
     {
         return $this->executeTransaction(function ($mysql) use ($data, $detalles, $datosClienteNuevo) {
             $idCliente = $data['idcliente'];
@@ -215,8 +226,16 @@ class VentasModel extends Mysql
             }
 
             // Generar número de venta
-            $nro_venta = $this->generarNumeroVenta();
 
+            $nro_venta = $this->generarNumeroVenta();
+            if (!$nro_venta) {
+                // Si es una petición AJAX, responde con JSON y termina la ejecución
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error: No se pudo generar el número de venta'
+                ]);
+                exit;
+            }
             // Insertar venta
             $sqlVenta = "INSERT INTO venta 
                 (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, 
@@ -363,27 +382,27 @@ class VentasModel extends Mysql
 
     // Método para eliminar/desactivar venta
     public function eliminarVenta($idventa)
-{
-    return $this->executeTransaction(function($mysql) use ($idventa) {
-        
-        // Verificar que la venta existe
-        $venta = $this->search("SELECT COUNT(*) as count FROM venta WHERE idventa = ?", [$idventa]);
-        if ($venta['count'] == 0) {
-            throw new Exception("La venta especificada no existe.");
-        }
-        
-        // ✅ CORRECTO: Usar el nombre de columna correcto
-        // Verificar si tu tabla usa 'fecha_modificacion' o 'ultima_modificacion'
-        $sqlUpdate = "UPDATE venta SET estatus = 'Inactivo', ultima_modificacion = NOW() WHERE idventa = ?";
-        $result = $this->update($sqlUpdate, [$idventa]);
-        
-        if ($result > 0) {
-            return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
-        } else {
-            throw new Exception("No se pudo desactivar la venta.");
-        }
-    });
-}
+    {
+        return $this->executeTransaction(function ($mysql) use ($idventa) {
+
+            // Verificar que la venta existe
+            $venta = $this->search("SELECT COUNT(*) as count FROM venta WHERE idventa = ?", [$idventa]);
+            if ($venta['count'] == 0) {
+                throw new Exception("La venta especificada no existe.");
+            }
+
+            // ✅ CORRECTO: Usar el nombre de columna correcto
+            // Verificar si tu tabla usa 'fecha_modificacion' o 'ultima_modificacion'
+            $sqlUpdate = "UPDATE venta SET estatus = 'Inactivo', ultima_modificacion = NOW() WHERE idventa = ?";
+            $result = $this->update($sqlUpdate, [$idventa]);
+
+            if ($result > 0) {
+                return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
+            } else {
+                throw new Exception("No se pudo desactivar la venta.");
+            }
+        });
+    }
 
 
     // Método para buscar clientes por criterio

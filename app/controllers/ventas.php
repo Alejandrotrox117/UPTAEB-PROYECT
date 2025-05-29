@@ -143,7 +143,7 @@ class Ventas extends Controllers
         }
 
         try {
-            $arrData = $this->model->obtenerTodasLasVentasConCliente();
+            $arrData = $this->model->getVentasDatatable();
 
 
             $response = [
@@ -165,7 +165,7 @@ class Ventas extends Controllers
         }
         exit();
     }
-    public function insertVentaConCliente()
+    public function setVenta()
     {
         if (!$this->verificarUsuarioLogueado()) {
             echo json_encode([
@@ -261,7 +261,7 @@ class Ventas extends Controllers
             }
 
             // Crear la venta con cliente (nuevo o existente)
-            $resultado = $this->model->crearVentaConCliente($data, $detalles, $datosClienteNuevo);
+            $resultado = $this->model->insertVenta($data, $detalles, $datosClienteNuevo);
 
             if ($resultado['success']) {
                 echo json_encode([
@@ -276,7 +276,7 @@ class Ventas extends Controllers
             } else {
                 echo json_encode([
                     'status' => false,
-                    'message' => $resultado['message'] ?? 'Error desconocido al crear la venta'
+                    'message' => $resultado['message'] ?? 'Error al crear la venta'
                 ]);
             }
         } catch (Exception $e) {
@@ -289,6 +289,35 @@ class Ventas extends Controllers
         exit();
     }
   
+
+public function getProductosLista() {
+    header('Content-Type: application/json');
+    try {
+        $modelo = $this->get_model();
+        $productos = $modelo->obtenerProductos();
+        echo json_encode([
+            'status' => true,
+            'data' => $productos
+        ]);
+    } catch (Exception $e) {
+        echo json_encode([
+            'status' => false,
+            'message' => 'Error al obtener productos: ' . $e->getMessage(),
+            'data' => []
+        ]);
+    }
+    exit();
+}
+  public function getMonedas()
+    {
+        try {
+            $monedas = $this->model->getMonedasActivas();
+            echo json_encode(["status" => true, "data" => $monedas]);
+        } catch (Exception $e) {
+            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+        }
+        exit();
+    }
 
     public function buscarClientes()
     {
