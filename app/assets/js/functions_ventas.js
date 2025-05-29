@@ -881,52 +881,53 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  function confirmarEliminacion(idventa) {
-    Swal.fire({
-      title: "¿Estás seguro?",
-      text: "Esta acción podría cambiar el estatus.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, continuar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch("ventas.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            accion: "eliminar",
-            id: parseInt(idventa),
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              Swal.fire(
-                "Actualizado",
-                data.message || "Venta actualizada.",
-                "success"
-              );
-              if (typeof $ !== "undefined" && $("#Tablaventas").length) {
-                $("#Tablaventas").DataTable().ajax.reload();
-              }
-            } else {
-              Swal.fire(
-                "Error",
-                data.message || "No se pudo procesar.",
-                "error"
-              );
+ function confirmarEliminacion(idventa) {
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: "Esta acción cambiará el estatus de la venta a inactivo.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Sí, desactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // ✅ CORRECTO: Llamar al método del controlador
+      fetch("ventas/deleteVenta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: parseInt(idventa),
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status) {
+            Swal.fire(
+              "Desactivada",
+              data.message || "Venta desactivada correctamente.",
+              "success"
+            );
+            if (typeof $ !== "undefined" && $("#Tablaventas").length) {
+              $("#Tablaventas").DataTable().ajax.reload();
             }
-          })
-          .catch((error) => {
-            Swal.fire("Error", "Error de comunicación.", "error");
-            console.error("Error al eliminar/desactivar venta:", error);
-          });
-      }
-    });
-  }
+          } else {
+            Swal.fire(
+              "Error",
+              data.message || "No se pudo desactivar la venta.",
+              "error"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error al desactivar venta:", error);
+          Swal.fire("Error", "Error de comunicación con el servidor.", "error");
+        });
+    }
+  });
+}
+
 
   //DETALLE DE VENTA
   document.addEventListener("click", async function (e) {

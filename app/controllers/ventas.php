@@ -443,47 +443,65 @@ class Ventas extends Controllers
     }
 
     public function deleteVenta()
-    {
-        if (!$this->verificarUsuarioLogueado()) {
-            echo json_encode([
-                'status' => false,
-                'message' => 'Usuario no autenticado'
-            ]);
-            return;
-        }
+{
+    if (!$this->verificarUsuarioLogueado()) {
+        echo json_encode([
+            'status' => false,
+            'message' => 'Usuario no autenticado'
+        ]);
+        return;
+    }
 
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'eliminar')) {
-            echo json_encode([
-                'status' => false,
-                'message' => 'No tiene permisos para eliminar ventas.'
-            ]);
-            return;
-        }
+    if (!permisosVerificar::verificarPermisoAccion('Ventas', 'eliminar')) {
+        echo json_encode([
+            'status' => false, 
+            'message' => 'No tiene permisos para eliminar ventas.'
+        ]);
+        return;
+    }
 
-        if ($_POST) {
-            $id = intval($_POST['id'] ?? 0);
+    // ✅ CORRECTO: Leer datos JSON en lugar de $_POST
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
 
-            if ($id > 0) {
-                $resultado = $this->model->eliminarVenta($id);
+    if (!$data) {
+        echo json_encode([
+            'status' => false,
+            'message' => 'Datos no válidos'
+        ]);
+        return;
+    }
 
-                if ($resultado['success']) {
-                    echo json_encode([
-                        'status' => true,
-                        'message' => $resultado['message']
-                    ]);
-                } else {
-                    echo json_encode([
-                        'status' => false,
-                        'message' => $resultado['message']
-                    ]);
-                }
+    $id = intval($data['id'] ?? 0);
+    
+    if ($id > 0) {
+        try {
+            $resultado = $this->model->eliminarVenta($id);
+            
+            if ($resultado['success']) {
+                echo json_encode([
+                    'status' => true,
+                    'message' => $resultado['message']
+                ]);
             } else {
                 echo json_encode([
                     'status' => false,
-                    'message' => 'ID de venta no válido'
+                    'message' => $resultado['message']
                 ]);
             }
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al desactivar la venta: ' . $e->getMessage()
+            ]);
         }
-        exit();
+    } else {
+        echo json_encode([
+            'status' => false,
+            'message' => 'ID de venta no válido'
+        ]);
     }
+    exit();
+}
+
 }

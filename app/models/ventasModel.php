@@ -363,26 +363,28 @@ class VentasModel extends Mysql
 
     // Método para eliminar/desactivar venta
     public function eliminarVenta($idventa)
-    {
-        return $this->executeTransaction(function ($mysql) use ($idventa) {
+{
+    return $this->executeTransaction(function($mysql) use ($idventa) {
+        
+        // Verificar que la venta existe
+        $venta = $this->search("SELECT COUNT(*) as count FROM venta WHERE idventa = ?", [$idventa]);
+        if ($venta['count'] == 0) {
+            throw new Exception("La venta especificada no existe.");
+        }
+        
+        // ✅ CORRECTO: Usar el nombre de columna correcto
+        // Verificar si tu tabla usa 'fecha_modificacion' o 'ultima_modificacion'
+        $sqlUpdate = "UPDATE venta SET estatus = 'Inactivo', ultima_modificacion = NOW() WHERE idventa = ?";
+        $result = $this->update($sqlUpdate, [$idventa]);
+        
+        if ($result > 0) {
+            return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
+        } else {
+            throw new Exception("No se pudo desactivar la venta.");
+        }
+    });
+}
 
-            // Verificar que la venta existe
-            $venta = $this->search("SELECT COUNT(*) as count FROM venta WHERE idventa = ?", [$idventa]);
-            if ($venta['count'] == 0) {
-                throw new Exception("La venta especificada no existe.");
-            }
-
-            // En lugar de eliminar físicamente, cambiar el estatus
-            $sqlUpdate = "UPDATE venta SET estatus = 'Inactivo', fecha_modificacion = NOW() WHERE idventa = ?";
-            $result = $this->update($sqlUpdate, [$idventa]);
-
-            if ($result > 0) {
-                return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
-            } else {
-                throw new Exception("No se pudo desactivar la venta.");
-            }
-        });
-    }
 
     // Método para buscar clientes por criterio
     public function buscarClientes($criterio)
