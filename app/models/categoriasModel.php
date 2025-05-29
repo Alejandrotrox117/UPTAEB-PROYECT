@@ -16,8 +16,8 @@ class categoriasModel extends Mysql
     public function __construct()
     {
         $this->conexion = new Conexion();
-        $this->db = $this->conexion->connect();
-        parent::__construct();
+        $this->conexion->connect();
+        $this->db = $this->conexion->get_conectGeneral();
     }
 
     // Métodos Getters y Setters

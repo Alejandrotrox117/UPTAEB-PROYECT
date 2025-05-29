@@ -30,8 +30,38 @@ class empleadosModel extends Mysql
     {
         parent::__construct();
         $this->conexion = new Conexion();
-        $this->db = (new Conexion())->connect();
+        $this->conexion->connect();
+        $this->db = $this->conexion->get_conectGeneral();
+        // Obtener el ID del usuario desde la sesión
+        $idUsuario = $this->obtenerIdUsuarioSesion();
+
+        if ($idUsuario) {
+            // Establecer la variable de sesión SQL
+            $this->setUsuarioActual($idUsuario);
+        }
     }
+    private function obtenerIdUsuarioSesion(): ?int
+    {
+        if (isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id'])) {
+            return intval($_SESSION['usuario_id']);
+        } elseif (isset($_SESSION['idUser']) && !empty($_SESSION['idUser'])) {
+            return intval($_SESSION['idUser']);
+        }
+        return null;
+    }
+
+    // Método para establecer @usuario_actual en MySQL
+    private function setUsuarioActual(int $idUsuario)
+    {
+        $sql = "SET @usuario_actual = $idUsuario";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+        } catch (Exception $e) {
+            error_log("No se pudo establecer @usuario_actual: " . $e->getMessage());
+        }
+    }
+
 
     // Métodos Getters y Setters
     public function getIdEmpleado()

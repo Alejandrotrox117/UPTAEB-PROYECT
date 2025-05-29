@@ -14,6 +14,33 @@ class PersonasModel extends mysql
         $this->conexion->connect();
         $this->dbPrincipal = $this->conexion->get_conectGeneral();
         $this->dbSeguridad = $this->conexion->get_conectSeguridad();
+    $idUsuario = $this->obtenerIdUsuarioSesion();
+
+        if ($idUsuario) {
+            // Establecer la variable de sesión SQL
+            $this->setUsuarioActual($idUsuario);
+        }
+    }
+    private function obtenerIdUsuarioSesion(): ?int
+    {
+        if (isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id'])) {
+            return intval($_SESSION['usuario_id']);
+        } elseif (isset($_SESSION['idUser']) && !empty($_SESSION['idUser'])) {
+            return intval($_SESSION['idUser']);
+        }
+        return null;
+    }
+
+    // Método para establecer @usuario_actual en MySQL
+    private function setUsuarioActual(int $idUsuario)
+    {
+        $sql = "SET @usuario_actual = $idUsuario";
+        try {
+            $stmt = $this->dbPrincipal->prepare($sql);
+            $stmt->execute();
+        } catch (Exception $e) {
+            error_log("No se pudo establecer @usuario_actual: " . $e->getMessage());
+        }
     }
 
     public function insertPersona(array $data): array

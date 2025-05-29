@@ -6,8 +6,9 @@ class bitacoraModel
 {
     private $db;
     private $conexion;
+    private $dbSeguridad;
 
-    // Propiedades que corresponden a cada columna de la tabla
+    
     private $idbitacora;
     private $tabla;
     private $accion;
@@ -16,8 +17,10 @@ class bitacoraModel
 
     public function __construct()
     {
-        $this->conexion = new Conexion();
-        $this->db = $this->conexion->connect();
+       $this->conexion = new Conexion();
+        $this->conexion->connect();
+        $this->db = $this->conexion->get_conectGeneral();
+         $this->dbSeguridad = $this->conexion->get_conectSeguridad();
     }
 
     // Getters y Setters
@@ -72,53 +75,33 @@ class bitacoraModel
         $this->fecha = $fecha;
     }
     
-   public function insertar()
-{
-    try {
-        $query = "INSERT INTO bitacora (tabla, accion, idusuario, fecha) VALUES (:tabla, :accion, :idusuario, :fecha)";
-        $stmt = $this->db->prepare($query);
-
-        // Si no se asigna fecha manualmente, se usará la actual por defecto
-        $fecha = $this->getFecha() ?? date("Y-m-d H:i:s");
-
-        $stmt->bindParam(":tabla", $this->tabla);
-        $stmt->bindParam(":accion", $this->accion);
-        $stmt->bindParam(":idusuario", $this->idusuario);
-        $stmt->bindParam(":fecha", $fecha);
-
-        return $stmt->execute();
-    } catch (PDOException $e) {
-        // Puedes imprimir el error para depuración o guardarlo en logs
-        echo "Error al insertar en bitacora: " . $e->getMessage();
-        return false;
+  public function SelectAllBitacora()
+    {
+        $sql = "SELECT 
+    b.idbitacora,
+    b.tabla,
+    b.accion,
+    b.idusuario,
+    CONCAT(p.nombre, ' ', p.apellido) AS nombre_usuario,
+    b.fecha
+FROM bitacora b
+LEFT JOIN usuario u ON b.idusuario = u.idusuario
+LEFT JOIN bd_pda.personas p ON u.personaId = p.idpersona
+ORDER BY b.fecha DESC;";
+        try {
+            $stmt = $this->dbSeguridad->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("CategoriasModel: Error al seleccionar todos las categorias- " . $e->getMessage());
+            return [];
+        }
     }
-}
+    
 
 
 
 
 
- public function insertar2()
-{
-    try {
-        require_once "app/core/Conexion.php"; 
-        $query = "INSERT INTO bitacora (tabla, accion, idusuario, fecha) VALUES (:tabla, :accion, :idusuario, :fecha)";
-        $stmt = $this->db->prepare($query);
-
-        // Si no se asigna fecha manualmente, se usará la actual por defecto
-        $fecha = $this->getFecha() ?? date("Y-m-d H:i:s");
-
-        $stmt->bindParam(":tabla", $this->tabla);
-        $stmt->bindParam(":accion", $this->accion);
-        $stmt->bindParam(":idusuario", $this->idusuario);
-        $stmt->bindParam(":fecha", $fecha);
-
-        return $stmt->execute();
-    } catch (PDOException $e) {
-        // Puedes imprimir el error para depuración o guardarlo en logs
-        echo "Error al insertar en bitacora: " . $e->getMessage();
-        return false;
-    }
-}
+ 
 
 }
