@@ -36,6 +36,7 @@ class Login extends Controllers
 
     public function loginUser()
     {
+        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = strtolower(($_POST['txtEmail']));
             $password = hash("SHA256", strClean($_POST['txtPass']));

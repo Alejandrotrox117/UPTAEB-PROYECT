@@ -15,32 +15,74 @@ class MovimientosModel extends Mysql
     private $descuento;
 
     // Getters y Setters
-    public function getId() { return $this->id; }
-    public function setId($id) { $this->id = $id; }
-    public function getFecha() { return $this->fecha; }
-    public function setFecha($fecha) { $this->fecha = $fecha; }
-    public function getInicial() { return $this->inicial; }
-    public function setInicial($inicial) { $this->inicial = $inicial; }
-    public function getFinal() { return $this->final; }
-    public function setFinal($final) { $this->final = $final; }
-    public function getMaterial_compras() { return $this->material_compras; }
-    public function setMaterial_compras($material_compras) { $this->material_compras = $material_compras; }
-    public function getAjuste() { return $this->ajuste; }
-    public function setAjuste($ajuste) { $this->ajuste = $ajuste; }
-    public function getDescuento() { return $this->descuento; }
-    public function setDescuento($descuento) { $this->descuento = $descuento; }
+    public function getId()
+    {
+        return $this->id;
+    }
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+    public function getFecha()
+    {
+        return $this->fecha;
+    }
+    public function setFecha($fecha)
+    {
+        $this->fecha = $fecha;
+    }
+    public function getInicial()
+    {
+        return $this->inicial;
+    }
+    public function setInicial($inicial)
+    {
+        $this->inicial = $inicial;
+    }
+    public function getFinal()
+    {
+        return $this->final;
+    }
+    public function setFinal($final)
+    {
+        $this->final = $final;
+    }
+    public function getMaterial_compras()
+    {
+        return $this->material_compras;
+    }
+    public function setMaterial_compras($material_compras)
+    {
+        $this->material_compras = $material_compras;
+    }
+    public function getAjuste()
+    {
+        return $this->ajuste;
+    }
+    public function setAjuste($ajuste)
+    {
+        $this->ajuste = $ajuste;
+    }
+    public function getDescuento()
+    {
+        return $this->descuento;
+    }
+    public function setDescuento($descuento)
+    {
+        $this->descuento = $descuento;
+    }
 
     // Constructor
     public function __construct()
     {
-       
+
         parent::__construct();
     }
 
     // Obtener todos los movimientos
     public function selectAllMovimientos()
-{
-    $sql = "SELECT 
+    {
+        $sql = "SELECT 
                 m.*, 
                 t.nombre AS tipo_movimiento, 
                 p.nombre AS nombre_producto
@@ -48,27 +90,35 @@ class MovimientosModel extends Mysql
             INNER JOIN tipo_movimiento t ON m.idtipomovimiento = t.idtipomovimiento
             INNER JOIN producto p ON m.idproducto = p.idproducto
             ORDER BY m.idmovimiento DESC";
-    return $this->searchAll($sql);
-}
-    // Obtener un movimiento por ID
-    public function obtenerMovimientoPorId($id_movimiento)
-    {
-        try {
-            $sql = "SELECT * FROM movimiento_existencia WHERE id_movimiento = ?";
-            return $this->search($sql, [$id_movimiento]);
-        } catch (Exception $e) {
-            error_log("Error al obtener el movimiento: " . $e->getMessage());
-            throw new Exception("Error al obtener el movimiento: " . $e->getMessage());
-        }
+        return $this->searchAll($sql);
     }
+   
 
+    public function obtenerMovimientoPorId($idmovimiento)
+    {
+        $sql = "SELECT 
+                m.*, 
+                t.nombre AS tipo_movimiento, 
+                p.nombre AS nombre_producto
+            FROM movimientos_existencia m
+            INNER JOIN tipo_movimiento t ON m.idtipomovimiento = t.idtipomovimiento
+            INNER JOIN producto p ON m.idproducto = p.idproducto
+            WHERE m.idmovimiento = ?";
+        return $this->search($sql, [$idmovimiento]);
+    }
     // Crear un nuevo movimiento
     public function crearMovimiento($data)
     {
-        return $this->executeTransaction(function($mysql) use ($data) {
+        return $this->executeTransaction(function ($mysql) use ($data) {
             // Validar campos obligatorios
             $camposObligatorios = [
-                'inicial', 'ajuste', 'material_compras', 'despacho', 'descuento', 'final', 'fecha'
+                'inicial',
+                'ajuste',
+                'material_compras',
+                'despacho',
+                'descuento',
+                'final',
+                'fecha'
             ];
             foreach ($camposObligatorios as $campo) {
                 if (!isset($data[$campo])) {
@@ -97,7 +147,7 @@ class MovimientosModel extends Mysql
     // Actualizar un movimiento
     public function actualizarMovimiento($id_movimiento, $data)
     {
-        return $this->executeTransaction(function($mysql) use ($id_movimiento, $data) {
+        return $this->executeTransaction(function ($mysql) use ($id_movimiento, $data) {
             $sql = "UPDATE movimiento_existencia SET 
                         inicial = ?, 
                         ajuste = ?, 
@@ -129,7 +179,7 @@ class MovimientosModel extends Mysql
     // Eliminar (desactivar) un movimiento
     public function eliminarMovimiento($id_movimiento)
     {
-        return $this->executeTransaction(function($mysql) use ($id_movimiento) {
+        return $this->executeTransaction(function ($mysql) use ($id_movimiento) {
             // Verificar que el movimiento existe
             $mov = $this->search("SELECT COUNT(*) as count FROM movimiento_existencia WHERE id_movimiento = ?", [$id_movimiento]);
             if ($mov['count'] == 0) {
