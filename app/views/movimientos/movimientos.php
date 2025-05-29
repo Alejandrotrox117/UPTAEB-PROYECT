@@ -62,6 +62,40 @@ $permisos = $data['permisos'] ?? [];
         </div>
     </div>
 </main>
+
+<form id="formMovimiento" class="space-y-4">
+  <div>
+    <label for="producto" class="block text-sm font-medium">Producto</label>
+    <select id="producto" name="producto" class="border rounded w-full py-2 px-3" required>
+      <option value="">Seleccione un producto</option>
+      <!-- Opciones dinámicas -->
+    </select>
+  </div>
+  <div>
+    <label for="tipo_movimiento" class="block text-sm font-medium">Tipo de Movimiento</label>
+    <select id="tipo_movimiento" name="tipo_movimiento" class="border rounded w-full py-2 px-3" required>
+      <option value="">Seleccione tipo</option>
+      <!-- Opciones dinámicas -->
+    </select>
+  </div>
+  <div>
+    <label for="cantidad" class="block text-sm font-medium">Cantidad</label>
+    <input type="number" id="cantidad" name="cantidad" class="border rounded w-full py-2 px-3" min="0.01" step="0.01" required>
+  </div>
+  <div>
+    <label for="fecha" class="block text-sm font-medium">Fecha</label>
+    <input type="date" id="fecha" name="fecha" class="border rounded w-full py-2 px-3" value="<?= date('Y-m-d') ?>" required>
+  </div>
+  <div>
+    <label for="observaciones" class="block text-sm font-medium">Observaciones</label>
+    <textarea id="observaciones" name="observaciones" class="border rounded w-full py-2 px-3"></textarea>
+  </div>
+  <div class="flex justify-end">
+    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Registrar Movimiento</button>
+  </div>
+</form>
+
+
 <!-- Modal Detalle de Movimiento -->
 
 <div id="modalDetalleMovimiento" class="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 opacity-0 pointer-events-none transparent backdrop-blur-[2px] transition-opacity duration-300">

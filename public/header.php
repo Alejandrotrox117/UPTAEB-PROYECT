@@ -32,53 +32,12 @@
               <span class="ml-5">Dashboard</span>
             </a>
           </li>
-
-          <li class="menu-item-group">
-            <details class="group">
-              <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
-                <div class="flex items-center">
-                  <span><i class="fa-solid fa-cogs icon"></i></span>
-                  <span class="ml-5">Procesos</span>
-                </div>
-                <span class="shrink-0 transition duration-300 group-open:rotate-180">
-                  <i class="fa-solid fa-chevron-down text-xs"></i>
-                </span>
-              </summary>
-              <ul class="ml-5 mt-1 space-y-1">
-                <li
-                  class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/romana" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-weight-scale icon"></i></span>
-                    <span class="ml-5">Romana</span>
-                  </a>
-                </li>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/clasificacion" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-layer-group icon"></i></span>
-                    <span class="ml-4">Clasificacion de Materiales</span>
-                  </a>
-                </li>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/empleados" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-shield-halved icon"></i></span>
-                    <span class="ml-5">Empleados</span>
-                  </a>
-                </li>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/produccion" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-shield-halved icon"></i></span>
-                    <span class="ml-5">Produccion</span>
-                  </a>
-                </li>
-              </ul>
-            </details>
-          </li>
           <li class="menu-item-group">
             <details class="group">
               <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
                 <div class="flex items-center">
                   <span><i class="fa-solid fa-cart-shopping icon"></i></span>
-                  <span class="ml-5">Gestionar Compras de Materiales</span>
+                  <span class="ml-5">Gestionar Compras</span>
                 </div>
                 <span class="shrink-0 transition duration-300 group-open:rotate-180">
                   <i class="fa-solid fa-chevron-down text-xs"></i>
@@ -88,7 +47,7 @@
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/compras" class="flex items-center text-sm">
                     <span><i class="fa-solid fa-cart-shopping icon"></i></span>
-                    <span class="ml-5">Compras</span>
+                    <span class="ml-5"> Compras</span>
                   </a>
                 </li>
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
@@ -100,19 +59,39 @@
               </ul>
             </details>
           </li>
-
           <li class="menu-item-group">
             <details class="group">
               <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
                 <div class="flex items-center">
-                  <span><i class="fa-solid fa-boxes-stacked icon"></i></span>
-                  <span class="ml-5">Gestión de Productos</span>
+                  <span><i class="fa-solid fa-cogs icon"></i></span>
+                  <span class="ml-5">Gestionar Produccion</span>
                 </div>
                 <span class="shrink-0 transition duration-300 group-open:rotate-180">
                   <i class="fa-solid fa-chevron-down text-xs"></i>
                 </span>
               </summary>
               <ul class="ml-5 mt-1 space-y-1">
+                <!-- <li
+                  class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/romana" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-weight-scale icon"></i></span>
+                    <span class="ml-5">Romana</span>
+                  </a>
+                </li> -->
+
+
+                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/produccion" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-industry icon"></i></span>
+                    <span class="ml-5">Produccion</span>
+                  </a>
+                </li>
+                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/empleados" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-user-group icon"></i></span>
+                    <span class="ml-5">Empleados</span>
+                  </a>
+                </li>
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/productos" class="flex items-center text-sm">
                     <span><i class="fa-solid fa-box icon"></i></span>
@@ -125,6 +104,37 @@
                     <span class="ml-5">Categorias</span>
                   </a>
                 </li>
+
+
+              </ul>
+            </details>
+          </li>
+          <li class="menu-item-group">
+            <details class="group">
+              <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+                <div class="flex items-center">
+                  <span><i class="fa-solid fa-cogs icon"></i></span>
+                  <span class="ml-5">Gestionar Pagos</span>
+                </div>
+                <span class="shrink-0 transition duration-300 group-open:rotate-180">
+                  <i class="fa-solid fa-chevron-down text-xs"></i>
+                </span>
+              </summary>
+              <ul class="ml-5 mt-1 space-y-1">
+                <li
+                  class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/romana" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-weight-scale icon"></i></span>
+                    <span class="ml-5">Pagos</span>
+                  </a>
+                </li>
+
+                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/personas" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-user-shield icon"></i></span>
+                    <span class="ml-5">Personas</span>
+                  </a>
+                </li>
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/tasas" class="flex items-center text-sm">
                     <span><i class="fas fa-coins icon"></i></span>
@@ -135,24 +145,26 @@
             </details>
           </li>
 
+
+
           <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
             <a href="/project/movimientos" class="flex items-center">
-              <span><i class="fa-solid fa-warehouse icon"></i></span>
-              <span class="ml-5">Movimientos de existencias</span>
+              <span><i class="fa-solid fa-boxes-stacked icon"></i></span>
+              <span class="ml-5">Gestionar Movimientos de existencias</span>
             </a>
           </li>
           <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-            <a href="/project/ventas" class="flex items-center">
-              <span><i class="fa-solid fa-file-invoice-dollar icon"></i></span>
-              <span class="ml-5">Ventas de Materiales</span>
+            <a href="/project/movimientos" class="flex items-center">
+              <span><i class="fa-solid fa-money-bill-wave icon"></i></span>
+              <span class="ml-5">Gestionar Sueldos Temporales</span>
             </a>
           </li>
           <li class="menu-item-group">
             <details class="group">
               <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
                 <div class="flex items-center">
-                  <span><i class="fa-solid fa-shield-halved icon"></i></span>
-                  <span class="ml-5">Personas</span>
+                  <span><i class="fa-solid fa-cash-register icon"></i></span>
+                  <span class="ml-5">Gestionar Ventas</span>
                 </div>
                 <span class="shrink-0 transition duration-300 group-open:rotate-180">
                   <i class="fa-solid fa-chevron-down text-xs"></i>
@@ -160,28 +172,31 @@
               </summary>
               <ul class="ml-5 mt-1 space-y-1">
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/clientes" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Clientes</span>
+                  <a href="/project/ventas" class="flex items-center">
+                    <span><i class="fa-solid fa-file-invoice-dollar icon"></i></span>
+                    <span class="ml-5"> Ventas </span>
                   </a>
                 </li>
-              </ul>
-              <ul class="ml-5 mt-1 space-y-1">
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/personas" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Personas</span>
+                  <a href="/project/clientes" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-users icon"></i></span>
+                    <span class="ml-5">Clientes</span>
                   </a>
                 </li>
               </ul>
             </details>
           </li>
-
+          <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+            <a href="/project/movimientos" class="flex items-center">
+              <span><i class="fa-solid fa-file-lines icon"></i></span>
+              <span class="ml-5">Generar Reportes</span>
+            </a>
+          </li>
           <li class="menu-item-group">
             <details class="group">
               <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
                 <div class="flex items-center">
-                  <span><i class="fa-solid fa-shield-halved icon"></i></span>
+                  <span><i class="fa-solid fa-user-lock icon"></i></span>
                   <span class="ml-5">Seguridad</span>
                 </div>
                 <span class="shrink-0 transition duration-300 group-open:rotate-180">
@@ -191,43 +206,45 @@
               <ul class="ml-5 mt-1 space-y-1">
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/usuarios" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Usuarios</span>
+                    <span><i class="fa-solid fa-user icon"></i></span>
+                    <span class="ml-5">Gestionar Usuarios</span>
                   </a>
                 </li>
               </ul>
               <ul class="ml-5 mt-1 space-y-1">
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/roles" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Roles</span>
-                  </a>
-                </li>
-              </ul>
-              <ul class="ml-5 mt-1 space-y-1">
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/modulos" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Modulos</span>
+                    <span><i class="fa-solid fa-user-tag icon"></i></span>
+                    <span class="ml-5">Gestionar Rol</span>
                   </a>
                 </li>
               </ul>
               <ul class="ml-5 mt-1 space-y-1">
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/RolesPermisos" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Asignar Permisos a Roles</span>
+                    <span><i class="fa-solid fa-key icon"></i></span>
+                    <span class="ml-5">Asignar Permisos</span>
+                  </a>
+                </li>
+              </ul>
+              <ul class="ml-5 mt-1 space-y-1">
+                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
+                  <a href="/project/modulos" class="flex items-center text-sm">
+                    <span><i class="fa-solid fa-puzzle-piece icon"></i></span>
+                    <span class="ml-5">Modulos</span>
                   </a>
                 </li>
               </ul>
               <ul class="ml-5 mt-1 space-y-1">
                 <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
                   <a href="/project/rolesmodulos" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Asignar Modulos a Roles</span>
+                    <span><i class="fa-solid fa-link icon"></i></span>
+                    <span class="ml-5">Asignar Modulos</span>
                   </a>
                 </li>
               </ul>
+            </details>
+          </li>
         </ul>
         <ul>
           <li class="menu-item rounded-lg p-3  hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
