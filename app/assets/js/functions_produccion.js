@@ -260,103 +260,103 @@ document.addEventListener("DOMContentLoaded", function () {
       selectInsumo.value = "";
     });
   document
-  .getElementById("btnGuardarProduccion")
-  .addEventListener("click", function () {
-    if (!validarCamposVacios(camposProduccion, "formRegistrarProduccion"))
-      return;
+    .getElementById("btnGuardarProduccion")
+    .addEventListener("click", function () {
+      if (!validarCamposVacios(camposProduccion, "formRegistrarProduccion"))
+        return;
 
-    camposProduccion.forEach((campo) => {
-      if (campo.tipo === "select") {
-        validarSelect(campo.id, campo.mensajes, "formRegistrarProduccion");
-      }
-    });
-
-    const idproduccion = document.getElementById("idproduccion").value.trim();
-    const idproducto = document
-      .getElementById("select_producto")
-      .value.trim();
-    const idempleado_seleccionado = document
-      .getElementById("idempleado_seleccionado")
-      .value.trim();
-    const cantidad_a_realizar = document
-      .getElementById("cantidad_a_realizar")
-      .value.trim();
-    const fecha_inicio = document.getElementById("fecha_inicio").value.trim();
-    const fecha_fin =
-      document.getElementById("fecha_fin").value.trim() || null;
-    const estado = document.getElementById("estado").value.trim();
-
-    if (
-      !idproducto ||
-      !idempleado_seleccionado ||
-      !cantidad_a_realizar ||
-      !fecha_inicio ||
-      !estado
-    ) {
-      Swal.fire("Error", "Faltan campos obligatorios.", "error");
-      return;
-    }
-
-    if (parseFloat(cantidad_a_realizar) <= 0) {
-      Swal.fire("Error", "La cantidad debe ser mayor a cero.", "error");
-      return;
-    }
-
-    // 🔴 Validar insumos solo si es creación
-    if (!idproduccion && detalleProduccionItems.length === 0) {
-      Swal.fire(
-        "Atención",
-        "Debe agregar al menos un insumo al detalle.",
-        "warning"
-      );
-      return;
-    }
-
-    const data = {
-      idproduccion,
-      idempleado: idempleado_seleccionado,
-      idproducto,
-      cantidad_a_realizar,
-      fecha_inicio,
-      fecha_fin,
-      estado,
-      insumos: detalleProduccionItems,
-    };
-
-    console.log("Datos enviados:", data);
-
-    const url = idproduccion
-      ? "produccion/updateProduccion"
-      : "produccion/createProduccion";
-    const method = idproduccion ? "PUT" : "POST";
-
-    fetch(url, {
-      method: method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((res) => res.json())
-      .then((result) => {
-        if (result.status) {
-          Swal.fire("Éxito", result.message, "success");
-          cerrarModal("produccionModal");
-          limpiarFormularioProduccion();
-          tablaProduccion.ajax.reload();
-        } else {
-          Swal.fire("Error", result.message, "error");
+      camposProduccion.forEach((campo) => {
+        if (campo.tipo === "select") {
+          validarSelect(campo.id, campo.mensajes, "formRegistrarProduccion");
         }
-      })
-      .catch((err) => {
-        console.error("Error al enviar:", err);
-        Swal.fire(
-          "Error",
-          "Hubo un problema al procesar la solicitud.",
-          "error"
-        );
       });
-  });
+
+      const idproduccion = document.getElementById("idproduccion").value.trim();
+      const idproducto = document
+        .getElementById("select_producto")
+        .value.trim();
+      const idempleado_seleccionado = document
+        .getElementById("idempleado_seleccionado")
+        .value.trim();
+      const cantidad_a_realizar = document
+        .getElementById("cantidad_a_realizar")
+        .value.trim();
+      const fecha_inicio = document.getElementById("fecha_inicio").value.trim();
+      const fecha_fin =
+        document.getElementById("fecha_fin").value.trim() || null;
+      const estado = document.getElementById("estado").value.trim();
+
+      if (
+        !idproducto ||
+        !idempleado_seleccionado ||
+        !cantidad_a_realizar ||
+        !fecha_inicio ||
+        !estado
+      ) {
+        Swal.fire("Error", "Faltan campos obligatorios.", "error");
+        return;
+      }
+
+      if (parseFloat(cantidad_a_realizar) <= 0) {
+        Swal.fire("Error", "La cantidad debe ser mayor a cero.", "error");
+        return;
+      }
+
+      // 🔴 Validar insumos solo si es creación
+      if (!idproduccion && detalleProduccionItems.length === 0) {
+        Swal.fire(
+          "Atención",
+          "Debe agregar al menos un insumo al detalle.",
+          "warning"
+        );
+        return;
+      }
+
+      const data = {
+        idproduccion,
+        idempleado: idempleado_seleccionado,
+        idproducto,
+        cantidad_a_realizar,
+        fecha_inicio,
+        fecha_fin,
+        estado,
+        insumos: detalleProduccionItems,
+      };
+
+      console.log("Datos enviados:", data);
+
+      const url = idproduccion
+        ? "produccion/updateProduccion"
+        : "produccion/createProduccion";
+      const method = idproduccion ? "PUT" : "POST";
+
+      fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("Éxito", result.message, "success");
+            cerrarModal("produccionModal");
+            limpiarFormularioProduccion();
+            tablaProduccion.ajax.reload();
+          } else {
+            Swal.fire("Error", result.message, "error");
+          }
+        })
+        .catch((err) => {
+          console.error("Error al enviar:", err);
+          Swal.fire(
+            "Error",
+            "Hubo un problema al procesar la solicitud.",
+            "error"
+          );
+        });
+    });
 
   document
     .getElementById("btnAgregarTarea")
@@ -572,46 +572,77 @@ document.addEventListener("DOMContentLoaded", function () {
         const prod = produccionRes.data;
         const detalle = detalleRes.data;
         let html = `
-            <h4 class="font-semibold mb-2">Datos Generales</h4>
-            <ul class="mb-4 space-y-1">
-                <li><strong>ID:</strong> ${prod.idproduccion}</li>
-                <li><strong>Producto:</strong> ${prod.nombre_producto}</li>
-                <li><strong>Cantidad a realizar:</strong> ${prod.cantidad_a_realizar}</li>
-                <li><strong>Empleado:</strong> ${prod.nombre_empleado}</li>
-                <li><strong>Fecha inicio:</strong> ${prod.fecha_inicio}</li>
-                <li><strong>Fecha fin:</strong> ${prod.fecha_fin}</li>
-                <li><strong>Estado:</strong> ${prod.estado}</li>
-            </ul>
-            <h4 class="font-semibold mb-2">Insumos</h4>
-            <table class="min-w-full table-auto border-collapse">
-                <thead class="bg-gray-100">
+          <div class="space-y-6">
+            <div>
+              <h4 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4"> Datos Generales</h4>
+              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
+                <li><span class="font-medium text-gray-500">ID:</span> ${
+                  prod.idproduccion
+                }</li>
+                <li><span class="font-medium text-gray-500">Producto:</span> ${
+                  prod.nombre_producto
+                }</li>
+                <li><span class="font-medium text-gray-500">Cantidad a realizar:</span> ${
+                  prod.cantidad_a_realizar
+                }</li>
+                <li><span class="font-medium text-gray-500">Empleado:</span> ${
+                  prod.nombre_empleado
+                }</li>
+                <li><span class="font-medium text-gray-500">Fecha inicio:</span> ${
+                  prod.fecha_inicio
+                }</li>
+                <li><span class="font-medium text-gray-500">Fecha fin:</span> ${
+                  prod.fecha_fin
+                }</li>
+                <li><span class="font-medium text-gray-500">Estado:</span>
+                  <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold 
+                    ${
+                      prod.estado === "realizado"
+                        ? "bg-green-100 text-green-700"
+                        : prod.estado === "empacando"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-gray-100 text-gray-700"
+                    }">
+                    ${prod.estado}
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4"> Insumos</h4>
+              <div class="overflow-x-auto rounded-lg shadow-sm">
+                <table class="w-full text-xs">
+                  <thead class="bg-gray-50 text-gray-700 text-left uppercase tracking-wider">
                     <tr>
-                        <th class="border px-4 py-2">Producto</th>
-                        <th class="border px-4 py-2">Cantidad</th>
-                        <th class="border px-4 py-2">Consumida</th>
-                        <th class="border px-4 py-2">Observaciones</th>
+                      <th class="px-4 py-3 border-b">Producto</th>
+                      <th class="px-4 py-3 border-b">Cantidad</th>
+                      <th class="px-4 py-3 border-b">Consumida</th>
+                      <th class="px-4 py-3 border-b">Observaciones</th>
                     </tr>
-                </thead>
-                <tbody>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-100">
         `;
-        detalle.forEach((insumo) => {
-          html += `
-                <tr>
-                    <td class="border px-4 py-2">${insumo.nombre_producto}</td>
-                    <td class="border px-4 py-2">${insumo.cantidad}</td>
-                    <td class="border px-4 py-2">${
-                      insumo.cantidad_consumida
-                    }</td>
-                    <td class="border px-4 py-2">${
-                      insumo.observaciones || "-"
-                    }</td>
-                </tr>
-            `;
-        });
-        html += `
-                </tbody>
-            </table>
+
+                detalle.forEach((insumo) => {
+                  html += `
+                    <tr>
+                      <td class="px-4 py-3">${insumo.nombre_producto}</td>
+                      <td class="px-4 py-3">${insumo.cantidad}</td>
+                      <td class="px-4 py-3">${insumo.cantidad_consumida}</td>
+                      <td class="px-4 py-3">${insumo.observaciones || "-"}</td>
+                    </tr>
+          `;
+                });
+
+                html += `
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         `;
+
         contenido.innerHTML = html;
       })
       .catch((err) => {
@@ -680,9 +711,10 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         if (data.status) {
           const p = data.data;
-          
+
           document.getElementById("idproduccion").value = p.idproduccion;
-          document.getElementById("idempleado_seleccionado").value = p.idempleado;
+          document.getElementById("idempleado_seleccionado").value =
+            p.idempleado;
           const divInfoEmpleado = document.getElementById(
             "empleado_seleccionado_info"
           );
@@ -699,9 +731,11 @@ document.addEventListener("DOMContentLoaded", function () {
           document.getElementById("fecha_inicio").value = fecha_inicio;
           document.getElementById("fecha_fin").value = fecha_fin;
           document.getElementById("estado").value = p.estado;
-          document.getElementById("empleado").classList.add("hidden"); 
-           document.getElementById("registrarEmpleado").classList.add("hidden"); 
-          document.getElementById("inputCriterioEmpleado").classList.add("hidden"); 
+          document.getElementById("empleado").classList.add("hidden");
+          document.getElementById("registrarEmpleado").classList.add("hidden");
+          document
+            .getElementById("inputCriterioEmpleado")
+            .classList.add("hidden");
           abrirModal("produccionModal");
         } else {
           alert("Producción no encontrada.");

@@ -274,7 +274,8 @@ $permisos = $data['permisos'] ?? []; ?>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="estado" class="block text-gray-700 font-medium mb-1">Estado <span class="text-red-500">*</span></label>
-              <select id="estado" name="estado" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+
+              <select id="estado" name="estado" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" >
                 <option value="borrador">Borrador</option>
                 <option value="en_clasificacion">En Clasificación</option>
                 <option value="empacando">Empacando</option>
