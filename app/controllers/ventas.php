@@ -67,7 +67,7 @@ class Ventas extends Controllers
     private function redirigirLogin()
     {
         if (function_exists('base_url')) {
-            $loginUrl = base_url() . 'login';
+            $loginUrl = base_url() . '/login';
         } else {
             $loginUrl = '/project/login';
         }

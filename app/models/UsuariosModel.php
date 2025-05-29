@@ -21,7 +21,7 @@ class UsuariosModel extends mysql
         try {
             $this->dbSeguridad->beginTransaction();
 
-            $claveHasheada = password_hash($data['clave'], PASSWORD_DEFAULT);
+            $claveHasheada = hash("SHA256", $data['clave']);
 
             $sql = "INSERT INTO usuario (idrol, usuario, clave, correo, personaId, estatus, token) VALUES (?, ?, ?, ?, ?, ?, ?)";
             
@@ -86,7 +86,7 @@ class UsuariosModel extends mysql
 
             // Solo actualizar clave si se proporciona
             if (!empty($data['clave'])) {
-                $claveHasheada = password_hash($data['clave'], PASSWORD_DEFAULT);
+                $claveHasheada = hash("SHA256", $data['clave']);
                 $sql .= ", clave = ?";
                 $valores[] = $claveHasheada;
             }
@@ -137,10 +137,11 @@ class UsuariosModel extends mysql
                     p.nombre AS persona_nombre,
                     p.apellido AS persona_apellido,
                     p.identificacion AS persona_cedula,
+                    p.idpersona AS persona_id,
                     CONCAT(p.nombre, ' ', p.apellido) AS persona_nombre_completo
                 FROM usuario u
                 LEFT JOIN roles r ON u.idrol = r.idrol
-                LEFT JOIN {$this->conexion->getDatabaseGeneral()}.personas p ON u.personaId = p.identificacion
+                LEFT JOIN {$this->conexion->getDatabaseGeneral()}.personas p ON u.personaId = p.idpersona
                 WHERE u.idusuario = ?";
         try {
             $stmt = $this->dbSeguridad->prepare($sql);
