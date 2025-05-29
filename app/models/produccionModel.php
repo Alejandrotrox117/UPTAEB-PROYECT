@@ -28,32 +28,86 @@ class ProduccionModel extends Mysql
 
     // === Getters y Setters ===
 
-    public function getIdProduccion() { return $this->idproduccion; }
-    public function setIdProduccion($id) { $this->idproduccion = $id; }
+    public function getIdProduccion()
+    {
+        return $this->idproduccion;
+    }
+    public function setIdProduccion($id)
+    {
+        $this->idproduccion = $id;
+    }
 
-    public function getIdEmpleado() { return $this->idempleado; }
-    public function setIdEmpleado($id) { $this->idempleado = $id; }
+    public function getIdEmpleado()
+    {
+        return $this->idempleado;
+    }
+    public function setIdEmpleado($id)
+    {
+        $this->idempleado = $id;
+    }
 
-    public function getIdProducto() { return $this->idproducto; }
-    public function setIdProducto($id) { $this->idproducto = $id; }
+    public function getIdProducto()
+    {
+        return $this->idproducto;
+    }
+    public function setIdProducto($id)
+    {
+        $this->idproducto = $id;
+    }
 
-    public function getCantidadARealizar() { return $this->cantidad_a_realizar; }
-    public function setCantidadARealizar($cant) { $this->cantidad_a_realizar = $cant; }
+    public function getCantidadARealizar()
+    {
+        return $this->cantidad_a_realizar;
+    }
+    public function setCantidadARealizar($cant)
+    {
+        $this->cantidad_a_realizar = $cant;
+    }
 
-    public function getFechaInicio() { return $this->fecha_inicio; }
-    public function setFechaInicio($fecha) { $this->fecha_inicio = $fecha; }
+    public function getFechaInicio()
+    {
+        return $this->fecha_inicio;
+    }
+    public function setFechaInicio($fecha)
+    {
+        $this->fecha_inicio = $fecha;
+    }
 
-    public function getFechaFin() { return $this->fecha_fin; }
-    public function setFechaFin($fecha) { $this->fecha_fin = $fecha; }
+    public function getFechaFin()
+    {
+        return $this->fecha_fin;
+    }
+    public function setFechaFin($fecha)
+    {
+        $this->fecha_fin = $fecha;
+    }
 
-    public function getEstado() { return $this->estado; }
-    public function setEstado($estado) { $this->estado = $estado; }
+    public function getEstado()
+    {
+        return $this->estado;
+    }
+    public function setEstado($estado)
+    {
+        $this->estado = $estado;
+    }
 
-    public function getFechaCreacion() { return $this->fecha_creacion; }
-    public function setFechaCreacion($fecha) { $this->fecha_creacion = $fecha; }
+    public function getFechaCreacion()
+    {
+        return $this->fecha_creacion;
+    }
+    public function setFechaCreacion($fecha)
+    {
+        $this->fecha_creacion = $fecha;
+    }
 
-    public function getFechaModificacion() { return $this->fecha_modificacion; }
-    public function setFechaModificacion($fecha) { $this->fecha_modificacion = $fecha; }
+    public function getFechaModificacion()
+    {
+        return $this->fecha_modificacion;
+    }
+    public function setFechaModificacion($fecha)
+    {
+        $this->fecha_modificacion = $fecha;
+    }
 
     // === Operaciones CRUD ===
 
@@ -96,7 +150,6 @@ class ProduccionModel extends Mysql
             }
 
             return $idproduccion;
-
         } catch (Exception $e) {
             error_log("ProduccionModel::insertProduccion - Error: " . $e->getMessage());
             return false;
@@ -135,11 +188,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    /**
-     * Actualiza una producción y sus insumos
-     * @param array $data Datos actualizados
-     * @return bool
-     */
+
     public function updateProduccion(array $data): bool
     {
         try {
@@ -176,7 +225,6 @@ class ProduccionModel extends Mysql
 
             $this->db->commit();
             return true;
-
         } catch (Exception $e) {
             $this->db->rollBack();
             error_log("ProduccionModel::updateProduccion - Error: " . $e->getMessage());
@@ -184,11 +232,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    /**
-     * Elimina el detalle de producción por ID
-     * @param int $idproduccion
-     * @return bool
-     */
+    
     public function deleteDetalleProduccion(int $idproduccion): bool
     {
         try {
@@ -229,7 +273,19 @@ class ProduccionModel extends Mysql
      */
     public function getProduccionById(int $idproduccion): mixed
     {
-        $sql = "SELECT * FROM produccion WHERE idproduccion = ?";
+        $sql = "SELECT 
+                p.*, 
+                prod.nombre AS nombre_producto,
+                e.nombre AS nombre_empleado 
+            FROM 
+                produccion p
+            JOIN 
+                producto prod ON p.idproducto = prod.idproducto
+            JOIN
+                empleado e ON p.idempleado = e.idempleado
+            WHERE 
+                p.idproduccion = ?";
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$idproduccion]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -339,11 +395,33 @@ class ProduccionModel extends Mysql
 
             $this->db->commit();
             return true;
-
         } catch (Exception $e) {
             $this->db->rollBack();
             error_log("ProduccionModel: Error al ajustar inventario - " . $e->getMessage());
             return false;
         }
+    }
+    public function getTotalProducciones()
+    {
+        $sql = "SELECT COUNT(*) AS total FROM produccion WHERE estado != ''";
+        $stmt = $this->db->query($sql);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)$row['total'];
+    }
+
+    public function getProduccionesEnClasificacion()
+    {
+        $sql = "SELECT COUNT(*) AS total FROM produccion WHERE estado = 'en_clasificacion'";
+        $stmt = $this->db->query($sql);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)$row['total'];
+    }
+
+    public function getProduccionesFinalizadas()
+    {
+        $sql = "SELECT COUNT(*) AS total FROM produccion WHERE estado = 'realizado'";
+        $stmt = $this->db->query($sql);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)$row['total'];
     }
 }

@@ -2,16 +2,18 @@
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
 require_once "app/models/produccionModel.php";
-
+require_once "app/models/tareaProduccionModel.php";
 class Produccion extends Controllers
 {
+    private $tarea_model;
     public function __construct()
     {
         parent::__construct();
         $this->model = new produccionModel();
+        $this->tarea_model = new TareaProduccionModel();
     }
 
-    // Vista principal
+
     public function index()
     {
         $data['page_title'] = "Gestión de Producción";
@@ -98,7 +100,7 @@ class Produccion extends Controllers
         try {
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
-            
+
             if (!$data || !is_array($data)) {
                 throw new Exception("Datos inválidos.");
             }
@@ -142,7 +144,6 @@ class Produccion extends Controllers
             } else {
                 throw new Exception("No se pudo registrar la producción.");
             }
-
         } catch (Exception $e) {
             echo json_encode([
                 "status" => false,
@@ -199,7 +200,6 @@ class Produccion extends Controllers
             } else {
                 throw new Exception("No se pudo actualizar la producción.");
             }
-
         } catch (Exception $e) {
             echo json_encode([
                 "status" => false,
@@ -209,7 +209,7 @@ class Produccion extends Controllers
         exit();
     }
 
-    // Eliminar producción
+
     public function deleteProduccion()
     {
         try {
@@ -232,7 +232,6 @@ class Produccion extends Controllers
             } else {
                 throw new Exception("No se pudo eliminar la producción.");
             }
-
         } catch (Exception $e) {
             echo json_encode([
                 "status" => false,
@@ -285,6 +284,97 @@ class Produccion extends Controllers
                 "message" => $e->getMessage()
             ]);
         }
+        exit();
+    }
+    public function getEstadisticas()
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $total = $this->model->getTotalProducciones();
+            $clasificacion = $this->model->getProduccionesEnClasificacion();
+            $finalizadas = $this->model->getProduccionesFinalizadas();
+
+            echo json_encode([
+                "status" => true,
+                "data" => compact("total", "clasificacion", "finalizadas")
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => false,
+                "message" => $e->getMessage()
+            ]);
+        }
+
+        exit();
+    }
+    public function getTareasByProduccion($idproduccion)
+    {
+        header('Content-Type: application/json');
+
+        try {
+            $tareaModel = new TareaProduccionModel();
+            $tareas = $tareaModel->getTareasByProduccion($idproduccion);
+
+            echo json_encode(["status" => true, "data" => $tareas]);
+        } catch (Exception $e) {
+            echo json_encode(["status" => false, "message" => "Error interno"]);
+        }
+
+        exit();
+    }
+
+
+    public function updateTarea()
+{
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+
+    if (!$data || !is_array($data)) {
+        echo json_encode(["status" => false, "message" => "Datos inválidos."]);
+        exit();
+    }
+
+    try {
+        $tareaModel = new TareaProduccionModel();
+        $result = $tareaModel->updateTarea($data);
+
+        echo json_encode([
+            "status" => $result,
+            "message" => $result ? "Tarea actualizada." : "No se pudo actualizar."
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(["status" => false, "message" => "Error interno: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+
+
+    public function asignarTarea()
+    {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (!$data || !is_array($data)) {
+            echo json_encode(["status" => false, "message" => "Datos inválidos."]);
+            exit();
+        }
+
+        try {
+            $tareaModel = new TareaProduccionModel();
+            $result = $tareaModel->insertTarea($data);
+
+            if ($result) {
+                echo json_encode(["status" => true, "message" => "Tarea asignada correctamente."]);
+            } else {
+                echo json_encode(["status" => false, "message" => "No se pudo asignar la tarea."]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(["status" => false, "message" => $e->getMessage()]);
+        }
+
         exit();
     }
 }
