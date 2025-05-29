@@ -1,220 +1,269 @@
 <?php
-require_once("app/core/conexion.php");
+require_once "app/core/conexion.php";
+require_once "app/core/mysql.php";
 
-class ModulosModel
+class ModulosModel extends mysql
 {
-    private $db;
-    private $idmodulo;
-    private $titulo;
-    private $descripcion;
-    private $estatus;
-    private $fecha_creacion;
-    private $fecha_modificacion;
+    private $conexion;
+    private $dbPrincipal;
+    private $dbSeguridad;
 
     public function __construct()
     {
-        $this->db = (new Conexion())->connect();
+        $this->conexion = new Conexion();
+        $this->conexion->connect();
+        $this->dbPrincipal = $this->conexion->get_conectGeneral();
+        $this->dbSeguridad = $this->conexion->get_conectSeguridad();
     }
 
-    // ===========================
-    // SETTERS
-    // ===========================
-    public function setEstatus($estatus)
+    private function verificarControllerExiste(string $titulo): bool
     {
-        $this->estatus = $estatus;
+        $nombreController = ucfirst(strtolower(trim($titulo)));
+        $rutaController = "app/Controllers/" . $nombreController . ".php";
+        return file_exists($rutaController);
     }
 
-    public function setTitulo($titulo)
+    private function verificarModuloExiste(string $titulo, int $idModuloExcluir = null): bool
     {
-        $this->titulo = $titulo;
-    }
-
-    public function setDescripcion($descripcion)
-    {
-        $this->descripcion = $descripcion;
-    }
-
-    public function setIdmodulo($idmodulo)
-    {
-        $this->idmodulo = $idmodulo;
-    }
-
-    public function setFechaCreacion($fecha_creacion)
-    {
-        $this->fecha_creacion = $fecha_creacion;
-    }
-
-    public function setFechaModificacion($fecha_modificacion)
-    {
-        $this->fecha_modificacion = $fecha_modificacion;
-    }
-
-
-    // Puedes añadir más setters si los necesitas
-
-    // ===========================
-    // GETTERS
-    // ===========================
-    public function getEstatus()
-    {
-        return $this->estatus;
-    }
-
-    public function getTitulo()
-    {
-        return $this->titulo;
-    }
-
-    public function getDescripcion()
-    {
-        return $this->descripcion;
-    }
-
-    public function getIdmodulo()
-    {
-        return $this->idmodulo;
-    }
-
-    public function getFechaCreacion()
-    {
-        return $this->fecha_creacion;
-    }
-
-    public function getFechaModificacion()
-    {
-        return $this->fecha_modificacion;
-    }
-
-
-    // ===========================
-    // MÉTODOS FUNCIONALES
-    // ===========================
-
-    // Obtener módulos según estatus, o todos si no hay filtro
-    public function getAllModulos()
-    {
-        // Consulta para obtener todos los módulos
-        $sql = "SELECT idmodulo, titulo, descripcion, estatus, fecha_creacion, fecha_modificacion FROM modulos";
-
-        // Ejecutar la consulta y devolver los resultados
-        $stmt = $this->db->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Retorna los módulos como un arreglo asociativo
-    }
-
-
-    public function registrarModulo()
-    {
-        $this->setFechaCreacion(date('Y-m-d H:i:s'));  // Establecer la fecha de creación
-
-        $sqlVerificar = "SELECT COUNT(*) FROM modulos WHERE titulo = :titulo";
-        $stmtVerificar = $this->db->prepare($sqlVerificar);
-        $stmtVerificar->execute([':titulo' => $this->getTitulo()]);
-        $existe = $stmtVerificar->fetchColumn();
-    
-        if ($existe > 0) {
-            return 'duplicado';
+        $sql = "SELECT COUNT(*) as total FROM modulos WHERE LOWER(titulo) = LOWER(?)";
+        $params = [trim($titulo)];
+        
+        if ($idModuloExcluir !== null) {
+            $sql .= " AND idmodulo != ?";
+            $params[] = $idModuloExcluir;
         }
-    
-    
-        $sql = "INSERT INTO modulos (titulo, estatus, descripcion, fecha_creacion, fecha_modificacion) 
-                VALUES (:titulo, :estatus, :descripcion, :fecha_creacion, :fecha_modificacion)";  // Consulta SQL para insertar
-    
-        $stmt = $this->db->prepare($sql);  // Preparar la consulta SQL
-    
-        // Ejecutar la consulta pasando los valores de los setters
-        return $stmt->execute([
-            ':titulo' => $this->getTitulo(),
-            ':estatus' => $this->getEstatus(),
-            ':descripcion' => $this->getDescripcion(),
-            ':fecha_creacion' => $this->getFechaCreacion(),
-            ':fecha_modificacion'=>$this->getFechaCreacion()
-        ]);
-    }
-    
-
-
-
-
-    public function getModuloById($id)
-    {
-        $sql = "SELECT * FROM modulos WHERE idmodulo = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':id' => $id]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($data) {
-            $this->setIdmodulo($data['idmodulo']);
-            $this->setTitulo($data['titulo']);
-            $this->setDescripcion($data['descripcion']);
-            $this->setEstatus($data['estatus']);
-            $this->setFechaCreacion($data['fecha_creacion']);
-            $this->setFechaModificacion($data['fecha_modificacion']);
-        }
-
-        return $data;
-    }
-
-    public function eliminarModulo($id)
-{
-    $this->setFechaModificacion(date('Y-m-d H:i:s')); // Establece la última modificación
-
-    // Actualiza el estatus del módulo a 'Inactivo'
-    $sql = "UPDATE modulos SET estatus = 'Inactivo', fecha_modificacion = :fecha WHERE idmodulo = :id";
-    $stmt = $this->db->prepare($sql);
-
-    // Ejecuta la consulta con los parámetros correspondientes
-    return $stmt->execute([
-        ':id' => $id,
-        ':fecha' => $this->getFechaModificacion()
-    ]);
-}
-
-
-
-public function actualizarModulo()
-{
-    $this->setFechaModificacion(date('Y-m-d H:i:s'));  // Establecer la fecha de la última modificación
-
-    // Obtener el título original desde la base de datos antes de hacer la comparación
-    $sqlOriginal = "SELECT titulo FROM modulos WHERE idmodulo = :idmodulo";
-    $stmtOriginal = $this->db->prepare($sqlOriginal);
-    $stmtOriginal->execute([':idmodulo' => $this->getIdmodulo()]);
-    $tituloOriginal = $stmtOriginal->fetchColumn();  // Esto obtendrá el título original del módulo
-
-    // Verificar si el título ha cambiado. Si ha cambiado, validamos duplicados.
-    if ($this->getTitulo() !== $tituloOriginal) {
-        $sqlVerificar = "SELECT COUNT(*) FROM modulos WHERE titulo = :titulo AND idmodulo != :idmodulo";
-        $stmtVerificar = $this->db->prepare($sqlVerificar);
-        $stmtVerificar->execute([':titulo' => $this->getTitulo(), ':idmodulo' => $this->getIdmodulo()]);
-        $existe = $stmtVerificar->fetchColumn();
-
-        if ($existe > 0) {
-            return 'duplicado';  // Ya existe un módulo con el mismo título
+        
+        try {
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute($params);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['total'] > 0;
+        } catch (Exception $e) {
+            error_log("Error al verificar módulo existente: " . $e->getMessage());
+            return true;
         }
     }
 
-    // Si el título no es duplicado, proceder con la actualización
-    $sql = "UPDATE modulos 
-            SET titulo = :nombre, estatus = :estatus, descripcion = :descripcion, fecha_modificacion = :ultima_modificacion
-            WHERE idmodulo = :idmodulo";  // Solo actualizamos el módulo con el ID correspondiente
+    public function insertModulo(array $data): array
+    {
+        try {
+            $titulo = $data['titulo'];
+            $descripcion = $data['descripcion'];
 
-    $stmt = $this->db->prepare($sql);  // Preparar la consulta SQL
+            if ($this->verificarModuloExiste($titulo)) {
+                return [
+                    'status' => false,
+                    'message' => 'Ya existe un módulo con ese título.',
+                    'modulo_id' => null
+                ];
+            }
 
-    // Ejecutar la consulta pasando los valores de los setters
-    return $stmt->execute([
-        ':idmodulo' => $this->getIdmodulo(),  // Asegúrate de tener este método
-        ':nombre' => $this->getTitulo(),
-        ':estatus' => $this->getEstatus(),
-        ':descripcion' => $this->getDescripcion(),
-        ':ultima_modificacion' => $this->getFechaModificacion()
-    ]);
-}
+            if (!$this->verificarControllerExiste($titulo)) {
+                return [
+                    'status' => false,
+                    'message' => 'No existe un controlador con el nombre "' . ucfirst(strtolower($titulo)) . '.php". Debe crear el controlador antes de registrar el módulo.',
+                    'modulo_id' => null
+                ];
+            }
 
+            $this->dbSeguridad->beginTransaction();
 
+            $sql = "INSERT INTO modulos (titulo, descripcion, estatus, fecha_creacion, fecha_modificacion) VALUES (?, ?, ?, NOW(), NOW())";
+            
+            $valores = [
+                $titulo,
+                $descripcion,
+                'ACTIVO'
+            ];
+            
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $insertExitoso = $stmt->execute($valores);
 
+            $idModuloInsertado = $this->dbSeguridad->lastInsertId();
 
+            if (!$idModuloInsertado) {
+                $this->dbSeguridad->rollBack();
+                error_log("Error: No se pudo obtener el lastInsertId para el módulo.");
+                return [
+                    'status' => false, 
+                    'message' => 'Error al obtener ID de módulo tras registro.',
+                    'modulo_id' => null
+                ];
+            }
 
+            $this->dbSeguridad->commit();
 
+            return [
+                'status' => true, 
+                'message' => 'Módulo registrado exitosamente (ID: ' . $idModuloInsertado . ').',
+                'modulo_id' => $idModuloInsertado
+            ];
 
+        } catch (PDOException $e) {
+            if ($this->dbSeguridad->inTransaction()) {
+                $this->dbSeguridad->rollBack();
+            }
+            error_log("Error al insertar módulo: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error de base de datos al registrar módulo: ' . $e->getMessage(),
+                'modulo_id' => null
+            ];
+        }
+    }
+
+    public function updateModulo(int $idmodulo, array $data): array
+    {
+        try {
+            $titulo = $data['titulo'];
+            $descripcion = $data['descripcion'];
+
+            if ($this->verificarModuloExiste($titulo, $idmodulo)) {
+                return [
+                    'status' => false,
+                    'message' => 'Ya existe otro módulo con ese título.'
+                ];
+            }
+
+            if (!$this->verificarControllerExiste($titulo)) {
+                return [
+                    'status' => false,
+                    'message' => 'No existe un controlador con el nombre "' . ucfirst(strtolower($titulo)) . '.php". Debe crear el controlador antes de actualizar el módulo.'
+                ];
+            }
+
+            $this->dbSeguridad->beginTransaction();
+
+            $sql = "UPDATE modulos SET titulo = ?, descripcion = ?, fecha_modificacion = NOW() WHERE idmodulo = ?";
+            
+            $valores = [
+                $titulo,
+                $descripcion,
+                $idmodulo
+            ];
+            
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $updateExitoso = $stmt->execute($valores);
+
+            if (!$updateExitoso || $stmt->rowCount() === 0) {
+                $this->dbSeguridad->rollBack();
+                return [
+                    'status' => false, 
+                    'message' => 'No se pudo actualizar el módulo o no se realizaron cambios.'
+                ];
+            }
+
+            $this->dbSeguridad->commit();
+
+            return [
+                'status' => true, 
+                'message' => 'Módulo actualizado exitosamente.'
+            ];
+
+        } catch (PDOException $e) {
+            if ($this->dbSeguridad->inTransaction()) {
+                $this->dbSeguridad->rollBack();
+            }
+            error_log("Error al actualizar módulo: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error de base de datos al actualizar módulo: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function selectModuloById(int $idmodulo)
+    {
+        $sql = "SELECT 
+                    idmodulo,
+                    titulo,
+                    descripcion,
+                    estatus,
+                    fecha_creacion,
+                    fecha_modificacion,
+                    DATE_FORMAT(fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
+                    DATE_FORMAT(fecha_modificacion, '%d/%m/%Y %H:%i') as fecha_modificacion_formato
+                FROM modulos 
+                WHERE idmodulo = ?";
+        try {
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute([$idmodulo]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("ModulosModel::selectModuloById -> " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteModuloById(int $idmodulo): bool
+    {
+        try {
+            $this->dbSeguridad->beginTransaction();
+
+            $sql = "UPDATE modulos SET estatus = 'INACTIVO', fecha_modificacion = NOW() WHERE idmodulo = ?";
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute([$idmodulo]);
+            
+            $this->dbSeguridad->commit();
+            return $stmt->rowCount() > 0;
+
+        } catch (PDOException $e) {
+            $this->dbSeguridad->rollBack();
+            error_log("ModulosModel::deleteModuloById -> " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function selectAllModulosActivos()
+    {
+        $sql = "SELECT 
+                    idmodulo,
+                    titulo,
+                    descripcion,
+                    estatus,
+                    fecha_creacion,
+                    fecha_modificacion,
+                    DATE_FORMAT(fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato,
+                    DATE_FORMAT(fecha_modificacion, '%d/%m/%Y') as fecha_modificacion_formato
+                FROM modulos 
+                WHERE estatus = 'ACTIVO'
+                ORDER BY titulo ASC";
+
+        try {
+            $stmt = $this->dbSeguridad->query($sql);
+            $modulos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ["status" => true, "message" => "Módulos obtenidos.", "data" => $modulos];
+        } catch (PDOException $e) {
+            error_log("ModulosModel::selectAllModulosActivos - Error al seleccionar módulos: " . $e->getMessage());
+            return ["status" => false, "message" => "Error al obtener módulos: " . $e->getMessage(), "data" => []];
+        }
+    }
+
+    public function getControlladoresDisponibles(): array
+    {
+        $controladores = [];
+        $rutaControllers = "app/Controllers/";
+        
+        try {
+            if (is_dir($rutaControllers)) {
+                $archivos = scandir($rutaControllers);
+                foreach ($archivos as $archivo) {
+                    if (pathinfo($archivo, PATHINFO_EXTENSION) === 'php') {
+                        $nombreController = pathinfo($archivo, PATHINFO_FILENAME);
+                        if (!in_array($nombreController, ['Home', 'Error', 'Controllers'])) {
+                            $controladores[] = [
+                                'nombre' => $nombreController,
+                                'archivo' => $archivo
+                            ];
+                        }
+                    }
+                }
+            }
+            return ["status" => true, "data" => $controladores];
+        } catch (Exception $e) {
+            error_log("Error al obtener controladores: " . $e->getMessage());
+            return ["status" => false, "data" => []];
+        }
+    }
 }
 ?>
