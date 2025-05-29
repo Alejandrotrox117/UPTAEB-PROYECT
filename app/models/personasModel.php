@@ -77,7 +77,7 @@ class PersonasModel extends mysql
         try {
             $this->dbSeguridad->beginTransaction();
 
-            $claveHasheada = password_hash($dataUsuario['clave_usuario'], PASSWORD_DEFAULT);
+            $claveHasheada = hash("SHA256", $dataUsuario['clave_usuario']);
             $correoTablaUsuario = $dataUsuario['correo_electronico_usuario'];  
             $rol = $dataUsuario['idrol_usuario'];
 
@@ -232,7 +232,7 @@ class PersonasModel extends mysql
         }
     }
 
-    public function updateUsuario(int $personaId, array $dataUsuario): array
+    public function updateUsuario(int $idpersona_pk, array $dataUsuario): array
     {
         try {
             $this->dbSeguridad->beginTransaction();
@@ -240,7 +240,7 @@ class PersonasModel extends mysql
             // Primero verificar si existe el usuario
             $sqlCheck = "SELECT idusuario FROM usuario WHERE personaId = ?";
             $stmtCheck = $this->dbSeguridad->prepare($sqlCheck);
-            $stmtCheck->execute([$personaId]);
+            $stmtCheck->execute([$idpersona_pk]);
             $usuarioExiste = $stmtCheck->fetch(PDO::FETCH_ASSOC);
 
             if (!$usuarioExiste) {
@@ -254,7 +254,7 @@ class PersonasModel extends mysql
                         $dataUsuario['correo_electronico_usuario'],
                         $claveHasheada,
                         $dataUsuario['correo_electronico_usuario'],
-                        $personaId,
+                        $idpersona_pk,
                         'ACTIVO',
                         ''
                     ];
@@ -273,13 +273,13 @@ class PersonasModel extends mysql
 
                 // Solo actualizar clave si se proporciona
                 if (!empty($dataUsuario['clave_usuario'])) {
-                    $claveHasheada = password_hash($dataUsuario['clave_usuario'], PASSWORD_DEFAULT);
+                    $claveHasheada = hash("SHA256", $dataUsuario['clave_usuario']);
                     $sqlUpdate .= ", clave = ?";
                     $valoresUpdate[] = $claveHasheada;
                 }
 
                 $sqlUpdate .= " WHERE personaId = ?";
-                $valoresUpdate[] = $personaId;
+                $valoresUpdate[] = $idpersona_pk;
 
                 $stmtUpdate = $this->dbSeguridad->prepare($sqlUpdate);
                 $stmtUpdate->execute($valoresUpdate);
