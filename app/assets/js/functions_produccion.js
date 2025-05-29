@@ -1,4 +1,4 @@
-import { abrirModal, cerrarModal } from "./exporthelpers.js";
+import { abrirModal, cerrarModal, obtenerPermisosUsuario, } from "./exporthelpers.js";
 import {
   expresiones,
   inicializarValidaciones,
@@ -11,6 +11,8 @@ import {
 } from "./validaciones.js";
 let tablaProduccion = "";
 document.addEventListener("DOMContentLoaded", function () {
+  const PERMISOS_USUARIO = obtenerPermisosUsuario();
+  window.PERMISOS_USUARIO = PERMISOS_USUARIO;
   cargarEstadisticas();
   tablaProduccion = $("#TablaProduccion").DataTable({
     processing: true,

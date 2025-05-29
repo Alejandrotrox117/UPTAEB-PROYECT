@@ -22,7 +22,36 @@ class TareaProduccionModel extends Mysql
         $this->conexion = new Conexion();
         $this->conexion->connect();
         $this->db = $this->conexion->get_conectGeneral();
+        // Obtener el ID del usuario desde la sesión
+        $idUsuario = $this->obtenerIdUsuarioSesion();
+
+        if ($idUsuario) {
+            // Establecer la variable de sesión SQL
+            $this->setUsuarioActual($idUsuario);
+        }
     }
+    private function obtenerIdUsuarioSesion(): ?int
+    {
+        if (isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id'])) {
+            return intval($_SESSION['usuario_id']);
+        } elseif (isset($_SESSION['idUser']) && !empty($_SESSION['idUser'])) {
+            return intval($_SESSION['idUser']);
+        }
+        return null;
+    }
+
+    // Método para establecer @usuario_actual en MySQL
+    private function setUsuarioActual(int $idUsuario)
+    {
+        $sql = "SET @usuario_actual = $idUsuario";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+        } catch (Exception $e) {
+            error_log("No se pudo establecer @usuario_actual: " . $e->getMessage());
+        }
+    }
+    
 
     // Getters
     public function getIdTarea()
@@ -172,38 +201,38 @@ class TareaProduccionModel extends Mysql
     }
 
     // Actualizar una tarea existente
-   public function updateTarea(array $data)
-{
-    try {
-    
-        error_log("Datos recibidos: " . json_encode($data));
+    public function updateTarea(array $data)
+    {
+        try {
 
-        
-        $idtarea = isset($data['idtarea']) ? (int)$data['idtarea'] : null;
-        $cantidad = isset($data['cantidad_realizada']) ? (int)$data['cantidad_realizada'] : null;
+            error_log("Datos recibidos: " . json_encode($data));
 
-        if ($idtarea === null || $cantidad === null) {
-            error_log("Datos inválidos para actualizar.");
+
+            $idtarea = isset($data['idtarea']) ? (int)$data['idtarea'] : null;
+            $cantidad = isset($data['cantidad_realizada']) ? (int)$data['cantidad_realizada'] : null;
+
+            if ($idtarea === null || $cantidad === null) {
+                error_log("Datos inválidos para actualizar.");
+                return false;
+            }
+
+
+            $sql = "UPDATE tarea_produccion SET cantidad_realizada = ? WHERE idtarea = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$cantidad, $idtarea]);
+
+            if ($stmt->rowCount() > 0) {
+                error_log("Tarea actualizada con éxito.");
+                return true;
+            } else {
+                error_log("No se afectó ninguna fila con idtarea = $idtarea (posible dato idéntico o ID no existe).");
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log("TareaProduccionModel - Error al actualizar tarea: " . $e->getMessage());
             return false;
         }
-
-       
-        $sql = "UPDATE tarea_produccion SET cantidad_realizada = ? WHERE idtarea = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$cantidad, $idtarea]);
-
-        if ($stmt->rowCount() > 0) {
-            error_log("Tarea actualizada con éxito.");
-            return true;
-        } else {
-            error_log("No se afectó ninguna fila con idtarea = $idtarea (posible dato idéntico o ID no existe).");
-            return false;
-        }
-    } catch (Exception $e) {
-        error_log("TareaProduccionModel - Error al actualizar tarea: " . $e->getMessage());
-        return false;
     }
-}
 
 
 

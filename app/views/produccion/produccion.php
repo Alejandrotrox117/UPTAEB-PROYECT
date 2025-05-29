@@ -1,4 +1,5 @@
-<?php headerAdmin($data); ?>
+<?php headerAdmin($data); 
+$permisos = $data['permisos'] ?? []; ?>
 <!-- Main Content -->
 <main class="flex-1 p-6">
   <div class="flex justify-between items-center">
@@ -330,4 +331,5 @@
     <button id="cerrarDetalleProduccion" class="mt-4 px-4 py-2 bg-gray-300 rounded">Cerrar</button>
   </div>
 </div>
+<div id="permisosUsuario" data-permisos='<?= json_encode($permisos) ?>' style="display:none"></div>
 <?php footerAdmin($data); ?>

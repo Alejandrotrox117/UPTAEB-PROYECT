@@ -1,5 +1,7 @@
 <?php
 require_once "app/core/Controllers.php";
+require_once "helpers/permisosVerificar.php";
+require_once "helpers/PermisosHelper.php";
 require_once "helpers/helpers.php";
 require_once "app/models/produccionModel.php";
 require_once "app/models/tareaProduccionModel.php";
@@ -9,16 +11,90 @@ class Produccion extends Controllers
     public function __construct()
     {
         parent::__construct();
+        // Asegurar que la sesión esté iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Verificar si el usuario está logueado antes de verificar permisos
+        if (!$this->verificarUsuarioLogueado()) {
+            $this->redirigirLogin();
+            return;
+        }
+        permisosVerificar::verificarAccesoModulo('Produccion');
+        // Solo verificar permisos si está logueado
+        
         $this->model = new produccionModel();
         $this->tarea_model = new TareaProduccionModel();
     }
 
+ private function verificarUsuarioLogueado(): bool
+    {
+        // Verificar múltiples formas de identificar al usuario logueado
+        $tieneLogin = isset($_SESSION['login']) && $_SESSION['login'] === true;
+        $tieneIdUser = isset($_SESSION['idUser']) && !empty($_SESSION['idUser']);
+        $tieneUsuarioId = isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id']);
+        
+        return $tieneLogin && ($tieneIdUser || $tieneUsuarioId);
+    }
 
+    /**
+     * Obtiene el ID del usuario de la sesión
+     */
+    private function obtenerIdUsuario(): ?int
+    {
+        if (isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id'])) {
+            return intval($_SESSION['usuario_id']);
+        } elseif (isset($_SESSION['idUser']) && !empty($_SESSION['idUser'])) {
+            return intval($_SESSION['idUser']);
+        }
+        return null;
+    }
+private function redirigirLogin()
+    {
+        if (function_exists('base_url')) {
+            $loginUrl = base_url() . '/login';
+        } else {
+            $loginUrl = '/project/login';
+        }
+        
+        header('Location: ' . $loginUrl);
+        exit;
+    }
     public function index()
     {
+         // Doble verificación de seguridad
+        if (!$this->verificarUsuarioLogueado()) {
+            $this->redirigirLogin();
+            return;
+        }
+
+        // Obtener ID del usuario
+        $idUsuario = $this->obtenerIdUsuario();
+        
+        if (!$idUsuario) {
+            error_log("Produccion::index - No se pudo obtener ID de usuario");
+            $this->redirigirLogin();
+            return;
+        }
+
+        try {
+            $permisos = PermisosHelper::getPermisosDetalle($idUsuario, 'Produccion');
+        } catch (Exception $e) {
+            error_log("Error al obtener permisos: " . $e->getMessage());
+            // Permisos por defecto (sin acceso)
+            $permisos = [
+                'puede_ver' => false,
+                'puede_crear' => false,
+                'puede_editar' => false,
+                'puede_eliminar' => false,
+                'acceso_total' => false
+            ];
+        }
         $data['page_title'] = "Gestión de Producción";
         $data['page_name'] = "produccion";
         $data['page_functions_js'] = "functions_produccion.js";
+        $data['permisos'] = $permisos;
         $this->views->getView($this, "produccion", $data);
     }
 
@@ -336,6 +412,8 @@ class Produccion extends Controllers
     }
 
     try {
+        
+
         $tareaModel = new TareaProduccionModel();
         $result = $tareaModel->updateTarea($data);
 
