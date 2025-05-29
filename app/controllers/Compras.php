@@ -1,14 +1,15 @@
 <?php
-require_once "app/core/Controllers.php"; // Asegúrate que la ruta sea correcta
-require_once "app/models/ComprasModel.php"; // Asegúrate que la ruta sea correcta
-require_once "helpers/helpers.php"; 
+require_once "app/core/Controllers.php";
+require_once "app/models/ComprasModel.php";
+require_once "helpers/helpers.php";
 
 class Compras extends Controllers
 {
     public function __construct() {
         parent::__construct();
     }
-        public function set_model($model)
+
+    public function set_model($model)
     {
         $this->model = $model;
     }
@@ -17,7 +18,6 @@ class Compras extends Controllers
     {
         return $this->model;
     }
-
 
     public function index(){
         $data['page_title'] = "Gestión de Compras";
@@ -41,7 +41,6 @@ class Compras extends Controllers
         $monedas = $modelo->getMonedasActivas();
         echo json_encode($monedas);
         exit();
-
     }
 
     //BUSCAR TASAS DE MONEDAS POR FECHA
@@ -80,56 +79,6 @@ class Compras extends Controllers
         exit();
     }
 
-    //REGISTRAR NUEVO PROVEEDOR
-    public function registrarNuevoProveedor() {
-        header('Content-Type: application/json');
-        $response = ["status" => false, "message" => "Datos incompletos o incorrectos."];
-
-        if ($_POST) {
-            $data = [
-                'nombre' => $_POST['nombre'] ?? null,
-                'apellido' => $_POST['apellido'] ?? null,
-                'identificacion' => $_POST['identificacion'] ?? null,
-                'telefono_principal' => $_POST['telefono_principal'] ?? null,
-                'correo_electronico' => $_POST['correo_electronico'] ?? null, FILTER_SANITIZE_EMAIL,
-                'direccion' => $_POST['direccion'] ?? null,
-                'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?? null,
-                'genero' => $_POST['genero'] ?? null,
-                'estatus' => $_POST['estatus'] ?? 'ACTIVO',
-                'observaciones' => $_POST['observaciones'] ?? null,
-            ];
-            var_dump($_POST);
-            die();
-
-        
-            $modelo = $this->get_model();
-            $existente = $modelo->getProveedorByIdentificacion($_POST['identificacion']);
-
-            if ($existente && isset($existente['idproveedor'])) {
-                $response['message'] = "Proveedor con esta identificación ya existe.";
-                $response['idproveedor'] = $existente['idproveedor'];
-                $response['nombre'] = htmlspecialchars(($existente['nombre'] ?? '') . ' ' . ($existente['apellido'] ?? ''), ENT_QUOTES, 'UTF-8');
-                echo json_encode($response);
-                exit();
-            }
-
-            $idNuevoProveedor = $modelo->registrarProveedor($data);
-
-            if ($idNuevoProveedor) {
-                $response = [
-                    "status" => true,
-                    "message" => "Proveedor registrado con éxito.",
-                    "idproveedor" => $idNuevoProveedor,
-                    "nombre" => htmlspecialchars($_POST['nombre'], ENT_QUOTES, 'UTF-8')
-                ];
-            } else {
-                $response['message'] = "Error al registrar el proveedor. Verifique los logs del servidor.";
-            }
-        }
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
-    }
-    
     //BUSCAR ULTIMO PESO DE ROMANA
     public function getUltimoPesoRomana(){
         header('Content-Type: application/json');
@@ -271,79 +220,159 @@ class Compras extends Controllers
         exit();
     }
 
-    //BUSCAR DETALLE DE COMPRA
-    public function getDetalleCompra($idcompra){
-        header('Content-Type: application/json');
-
-        if (!$idcompra) {
-            echo json_encode(['status' => false, 'message' => 'ID de compra inválido']);
-            exit();
-        }
-
-        $this->get_model()->setIdCompra(intval($idcompra));
-        $compra = $this->get_model()->getCompraById($idcompra);
-
-        if (!$compra) {
-            echo json_encode(['status' => false, 'message' => 'Compra no encontrada']);
-            exit();
-        }
-
-        $detalles = $this->get_model()->getDetalleCompraById($idcompra);
-
-        if (!$detalles) {
-            echo json_encode(['status' => false, 'message' => 'Detalles de compra no encontrados']);
-            exit();
-        }
-
-        // Solo un echo json_encode con toda la información
-        echo json_encode([
-            'status' => true,
-            'compra' => $compra,
-            'detalle' => $detalles
-        ], JSON_UNESCAPED_UNICODE);
-        exit();
-    }
-
-    //EDITAR COMPRA
-    public function editarCompra() {
-        header('Content-Type: application/json');
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $modelo = $this->get_model();
-            $response = ["status" => false, "message" => "Error desconocido."];
-
-            $idcompra = intval($_POST['idcompra'] ?? 0);
-            $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
-            $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
-            $idmoneda_general = intval($_POST['idmoneda_general_compra'] ?? 0);
-            $observaciones_compra = $_POST['observaciones_compra'] ?? '';
-            $subtotal_general_compra = floatval($_POST['subtotal_general_input'] ?? 0);
-            $descuento_porcentaje_compra = floatval($_POST['descuento_porcentaje_input'] ?? 0);
-            $monto_descuento_compra = floatval($_POST['monto_descuento_input'] ?? 0);
-            $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
-            $datosCompra = [
-                "idcompra" => $idcompra,
-                "fecha_compra" => $fecha_compra,
-                "idproveedor" => $idproveedor,
-                "idmoneda_general" => $idmoneda_general,
-                "subtotal_general_compra" => $subtotal_general_compra,
-                "descuento_porcentaje_compra" => $descuento_porcentaje_compra,
-                "monto_descuento_compra" => $monto_descuento_compra,
-                "total_general_compra" => $total_general_compra,
-                "observaciones_compra" => $observaciones_compra,
-            ];
-
-
-            // Llama al modelo
-            try {
-                $modelo->editarCompra($datosCompra);
-                $response = ["status" => true, "message" => "Compra actualizada correctamente."];
-            } catch (Exception $e) {
-                $response = ["status" => false, "message" => $e->getMessage()];
+    //VER DETALLE DE COMPRA
+    public function getCompraById(int $idcompra)
+    {
+        if ($idcompra > 0) {
+            $compra = $this->get_model()->getCompraById($idcompra);
+            $detalles = $this->get_model()->getDetalleCompraById($idcompra);
+            
+            if (empty($compra)) {
+                $response = ["status" => false, "message" => "Compra no encontrada."];
+            } else {
+                $response = [
+                    "status" => true, 
+                    "data" => [
+                        "compra" => $compra,
+                        "detalles" => $detalles
+                    ]
+                ];
             }
             echo json_encode($response, JSON_UNESCAPED_UNICODE);
         }
-        exit();
+        die();
+    }
+
+    //ACTUALIZAR COMPRA
+    public function updateCompra()
+    {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$input) {
+                echo json_encode(['status' => false, 'message' => 'Datos no válidos']);
+                return;
+            }
+
+            $idCompra = intval($input['idcompra'] ?? 0);
+            if ($idCompra <= 0) {
+                echo json_encode(['status' => false, 'message' => 'ID de compra no válido']);
+                return;
+            }
+
+            // Preparar datos para el modelo
+            $datosCompra = [
+                'idcompra' => $idCompra,
+                'fecha_compra' => $input['fecha_compra'] ?? '',
+                'idproveedor' => intval($input['idproveedor'] ?? 0),
+                'idmoneda_general' => intval($input['idmoneda_general'] ?? 0),
+                'observaciones_compra' => $input['observaciones_compra'] ?? '',
+                'subtotal_general_compra' => floatval($input['subtotal_general'] ?? 0),
+                'descuento_porcentaje_compra' => floatval($input['descuento_porcentaje'] ?? 0),
+                'monto_descuento_compra' => floatval($input['monto_descuento'] ?? 0),
+                'total_general_compra' => floatval($input['total_general'] ?? 0),
+            ];
+
+            $detallesCompra = $input['detalles'] ?? [];
+
+            $resultado = $this->get_model()->updateCompra($datosCompra, $detallesCompra);
+            
+            echo json_encode($resultado);
+
+        } catch (Exception $e) {
+            error_log("Error en updateCompra: " . $e->getMessage());
+            echo json_encode([
+                'status' => false, 
+                'message' => 'Error interno del servidor'
+            ]);
+        }
     }
 
 
+    //ELIMINAR COMPRA
+    public function deleteCompra(){
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(
+                ["status"  => false,"message" => "Método no permitido."],JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        $idcompra = isset($data['idcompra']) ? intval($data['idcompra']) : 0;
+
+        if ($idcompra <= 0) {
+            echo json_encode(
+                ["status"  => false,"message" => "ID de compra no válido."],JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $requestDelete = $this->get_model()->deleteCompraById($idcompra);
+
+        if ($requestDelete) {
+            $response = ["status"  => true,"message" => "Compra marcada como inactiva correctamente."];
+        } else {
+            $response = ["status"  => false,"message" => "Error al marcar la compra como inactiva."];
+        }
+
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+
+    //CAMBIAR ESTADO DE COMPRA
+    public function cambiarEstadoCompra(){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+            $idcompra = isset($data['idcompra']) ? intval($data['idcompra']) : 0;
+            $nuevoEstado = isset($data['nuevo_estado']) ? trim($data['nuevo_estado']) : '';
+
+            if ($idcompra > 0 && !empty($nuevoEstado)) {
+                $resultado = $this->get_model()->cambiarEstadoCompra($idcompra, $nuevoEstado);
+                echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            } else {
+                $response = ["status" => false, "message" => "Datos incompletos para cambiar estado."];
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            }
+        }
+        die();
+    }
+
+    //REGISTRAR NUEVO PROVEEDOR EN COMPRAS
+    public function createProveedorinCompras(){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'nombre' => trim($_POST['nombre'] ?? ''),
+                'apellido' => trim($_POST['apellido'] ?? ''),
+                'identificacion' => trim($_POST['identificacion'] ?? ''),
+                'telefono_principal' => trim($_POST['telefono_principal'] ?? ''),
+                'correo_electronico' => trim($_POST['correo_electronico'] ?? ''),
+                'direccion' => trim($_POST['direccion'] ?? ''),
+                'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?: null,
+                'genero' => $_POST['genero'] ?? null,
+                'observaciones' => trim($_POST['observaciones'] ?? ''),
+            ];
+
+            $request = $this->get_model()->insertProveedor($data);
+            echo json_encode($request, JSON_UNESCAPED_UNICODE);
+        }
+        die();
+    }
+
+    //OBTENER PROVEEDOR POR ID
+    public function getProveedorById($idproveedor){
+        if ($idproveedor > 0) {
+            $proveedor = $this->get_model()->getProveedorById($idproveedor);
+            if (empty($proveedor)) {
+                $response = ["status" => false, "message" => "Proveedor no encontrado."];
+            } else {
+                $response = ["status" => true, "data" => $proveedor];
+            }
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        }
+        die();
+    }
 }
+?>
