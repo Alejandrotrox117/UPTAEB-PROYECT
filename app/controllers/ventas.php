@@ -288,74 +288,7 @@ class Ventas extends Controllers
         }
         exit();
     }
-    public function insertVenta()
-    {
-        if (!$this->verificarUsuarioLogueado()) {
-            echo json_encode([
-                'status' => false,
-                'message' => 'Usuario no autenticado.'
-            ]);
-            return;
-        }
-
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'crear')) {
-            echo json_encode([
-                'status' => false,
-                'message' => 'No tiene permisos para crear ventas.'
-            ]);
-            return;
-        }
-
-        // Leer datos JSON
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-
-        if (!$data) {
-            echo json_encode(['status' => false, 'message' => 'Datos no válidos.']);
-            return;
-        }
-
-        // Validar que los campos principales estén presentes (opcional, ya lo hace el modelo)
-        $camposObligatorios = [
-            'idcliente',
-            'fecha_venta',
-            'idmoneda_general',
-            'subtotal_general',
-            'descuento_porcentaje_general',
-            'monto_descuento_general',
-            'total_general',
-            'estatus'
-        ];
-        foreach ($camposObligatorios as $campo) {
-            if (!isset($data[$campo])) {
-                echo json_encode(['status' => false, 'message' => "Falta el campo obligatorio: $campo"]);
-                return;
-            }
-        }
-
-        try {
-            $detalles = $data['detalles'] ?? [];
-            unset($data['detalles']);
-            $resultado = $this->model->crearVenta($data, $detalles);
-            if ($resultado['success']) {
-                echo json_encode([
-                    'status' => true,
-                    'message' => $resultado['message']
-                ]);
-            } else {
-                echo json_encode([
-                    'status' => false,
-                    'message' => $resultado['message']
-                ]);
-            }
-        } catch (Exception $e) {
-            echo json_encode([
-                'status' => false,
-                'message' => 'Error al procesar la venta: ' . $e->getMessage()
-            ]);
-        }
-        exit();
-    }
+  
 
     public function buscarClientes()
     {
