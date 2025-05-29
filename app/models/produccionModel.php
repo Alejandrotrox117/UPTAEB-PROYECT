@@ -137,13 +137,7 @@ class ProduccionModel extends Mysql
         $this->fecha_modificacion = $fecha;
     }
 
-    // === Operaciones CRUD ===
-
-    /**
-     * Registra una nueva producción y sus insumos
-     * @param array $data Datos de la producción
-     * @return int|false ID de producción o false en caso de error
-     */
+  
     public function insertProduccion(array $data)
     {
         try {
@@ -184,12 +178,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    /**
-     * Inserta un detalle de producción (insumo usado)
-     * @param int $idproduccion ID de producción
-     * @param array $insumo Datos del insumo
-     * @return bool
-     */
+
     private function insertDetalleProduccion(int $idproduccion, array $insumo): bool
     {
         try {
@@ -273,10 +262,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    /**
-     * Obtiene todas las producciones activas
-     * @return array
-     */
+
     public function SelectAllProducciones(): array
     {
         $sql = "SELECT 
@@ -294,11 +280,7 @@ class ProduccionModel extends Mysql
         return $this->searchAll($sql);
     }
 
-    /**
-     * Obtiene una producción por su ID
-     * @param int $idproduccion
-     * @return array|false
-     */
+    
     public function getProduccionById(int $idproduccion): mixed
     {
         $sql = "SELECT 
@@ -319,11 +301,7 @@ class ProduccionModel extends Mysql
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Obtiene los insumos usados en una producción
-     * @param int $idproduccion
-     * @return array
-     */
+    
     public function SelectDetalleProduccion(int $idproduccion): array
     {
         $sql = "SELECT 
@@ -341,11 +319,7 @@ class ProduccionModel extends Mysql
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Elimina lógicamente una producción
-     * @param int $idproduccion
-     * @return bool
-     */
+    
     public function deleteProduccion(int $idproduccion): bool
     {
         $sql = "UPDATE produccion SET estado = 'inactivo' WHERE idproduccion = ?";
@@ -353,10 +327,7 @@ class ProduccionModel extends Mysql
         return $stmt->execute([$idproduccion]);
     }
 
-    /**
-     * Obtiene todos los empleados activos
-     * @return array
-     */
+    
     public function SelectAllEmpleado(): array
     {
         $sql = "SELECT * FROM empleado WHERE estatus = 'activo'";
@@ -369,10 +340,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    /**
-     * Obtiene todos los productos activos
-     * @return array
-     */
+   
     public function SelectAllProducto(): array
     {
         $sql = "SELECT * FROM producto WHERE estatus = 'activo'";
@@ -385,11 +353,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    /**
-     * Ajusta inventario tras finalizar producción
-     * @param int $idproduccion
-     * @return bool
-     */
+    
     public function ajustarInventario(int $idproduccion): bool
     {
         try {

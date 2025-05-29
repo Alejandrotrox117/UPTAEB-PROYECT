@@ -1,4 +1,4 @@
-<?php headerAdmin($data); 
+<?php headerAdmin($data);
 $permisos = $data['permisos'] ?? []; ?>
 <!-- Main Content -->
 <main class="flex-1 p-6">
@@ -95,15 +95,14 @@ $permisos = $data['permisos'] ?? []; ?>
       </button>
     </div>
 
-    <!-- Contenido del Modal (Formulario) -->
+
     <form id="formRegistrarProduccion" class="px-8 py-6 max-h-[70vh] overflow-y-auto">
 
-      <!-- Campos Ocultos -->
       <input type="hidden" id="idproduccion" name="idproduccion">
       <input type="hidden" id="idproducto" name="idproducto">
       <input type="hidden" id="detalleProduccionJson" name="detalleProduccionJson">
 
-      <!-- Sección Datos Generales -->
+
       <div>
         <h4 class="text-base font-semibold text-gray-700 mb-3 border-b pb-2">Datos Generales</h4>
         <div class="mb-4">
@@ -116,7 +115,7 @@ $permisos = $data['permisos'] ?? []; ?>
 
         </div>
 
-        <!-- Producto -->
+
         <div class="mb-4">
           <label for="select_producto" class="form-label">Producto <span class="text-red-500">*</span></label>
           <select id="select_producto" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
@@ -124,34 +123,32 @@ $permisos = $data['permisos'] ?? []; ?>
           </select>
         </div>
 
-    
+
         <div class="mb-4">
-          <label for="cantidad_a_realizar" class="form-label">Cantidad a Producir <span class="text-red-500">*</span></label>
+          <label for="cantidad_a_realizar" class="form-label">Meta a Producir <span class="text-red-500">*</span></label>
           <input type="number" id="cantidad_a_realizar" name="cantidad_a_realizar" class="w-1/3 border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" min="1" required>
         </div>
-        <div class="mb-4">
-          <label for="EmpleadoCargo" class="form-label">Empleado a Cargo <span class="text-red-500">*</span></label>
-          <input type="text" id="EmpleadoCargo" name="EmpleadoCargo" class="w-1/3 border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" min="1">
-        </div>
+
       </div>
 
       <!-- Sección Empleado -->
       <div class="mb-4 grid-item">
-        <label for="buscar_empleado" class="form-label">Buscar Empleado <span class="text-red-500">*</span></label>
-        <div class="flex gap-4 ml-2">
+       
+        <div id="empleado" class="flex gap-4 ml-2">
+           <label for="buscar_empleado" class="form-label">Buscar Empleado <span class="text-red-500">*</span></label>
           <input type="text" id="inputCriterioEmpleado" class="w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Nombre, Apellido o Cédula...">
           <button type="button" id="btnBuscarEmpleado" class="btn-success px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-base">Buscar</button>
         </div>
-        <input type="hidden" id="idempleado_seleccionado" name="idempleado_seleccionado">
+        <input type="hidden"  id="idempleado_seleccionado" name="idempleado_seleccionado">
         <div id="empleado_seleccionado_info" class="mt-2 p-2 border border-gray-200 rounded-md bg-gray-50 text-xs hidden"></div>
         <div id="listaResultadosEmpleado" class="mt-2 border border-gray-300 rounded-md max-h-20 overflow-y-auto hidden"></div>
       </div>
 
-      
-      <button type="button" onclick="abrirModalEmpleado('Registrar Empleado', 'empleadoForm', 'POST', 'empleados/createEmpleado')" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-700 transition text-base font-medium mb-6">
+
+      <button id="registrarEmpleado" type="button" onclick="abrirModalEmpleado('Registrar Empleado', 'empleadoForm', 'POST', 'empleados/createEmpleado')" class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-700 transition text-base font-medium mb-6">
         <i class="fas fa-user-plus mr-2"></i>Registrar Nuevo Empleado
       </button>
-     
+
       <div class="mb-4 border-b border-gray-200">
         <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="tabs">
           <li class="mr-2">
@@ -184,7 +181,8 @@ $permisos = $data['permisos'] ?? []; ?>
         <button type="button" id="btnAgregarTarea" class="btn-primary-solid w-full sm:w-auto">
           <i class="fas fa-plus mr-2"></i>Asignar Tarea
         </button>
-<br><br><br><hr>
+        <br><br><br>
+        <hr>
 
         <!-- Tabla de tareas -->
         <table id="tablaTareas" class="w-full text-xs">
@@ -200,22 +198,14 @@ $permisos = $data['permisos'] ?? []; ?>
           <tbody id="detalleTareasBody"></tbody>
         </table>
         <!-- Campos de progreso -->
-        <div class="flex justify-between bg-white p-6 rounded-2xl shadow-md space-x-8 mt-5">
-          <div class="flex items-center space-x-4">
-            <div class="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
-              <i class="fa-solid fa-weight-scale text-green-500 text-3xl"></i>
-            </div>
-            <div>
-              <p class="text-gray-500 text-sm">Total a Producir</p>
-              <p id="total-produccion" class="text-gray-900 text-2xl font-bold">0</p>
-            </div>
-          </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5">
+      
+         
 
-          <div class="border-l border-gray-300 h-16"></div>
-
-          <div class="flex items-center space-x-4">
+          <!-- Ya Realizado -->
+          <div class="flex items-center p-6 bg-white rounded-2xl shadow-md space-x-4">
             <div class="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
-              <i class="fa-solid fa-box text-green-500 text-3xl"></i>
+              <i class="fa-solid fa-check-circle text-green-500 text-3xl"></i>
             </div>
             <div>
               <p class="text-gray-500 text-sm">Ya Realizado</p>
@@ -223,11 +213,10 @@ $permisos = $data['permisos'] ?? []; ?>
             </div>
           </div>
 
-          <div class="border-l border-gray-300 h-16"></div>
-
-          <div class="flex items-center space-x-4">
-            <div class="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
-              <i class="fa-solid fa-file text-green-500 text-3xl"></i>
+          <!-- Faltante -->
+          <div class="flex items-center p-6 bg-white rounded-2xl shadow-md space-x-4">
+            <div class="flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full">
+              <i class="fa-solid fa-hourglass-half text-yellow-500 text-3xl"></i>
             </div>
             <div>
               <p class="text-gray-500 text-sm">Faltante</p>
@@ -235,6 +224,7 @@ $permisos = $data['permisos'] ?? []; ?>
             </div>
           </div>
         </div>
+
 
         <!-- Barra de progreso -->
         <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden mt-4">

@@ -1,4 +1,8 @@
-import { abrirModal, cerrarModal, obtenerPermisosUsuario, } from "./exporthelpers.js";
+import {
+  abrirModal,
+  cerrarModal,
+  obtenerPermisosUsuario,
+} from "./exporthelpers.js";
 import {
   expresiones,
   inicializarValidaciones,
@@ -67,10 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
     pageLength: 10,
     order: [[0, "asc"]],
   });
-  // Campos a validar en el formulario de producción
-
-  let detalleProduccionItems = []; // Lista global de ítems del detalle
-
+  let detalleProduccionItems = [];
   const camposProduccion = [
     {
       id: "fecha_inicio",
@@ -102,14 +103,10 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     },
   ];
-
-  // BOTÓN PARA ABRIR EL MODAL DE PRODUCCIÓN
   document
     .getElementById("abrirModalProduccion")
     .addEventListener("click", function () {
       abrirModal("produccionModal");
-
-      // Cargar select de PRODUCTO TERMINADO (el principal)
       cargarSelect({
         selectId: "select_producto_principal",
         endpoint: "productos/getListaProductosParaFormulario",
@@ -120,15 +117,10 @@ document.addEventListener("DOMContentLoaded", function () {
           listaProductos = productos;
         },
       });
-
-      // Inicializar buscador de empleados
       inicializarBuscadorEmpleado();
       inicializarBuscadorEmpleadoTarea();
-
-      // Inicializar validaciones
       inicializarValidaciones(camposProduccion, "formRegistrarProduccion");
     });
-
   document.addEventListener("click", function (e) {
     if (e.target.closest(".ver-detalle-btn")) {
       const idproduccion = e.target
@@ -141,7 +133,6 @@ document.addEventListener("DOMContentLoaded", function () {
       verDetalleProduccion(idproduccion);
     }
   });
-
   document
     .getElementById("btnCerrarModalProduccion")
     .addEventListener("click", function () {
@@ -149,8 +140,6 @@ document.addEventListener("DOMContentLoaded", function () {
       limpiarValidaciones(camposProduccion, "formRegistrarProduccion");
       limpiarFormularioProduccion();
     });
-
-  // BOTÓN CANCELAR DEL MODAL
   document
     .getElementById("btnCancelarProduccion")
     .addEventListener("click", function () {
@@ -158,8 +147,6 @@ document.addEventListener("DOMContentLoaded", function () {
       limpiarValidaciones(camposProduccion, "formRegistrarProduccion");
       limpiarFormularioProduccion();
     });
-
-  // ACTUALIZAR CAMPO OCULTO CUANDO SE SELECCIONA UN PRODUCTO PRINCIPAL
   const selectProductoPrincipal = document.getElementById(
     "select_producto_principal"
   );
@@ -179,23 +166,70 @@ document.addEventListener("DOMContentLoaded", function () {
       const idproduccion = e.target
         .closest(".editar-btn")
         .getAttribute("data-idproduccion");
-
       if (!idproduccion || isNaN(idproduccion)) {
         Swal.fire("Error", "ID inválido.", "error");
         return;
       }
-
       abrirModalProduccionParaEdicion(idproduccion);
       cargarTareas(idproduccion);
       actualizarProgresoProduccion(idproduccion);
       inicializarBuscadorEmpleado();
       inicializarBuscadorEmpleadoTarea();
-
       cargarEmpleado();
       cargarProducto();
     }
   });
-  // BOTÓN AGREGAR INSUMOS AL DETALLE
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".eliminar-btn")) {
+      const idproduccion = e.target
+        .closest(".eliminar-btn")
+        .getAttribute("data-idproduccion");
+
+      if (!idproduccion || isNaN(idproduccion)) {
+        Swal.fire("Error", "ID de producción inválido.", "error");
+        return;
+      }
+
+      Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Esta acción marcará la producción como inactiva.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch("produccion/deleteProduccion", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `idproduccion=${encodeURIComponent(idproduccion)}`,
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.status) {
+                Swal.fire("Eliminado", data.message, "success");
+                if (tablaProduccion && tablaProduccion.ajax) {
+                  tablaProduccion.ajax.reload();
+                }
+              } else {
+                Swal.fire("Error", data.message, "error");
+              }
+            })
+            .catch((err) => {
+              console.error("Error al eliminar:", err);
+              Swal.fire(
+                "Error",
+                "Hubo un problema al intentar eliminar la producción.",
+                "error"
+              );
+            });
+        }
+      });
+    }
+  });
+
   document
     .getElementById("btnAgregarProductoDetalleProduccion")
     .addEventListener("click", function () {
@@ -203,23 +237,18 @@ document.addEventListener("DOMContentLoaded", function () {
         "select_producto_agregar_detalle"
       );
       const selectedOption = selectInsumo.options[selectInsumo.selectedIndex];
-
       if (!selectedOption.value) {
         Swal.fire("Atención", "Seleccione un insumo.", "warning");
         return;
       }
-
       const idproducto = selectedOption.value;
       const nombreProducto = selectedOption.textContent;
-
-      // Verificar si ya existe
       if (
         detalleProduccionItems.some((item) => item.idproducto === idproducto)
       ) {
         Swal.fire("Atención", "Este insumo ya fue agregado.", "warning");
         return;
       }
-
       detalleProduccionItems.push({
         idproducto: idproducto,
         nombre: nombreProducto,
@@ -227,116 +256,108 @@ document.addEventListener("DOMContentLoaded", function () {
         cantidad_consumida: 0,
         observaciones: "",
       });
-
       renderizarTablaDetalleProduccion();
-      selectInsumo.value = ""; // Limpiar select
+      selectInsumo.value = "";
     });
-
   document
-    .getElementById("btnGuardarProduccion")
-    .addEventListener("click", function () {
-      // Validar campos vacíos
-      if (!validarCamposVacios(camposProduccion, "formRegistrarProduccion"))
-        return;
+  .getElementById("btnGuardarProduccion")
+  .addEventListener("click", function () {
+    if (!validarCamposVacios(camposProduccion, "formRegistrarProduccion"))
+      return;
 
-      // Validar selects
-      camposProduccion.forEach((campo) => {
-        if (campo.tipo === "select") {
-          validarSelect(campo.id, campo.mensajes, "formRegistrarProduccion");
-        }
-      });
-
-      // Validar que haya al menos un insumo
-      if (detalleProduccionItems.length === 0) {
-        Swal.fire(
-          "Atención",
-          "Debe agregar al menos un insumo al detalle.",
-          "warning"
-        );
-        return;
+    camposProduccion.forEach((campo) => {
+      if (campo.tipo === "select") {
+        validarSelect(campo.id, campo.mensajes, "formRegistrarProduccion");
       }
-
-      // Obtener valores directamente del DOM
-      const idproduccion = document.getElementById("idproduccion").value.trim();
-      const idproducto = document
-        .getElementById("select_producto")
-        .value.trim();
-      const idempleado_seleccionado = document
-        .getElementById("idempleado_seleccionado")
-        .value.trim();
-      const cantidad_a_realizar = document
-        .getElementById("cantidad_a_realizar")
-        .value.trim();
-      const fecha_inicio = document.getElementById("fecha_inicio").value.trim();
-      const fecha_fin =
-        document.getElementById("fecha_fin").value.trim() || null;
-      const estado = document.getElementById("estado").value.trim();
-
-      // Validación básica
-      if (
-        !idproducto ||
-        !idempleado_seleccionado ||
-        !cantidad_a_realizar ||
-        !fecha_inicio ||
-        !estado
-      ) {
-        Swal.fire("Error", "Faltan campos obligatorios.", "error");
-        return;
-      }
-
-      if (parseFloat(cantidad_a_realizar) <= 0) {
-        Swal.fire("Error", "La cantidad debe ser mayor a cero.", "error");
-        return;
-      }
-
-      // Preparar objeto de datos
-      const data = {
-        idproduccion,
-        idempleado: idempleado_seleccionado,
-        idproducto,
-        cantidad_a_realizar,
-        fecha_inicio,
-        fecha_fin,
-        estado,
-        insumos: detalleProduccionItems,
-      };
-
-      console.log("Datos enviados:", data);
-
-      // Definir URL y método
-      const url = idproduccion
-        ? "produccion/updateProduccion"
-        : "produccion/createProduccion";
-      const method = idproduccion ? "PUT" : "POST";
-
-      // Enviar datos al backend
-      fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-        .then((res) => res.json())
-        .then((result) => {
-          if (result.status) {
-            Swal.fire("Éxito", result.message, "success");
-            cerrarModal("produccionModal");
-            limpiarFormularioProduccion();
-            tablaProduccion.ajax.reload(); // Recargar DataTable
-          } else {
-            Swal.fire("Error", result.message, "error");
-          }
-        })
-        .catch((err) => {
-          console.error("Error al enviar:", err);
-          Swal.fire(
-            "Error",
-            "Hubo un problema al procesar la solicitud.",
-            "error"
-          );
-        });
     });
+
+    const idproduccion = document.getElementById("idproduccion").value.trim();
+    const idproducto = document
+      .getElementById("select_producto")
+      .value.trim();
+    const idempleado_seleccionado = document
+      .getElementById("idempleado_seleccionado")
+      .value.trim();
+    const cantidad_a_realizar = document
+      .getElementById("cantidad_a_realizar")
+      .value.trim();
+    const fecha_inicio = document.getElementById("fecha_inicio").value.trim();
+    const fecha_fin =
+      document.getElementById("fecha_fin").value.trim() || null;
+    const estado = document.getElementById("estado").value.trim();
+
+    if (
+      !idproducto ||
+      !idempleado_seleccionado ||
+      !cantidad_a_realizar ||
+      !fecha_inicio ||
+      !estado
+    ) {
+      Swal.fire("Error", "Faltan campos obligatorios.", "error");
+      return;
+    }
+
+    if (parseFloat(cantidad_a_realizar) <= 0) {
+      Swal.fire("Error", "La cantidad debe ser mayor a cero.", "error");
+      return;
+    }
+
+    // 🔴 Validar insumos solo si es creación
+    if (!idproduccion && detalleProduccionItems.length === 0) {
+      Swal.fire(
+        "Atención",
+        "Debe agregar al menos un insumo al detalle.",
+        "warning"
+      );
+      return;
+    }
+
+    const data = {
+      idproduccion,
+      idempleado: idempleado_seleccionado,
+      idproducto,
+      cantidad_a_realizar,
+      fecha_inicio,
+      fecha_fin,
+      estado,
+      insumos: detalleProduccionItems,
+    };
+
+    console.log("Datos enviados:", data);
+
+    const url = idproduccion
+      ? "produccion/updateProduccion"
+      : "produccion/createProduccion";
+    const method = idproduccion ? "PUT" : "POST";
+
+    fetch(url, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.status) {
+          Swal.fire("Éxito", result.message, "success");
+          cerrarModal("produccionModal");
+          limpiarFormularioProduccion();
+          tablaProduccion.ajax.reload();
+        } else {
+          Swal.fire("Error", result.message, "error");
+        }
+      })
+      .catch((err) => {
+        console.error("Error al enviar:", err);
+        Swal.fire(
+          "Error",
+          "Hubo un problema al procesar la solicitud.",
+          "error"
+        );
+      });
+  });
+
   document
     .getElementById("btnAgregarTarea")
     .addEventListener("click", function () {
@@ -344,14 +365,11 @@ document.addEventListener("DOMContentLoaded", function () {
         "idempleado_seleccionado_tarea"
       ).value;
       const idproduccion = document.getElementById("idproduccion").value;
-
       if (!idempleado || !idproduccion) {
         alert("Debe seleccionar un empleado y haber una producción abierta.");
         return;
       }
-
       const cantidad_asignada = prompt("¿Cuánto se le asigna?", "10");
-
       if (
         !cantidad_asignada ||
         isNaN(cantidad_asignada) ||
@@ -360,7 +378,6 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("Ingrese una cantidad válida.");
         return;
       }
-
       fetch("produccion/asignarTarea", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -388,7 +405,6 @@ document.addEventListener("DOMContentLoaded", function () {
           alert("Ocurrió un error al asignar la tarea.");
         });
     });
-  // FUNCIÓN PARA INICIALIZAR BUSCADOR DE EMPLEADOS
   function inicializarBuscadorEmpleado() {
     const inputCriterioEmpleado = document.getElementById(
       "inputCriterioEmpleado"
@@ -401,9 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const divInfoEmpleado = document.getElementById(
       "empleado_seleccionado_info"
     );
-
     if (!btnBuscarEmpleado || !inputCriterioEmpleado) return;
-
     btnBuscarEmpleado.addEventListener("click", async function () {
       const criterio = inputCriterioEmpleado.value.trim();
       if (criterio.length < 2) {
@@ -414,19 +428,14 @@ document.addEventListener("DOMContentLoaded", function () {
         );
         return;
       }
-
       listaResultadosEmpleado.innerHTML =
         '<div class="p-2 text-xs text-gray-500">Buscando...</div>';
       listaResultadosEmpleado.classList.remove("hidden");
-
       try {
         const response = await fetch(`produccion/getEmpleado`);
-        const data = await response.json(); // ✅ Aquí defines 'data'
-
+        const data = await response.json();
         listaResultadosEmpleado.innerHTML = "";
-
         if (data.status && Array.isArray(data.data)) {
-          // ✅ Ahora sí puedes usar data
           data.data.forEach((emp) => {
             const itemDiv = document.createElement("div");
             itemDiv.textContent = `${emp.nombre} ${emp.apellido} (${emp.identificacion})`;
@@ -434,7 +443,6 @@ document.addEventListener("DOMContentLoaded", function () {
             itemDiv.dataset.nombre = emp.nombre;
             itemDiv.dataset.apellido = emp.apellido;
             itemDiv.dataset.cedula = emp.identificacion;
-
             itemDiv.addEventListener("click", function () {
               inputIdEmpleado.value = this.dataset.id;
               divInfoEmpleado.innerHTML = `Sel: <strong>${this.dataset.nombre} ${this.dataset.apellido}</strong> (C.I.: ${this.dataset.cedula})`;
@@ -443,7 +451,6 @@ document.addEventListener("DOMContentLoaded", function () {
               listaResultadosEmpleado.classList.add("hidden");
               listaResultadosEmpleado.innerHTML = "";
             });
-
             listaResultadosEmpleado.appendChild(itemDiv);
           });
         } else {
@@ -456,32 +463,24 @@ document.addEventListener("DOMContentLoaded", function () {
           '<div class="p-2 text-xs text-red-500">Error al buscar. Intente de nuevo.</div>';
       }
     });
-
     inputCriterioEmpleado.addEventListener("input", function () {
       inputIdEmpleado.value = "";
       divInfoEmpleado.classList.add("hidden");
       listaResultadosEmpleado.classList.add("hidden");
     });
   }
-
-  // RENDERIZAR TABLA DE DETALLE
   function renderizarTablaDetalleProduccion() {
     const tbody = document.getElementById("cuerpoTablaDetalleProduccion");
     const noDetallesMensaje = document.getElementById(
       "noDetallesMensajeProduccion"
     );
-
     if (!tbody) return;
-
     tbody.innerHTML = "";
-
     if (detalleProduccionItems.length === 0) {
       noDetallesMensaje.classList.remove("hidden");
       return;
     }
-
     noDetallesMensaje.classList.add("hidden");
-
     detalleProduccionItems.forEach((item, index) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -497,15 +496,12 @@ document.addEventListener("DOMContentLoaded", function () {
       `;
       tbody.appendChild(tr);
     });
-
-    // Eventos de edición
     document.querySelectorAll(".cantidad-requerida-input").forEach((input) => {
       input.addEventListener("input", function () {
         const index = parseInt(this.getAttribute("data-index"));
         detalleProduccionItems[index].cantidad = parseFloat(this.value) || 1;
       });
     });
-
     document.querySelectorAll(".cantidad-usada-input").forEach((input) => {
       input.addEventListener("input", function () {
         const index = parseInt(this.getAttribute("data-index"));
@@ -513,14 +509,12 @@ document.addEventListener("DOMContentLoaded", function () {
           parseFloat(this.value) || 0;
       });
     });
-
     document.querySelectorAll(".observaciones-input").forEach((input) => {
       input.addEventListener("input", function () {
         const index = parseInt(this.getAttribute("data-index"));
         detalleProduccionItems[index].observaciones = this.value;
       });
     });
-
     document.querySelectorAll(".eliminar-detalle-btn").forEach((btn) => {
       btn.addEventListener("click", function (e) {
         e.preventDefault();
@@ -530,8 +524,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   }
-
-  // CARGAR SELECT DE INSUMOS (para el detalle)
   const selectInsumos = document.getElementById(
     "select_producto_agregar_detalle"
   );
@@ -542,12 +534,9 @@ document.addEventListener("DOMContentLoaded", function () {
       optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
       optionValueFn: (p) => p.idproducto || "",
       placeholder: "Seleccione un insumo...",
-      onLoaded: (productos) => {
-        // Puedes filtrar aquí si deseas solo insumos o categorías específicas
-      },
+      onLoaded: (productos) => {},
     });
   }
-  // CARGAR SELECT DE INSUMOS (para el detalle)
   const selectProductoterminado = document.getElementById("select_producto");
   if (selectInsumos) {
     cargarSelect({
@@ -556,27 +545,19 @@ document.addEventListener("DOMContentLoaded", function () {
       optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
       optionValueFn: (p) => p.idproducto || "",
       placeholder: "Seleccione un producto terminado...",
-      onLoaded: (productos) => {
-        // Puedes filtrar aquí si deseas solo insumos o categorías específicas
-      },
+      onLoaded: (productos) => {},
     });
   }
-
-  // LIMPIAR FORMULARIO
   function limpiarFormularioProduccion() {
     const form = document.getElementById("formRegistrarProduccion");
     if (form) form.reset();
-
-    // Limpiar lista de insumos
     detalleProduccionItems = [];
-    renderizarTablaDetalleProduccion(); // Si usas esta función
+    renderizarTablaDetalleProduccion();
   }
   function verDetalleProduccion(idproduccion) {
     const modal = document.getElementById("detalleModal");
     const contenido = document.getElementById("contenidoDetalleProduccion");
-
     abrirModalDetalleProduccion();
-
     Promise.all([
       fetch(`produccion/getProduccionById/${idproduccion}`).then((res) =>
         res.json()
@@ -588,10 +569,8 @@ document.addEventListener("DOMContentLoaded", function () {
       .then(([produccionRes, detalleRes]) => {
         if (!produccionRes.status || !detalleRes.status)
           throw new Error("Error al cargar datos");
-
         const prod = produccionRes.data;
         const detalle = detalleRes.data;
-
         let html = `
             <h4 class="font-semibold mb-2">Datos Generales</h4>
             <ul class="mb-4 space-y-1">
@@ -615,7 +594,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 </thead>
                 <tbody>
         `;
-
         detalle.forEach((insumo) => {
           html += `
                 <tr>
@@ -630,12 +608,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 </tr>
             `;
         });
-
         html += `
                 </tbody>
             </table>
         `;
-
         contenido.innerHTML = html;
       })
       .catch((err) => {
@@ -643,7 +619,6 @@ document.addEventListener("DOMContentLoaded", function () {
         contenido.innerHTML = "<p>Error al cargar los detalles.</p>";
       });
   }
-
   function abrirModalDetalleProduccion() {
     const modal = document.getElementById("detalleModal");
     modal.classList.remove("opacity-0", "pointer-events-none");
@@ -657,20 +632,15 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("cerrarDetalleProduccion")
     .addEventListener("click", cerrarModalDetalleProduccion);
-
   function abrirModalProduccionParaEdicion(idproduccion) {
     const tbody = document.getElementById("cuerpoTablaDetalleProduccion");
-
     if (!tbody) {
       console.error(
         "No se encontró el tbody con ID 'cuerpoTablaDetalleProduccion'"
       );
       return;
     }
-
-    tbody.innerHTML = ""; // Limpiar tabla antes de cargar nuevos datos
-
-    // Cargar insumos desde el backend
+    tbody.innerHTML = "";
     fetch(`produccion/getDetalleProduccionData/${idproduccion}`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
@@ -705,26 +675,33 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Error al obtener detalle:", err);
         alert("Error al cargar los insumos.");
       });
-
-    // Cargar datos generales de producción
     fetch(`produccion/getProduccionById/${idproduccion}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.status) {
           const p = data.data;
-
+          
           document.getElementById("idproduccion").value = p.idproduccion;
-          document.getElementById("EmpleadoCargo").value = p.nombre_empleado;
+          document.getElementById("idempleado_seleccionado").value = p.idempleado;
+          const divInfoEmpleado = document.getElementById(
+            "empleado_seleccionado_info"
+          );
+          divInfoEmpleado.innerHTML = `Empleado A Cargo: <strong>${p.nombre_empleado}</strong>`;
+          divInfoEmpleado.classList.remove("hidden");
+
           document.getElementById("select_producto").value = p.idproducto;
           document.getElementById("cantidad_a_realizar").value =
             p.cantidad_a_realizar;
-         const fecha_inicio = p.fecha_inicio ? p.fecha_inicio.split(" ")[0] : "";
-            const fecha_fin = p.fecha_fin ? p.fecha_fin.split(" ")[0] : "";
-            
-            document.getElementById("fecha_inicio").value = fecha_inicio;
-            document.getElementById("fecha_fin").value = fecha_fin;
+          const fecha_inicio = p.fecha_inicio
+            ? p.fecha_inicio.split(" ")[0]
+            : "";
+          const fecha_fin = p.fecha_fin ? p.fecha_fin.split(" ")[0] : "";
+          document.getElementById("fecha_inicio").value = fecha_inicio;
+          document.getElementById("fecha_fin").value = fecha_fin;
           document.getElementById("estado").value = p.estado;
-
+          document.getElementById("empleado").classList.add("hidden"); 
+           document.getElementById("registrarEmpleado").classList.add("hidden"); 
+          document.getElementById("inputCriterioEmpleado").classList.add("hidden"); 
           abrirModal("produccionModal");
         } else {
           alert("Producción no encontrada.");
@@ -734,17 +711,13 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Error al obtener producción:", err);
         alert("Error al cargar los datos.");
       });
-      
   }
   let listaProductos = [];
   let listaEmpleados = [];
-
-  // Cargar productos al inicio
   async function cargarProducto() {
     try {
       const res = await fetch("produccion/getProductos");
       const data = await res.json();
-
       if (data.status) {
         listaProductos = data.data;
       } else {
@@ -758,7 +731,6 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const res = await fetch("produccion/getEstadisticas");
       const data = await res.json();
-
       if (data.status) {
         document.querySelector("#total-producciones").textContent =
           data.data.total;
@@ -773,12 +745,11 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Error de red:", err);
     }
   }
-  // Cargar empleados al inicio
+
   async function cargarEmpleado() {
     try {
       const res = await fetch("produccion/getEmpleado");
       const data = await res.json();
-
       if (data.status) {
         listaEmpleados = data.data;
       } else {
@@ -812,20 +783,16 @@ document.addEventListener("DOMContentLoaded", function () {
       "idempleado_seleccionado_tarea"
     );
     const divInfo = document.getElementById("empleado_seleccionado_info_tarea");
-
     if (!inputCriterio || !listaResultados || !inputIdEmpleado || !divInfo) {
       console.warn("Campos necesarios no encontrados para buscar empleado");
       return;
     }
-
     inputCriterio.addEventListener("input", function () {
       const criterio = this.value.trim();
-
       if (criterio.length < 2) {
         listaResultados.classList.add("hidden");
         return;
       }
-
       fetch("produccion/getEmpleado")
         .then((res) => res.json())
         .then((data) => {
@@ -838,7 +805,6 @@ document.addEventListener("DOMContentLoaded", function () {
               itemDiv.dataset.nombre = emp.nombre;
               itemDiv.dataset.apellido = emp.apellido;
               itemDiv.dataset.cedula = emp.identificacion;
-
               itemDiv.addEventListener("click", function () {
                 inputIdEmpleado.value = this.dataset.id;
                 divInfo.innerHTML = `Sel: <strong>${this.dataset.nombre} ${this.dataset.apellido}</strong> (C.I.: ${this.dataset.cedula})`;
@@ -846,10 +812,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 inputCriterio.value = this.textContent;
                 listaResultados.classList.add("hidden");
               });
-
               listaResultados.appendChild(itemDiv);
             });
-
             listaResultados.classList.remove("hidden");
           } else {
             listaResultados.innerHTML =
@@ -863,19 +827,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
   }
-
-  // Llama esto cuando abras el modal de edición
-
   async function actualizarProgresoProduccion(idproduccion) {
     try {
       const res = await fetch(`produccion/getProduccionById/${idproduccion}`);
       const prodRes = await res.json();
-
       const resTareas = await fetch(
         `produccion/getTareasByProduccion/${idproduccion}`
       );
       const dataTareas = await resTareas.json();
-
       let total_realizado = 0;
       if (dataTareas.status && dataTareas.data.length > 0) {
         total_realizado = dataTareas.data.reduce(
@@ -883,10 +842,8 @@ document.addEventListener("DOMContentLoaded", function () {
           0
         );
       }
-
       const cantidad_total = parseFloat(prodRes.data.cantidad_a_realizar);
       const progreso = ((total_realizado / cantidad_total) * 100).toFixed(2);
-
       document.getElementById("producido").textContent =
         total_realizado.toFixed(2);
       document.getElementById("faltante").textContent = (
@@ -894,34 +851,28 @@ document.addEventListener("DOMContentLoaded", function () {
       ).toFixed(2);
       document.getElementById("porcentaje-progreso").style.width =
         Math.min(progreso, 100) + "%";
-
       document.getElementById("porcentaje-progreso-texto").textContent =
-        "${progreso}%";
+        progreso + "%";
     } catch (err) {
       console.error("Error al actualizar progreso:", err);
     }
   }
   let detalleTareasItems = [];
-
   async function cargarTareas(idproduccion) {
     const tbody = document.getElementById("detalleTareasBody");
     if (!tbody) {
       console.error("No se encontró el tbody para tareas");
       return;
     }
-
     tbody.innerHTML = "";
-
     try {
       const res = await fetch(
         `produccion/getTareasByProduccion/${idproduccion}`
       );
       const data = await res.json();
-
       if (data.status && data.data.length > 0) {
         data.data.forEach((tarea) => {
           const tr = document.createElement("tr");
-
           tr.innerHTML = `
                     <td>${tarea.nombre_empleado}</td>
                     <td>${tarea.cantidad_asignada}</td>
@@ -931,8 +882,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 `;
           tbody.appendChild(tr);
         });
-
-        // Evento guardar cantidad realizada
         document.querySelectorAll(".guardar-tarea-btn").forEach((btn) => {
           btn.addEventListener("click", async function () {
             const fila = this.closest("tr");
@@ -941,7 +890,6 @@ document.addEventListener("DOMContentLoaded", function () {
               .getAttribute("data-id");
             const cantidad_realizada =
               fila.querySelector(".tarea-realizada").value;
-
             const response = await fetch("produccion/updateTarea", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -950,7 +898,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 cantidad_realizada,
               }),
             });
-
             const result = await response.json();
             if (result.status) {
               Swal.fire("Éxito", result.message, "success");
@@ -971,23 +918,19 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("Hubo un problema al cargar las tareas.");
     }
   }
-   document.querySelectorAll('.tab-button').forEach(button => {
-    button.addEventListener('click', () => {
-      const tab = button.getAttribute('data-tab');
-
-      
-      document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active', 'border-green-500', 'text-green-600');
-        btn.classList.add('border-transparent');
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const tab = button.getAttribute("data-tab");
+      document.querySelectorAll(".tab-button").forEach((btn) => {
+        btn.classList.remove("active", "border-green-500", "text-green-600");
+        btn.classList.add("border-transparent");
       });
-      button.classList.add('active', 'border-green-500', 'text-green-600');
-      button.classList.remove('border-transparent');
-
-
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
+      button.classList.add("active", "border-green-500", "text-green-600");
+      button.classList.remove("border-transparent");
+      document.querySelectorAll(".tab-content").forEach((content) => {
+        content.classList.add("hidden");
       });
-      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).classList.remove("hidden");
     });
   });
 });
