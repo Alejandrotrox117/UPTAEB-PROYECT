@@ -261,7 +261,7 @@ public function obtenerProductos()
 
             // Insertar detalles
             $sqlDetalle = "INSERT INTO detalle_venta 
-                (idventa, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_venta, 
+                (idventa, idproducto, cantidad, precio_unitario_venta, 
                  idmoneda, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -275,7 +275,7 @@ public function obtenerProductos()
                 $paramsDetalle = [
                     $idventa,
                     $detalle['idproducto'],
-                    $detalle['descripcion_temporal_producto'] ?? '',
+                    
                     $detalle['cantidad'],
                     $detalle['precio_unitario_venta'],
                     $detalle['id_moneda_detalle'] ?? $data['idmoneda_general'],
@@ -365,7 +365,7 @@ public function obtenerProductos()
             $sql = "SELECT dv.cantidad, 
                        dv.precio_unitario_venta, 
                        dv.subtotal_general, 
-                       dv.descripcion_temporal_producto,
+                       
                        p.nombre as producto_nombre,
                        m.codigo_moneda
                 FROM detalle_venta dv
@@ -391,8 +391,7 @@ public function obtenerProductos()
                 throw new Exception("La venta especificada no existe.");
             }
 
-            // ✅ CORRECTO: Usar el nombre de columna correcto
-            // Verificar si tu tabla usa 'fecha_modificacion' o 'ultima_modificacion'
+            
             $sqlUpdate = "UPDATE venta SET estatus = 'Inactivo', ultima_modificacion = NOW() WHERE idventa = ?";
             $result = $this->update($sqlUpdate, [$idventa]);
 

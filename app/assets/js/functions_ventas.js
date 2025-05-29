@@ -797,7 +797,7 @@ document.addEventListener("DOMContentLoaded", function () {
           precio_unitario_venta: parseFloat(precio),
           subtotal_general: parseFloat(subtotal),
           descuento_porcentaje_general: 0,
-          descripcion_temporal_producto: "",
+        
           id_moneda_detalle: datosVentaFinal.idmoneda_general,
           peso_vehiculo: 0,
           peso_bruto: 0,
@@ -816,7 +816,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      console.log("Datos Finales de VENTA a enviar:", datosVentaFinal);
+      // console.log("Datos Finales de VENTA a enviar:", datosVentaFinal);
 
       // Enviar datos usando fetch directamente para compatibilidad con el backend PHP
       fetch("ventas/setVenta", {
@@ -893,7 +893,7 @@ document.addEventListener("DOMContentLoaded", function () {
     cancelButtonText: "Cancelar",
   }).then((result) => {
     if (result.isConfirmed) {
-      // ✅ CORRECTO: Llamar al método del controlador
+     
       fetch("ventas/deleteVenta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

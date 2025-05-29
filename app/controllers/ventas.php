@@ -489,7 +489,7 @@ public function getProductosLista() {
         return;
     }
 
-    // ✅ CORRECTO: Leer datos JSON en lugar de $_POST
+   
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
 
