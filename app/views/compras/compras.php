@@ -244,21 +244,27 @@
 
 <!-- Modal para Ver Compra -->
 <div id="modalVerCompra" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] bg-opacity-30 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-  <div class="bg-white rounded-xl shadow-lg w-11/12 max-w-4xl overflow-auto max-h-[80vh]">
+  <div class="bg-white rounded-xl shadow-lg w-11/12 max-w-4xl">
     <div class="flex justify-between items-center px-6 py-4 border-b">
       <h3 class="text-xl font-bold text-gray-800">
-        <i class="fas fa-eye mr-2 text-blue-600"></i>Detalle de la Compra
+        <i class="fas fa-eye mr-2 text-green-600"></i>Detalle de la Compra
       </h3>
       <button id="btnCerrarModalVer" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
-        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fill-rule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          />
+        </svg>
       </button>
     </div>
-    <div class="px-6 py-4">
+    <div class="px-6 py-4 overflow-auto max-h-[70vh]">
       <!-- Información de la Compra -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <label class="block text-sm font-medium text-gray-500">Número de Compra:</label>
-          <p id="verNroCompra" class="text-lg font-semibold text-gray-900">-</p>
+          <p id="verNroCompra" class="text-lg font-semibold text-gray-900"> - </p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-500">Fecha:</label>
@@ -272,11 +278,8 @@
           <label class="block text-sm font-medium text-gray-500">Estado:</label>
           <p id="verEstado" class="text-lg font-semibold text-gray-900">-</p>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-500">Total General:</label>
-          <p id="verTotalGeneral" class="text-xl font-bold text-green-600">-</p>
-        </div>
-        <div>
+        <div class="md:col-span-2">
+          <!-- Observaciones ocupando dos columnas si es necesario -->
           <label class="block text-sm font-medium text-gray-500">Observaciones:</label>
           <p id="verObservaciones" class="text-base text-gray-700">-</p>
         </div>
@@ -284,7 +287,9 @@
 
       <!-- Detalle de Productos -->
       <div>
-        <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Detalle de Productos</h4>
+        <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+          Detalle de Productos
+        </h4>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="bg-gray-100">
@@ -292,6 +297,7 @@
                 <th class="px-4 py-2 text-left">Producto</th>
                 <th class="px-4 py-2 text-right">Cantidad</th>
                 <th class="px-4 py-2 text-right">Precio Unitario</th>
+                <th class="px-4 py-2 text-right">Descuento</th>
                 <th class="px-4 py-2 text-right">Subtotal</th>
               </tr>
             </thead>
@@ -301,14 +307,44 @@
           </table>
         </div>
       </div>
+
+      <!-- Resumen de Totales -->
+      <div class="mt-6 pt-4 border-t">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">
+          Resumen de Totales
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Total Productos en Euros (€):</label>
+            <p id="verTotalProductosEUR" class="text-lg font-semibold text-gray-900">-</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Total Productos en Dólares ($):</label>
+            <p id="verTotalProductosUSD" class="text-lg font-semibold text-gray-900">-</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Subtotal General (Bs.):</label>
+            <p id="verSubtotalGeneralVES" class="text-lg font-semibold text-gray-900">-</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Descuento General (Bs.):</label>
+            <p id="verMontoDescuentoGeneralVES" class="text-lg font-semibold text-gray-900">-</p>
+          </div>
+          <div class="md:col-span-2 mt-2">
+            <label class="block text-sm font-medium text-gray-500">Total General (Bs.):</label>
+            <p id="verTotalGeneral" class="text-xl font-bold text-green-600">-</p>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="flex justify-end px-6 py-4 border-t">
-      <button id="btnCerrarModalVer2" class="bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600 transition">
+      <button id="btnCerrarModalVer2" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-600 transition">
         Cerrar
       </button>
     </div>
   </div>
 </div>
+
 
 <!-- Modal para Actualizar Compra -->
 <div id="modalActualizarCompra" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">

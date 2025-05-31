@@ -319,8 +319,7 @@ document.addEventListener("DOMContentLoaded", function () {
       cambiarEstadoCompra(idCompra, nuevoEstado);
     }
   );
-});
-
+  });
 
   const btnAbrirModalNuevaCompra = document.getElementById("btnAbrirModalNuevaCompra");
   const formNuevaCompraModal = document.getElementById("formNuevaCompraModal");
@@ -1151,9 +1150,61 @@ function verCompra(idCompra) {
       if (result.status && result.data) {
         const compra = result.data.compra;
         const detalles = result.data.detalles;
-        mostrarModalVerCompra(compra, detalles);
+
+        // Inicializamos los totalizadores para monedas de productos
+        let totalEuros = 0;
+        let totalDolares = 0;
+
+        // Los montos en bolívares ya vienen en el objeto 'compra'
+        const montoDescuentoBolivares = parseFloat(
+          compra.monto_descuento_general || 0,
+        );
+        const montoTotalBolivares = parseFloat(compra.total_general || 0);
+        const subtotalGeneralBolivares = parseFloat(
+          compra.subtotal_general || 0,
+        );
+
+        // Iteramos sobre los detalles para sumar por moneda de producto
+        if (detalles && detalles.length > 0) {
+          detalles.forEach((detalle) => {
+            const subtotalLinea = parseFloat(detalle.subtotal_linea || 0);
+            if (isNaN(subtotalLinea)) {
+              console.warn(
+                "Subtotal de línea no es un número:",
+                detalle.subtotal_linea,
+              );
+              return; // Saltar este detalle si el subtotal no es válido
+            }
+
+            switch (detalle.codigo_moneda) {
+              case "EUR":
+                totalEuros += subtotalLinea;
+                break;
+              case "USD": // Asumiendo que el código para dólares es "USD"
+                totalDolares += subtotalLinea;
+                break;
+              // No sumamos VES aquí para estos totales específicos,
+              // ya que el 'subtotalGeneralBolivares' ya lo incluye todo convertido.
+            }
+          });
+        }
+
+        // Pasamos los datos y los nuevos totales al modal
+        mostrarModalVerCompra(
+          compra,
+          detalles,
+          totalEuros,
+          totalDolares,
+          montoDescuentoBolivares,
+          montoTotalBolivares,
+          subtotalGeneralBolivares,
+        );
       } else {
-        Swal.fire("Error", "No se pudieron cargar los datos.", "error");
+        Swal.fire(
+          "Error",
+          result.message || "No se pudieron cargar los datos.",
+          "error",
+        );
       }
     })
     .catch((error) => {
@@ -1162,34 +1213,103 @@ function verCompra(idCompra) {
     });
 }
 
-function mostrarModalVerCompra(compra, detalles) {
-  document.getElementById("verNroCompra").textContent = compra.nro_compra || "N/A";
-  document.getElementById("verFecha").textContent = compra.fecha ? new Date(compra.fecha).toLocaleDateString('es-ES') : "N/A";
-  document.getElementById("verProveedor").textContent = compra.proveedor_nombre || "N/A";
-  document.getElementById("verEstado").textContent = compra.estatus_compra || "N/A";
-  document.getElementById("verTotalGeneral").textContent = compra.total_general ? 
-    "Bs. " + parseFloat(compra.total_general).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "N/A";
-  document.getElementById("verObservaciones").textContent = compra.observaciones_compra || "N/A";
+function mostrarModalVerCompra(
+  compra,
+  detalles,
+  totalEuros,
+  totalDolares,
+  montoDescuentoBolivares,
+  montoTotalBolivares,
+  subtotalGeneralBolivares,
+) {
+  document.getElementById("verNroCompra").textContent =
+    compra.nro_compra || "N/A";
+  document.getElementById("verFecha").textContent = compra.fecha
+    ? new Date(compra.fecha + "T00:00:00").toLocaleDateString("es-ES")
+    : "N/A";
+  document.getElementById("verProveedor").textContent =
+    compra.proveedor_nombre || "N/A";
+  document.getElementById("verEstado").textContent =
+    compra.estatus_compra || "N/A";
+  document.getElementById("verObservaciones").textContent =
+    compra.observaciones_compra || "N/A";
+
+  const elSubtotalGeneralVES = document.getElementById("verSubtotalGeneralVES",);
+  if (elSubtotalGeneralVES) {
+    elSubtotalGeneralVES.textContent =
+      "Bs. " +
+      subtotalGeneralBolivares.toLocaleString("es-ES", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+  }
+
+  const elTotalProductosEUR = document.getElementById("verTotalProductosEUR");
+  if (elTotalProductosEUR) {
+    elTotalProductosEUR.textContent =
+      "€ " +
+      totalEuros.toLocaleString("es-ES", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+  }
+  const elTotalProductosUSD = document.getElementById("verTotalProductosUSD");
+  if (elTotalProductosUSD) {
+    elTotalProductosUSD.textContent =
+      "$ " + 
+      totalDolares.toLocaleString("es-ES", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+  }
+
+  const elMontoDescuentoVES = document.getElementById(
+    "verMontoDescuentoGeneralVES",
+  );
+  if (elMontoDescuentoVES) {
+    elMontoDescuentoVES.textContent =
+      "Bs. " +
+      montoDescuentoBolivares.toLocaleString("es-ES", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+  }
+
+  document.getElementById("verTotalGeneral").textContent =
+    "Bs. " +
+    montoTotalBolivares.toLocaleString("es-ES", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   const tbody = document.getElementById("verDetalleProductos");
-  tbody.innerHTML = "";
-  
+  tbody.innerHTML = ""; 
+
   if (detalles && detalles.length > 0) {
-    detalles.forEach(detalle => {
+    detalles.forEach((detalle) => {
       const tr = document.createElement("tr");
+      const cantidad = parseFloat(detalle.cantidad || 0);
+      const precioUnitario = parseFloat(detalle.precio_unitario_compra || 0);
+      const subtotalLinea = parseFloat(detalle.subtotal_linea || 0);
+      const descuentoValor = detalle.descuento
+        ? parseFloat(detalle.descuento)
+        : 0;
+
       tr.innerHTML = `
         <td class="px-4 py-2">${detalle.descripcion_temporal_producto || detalle.producto_nombre || "N/A"}</td>
-        <td class="px-4 py-2 text-right">${parseFloat(detalle.cantidad || 0).toLocaleString('es-ES', {minimumFractionDigits: 2})}</td>
-        <td class="px-4 py-2 text-right">${detalle.codigo_moneda || ""} ${parseFloat(detalle.precio_unitario_compra || 0).toLocaleString('es-ES', {minimumFractionDigits: 2})}</td>
-        <td class="px-4 py-2 text-right">${detalle.codigo_moneda || ""} ${parseFloat(detalle.subtotal_linea || 0).toLocaleString('es-ES', {minimumFractionDigits: 2})}</td>
+        <td class="px-4 py-2 text-right">${cantidad.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        <td class="px-4 py-2 text-right">${detalle.codigo_moneda || ""} ${precioUnitario.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        <td class="px-4 py-2 text-right">${descuentoValor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %</td>
+        <td class="px-4 py-2 text-right">${detalle.codigo_moneda || ""} ${subtotalLinea.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
       `;
       tbody.appendChild(tr);
     });
   } else {
-    tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-2 text-center text-gray-500">No hay detalles disponibles</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="px-4 py-2 text-center text-gray-500">No hay detalles disponibles</td></tr>';
   }
 
-  abrirModal("modalVerCompra");
+  abrirModal("modalVerCompra"); 
 }
 
 function editarCompra(idCompra) {
