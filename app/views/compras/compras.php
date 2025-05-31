@@ -21,12 +21,12 @@
       <table id="TablaCompras" class="w-full text-left border-collapse mt-6">
         <thead>
           <tr class="text-gray-500 text-sm border-b">
-            <th class="py-2">Nro. Compra</th>
-            <th class="py-2">Fecha</th>
-            <th class="py-2">Proveedor</th>
-            <th class="py-2">Total</th>
-            <th class="py-2">Estado</th>
-            <th class="py-2">Acciones</th>
+            <th class="py-1">Nro. Compra</th>
+            <th class="py-1">Fecha</th>
+            <th class="py-1">Proveedor</th>
+            <th class="py-1">Total</th>
+            <th class="py-1">Estado</th>
+            <th class="py-1">Acciones</th>
           </tr>
         </thead>
         <tbody class="text-gray-900">

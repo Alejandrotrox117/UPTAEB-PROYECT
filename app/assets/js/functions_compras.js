@@ -53,238 +53,273 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   $(document).ready(function () {
-    tablaCompras = $("#TablaCompras").DataTable({
-      processing: true,
-      ajax: {
-        url: "Compras/getComprasDataTable",
-        type: "GET",
-        dataSrc: function (json) {
-          if (json && json.data) {
-            return json.data;
-          } else {
-            console.error("Error en respuesta del servidor:", json);
-            $("#TablaCompras_processing").hide();
-            alert("Error: No se pudieron cargar los datos de compras.");
-            return [];
-          }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-          console.error("Error AJAX:", textStatus, errorThrown);
+  $("#TablaCompras").addClass("compact fuente-tabla-pequena");
+  const colorFilaImpar = "#ffffff";
+  const colorFilaPar = "#f3f4f6"; 
+  const colorFilaHover = "#e0e7ff"; 
+  const paddingVerticalCelda = "8px";
+
+  tablaCompras = $("#TablaCompras").DataTable({
+    processing: true,
+    ajax: {
+      url: "Compras/getComprasDataTable",
+      type: "GET",
+      dataSrc: function (json) {
+        if (json && json.data) {
+          return json.data;
+        } else {
+          console.error("Error en respuesta del servidor:", json);
           $("#TablaCompras_processing").hide();
-          alert("Error de comunicación al cargar los datos.");
+          alert("Error: No se pudieron cargar los datos de compras.");
+          return [];
         }
       },
-      columns: [
-        { data: "nro_compra", title: "Nro. Compra" },
-        {
-          data: "fecha",
-          title: "Fecha",
-          render: function (data) {
-            return data
-              ? new Date(data).toLocaleDateString("es-ES")
-              : "N/A";
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error AJAX:", textStatus, errorThrown);
+        $("#TablaCompras_processing").hide();
+        alert("Error de comunicación al cargar los datos.");
+      }
+    },
+    columns: [
+      { data: "nro_compra", title: "Nro. Compra" },
+      {
+        data: "fecha",
+        title: "Fecha",
+        render: function (data) {
+          return data
+            ? new Date(data).toLocaleDateString("es-ES")
+            : "N/A";
+        }
+      },
+      { data: "proveedor", title: "Proveedor" },
+      {
+        data: "total_general",
+        title: "Total",
+        render: function (data) {
+          return data
+            ? "Bs. " +
+                parseFloat(data).toLocaleString("es-ES", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })
+            : "Bs. 0.00";
+        }
+      },
+      {
+        data: "estatus_compra",
+        title: "Estado",
+        render: function (data) {
+          if (!data) return '<i style="color: silver;">N/A</i>';
+          var estatusUpper = String(data).toUpperCase();
+          var badgeClass = "bg-gray-100 text-gray-800";
+          switch (estatusUpper) {
+            case "BORRADOR":
+              badgeClass = "bg-yellow-100 text-yellow-800";
+              break;
+            case "POR_AUTORIZAR":
+              badgeClass = "bg-blue-100 text-blue-800";
+              break;
+            case "AUTORIZADA":
+              badgeClass = "bg-green-100 text-green-800";
+              break;
+            case "POR_PAGAR":
+              badgeClass = "bg-orange-100 text-orange-800";
+              break;
+            case "PAGADA":
+              badgeClass = "bg-purple-100 text-purple-800";
+              break;
           }
-        },
-        { data: "proveedor", title: "Proveedor" },
-        {
-          data: "total_general",
-          title: "Total",
-          render: function (data) {
-            return data
-              ? "Bs. " +
-                  parseFloat(data).toLocaleString("es-ES", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })
-              : "Bs. 0.00";
-          }
-        },
-        {
-          data: "estatus_compra",
-          title: "Estado",
-          render: function (data) {
-            if (!data) return '<i style="color: silver;">N/A</i>';
-            var estatusUpper = String(data).toUpperCase();
-            var badgeClass   = "bg-gray-100 text-gray-800";
-            switch (estatusUpper) {
-              case "BORRADOR":
-                badgeClass = "bg-yellow-100 text-yellow-800"; break;
-              case "POR_AUTORIZAR":
-                badgeClass = "bg-blue-100 text-blue-800";   break;
-              case "AUTORIZADA":
-                badgeClass = "bg-green-100 text-green-800"; break;
-              case "POR_PAGAR":
-                badgeClass = "bg-orange-100 text-orange-800"; break;
-              case "PAGADA":
-                badgeClass = "bg-purple-100 text-purple-800"; break;
-            }
-            return `<span class="${badgeClass} text-xs font-medium me-2 px-2.5 py-0.5 rounded">${data}</span>`;
-          }
-        },
-        {
-          data: null,
-          title: "Acciones",
-          orderable: false,
-          searchable: false,
-          className: "text-center",
-          width: "200px",
-          render: function (_, __, row) {
-            var nroCompra     = row.nro_compra || "Sin número";
-            var estadoActual  = row.estatus_compra || "";
-            var botonesEstado = "";
+          return `<span class="${badgeClass} text-xs font-medium me-2 px-1.5 py-0.5 rounded">${data}</span>`;
+        }
+      },
+      {
+        data: null,
+        title: "Acciones",
+        orderable: false,
+        searchable: false,
+        className: "text-center acciones-columna",
+        width: "180px",
+        render: function (_, __, row) {
+          var nroCompra = row.nro_compra || "Sin número";
+          var estadoActual = row.estatus_compra || "";
+          var botonesEstado = "";
 
-            switch (estadoActual.toUpperCase()) {
-              case "BORRADOR":
-                botonesEstado = `
-                  <button
-                    class="cambiar-estado-btn text-blue-500 hover:text-blue-700 p-1"
-                    data-idcompra="${row.idcompra}"
-                    data-nuevo-estado="POR_AUTORIZAR"
-                    title="Enviar a Autorización"
-                  >
-                    <i class="fas fa-paper-plane fa-lg"></i>
-                  </button>`;
-                break;
-              case "POR_AUTORIZAR":
-                botonesEstado = `
-                  <button
-                    class="cambiar-estado-btn text-green-500 hover:text-green-700 p-1"
-                    data-idcompra="${row.idcompra}"
-                    data-nuevo-estado="AUTORIZADA"
-                    title="Autorizar"
-                  >
-                    <i class="fas fa-check fa-lg"></i>
-                  </button>
-                  <button
-                    class="cambiar-estado-btn text-yellow-500 hover:text-yellow-700 p-1"
-                    data-idcompra="${row.idcompra}"
-                    data-nuevo-estado="BORRADOR"
-                    title="Devolver a Borrador"
-                  >
-                    <i class="fas fa-undo fa-lg"></i>
-                  </button>`;
-                break;
-              case "AUTORIZADA":
-                botonesEstado = `
-                  <button
-                    class="cambiar-estado-btn text-orange-500 hover:text-orange-700 p-1"
-                    data-idcompra="${row.idcompra}"
-                    data-nuevo-estado="POR_PAGAR"
-                    title="Marcar para Pago"
-                  >
-                    <i class="fas fa-credit-card fa-lg"></i>
-                  </button>`;
-                break;
-              case "POR_PAGAR":
-                botonesEstado = `
-                  <button
-                    class="cambiar-estado-btn text-purple-500 hover:text-purple-700 p-1"
-                    data-idcompra="${row.idcompra}"
-                    data-nuevo-estado="PAGADA"
-                    title="Marcar como Pagada"
-                  >
-                    <i class="fas fa-money-check-alt fa-lg"></i>
-                  </button>
-                  <button
-                    class="cambiar-estado-btn text-orange-500 hover:text-orange-700 p-1"
-                    data-idcompra="${row.idcompra}"
-                    data-nuevo-estado="AUTORIZADA"
-                    title="Devolver a Autorizada"
-                  >
-                    <i class="fas fa-undo fa-lg"></i>
-                  </button>`;
-                break;
-              case "PAGADA":
-                botonesEstado = `
-                  <span class="text-green-600 font-semibold text-xs">
-                    FINALIZADA
-                  </span>`;
-                break;
-            }
-
-            return `
-              <button
-                class="ver-compra-btn text-green-600 hover:text-green-800 p-1"
-                data-idcompra="${row.idcompra}"
-                title="Ver Detalle"
-              >
-                <i class="fas fa-eye fa-lg"></i>
-              </button>
-              ${
-                estadoActual.toUpperCase() === "BORRADOR"
-                  ? `
+          switch (estadoActual.toUpperCase()) {
+            case "BORRADOR":
+              botonesEstado = `
                 <button
-                  class="editar-compra-btn text-blue-500 hover:text-blue-700 p-1 ml-2"
+                  class="cambiar-estado-btn text-blue-500 hover:text-blue-700 ml-1.5"
                   data-idcompra="${row.idcompra}"
-                  title="Editar"
+                  data-nuevo-estado="POR_AUTORIZAR"
+                  title="Enviar a Autorización"
                 >
-                  <i class="fas fa-edit fa-lg"></i>
+                  <i class="fas fa-paper-plane"></i>
+                </button>`;
+              break;
+            case "POR_AUTORIZAR":
+              botonesEstado = `
+                <button
+                  class="cambiar-estado-btn text-green-500 hover:text-green-700 ml-1.5"
+                  data-idcompra="${row.idcompra}"
+                  data-nuevo-estado="AUTORIZADA"
+                  title="Autorizar"
+                >
+                  <i class="fas fa-check"></i>
                 </button>
                 <button
-                  class="eliminar-compra-btn text-red-500 hover:text-red-700 p-1 ml-2"
+                  class="cambiar-estado-btn text-yellow-500 hover:text-yellow-700 ml-1.5"
                   data-idcompra="${row.idcompra}"
-                  data-nro-compra="${nroCompra}"
-                  title="Eliminar"
+                  data-nuevo-estado="BORRADOR"
+                  title="Devolver a Borrador"
                 >
-                  <i class="fas fa-trash fa-lg"></i>
-                </button>`
-                  : ""
-              }
-              ${botonesEstado}
-            `;
+                  <i class="fas fa-undo"></i>
+                </button>`;
+              break;
+            case "AUTORIZADA":
+              botonesEstado = `
+                <button
+                  class="cambiar-estado-btn text-orange-500 hover:text-orange-700 ml-1.5"
+                  data-idcompra="${row.idcompra}"
+                  data-nuevo-estado="POR_PAGAR"
+                  title="Marcar para Pago"
+                >
+                  <i class="fas fa-credit-card"></i>
+                </button>`;
+              break;
+            case "POR_PAGAR":
+              botonesEstado = `
+                <button
+                  class="cambiar-estado-btn text-purple-500 hover:text-purple-700 ml-1.5"
+                  data-idcompra="${row.idcompra}"
+                  data-nuevo-estado="PAGADA"
+                  title="Marcar como Pagada"
+                >
+                  <i class="fas fa-money-check-alt"></i>
+                </button>
+                <button
+                  class="cambiar-estado-btn text-orange-500 hover:text-orange-700 ml-1.5"
+                  data-idcompra="${row.idcompra}"
+                  data-nuevo-estado="AUTORIZADA"
+                  title="Devolver a Autorizada"
+                >
+                  <i class="fas fa-undo"></i>
+                </button>`;
+              break;
+            case "PAGADA":
+              botonesEstado = `
+                <span class="text-green-600 font-semibold text-xs">
+                  FINALIZADA
+                </span>`;
+              break;
           }
+
+          return `
+            <button
+              class="ver-compra-btn text-green-600 hover:text-green-800 ml-1.5"
+              data-idcompra="${row.idcompra}"
+              title="Ver Detalle"
+            >
+              <i class="fas fa-eye"></i>
+            </button>
+            ${
+              estadoActual.toUpperCase() === "BORRADOR"
+                ? `
+              <button
+                class="editar-compra-btn text-blue-500 hover:text-blue-700 ml-1.5"
+                data-idcompra="${row.idcompra}"
+                title="Editar"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button
+                class="eliminar-compra-btn text-red-500 hover:text-red-700 ml-1.5"
+                data-idcompra="${row.idcompra}"
+                data-nro-compra="${nroCompra}"
+                title="Eliminar"
+              >
+                <i class="fas fa-trash"></i>
+              </button>`
+                : ""
+            }
+            ${botonesEstado}
+          `;
         }
-      ],
-      language: {
-        decimal: "",
-        emptyTable: "No hay información disponible en la tabla",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-        infoFiltered: "(filtrado de _MAX_ entradas totales)",
-        lengthMenu: "Mostrar _MENU_ entradas",
-        loadingRecords: "Cargando...",
-        processing: "Procesando...",
-        search: "Buscar:",
-        zeroRecords: "No se encontraron registros coincidentes",
-        paginate: {
-          first: "Primero",
-          last: "Último",
-          next: "Siguiente",
-          previous: "Anterior"
-        }
-      },
-      destroy: true,
-      responsive: true,
-      pageLength: 10,
-      order: [[1, "desc"]]
-    });
+      }
+    ],
+    language: {
+      decimal: "",
+      emptyTable: "No hay información disponible en la tabla",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+      infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+      infoFiltered: "(filtrado de _MAX_ entradas totales)",
+      lengthMenu: "Mostrar _MENU_ entradas",
+      loadingRecords: "Cargando...",
+      processing: "Procesando...",
+      search: "Buscar:",
+      zeroRecords: "No se encontraron registros coincidentes",
+      paginate: {
+        first: "Primero",
+        last: "Último",
+        next: "Siguiente",
+        previous: "Anterior"
+      }
+    },
+    destroy: true,
+    responsive: true,
+    pageLength: 10,
+    order: [[1, "desc"]],
+    rowCallback: function (row, data, index) {
+      let colorDeFondoActual;
+      const celdas = $(row).children("td");
+      celdas.css({
+        "padding-top": paddingVerticalCelda,
+        "padding-bottom": paddingVerticalCelda
+      });
+      if (index % 2 === 0) {
+        colorDeFondoActual = colorFilaImpar;
+        celdas.css("background-color", colorFilaImpar);
+      } else {
+        colorDeFondoActual = colorFilaPar;
+        celdas.css("background-color", colorFilaPar);
+      }
+      $(row)
+        .off("mouseenter mouseleave")
+        .on("mouseenter", function () {
+          $(this).children("td").css("background-color", colorFilaHover);
+        })
+        .on("mouseleave", function () {
+          $(this).children("td").css("background-color", colorDeFondoActual);
+        });
+    }
+  });
 
-    // Aplicar filtro inicial
-    tablaCompras.draw();
+  // Event listeners para botones del DataTable
+  $("#TablaCompras tbody").on("click", ".ver-compra-btn", function () {
+    const idCompra = $(this).data("idcompra");
+    verCompra(idCompra);
+  });
 
-    // Event listeners para botones del DataTable
-    $("#TablaCompras tbody").on("click", ".ver-compra-btn", function () {
+  $("#TablaCompras tbody").on("click", ".editar-compra-btn", function () {
+    const idCompra = $(this).data("idcompra");
+    editarCompra(idCompra);
+  });
+
+  $("#TablaCompras tbody").on("click", ".eliminar-compra-btn", function () {
+    const idCompra = $(this).data("idcompra");
+    const nroCompra = $(this).data("nro-compra");
+    eliminarCompra(idCompra, nroCompra);
+  });
+
+  $("#TablaCompras tbody").on(
+    "click",
+    ".cambiar-estado-btn",
+    function () {
       const idCompra = $(this).data("idcompra");
-      verCompra(idCompra);
-    });
-
-    $("#TablaCompras tbody").on("click", ".editar-compra-btn", function () {
-      const idCompra = $(this).data("idcompra");
-      editarCompra(idCompra);
-    });
-
-    $("#TablaCompras tbody").on("click", ".eliminar-compra-btn", function () {
-      const idCompra  = $(this).data("idcompra");
-      const nroCompra = $(this).data("nro-compra");
-      eliminarCompra(idCompra, nroCompra);
-    });
-
-    $("#TablaCompras tbody").on("click", ".cambiar-estado-btn", function () {
-      const idCompra   = $(this).data("idcompra");
       const nuevoEstado = $(this).data("nuevo-estado");
       cambiarEstadoCompra(idCompra, nuevoEstado);
-    });
-  });
+    }
+  );
+});
 
 
   const btnAbrirModalNuevaCompra = document.getElementById("btnAbrirModalNuevaCompra");
