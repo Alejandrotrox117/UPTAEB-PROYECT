@@ -355,6 +355,20 @@ class ComprasModel extends Mysql
         try {
             $this->db->beginTransaction();
 
+            // Validar estado actual
+            $sqlCheckEstado = "SELECT estatus_compra FROM compra WHERE idcompra = ?";
+            $stmtCheckEstado = $this->db->prepare($sqlCheckEstado);
+            $stmtCheckEstado->execute([$datosCompra['idcompra']]);
+            $estadoActual = $stmtCheckEstado->fetchColumn();
+            
+            if ($estadoActual !== 'BORRADOR') {
+                $this->db->rollBack();
+                return [
+                    'status' => false, 
+                    'message' => 'Solo se pueden actualizar compras en estado BORRADOR.'
+                ];
+            }
+
             // Actualizar cabecera de compra
             $sql = "UPDATE compra SET 
                     fecha = ?, 
@@ -372,10 +386,10 @@ class ComprasModel extends Mysql
                 $datosCompra['fecha_compra'],
                 $datosCompra['idproveedor'],
                 $datosCompra['idmoneda_general'],
-                $datosCompra['subtotal_general_compra'],
-                $datosCompra['descuento_porcentaje_compra'],
-                $datosCompra['monto_descuento_compra'],
-                $datosCompra['total_general_compra'],
+                $datosCompra['subtotal_general'],
+                $datosCompra['descuento_porcentaje'],
+                $datosCompra['monto_descuento'],
+                $datosCompra['total_general'],
                 $datosCompra['observaciones_compra'],
                 $datosCompra['idcompra']
             ];
@@ -392,40 +406,58 @@ class ComprasModel extends Mysql
             }
 
             // Si hay detalles, actualizar también
-            if (!empty($detallesCompra)) {
-                // Eliminar detalles existentes
-                $sqlDeleteDetalles = "DELETE FROM detalle_compra WHERE idcompra = ?";
-                $stmtDelete = $this->db->prepare($sqlDeleteDetalles);
-                $stmtDelete->execute([$datosCompra['idcompra']]);
+            // Si hay detalles, actualizar también
+        if (!empty($detallesCompra)) {
+            // Eliminar detalles existentes
+            $sqlDeleteDetalles = "DELETE FROM detalle_compra WHERE idcompra = ?";
+            $stmtDelete = $this->db->prepare($sqlDeleteDetalles);
+            $stmtDelete->execute([$datosCompra['idcompra']]);
 
-                // Insertar nuevos detalles
-                $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                $stmtDetalle = $this->db->prepare($sqlDetalle);
+            // Validar monedas existentes
+            $sqlMonedas = "SELECT idmoneda FROM monedas";
+            $stmtMonedas = $this->db->prepare($sqlMonedas);
+            $stmtMonedas->execute();
+            $monedasValidas = $stmtMonedas->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Si no hay monedas válidas, usar una por defecto (asumimos que 3 es VES)
+            if (empty($monedasValidas)) {
+                $monedasValidas = [3]; 
+            }
 
-                foreach ($detallesCompra as $detalle) {
-                    $arrDataDetalle = [
-                        $datosCompra['idcompra'],
-                        $detalle['idproducto'],
-                        $detalle['descripcion_temporal_producto'],
-                        $detalle['cantidad'],
-                        $detalle['precio_unitario_compra'],
-                        $detalle['idmoneda_detalle'],
-                        $detalle['subtotal_linea'],
-                        $detalle['peso_vehiculo'] ?? null,
-                        $detalle['peso_bruto'] ?? null,
-                        $detalle['peso_neto'] ?? null
+            // Insertar nuevos detalles
+            $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmtDetalle = $this->db->prepare($sqlDetalle);
+
+            foreach ($detallesCompra as $detalle) {
+                // Asegurarse de que idmoneda_detalle sea válido
+                $idmonedaDetalle = intval($detalle['idmoneda_detalle']);
+                if (!in_array($idmonedaDetalle, $monedasValidas)) {
+                    $idmonedaDetalle = $monedasValidas[0]; // Usar la primera moneda válida
+                }
+                
+                $arrDataDetalle = [
+                    $datosCompra['idcompra'],
+                    $detalle['idproducto'],
+                    $detalle['descripcion_temporal_producto'],
+                    $detalle['cantidad'],
+                    $detalle['precio_unitario_compra'],
+                    $idmonedaDetalle, // Usamos el valor validado
+                    $detalle['subtotal_linea'],
+                    $detalle['peso_vehiculo'] ?? null,
+                    $detalle['peso_bruto'] ?? null,
+                    $detalle['peso_neto'] ?? null
+                ];
+
+                if (!$stmtDetalle->execute($arrDataDetalle)) {
+                    $this->db->rollBack();
+                    return [
+                        'status' => false, 
+                        'message' => 'Error al actualizar detalles de compra.'
                     ];
-
-                    if (!$stmtDetalle->execute($arrDataDetalle)) {
-                        $this->db->rollBack();
-                        return [
-                            'status' => false, 
-                            'message' => 'Error al actualizar detalles de compra.'
-                        ];
-                    }
                 }
             }
+        }
 
             $this->db->commit();
             return [
@@ -444,6 +476,7 @@ class ComprasModel extends Mysql
             ];
         }
     }
+
 
     //Eliminacion Logica
     public function deleteCompraById(int $idcompra)

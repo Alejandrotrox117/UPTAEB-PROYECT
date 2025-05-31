@@ -314,6 +314,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const observacionesCompraModal = document.getElementById("observaciones_compra_modal");
   const mensajeErrorFormCompraModal = document.getElementById("mensajeErrorFormCompraModal");
 
+  
+
   let tasasMonedas = {};
   let fechaActualCompra = null;
 
@@ -942,7 +944,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
   const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
   const formActualizarCompra = document.getElementById("formActualizarCompra");
+
+
   const btnActualizarCompra = document.getElementById("btnActualizarCompra");
+  if (btnActualizarCompra) {
+    btnActualizarCompra.addEventListener("click", function () {
+      actualizarCompra();
+    });
+  }
 
   if (btnCerrarModalVer) {
     btnCerrarModalVer.addEventListener("click", function () {
@@ -974,6 +983,7 @@ document.addEventListener("DOMContentLoaded", function () {
       actualizarCompra();
     });
   }
+  
 const fechaCompraActualizar = document.getElementById("fecha_compra_actualizar");
   if (fechaCompraActualizar) {
     fechaCompraActualizar.addEventListener("change", function () {
@@ -1205,8 +1215,8 @@ function mostrarModalEditarCompra(compra, detalles) {
     detalles.forEach(detalle => {
       const item = {
         idproducto: detalle.idproducto,
-        nombre: detalle.descripcion_temporal_producto,
-        idcategoria: parseInt(detalle.idcategoria || 1), // Convertir a número entero
+        nombre: detalle.descripcion_temporal_producto || detalle.producto_nombre,
+        idcategoria: parseInt(detalle.idcategoria || 1),
         precio_unitario: parseFloat(detalle.precio_unitario_compra),
         idmoneda_item: detalle.idmoneda_detalle,
         simbolo_moneda_item: detalle.codigo_moneda || "",
@@ -1228,7 +1238,7 @@ function mostrarModalEditarCompra(compra, detalles) {
     calcularTotalesGeneralesActualizar();
   }, 600);
 
-  inicializarValidaciones(camposCompras, "formActualizarCompra");
+  inicializarValidaciones(camposFormularioActualizarCompra, "formActualizarCompra");
   abrirModal("modalActualizarCompra");
 }
 
@@ -1252,11 +1262,13 @@ async function cargarTasasPorFechaActualizar(fecha) {
       divTasa.textContent = "No hay tasas registradas para esta fecha.";
       tasasMonedasActualizar = {};
       calcularTotalesGeneralesActualizar();
+      Swal.fire("Atención", "No hay tasas registradas para la fecha seleccionada.", "warning");
     }
   } catch (e) {
     divTasa.textContent = "Error al cargar tasas del día.";
     tasasMonedasActualizar = {};
     calcularTotalesGeneralesActualizar();
+    Swal.fire("Error", "Ocurrió un error al cargar las tasas del día.", "error");
   }
 }
 
@@ -1329,11 +1341,14 @@ function renderizarTablaDetalleActualizar() {
         <div class="campos_peso_vehiculo_actualizar ${item.no_usa_vehiculo ? "hidden" : ""}">
           P.Bru: 
           <input type="number" step="0.01" class="w-1/4 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_bruto_actualizar" value="${item.peso_bruto || ""}" placeholder="0.00">
+          <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           P.Veh: 
           <input type="number" step="0.01" class="w-1/4 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_vehiculo_actualizar" value="${item.peso_vehiculo || ""}" placeholder="0.00">
+          <button type="button" class="btnUltimoPesoRomanaVehiculoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
         </div>
         <div class="campo_peso_neto_directo_actualizar ${!item.no_usa_vehiculo ? "hidden" : ""}">
           P.Neto: <input type="number" step="0.01" class="w-1/4 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_neto_directo_actualizar" value="${item.peso_neto_directo || ""}" placeholder="0.00">
+          <button type="button" class="btnUltimoPesoRomanaNetoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
         </div>
         Neto Calc: <strong class="peso_neto_calculado_display_actualizar">${calcularPesoNetoItemActualizar(item).toFixed(2)}</strong>
       </div>`;
@@ -1493,7 +1508,7 @@ function actualizarCompra() {
   const mensajeErrorFormCompraActualizar = document.getElementById("mensajeErrorFormCompraActualizar");
 
   // Validaciones
-  if (!validarCamposVacios(camposCompras, "formActualizarCompra")) {
+  if (!validarCamposVacios(camposFormularioActualizarCompra, "formActualizarCompra")) {
     return;
   }
 
@@ -1502,6 +1517,21 @@ function actualizarCompra() {
   if (detalleCompraItemsActualizar.length === 0) {
     mensajeErrorFormCompraActualizar.textContent = "Debe tener al menos un producto en el detalle.";
     return;
+  }
+
+  // Validar productos
+  for (const item of detalleCompraItemsActualizar) {
+    const precio = parseFloat(item.precio_unitario) || 0;
+    let cantidadValida = false;
+    if (item.idcategoria === 1) {
+      cantidadValida = calcularPesoNetoItemActualizar(item) > 0;
+    } else {
+      cantidadValida = (parseFloat(item.cantidad_unidad) || 0) > 0;
+    }
+    if (precio <= 0 || !cantidadValida) {
+      mensajeErrorFormCompraActualizar.textContent = `El producto "${item.nombre}" tiene precio o cantidad/peso inválido.`;
+      return;
+    }
   }
 
   const formData = new FormData(formActualizar);
@@ -1576,7 +1606,7 @@ function actualizarCompra() {
         btnActualizarCompra.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Compra`;
       }
     });
-  }
+}
 
 function eliminarCompra(idCompra, nroCompra) {
   Swal.fire({

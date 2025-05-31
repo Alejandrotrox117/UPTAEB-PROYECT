@@ -267,10 +267,10 @@ class Compras extends Controllers
                 'idproveedor' => intval($input['idproveedor'] ?? 0),
                 'idmoneda_general' => intval($input['idmoneda_general'] ?? 0),
                 'observaciones_compra' => $input['observaciones_compra'] ?? '',
-                'subtotal_general_compra' => floatval($input['subtotal_general'] ?? 0),
-                'descuento_porcentaje_compra' => floatval($input['descuento_porcentaje'] ?? 0),
-                'monto_descuento_compra' => floatval($input['monto_descuento'] ?? 0),
-                'total_general_compra' => floatval($input['total_general'] ?? 0),
+                'subtotal_general' => floatval($input['subtotal_general'] ?? 0),
+                'descuento_porcentaje' => floatval($input['descuento_porcentaje'] ?? 0),
+                'monto_descuento' => floatval($input['monto_descuento'] ?? 0),
+                'total_general' => floatval($input['total_general'] ?? 0),
             ];
 
             $detallesCompra = $input['detalles'] ?? [];
@@ -287,7 +287,6 @@ class Compras extends Controllers
             ]);
         }
     }
-
 
     //ELIMINAR COMPRA
     public function deleteCompra(){
