@@ -118,8 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
               case "PAGADA":
                 badgeClass = "bg-purple-100 text-purple-800"; break;
             }
-            return `<span class="${badgeClass} text-xs font-medium me-2 \
-  px-2.5 py-0.5 rounded">${data}</span>`;
+            return `<span class="${badgeClass} text-xs font-medium me-2 px-2.5 py-0.5 rounded">${data}</span>`;
           }
         },
         {
@@ -520,8 +519,13 @@ document.addEventListener("DOMContentLoaded", function () {
       cantidadBase = parseFloat(item.cantidad_unidad) || 0;
     }
     const subtotalOriginal = cantidadBase * precioUnitario;
+    
+    // Guardar el subtotal en moneda original
     item.subtotal_linea = subtotalOriginal;
+    
+    // Convertir a bolívares usando la tasa del día
     item.subtotal_linea_bs = convertirAMonedaBase(subtotalOriginal, item.idmoneda_item);
+    
     return item.subtotal_linea;
   }
 
@@ -539,26 +543,40 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function convertirAMonedaBase(monto, idmoneda) {
+    // Si ya es en bolívares (idmoneda=3), no hace falta convertir
     if (idmoneda == 3) return monto;
+    
+    // Aplica la tasa de cambio del día para convertir a bolívares
     const tasa = tasasMonedas[idmoneda] || 1;
     return monto * tasa;
   }
 
   function calcularTotalesGeneralesModal() {
     let subtotalGeneralBs = 0;
+    let totalDescuentosBs = 0;
+    
+    // Calcular subtotal sumando los subtotales de cada línea ya convertidos a bolívares
     detalleCompraItemsModal.forEach((item) => {
       subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+      
+      // Si es categoría 1, aplicar descuento específico para estos productos
+      if (item.idcategoria === 1) {
+        const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
+        const montoDescuento = (item.subtotal_linea_bs * descuentoPorcentaje) / 100;
+        totalDescuentosBs += montoDescuento;
+      }
     });
     
+    // Mostrar el subtotal formateado
     subtotalGeneralDisplayModal.value = `Bs. ${subtotalGeneralBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     subtotalGeneralInputModal.value = subtotalGeneralBs.toFixed(2);
     
-    const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputModal.value) || 0;
-    const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
-    montoDescuentoDisplayModal.value = `Bs. ${montoDescuento.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    montoDescuentoInputModal.value = montoDescuento.toFixed(2);
+    // Mostrar el monto de descuento total (suma de todos los descuentos)
+    montoDescuentoDisplayModal.value = `Bs. ${totalDescuentosBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    montoDescuentoInputModal.value = totalDescuentosBs.toFixed(2);
     
-    const totalGeneral = subtotalGeneralBs - montoDescuento;
+    // Calcular y mostrar el total general (subtotal - descuentos)
+    const totalGeneral = subtotalGeneralBs - totalDescuentosBs;
     totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     totalGeneralInputModal.value = totalGeneral.toFixed(2);
   }
@@ -1188,7 +1206,7 @@ function mostrarModalEditarCompra(compra, detalles) {
       const item = {
         idproducto: detalle.idproducto,
         nombre: detalle.descripcion_temporal_producto,
-        idcategoria: 1, // Asumiendo categoría, ajustar según tus datos
+        idcategoria: parseInt(detalle.idcategoria || 1), // Convertir a número entero
         precio_unitario: parseFloat(detalle.precio_unitario_compra),
         idmoneda_item: detalle.idmoneda_detalle,
         simbolo_moneda_item: detalle.codigo_moneda || "",
@@ -1377,13 +1395,21 @@ function convertirAMonedaBaseActualizar(monto, idmoneda) {
 
 function calcularTotalesGeneralesActualizar() {
   let subtotalGeneralBs = 0;
+  let totalDescuentosBs = 0;
+  
   detalleCompraItemsActualizar.forEach((item) => {
     subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+    
+    // Si es categoría 1, aplicar descuento específico para estos productos
+    if (item.idcategoria === 1) {
+      const descuentoPorcentaje = parseFloat(document.getElementById("descuento_porcentaje_input_actualizar").value) || 0;
+      const montoDescuento = (item.subtotal_linea_bs * descuentoPorcentaje) / 100;
+      totalDescuentosBs += montoDescuento;
+    }
   });
   
   const subtotalGeneralDisplayActualizar = document.getElementById("subtotal_general_display_actualizar");
   const subtotalGeneralInputActualizar = document.getElementById("subtotal_general_input_actualizar");
-  const descuentoPorcentajeInputActualizar = document.getElementById("descuento_porcentaje_input_actualizar");
   const montoDescuentoDisplayActualizar = document.getElementById("monto_descuento_display_actualizar");
   const montoDescuentoInputActualizar = document.getElementById("monto_descuento_input_actualizar");
   const totalGeneralDisplayActualizar = document.getElementById("total_general_display_actualizar");
@@ -1393,13 +1419,11 @@ function calcularTotalesGeneralesActualizar() {
     subtotalGeneralDisplayActualizar.value = `Bs. ${subtotalGeneralBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     subtotalGeneralInputActualizar.value = subtotalGeneralBs.toFixed(2);
     
-    const descuentoPorcentaje = parseFloat(descuentoPorcentajeInputActualizar.value) || 0;
-    const montoDescuento = (subtotalGeneralBs * descuentoPorcentaje) / 100;
-    montoDescuentoDisplayActualizar.value = `Bs. ${montoDescuento.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    montoDescuentoInputActualizar.value = montoDescuento.toFixed(2);
+    montoDescuentoDisplayActualizar.value = `Bs. ${totalDescuentosBs.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    montoDescuentoInputActualizar.value = totalDescuentosBs.toFixed(2);
     
-    const totalGeneral = subtotalGeneralBs - montoDescuento;
-    totalGeneralDisplayActualizar.value = `Bs. ${totalGeneral.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    const totalGeneral = subtotalGeneralBs - totalDescuentosBs;
+        totalGeneralDisplayActualizar.value = `Bs. ${totalGeneral.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     totalGeneralInputActualizar.value = totalGeneral.toFixed(2);
   }
 }
@@ -1650,3 +1674,5 @@ function cambiarEstadoCompra(idCompra, nuevoEstado) {
     }
   });
 }
+
+      
