@@ -343,6 +343,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const mensajeErrorFormCompraModal = document.getElementById("mensajeErrorFormCompraModal");
 
 
+
   let tasasMonedas = {};
   let fechaActualCompra = null;
 
@@ -1048,7 +1049,232 @@ document.addEventListener("DOMContentLoaded", function () {
       cerrarModal("modalVerCompra");
     });
   }
- });
+ 
+const btnCerrarModalEditarCompra = document.getElementById("btnCerrarModalEditarCompra");
+  const btnCancelarCompraActualizar = document.getElementById("btnCancelarCompraActualizar");
+  const modalEditarCompra = document.getElementById("modalEditarCompra");
+  const formEditarCompraModal = document.getElementById("formEditarCompraModal");
+  const fechaActualizar = document.getElementById("fechaActualizar");
+  const selectMonedaGeneralActualizar = document.getElementById("idmoneda_general_compra_actualizar");
+  const inputCriterioProveedorActualizar = document.getElementById('inputCriterioProveedorActualizar');
+  const btnBuscarProveedorActualizar = document.getElementById('btnBuscarProveedorActualizar');
+  const listaResultadosProveedorActualizar = document.getElementById('listaResultadosProveedorActualizar');
+  const hiddenIdProveedorActualizar = document.getElementById("idproveedor_seleccionado_actualizar");
+  const divInfoProveedorActualizar = document.getElementById("proveedor_seleccionado_info_actualizar");
+  const selectProductoAgregarActualizar = document.getElementById("select_producto_agregar_actualizar");
+  const btnAgregarProductoDetalleActualizar = document.getElementById("btnAgregarProductoDetalleActualizar");
+  const cuerpoTablaDetalleCompraActualizar = document.getElementById("cuerpoTablaDetalleCompraActualizar");
+  const totalGeneralDisplayActualizar = document.getElementById("total_general_display_actualizar");
+  const totalGeneralInputActualizar = document.getElementById("total_general_input_actualizar");
+  const mensajeErrorFormCompraActualizar = document.getElementById("mensajeErrorFormCompraActualizar");
+  const btnActualizarCompraModal = document.getElementById("btnActualizarCompraModal");
+
+  // Event listeners para cerrar modal
+  if (btnCerrarModalEditarCompra) {
+    btnCerrarModalEditarCompra.addEventListener("click", function () {
+      cerrarModalEditarCompra();
+    });
+  }
+
+  if (btnCancelarCompraActualizar) {
+    btnCancelarCompraActualizar.addEventListener("click", function () {
+      cerrarModalEditarCompra();
+    });
+  }
+
+  // Cerrar modal al hacer click fuera
+  if (modalEditarCompra) {
+    modalEditarCompra.addEventListener("click", (e) => {
+      if (e.target === modalEditarCompra) {
+        cerrarModalEditarCompra();
+      }
+    });
+  }
+
+  // Event listener para cambio de fecha
+  if (fechaActualizar) {
+    fechaActualizar.addEventListener("change", function () {
+      fechaActualCompraActualizar = this.value;
+      if (fechaActualCompraActualizar) {
+        cargarTasasPorFechaActualizar(fechaActualCompraActualizar);
+      }
+    });
+  }
+
+  // Event listener para cambio de moneda
+  if (selectMonedaGeneralActualizar) {
+    selectMonedaGeneralActualizar.addEventListener("change", calcularTotalesGeneralesActualizar);
+  }
+
+  // Event listener para buscar proveedor
+  if (btnBuscarProveedorActualizar && inputCriterioProveedorActualizar) {
+    btnBuscarProveedorActualizar.addEventListener('click', async function() {
+      const termino = inputCriterioProveedorActualizar.value.trim();
+      if (termino.length < 2) {
+        Swal.fire("Atención", "Ingrese al menos 2 caracteres para buscar.", "warning");
+        return;
+      }
+
+      listaResultadosProveedorActualizar.innerHTML = '<div class="p-2 text-xs text-gray-500">Buscando...</div>';
+      listaResultadosProveedorActualizar.classList.remove('hidden');
+
+      try {
+        const response = await fetch(`Compras/buscarProveedores?term=${encodeURIComponent(termino)}`);
+        if (!response.ok) {
+          throw new Error('Error en la respuesta del servidor');
+        }
+        const proveedores = await response.json();
+
+        listaResultadosProveedorActualizar.innerHTML = '';
+        if (proveedores && proveedores.length > 0) {
+          proveedores.forEach(prov => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('p-2', 'text-xs', 'hover:bg-gray-100', 'cursor-pointer');
+            itemDiv.textContent = `${prov.nombre || ""} ${prov.apellido || ""} (${prov.identificacion || ""})`.trim();
+            itemDiv.dataset.idproveedor = prov.idproveedor;
+            itemDiv.dataset.nombre = `${prov.nombre || ""} ${prov.apellido || ""}`.trim();
+            itemDiv.dataset.identificacion = prov.identificacion || "";
+
+            itemDiv.addEventListener('click', function() {
+              hiddenIdProveedorActualizar.value = this.dataset.idproveedor;
+              divInfoProveedorActualizar.innerHTML = `Sel: <strong>${this.dataset.nombre}</strong> (ID: ${this.dataset.identificacion})`;
+              divInfoProveedorActualizar.classList.remove('hidden');
+              inputCriterioProveedorActualizar.value = this.textContent;
+              listaResultadosProveedorActualizar.classList.add('hidden');
+              listaResultadosProveedorActualizar.innerHTML = '';
+            });
+            listaResultadosProveedorActualizar.appendChild(itemDiv);
+          });
+        } else {
+          listaResultadosProveedorActualizar.innerHTML = '<div class="p-2 text-xs text-gray-500">No se encontraron proveedores.</div>';
+        }
+      } catch (error) {
+        console.error("Error al buscar proveedores:", error);
+        listaResultadosProveedorActualizar.innerHTML = '<div class="p-2 text-xs text-red-500">Error al buscar. Intente de nuevo.</div>';
+      }
+    });
+  }
+
+  // Event listener para agregar producto
+  if (btnAgregarProductoDetalleActualizar && selectProductoAgregarActualizar) {
+    btnAgregarProductoDetalleActualizar.addEventListener("click", function () {
+      const selectedOption = selectProductoAgregarActualizar.options[selectProductoAgregarActualizar.selectedIndex];
+      if (!selectedOption.value) {
+        Swal.fire("Atención", "Seleccione un producto.", "warning");
+        return;
+      }
+      
+      const idproducto = selectedOption.value;
+      if (detalleCompraItemsActualizar.find((item) => item.idproducto === idproducto)) {
+        Swal.fire("Atención", "Este producto ya ha sido agregado.", "warning");
+        return;
+      }
+
+      const monedaGeneralSeleccionada = selectMonedaGeneralActualizar.options[selectMonedaGeneralActualizar.selectedIndex];
+      const simboloMonedaGeneral = monedaGeneralSeleccionada ? monedaGeneralSeleccionada.dataset.simbolo : "$";
+
+      const item = {
+        idproducto: idproducto,
+        nombre: selectedOption.dataset.nombre,
+        idcategoria: parseInt(selectedOption.dataset.idcategoria),
+        precio_unitario: parseFloat(selectedOption.dataset.precio) || 0,
+        idmoneda_item: selectedOption.dataset.idmoneda || selectMonedaGeneralActualizar.value,
+        simbolo_moneda_item: selectedOption.dataset.monedaSimbolo || simboloMonedaGeneral,
+        no_usa_vehiculo: false,
+        peso_vehiculo: 0,
+        peso_bruto: 0,
+        peso_neto_directo: 0,
+        cantidad_unidad: 1,
+        descuento: 0,
+        moneda: selectedOption.dataset.moneda
+      };
+      
+      detalleCompraItemsActualizar.push(item);
+      renderizarTablaDetalleActualizar();
+      selectProductoAgregarActualizar.value = "";
+    });
+  }
+
+  // Event listener para actualizar compra
+  if (btnActualizarCompraModal) {
+    btnActualizarCompraModal.addEventListener("click", async function () {
+      if (!validarCamposVacios(camposFormularioActualizarCompra, "formEditarCompraModal")) return;
+      mensajeErrorFormCompraActualizar.textContent = "";
+      
+      if (detalleCompraItemsActualizar.length === 0) {
+        mensajeErrorFormCompraActualizar.textContent = "Debe agregar al menos un producto al detalle.";
+        return;
+      }
+      
+      if (!selectMonedaGeneralActualizar.value) {
+        mensajeErrorFormCompraActualizar.textContent = "Debe seleccionar una moneda general para la compra.";
+        return;
+      }
+      
+      for (const item of detalleCompraItemsActualizar) {
+        const precio = parseFloat(item.precio_unitario) || 0;
+        let cantidadValida = false;
+        if (item.idcategoria === 1) {
+          cantidadValida = calcularPesoNetoItemActualizar(item) > 0;
+        } else {
+          cantidadValida = (parseFloat(item.cantidad_unidad) || 0) > 0;
+        }
+        if (precio <= 0 || !cantidadValida) {
+          mensajeErrorFormCompraActualizar.textContent = `El producto "${item.nombre}" tiene precio o cantidad/peso inválido.`;
+          return;
+        }
+      }
+
+      const formData = new FormData(formEditarCompraModal);
+      const productosDetalle = detalleCompraItemsActualizar.map(item => ({
+        idproducto: item.idproducto,
+        nombre_producto: item.nombre,
+        cantidad: item.idcategoria === 1 ? calcularPesoNetoItemActualizar(item) : item.cantidad_unidad,
+        precio_unitario_compra: item.precio_unitario,
+        idmoneda_detalle: item.idmoneda_item,
+        descuento: item.descuento || 0,
+        moneda: item.moneda,
+        subtotal_original_linea: item.subtotal_original_linea || 0,
+        monto_descuento_linea: item.monto_descuento_linea || 0,
+        subtotal_linea: item.subtotal_linea,
+        peso_vehiculo: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
+        peso_bruto: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_bruto : null,
+        peso_neto: item.idcategoria === 1 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemActualizar(item)) : null,
+      }));
+      
+      formData.append("productos_detalle", JSON.stringify(productosDetalle));
+      formData.set("total_general_input", totalGeneralInputActualizar.value);
+
+      btnActualizarCompraModal.disabled = true;
+      btnActualizarCompraModal.textContent = "Actualizando...";
+
+      try {
+        const response = await fetch(`Compras/updateCompra`, {
+          method: "POST",
+          body: formData,
+        });
+        const data = await response.json();
+        Swal.fire({
+          title: data.status ? "¡Éxito!" : "Error",
+          text: data.message,
+          icon: data.status ? "success" : "error",
+        });
+        if (data.status) {
+          cerrarModalEditarCompra();
+          $("#TablaCompras").DataTable().ajax.reload();
+        } else {
+          mensajeErrorFormCompraActualizar.textContent = data.message || "Error al actualizar.";
+        }
+      } catch (error) {
+        console.error("Error al actualizar compra:", error);
+        Swal.fire("Error", "Ocurrió un error de conexión al actualizar.", "error");
+        mensajeErrorFormCompraActualizar.textContent = "Ocurrió un error de conexión al actualizar.";
+      } finally {
+        btnActualizarCompraModal.disabled = false;
+        btnActualizarCompraModal.textContent = "Actualizar Compra";
+      }
+    });
+  }});
 
 // Ver compra
 function verCompra(idCompra) {
@@ -1348,4 +1574,403 @@ function cambiarEstadoCompra(idCompra, nuevoEstado) {
         });
     }
   });
+}
+
+// Función para abrir modal de editar
+async function editarCompra(idCompra) {
+  try {
+    const response = await fetch(`Compras/getCompraParaEditar/${idCompra}`);
+    const result = await response.json();
+    
+    if (result.status && result.data) {
+      const { compra, detalles } = result.data;
+      await abrirModalEditarCompra(compra, detalles);
+    } else {
+      Swal.fire("Error", result.message || "No se pudo cargar la compra para editar.", "error");
+    }
+  } catch (error) {
+    console.error("Error al cargar compra para editar:", error);
+    Swal.fire("Error", "Error de conexión al cargar la compra.", "error");
+  }
+}
+
+// Función para abrir modal de editar con datos
+async function abrirModalEditarCompra(compra, detalles) {
+  // Resetear formulario
+  const formEditarCompraModal = document.getElementById("formEditarCompraModal");
+  const modalEditarCompra = document.getElementById("modalEditarCompra");
+  const fechaActualizar = document.getElementById("fechaActualizar");
+  const selectMonedaGeneralActualizar = document.getElementById("idmoneda_general_compra_actualizar");
+  const hiddenIdProveedorActualizar = document.getElementById("idproveedor_seleccionado_actualizar");
+  const divInfoProveedorActualizar = document.getElementById("proveedor_seleccionado_info_actualizar");
+  const inputCriterioProveedorActualizar = document.getElementById('inputCriterioProveedorActualizar');
+  const mensajeErrorFormCompraActualizar = document.getElementById("mensajeErrorFormCompraActualizar");
+  
+  formEditarCompraModal.reset();
+  detalleCompraItemsActualizar = [];
+  mensajeErrorFormCompraActualizar.textContent = "";
+
+  // Cargar datos básicos
+  document.getElementById("idcompra_editar").value = compra.idcompra;
+  fechaActualizar.value = compra.fecha;
+  fechaActualCompraActualizar = compra.fecha;
+  document.getElementById("observacionesActualizar").value = compra.observaciones_compra || "";
+
+  // Cargar tasas por fecha
+  await cargarTasasPorFechaActualizar(compra.fecha);
+
+  // Cargar monedas y seleccionar la moneda general
+  await cargarMonedasParaActualizar();
+  selectMonedaGeneralActualizar.value = compra.idmoneda_general;
+
+  // Cargar productos
+  await cargarProductosParaActualizar();
+
+  // Configurar proveedor
+  hiddenIdProveedorActualizar.value = compra.idproveedor;
+  divInfoProveedorActualizar.innerHTML = `Sel: <strong>${compra.proveedor_nombre}</strong>`;
+  divInfoProveedorActualizar.classList.remove('hidden');
+  inputCriterioProveedorActualizar.value = compra.proveedor_nombre;
+
+  // Cargar detalles
+  if (detalles && detalles.length > 0) {
+    detalles.forEach(detalle => {
+      const item = {
+        idproducto: detalle.idproducto,
+        nombre: detalle.producto_nombre || detalle.descripcion_temporal_producto,
+        idcategoria: parseInt(detalle.idcategoria),
+        precio_unitario: parseFloat(detalle.precio_unitario_compra),
+        idmoneda_item: detalle.codigo_moneda,
+        simbolo_moneda_item: detalle.codigo_moneda,
+        no_usa_vehiculo: detalle.peso_vehiculo === null && detalle.peso_bruto === null,
+        peso_vehiculo: parseFloat(detalle.peso_vehiculo) || 0,
+        peso_bruto: parseFloat(detalle.peso_bruto) || 0,
+        peso_neto_directo: (detalle.peso_vehiculo === null && detalle.peso_bruto === null) ? parseFloat(detalle.peso_neto) || 0 : 0,
+        cantidad_unidad: parseInt(detalle.idcategoria) === 1 ? 0 : parseFloat(detalle.cantidad),
+        descuento: parseFloat(detalle.descuento) || 0,
+        moneda: detalle.idmoneda_detalle,
+        subtotal_linea: parseFloat(detalle.subtotal_linea)
+      };
+      
+      detalleCompraItemsActualizar.push(item);
+    });
+  }
+
+  renderizarTablaDetalleActualizar();
+  inicializarValidaciones(camposFormularioActualizarCompra, "formEditarCompraModal");
+  
+  // Mostrar modal
+  modalEditarCompra.classList.remove("opacity-0", "pointer-events-none");
+  document.body.classList.add("overflow-hidden");
+}
+
+// Función para cerrar modal de editar
+function cerrarModalEditarCompra() {
+  const modalEditarCompra = document.getElementById("modalEditarCompra");
+  const formEditarCompraModal = document.getElementById("formEditarCompraModal");
+  
+  modalEditarCompra.classList.add("opacity-0", "pointer-events-none");
+  document.body.classList.remove("overflow-hidden");
+  limpiarValidaciones(camposFormularioActualizarCompra, "formEditarCompraModal");
+  formEditarCompraModal.reset();
+  detalleCompraItemsActualizar = [];
+}
+
+// Funciones auxiliares para el modal de actualizar (similares a las del modal de registro)
+async function cargarTasasPorFechaActualizar(fecha) {
+  const divTasa = document.getElementById("tasaDelDiaInfoActualizar");
+  divTasa.textContent = "Cargando tasas del día...";
+  try {
+    const response = await fetch(`Compras/getTasasMonedasPorFecha?fecha=${encodeURIComponent(fecha)}`);
+    const data = await response.json();
+    if (data.status && data.tasas && Object.keys(data.tasas).length > 0) {
+      tasasMonedasActualizar = data.tasas;
+      let texto = `Tasa del día (${fecha.split('-').reverse().join('/')})`;
+      let tasasArr = [];
+      for (const [moneda, tasa] of Object.entries(tasasMonedasActualizar)) {
+        tasasArr.push(`1 ${moneda} = ${Number(tasa).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 4})} Bs.`);
+      }
+      texto += ": " + tasasArr.join(" | ");
+      divTasa.textContent = texto;
+      calcularTotalesGeneralesActualizar();
+    } else {
+      divTasa.textContent = "No hay tasas registradas para esta fecha.";
+      tasasMonedasActualizar = {};
+      calcularTotalesGeneralesActualizar();
+    }
+  } catch (e) {
+    divTasa.textContent = "Error al cargar tasas del día.";
+    tasasMonedasActualizar = {};
+    calcularTotalesGeneralesActualizar();
+  }
+}
+
+async function cargarMonedasParaActualizar() {
+  const selectMonedaGeneralActualizar = document.getElementById("idmoneda_general_compra_actualizar");
+  selectMonedaGeneralActualizar.innerHTML = '<option value="">Cargando...</option>';
+  try {
+    const response = await fetch('Compras/getListaMonedasParaFormulario');
+    if (!response.ok) throw new Error("Error en respuesta de monedas");
+    const monedas = await response.json();
+    selectMonedaGeneralActualizar.innerHTML = '<option value="">Seleccione Moneda</option>';
+    monedas.forEach((moneda) => {
+      let simbolo = "";
+      if (moneda.codigo_moneda === "USD") simbolo = "$";
+      else if (moneda.codigo_moneda === "EUR") simbolo = "€";
+      else if (moneda.codigo_moneda === "VES") simbolo = "Bs.";
+      const option = document.createElement("option");
+      option.value = moneda.idmoneda;
+      option.textContent = `${moneda.codigo_moneda} (${simbolo})`;
+      selectMonedaGeneralActualizar.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error al cargar monedas:", error);
+    selectMonedaGeneralActualizar.innerHTML = '<option value="">Error al cargar</option>';
+  }
+}
+
+async function cargarProductosParaActualizar() {
+  const selectProductoAgregarActualizar = document.getElementById("select_producto_agregar_actualizar");
+  selectProductoAgregarActualizar.innerHTML = '<option value="">Cargando...</option>';
+  try {
+    const response = await fetch('Compras/getListaProductosParaFormulario');
+    if (!response.ok) throw new Error("Error en respuesta de productos");
+    const productos = await response.json();
+    selectProductoAgregarActualizar.innerHTML = '<option value="">Seleccione producto...</option>';
+    productos.forEach((producto) => {
+      const option = document.createElement("option");
+      option.value = producto.idproducto;
+      option.dataset.idcategoria = producto.idcategoria;
+      option.dataset.nombre = producto.nombre_producto;
+      option.dataset.precio = producto.precio_referencia_compra || "0.00";
+      option.dataset.idmoneda = producto.codigo_moneda || "";
+      option.dataset.moneda = producto.idmoneda_producto || "";
+      option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria})`;
+      selectProductoAgregarActualizar.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error al cargar productos:", error);
+    selectProductoAgregarActualizar.innerHTML = '<option value="">Error al cargar</option>';
+  }
+}
+
+function calcularPesoNetoItemActualizar(item) {
+  if (item.idcategoria === 1) {
+    if (item.no_usa_vehiculo) {
+      return parseFloat(item.peso_neto_directo) || 0;
+    } else {
+      const bruto = parseFloat(item.peso_bruto) || 0;
+      const vehiculo = parseFloat(item.peso_vehiculo) || 0;
+      return Math.max(0, bruto - vehiculo);
+    }
+  }
+  return 0;
+}
+
+function calcularSubtotalLineaItemActualizar(item) {
+  const precioUnitario = parseFloat(item.precio_unitario) || 0;
+  let cantidadBase = 0;
+  if (item.idcategoria === 1) {
+    cantidadBase = calcularPesoNetoItemActualizar(item) || 0;
+  } else {
+    cantidadBase = parseFloat(item.cantidad_unidad) || 0;
+  }
+  const subtotalAntesDescuento = cantidadBase * precioUnitario;
+  const porcentajeDescuento = parseFloat(item.descuento) || 0;
+  let montoDescuento = 0;
+  let subtotalConDescuento = subtotalAntesDescuento;
+  if (porcentajeDescuento > 0 && porcentajeDescuento <= 100) {
+    montoDescuento = subtotalAntesDescuento * (porcentajeDescuento / 100);
+    subtotalConDescuento = subtotalAntesDescuento - montoDescuento;
+  }
+  item.subtotal_original_linea = subtotalAntesDescuento;
+  item.monto_descuento_linea = montoDescuento;
+  item.subtotal_linea = subtotalConDescuento;
+  item.subtotal_linea_bs = convertirAMonedaBaseActualizar(subtotalConDescuento, item.idmoneda_item);
+  return item.subtotal_linea;
+}
+
+function convertirAMonedaBaseActualizar(monto, idmoneda) {
+  if (idmoneda == 3) return monto;
+  const tasa = tasasMonedasActualizar[idmoneda] || 1;
+  return monto * tasa;
+}
+
+function calcularTotalesGeneralesActualizar() {
+  let subtotalGeneralBs = 0;
+  detalleCompraItemsActualizar.forEach((item) => {
+    subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
+  });
+  const totalGeneral = subtotalGeneralBs;
+  const totalGeneralDisplayActualizar = document.getElementById("total_general_display_actualizar");
+  const totalGeneralInputActualizar = document.getElementById("total_general_input_actualizar");
+  totalGeneralDisplayActualizar.value = `Bs. ${totalGeneral.toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  totalGeneralInputActualizar.value = totalGeneral.toFixed(2);
+}
+
+function renderizarTablaDetalleActualizar() {
+  const cuerpoTablaDetalleCompraActualizar = document.getElementById("cuerpoTablaDetalleCompraActualizar");
+  cuerpoTablaDetalleCompraActualizar.innerHTML = "";
+  detalleCompraItemsActualizar.forEach((item, index) => {
+    const tr = document.createElement("tr");
+    tr.classList.add("border-b", "hover:bg-gray-50");
+    tr.dataset.index = index;
+
+    let infoEspecificaHtml = "";
+    if (item.idcategoria === 1) {
+      infoEspecificaHtml = `
+      <div class="space-y-1">
+        <div>
+          <label class="flex items-center text-xs">
+            <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_actualizar" ${item.no_usa_vehiculo ? "checked" : ""}> No usa vehículo
+          </label>
+        </div>
+        <div class="campos_peso_vehiculo_actualizar ${item.no_usa_vehiculo ? "hidden" : ""}">
+          P.Bru: 
+          <input type="number" step="0.01" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_bruto_actualizar" value="${item.peso_bruto || ""}" placeholder="0.00">
+          <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+          P.Veh: 
+          <input type="number" step="0.01" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_vehiculo_actualizar" value="${item.peso_vehiculo || ""}" placeholder="0.00">
+          <button type="button" class="btnUltimoPesoRomanaVehiculoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+          Descuento %: 
+          <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 descuento_actualizar" value="${item.descuento || ""}" placeholder="0.00">
+        </div>
+        <div class="campo_peso_neto_directo_actualizar ${!item.no_usa_vehiculo ? "hidden" : ""}">
+          P.Neto: <input type="number" step="0.01" class="w-20 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_neto_directo_actualizar" value="${item.peso_neto_directo || ""}" placeholder="0.00">
+          <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
+          Descuento %: 
+          <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 descuento_actualizar" value="${item.descuento || ""}" placeholder="0.00">
+        </div>
+        Neto Calc: <strong class="peso_neto_calculado_display_actualizar">${calcularPesoNetoItemActualizar(item).toFixed(2)}</strong>
+      </div>`;
+    } else {
+      infoEspecificaHtml = `
+        <div>
+          Cant: <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 cantidad_unidad_actualizar" value="${item.cantidad_unidad || "1"}" placeholder="1">
+        </div>`;
+    }
+
+    tr.innerHTML = `
+      <td class="py-1 px-1 text-xs">${item.nombre}</td>
+      <td class="py-1 px-1 text-xs">${infoEspecificaHtml}</td>
+      <td class="py-1 px-1 text-xs">
+          ${item.idmoneda_item} <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 precio_unitario_item_actualizar" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
+      </td>
+      <td class="py-1 px-1 text-xs subtotal_linea_display_actualizar">${item.idmoneda_item} ${calcularSubtotalLineaItemActualizar(item).toFixed(2)}</td>
+      <td class="py-1 px-1 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleActualizar text-xs"></button></td>
+    `;
+    cuerpoTablaDetalleCompraActualizar.appendChild(tr);
+  });
+  addEventListenersToDetalleInputsActualizar();
+  calcularTotalesGeneralesActualizar();
+}
+
+function addEventListenersToDetalleInputsActualizar() {
+  document.querySelectorAll("#cuerpoTablaDetalleCompraActualizar tr").forEach((row) => {
+    const index = parseInt(row.dataset.index);
+    if (isNaN(index) || index >= detalleCompraItemsActualizar.length) return;
+    const item = detalleCompraItemsActualizar[index];
+
+    // Event listeners para pesos de romana
+    const btnUltimoPesoBruto = row.querySelector(".btnUltimoPesoRomanaBrutoActualizar");
+    if (btnUltimoPesoBruto) {
+      btnUltimoPesoBruto.addEventListener("click", async function () {
+        try {
+          const response = await fetch("Compras/getUltimoPesoRomana");
+          const data = await response.json();
+          if (data.status) {
+            if (item.no_usa_vehiculo) {
+              item.peso_neto_directo = data.peso;
+              row.querySelector(".peso_neto_directo_actualizar").value = data.peso;
+            } else {
+              item.peso_bruto = data.peso;
+              row.querySelector(".peso_bruto_actualizar").value = data.peso;
+            }
+            actualizarCalculosFilaActualizar(row, item);
+          } else {
+            Swal.fire("Atención", data.message || "No se pudo obtener el peso.", "warning");
+          }
+        } catch (e) {
+          Swal.fire("Error", "Error al consultar la romana.", "error");
+        }
+      });
+    }
+
+    const btnUltimoPesoVehiculo = row.querySelector(".btnUltimoPesoRomanaVehiculoActualizar");
+    if (btnUltimoPesoVehiculo) {
+      btnUltimoPesoVehiculo.addEventListener("click", async function () {
+        try {
+          const response = await fetch("Compras/getUltimoPesoRomana");
+          const data = await response.json();
+          if (data.status) {
+            item.peso_vehiculo = data.peso;
+            row.querySelector(".peso_vehiculo_actualizar").value = data.peso;
+            actualizarCalculosFilaActualizar(row, item);
+          } else {
+            Swal.fire("Atención", data.message || "No se pudo obtener el peso.", "warning");
+          }
+        } catch (e) {
+          Swal.fire("Error", "Error al consultar la romana.", "error");
+        }
+      });
+    }
+
+    // Checkbox no usa vehículo
+    const cbNoUsaVehiculo = row.querySelector(".no_usa_vehiculo_cb_actualizar");
+    if (cbNoUsaVehiculo) {
+      cbNoUsaVehiculo.addEventListener("change", function (e) {
+        item.no_usa_vehiculo = e.target.checked;
+        const camposPesoVehiculo = row.querySelector(".campos_peso_vehiculo_actualizar");
+        const campoPesoNetoDirecto = row.querySelector(".campo_peso_neto_directo_actualizar");
+        if (e.target.checked) {
+          camposPesoVehiculo.classList.add("hidden");
+          campoPesoNetoDirecto.classList.remove("hidden");
+          item.peso_vehiculo = 0;
+          item.peso_bruto = 0;
+        } else {
+          camposPesoVehiculo.classList.remove("hidden");
+          campoPesoNetoDirecto.classList.add("hidden");
+          item.peso_neto_directo = 0;
+        }
+        actualizarCalculosFilaActualizar(row, item);
+      });
+    }
+
+    row.querySelectorAll(".peso_vehiculo_actualizar, .peso_bruto_actualizar, .peso_neto_directo_actualizar, .cantidad_unidad_actualizar, .precio_unitario_item_actualizar, .descuento_actualizar").forEach((input) => {
+      input.addEventListener("input", function (e) {
+        const fieldName = e.target.classList.contains("peso_vehiculo_actualizar") ? "peso_vehiculo"
+          : e.target.classList.contains("peso_bruto_actualizar") ? "peso_bruto"
+          : e.target.classList.contains("peso_neto_directo_actualizar") ? "peso_neto_directo"
+          : e.target.classList.contains("cantidad_unidad_actualizar") ? "cantidad_unidad"
+          : e.target.classList.contains("descuento_actualizar") ? "descuento"
+          : "precio_unitario";
+        
+        let valor = parseFloat(e.target.value) || 0;
+        
+        if (fieldName === "descuento" && valor > 100) {
+          valor = 100;
+          e.target.value = 100;
+          Swal.fire("Atención", "El descuento no puede ser mayor al 100%", "warning");
+        }
+        
+        item[fieldName] = valor;
+        actualizarCalculosFilaActualizar(row, item);
+      });
+    });
+
+    // Botón eliminar item
+    row.querySelector(".btnEliminarItemDetalleActualizar").addEventListener("click", function () {
+      detalleCompraItemsActualizar.splice(index, 1);
+      renderizarTablaDetalleActualizar();
+    });
+  });
+}
+
+function actualizarCalculosFilaActualizar(rowElement, item) {
+  const pesoNetoDisplay = rowElement.querySelector(".peso_neto_calculado_display_actualizar");
+  if (pesoNetoDisplay) {
+    pesoNetoDisplay.textContent = calcularPesoNetoItemActualizar(item).toFixed(2);
+  }
+  rowElement.querySelector(".subtotal_linea_display_actualizar").textContent = `${item.idmoneda_item} ${calcularSubtotalLineaItemActualizar(item).toFixed(2)}`;
+  calcularTotalesGeneralesActualizar();
 }

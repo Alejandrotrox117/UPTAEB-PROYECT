@@ -312,6 +312,125 @@ class ComprasModel extends Mysql
         }
     }
 
+    //ACTUALIZAR COMPRA
+    public function actualizarCompra(int $idcompra, array $datosCompra, array $detallesCompra){
+        try {
+            $this->db->beginTransaction();
+
+            // Actualizar cabecera de compra
+            $sqlCompra = "UPDATE compra SET 
+                            fecha = ?, 
+                            idproveedor = ?, 
+                            idmoneda_general = ?, 
+                            subtotal_general = ?, 
+                            descuento_porcentaje_general = ?, 
+                            monto_descuento_general = ?, 
+                            total_general = ?, 
+                            observaciones_compra = ?,
+                            fecha_modificacion = NOW()
+                        WHERE idcompra = ?";
+            
+            $arrDataCompra = [
+                $datosCompra['fecha_compra'],
+                $datosCompra['idproveedor'],
+                $datosCompra['idmoneda_general'],
+                $datosCompra['subtotal_general_compra'],
+                $datosCompra['descuento_porcentaje_compra'],
+                $datosCompra['monto_descuento_compra'],
+                $datosCompra['total_general_compra'],
+                $datosCompra['observaciones_compra'],
+                $idcompra
+            ];
+
+            $stmtCompra = $this->db->prepare($sqlCompra);
+            if (!$stmtCompra->execute($arrDataCompra)) {
+                $this->db->rollBack();
+                throw new Exception("Error al actualizar cabecera de compra");
+            }
+
+            // Eliminar detalles existentes
+            $sqlDeleteDetalle = "DELETE FROM detalle_compra WHERE idcompra = ?";
+            $stmtDelete = $this->db->prepare($sqlDeleteDetalle);
+            if (!$stmtDelete->execute([$idcompra])) {
+                $this->db->rollBack();
+                throw new Exception("Error al eliminar detalles existentes");
+            }
+
+            // Insertar nuevos detalles
+            $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, descuento, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmtDetalle = $this->db->prepare($sqlDetalle);
+
+            foreach ($detallesCompra as $detalle) {
+                $arrDataDetalle = [
+                    $idcompra,
+                    $detalle['idproducto'],
+                    $detalle['descripcion_temporal_producto'],
+                    $detalle['cantidad'],
+                    $detalle['descuento'],
+                    $detalle['precio_unitario_compra'],
+                    $detalle['idmoneda_detalle'],
+                    $detalle['subtotal_linea'],
+                    $detalle['peso_vehiculo'],
+                    $detalle['peso_bruto'],
+                    $detalle['peso_neto']
+                ];
+
+                if (!$stmtDetalle->execute($arrDataDetalle)) {
+                    $this->db->rollBack();
+                    throw new Exception("Error al insertar detalle actualizado de compra");
+                }
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log("Error al actualizar compra: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    //OBTENER COMPRA COMPLETA PARA EDITAR
+    public function getCompraCompletaParaEditar($idcompra) {
+        try {
+            // Obtener datos de la compra
+            $compra = $this->getCompraById($idcompra);
+            if (!$compra) {
+                return false;
+            }
+
+            // Obtener detalles con información adicional para edición
+            $sqlDetalles = "SELECT 
+                                dc.*,
+                                p.nombre as producto_nombre,
+                                p.idcategoria,
+                                m.codigo_moneda,
+                                cat.nombre as categoria_nombre
+                            FROM detalle_compra dc
+                            LEFT JOIN producto p ON dc.idproducto = p.idproducto
+                            LEFT JOIN monedas m ON dc.idmoneda_detalle = m.idmoneda
+                            LEFT JOIN categoria cat ON p.idcategoria = cat.idcategoria
+                            WHERE dc.idcompra = ?";
+            
+            $stmt = $this->db->prepare($sqlDetalles);
+            $stmt->execute([$idcompra]);
+            $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'compra' => $compra,
+                'detalles' => $detalles
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Error al obtener compra completa para editar: " . $e->getMessage());
+            return false;
+        }
+    }
+
     //BUSCAR COMPRA POR ID
     public function getCompraById($idcompra) {
         $codigoMonedaEuro = 'EUR';
@@ -354,7 +473,6 @@ class ComprasModel extends Mysql
     }
 
 
-
     //BUSCAR DETALLE DE COMPRA POR ID
     public function getDetalleCompraById($idcompra){
         $sql = "SELECT 
@@ -374,135 +492,6 @@ class ComprasModel extends Mysql
             return [];
         }
     }
-
-    //ACTUALIZAR COMPRA
-    public function updateCompra(array $datosCompra, array $detallesCompra): array
-    {
-        try {
-            $this->db->beginTransaction();
-
-            // Validar estado actual
-            $sqlCheckEstado = "SELECT estatus_compra FROM compra WHERE idcompra = ?";
-            $stmtCheckEstado = $this->db->prepare($sqlCheckEstado);
-            $stmtCheckEstado->execute([$datosCompra['idcompra']]);
-            $estadoActual = $stmtCheckEstado->fetchColumn();
-            
-            if ($estadoActual !== 'BORRADOR') {
-                $this->db->rollBack();
-                return [
-                    'status' => false, 
-                    'message' => 'Solo se pueden actualizar compras en estado BORRADOR.'
-                ];
-            }
-
-            // Actualizar cabecera de compra
-            $sql = "UPDATE compra SET 
-                    fecha = ?, 
-                    idproveedor = ?, 
-                    idmoneda_general = ?, 
-                    subtotal_general = ?, 
-                    descuento_porcentaje_general = ?, 
-                    monto_descuento_general = ?, 
-                    total_general = ?, 
-                    observaciones_compra = ?,
-                    fecha_modificacion = NOW() 
-                    WHERE idcompra = ?";
-            
-            $valores = [
-                $datosCompra['fecha_compra'],
-                $datosCompra['idproveedor'],
-                $datosCompra['idmoneda_general'],
-                $datosCompra['subtotal_general'],
-                $datosCompra['descuento_porcentaje'],
-                $datosCompra['monto_descuento'],
-                $datosCompra['total_general'],
-                $datosCompra['observaciones_compra'],
-                $datosCompra['idcompra']
-            ];
-            
-            $stmt = $this->db->prepare($sql);
-            $updateExitoso = $stmt->execute($valores);
-
-            if (!$updateExitoso) {
-                $this->db->rollBack();
-                return [
-                    'status' => false, 
-                    'message' => 'No se pudo actualizar la compra.'
-                ];
-            }
-
-            // Si hay detalles, actualizar también
-            // Si hay detalles, actualizar también
-        if (!empty($detallesCompra)) {
-            // Eliminar detalles existentes
-            $sqlDeleteDetalles = "DELETE FROM detalle_compra WHERE idcompra = ?";
-            $stmtDelete = $this->db->prepare($sqlDeleteDetalles);
-            $stmtDelete->execute([$datosCompra['idcompra']]);
-
-            // Validar monedas existentes
-            $sqlMonedas = "SELECT idmoneda FROM monedas";
-            $stmtMonedas = $this->db->prepare($sqlMonedas);
-            $stmtMonedas->execute();
-            $monedasValidas = $stmtMonedas->fetchAll(PDO::FETCH_COLUMN);
-            
-            // Si no hay monedas válidas, usar una por defecto (asumimos que 3 es VES)
-            if (empty($monedasValidas)) {
-                $monedasValidas = [3]; 
-            }
-
-            // Insertar nuevos detalles
-            $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmtDetalle = $this->db->prepare($sqlDetalle);
-
-            foreach ($detallesCompra as $detalle) {
-                // Asegurarse de que idmoneda_detalle sea válido
-                $idmonedaDetalle = intval($detalle['idmoneda_detalle']);
-                if (!in_array($idmonedaDetalle, $monedasValidas)) {
-                    $idmonedaDetalle = $monedasValidas[0]; // Usar la primera moneda válida
-                }
-                
-                $arrDataDetalle = [
-                    $datosCompra['idcompra'],
-                    $detalle['idproducto'],
-                    $detalle['descripcion_temporal_producto'],
-                    $detalle['cantidad'],
-                    $detalle['precio_unitario_compra'],
-                    $idmonedaDetalle, // Usamos el valor validado
-                    $detalle['subtotal_linea'],
-                    $detalle['peso_vehiculo'] ?? null,
-                    $detalle['peso_bruto'] ?? null,
-                    $detalle['peso_neto'] ?? null
-                ];
-
-                if (!$stmtDetalle->execute($arrDataDetalle)) {
-                    $this->db->rollBack();
-                    return [
-                        'status' => false, 
-                        'message' => 'Error al actualizar detalles de compra.'
-                    ];
-                }
-            }
-        }
-
-            $this->db->commit();
-            return [
-                'status' => true, 
-                'message' => 'Compra actualizada exitosamente.'
-            ];
-
-        } catch (PDOException $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            error_log("Error al actualizar compra: " . $e->getMessage());
-            return [
-                'status' => false, 
-                'message' => 'Error de base de datos al actualizar compra: ' . $e->getMessage()
-            ];
-        }
-    }
-
 
     //Eliminacion Logica
     public function deleteCompraById(int $idcompra)
