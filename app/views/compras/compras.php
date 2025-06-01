@@ -264,7 +264,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <label class="block text-sm font-medium text-gray-500">Número de Compra:</label>
-          <p id="verNroCompra" class="text-lg font-semibold text-gray-900"> - </p>
+          <p id="verNroCompra" class="text-lg font-semibold text-gray-900">-</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-500">Fecha:</label>
@@ -279,13 +279,10 @@
           <p id="verEstado" class="text-lg font-semibold text-gray-900">-</p>
         </div>
         <div class="md:col-span-2">
-          <!-- Observaciones ocupando dos columnas si es necesario -->
           <label class="block text-sm font-medium text-gray-500">Observaciones:</label>
           <p id="verObservaciones" class="text-base text-gray-700">-</p>
         </div>
       </div>
-
-      <!-- Detalle de Productos -->
       <div>
         <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
           Detalle de Productos
@@ -302,7 +299,6 @@
               </tr>
             </thead>
             <tbody id="verDetalleProductos" class="divide-y divide-gray-200">
-              <!-- Los detalles se inyectan aquí -->
             </tbody>
           </table>
         </div>
@@ -310,17 +306,23 @@
 
       <!-- Resumen de Totales -->
       <div class="mt-6 pt-4 border-t">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4">
-          Resumen de Totales
-        </h4>
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">Resumen de Totales</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-          <div>
+          <div id="contenedorTotalProductosEUR" style="display: none">
             <label class="block text-sm font-medium text-gray-500">Total Productos en Euros (€):</label>
-            <p id="verTotalProductosEUR" class="text-lg font-semibold text-gray-900">-</p>
+            <p id="verTotalProductosEUR"class="text-lg font-semibold text-gray-900">-</p>
           </div>
-          <div>
+          <div id="contenedorTotalProductosUSD" style="display: none">
             <label class="block text-sm font-medium text-gray-500">Total Productos en Dólares ($):</label>
             <p id="verTotalProductosUSD" class="text-lg font-semibold text-gray-900">-</p>
+          </div>
+          <div id="contenedorTasaEURVES" style="display: none">
+            <label class="block text-sm font-medium text-gray-500">Tasa EUR/VES (Fecha Compra):</label>
+            <p id="verTasaEURVES" class="text-lg font-semibold text-gray-900">-</p>
+          </div>
+          <div id="contenedorTasaUSDVES" style="display: none">
+            <label class="block text-sm font-medium text-gray-500">Tasa USD/VES (Fecha Compra):</label>
+            <p id="verTasaUSDVES" class="text-lg font-semibold text-gray-900">-</p>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-500">Subtotal General (Bs.):</label>
@@ -331,6 +333,7 @@
             <p id="verMontoDescuentoGeneralVES" class="text-lg font-semibold text-gray-900">-</p>
           </div>
           <div class="md:col-span-2 mt-2">
+            <div></div>
             <label class="block text-sm font-medium text-gray-500">Total General (Bs.):</label>
             <p id="verTotalGeneral" class="text-xl font-bold text-green-600">-</p>
           </div>
@@ -344,6 +347,7 @@
     </div>
   </div>
 </div>
+
 
 
 <!-- Modal para Actualizar Compra -->

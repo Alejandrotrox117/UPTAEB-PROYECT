@@ -310,24 +310,47 @@ class ComprasModel extends Mysql
     }
 
     //BUSCAR COMPRA POR ID
-    public function getCompraById($idcompra){
+    public function getCompraById($idcompra) {
+        $codigoMonedaEuro = 'EUR';
+        $codigoMonedaDolar = 'USD';
+
         $sql = "SELECT 
                     c.*,
                     CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as proveedor_nombre,
-                    m.codigo_moneda
+                    m.codigo_moneda AS moneda_general_compra_codigo,
+                    (SELECT ht_eur.tasa_a_bs
+                    FROM historial_tasas_bcv ht_eur
+                    WHERE ht_eur.codigo_moneda = ?
+                    AND DATE(ht_eur.fecha_publicacion_bcv) <= DATE(c.fecha)
+                    ORDER BY ht_eur.fecha_publicacion_bcv DESC
+                    LIMIT 1) AS tasa_eur_ves,
+                    (SELECT ht_usd.tasa_a_bs
+                    FROM historial_tasas_bcv ht_usd
+                    WHERE ht_usd.codigo_moneda = ?
+                    AND DATE(ht_usd.fecha_publicacion_bcv) <= DATE(c.fecha)
+                    ORDER BY ht_usd.fecha_publicacion_bcv DESC
+                    LIMIT 1) AS tasa_usd_ves
                 FROM compra c 
                 LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor
                 LEFT JOIN monedas m ON c.idmoneda_general = m.idmoneda
                 WHERE c.idcompra = ?";
+
         try {
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([$idcompra]);
+            $array = [
+                $codigoMonedaEuro,
+                $codigoMonedaDolar,
+                $idcompra
+            ];
+            $stmt->execute($array);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log("Error al obtener compra por ID: " . $e->getMessage());
+            error_log("Error al obtener compra por ID con tasas: " . $e->getMessage());
             return false;
         }
     }
+
+
 
     //BUSCAR DETALLE DE COMPRA POR ID
     public function getDetalleCompraById($idcompra){
