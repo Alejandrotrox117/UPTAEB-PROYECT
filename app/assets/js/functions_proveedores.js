@@ -143,172 +143,201 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     var api = new $.fn.dataTable.Api(settings);
     var rowData = api.row(dataIndex).data();
-    return rowData && rowData.estatus !== "inactivo";
+    return rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
   });
 
   $(document).ready(function () {
-    $("#TablaProveedores").addClass("compact fuente-tabla-pequena");
-
-    const colorFilaImpar = "#ffffff"; 
-    const colorFilaPar = "#f3f4f6";
-    const colorFilaHover = "#e0e7ff";
-    const paddingVerticalCelda = "5px"; 
-
-    tablaProveedores = $("#TablaProveedores").DataTable({
-      processing: true,
-      ajax: {
-        url: "Proveedores/getProveedoresData",
-        type: "GET",
-        dataSrc: function (json) {
-          if (json && json.data) {
-            return json.data;
-          } else {
-            console.error(
-              "La respuesta del servidor no tiene la estructura esperada:",
-              json
-            );
-            $("#TablaProveedores_processing").hide();
-            alert("Error: No se pudieron cargar los datos de proveedores.");
-            return [];
-          }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-          console.error(
-            "Error AJAX al cargar datos:",
-            textStatus,
-            errorThrown,
-            jqXHR.responseText
-          );
-          $("#TablaProveedores_processing").hide();
-          alert("Error de comunicación al cargar los datos.");
-        },
-      },
-      columns: [
-        { data: "nombre", title: "Nombre" },
-        { data: "apellido", title: "Apellido" },
-        { data: "identificacion", title: "Identificación" },
-        { data: "telefono_principal", title: "Teléfono" },
-        {
-          data: "estatus",
-          title: "Estatus",
-          render: function (data, type, row) {
-            if (data) {
-              const estatusUpper = String(data).toUpperCase();
-              let badgeClass = "bg-gray-100 text-gray-800"; 
-              if (estatusUpper === "ACTIVO") {
-                badgeClass =
-                  "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-              } else if (estatusUpper === "INACTIVO") {
-                badgeClass =
-                  "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-              }
-              return `<span class="${badgeClass} text-xs font-medium me-2 px-2.5 py-0.5 rounded">${data}</span>`;
-            }
-            return '<i style="color: silver;">N/A</i>';
-          },
-        },
-        {
-          data: null,
-          title: "Acciones",
-          orderable: false,
-          searchable: false,
-          render: function (data, type, row) {
-            return `
-              <button class="ver-proveedor-btn text-green-500 hover:text-green-700 p-1 ml-1.5" data-idproveedor="${row.idproveedor}" title="Ver detalles">
-                  <i class="fas fa-eye"></i>
-              </button>
-              <button class="editar-proveedor-btn text-blue-500 hover:text-blue-700 p-1 ml-1.5" data-idproveedor="${row.idproveedor}" title="Editar">
-                  <i class="fas fa-edit"></i>
-              </button>
-              <button class="eliminar-proveedor-btn text-red-500 hover:text-red-700 p-1 ml-1.5" data-idproveedor="${row.idproveedor}" data-nombre="${row.nombre} ${row.apellido}" title="Desactivar Proveedor">
-                  <i class="fas fas fa-trash"></i>
-              </button>
-            `;
-          },
-          width: "140px", 
-          className: "text-center acciones-columna",
-        },
-      ],
-      language: {
-        decimal: "",
-        emptyTable: "No hay información disponible en la tabla",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-        infoFiltered: "(filtrado de _MAX_ entradas totales)",
-        lengthMenu: "Mostrar _MENU_ entradas",
-        loadingRecords: "Cargando...",
-        processing: "Procesando...",
-        search: "Buscar:",
-        zeroRecords: "No se encontraron registros coincidentes",
-        paginate: {
-          first: "Primero",
-          last: "Último",
-          next: "Siguiente",
-          previous: "Anterior",
-        },
-        aria: {
-          sortAscending: ": activar para ordenar la columna ascendentemente",
-          sortDescending: ": activar para ordenar la columna descendentemente",
-        },
-      },
-      destroy: true,
-      responsive: true,
-      pageLength: 10,
-      order: [[0, "asc"]],
-      rowCallback: function (row, data, index) {
-        let colorDeFondoActual;
-        const celdas = $(row).children("td");
-        celdas.css({
-          "padding-top": paddingVerticalCelda,
-          "padding-bottom": paddingVerticalCelda,
-        });
-
-        if (index % 2 === 0) {
-          colorDeFondoActual = colorFilaImpar;
-          celdas.css("background-color", colorFilaImpar);
+  // La variable tablaProveedores se declara aquí, pero su valor completo
+  // solo está disponible después de que DataTable() termina de ejecutarse.
+  let tablaProveedores = $("#TablaProveedores").DataTable({
+    processing: true,
+    serverSide: false,
+    ajax: {
+      url: "./Proveedores/getProveedoresData",
+      type: "GET",
+      dataSrc: function (json) {
+        if (json && Array.isArray(json.data)) {
+          return json.data;
         } else {
-          colorDeFondoActual = colorFilaPar;
-          celdas.css("background-color", colorFilaPar);
-        }
-
-        $(row)
-          .off("mouseenter mouseleave")
-          .on("mouseenter", function () {
-            $(this).children("td").css("background-color", colorFilaHover);
-          })
-          .on("mouseleave", function () {
-            $(this)
-              .children("td")
-              .css("background-color", colorDeFondoActual);
+          console.error("Respuesta del servidor no tiene la estructura esperada:", json);
+          $("#TablaProveedores_processing").css("display", "none");
+          Swal.fire({
+            icon: "error",
+            title: "Error de Datos",
+            text: "No se pudieron cargar los datos. Respuesta inválida.",
           });
+          return [];
+        }
       },
-    });
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error AJAX:", textStatus, errorThrown, jqXHR.responseText);
+        $("#TablaProveedores_processing").css("display", "none");
+        Swal.fire({
+          icon: "error",
+          title: "Error de Comunicación",
+          text: "Fallo al cargar datos. Intente más tarde.",
+          footer: `Detalle: ${textStatus} - ${errorThrown}`,
+        });
+      },
+    },
+    columns: [
+      { data: "nombre", title: "Nombre", className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background" },
+      { data: "apellido", title: "Apellido", className: "all whitespace-nowrap py-2 px-3 text-gray-700" },
+      { data: "identificacion", title: "Identificación", className: "desktop whitespace-nowrap py-2 px-3 text-gray-700" },
+      { data: "telefono_principal", title: "Teléfono", className: "tablet-l whitespace-nowrap py-2 px-3 text-gray-700" },
+      {
+        data: "estatus",
+        title: "Estatus",
+        className: "min-tablet-p text-center py-2 px-3",
+        render: function (data, type, row) {
+          if (data) {
+            const estatusNormalizado = String(data).trim().toUpperCase();
+            let badgeClass = "bg-gray-200 text-gray-800";
+            if (estatusNormalizado === "ACTIVO") {
+              badgeClass = "bg-green-100 text-green-800";
+            } else if (estatusNormalizado === "INACTIVO") {
+              badgeClass = "bg-red-100 text-red-800";
+            }
+            return `<span class="${badgeClass} text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
+          }
+          return '<span class="text-xs italic text-gray-500">N/A</span>';
+        },
+      },
+      {
+        data: null,
+        title: "Acciones",
+        orderable: false,
+        searchable: false,
+        className: "all text-center actions-column py-1 px-2",
+        render: function (data, type, row) {
+          const idProveedor = row.idproveedor || "";
+          const nombreCompleto = `${row.nombre || ""} ${row.apellido || ""}`.trim();
+          return `
+            <div class="inline-flex items-center space-x-1">
+              <button class="ver-proveedor-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" data-idproveedor="${idProveedor}" title="Ver detalles">
+                  <i class="fas fa-eye fa-fw text-base"></i>
+              </button>
+              <button class="editar-proveedor-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" data-idproveedor="${idProveedor}" title="Editar">
+                  <i class="fas fa-edit fa-fw text-base"></i>
+              </button>
+              <button class="eliminar-proveedor-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" data-idproveedor="${idProveedor}" data-nombre="${nombreCompleto}" title="Desactivar">
+                  <i class="fas fa-trash-alt fa-fw text-base"></i>
+              </button>
+            </div>`;
+        },
+      },
+    ],
+    language: {
+      processing: `
+        <div class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]" style="margin-left:0;">
+            <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+                <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+                <span class="text-lg font-medium text-gray-700">Procesando...</span>
+            </div>
+        </div>`,
+      emptyTable: '<div class="text-center py-4"><i class="fas fa-info-circle fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No hay proveedores disponibles.</p></div>',
+      info: "Mostrando _START_ a _END_ de _TOTAL_ proveedores",
+      infoEmpty: "Mostrando 0 proveedores",
+      infoFiltered: "(filtrado de _MAX_ proveedores totales)",
+      lengthMenu: "Mostrar _MENU_ proveedores",
+      search: "_INPUT_",
+      searchPlaceholder: "Buscar proveedor...",
+      zeroRecords: '<div class="text-center py-4"><i class="fas fa-search fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No se encontraron coincidencias.</p></div>',
+      paginate: { first: '<i class="fas fa-angle-double-left"></i>', last: '<i class="fas fa-angle-double-right"></i>', next: '<i class="fas fa-angle-right"></i>', previous: '<i class="fas fa-angle-left"></i>' },
+    },
+    destroy: true,
+    responsive: {
+      details: {
+        type: "column",
+        target: -1,
+        renderer: function (api, rowIdx, columns) {
+          var data = $.map(columns, function (col, i) {
+            return col.hidden && col.title
+              ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
+                   <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                   <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                 </tr>`
+              : "";
+          }).join("");
+          return data
+            ? $('<table class="w-full table-fixed details-table border-t border-gray-200"/>').append(data)
+            : false;
+        },
+      },
+    },
+    autoWidth: false,
+    pageLength: 10,
+    lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "Todos"] ],
+    order: [[0, "asc"]],
+    scrollX: true,
+    fixedColumns: {
+        left: 1
+    },
+    initComplete: function (settings, json) {
+        // Aquí 'this' se refiere a la tabla, y 'this.api()' te da la API de DataTables
+        // var api = this.api();
+        // console.log("Tabla Proveedores inicializada y datos cargados.");
+    },
+    drawCallback: function (settings) {
+      // Estilizar el input de búsqueda
+      $(settings.nTableWrapper).find('.dataTables_filter input[type="search"]')
+        .addClass("py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white")
+        .removeClass("form-control-sm");
 
-    $("#TablaProveedores tbody").on("click", ".ver-proveedor-btn", function () {
-      const idProveedor = $(this).data("idproveedor");
-      verProveedor(idProveedor);
-    });
+      // --- CORRECCIÓN AQUÍ ---
+      // Usar la API de DataTables proporcionada por 'settings' o 'this.api()'
+      var api = new $.fn.dataTable.Api(settings); // O también: var api = this.api();
 
-    $("#TablaProveedores tbody").on(
-      "click",
-      ".editar-proveedor-btn",
-      function () {
-        const idProveedor = $(this).data("idproveedor");
-        editarProveedor(idProveedor); 
+      // Verificar si FixedColumns está disponible y luego llamar a relayout
+      if (api.fixedColumns && typeof api.fixedColumns === 'function' && api.fixedColumns().relayout) {
+        api.fixedColumns().relayout();
       }
-    );
-
-    $("#TablaProveedores tbody").on(
-      "click",
-      ".eliminar-proveedor-btn",
-      function () {
-        const idProveedor = $(this).data("idproveedor");
-        const nombreProveedor = $(this).data("nombre");
-        eliminarProveedor(idProveedor, nombreProveedor);
-      }
-    );
+      // O, si sabes que la extensión está cargada globalmente:
+      // if ($.fn.dataTable.FixedColumns) {
+      //   api.fixedColumns().relayout();
+      // }
+    },
   });
 
+  // El resto de tus event listeners para los botones (ver, editar, eliminar)
+  // pueden seguir usando la variable 'tablaProveedores' porque para cuando se ejecuten
+  // (en un click), la inicialización de DataTables ya habrá completado y
+  // 'tablaProveedores' ya tendrá asignada la instancia de la API.
+  $("#TablaProveedores tbody").on("click", ".ver-proveedor-btn", function () {
+    const idProveedor = $(this).data("idproveedor");
+    if (idProveedor && typeof verProveedor === "function") {
+      verProveedor(idProveedor);
+    } else {
+      console.error("Función verProveedor no definida o idProveedor no encontrado.", idProveedor);
+      Swal.fire("Error", "No se pudo obtener el ID del proveedor.", "error");
+    }
+  });
+
+  $("#TablaProveedores tbody").on("click", ".editar-proveedor-btn", function () {
+    const idProveedor = $(this).data("idproveedor");
+    if (idProveedor && typeof editarProveedor === "function") {
+      editarProveedor(idProveedor);
+    } else {
+      console.error("Función editarProveedor no definida o idProveedor no encontrado.", idProveedor);
+      Swal.fire("Error", "No se pudo obtener el ID del proveedor.", "error");
+    }
+  });
+
+  $("#TablaProveedores tbody").on(
+    "click",
+    ".eliminar-proveedor-btn",
+    function () {
+      const idProveedor = $(this).data("idproveedor");
+      const nombreProveedor = $(this).data("nombre");
+      if (idProveedor && typeof eliminarProveedor === "function") {
+        eliminarProveedor(idProveedor, nombreProveedor);
+      } else {
+        console.error("Función eliminarProveedor no definida o idProveedor no encontrado.", idProveedor);
+        Swal.fire("Error", "No se pudo obtener el ID del proveedor.", "error");
+      }
+    }
+  );
+});
   // MODAL REGISTRAR PROVEEDOR
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarProveedor"

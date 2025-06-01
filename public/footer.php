@@ -8,6 +8,8 @@
 <script src="/project/app/assets/DataTables/jquery.min.js"></script>
 <!-- DataTables -->
 <script src="/project/app/assets/DataTables/datatables.js"></script>
+<script src="\project\vendor\datatables.net\datatables.net-fixedcolumns\js\dataTables.fixedColumns.min.js"></script>
+
 <!-- sweetAlerts -->
 <script type="text/javascript" src="app\assets\sweetAlert\sweetalert2.all.min.js"></script>
 <!-- Archivo dinámico de validaciones -->
