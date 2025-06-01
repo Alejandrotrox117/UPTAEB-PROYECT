@@ -1,218 +1,325 @@
 <?php
-require_once "app/core/Controllers.php";
-require_once "helpers/helpers.php";
 
 class Proveedores extends Controllers
 {
-    public function set_model($model)
-    {
-        $this->model = $model;
-    }
-
-    public function get_model()
-    {
-        return $this->model;
-    }
-
     public function __construct()
     {
         parent::__construct();
     }
+
     public function index()
     {
-        $data['page_title'] = "Gestión de Proveedores";
-        $data['page_name'] = "Proveedores";
-        $data['page_functions_js'] = "functions_proveedores.js"; // Tu nuevo archivo JS
-        $this->views->getView($this, "proveedores", $data); // Tu nueva vista HTML
+        $data['page_tag'] = "Proveedores";
+        $data['page_title'] = "Administración de Proveedores";
+        $data['page_name'] = "proveedores";
+        $data['page_content'] = "Gestión integral de proveedores del sistema";
+        $data['page_functions_js'] = "functions_proveedores.js";
+        $this->views->getView($this, "proveedores", $data);
     }
 
-    public function getProveedoresData(){
-        $arrData = $this->model->selectAllProveedores(); 
+    public function getProveedoresData()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $arrResponse = $this->model->selectAllProveedores();
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getProveedoresData: " . $e->getMessage());
+                $response = array('status' => false, 'message' => 'Error interno del servidor', 'data' => []);
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
 
-        echo json_encode(['data' => $arrData], JSON_UNESCAPED_UNICODE);
-        die();
+    public function getProveedorById($idproveedor)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            if (empty($idproveedor) || !is_numeric($idproveedor)) {
+                $arrResponse = array('status' => false, 'message' => 'ID de proveedor inválido');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
+            try {
+                $arrData = $this->model->selectProveedorById(intval($idproveedor));
+                if (!empty($arrData)) {
+                    $arrResponse = array('status' => true, 'data' => $arrData);
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'Proveedor no encontrado');
+                }
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getProveedorById: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
     }
 
     public function createProveedor()
     {
-        // if (!is_ajax()) { /* ... */ }
-        if ($_POST) { 
-            // Sanitizar y validar datos de $_POST
-            $data = [
-                'nombre' => $_POST['nombre'] ?? null,
-                'apellido' => $_POST['apellido'] ?? null,
-                'identificacion' => $_POST['identificacion'] ?? null,
-                'telefono_principal' => $_POST['telefono_principal'] ?? null,
-                'correo_electronico' => $_POST['correo_electronico'] ?? null, FILTER_SANITIZE_EMAIL,
-                'direccion' => $_POST['direccion'] ?? null,
-                'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?? null, // Validar formato de fecha
-                'genero' => $_POST['genero'] ?? null,
-                'estatus' => $_POST['estatus'] ?? 'ACTIVO',
-                'observaciones' => $_POST['observaciones'] ?? null,
-            ];
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
 
-            // Validaciones adicionales aquí (ej. que identificación no exista)
-
-            $request = $this->model->insertProveedor($data);
-
-
-            if ($request) {
-                $response = ['status' => true, 'message' => 'Proveedor registrado con éxito.'];
-            } else {
-                $response = ['status' => false, 'message' => 'No se pudo registrar el proveedor. Verifique los datos o la identificación podría ya existir.'];
-            }
-        } else {
-            $response = ['status' => false, 'message' => 'Método no permitido.'];
-        }
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        die();
-    }
-
-   public function createProveedorinCompras()
-    {
-        $response = ['status' => false, 'message' => 'Error desconocido.'];
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = [
-                'nombre' => filter_var($_POST['nombre'] ?? null, FILTER_SANITIZE_STRING),
-                'apellido' => filter_var($_POST['apellido'] ?? null, FILTER_SANITIZE_STRING),
-                'identificacion' => filter_var($_POST['identificacion'] ?? null, FILTER_SANITIZE_STRING),
-                'telefono_principal' => filter_var($_POST['telefono_principal'] ?? null, FILTER_SANITIZE_STRING),
-                'correo_electronico' => filter_var($_POST['correo_electronico'] ?? null, FILTER_SANITIZE_EMAIL),
-                'direccion' => filter_var($_POST['direccion'] ?? null, FILTER_SANITIZE_STRING),
-                'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?? null,
-                'genero' => filter_var($_POST['genero'] ?? null, FILTER_SANITIZE_STRING),
-                'estatus' => filter_var($_POST['estatus'] ?? 'ACTIVO', FILTER_SANITIZE_STRING),
-                'observaciones' => filter_var($_POST['observaciones'] ?? null, FILTER_SANITIZE_STRING),
-            ];
-
-            if (!empty($data['correo_electronico']) && !filter_var($data['correo_electronico'], FILTER_VALIDATE_EMAIL)) {
-                $response = ['status' => false, 'message' => 'Formato de correo electrónico inválido.'];
-                header('Content-Type: application/json');
-                echo json_encode($response, JSON_UNESCAPED_UNICODE);
-                die();
-            }
-            
-            if (!empty($data['fecha_nacimiento'])) {
-                $d = DateTime::createFromFormat('Y-m-d', $data['fecha_nacimiento']);
-                if (!$d || $d->format('Y-m-d') !== $data['fecha_nacimiento']) {
-                    $response = ['status' => false, 'message' => 'Formato de fecha de nacimiento inválido. Use YYYY-MM-DD.'];
-                    header('Content-Type: application/json');
-                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                     die();
                 }
+
+                // Validaciones básicas
+                $strNombre = strClean($request['nombre'] ?? '');
+                $strApellido = strClean($request['apellido'] ?? '');
+                $strIdentificacion = strClean($request['identificacion'] ?? '');
+                $strTelefono = strClean($request['telefono_principal'] ?? '');
+
+                if (empty($strNombre) || empty($strApellido) || empty($strIdentificacion) || empty($strTelefono)) {
+                    $arrResponse = array('status' => false, 'message' => 'Los campos nombre, apellido, identificación y teléfono son obligatorios');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Preparar datos para inserción
+                $arrData = array(
+                    'nombre' => $strNombre,
+                    'apellido' => $strApellido,
+                    'identificacion' => $strIdentificacion,
+                    'fecha_nacimiento' => $request['fecha_nacimiento'] ?? '',
+                    'direccion' => strClean($request['direccion'] ?? ''),
+                    'correo_electronico' => strClean($request['correo_electronico'] ?? ''),
+                    'telefono_principal' => $strTelefono,
+                    'observaciones' => strClean($request['observaciones'] ?? ''),
+                    'genero' => strClean($request['genero'] ?? '')
+                );
+
+                $arrResponse = $this->model->insertProveedor($arrData);
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en createProveedor: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
-
-            if (empty($data['nombre']) || empty($data['identificacion']) || empty($data['telefono_principal'])) {
-                 $response = ['status' => false, 'message' => 'Nombre, Identificación y Teléfono son obligatorios.'];
-                 header('Content-Type: application/json');
-                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
-                 die();
-            }
-
-            $request = $this->model->insertProveedorbackid($data);
-
-            if ($request !== false && $request > 0) {
-                $response = [
-                    'status' => true,
-                    'message' => 'Proveedor registrado con éxito.',
-                    'idproveedor' => $request['idproveedor'] ?? null
-                ];
-            } elseif ($request === false) {
-                $response = ['status' => false, 'message' => 'Error al registrar el proveedor.'];
-            } elseif (is_array($request) && isset($request['error'])) {
-                $response = ['status' => false, 'message' => $request['error']];
-
-            } else {
-                $response = ['status' => false, 'message' => 'Error al registrar el proveedor en la base de datos.'];
-            }
-        } else {
-            $response = ['status' => false, 'message' => 'Método no permitido.'];
+            die();
         }
-        
-        header('Content-Type: application/json');
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        die();
     }
 
-
-    public function getProveedorById(int $idproveedor)
-    {
-        $id = intval($idproveedor);
-        if ($id > 0) {
-            $data = $this->model->getProveedorById($id);
-            if ($data) {
-                $response = ['status' => true, 'data' => $data];
-            } else {
-                $response = ['status' => false, 'message' => 'Proveedor no encontrado.'];
-            }
-        } else {
-            $response = ['status' => false, 'message' => 'ID de proveedor no válido.'];
-        }
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        die();
-    }
-    
     public function updateProveedor()
     {
-        // if (!is_ajax()) { /* ... */ }
-        if ($_SERVER['REQUEST_METHOD'] == "POST") { // O PUT si tu JS y servidor lo manejan
-            // Sanitizar y validar datos de $_POST
-            $idproveedor = intval($_POST['idproveedor']);
-            var_dump($idproveedor);
-            if ($idproveedor > 0) {
-                $this->model->setIdpersona($idproveedor);
-                $this->model->setNombre($_POST['nombre'] ?? null);
-                $this->model->setApellido($_POST['apellido'] ?? null);
-                $this->model->setIdentificacion($_POST['identificacion'] ?? null);
-                $this->model->setTelefonoPrincipal($_POST['telefono_principal'] ?? null);
-                $this->model->setCorreoElectronico($_POST['correo_electronico'] ?? null, FILTER_SANITIZE_EMAIL);
-                $this->model->setDireccion($_POST['direccion'] ?? null);
-                $this->model->setFechaNacimiento($_POST['fecha_nacimiento'] ?? null);
-                $this->model->setGenero($_POST['genero'] ?? null);
-                $this->model->setEstatus($_POST['estatus'] ?? 'ACTIVO');
-                $this->model->setObservaciones($_POST['observaciones'] ?? null);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
 
-                // Validaciones adicionales (ej. que la nueva identificación no exista para otro proveedor)
-
-                $request = $this->model->updateProveedor();
-                if ($request) {
-                    $response = ['status' => true, 'message' => 'Proveedor actualizado con éxito.'];
-                } else {
-                    $response = ['status' => false, 'message' => 'No se pudo actualizar el proveedor. Verifique los datos.'];
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
                 }
-            } else {
-                 $response = ['status' => false, 'message' => 'ID de proveedor no válido para actualizar.'];
+
+                $intIdProveedor = intval($request['idproveedor'] ?? 0);
+                if ($intIdProveedor <= 0) {
+                    $arrResponse = array('status' => false, 'message' => 'ID de proveedor inválido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Validaciones básicas
+                $strNombre = strClean($request['nombre'] ?? '');
+                $strApellido = strClean($request['apellido'] ?? '');
+                $strIdentificacion = strClean($request['identificacion'] ?? '');
+                $strTelefono = strClean($request['telefono_principal'] ?? '');
+
+                if (empty($strNombre) || empty($strApellido) || empty($strIdentificacion) || empty($strTelefono)) {
+                    $arrResponse = array('status' => false, 'message' => 'Los campos nombre, apellido, identificación y teléfono son obligatorios');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Preparar datos para actualización
+                $arrData = array(
+                    'nombre' => $strNombre,
+                    'apellido' => $strApellido,
+                    'identificacion' => $strIdentificacion,
+                    'fecha_nacimiento' => $request['fecha_nacimiento'] ?? '',
+                    'direccion' => strClean($request['direccion'] ?? ''),
+                    'correo_electronico' => strClean($request['correo_electronico'] ?? ''),
+                    'telefono_principal' => $strTelefono,
+                    'observaciones' => strClean($request['observaciones'] ?? ''),
+                    'genero' => strClean($request['genero'] ?? '')
+                );
+
+                $arrResponse = $this->model->updateProveedor($intIdProveedor, $arrData);
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en updateProveedor: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
-        } else {
-            $response = ['status' => false, 'message' => 'Método no permitido.'];
+            die();
         }
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        die();
     }
 
     public function deleteProveedor()
     {
-        // if (!is_ajax()) { /* ... */ }
-        if ($_SERVER['REQUEST_METHOD'] == "POST") {
-            $data = json_decode(file_get_contents('php://input'), true); // Si envías JSON
-            $idproveedor = intval($data['idpersona'] ?? 0);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
 
-            if ($idproveedor > 0) {
-                $request = $this->model->deleteProveedor($idproveedor);
-                if ($request) {
-                    $response = ['status' => true, 'message' => 'Proveedor desactivado con éxito.'];
-                } else {
-                    $response = ['status' => false, 'message' => 'No se pudo desactivar el proveedor.'];
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
                 }
-            } else {
-                $response = ['status' => false, 'message' => 'ID de proveedor no válido.'];
+
+                $intIdProveedor = intval($request['idproveedor'] ?? 0);
+                if ($intIdProveedor <= 0) {
+                    $arrResponse = array('status' => false, 'message' => 'ID de proveedor inválido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $requestDelete = $this->model->deleteProveedorById($intIdProveedor);
+                if ($requestDelete) {
+                    $arrResponse = array('status' => true, 'message' => 'Proveedor desactivado correctamente');
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'Error al desactivar el proveedor');
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en deleteProveedor: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
-        } else {
-            $response = ['status' => false, 'message' => 'Método no permitido.'];
+            die();
         }
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        die();
+    }
+
+    public function getProveedoresActivos()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $arrResponse = $this->model->selectProveedoresActivos();
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getProveedoresActivos: " . $e->getMessage());
+                $response = array('status' => false, 'message' => 'Error interno del servidor', 'data' => []);
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function activarProveedor()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $intIdProveedor = intval($request['idproveedor'] ?? 0);
+                if ($intIdProveedor <= 0) {
+                    $arrResponse = array('status' => false, 'message' => 'ID de proveedor inválido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $requestActivar = $this->model->activarProveedorById($intIdProveedor);
+                if ($requestActivar) {
+                    $arrResponse = array('status' => true, 'message' => 'Proveedor activado correctamente');
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'Error al activar el proveedor');
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en activarProveedor: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function exportarProveedores()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $arrData = $this->model->selectAllProveedores();
+                
+                if ($arrData['status']) {
+                    $data['proveedores'] = $arrData['data'];
+                    $data['page_title'] = "Reporte de Proveedores";
+                    $data['fecha_reporte'] = date('d/m/Y H:i:s');
+                    
+                    // Aquí podrías implementar la generación de PDF o Excel
+                    $arrResponse = array('status' => true, 'message' => 'Datos preparados para exportación', 'data' => $data);
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'No se pudieron obtener los datos');
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en exportarProveedores: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function buscarProveedor()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $strTermino = strClean($request['termino'] ?? '');
+                if (empty($strTermino)) {
+                    $arrResponse = array('status' => false, 'message' => 'Término de búsqueda requerido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $arrData = $this->model->buscarProveedores($strTermino);
+                if ($arrData['status']) {
+                    $arrResponse = array('status' => true, 'data' => $arrData['data']);
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'No se encontraron resultados');
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en buscarProveedor: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
     }
 }
 ?>
