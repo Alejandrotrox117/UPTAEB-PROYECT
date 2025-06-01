@@ -142,13 +142,14 @@ class ComprasModel extends Mysql
                     p.idcategoria,
                     cp.nombre AS nombre_categoria,
                     p.precio AS precio_referencia_compra,
-                    p.moneda AS idmoneda_producto 
+                    m.idmoneda AS idmoneda_producto,
+                    p.moneda AS codigo_moneda
                 FROM
                     producto p
                 JOIN
                     categoria cp ON p.idcategoria = cp.idcategoria
                 LEFT JOIN
-                    monedas m ON p.moneda = m.idmoneda 
+                    monedas m ON p.moneda = m.codigo_moneda 
                 WHERE
                     p.estatus = 'activo'";
         try {
@@ -167,6 +168,7 @@ class ComprasModel extends Mysql
         $sql = "SELECT p.idproducto, p.nombre, p.idcategoria,
                        p.precio, p.moneda,
                        m.codigo_moneda as codigo_moneda,
+                       m.idmoneda as idmoneda_producto,
                        cp.nombre as nombre_categoria
                 FROM producto p
                 JOIN categoria cp ON p.idcategoria = cp.idcategoria
@@ -273,8 +275,8 @@ class ComprasModel extends Mysql
             $idCompra = $this->db->lastInsertId();
 
             // Insertar detalles
-            $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, descuento, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtDetalle = $this->db->prepare($sqlDetalle);
 
             foreach ($detallesCompra as $detalle) {
@@ -283,6 +285,7 @@ class ComprasModel extends Mysql
                     $detalle['idproducto'],
                     $detalle['descripcion_temporal_producto'],
                     $detalle['cantidad'],
+                    $detalle['descuento'],
                     $detalle['precio_unitario_compra'],
                     $detalle['idmoneda_detalle'],
                     $detalle['subtotal_linea'],

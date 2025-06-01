@@ -101,7 +101,8 @@ class Compras extends Controllers
             $response = ["status" => false, "message" => "Error desconocido."];
 
             $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
-            $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d'); 
+            date_default_timezone_set('America/Caracas');
+            $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
             $idmoneda_general = intval($_POST['idmoneda_general_compra'] ?? 0);
             $observaciones_compra = $_POST['observaciones_compra'] ?? '';
             $subtotal_general_compra = floatval($_POST['subtotal_general_input'] ?? 0);
@@ -179,7 +180,7 @@ class Compras extends Controllers
                     echo json_encode($response);
                     exit();
                 }
-                if (floatval($item['precio_unitario'] ?? 0) <= 0) {
+                if (floatval($item['precio_unitario_compra'] ?? 0) <= 0) {
                     $response['message'] = "Precio unitario debe ser mayor a cero para el producto: " . htmlspecialchars($productoInfo['nombre_producto'], ENT_QUOTES, 'UTF-8');
                     echo json_encode($response);
                     exit();
@@ -189,8 +190,9 @@ class Compras extends Controllers
                     "idproducto" => $productoInfo['idproducto'],
                     "descripcion_temporal_producto" => $productoInfo['nombre'],
                     "cantidad" => $cantidad_base,
-                    "precio_unitario_compra" => floatval($item['precio_unitario'] ?? 0),
-                    "idmoneda_detalle" => intval($item['moneda'] ?? $idmoneda_general),
+                    "descuento" => floatval($item['descuento'] ?? 0),
+                    "precio_unitario_compra" => floatval($item['precio_unitario_compra'] ?? 0),
+                    "idmoneda_detalle" => $item['moneda'],
                     "subtotal_linea" => floatval($item['subtotal_linea'] ?? 0),
                     "peso_vehiculo" => ($idCategoriaProducto === 1 && !filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN)) ? floatval($item['peso_vehiculo'] ?? 0) : null,
                     "peso_bruto" => ($idCategoriaProducto === 1 && !filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN)) ? floatval($item['peso_bruto'] ?? 0) : null,
