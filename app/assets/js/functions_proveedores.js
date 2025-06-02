@@ -274,35 +274,20 @@ document.addEventListener("DOMContentLoaded", function () {
         left: 1
     },
     initComplete: function (settings, json) {
-        // Aquí 'this' se refiere a la tabla, y 'this.api()' te da la API de DataTables
-        // var api = this.api();
-        // console.log("Tabla Proveedores inicializada y datos cargados.");
     },
     drawCallback: function (settings) {
-      // Estilizar el input de búsqueda
       $(settings.nTableWrapper).find('.dataTables_filter input[type="search"]')
         .addClass("py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white")
         .removeClass("form-control-sm");
 
-      // --- CORRECCIÓN AQUÍ ---
-      // Usar la API de DataTables proporcionada por 'settings' o 'this.api()'
-      var api = new $.fn.dataTable.Api(settings); // O también: var api = this.api();
+      var api = new $.fn.dataTable.Api(settings); 
 
-      // Verificar si FixedColumns está disponible y luego llamar a relayout
       if (api.fixedColumns && typeof api.fixedColumns === 'function' && api.fixedColumns().relayout) {
         api.fixedColumns().relayout();
       }
-      // O, si sabes que la extensión está cargada globalmente:
-      // if ($.fn.dataTable.FixedColumns) {
-      //   api.fixedColumns().relayout();
-      // }
     },
   });
 
-  // El resto de tus event listeners para los botones (ver, editar, eliminar)
-  // pueden seguir usando la variable 'tablaProveedores' porque para cuando se ejecuten
-  // (en un click), la inicialización de DataTables ya habrá completado y
-  // 'tablaProveedores' ya tendrá asignada la instancia de la API.
   $("#TablaProveedores tbody").on("click", ".ver-proveedor-btn", function () {
     const idProveedor = $(this).data("idproveedor");
     if (idProveedor && typeof verProveedor === "function") {

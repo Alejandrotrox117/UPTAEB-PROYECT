@@ -1,10 +1,23 @@
 <?php
+require_once "app/core/Controllers.php";
+require_once "app/models/ComprasModel.php";
+require_once "helpers/helpers.php";
 
 class Proveedores extends Controllers
 {
     public function __construct()
     {
         parent::__construct();
+    }
+
+    public function set_model($model)
+    {
+        $this->model = $model;
+    }
+
+    public function get_model()
+    {
+        return $this->model;
     }
 
     public function index()
@@ -17,11 +30,10 @@ class Proveedores extends Controllers
         $this->views->getView($this, "proveedores", $data);
     }
 
-    public function getProveedoresData()
-    {
+    public function getProveedoresData(){
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                $arrResponse = $this->model->selectAllProveedores();
+                $arrResponse = $this->get_model()->selectAllProveedores();
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
                 error_log("Error en getProveedoresData: " . $e->getMessage());
@@ -32,8 +44,7 @@ class Proveedores extends Controllers
         }
     }
 
-    public function getProveedorById($idproveedor)
-    {
+    public function getProveedorById($idproveedor){
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             if (empty($idproveedor) || !is_numeric($idproveedor)) {
                 $arrResponse = array('status' => false, 'message' => 'ID de proveedor inválido');
@@ -42,7 +53,7 @@ class Proveedores extends Controllers
             }
 
             try {
-                $arrData = $this->model->selectProveedorById(intval($idproveedor));
+                $arrData = $this->get_model()->selectProveedorById(intval($idproveedor));
                 if (!empty($arrData)) {
                     $arrResponse = array('status' => true, 'data' => $arrData);
                 } else {
@@ -58,8 +69,7 @@ class Proveedores extends Controllers
         }
     }
 
-    public function createProveedor()
-    {
+    public function createProveedor(){
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 $postdata = file_get_contents("php://input");
@@ -96,7 +106,7 @@ class Proveedores extends Controllers
                     'genero' => strClean($request['genero'] ?? '')
                 );
 
-                $arrResponse = $this->model->insertProveedor($arrData);
+                $arrResponse = $this->get_model()->insertProveedor($arrData);
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
 
             } catch (Exception $e) {
@@ -108,8 +118,7 @@ class Proveedores extends Controllers
         }
     }
 
-    public function updateProveedor()
-    {
+    public function updateProveedor(){
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 $postdata = file_get_contents("php://input");
@@ -153,7 +162,7 @@ class Proveedores extends Controllers
                     'genero' => strClean($request['genero'] ?? '')
                 );
 
-                $arrResponse = $this->model->updateProveedor($intIdProveedor, $arrData);
+                $arrResponse = $this->get_model()->updateProveedor($intIdProveedor, $arrData);
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
 
             } catch (Exception $e) {
@@ -165,8 +174,7 @@ class Proveedores extends Controllers
         }
     }
 
-    public function deleteProveedor()
-    {
+    public function deleteProveedor(){
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 $postdata = file_get_contents("php://input");
@@ -185,7 +193,7 @@ class Proveedores extends Controllers
                     die();
                 }
 
-                $requestDelete = $this->model->deleteProveedorById($intIdProveedor);
+                $requestDelete = $this->get_model()->deleteProveedorById($intIdProveedor);
                 if ($requestDelete) {
                     $arrResponse = array('status' => true, 'message' => 'Proveedor desactivado correctamente');
                 } else {
@@ -203,11 +211,10 @@ class Proveedores extends Controllers
         }
     }
 
-    public function getProveedoresActivos()
-    {
+    public function getProveedoresActivos(){
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                $arrResponse = $this->model->selectProveedoresActivos();
+                $arrResponse = $this->get_model()->selectProveedoresActivos();
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
                 error_log("Error en getProveedoresActivos: " . $e->getMessage());
@@ -238,7 +245,7 @@ class Proveedores extends Controllers
                     die();
                 }
 
-                $requestActivar = $this->model->activarProveedorById($intIdProveedor);
+                $requestActivar = $this->get_model()->activarProveedorById($intIdProveedor);
                 if ($requestActivar) {
                     $arrResponse = array('status' => true, 'message' => 'Proveedor activado correctamente');
                 } else {
@@ -256,11 +263,10 @@ class Proveedores extends Controllers
         }
     }
 
-    public function exportarProveedores()
-    {
+    public function exportarProveedores(){
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                $arrData = $this->model->selectAllProveedores();
+                $arrData = $this->get_model()->selectAllProveedores();
                 
                 if ($arrData['status']) {
                     $data['proveedores'] = $arrData['data'];
@@ -284,8 +290,7 @@ class Proveedores extends Controllers
         }
     }
 
-    public function buscarProveedor()
-    {
+    public function buscarProveedor(){
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 $postdata = file_get_contents("php://input");
@@ -304,7 +309,7 @@ class Proveedores extends Controllers
                     die();
                 }
 
-                $arrData = $this->model->buscarProveedores($strTermino);
+                $arrData = $this->get_model()->buscarProveedores($strTermino);
                 if ($arrData['status']) {
                     $arrResponse = array('status' => true, 'data' => $arrData['data']);
                 } else {
