@@ -100,7 +100,7 @@ class Proveedores extends Controllers
                     'identificacion' => $strIdentificacion,
                     'fecha_nacimiento' => $request['fecha_nacimiento'] ?? '',
                     'direccion' => strClean($request['direccion'] ?? ''),
-                    'correo_electronico' => strClean($request['correo_electronico'] ?? ''),
+                    'correo_electronico' => $request['correo_electronico'],
                     'telefono_principal' => $strTelefono,
                     'observaciones' => strClean($request['observaciones'] ?? ''),
                     'genero' => strClean($request['genero'] ?? '')
@@ -273,7 +273,6 @@ class Proveedores extends Controllers
                     $data['page_title'] = "Reporte de Proveedores";
                     $data['fecha_reporte'] = date('d/m/Y H:i:s');
                     
-                    // Aquí podrías implementar la generación de PDF o Excel
                     $arrResponse = array('status' => true, 'message' => 'Datos preparados para exportación', 'data' => $data);
                 } else {
                     $arrResponse = array('status' => false, 'message' => 'No se pudieron obtener los datos');

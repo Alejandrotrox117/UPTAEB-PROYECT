@@ -246,14 +246,6 @@
                             <label class="block text-xs font-medium text-gray-500">Observaciones</label>
                             <p id="verProveedorObservaciones" class="text-gray-900 font-medium">-</p>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500">Fecha de Creación</label>
-                            <p id="verProveedorFechaCreacion" class="text-gray-900 font-medium">-</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500">Última Modificación</label>
-                            <p id="verProveedorFechaModificacion" class="text-gray-900 font-medium">-</p>
-                        </div>
                     </div>
                 </div>
                 <div class="flex justify-end pt-4 md:pt-6 border-t border-gray-200">
