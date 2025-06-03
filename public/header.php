@@ -250,7 +250,7 @@
         <div class="mt-auto pt-4 border-t border-gray-200">
           <ul>
             <li class="menu-item">
-              <a href="<?= isset($base_url) ? $base_url : ''; ?>/logout" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-red-100 hover:text-red-700 group">
+              <a href="/project/logout" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-red-100 hover:text-red-700 group">
                 <i class="nav-icon fa-solid fa-right-to-bracket w-5 text-center text-gray-500 group-hover:text-red-600"></i>
                 <span class="nav-text ml-3 font-medium">Cerrar Sesión</span>
               </a>
