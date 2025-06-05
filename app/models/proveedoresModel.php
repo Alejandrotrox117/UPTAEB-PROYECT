@@ -1,7 +1,7 @@
 <?php
 require_once "app/core/conexion.php";
 require_once "app/core/mysql.php";
-
+require_once "app/models/bitacoraModel.php";
 class ProveedoresModel extends Mysql
 {
     private $query;
