@@ -42,12 +42,10 @@ class PermisosVerificar
         return true;
     }
 
-    /**
-     * Verifica permisos específicos para acciones
-     */
+ 
     public static function verificarPermisoAccion(string $modulo, string $accion): bool
     {
-        // Asegurar que la sesión esté iniciada
+      
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -58,42 +56,41 @@ class PermisosVerificar
             return false;
         }
 
-        switch (strtolower($accion)) { // Convertir acción a minúsculas para consistencia
+        switch (strtolower($accion)) { 
             case 'crear':
             case 'registrar':
-            case 'solo_registrar': // Nueva acción explícita
+            case 'solo_registrar': 
                 return PermisosHelper::puedeCrear($idUsuario, $modulo);
             
             case 'editar':
             case 'actualizar':
-            case 'solo_editar': // Nueva acción explícita
+            case 'solo_editar': 
                 return PermisosHelper::puedeEditar($idUsuario, $modulo);
             
             case 'eliminar':
             case 'delete':
-            case 'solo_eliminar': // Nueva acción explícita
+            case 'solo_eliminar': 
                 return PermisosHelper::puedeEliminar($idUsuario, $modulo);
             
             case 'ver':
             case 'listar':
-            case 'solo_lectura': // Nueva acción explícita
+            case 'solo_lectura':
                 return PermisosHelper::puedeVer($idUsuario, $modulo);
 
-            // Nuevas acciones combinadas
+           
             case 'acceso_total':
-                // Asume que PermisosHelper::tieneAccesoTotal verifica crear, ver, editar y eliminar
+               
                 return PermisosHelper::tieneAccesoTotal($idUsuario, $modulo);
 
             case 'editar_y_eliminar':
-                // Asume que PermisosHelper::puedeEditarYEliminar verifica ambos
+         
                 return PermisosHelper::puedeEditarYEliminar($idUsuario, $modulo);
 
             case 'registrar_y_editar':
-                // Asume que PermisosHelper::puedeRegistrarYEditar verifica ambos
                 return PermisosHelper::puedeRegistrarYEditar($idUsuario, $modulo);
 
             case 'registrar_y_eliminar':
-                // Asume que PermisosHelper::puedeRegistrarYEliminar verifica ambos
+              
                 return PermisosHelper::puedeRegistrarYEliminar($idUsuario, $modulo);
             
             default:
@@ -102,9 +99,7 @@ class PermisosVerificar
         }
     }
 
-    /**
-     * Redirige al login
-     */
+   
     private static function redirigirLogin()
     {
         if (function_exists('base_url')) {
@@ -117,9 +112,7 @@ class PermisosVerificar
         exit;
     }
 
-    /**
-     * Muestra error de permisos
-     */
+
     private static function mostrarErrorPermisos(string $mensaje)
     {
         // Si es una petición AJAX, devolver JSON

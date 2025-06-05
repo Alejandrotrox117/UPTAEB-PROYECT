@@ -165,10 +165,7 @@ $permisos = $data['permisos'] ?? []; ?>
                     <div id="error-estatus_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
                 </div>
             </div>
-            <div class="flex justify-end gap-2 pt-1.5 mt-2 border-t border-gray-100">
-                <button type="button" id="cancelarNuevoClienteBtn" class="px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition">Cancelar</button>
-                <button type="button" id="registrarClienteInlineBtn" class="px-2.5 py-1 text-xs font-medium text-white bg-green-500 rounded hover:bg-green-600 transition">Guardar Cliente</button>
-            </div>
+           
         </div>
         <!-- FIN Contenedor para el formulario de nuevo cliente -->
 
@@ -183,7 +180,7 @@ $permisos = $data['permisos'] ?? []; ?>
               </select>
               <!-- <div id="error-select_producto_agregar_modal-vacio" class="mt-1 hidden text-xs text-red-500"></div> -->
             </div>
-            <button type="button" id="agregarDetalleBtn" class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 sm:w-auto transition">
+            <button type="button" id="agregarDetalleBtn" class="w-full px-4 py-2 text-sm font-medium text-black bg-indigo-500 rounded-lg hover:bg-indigo-600 sm:w-auto transition">
               <i class="mr-2 fas fa-plus"></i>Agregar al Detalle
             </button>
           </div>

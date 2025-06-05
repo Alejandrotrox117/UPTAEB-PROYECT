@@ -214,7 +214,8 @@
             PermisosVerificar::verificarPermisoAccion('roles', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('modulos', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')
+            PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')||
+            PermisosVerificar::verificarPermisoAccion('bitacora', 'ver')
           ): ?>
           <li class="menu-item-group">
             <details class="group">
@@ -240,6 +241,9 @@
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')): ?>
                 <li class="menu-item"><a href="/project/rolesmodulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-link w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Modulos</span></a></li>
+                <?php endif; ?>
+                 <?php if (PermisosVerificar::verificarPermisoAccion('bitacora', 'ver')): ?>
+                <li class="menu-item"><a href="/project/bitacora" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-clipboard-list w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Bitácora</span></a></li>
                 <?php endif; ?>
               </ul>
             </details>
