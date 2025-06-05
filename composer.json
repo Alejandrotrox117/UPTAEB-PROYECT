@@ -8,5 +8,8 @@
             "app\\": "app/"
         }
     },
-    "require": {}
+    "require": {
+        "datatables.net/datatables.net-datetime": "^1.5",
+        "datatables.net/datatables.net-fixedcolumns-dt": "^5.0"
+    }
 }

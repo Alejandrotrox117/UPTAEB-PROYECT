@@ -179,22 +179,48 @@
     }
 }
 
-/* Media query para pantallas muy pequeñas como teléfonos en modo retrato */
 @media (max-width: 400px) {
     .login-container {
-        padding: 15px 10px;  /* Aún menos padding para pantallas muy pequeñas */
-        max-width: 95%; /* Asegura que el contenedor ocupe casi todo el ancho */
+        padding: 15px 10px; 
+        max-width: 95%;
     }
 
     .login-container h2 {
-        font-size: 1.25rem;  /* Asegura que el título no sea demasiado grande */
+        font-size: 1.25rem;
     }
 
     .login-container input, .login-container button {
-        font-size: 12px;  /* Ajustar tamaño de texto para dispositivos más pequeños */
+        font-size: 12px; 
     }
 
     .password-container .eye-icon {
-        font-size: 16px;  /* Reducir tamaño del ícono en dispositivos pequeños */
+        font-size: 16px; 
     }
+}
+
+.dt-fixed-col-background {
+    background-color: #f9fafb;
+}
+table.dataTable thead th.dt-fixed-col-background {
+    background-color: #f3f4f6;
+}
+
+table.dataTable thead th.dtfc-fixed-start,
+table.dataTable thead td.dtfc-fixed-start {
+    background-color: #f3f4f6;
+    position: sticky;
+    z-index: 3;
+    border-right: 1px solid #e5e7eb;
+}
+
+table.dataTable tbody th.dtfc-fixed-start,
+table.dataTable tbody td.dtfc-fixed-start {
+    background-color: white; 
+    position: sticky; 
+    z-index: 1;  
+    border-right: 1px solid #e5e7eb;
+}
+table.dataTable thead th,
+table.dataTable thead td {
+    background-color: #f3f4f6;
 }

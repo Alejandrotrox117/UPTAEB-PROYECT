@@ -1,4 +1,3 @@
-
 <?php require_once __DIR__ . '/../helpers/permisosVerificar.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -10,25 +9,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/project/app/assets/styles/styles.css">
   <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
-  <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
-  <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
-  <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
   <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet">
   <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
   <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
+  <style>
+    body {
+      overflow-x: hidden;
+    }
+    #sidebar nav::-webkit-scrollbar { width: 6px; }
+    #sidebar nav::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
+    #sidebar nav::-webkit-scrollbar-track { background-color: #f7fafc; }
+  </style>
 </head>
 
-<body class="bg-blue-50 min-h-screen">
-  <div class="flex min-h-screen">
-    <!-- Sidebar -->
-    <aside class="flex flex-col bg-white p-2 shadow-md">
-      <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="logo-sidebar">
-      <nav class="text-sm">
+<body class="bg-gray-100 min-h-screen">
+  <header 
+    class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md p-4 flex items-center justify-between z-50 h-16">
+    
+    <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="h-16 w-auto">
+    <button id="mobile-menu-toggle" class="text-gray-700 hover:text-green-600 focus:outline-none p-2">
+      <i class="fa-solid fa-bars text-2xl"></i>
+    </button>
+  </header>
+
+  <div id="sidebar-overlay" class="fixed inset-0 bg-transparent bg-opacity-50 z-30 lg:hidden hidden"></div>
+
+  <div class="flex min-h-screen pt-16 lg:pt-0">
+    
+    <aside id="sidebar" 
+           class="fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-xl 
+                  transform -translate-x-full transition-transform duration-300 ease-in-out 
+                  lg:relative lg:translate-x-0 lg:shadow-md lg:flex lg:flex-col">
+      
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 h-17">
+        <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="h-16 w-auto">
+        <button id="sidebar-close" class="text-gray-600 hover:text-green-600 lg:hidden p-2">
+          <i class="fa-solid fa-times text-2xl"></i>
+        </button>
+      </div>
+
+      <nav class="flex-1 flex flex-col overflow-y-auto p-3 text-sm">
         <ul class="space-y-1">
-          <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-            <a href="/project/dashboard" class="flex items-center">
-              <span><i class="fa-solid fa-tachometer-alt icon"></i></span>
-              <span class="ml-5">Dashboard</span>
+          <!-- Dashboard -->
+          <li class="menu-item">
+            <a href="/project/dashboard" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
+              <i class="nav-icon fa-solid fa-tachometer-alt w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+              <span class="nav-text ml-3 font-medium">Dashboard</span>
             </a>
           </li>
 
@@ -36,29 +62,27 @@
           <?php if (PermisosVerificar::verificarPermisoAccion('compras', 'ver') || PermisosVerificar::verificarPermisoAccion('proveedores', 'ver')): ?>
           <li class="menu-item-group">
             <details class="group">
-              <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
                 <div class="flex items-center">
-                  <span><i class="fa-solid fa-cart-shopping icon"></i></span>
-                  <span class="ml-5">Gestionar Compras</span>
+                  <i class="nav-icon fa-solid fa-cart-shopping w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+                  <span class="nav-text ml-3 font-medium">Gestionar Compras</span>
                 </div>
-                <span class="shrink-0 transition duration-300 group-open:rotate-180">
-                  <i class="fa-solid fa-chevron-down text-xs"></i>
-                </span>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
-              <ul class="ml-5 mt-1 space-y-1">
+              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
                 <?php if (PermisosVerificar::verificarPermisoAccion('compras', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/compras" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-cart-shopping icon"></i></span>
-                    <span class="ml-5">Compras</span>
+                <li class="menu-item">
+                  <a href="/project/compras" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-cart-shopping w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Compras</span>
                   </a>
                 </li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('proveedores', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/proveedores" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-truck icon"></i></span>
-                    <span class="ml-5">Proveedores</span>
+                <li class="menu-item">
+                  <a href="/project/proveedores" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-truck w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Proveedores</span>
                   </a>
                 </li>
                 <?php endif; ?>
@@ -76,47 +100,25 @@
           ): ?>
           <li class="menu-item-group">
             <details class="group">
-              <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
                 <div class="flex items-center">
-                  <span><i class="fa-solid fa-cogs icon"></i></span>
-                  <span class="ml-5">Gestionar Produccion</span>
+                  <i class="nav-icon fa-solid fa-cogs w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+                  <span class="nav-text ml-3 font-medium">Gestionar Produccion</span>
                 </div>
-                <span class="shrink-0 transition duration-300 group-open:rotate-180">
-                  <i class="fa-solid fa-chevron-down text-xs"></i>
-                </span>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
-              <ul class="ml-5 mt-1 space-y-1">
+              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
                 <?php if (PermisosVerificar::verificarPermisoAccion('produccion', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/produccion" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-industry icon"></i></span>
-                    <span class="ml-5">Produccion</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/produccion" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-industry w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Produccion</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('empleados', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/empleados" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-group icon"></i></span>
-                    <span class="ml-5">Empleados</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/empleados" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-group w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Empleados</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/productos" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-box icon"></i></span>
-                    <span class="ml-5">Productos</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/productos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-box w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Productos</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('categorias', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/categorias" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-tags icon"></i></span>
-                    <span class="ml-5">Categorias</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/categorias" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-tags w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Categorias</span></a></li>
                 <?php endif; ?>
               </ul>
             </details>
@@ -124,46 +126,29 @@
           <?php endif; ?>
 
           <!-- Gestionar Pagos -->
-          <?php if (
+           <?php if (
             PermisosVerificar::verificarPermisoAccion('romana', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('personas', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('tasas', 'ver')
           ): ?>
           <li class="menu-item-group">
             <details class="group">
-              <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
                 <div class="flex items-center">
-                  <span><i class="fa-solid fa-cogs icon"></i></span>
-                  <span class="ml-5">Gestionar Pagos</span>
+                  <i class="nav-icon fa-solid fa-credit-card w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+                  <span class="nav-text ml-3 font-medium">Gestionar Pagos</span>
                 </div>
-                <span class="shrink-0 transition duration-300 group-open:rotate-180">
-                  <i class="fa-solid fa-chevron-down text-xs"></i>
-                </span>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
-              <ul class="ml-5 mt-1 space-y-1">
+              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
                 <?php if (PermisosVerificar::verificarPermisoAccion('romana', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/romana" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-weight-scale icon"></i></span>
-                    <span class="ml-5">Pagos</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/romana" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-weight-scale w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Pagos</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('personas', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/personas" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Personas</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/personas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-shield w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Personas</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('tasas', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/tasas" class="flex items-center text-sm">
-                    <span><i class="fas fa-coins icon"></i></span>
-                    <span class="ml-5">Historico de Tasas BCV</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/tasas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fas fa-coins w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Historico de Tasas BCV</span></a></li>
                 <?php endif; ?>
               </ul>
             </details>
@@ -172,20 +157,20 @@
 
           <!-- Movimientos de existencias -->
           <?php if (PermisosVerificar::verificarPermisoAccion('movimientos', 'ver')): ?>
-          <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-            <a href="/project/movimientos" class="flex items-center">
-              <span><i class="fa-solid fa-boxes-stacked icon"></i></span>
-              <span class="ml-5">Gestionar Movimientos de existencias</span>
+          <li class="menu-item">
+            <a href="/project/movimientos" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
+              <i class="nav-icon fa-solid fa-boxes-stacked w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+              <span class="nav-text ml-3 font-medium">Gestionar Movimientos</span>
             </a>
           </li>
           <?php endif; ?>
 
           <!-- Sueldos Temporales -->
           <?php if (PermisosVerificar::verificarPermisoAccion('sueldos_temporales', 'ver')): ?>
-          <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-            <a href="/project/movimientos" class="flex items-center">
-              <span><i class="fa-solid fa-money-bill-wave icon"></i></span>
-              <span class="ml-5">Gestionar Sueldos Temporales</span>
+          <li class="menu-item">
+            <a href="/project/sueldos_temporales" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
+              <i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+              <span class="nav-text ml-3 font-medium">Gestionar Sueldos</span>
             </a>
           </li>
           <?php endif; ?>
@@ -194,31 +179,19 @@
           <?php if (PermisosVerificar::verificarPermisoAccion('ventas', 'ver') || PermisosVerificar::verificarPermisoAccion('clientes', 'ver')): ?>
           <li class="menu-item-group">
             <details class="group">
-              <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
                 <div class="flex items-center">
-                  <span><i class="fa-solid fa-cash-register icon"></i></span>
-                  <span class="ml-5">Gestionar Ventas</span>
+                  <i class="nav-icon fa-solid fa-cash-register w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+                  <span class="nav-text ml-3 font-medium">Gestionar Ventas</span>
                 </div>
-                <span class="shrink-0 transition duration-300 group-open:rotate-180">
-                  <i class="fa-solid fa-chevron-down text-xs"></i>
-                </span>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
-              <ul class="ml-5 mt-1 space-y-1">
+              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
                 <?php if (PermisosVerificar::verificarPermisoAccion('ventas', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/ventas" class="flex items-center">
-                    <span><i class="fa-solid fa-file-invoice-dollar icon"></i></span>
-                    <span class="ml-5">Ventas</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/ventas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-file-invoice-dollar w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Ventas</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('clientes', 'ver')): ?>
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/clientes" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-users icon"></i></span>
-                    <span class="ml-5">Clientes</span>
-                  </a>
-                </li>
+                <li class="menu-item"><a href="/project/clientes" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-users w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Clientes</span></a></li>
                 <?php endif; ?>
               </ul>
             </details>
@@ -227,10 +200,10 @@
 
           <!-- Generar Reportes -->
           <?php if (PermisosVerificar::verificarPermisoAccion('reportes', 'ver')): ?>
-          <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-            <a href="/project/movimientos" class="flex items-center">
-              <span><i class="fa-solid fa-file-lines icon"></i></span>
-              <span class="ml-5">Generar Reportes</span>
+          <li class="menu-item">
+            <a href="/project/reportes" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
+              <i class="nav-icon fa-solid fa-file-lines w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+              <span class="nav-text ml-3 font-medium">Generar Reportes</span>
             </a>
           </li>
           <?php endif; ?>
@@ -245,131 +218,152 @@
           ): ?>
           <li class="menu-item-group">
             <details class="group">
-              <summary class="flex cursor-pointer list-none items-center justify-between rounded-lg p-3 hover:bg-green-100 hover:bg-green-600 hover:text-white">
+              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
                 <div class="flex items-center">
-                  <span><i class="fa-solid fa-user-lock icon"></i></span>
-                  <span class="ml-5">Seguridad</span>
+                  <i class="nav-icon fa-solid fa-user-lock w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+                  <span class="nav-text ml-3 font-medium">Seguridad</span>
                 </div>
-                <span class="shrink-0 transition duration-300 group-open:rotate-180">
-                  <i class="fa-solid fa-chevron-down text-xs"></i>
-                </span>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
-              <?php if (PermisosVerificar::verificarPermisoAccion('usuarios', 'ver')): ?>
-              <ul class="ml-5 mt-1 space-y-1">
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/usuarios" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user icon"></i></span>
-                    <span class="ml-5">Gestionar Usuarios</span>
-                  </a>
-                </li>
+              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
+                 <?php if (PermisosVerificar::verificarPermisoAccion('usuarios', 'ver')): ?>
+                <li class="menu-item"><a href="/project/usuarios" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Usuarios</span></a></li>
+                <?php endif; ?>
+                <?php if (PermisosVerificar::verificarPermisoAccion('roles', 'ver')): ?>
+                <li class="menu-item"><a href="/project/roles" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-tag w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Rol</span></a></li>
+                <?php endif; ?>
+                <?php if (PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver')): ?>
+                <li class="menu-item"><a href="/project/RolesPermisos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-key w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Permisos</span></a></li>
+                <?php endif; ?>
+                <?php if (PermisosVerificar::verificarPermisoAccion('modulos', 'ver')): ?>
+                <li class="menu-item"><a href="/project/modulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-puzzle-piece w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Modulos</span></a></li>
+                <?php endif; ?>
+                <?php if (PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')): ?>
+                <li class="menu-item"><a href="/project/rolesmodulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-link w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Modulos</span></a></li>
+                <?php endif; ?>
               </ul>
-              <?php endif; ?>
-              <?php if (PermisosVerificar::verificarPermisoAccion('roles', 'ver')): ?>
-              <ul class="ml-5 mt-1 space-y-1">
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/roles" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-tag icon"></i></span>
-                    <span class="ml-5">Gestionar Rol</span>
-                  </a>
-                </li>
-              </ul>
-              <?php endif; ?>
-              <?php if (PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver')): ?>
-              <ul class="ml-5 mt-1 space-y-1">
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/RolesPermisos" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-key icon"></i></span>
-                    <span class="ml-5">Asignar Permisos</span>
-                  </a>
-                </li>
-              </ul>
-              <?php endif; ?>
-              <?php if (PermisosVerificar::verificarPermisoAccion('modulos', 'ver')): ?>
-              <ul class="ml-5 mt-1 space-y-1">
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/modulos" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-puzzle-piece icon"></i></span>
-                    <span class="ml-5">Modulos</span>
-                  </a>
-                </li>
-              </ul>
-              <?php endif; ?>
-              <?php if (PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')): ?>
-              <ul class="ml-5 mt-1 space-y-1">
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/rolesmodulos" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-link icon"></i></span>
-                    <span class="ml-5">Asignar Modulos</span>
-                  </a>
-                </li>
-              </ul>
-               <ul class="ml-5 mt-1 space-y-1">
-                <li class="menu-item rounded-lg p-3 hover:bg-green-100 hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-                  <a href="/project/bitacora" class="flex items-center text-sm">
-                    <span><i class="fa-solid fa-user-shield icon"></i></span>
-                    <span class="ml-5">Bitacora</span>
-                  </a>
-                </li>
-              </ul>
-              <?php endif; ?>
             </details>
           </li>
           <?php endif; ?>
         </ul>
-        <ul>
-          <li class="menu-item rounded-lg p-3  hover:rounded-lg hover:bg-green-600 hover:p-3 hover:text-white">
-            <a href="<?= base_url(); ?>/logout" class="flex items-center">
-              <span><i class="fa-solid fa-right-to-bracket"></i></span>
-              <span class="ml-5">Cerrar Sesión</span>
-            </a>
-          </li>
-        </ul>
+
+        <div class="mt-auto pt-4 border-t border-gray-200">
+          <ul>
+            <li class="menu-item">
+              <a href="/project/logout" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-red-100 hover:text-red-700 group">
+                <i class="nav-icon fa-solid fa-right-to-bracket w-5 text-center text-gray-500 group-hover:text-red-600"></i>
+                <span class="nav-text ml-3 font-medium">Cerrar Sesión</span>
+              </a>
+            </li>
+          </ul>
+        </div>
       </nav>
     </aside>
-</body>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const currentPath = window.location.pathname;
-    const pathDisplay = document.getElementById("current-path-display");
-    if (pathDisplay) {
-      pathDisplay.textContent = currentPath;
+document.addEventListener("DOMContentLoaded", () => {
+  const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+  const sidebar = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarClose = document.getElementById("sidebar-close");
+
+  function openSidebar() {
+    if (sidebar && sidebarOverlay) {
+      sidebar.classList.remove("-translate-x-full");
+      sidebarOverlay.classList.remove("hidden");
+      document.body.classList.add("overflow-hidden");
     }
+  }
 
-    const navLinks = document.querySelectorAll("aside nav a");
+  function closeSidebar() {
+    if (sidebar && sidebarOverlay) {
+      sidebar.classList.add("-translate-x-full");
+      sidebarOverlay.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    }
+  }
 
-    navLinks.forEach((link) => {
-      const linkPath = link.getAttribute("href");
-      const listItem = link.closest("li");
+  if (mobileMenuToggle) {
+    mobileMenuToggle.addEventListener("click", openSidebar);
+  } else {
+    console.error("Botón de menú móvil (mobile-menu-toggle) no encontrado.");
+  }
 
-      if (listItem) {
-        listItem.classList.remove("bg-green-600", "text-white");
+  if (sidebarClose) {
+    sidebarClose.addEventListener("click", closeSidebar);
+  }
 
-        if (linkPath === currentPath) {
-          listItem.classList.add("bg-green-600", "text-white");
-          listItem.classList.remove("hover:bg-green-100", "hover:text-black");
-          const detailsParent = link.closest("details");
-          if (detailsParent) {
-            detailsParent.setAttribute("open", "");
-          }
-        }
-      }
-    });
-    const groupItems = document.querySelectorAll("li.menu-item-group");
-    groupItems.forEach(groupLi => {
-      const hasActiveChild = groupLi.querySelector('details li.bg-green-600');
-      if (!hasActiveChild) {
-        groupLi.classList.remove("bg-green-600", "text-white");
-        const summary = groupLi.querySelector('summary');
-        if (summary) {
-          summary.classList.remove("text-white");
-        }
-      } else {
-        const summary = groupLi.querySelector('summary');
-        if (summary) {
-          summary.classList.remove("bg-green-600");
-        }
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", closeSidebar);
+  }
+
+  const sidebarLinks = sidebar ? sidebar.querySelectorAll("a.nav-link") : [];
+  sidebarLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth < 1024) { // Tailwind's lg breakpoint
+        closeSidebar();
       }
     });
   });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth >= 1024) {
+      // En desktop, el sidebar es visible por layout (lg:relative) y el overlay no es necesario.
+      closeSidebar(); // Esto asegura que si se redimensiona de móvil a desktop con el menú abierto, se oculte el overlay y se quite el overflow-hidden del body.
+      document.body.classList.remove("overflow-hidden"); // Asegurar que el body pueda hacer scroll
+      if(sidebarOverlay) sidebarOverlay.classList.add("hidden"); // Asegurar que el overlay esté oculto
+    }
+  });
+
+  // Active link functionality
+  const currentPath = window.location.pathname;
+  const navLinksQuery = "#sidebar nav a.nav-link"; // Usar la clase común
+  const allNavLinks = document.querySelectorAll(navLinksQuery);
+
+  allNavLinks.forEach((link) => {
+    const linkElement = link;
+    const listItem = linkElement.closest("li.menu-item, li.menu-item-group"); 
+    const icon = linkElement.querySelector("i.nav-icon");
+    const textSpan = linkElement.querySelector("span.nav-text");
+
+    if (listItem) listItem.classList.remove("bg-green-600");
+    linkElement.classList.remove("text-white");
+    if (icon) icon.classList.remove("text-white");
+    if (textSpan) textSpan.classList.remove("text-white");
+
+
+    if (linkElement.getAttribute("href") === currentPath) {
+      if (listItem) {
+        // Aplicar estilos activos al LI y al A
+        listItem.classList.add("bg-green-600"); // Fondo verde al LI
+        listItem.classList.add("rounded-md"); // Fondo verde al LI
+        linkElement.classList.add("text-white"); // Texto blanco al A
+        if (icon) icon.classList.add("text-white"); // Icono blanco
+        if (textSpan) textSpan.classList.add("text-white"); // Texto del span blanco
+        
+        // Quitar clases de hover/group-hover para el estado activo
+        linkElement.classList.remove("hover:bg-green-100", "hover:text-green-700");
+        if(icon) icon.classList.remove("text-gray-500", "group-hover:text-green-600");
+        if(textSpan) textSpan.classList.remove("text-gray-700");
+
+
+        // Si el enlace activo está dentro de un <details>, abrirlo
+        let parentDetails = linkElement.closest("details");
+        if (parentDetails) {
+          parentDetails.setAttribute("open", "");
+          // También aplicar estilo activo al summary del details
+          const summary = parentDetails.querySelector("summary.nav-link-summary");
+          if (summary) {
+            summary.classList.add("bg-green-600", "text-white"); // Fondo y texto al summary
+            const summaryIcon = summary.querySelector("i.nav-icon");
+            const summaryText = summary.querySelector("span.nav-text");
+            if(summaryIcon) summaryIcon.classList.add("text-white");
+            if(summaryText) summaryText.classList.add("text-white");
+            summary.classList.remove("hover:bg-green-100", "hover:text-green-700");
+          }
+        }
+      }
+    }
+  });
+});
 </script>

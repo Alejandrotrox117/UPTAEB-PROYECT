@@ -46,147 +46,256 @@ const camposFormularioActualizarRolModulo = [
 
 document.addEventListener("DOMContentLoaded", function () {
   $(document).ready(function () {
-    // DATATABLE ROLES MÓDULOS
-    tablaRolesModulos = $("#TablaRolesModulos").DataTable({
-      processing: true,
-      ajax: {
-        url: "RolesModulos/getRolesModulosData",
-        type: "GET",
-        dataSrc: function (json) {
-          if (json && json.data) {
-            return json.data;
-          } else {
-            console.error(
-              "La respuesta del servidor no tiene la estructura esperada (falta 'data'):",
-              json
-            );
-            $("#TablaRolesModulos_processing").hide();
-            alert(
-              "Error: No se pudieron cargar los datos de asignaciones correctamente."
-            );
-            return [];
-          }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
+  if ($.fn.DataTable.isDataTable("#TablaRolesModulos")) {
+    $("#TablaRolesModulos").DataTable().destroy();
+  }
+  tablaRolesModulos = $("#TablaRolesModulos").DataTable({
+    processing: true,
+    ajax: {
+      url: "RolesModulos/getRolesModulosData",
+      type: "GET",
+      dataSrc: function (json) {
+        if (json && json.data) {
+          return json.data;
+        } else {
           console.error(
-            "Error AJAX al cargar datos para TablaRolesModulos: ",
-            textStatus,
-            errorThrown,
-            jqXHR.responseText
+            "La respuesta del servidor no tiene la estructura esperada (falta 'data'):",
+            json
           );
-          $("#TablaRolesModulos_processing").hide();
+          $("#TablaRolesModulos_processing").css("display", "none"); // Hide processing
           alert(
-            "Error de comunicación al cargar los datos de asignaciones. Por favor, intente más tarde."
+            "Error: No se pudieron cargar los datos de asignaciones correctamente."
           );
+          return [];
+        }
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error(
+          "Error AJAX al cargar datos para TablaRolesModulos: ",
+          textStatus,
+          errorThrown,
+          jqXHR.responseText
+        );
+        $("#TablaRolesModulos_processing").css("display", "none"); // Hide processing
+        alert(
+          "Error de comunicación al cargar los datos de asignaciones. Por favor, intente más tarde."
+        );
+      },
+    },
+    columns: [
+      {
+        data: "nombre_rol",
+        title: "Rol",
+        className:
+          "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
+      },
+      {
+        data: "descripcion_rol",
+        title: "Descripción del Rol",
+        className: "desktop py-2 px-3 text-gray-700",
+        render: function (data, type, row) {
+          if (type === "display" && data && data.length > 40) {
+            return (
+              '<span title="' +
+              data.replace(/"/g, "&quot;") +
+              '">' +
+              data.substring(0, 40) +
+              "...</span>"
+            );
+          }
+          return data || '<i class="text-gray-400">Sin descripción</i>';
         },
       },
-      columns: [
-        { data: "nombre_rol", title: "Rol" },
-        { 
-          data: "descripcion_rol", 
-          title: "Descripción del Rol",
-          render: function (data, type, row) {
-            if (data && data.length > 50) {
-              return data.substring(0, 50) + "...";
-            }
-            return data || '<i style="color: silver;">Sin descripción</i>';
-          },
-        },
-        { data: "titulo_modulo", title: "Módulo" },
-        { 
-          data: "descripcion_modulo", 
-          title: "Descripción del Módulo",
-          render: function (data, type, row) {
-            if (data && data.length > 50) {
-              return data.substring(0, 50) + "...";
-            }
-            return data || '<i style="color: silver;">Sin descripción</i>';
-          },
-        },
-        {
-          data: "estatus_rol",
-          title: "Estatus",
-          render: function (data, type, row) {
-            if (data) {
-              const estatusUpper = String(data).toUpperCase();
-              if (estatusUpper === "ACTIVO") {
-                return `<span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">${data}</span>`;
-              } else {
-                return `<span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">${data}</span>`;
-              }
-            }
-            return '<i style="color: silver;">N/A</i>';
-          },
-        },
-        {
-          data: null,
-          title: "Acciones",
-          orderable: false,
-          searchable: false,
-          render: function (data, type, row) {
-            return `
-              <button class="ver-rolmodulo-btn text-green-500 hover:text-green-700 p-1" data-idrolmodulo="${row.idrolmodulo}" title="Ver detalles">
-                  <i class="fas fa-eye fa-lg"></i>
-              </button>
-              <button class="editar-rolmodulo-btn text-blue-500 hover:text-blue-700 p-1 ml-2" data-idrolmodulo="${row.idrolmodulo}" title="Editar">
-                  <i class="fas fa-edit fa-lg"></i>
-              </button>
-              <button class="eliminar-rolmodulo-btn text-red-500 hover:text-red-700 p-1 ml-2" data-idrolmodulo="${row.idrolmodulo}" data-rol="${row.nombre_rol}" data-modulo="${row.titulo_modulo}" title="Eliminar">
-                  <i class="fas fa-trash fa-lg"></i>
-              </button>
-            `;
-          },
-          width: "140px",
-          className: "text-center",
-        },
-      ],
-      language: {
-        decimal: "",
-        emptyTable: "No hay información disponible en la tabla",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-        infoFiltered: "(filtrado de _MAX_ entradas totales)",
-        lengthMenu: "Mostrar _MENU_ entradas",
-        loadingRecords: "Cargando...",
-        processing: "Procesando...",
-        search: "Buscar:",
-        zeroRecords: "No se encontraron registros coincidentes",
-        paginate: {
-          first: "Primero",
-          last: "Último",
-          next: "Siguiente",
-          previous: "Anterior",
-        },
-        aria: {
-          sortAscending: ": activar para ordenar la columna ascendentemente",
-          sortDescending: ": activar para ordenar la columna descendentemente",
+      {
+        data: "titulo_modulo",
+        title: "Módulo",
+        className: "all whitespace-nowrap py-2 px-3 text-gray-700",
+      },
+      {
+        data: "descripcion_modulo",
+        title: "Descripción del Módulo",
+        className: "desktop py-2 px-3 text-gray-700",
+        render: function (data, type, row) {
+          if (type === "display" && data && data.length > 40) {
+            return (
+              '<span title="' +
+              data.replace(/"/g, "&quot;") +
+              '">' +
+              data.substring(0, 40) +
+              "...</span>"
+            );
+          }
+          return data || '<i class="text-gray-400">Sin descripción</i>';
         },
       },
-      destroy: true,
-      responsive: true,
-      pageLength: 10,
-      order: [[0, "asc"]],
-    });
+      {
+        data: "estatus_rol",
+        title: "Estatus Rol",
+        className: "min-tablet-p text-center py-2 px-3",
+        render: function (data, type, row) {
+          if (data) {
+            const estatusUpper = String(data).toUpperCase();
+            if (estatusUpper === "ACTIVO") {
+              return `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
+            } else {
+              return `<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
+            }
+          }
+          return '<span class="text-xs italic text-gray-500">N/A</span>';
+        },
+      },
+      {
+        data: null,
+        title: "Acciones",
+        orderable: false,
+        searchable: false,
+        className: "all text-center actions-column py-1 px-2",
+        width: "auto",
+        render: function (data, type, row) {
+          return `
+            <div class="inline-flex items-center space-x-1">
+              <button class="ver-rolmodulo-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" data-idrolmodulo="${row.idrolmodulo}" title="Ver detalles">
+                  <i class="fas fa-eye fa-fw text-base"></i>
+              </button>
+              <button class="editar-rolmodulo-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" data-idrolmodulo="${row.idrolmodulo}" title="Editar">
+                  <i class="fas fa-edit fa-fw text-base"></i>
+              </button>
+              <button class="eliminar-rolmodulo-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" data-idrolmodulo="${row.idrolmodulo}" data-rol="${row.nombre_rol}" data-modulo="${row.titulo_modulo}" title="Eliminar">
+                  <i class="fas fa-trash-alt fa-fw text-base"></i>
+              </button>
+            </div>
+          `;
+        },
+      },
+    ],
+    language: {
+      processing: `
+        <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]" style="margin-left:0;">
+            <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+                <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+                <span class="text-lg font-medium text-gray-700">Procesando...</span>
+            </div>
+        </div>`,
+      emptyTable:
+        '<div class="text-center py-4"><i class="fas fa-info-circle fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No hay asignaciones disponibles.</p></div>',
+      info: "Mostrando _START_ a _END_ de _TOTAL_ asignaciones",
+      infoEmpty: "Mostrando 0 asignaciones",
+      infoFiltered: "(filtrado de _MAX_ asignaciones totales)",
+      lengthMenu: "Mostrar _MENU_ asignaciones",
+      search: "_INPUT_",
+      searchPlaceholder: "Buscar asignación...",
+      zeroRecords:
+        '<div class="text-center py-4"><i class="fas fa-search fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No se encontraron coincidencias.</p></div>',
+      paginate: {
+        first: '<i class="fas fa-angle-double-left"></i>',
+        last: '<i class="fas fa-angle-double-right"></i>',
+        next: '<i class="fas fa-angle-right"></i>',
+        previous: '<i class="fas fa-angle-left"></i>',
+      },
+    },
+    destroy: true,
+    responsive: {
+      details: {
+        type: "column",
+        target: -1, 
+        renderer: function (api, rowIdx, columns) {
+          var data = $.map(columns, function (col, i) {
+            return col.hidden && col.title
+              ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
+                                   <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                                   <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                               </tr>`
+              : "";
+          }).join("");
+          return data
+            ? $(
+                '<table class="w-full table-fixed details-table border-t border-gray-200"/>'
+              ).append(data)
+            : false;
+        },
+      },
+    },
+    autoWidth: false,
+    pageLength: 10,
+    lengthMenu: [
+      [10, 25, 50, -1],
+      [10, 25, 50, "Todos"],
+    ],
+    order: [[0, "asc"]],
+    scrollX: true,
+    fixedColumns: {
+      left: 1, 
+    },
+    className: "compact",
+    initComplete: function (settings, json) {
+      console.log("DataTable RolesModulos inicializado correctamente");
+      window.tablaRolesModulos = this.api();
+    },
+    drawCallback: function (settings) {
+      $(settings.nTableWrapper)
+        .find('.dataTables_filter input[type="search"]')
+        .addClass(
+          "py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+        )
+        .removeClass("form-control-sm");
+      var api = new $.fn.dataTable.Api(settings);
+      if (
+        api.fixedColumns &&
+        typeof api.fixedColumns === "function" &&
+        api.fixedColumns().relayout
+      ) {
+        api.fixedColumns().relayout();
+      }
+    },
+  });
 
-    // Click para ver asignación
-    $("#TablaRolesModulos tbody").on("click", ".ver-rolmodulo-btn", function () {
-      const idRolModulo = $(this).data("idrolmodulo");
+  $("#TablaRolesModulos tbody").on("click", ".ver-rolmodulo-btn", function () {
+    const idRolModulo = $(this).data("idrolmodulo");
+    if (idRolModulo && typeof verRolModulo === "function") {
       verRolModulo(idRolModulo);
-    });
+    } else {
+      console.error(
+        "Función verRolModulo no definida o idRolModulo no encontrado."
+      );
+      alert("Error: No se pudo obtener el ID de la asignación para verla.");
+    }
+  });
 
-    // Click para editar asignación
-    $("#TablaRolesModulos tbody").on("click", ".editar-rolmodulo-btn", function () {
+  $("#TablaRolesModulos tbody").on(
+    "click",
+    ".editar-rolmodulo-btn",
+    function () {
       const idRolModulo = $(this).data("idrolmodulo");
-      editarRolModulo(idRolModulo);
-    });
+      if (idRolModulo && typeof editarRolModulo === "function") {
+        editarRolModulo(idRolModulo);
+      } else {
+        console.error(
+          "Función editarRolModulo no definida o idRolModulo no encontrado."
+        );
+        alert("Error: No se pudo obtener el ID de la asignación para editarla.");
+      }
+    }
+  );
 
-    // Click para eliminar asignación
-    $("#TablaRolesModulos tbody").on("click", ".eliminar-rolmodulo-btn", function () {
+  $("#TablaRolesModulos tbody").on(
+    "click",
+    ".eliminar-rolmodulo-btn",
+    function () {
       const idRolModulo = $(this).data("idrolmodulo");
       const nombreRol = $(this).data("rol");
       const tituloModulo = $(this).data("modulo");
-      eliminarRolModulo(idRolModulo, nombreRol, tituloModulo);
-    });
+      if (idRolModulo && typeof eliminarRolModulo === "function") {
+        eliminarRolModulo(idRolModulo, nombreRol, tituloModulo);
+      } else {
+        console.error(
+          "Función eliminarRolModulo no definida o idRolModulo no encontrado."
+        );
+        alert(
+          "Error: No se pudo obtener el ID de la asignación para eliminarla."
+        );
+      }
+    }
+  );
   });
 
   // MODAL REGISTRAR ASIGNACIÓN

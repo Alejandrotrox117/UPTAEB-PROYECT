@@ -1,0 +1,274 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "0efccadaaaf8f5650a22423e7a34870a",
+    "packages": [
+        {
+            "name": "components/jquery",
+            "version": "v3.7.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/components/jquery.git",
+                "reference": "8edc7785239bb8c2ad2b83302b856a1d61de60e7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/components/jquery/zipball/8edc7785239bb8c2ad2b83302b856a1d61de60e7",
+                "reference": "8edc7785239bb8c2ad2b83302b856a1d61de60e7",
+                "shasum": ""
+            },
+            "type": "component",
+            "extra": {
+                "component": {
+                    "files": [
+                        "jquery.min.js",
+                        "jquery.min.map",
+                        "jquery.slim.js",
+                        "jquery.slim.min.js",
+                        "jquery.slim.min.map"
+                    ],
+                    "scripts": [
+                        "jquery.js"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "JS Foundation and other contributors"
+                }
+            ],
+            "description": "jQuery JavaScript Library",
+            "homepage": "http://jquery.com",
+            "support": {
+                "forum": "http://forum.jquery.com",
+                "irc": "irc://irc.freenode.org/jquery",
+                "issues": "https://github.com/jquery/jquery/issues",
+                "source": "https://github.com/jquery/jquery",
+                "wiki": "http://docs.jquery.com/"
+            },
+            "time": "2023-09-22T01:43:46+00:00"
+        },
+        {
+            "name": "datatables.net/datatables.net",
+            "version": "2.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DataTables/Dist-DataTables.git",
+                "reference": "f21820b8821a495efb6682d4b42bac25ce6fd662"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DataTables/Dist-DataTables/zipball/f21820b8821a495efb6682d4b42bac25ce6fd662",
+                "reference": "f21820b8821a495efb6682d4b42bac25ce6fd662",
+                "shasum": ""
+            },
+            "require": {
+                "components/jquery": ">=1.7"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SpryMedia",
+                    "homepage": "https://datatables.net"
+                }
+            ],
+            "description": "DataTables is a plug-in for the jQuery Javascript library. It is a highly flexible tool, based upon the foundations of progressive enhancement, which will add advanced interaction controls to any HTML table. This is jQuery DataTables",
+            "homepage": "http://www.datatables.net/",
+            "keywords": [
+                "datatables",
+                "jquery",
+                "table"
+            ],
+            "support": {
+                "forum": "https://datatables.net/forums",
+                "source": "https://github.com/DataTables/Dist-DataTables"
+            },
+            "time": "2025-05-16T10:50:51+00:00"
+        },
+        {
+            "name": "datatables.net/datatables.net-datetime",
+            "version": "1.5.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DataTables/DateTime.git",
+                "reference": "66ce652a4a790a3b6dae410863de49a8f13d7b22"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DataTables/DateTime/zipball/66ce652a4a790a3b6dae410863de49a8f13d7b22",
+                "reference": "66ce652a4a790a3b6dae410863de49a8f13d7b22",
+                "shasum": ""
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SpryMedia",
+                    "homepage": "https://datatables.net"
+                }
+            ],
+            "description": "DateTime picker for DataTables.net",
+            "homepage": "http://www.datatables.net/extensions/datetime",
+            "keywords": [
+                "datatables",
+                "date",
+                "time"
+            ],
+            "support": {
+                "forum": "https://datatables.net/forums",
+                "issues": "https://github.com/DataTables/DateTime/issues",
+                "source": "https://github.com/DataTables/DateTime"
+            },
+            "time": "2024-09-13T11:00:32+00:00"
+        },
+        {
+            "name": "datatables.net/datatables.net-dt",
+            "version": "2.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DataTables/Dist-DataTables-DataTables.git",
+                "reference": "681270adc93044afa6cbb58d9daa810b14cb1eef"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-DataTables/zipball/681270adc93044afa6cbb58d9daa810b14cb1eef",
+                "reference": "681270adc93044afa6cbb58d9daa810b14cb1eef",
+                "shasum": ""
+            },
+            "require": {
+                "datatables.net/datatables.net": ">=1.10.15"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SpryMedia",
+                    "homepage": "https://datatables.net"
+                }
+            ],
+            "description": "DataTables is a plug-in for the jQuery Javascript library. It is a highly flexible tool, based upon the foundations of progressive enhancement, which will add advanced interaction controls to any HTML table. This is DataTables with styling for [DataTables](https://datatables.net/)",
+            "homepage": "http://www.datatables.net/",
+            "keywords": [
+                "datatables",
+                "jquery",
+                "table"
+            ],
+            "support": {
+                "forum": "https://datatables.net/forums",
+                "source": "https://github.com/DataTables/Dist-DataTables-DataTables"
+            },
+            "time": "2025-05-16T10:51:30+00:00"
+        },
+        {
+            "name": "datatables.net/datatables.net-fixedcolumns",
+            "version": "5.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DataTables/Dist-DataTables-FixedColumns.git",
+                "reference": "caa6627651ed87ab19a466ecbbf5e88169df6376"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-FixedColumns/zipball/caa6627651ed87ab19a466ecbbf5e88169df6376",
+                "reference": "caa6627651ed87ab19a466ecbbf5e88169df6376",
+                "shasum": ""
+            },
+            "require": {
+                "datatables.net/datatables.net": ">=1.12.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SpryMedia",
+                    "homepage": "https://datatables.net"
+                }
+            ],
+            "description": "FixedColumns provides the ability to fix one or more columns to the left and / or right hand side of a DataTable that scrolls along the x-axis. This can be used if the columns show grouping, index or similar information. This is FixedColumns for DataTables",
+            "homepage": "http://www.datatables.net/",
+            "keywords": [
+                "datatables",
+                "fixedcolumns",
+                "jquery",
+                "table"
+            ],
+            "support": {
+                "forum": "https://datatables.net/forums",
+                "source": "https://github.com/DataTables/Dist-DataTables-FixedColumns"
+            },
+            "time": "2024-10-15T13:55:15+00:00"
+        },
+        {
+            "name": "datatables.net/datatables.net-fixedcolumns-dt",
+            "version": "5.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DataTables/Dist-DataTables-FixedColumns-DataTables.git",
+                "reference": "900bb5460ef529b7bf42fd0b710712339e786165"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-FixedColumns-DataTables/zipball/900bb5460ef529b7bf42fd0b710712339e786165",
+                "reference": "900bb5460ef529b7bf42fd0b710712339e786165",
+                "shasum": ""
+            },
+            "require": {
+                "datatables.net/datatables.net-dt": ">=1.12.1",
+                "datatables.net/datatables.net-fixedcolumns": ">=4.1.0"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SpryMedia",
+                    "homepage": "https://datatables.net"
+                }
+            ],
+            "description": "FixedColumns provides the ability to fix one or more columns to the left and / or right hand side of a DataTable that scrolls along the x-axis. This can be used if the columns show grouping, index or similar information. This is FixedColumns for DataTables with styling for [DataTables](https://datatables.net/)",
+            "homepage": "http://www.datatables.net/",
+            "keywords": [
+                "datatables",
+                "fixedcolumns",
+                "jquery",
+                "table"
+            ],
+            "support": {
+                "forum": "https://datatables.net/forums",
+                "source": "https://github.com/DataTables/Dist-DataTables-FixedColumns-DataTables"
+            },
+            "time": "2024-10-15T13:55:33+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
+}

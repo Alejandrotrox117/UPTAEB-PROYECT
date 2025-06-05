@@ -95,7 +95,10 @@ document.addEventListener("DOMContentLoaded", function () {
   cargarPersonas();
 
   $(document).ready(function () {
-    // DATATABLE USUARIOS
+    if ($.fn.DataTable.isDataTable("#TablaUsuarios")) {
+      $("#TablaUsuarios").DataTable().destroy();
+    }
+
     tablaUsuarios = $("#TablaUsuarios").DataTable({
       processing: true,
       ajax: {
@@ -109,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
               "La respuesta del servidor no tiene la estructura esperada (falta 'data'):",
               json
             );
-            $("#TablaUsuarios_processing").hide();
+            $("#TablaUsuarios_processing").css("display", "none"); 
             alert(
               "Error: No se pudieron cargar los datos de usuarios correctamente."
             );
@@ -123,38 +126,49 @@ document.addEventListener("DOMContentLoaded", function () {
             errorThrown,
             jqXHR.responseText
           );
-          $("#TablaUsuarios_processing").hide();
+          $("#TablaUsuarios_processing").css("display", "none"); 
           alert(
             "Error de comunicación al cargar los datos de usuarios. Por favor, intente más tarde."
           );
         },
       },
       columns: [
-        { data: "correo", title: "Correo" },
-        { data: "rol_nombre", title: "Rol" },
+        {
+          data: "correo",
+          title: "Correo",
+          className:
+            "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background break-all",
+        },
+        {
+          data: "rol_nombre",
+          title: "Rol",
+          className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+        },
         {
           data: "persona_nombre_completo",
           title: "Persona Asociada",
+          className: "tablet-l whitespace-nowrap py-2 px-3 text-gray-700",
           render: function (data, type, row) {
             if (data) {
               return data;
             }
-            return '<i style="color: silver;">Sin asociar</i>';
+            return '<i class="text-gray-400">Sin asociar</i>';
           },
         },
         {
           data: "estatus",
           title: "Estatus",
+          className: "min-tablet-p text-center py-2 px-3",
           render: function (data, type, row) {
             if (data) {
               const estatusUpper = String(data).toUpperCase();
               if (estatusUpper === "ACTIVO") {
-                return `<span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">${data}</span>`;
+                return `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
               } else {
-                return `<span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">${data}</span>`;
+                return `<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
               }
             }
-            return '<i style="color: silver;">N/A</i>';
+            return '<span class="text-xs italic text-gray-500">N/A</span>';
           },
         },
         {
@@ -162,68 +176,143 @@ document.addEventListener("DOMContentLoaded", function () {
           title: "Acciones",
           orderable: false,
           searchable: false,
+          className: "all text-center actions-column py-1 px-2",
+          width: "auto",
           render: function (data, type, row) {
+            const nombreUsuarioParaEliminar = row.usuario || row.correo; 
             return `
-              <button class="ver-usuario-btn text-green-500 hover:text-green-700 p-1" data-idusuario="${row.idusuario}" title="Ver detalles">
-                  <i class="fas fa-eye fa-lg"></i>
-              </button>
-              <button class="editar-usuario-btn text-blue-500 hover:text-blue-700 p-1 ml-2" data-idusuario="${row.idusuario}" title="Editar">
-                  <i class="fas fa-edit fa-lg"></i>
-              </button>
-              <button class="eliminar-usuario-btn text-red-500 hover:text-red-700 p-1 ml-2" data-idusuario="${row.idusuario}" data-nombre="${row.usuario}" title="Eliminar">
-                  <i class="fas fa-trash fa-lg"></i>
-              </button>
+              <div class="inline-flex items-center space-x-1">
+                <button class="ver-usuario-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" data-idusuario="${row.idusuario}" title="Ver detalles">
+                    <i class="fas fa-eye fa-fw text-base"></i>
+                </button>
+                <button class="editar-usuario-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" data-idusuario="${row.idusuario}" title="Editar">
+                    <i class="fas fa-edit fa-fw text-base"></i>
+                </button>
+                <button class="eliminar-usuario-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" data-idusuario="${row.idusuario}" data-nombre="${nombreUsuarioParaEliminar}" title="Desactivar">
+                    <i class="fas fa-trash-alt fa-fw text-base"></i>
+                </button>
+              </div>
             `;
           },
-          width: "140px",
-          className: "text-center",
         },
       ],
       language: {
-        decimal: "",
-        emptyTable: "No hay información disponible en la tabla",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-        infoFiltered: "(filtrado de _MAX_ entradas totales)",
-        lengthMenu: "Mostrar _MENU_ entradas",
-        loadingRecords: "Cargando...",
-        processing: "Procesando...",
-        search: "Buscar:",
-        zeroRecords: "No se encontraron registros coincidentes",
+        processing: `
+          <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]" style="margin-left:0;">
+              <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+                  <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+                  <span class="text-lg font-medium text-gray-700">Procesando...</span>
+              </div>
+          </div>`,
+        emptyTable:
+          '<div class="text-center py-4"><i class="fas fa-users-slash fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No hay usuarios disponibles.</p></div>',
+        info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
+        infoEmpty: "Mostrando 0 usuarios",
+        infoFiltered: "(filtrado de _MAX_ usuarios totales)",
+        lengthMenu: "Mostrar _MENU_ usuarios",
+        search: "_INPUT_",
+        searchPlaceholder: "Buscar usuario...",
+        zeroRecords:
+          '<div class="text-center py-4"><i class="fas fa-user-times fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No se encontraron coincidencias.</p></div>',
         paginate: {
-          first: "Primero",
-          last: "Último",
-          next: "Siguiente",
-          previous: "Anterior",
-        },
-        aria: {
-          sortAscending: ": activar para ordenar la columna ascendentemente",
-          sortDescending: ": activar para ordenar la columna descendentemente",
+          first: '<i class="fas fa-angle-double-left"></i>',
+          last: '<i class="fas fa-angle-double-right"></i>',
+          next: '<i class="fas fa-angle-right"></i>',
+          previous: '<i class="fas fa-angle-left"></i>',
         },
       },
       destroy: true,
-      responsive: true,
+      responsive: {
+        details: {
+          type: "column",
+          target: -1, 
+          renderer: function (api, rowIdx, columns) {
+            var data = $.map(columns, function (col, i) {
+              return col.hidden && col.title
+                ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
+                                    <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                                    <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                                </tr>`
+                : "";
+            }).join("");
+            return data
+              ? $(
+                  '<table class="w-full table-fixed details-table border-t border-gray-200"/>'
+                ).append(data)
+              : false;
+          },
+        },
+      },
+      autoWidth: false,
       pageLength: 10,
-      order: [[0, "asc"]],
+      lengthMenu: [
+        [10, 25, 50, -1],
+        [10, 25, 50, "Todos"],
+      ],
+      order: [[0, "asc"]], 
+      scrollX: true,
+      fixedColumns: {
+        left: 1, 
+      },
+      className: "compact",
+      initComplete: function (settings, json) {
+        console.log("DataTable Usuarios inicializado correctamente");
+        window.tablaUsuarios = this.api();
+      },
+      drawCallback: function (settings) {
+        $(settings.nTableWrapper)
+          .find('.dataTables_filter input[type="search"]')
+          .addClass(
+            "py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+          )
+          .removeClass("form-control-sm");
+
+        var api = new $.fn.dataTable.Api(settings);
+        if (
+          api.fixedColumns &&
+          typeof api.fixedColumns === "function" &&
+          api.fixedColumns().relayout
+        ) {
+          api.fixedColumns().relayout();
+        }
+      },
     });
 
-    // Click para ver usuario
     $("#TablaUsuarios tbody").on("click", ".ver-usuario-btn", function () {
       const idUsuario = $(this).data("idusuario");
-      verUsuario(idUsuario);
+      if (idUsuario && typeof verUsuario === "function") {
+        verUsuario(idUsuario);
+      } else {
+        console.error(
+          "Función verUsuario no definida o idUsuario no encontrado."
+        );
+        alert("Error: No se pudo obtener el ID del usuario para verlo.");
+      }
     });
 
-    // Click para editar usuario
     $("#TablaUsuarios tbody").on("click", ".editar-usuario-btn", function () {
       const idUsuario = $(this).data("idusuario");
-      editarUsuario(idUsuario);
+      if (idUsuario && typeof editarUsuario === "function") {
+        editarUsuario(idUsuario);
+      } else {
+        console.error(
+          "Función editarUsuario no definida o idUsuario no encontrado."
+        );
+        alert("Error: No se pudo obtener el ID del usuario para editarlo.");
+      }
     });
 
-    // Click para eliminar usuario
     $("#TablaUsuarios tbody").on("click", ".eliminar-usuario-btn", function () {
       const idUsuario = $(this).data("idusuario");
-      const nombreUsuario = $(this).data("nombre");
-      eliminarUsuario(idUsuario, nombreUsuario);
+      const nombreUsuario = $(this).data("nombre"); 
+      if (idUsuario && typeof eliminarUsuario === "function") {
+        eliminarUsuario(idUsuario, nombreUsuario);
+      } else {
+        console.error(
+          "Función eliminarUsuario no definida o idUsuario no encontrado."
+        );
+        alert("Error: No se pudo obtener el ID del usuario para desactivarlo.");
+      }
     });
   });
 
