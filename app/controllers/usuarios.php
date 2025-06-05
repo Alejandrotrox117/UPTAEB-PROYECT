@@ -1,4 +1,5 @@
 <?php
+
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
 
@@ -145,7 +146,8 @@ class Usuarios extends Controllers
     public function getPersonas()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            $arrData = $this->model->selectAllPersonasActivas();
+            $idPersonaActual = isset($_GET['idPersonaActual']) ? intval($_GET['idPersonaActual']) : 0;
+            $arrData = $this->model->selectAllPersonasActivas($idPersonaActual);
             echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
         }
         die();

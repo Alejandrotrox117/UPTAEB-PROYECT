@@ -16,9 +16,35 @@ class UsuariosModel extends mysql
         $this->dbSeguridad = $this->conexion->get_conectSeguridad();
     }
 
-    public function insertUsuario(array $data): array
+    public function selectUsuarioByEmail(string $email, int $idUsuarioExcluir = 0)
     {
+        $sql = "SELECT idusuario, usuario, correo FROM usuario WHERE correo = ? AND estatus = 'ACTIVO'";
+        $params = [$email];
+        if ($idUsuarioExcluir > 0) {
+            $sql .= " AND idusuario != ?";
+            $params[] = $idUsuarioExcluir;
+        }
         try {
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("UsuariosModel::selectUsuarioByEmail -> " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function insertUsuario(array $data): array{
+        try {
+            $existingUserByEmail = $this->selectUsuarioByEmail($data['correo']);
+            if ($existingUserByEmail) {
+                return [
+                    'status' => false,
+                    'message' => 'El correo electrónico ya está registrado. Por favor, utilice otro.',
+                    'usuario_id' => null
+                ];
+            }
+
             $this->dbSeguridad->beginTransaction();
 
             $claveHasheada = hash("SHA256", $data['clave']);
@@ -31,8 +57,8 @@ class UsuariosModel extends mysql
                 $claveHasheada,
                 $data['correo'],
                 $data['personaId'] ?: null,
-                'ACTIVO',
-                ''
+                'ACTIVO', // Default status
+                '' // Default token
             ];
             
             $stmt = $this->dbSeguridad->prepare($sql);
@@ -63,6 +89,22 @@ class UsuariosModel extends mysql
                 $this->dbSeguridad->rollBack();
             }
             error_log("Error al insertar usuario: " . $e->getMessage());
+            if ($e->getCode() == '23000') { 
+                if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                    if (strpos($e->getMessage(), "'correo'") !== false) {
+                         return [
+                             'status' => false, 
+                             'message' => 'El correo electrónico ya está registrado.',
+                             'usuario_id' => null
+                         ];
+                    } 
+                }
+                return [
+                    'status' => false, 
+                    'message' => 'Error de duplicidad. Verifique el correo electrónico.',
+                    'usuario_id' => null
+                ];
+            }
             return [
                 'status' => false, 
                 'message' => 'Error de base de datos al registrar usuario: ' . $e->getMessage(),
@@ -71,9 +113,18 @@ class UsuariosModel extends mysql
         }
     }
 
-    public function updateUsuario(int $idusuario, array $data): array
-    {
+    public function updateUsuario(int $idusuario, array $data): array{
         try {
+            if (!empty($data['correo'])) {
+                $existingUserByEmail = $this->selectUsuarioByEmail($data['correo'], $idusuario);
+                if ($existingUserByEmail) {
+                    return [
+                        'status' => false,
+                        'message' => 'El correo electrónico ya está registrado por otro usuario.'
+                    ];
+                }
+            }
+
             $this->dbSeguridad->beginTransaction();
 
             $sql = "UPDATE usuario SET idrol = ?, usuario = ?, correo = ?, personaId = ?";
@@ -84,7 +135,6 @@ class UsuariosModel extends mysql
                 $data['personaId'] ?: null
             ];
 
-            // Solo actualizar clave si se proporciona
             if (!empty($data['clave'])) {
                 $claveHasheada = hash("SHA256", $data['clave']);
                 $sql .= ", clave = ?";
@@ -97,13 +147,20 @@ class UsuariosModel extends mysql
             $stmt = $this->dbSeguridad->prepare($sql);
             $updateExitoso = $stmt->execute($valores);
 
-            if (!$updateExitoso || $stmt->rowCount() === 0) {
+            if (!$updateExitoso) {
                 $this->dbSeguridad->rollBack();
                 return [
                     'status' => false, 
-                    'message' => 'No se pudo actualizar el usuario o no se realizaron cambios.'
+                    'message' => 'No se pudo actualizar el usuario.'
                 ];
             }
+             if ($stmt->rowCount() === 0 && $updateExitoso) {
+                 $this->dbSeguridad->commit();
+                 return [
+                     'status' => true,
+                     'message' => 'No se realizaron cambios en el usuario (datos idénticos).'
+                 ];
+             }
 
             $this->dbSeguridad->commit();
 
@@ -117,6 +174,19 @@ class UsuariosModel extends mysql
                 $this->dbSeguridad->rollBack();
             }
             error_log("Error al actualizar usuario: " . $e->getMessage());
+            if ($e->getCode() == '23000') {
+                if (strpos($e->getMessage(), 'Duplicate entry') !== false && 
+                    strpos($e->getMessage(), "'correo'") !== false) {
+                     return [
+                         'status' => false, 
+                         'message' => 'El correo electrónico ya está registrado por otro usuario.'
+                     ];
+                }
+                return [
+                    'status' => false, 
+                    'message' => 'Error de duplicidad al actualizar. Verifique el correo electrónico.'
+                ];
+            }
             return [
                 'status' => false, 
                 'message' => 'Error de base de datos al actualizar usuario: ' . $e->getMessage()
@@ -124,8 +194,7 @@ class UsuariosModel extends mysql
         }
     }
 
-    public function selectUsuarioById(int $idusuario)
-    {
+    public function selectUsuarioById(int $idusuario){
         $sql = "SELECT 
                     u.idusuario, 
                     u.idrol, 
@@ -137,7 +206,7 @@ class UsuariosModel extends mysql
                     p.nombre AS persona_nombre,
                     p.apellido AS persona_apellido,
                     p.identificacion AS persona_cedula,
-                    p.idpersona AS persona_id,
+                    p.idpersona AS persona_id, 
                     CONCAT(p.nombre, ' ', p.apellido) AS persona_nombre_completo
                 FROM usuario u
                 LEFT JOIN roles r ON u.idrol = r.idrol
@@ -153,8 +222,7 @@ class UsuariosModel extends mysql
         }
     }
 
-    public function deleteUsuarioById(int $idusuario): bool
-    {
+    public function deleteUsuarioById(int $idusuario): bool{
         try {
             $this->dbSeguridad->beginTransaction();
 
@@ -172,8 +240,7 @@ class UsuariosModel extends mysql
         }
     }
 
-    public function selectAllUsuariosActivos()
-    {
+    public function selectAllUsuariosActivos(){
         $sql = "SELECT 
                     u.idusuario, 
                     u.usuario, 
@@ -185,8 +252,7 @@ class UsuariosModel extends mysql
                     CONCAT(p.nombre, ' ', p.apellido) AS persona_nombre_completo
                 FROM usuario u
                 LEFT JOIN roles r ON u.idrol = r.idrol
-                LEFT JOIN {$this->conexion->getDatabaseGeneral()}.personas p ON u.personaId = p.identificacion
-                WHERE u.estatus = 'ACTIVO'
+                LEFT JOIN {$this->conexion->getDatabaseGeneral()}.personas p ON u.personaId = p.idpersona
                 ORDER BY u.usuario ASC";
 
         try {
@@ -199,8 +265,7 @@ class UsuariosModel extends mysql
         }
     }
 
-    public function selectAllRoles()
-    {
+    public function selectAllRoles(){
         $sql = "SELECT idrol, nombre FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC";
         
         try {
@@ -213,26 +278,34 @@ class UsuariosModel extends mysql
         }
     }
 
-    public function selectAllPersonasActivas()
-    {
-        $sql = "SELECT 
-                    idpersona, 
-                    identificacion, 
-                    CONCAT(nombre, ' ', apellido) AS nombre_completo,
-                    nombre,
-                    apellido
-                FROM {$this->conexion->getDatabaseGeneral()}.personas 
-                WHERE estatus = 'ACTIVO'
-                ORDER BY nombre ASC, apellido ASC";
-        
+    public function selectAllPersonasActivas($idPersonaActual = 0) { 
+    $sql = "SELECT
+                p.idpersona,
+                CONCAT(p.nombre, ' ', p.apellido) AS nombre_completo
+            FROM
+                {$this->conexion->getDatabaseGeneral()}.personas p
+            WHERE
+                p.estatus = 'ACTIVO' AND (
+                    NOT EXISTS (
+                        SELECT 1 FROM {$this->conexion->getDatabaseSeguridad()}.usuario u
+                        WHERE u.personaId = p.idpersona
+                    )
+                    OR p.idpersona = ? 
+                )
+            ORDER BY
+                p.nombre ASC,
+                p.apellido ASC";
+
         try {
-            $stmt = $this->dbSeguridad->query($sql);
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute([$idPersonaActual]);
+
             $personas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return ["status" => true, "message" => "Personas obtenidas.", "data" => $personas];
-        } catch (PDOException $e) {
-            error_log("UsuariosModel::selectAllPersonasActivas - Error al seleccionar personas: " . $e->getMessage());
-            return ["status" => false, "message" => "Error al obtener personas: " . $e->getMessage(), "data" => []];
+            } catch (PDOException $e) {
+                error_log("UsuariosModel::selectAllPersonasActivas - Error: " . $e->getMessage());
+                    return ["status" => false, "message" => "Error al obtener personas.", "data" => []];
+            }
         }
-    }
 }
 ?>

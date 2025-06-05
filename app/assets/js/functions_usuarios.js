@@ -35,7 +35,7 @@ const camposFormularioUsuario = [
     regex: expresiones.password,
     mensajes: {
       vacio: "La contraseña es obligatoria.",
-      formato: "Contraseña inválida (6-16 caracteres).",
+      formato: "Contraseña inválida (mínimo 6 caracteres).",
     },
   },
   {
@@ -43,11 +43,11 @@ const camposFormularioUsuario = [
     tipo: "select",
     mensajes: { vacio: "Seleccione un rol." },
   },
-  // {
-  //   id: "usuarioPersona",
-  //   tipo: "select",
-  //   mensajes: {},
-  // },
+  { 
+    id: "usuarioPersona",
+    tipo: "select",
+    mensajes: {}, 
+  },
 ];
 
 const camposFormularioActualizarUsuario = [
@@ -70,11 +70,11 @@ const camposFormularioActualizarUsuario = [
     },
   },
   {
-    id: "usuarioClaveActualizar",
+    id: "usuarioClaveActualizar", 
     tipo: "input",
-    regex: expresiones.password,
+    regex: expresiones.password, 
     mensajes: {
-      formato: "Contraseña inválida (dejar en blanco para no cambiar).",
+      formato: "Contraseña inválida (dejar en blanco para no cambiar, mínimo 6 caracteres).",
     },
   },
   {
@@ -82,17 +82,16 @@ const camposFormularioActualizarUsuario = [
     tipo: "select",
     mensajes: { vacio: "Seleccione un rol." },
   },
-  {
+  { 
     id: "usuarioPersonaActualizar",
     tipo: "select",
-    mensajes: {},
+    mensajes: {}, 
   },
 ];
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Cargar roles y personas al inicio
   cargarRoles();
-  cargarPersonas();
+  cargarPersonas(); 
 
   $(document).ready(function () {
     if ($.fn.DataTable.isDataTable("#TablaUsuarios")) {
@@ -134,10 +133,15 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       columns: [
         {
-          data: "correo",
-          title: "Correo",
+          data: "usuario", 
+          title: "Usuario",
           className:
             "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background break-all",
+        },
+        {
+          data: "correo",
+          title: "Correo",
+          className: "desktop whitespace-nowrap py-2 px-3 text-gray-700 break-all",
         },
         {
           data: "rol_nombre",
@@ -256,7 +260,6 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       className: "compact",
       initComplete: function (settings, json) {
-        console.log("DataTable Usuarios inicializado correctamente");
         window.tablaUsuarios = this.api();
       },
       drawCallback: function (settings) {
@@ -316,130 +319,73 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // MODAL REGISTRAR USUARIO
-  const btnAbrirModalRegistro = document.getElementById(
-    "btnAbrirModalRegistrarUsuario"
-  );
+  const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarUsuario");
   const formRegistrar = document.getElementById("formRegistrarUsuario");
-  const btnCerrarModalRegistro = document.getElementById(
-    "btnCerrarModalRegistrar"
-  );
-  const btnCancelarModalRegistro = document.getElementById(
-    "btnCancelarModalRegistrar"
-  );
+  const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
+  const btnCancelarModalRegistro = document.getElementById("btnCancelarModalRegistrar");
 
   if (btnAbrirModalRegistro) {
     btnAbrirModalRegistro.addEventListener("click", function () {
       abrirModal("modalRegistrarUsuario");
       if (formRegistrar) formRegistrar.reset();
+      limpiarValidaciones(camposFormularioUsuario, "formRegistrarUsuario");
       inicializarValidaciones(camposFormularioUsuario, "formRegistrarUsuario");
+      cargarPersonas(0, "usuarioPersona"); 
     });
   }
 
-  if (btnCerrarModalRegistro) {
-    btnCerrarModalRegistro.addEventListener("click", function () {
-      cerrarModal("modalRegistrarUsuario");
-    });
-  }
+  if (btnCerrarModalRegistro) btnCerrarModalRegistro.addEventListener("click", () => cerrarModal("modalRegistrarUsuario"));
+  if (btnCancelarModalRegistro) btnCancelarModalRegistro.addEventListener("click", () => cerrarModal("modalRegistrarUsuario"));
+  if (formRegistrar) formRegistrar.addEventListener("submit", (e) => { e.preventDefault(); registrarUsuario(); });
 
-  if (btnCancelarModalRegistro) {
-    btnCancelarModalRegistro.addEventListener("click", function () {
-      cerrarModal("modalRegistrarUsuario");
-    });
-  }
-
-  // SUBMIT FORM REGISTRAR
-  if (formRegistrar) {
-    formRegistrar.addEventListener("submit", function (e) {
-      e.preventDefault();
-      registrarUsuario();
-    });
-  }
-
-  // MODAL ACTUALIZAR USUARIO
-  const btnCerrarModalActualizar = document.getElementById(
-    "btnCerrarModalActualizar"
-  );
-  const btnCancelarModalActualizar = document.getElementById(
-    "btnCancelarModalActualizar"
-  );
+  const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
+  const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
   const formActualizar = document.getElementById("formActualizarUsuario");
 
-  if (btnCerrarModalActualizar) {
-    btnCerrarModalActualizar.addEventListener("click", function () {
-      cerrarModal("modalActualizarUsuario");
-    });
-  }
+  if (btnCerrarModalActualizar) btnCerrarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarUsuario"));
+  if (btnCancelarModalActualizar) btnCancelarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarUsuario"));
+  if (formActualizar) formActualizar.addEventListener("submit", (e) => { e.preventDefault(); actualizarUsuario(); });
 
-  if (btnCancelarModalActualizar) {
-    btnCancelarModalActualizar.addEventListener("click", function () {
-      cerrarModal("modalActualizarUsuario");
-    });
-  }
-
-  if (formActualizar) {
-    formActualizar.addEventListener("submit", function (e) {
-      e.preventDefault();
-      actualizarUsuario();
-    });
-  }
-
-  // MODAL VER USUARIO
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
   
-  if (btnCerrarModalVer) {
-    btnCerrarModalVer.addEventListener("click", function () {
-      cerrarModal("modalVerUsuario");
-    });
-  }
-
-  if (btnCerrarModalVer2) {
-    btnCerrarModalVer2.addEventListener("click", function () {
-      cerrarModal("modalVerUsuario");
-    });
-  }
+  if (btnCerrarModalVer) btnCerrarModalVer.addEventListener("click", () => cerrarModal("modalVerUsuario"));
+  if (btnCerrarModalVer2) btnCerrarModalVer2.addEventListener("click", () => cerrarModal("modalVerUsuario"));
 });
 
-// FUNCIONES
 function cargarRoles() {
-  fetch("Usuarios/getRoles", {
+  fetch("Usuarios/getRoles", { 
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       "X-Requested-With": "XMLHttpRequest",
     },
-  })
-    .then((response) => response.json())
-    .then((result) => {
+   })
+    .then(response => response.json())
+    .then(result => {
       if (result.status && result.data) {
-        const selectRolRegistrar = document.getElementById("usuarioRol");
-        const selectRolActualizar = document.getElementById("usuarioRolActualizar");
-
-        if (selectRolRegistrar) {
-          selectRolRegistrar.innerHTML =
-            '<option value="">Seleccione un rol</option>';
-          result.data.forEach((rol) => {
-            selectRolRegistrar.innerHTML += `<option value="${rol.idrol}">${rol.nombre}</option>`;
-          });
-        }
-
-        if (selectRolActualizar) {
-          selectRolActualizar.innerHTML =
-            '<option value="">Seleccione un rol</option>';
-          result.data.forEach((rol) => {
-            selectRolActualizar.innerHTML += `<option value="${rol.idrol}">${rol.nombre}</option>`;
-          });
-        }
+        const selects = ["usuarioRol", "usuarioRolActualizar"];
+        selects.forEach(selectId => {
+          const selectElement = document.getElementById(selectId);
+          if (selectElement) {
+            selectElement.innerHTML = '<option value="">Seleccione un rol</option>';
+            result.data.forEach(rol => {
+              selectElement.innerHTML += `<option value="${rol.idrol}">${rol.nombre}</option>`;
+            });
+          }
+        });
       }
     })
-    .catch((error) => {
-      console.error("Error al cargar roles:", error);
-    });
+    .catch(error => console.error("Error al cargar roles:", error));
 }
 
-function cargarPersonas() {
-  fetch("Usuarios/getPersonas", {
+function cargarPersonas(idPersonaActual = 0, targetSelectId = null) {
+  let url = "Usuarios/getPersonas";
+  if (idPersonaActual && idPersonaActual > 0) {
+    url += `?idPersonaActual=${idPersonaActual}`;
+  }
+
+  fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -452,25 +398,36 @@ function cargarPersonas() {
         const selectPersonaRegistrar = document.getElementById("usuarioPersona");
         const selectPersonaActualizar = document.getElementById("usuarioPersonaActualizar");
 
-        if (selectPersonaRegistrar) {
-          selectPersonaRegistrar.innerHTML =
-            '<option value="">Sin persona asociada</option>';
-          result.data.forEach((persona) => {
-            selectPersonaRegistrar.innerHTML += `<option value="${persona.identificacion}">${persona.nombre_completo}</option>`;
-          });
+        const populateSelect = (selectElement, currentIdToSelect) => {
+          if (selectElement) {
+            selectElement.innerHTML = '<option value="">Sin persona asociada</option>'; 
+            result.data.forEach((persona) => {
+              const option = document.createElement('option');
+              option.value = persona.idpersona;
+              option.textContent = persona.nombre_completo; 
+              selectElement.appendChild(option);
+            });
+            if (currentIdToSelect && result.data.some(p => p.idpersona == currentIdToSelect)) {
+              selectElement.value = currentIdToSelect;
+            } else {
+              selectElement.value = ""; 
+            }
+          }
+        };
+        
+        if (targetSelectId) { 
+            populateSelect(document.getElementById(targetSelectId), idPersonaActual);
+        } else { 
+            if(selectPersonaRegistrar) populateSelect(selectPersonaRegistrar, 0); 
+            if(selectPersonaActualizar) populateSelect(selectPersonaActualizar, 0); 
         }
 
-        if (selectPersonaActualizar) {
-          selectPersonaActualizar.innerHTML =
-            '<option value="">Sin persona asociada</option>';
-          result.data.forEach((persona) => {
-            selectPersonaActualizar.innerHTML += `<option value="${persona.identificacion}">${persona.nombre_completo}</option>`;
-          });
-        }
+      } else {
+        console.error("Error al cargar personas:", result.message || "Datos no válidos");
       }
     })
     .catch((error) => {
-      console.error("Error al cargar personas:", error);
+      console.error("Error en fetch al cargar personas:", error);
     });
 }
 
@@ -478,36 +435,22 @@ function registrarUsuario() {
   const formRegistrar = document.getElementById("formRegistrarUsuario");
   const btnGuardarUsuario = document.getElementById("btnGuardarUsuario");
 
-  if (!validarCamposVacios(camposFormularioUsuario, "formRegistrarUsuario")) {
-    return;
-  }
+  const camposObligatoriosRegistrar = camposFormularioUsuario.filter(c => c.mensajes && c.mensajes.vacio);
+  if (!validarCamposVacios(camposObligatoriosRegistrar, "formRegistrarUsuario")) return;
 
   let formularioConErroresEspecificos = false;
   for (const campo of camposFormularioUsuario) {
     const inputElement = formRegistrar.querySelector(`#${campo.id}`);
     if (!inputElement) continue;
-
     let esValidoEsteCampo = true;
     if (campo.tipo === "select") {
-      if (campo.mensajes && campo.mensajes.vacio) {
-        esValidoEsteCampo = validarSelect(
-          campo.id,
-          campo.mensajes,
-          "formRegistrarUsuario"
-        );
+      if (campo.mensajes && campo.mensajes.vacio) { 
+        esValidoEsteCampo = validarSelect(campo.id, campo.mensajes, "formRegistrarUsuario");
       }
-    } else if (
-      ["input", "email", "password", "text"].includes(campo.tipo)
-    ) {
-      esValidoEsteCampo = validarCampo(
-        inputElement,
-        campo.regex,
-        campo.mensajes
-      );
+    } else if (["input", "email", "password", "text"].includes(campo.tipo)) {
+      esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
     }
-    if (!esValidoEsteCampo) {
-      formularioConErroresEspecificos = true;
-    }
+    if (!esValidoEsteCampo) formularioConErroresEspecificos = true;
   }
 
   if (formularioConErroresEspecificos) {
@@ -521,108 +464,70 @@ function registrarUsuario() {
     clave: formData.get("clave") || "",
     correo: formData.get("correo") || "",
     idrol: formData.get("idrol") || "",
-    personaId: formData.get("personaId") || "",
+    personaId: formData.get("personaId") || null, 
   };
 
-  if (btnGuardarUsuario) {
-    btnGuardarUsuario.disabled = true;
-    btnGuardarUsuario.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
-  }
+  btnGuardarUsuario.disabled = true;
+  btnGuardarUsuario.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
 
-  fetch("Usuarios/createUsuario", {
+  fetch("Usuarios/createUsuario", { 
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-    body: JSON.stringify(dataParaEnviar),
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+    body: JSON.stringify(dataParaEnviar) 
   })
-    .then((response) => {
-      if (!response.ok) {
-        return response.json().then((errData) => {
-          throw { status: response.status, data: errData };
-        });
-      }
-      return response.json();
-    })
-    .then((result) => {
+    .then(response => response.ok ? response.json() : response.json().then(err => { throw err; }))
+    .then(result => {
       if (result.status) {
         Swal.fire("¡Éxito!", result.message, "success");
         cerrarModal("modalRegistrarUsuario");
-        if (typeof tablaUsuarios !== "undefined" && tablaUsuarios.ajax) {
-          tablaUsuarios.ajax.reload(null, false);
-        }
+        if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
       } else {
-        Swal.fire(
-          "Error",
-          result.message || "No se pudo registrar el usuario.",
-          "error"
-        );
+        // Aquí se manejará el error de correo duplicado con el mensaje del servidor
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: result.message || "No se pudo registrar el usuario.",
+          confirmButtonColor: "#3085d6"
+        });
       }
     })
-    .catch((error) => {
-      console.error("Error en fetch:", error);
-      let errorMessage = "Ocurrió un error de conexión.";
-      if (error.data && error.data.message) {
-        errorMessage = error.data.message;
-      } else if (error.status) {
-        errorMessage = `Error del servidor: ${error.status}.`;
-      }
-      Swal.fire("Error", errorMessage, "error");
-    })
+    .catch(error => Swal.fire("Error", error.message || "Error de conexión.", "error"))
     .finally(() => {
-      if (btnGuardarUsuario) {
-        btnGuardarUsuario.disabled = false;
-        btnGuardarUsuario.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Usuario`;
-      }
+      btnGuardarUsuario.disabled = false;
+      btnGuardarUsuario.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Usuario`;
     });
 }
 
 function editarUsuario(idUsuario) {
-  fetch(`Usuarios/getUsuarioById/${idUsuario}`, {
+  fetch(`Usuarios/getUsuarioById/${idUsuario}`, { 
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  })
-    .then((response) => response.json())
-    .then((result) => {
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+   })
+    .then(response => response.json())
+    .then(result => {
       if (result.status && result.data) {
-        const usuario = result.data;
-        mostrarModalEditarUsuario(usuario);
+        mostrarModalEditarUsuario(result.data);
       } else {
-        Swal.fire("Error", "No se pudieron cargar los datos.", "error");
+        Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
       }
     })
-    .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire("Error", "Error de conexión.", "error");
-    });
+    .catch(error => Swal.fire("Error", "Error de conexión.", "error"));
 }
 
 function mostrarModalEditarUsuario(usuario) {
-  // Llenar los campos del formulario con los datos existentes
-  document.getElementById("idUsuarioActualizar").value =
-    usuario.idusuario || "";
-  document.getElementById("usuarioNombreActualizar").value =
-    usuario.usuario || "";
-  document.getElementById("usuarioCorreoActualizar").value =
-    usuario.correo || "";
-  document.getElementById("usuarioRolActualizar").value =
-    usuario.idrol || "";
-  document.getElementById("usuarioPersonaActualizar").value =
-    usuario.personaId || "";
+  const formActualizar = document.getElementById("formActualizarUsuario");
+  if (formActualizar) formActualizar.reset();
+  limpiarValidaciones(camposFormularioActualizarUsuario, "formActualizarUsuario");
 
-  // No llenamos la clave por seguridad
-  document.getElementById("usuarioClaveActualizar").value = "";
+  document.getElementById("idUsuarioActualizar").value = usuario.idusuario || "";
+  document.getElementById("usuarioNombreActualizar").value = usuario.usuario || "";
+  document.getElementById("usuarioCorreoActualizar").value = usuario.correo || "";
+  document.getElementById("usuarioRolActualizar").value = usuario.idrol || "";
+  document.getElementById("usuarioClaveActualizar").value = ""; 
 
-  // Inicializar validaciones para el formulario de actualizar
-  inicializarValidaciones(
-    camposFormularioActualizarUsuario,
-    "formActualizarUsuario"
-  );
-
+  cargarPersonas(usuario.personaId || 0, "usuarioPersonaActualizar");
+  
+  inicializarValidaciones(camposFormularioActualizarUsuario, "formActualizarUsuario");
   abrirModal("modalActualizarUsuario");
 }
 
@@ -631,45 +536,28 @@ function actualizarUsuario() {
   const btnActualizarUsuario = document.getElementById("btnActualizarUsuario");
   const idUsuario = document.getElementById("idUsuarioActualizar").value;
 
-  // Validar campos vacíos obligatorios
-  const camposObligatorios = camposFormularioActualizarUsuario.filter((c) => {
-    return c.mensajes && c.mensajes.vacio;
-  });
+  const camposObligatoriosActualizar = camposFormularioActualizarUsuario.filter(c => c.mensajes && c.mensajes.vacio);
+  if (!validarCamposVacios(camposObligatoriosActualizar, "formActualizarUsuario")) return;
 
-  if (!validarCamposVacios(camposObligatorios, "formActualizarUsuario")) {
-    return;
-  }
-
-  // Validar formatos específicos
   let formularioConErroresEspecificos = false;
-  for (const campo of camposFormularioActualizarUsuario) {
+  for (const campo of camposFormularioActualizarUsuario) { 
     const inputElement = formActualizar.querySelector(`#${campo.id}`);
     if (!inputElement) continue;
-
     let esValidoEsteCampo = true;
     if (campo.tipo === "select") {
       if (campo.mensajes && campo.mensajes.vacio) {
-        esValidoEsteCampo = validarSelect(
-          campo.id,
-          campo.mensajes,
-          "formActualizarUsuario"
-        );
+        esValidoEsteCampo = validarSelect(campo.id, campo.mensajes, "formActualizarUsuario");
       }
-    } else if (
-      ["input", "email", "password", "text"].includes(campo.tipo)
-    ) {
-      // Solo validar formato si el campo tiene contenido o es obligatorio
-      if (inputElement.value.trim() !== "" || (campo.mensajes && campo.mensajes.vacio)) {
-        esValidoEsteCampo = validarCampo(
-          inputElement,
-          campo.regex,
-          campo.mensajes
-        );
+    } else if (["input", "email", "password", "text"].includes(campo.tipo)) {
+      if (inputElement.value.trim() !== "" || (campo.mensajes && campo.mensajes.vacio && campo.id !== "usuarioClaveActualizar")) {
+        if (campo.id === "usuarioClaveActualizar" && inputElement.value.trim() === "") {
+            esValidoEsteCampo = true; 
+        } else {
+            esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
+        }
       }
     }
-    if (!esValidoEsteCampo) {
-      formularioConErroresEspecificos = true;
-    }
+    if (!esValidoEsteCampo) formularioConErroresEspecificos = true;
   }
 
   if (formularioConErroresEspecificos) {
@@ -683,105 +571,62 @@ function actualizarUsuario() {
     usuario: formData.get("usuario") || "",
     correo: formData.get("correo") || "",
     idrol: formData.get("idrol") || "",
-    personaId: formData.get("personaId") || "",
-    clave: formData.get("clave") || "",
+    personaId: formData.get("personaId") || null, 
+    clave: formData.get("clave") || "", 
   };
 
-  if (btnActualizarUsuario) {
-    btnActualizarUsuario.disabled = true;
-    btnActualizarUsuario.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...`;
-  }
+  btnActualizarUsuario.disabled = true;
+  btnActualizarUsuario.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...`;
 
-  fetch("Usuarios/updateUsuario", {
+  fetch("Usuarios/updateUsuario", { 
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-    body: JSON.stringify(dataParaEnviar),
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+    body: JSON.stringify(dataParaEnviar) 
   })
-    .then((response) => {
-      if (!response.ok) {
-        return response.json().then((errData) => {
-          throw { status: response.status, data: errData };
-        });
-      }
-      return response.json();
-    })
-    .then((result) => {
+    .then(response => response.ok ? response.json() : response.json().then(err => { throw err; }))
+    .then(result => {
       if (result.status) {
         Swal.fire("¡Éxito!", result.message, "success");
         cerrarModal("modalActualizarUsuario");
-        if (typeof tablaUsuarios !== "undefined" && tablaUsuarios.ajax) {
-          tablaUsuarios.ajax.reload(null, false);
-        }
+        if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
       } else {
-        Swal.fire(
-          "Error",
-          result.message || "No se pudo actualizar el usuario.",
-          "error"
-        );
+        // Aquí se manejará el error de correo duplicado con el mensaje del servidor
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: result.message || "No se pudo actualizar el usuario.",
+          confirmButtonColor: "#3085d6"
+        });
       }
     })
-    .catch((error) => {
-      console.error("Error en fetch:", error);
-      let errorMessage = "Ocurrió un error de conexión.";
-      if (error.data && error.data.message) {
-        errorMessage = error.data.message;
-      } else if (error.status) {
-        errorMessage = `Error del servidor: ${error.status}.`;
-      }
-      Swal.fire("Error", errorMessage, "error");
-    })
+    .catch(error => Swal.fire("Error", error.message || "Error de conexión.", "error"))
     .finally(() => {
-      if (btnActualizarUsuario) {
-        btnActualizarUsuario.disabled = false;
-        btnActualizarUsuario.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Usuario`;
-      }
+      btnActualizarUsuario.disabled = false;
+      btnActualizarUsuario.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Usuario`;
     });
 }
 
 function verUsuario(idUsuario) {
-  fetch(`Usuarios/getUsuarioById/${idUsuario}`, {
+  fetch(`Usuarios/getUsuarioById/${idUsuario}`, { 
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  })
-    .then((response) => response.json())
-    .then((result) => {
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+   })
+    .then(response => response.json())
+    .then(result => {
       if (result.status && result.data) {
         const usuario = result.data;
-        mostrarModalVerUsuario(usuario);
+        document.getElementById("verUsuarioNombre").textContent = usuario.usuario || "N/A";
+        document.getElementById("verUsuarioCorreo").textContent = usuario.correo || "N/A";
+        document.getElementById("verUsuarioRol").textContent = usuario.rol_nombre || "N/A";
+        document.getElementById("verUsuarioEstatus").textContent = usuario.estatus || "N/A";
+        document.getElementById("verPersonaNombre").textContent = usuario.persona_nombre_completo || "Sin persona asociada";
+        document.getElementById("verPersonaCedula").textContent = usuario.persona_cedula || "N/A";
+        abrirModal("modalVerUsuario");
       } else {
-        Swal.fire("Error", "No se pudieron cargar los datos.", "error");
+        Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
       }
     })
-    .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire("Error", "Error de conexión.", "error");
-    });
-}
-
-function mostrarModalVerUsuario(usuario) {
-  // Llenar los campos del modal de ver
-  document.getElementById("verUsuarioNombre").textContent =
-    usuario.usuario || "N/A";
-  document.getElementById("verUsuarioCorreo").textContent =
-    usuario.correo || "N/A";
-  document.getElementById("verUsuarioRol").textContent =
-    usuario.rol_nombre || "N/A";
-  document.getElementById("verUsuarioEstatus").textContent =
-    usuario.estatus || "N/A";
-
-  // Información de persona asociada
-  document.getElementById("verPersonaNombre").textContent =
-    usuario.persona_nombre_completo || "Sin persona asociada";
-  document.getElementById("verPersonaCedula").textContent =
-    usuario.persona_cedula || "N/A";
-
-  abrirModal("modalVerUsuario");
+    .catch(error => Swal.fire("Error", "Error de conexión.", "error"));
 }
 
 function eliminarUsuario(idUsuario, nombreUsuario) {
@@ -796,37 +641,21 @@ function eliminarUsuario(idUsuario, nombreUsuario) {
     cancelButtonText: "Cancelar",
   }).then((result) => {
     if (result.isConfirmed) {
-      const dataParaEnviar = {
-        idusuario: idUsuario,
-      };
-
       fetch("Usuarios/deleteUsuario", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-        },
-        body: JSON.stringify(dataParaEnviar),
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ idusuario: idUsuario }),
       })
-        .then((response) => response.json())
-        .then((result) => {
+        .then(response => response.json())
+        .then(result => {
           if (result.status) {
             Swal.fire("¡Desactivado!", result.message, "success");
-            if (typeof tablaUsuarios !== "undefined" && tablaUsuarios.ajax) {
-              tablaUsuarios.ajax.reload(null, false);
-            }
+            if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
           } else {
-            Swal.fire(
-              "Error",
-              result.message || "No se pudo desactivar el usuario.",
-              "error"
-            );
+            Swal.fire("Error", result.message || "No se pudo desactivar.", "error");
           }
         })
-        .catch((error) => {
-          console.error("Error:", error);
-          Swal.fire("Error", "Error de conexión.", "error");
-        });
+        .catch(error => Swal.fire("Error", "Error de conexión.", "error"));
     }
   });
 }
