@@ -281,6 +281,15 @@ class Proveedores extends Controllers
                 } else {
                     $arrResponse = array('status' => false, 'message' => 'Error al desactivar el proveedor');
                 }
+                 if ($arrResponse['status'] === true) {
+                    // Registrar acción en bitácora
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('proveedor', 'ELIMINAR', $idusuario);
+
+                    if (!$resultadoBitacora) {
+                        error_log("Warning: No se pudo registrar en bitácora la actualización del proveedor ID: " .
+                            ($arrResponse['proveedor_id'] ?? 'desconocido'));
+                    }
+                }
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
