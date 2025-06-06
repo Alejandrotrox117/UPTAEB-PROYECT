@@ -10,9 +10,9 @@ require_once "app/models/bitacoraModel.php";
 class Proveedores extends Controllers
 {
     private $bitacoraModel;
-    
 
-public function get_model()
+
+    public function get_model()
     {
         return $this->model;
     }
@@ -27,31 +27,20 @@ public function get_model()
         $this->model = new ProveedoresModel();
         $this->bitacoraModel = new BitacoraModel();
 
-        // Asegurar que la sesión esté iniciada
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+
         // Verificar si el usuario está logueado antes de verificar permisos
-        if (!$this->verificarUsuarioLogueado()) {
+        if (!$this->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
         }
     }
 
-    // Método para verificar si el usuario está logueado
-    private function verificarUsuarioLogueado()
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        return isset($_SESSION['idUser']) && !empty($_SESSION['idUser']);
-    }
 
-    // Método auxi<?php
     public function createProveedor()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
+
                 $postdata = file_get_contents("php://input");
                 $request = json_decode($postdata, true);
 
@@ -244,6 +233,16 @@ public function get_model()
                 // CAMBIO IMPORTANTE: Pasar el ID del usuario al modelo
                 $idusuario = $this->obtenerUsuarioSesion();
                 $arrResponse = $this->model->updateProveedor($intIdProveedor, $arrData, $idusuario);
+                // Registrar en bitácora si la inserción fue exitosa
+                if ($arrResponse['status'] === true) {
+                    // Registrar acción en bitácora
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('proveedor', 'ACTUALIZAR', $idusuario);
+
+                    if (!$resultadoBitacora) {
+                        error_log("Warning: No se pudo registrar en bitácora la actualización del proveedor ID: " .
+                            ($arrResponse['proveedor_id'] ?? 'desconocido'));
+                    }
+                }
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
                 error_log("Error en updateProveedor: " . $e->getMessage());
@@ -329,7 +328,7 @@ public function get_model()
                     die();
                 }
 
-                // CAMBIO IMPORTANTE: Pasar el ID del usuario al modelo (si tienes este método)
+               
                 $idusuario = $this->obtenerUsuarioSesion();
                 $requestActivar = $this->model->activarProveedorById($intIdProveedor, $idusuario);
                 if ($requestActivar) {
@@ -339,7 +338,7 @@ public function get_model()
                 }
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-             } catch (Exception $e) {
+            } catch (Exception $e) {
                 error_log("Error en activarProveedor: " . $e->getMessage());
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -347,23 +346,23 @@ public function get_model()
             die();
         }
     }
-     public function exportarProveedores(){
+    public function exportarProveedores()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
                 $arrData = $this->get_model()->selectAllProveedores();
-                
+
                 if ($arrData['status']) {
                     $data['proveedores'] = $arrData['data'];
                     $data['page_title'] = "Reporte de Proveedores";
                     $data['fecha_reporte'] = date('d/m/Y H:i:s');
-                    
+
                     $arrResponse = array('status' => true, 'message' => 'Datos preparados para exportación', 'data' => $data);
                 } else {
                     $arrResponse = array('status' => false, 'message' => 'No se pudieron obtener los datos');
                 }
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-
             } catch (Exception $e) {
                 error_log("Error en exportarProveedores: " . $e->getMessage());
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
@@ -373,7 +372,8 @@ public function get_model()
         }
     }
 
-    public function buscarProveedor(){
+    public function buscarProveedor()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 $postdata = file_get_contents("php://input");
@@ -400,7 +400,6 @@ public function get_model()
                 }
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-
             } catch (Exception $e) {
                 error_log("Error en buscarProveedor: " . $e->getMessage());
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
