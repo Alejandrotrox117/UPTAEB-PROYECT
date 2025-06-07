@@ -1,261 +1,541 @@
 <?php
-require_once("app/core/conexion.php");
-require_once("app/core/mysql.php");
+require_once "app/core/conexion.php";
+require_once "app/core/mysql.php";
+require_once "app/models/bitacoraModel.php";
 
-class productosModel extends Mysql
+class ProductosModel extends Mysql
 {
-    private $conexionObjeto;
-    private $db;
-
-    private $idproducto;
-    private $nombre;
-    private $descripcion;
-    private $unidad_medida;
-    private $precio;
-    private $existencia;
-    private $idcategoria;
-    private $moneda;
-    private $estatus;
-
-    
-    
-    
+    private $query;
+    private $array;
+    private $data;
+    private $result;
+    private $productoId;
+    private $message;
+    private $status;
+ 
     public function __construct()
     {
-        parent::__construct();
-        $this->conexionObjeto = new Conexion();
-        $this->conexionObjeto->connect();
-       
-        $this->db = $this->conexionObjeto->get_conectGeneral();
+        
     }
 
-    public function __destruct()
-    {
-        if ($this->conexionObjeto) {
-            $this->conexionObjeto->disconnect();
+    // Getters y Setters
+    public function getQuery(){
+        return $this->query;
+    }
+
+    public function setQuery(string $query){
+        $this->query = $query;
+    }
+
+    public function getArray(){
+        return $this->array ?? [];
+    }
+
+    public function setArray(array $array){
+        $this->array = $array;
+    }
+
+    public function getData(){
+        return $this->data ?? [];
+    }
+
+    public function setData(array $data){
+        $this->data = $data;
+    }
+
+    public function getResult(){
+        return $this->result;
+    }
+
+    public function setResult($result){
+        $this->result = $result;
+    }
+
+    public function getProductoId(){
+        return $this->productoId;
+    }
+
+    public function setProductoId(?int $productoId){
+        $this->productoId = $productoId;
+    }
+
+    public function getMessage(){
+        return $this->message ?? '';
+    }
+
+    public function setMessage(string $message){
+        $this->message = $message;
+    }
+
+    public function getStatus(){
+        return $this->status ?? false;
+    }
+
+    public function setStatus(bool $status){
+        $this->status = $status;
+    }
+
+    private function ejecutarVerificacionProducto(string $nombre, int $idProductoExcluir = null){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("SELECT COUNT(*) as total FROM producto WHERE nombre = ?");
+            $this->setArray([$nombre]);
+            if ($idProductoExcluir !== null) {
+                $this->setQuery($this->getQuery() . " AND idproducto != ?");
+                $array = $this->getArray();
+                $array[] = $idProductoExcluir;
+                $this->setArray($array);
+            }
+            $stmt = $db->prepare($this->getQuery());
+
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+
+            $result = $this->getResult();
+            $exists = $result && $result['total'] > 0;
+            
+        } catch (Exception $e) {
+            $conexion->disconnect();
+            error_log("Error al verificar producto existente: " . $e->getMessage());
+            $exists = true;
+        } finally {
+            $conexion->disconnect();
         }
+        return $exists;
     }
 
+    private function ejecutarInsercionProducto(array $data){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
-    // Métodos Getters y Setters
-    public function getIdproducto() {
-        return $this->idproducto;
+        try {
+            $this->setQuery(
+                "INSERT INTO producto (
+                    nombre, descripcion, unidad_medida, precio, 
+                    idcategoria, moneda, estatus, existencia,
+                    fecha_creacion, ultima_modificacion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+            );
+            
+            $this->setArray([
+                $data['nombre'],
+                $data['descripcion'],
+                $data['unidad_medida'],
+                $data['precio'],
+                $data['idcategoria'],
+                $data['moneda'],
+                'ACTIVO',
+                0 // existencia inicial en 0
+            ]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setProductoId($db->lastInsertId());
+            
+            if ($this->getProductoId()) {
+                $this->setStatus(true);
+                $this->setMessage('Producto registrado exitosamente.');
+            } else {
+                $this->setStatus(false);
+                $this->setMessage('Error al obtener ID de producto tras registro.');
+            }
+            
+            $resultado = [
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage(),
+                'producto_id' => $this->getProductoId()
+            ];
+            
+        } catch (Exception $e) {
+            $conexion->disconnect();
+            error_log("Error al insertar producto: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error de base de datos al registrar producto: ' . $e->getMessage(),
+                'producto_id' => null
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function setIdproducto($idproducto) {
-        $this->idproducto = $idproducto;
+    private function ejecutarActualizacionProducto(int $idproducto, array $data){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "UPDATE producto SET 
+                    nombre = ?, descripcion = ?, unidad_medida = ?, 
+                    precio = ?, idcategoria = ?, moneda = ?, 
+                    ultima_modificacion = NOW() 
+                WHERE idproducto = ?"
+            );
+            
+            $this->setArray([
+                $data['nombre'],
+                $data['descripcion'],
+                $data['unidad_medida'],
+                $data['precio'],
+                $data['idcategoria'],
+                $data['moneda'],
+                $idproducto
+            ]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $rowCount = $stmt->rowCount();
+            
+            if ($rowCount > 0) {
+                $this->setStatus(true);
+                $this->setMessage('Producto actualizado exitosamente.');
+            } else {
+                $this->setStatus(false);
+                $this->setMessage('No se pudo actualizar el producto o no se realizaron cambios.');
+            }
+            
+            $resultado = [
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
+            ];
+            
+        } catch (Exception $e) {
+            $conexion->disconnect();
+            error_log("Error al actualizar producto: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error de base de datos al actualizar producto: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function getNombre() {
-        return $this->nombre;
+    private function ejecutarBusquedaProductoPorId(int $idproducto){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT 
+                    p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
+                    p.precio, p.existencia, p.idcategoria, p.moneda, p.estatus,
+                    p.fecha_creacion, p.ultima_modificacion,
+                    c.nombre as categoria_nombre,
+                    DATE_FORMAT(p.fecha_creacion, ?) as fecha_creacion_formato,
+                    DATE_FORMAT(p.ultima_modificacion, ?) as fecha_modificacion_formato
+                FROM producto p 
+                LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+                WHERE p.idproducto = ?"
+            );
+            
+            $this->setArray(['%d/%m/%Y %H:%i', '%d/%m/%Y %H:%i', $idproducto]);
+        
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+            
+            $resultado = $this->getResult();
+            
+        } catch (Exception $e) {
+            $conexion->disconnect();
+            error_log("ProductosModel::ejecutarBusquedaProductoPorId -> " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function setNombre($nombre) {
-        $this->nombre = $nombre;
+    private function ejecutarEliminacionProducto(int $idproducto){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("UPDATE producto SET estatus = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
+            $this->setArray(['INACTIVO', $idproducto]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $resultado = $stmt->rowCount() > 0;
+            
+        } catch (Exception $e) {
+            error_log("ProductosModel::ejecutarEliminacionProducto -> " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function getDescripcion() {
-        return $this->descripcion;
+    private function ejecutarBusquedaTodosProductos(){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT 
+                    p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
+                    p.precio, p.existencia, p.idcategoria, p.moneda, p.estatus,
+                    p.fecha_creacion, p.ultima_modificacion,
+                    c.nombre as categoria_nombre,
+                    DATE_FORMAT(p.fecha_creacion, ?) as fecha_creacion_formato,
+                    DATE_FORMAT(p.ultima_modificacion, ?) as fecha_modificacion_formato
+                FROM producto p 
+                LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+                ORDER BY p.nombre ASC"
+            );
+            
+            $this->setArray(['%d/%m/%Y', '%d/%m/%Y']);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            $resultado = [
+                "status" => true,
+                "message" => "Productos obtenidos.",
+                "data" => $this->getResult()
+            ];
+            
+        } catch (Exception $e) {
+            error_log("ProductosModel::ejecutarBusquedaTodosProductos - Error: " . $e->getMessage());
+            $resultado = [
+                "status" => false,
+                "message" => "Error al obtener productos: " . $e->getMessage(),
+                "data" => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function setDescripcion($descripcion) {
-        $this->descripcion = $descripcion;
+    private function ejecutarBusquedaProductosActivos(){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT 
+                    p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
+                    p.precio, p.existencia, p.moneda,
+                    c.nombre as categoria_nombre
+                FROM producto p 
+                LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+                WHERE p.estatus = ?
+                ORDER BY p.nombre ASC"
+            );
+            
+            $this->setArray(['ACTIVO']);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            $resultado = [
+                "status" => true,
+                "message" => "Productos activos obtenidos.",
+                "data" => $this->getResult()
+            ];
+            
+        } catch (Exception $e) {
+            error_log("ProductosModel::ejecutarBusquedaProductosActivos - Error: " . $e->getMessage());
+            $resultado = [
+                "status" => false,
+                "message" => "Error al obtener productos activos: " . $e->getMessage(),
+                "data" => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function getUnidadMedida() {
-        return $this->unidad_medida;
+    private function ejecutarBusquedaCategoriasActivas(){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT 
+                    idcategoria, nombre, descripcion
+                FROM categoria 
+                WHERE estatus = ?
+                ORDER BY nombre ASC"
+            );
+            
+            $this->setArray(['ACTIVO']);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            $resultado = [
+                "status" => true,
+                "message" => "Categorías activas obtenidas.",
+                "data" => $this->getResult()
+            ];
+            
+        } catch (Exception $e) {
+            error_log("ProductosModel::ejecutarBusquedaCategoriasActivas - Error: " . $e->getMessage());
+            $resultado = [
+                "status" => false,
+                "message" => "Error al obtener categorías: " . $e->getMessage(),
+                "data" => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function setUnidadMedida($unidad_medida) {
-        $this->unidad_medida = $unidad_medida;
+    private function ejecutarActivacionProducto(int $idproducto){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("UPDATE producto SET estatus = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
+            $this->setArray(['ACTIVO', $idproducto]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $resultado = $stmt->rowCount() > 0;
+            
+        } catch (Exception $e) {
+            error_log("ProductosModel::ejecutarActivacionProducto -> " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function getPrecio() {
-        return $this->precio;
+    private function ejecutarBusquedaProductos(string $termino){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT 
+                    p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
+                    p.precio, p.existencia, p.moneda, p.estatus,
+                    c.nombre as categoria_nombre
+                FROM producto p 
+                LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+                WHERE p.nombre LIKE ? OR p.descripcion LIKE ? OR c.nombre LIKE ?
+                ORDER BY p.nombre ASC"
+            );
+            
+            $terminoBusqueda = '%' . $termino . '%';
+            $this->setArray([$terminoBusqueda, $terminoBusqueda, $terminoBusqueda]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            $resultado = [
+                "status" => true,
+                "message" => "Búsqueda completada.",
+                "data" => $this->getResult()
+            ];
+            
+        } catch (Exception $e) {
+            error_log("ProductosModel::ejecutarBusquedaProductos - Error: " . $e->getMessage());
+            $resultado = [
+                "status" => false,
+                "message" => "Error en la búsqueda: " . $e->getMessage(),
+                "data" => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
-    public function setPrecio($precio) {
-        $this->precio = $precio;
+    // Métodos públicos que usan las funciones privadas
+    public function insertProducto(array $data){
+        $this->setData($data);
+        $nombre = $this->getData()['nombre'];
+
+        if ($this->ejecutarVerificacionProducto($nombre)) {
+            return [
+                'status' => false,
+                'message' => 'Ya existe un producto con ese nombre.',
+                'producto_id' => null
+            ];
+        }
+
+        return $this->ejecutarInsercionProducto($this->getData());
     }
 
-    public function getExistencia() {
-        return $this->existencia;
+    public function updateProducto(int $idproducto, array $data){
+        $this->setData($data);
+        $this->setProductoId($idproducto);
+        $nombre = $this->getData()['nombre'];
+
+        if ($this->ejecutarVerificacionProducto($nombre, $this->getProductoId())) {
+            return [
+                'status' => false,
+                'message' => 'Ya existe otro producto con ese nombre.'
+            ];
+        }
+
+        return $this->ejecutarActualizacionProducto($this->getProductoId(), $this->getData());
     }
 
-    public function setExistencia($existencia) {
-        $this->existencia = $existencia;
+    public function selectProductoById(int $idproducto){
+        $this->setProductoId($idproducto);
+        return $this->ejecutarBusquedaProductoPorId($this->getProductoId());
     }
 
-    public function getIdcategoria() {
-        return $this->idcategoria;
+    public function deleteProductoById(int $idproducto){
+        $this->setProductoId($idproducto);
+        return $this->ejecutarEliminacionProducto($this->getProductoId());
     }
 
-    public function setIdcategoria($idcategoria) {
-        $this->idcategoria = $idcategoria;
+    public function selectAllProductos(){
+        return $this->ejecutarBusquedaTodosProductos();
     }
 
-    public function getEstatus() {
-        return $this->estatus;
+    public function selectProductosActivos(){
+        return $this->ejecutarBusquedaProductosActivos();
     }
 
-    public function setEstatus($estatus) {
-        $this->estatus = $estatus;
+    public function selectCategoriasActivas(){
+        return $this->ejecutarBusquedaCategoriasActivas();
     }
 
-    public function getMoneda() {
-        return $this->moneda;
+    public function activarProductoById(int $idproducto){
+        $this->setProductoId($idproducto);
+        return $this->ejecutarActivacionProducto($this->getProductoId());
     }
 
-    public function setMoneda($moneda) {
-        $this->moneda = $moneda;
-    }
-    
-public function SelectAllProductos() {
-    $sql = "SELECT 
-                    p.idproducto, 
-                    p.nombre, 
-                    p.descripcion, 
-                    p.unidad_medida, 
-                    p.precio, 
-                    p.existencia, 
-                    c.nombre AS nombre_categoria,
-                    p.idcategoria,
-                    p.moneda,                
-                    p.estatus, 
-                    p.fecha_creacion, 
-                    p.ultima_modificacion
-                FROM 
-                    producto p 
-                LEFT JOIN 
-                    categoria c ON p.idcategoria = c.idcategoria 
-                WHERE 
-                    p.estatus = 'activo'";
-    try {
-        $stmt = $this->db->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        error_log("ProductosModel: Error al seleccionar todos los productos con categoría - " . $e->getMessage());
-        return [];
+    public function buscarProductos(string $termino){
+        return $this->ejecutarBusquedaProductos($termino);
     }
 }
-
-
-
-    public function insertProducto($data)
-    {
-        $sql = "INSERT INTO producto (
-                    nombre, descripcion, unidad_medida, precio, existencia, idcategoria, moneda, estatus
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    
-        $stmt = $this->db->prepare($sql);
-        $arrValues = [
-            $data['nombre'],
-            $data['descripcion'],
-            $data['unidad_medida'],
-            $data['precio'],
-            $data['existencia'],
-            $data['idcategoria'],
-            $data['moneda'],
-            $data['estatus']
-        ];
-    
-        return $stmt->execute($arrValues);
-    }
-
-    // Método para eliminar lógicamente un producto
-    public function deleteProducto($idproducto) {
-        $sql = "UPDATE producto SET estatus = 'INACTIVO' WHERE idproducto = ?";
-        $stmt = $this->db->prepare($sql); 
-        return $stmt->execute([$idproducto]); 
-    }
-
-    // Método para actualizar un producto
-    public function updateProducto($data)
-    {
-        $sql = "UPDATE producto SET 
-                    nombre = ?, 
-                    descripcion = ?, 
-                    unidad_medida = ?, 
-                    precio = ?, 
-                    existencia = ?, 
-                    idcategoria = ?,
-                    moneda = ?,
-                    estatus = ? 
-                WHERE idproducto = ?";
-    
-        $stmt = $this->db->prepare($sql);
-        $arrValues = [
-            $data['nombre'],
-            $data['descripcion'],
-            $data['unidad_medida'],
-            $data['precio'],
-            $data['existencia'],
-            $data['idcategoria'],
-            $data['moneda'],
-            $data['estatus'],
-            $data['idproducto']
-        ];
-    
-        return $stmt->execute($arrValues);
-    }
-
-    // Método para obtener un producto por ID
-    public function getProductoById($idproducto) {
-        $sql = "SELECT * FROM producto WHERE idproducto = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$idproducto]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($data) {
-            // Asignar los valores a las propiedades del objeto
-            $this->setIdproducto($data['idproducto']);
-            $this->setNombre($data['nombre']);
-            $this->setDescripcion($data['descripcion']);
-            $this->setUnidadMedida($data['unidad_medida']);
-            $this->setPrecio($data['precio']);
-            $this->setExistencia($data['existencia']);
-            $this->setIdcategoria($data['idcategoria']);
-            $this->setMoneda($data['moneda']);
-            $this->setEstatus($data['estatus']);
-        }
-
-        return $data; 
-    }
-    public function SelectAllCategorias()
-    {
-        $sql = "SELECT * FROM categoria WHERE estatus = 'activo'";
-        try {
-            $stmt = $this->db->query($sql);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("CategoriasModel: Error al seleccionar todos las categorias- " . $e->getMessage());
-            return [];
-        }
-    }
-     public function getProductosConCategoria()
-    {
-        $sql = "SELECT
-                    p.idproducto,
-                    p.nombre AS nombre_producto,
-                    p.idcategoria,
-                    cp.nombre AS nombre_categoria,
-                    p.precio AS precio_unitario,
-                    p.moneda AS idmoneda_producto 
-                FROM
-                    producto p
-                JOIN
-                    categoria cp ON p.idcategoria = cp.idcategoria
-                LEFT JOIN
-                    monedas m ON p.moneda = m.idmoneda 
-                WHERE
-                    p.estatus = 'activo'";
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("ventasModel::getProductosConCategoria - Error de BD: " . $e->getMessage());
-            return [];
-        }
-    }
-}
+?>
