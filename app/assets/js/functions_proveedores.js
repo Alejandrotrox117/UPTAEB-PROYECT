@@ -2,13 +2,8 @@ import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import {
   expresiones,
   inicializarValidaciones,
-  validarCamposVacios,
-  validarCampo,
-  validarSelect,
   limpiarValidaciones,
   registrarEntidad,
-  validarFechaNacimiento,
-
 } from "./validaciones.js";
 
 let tablaProveedores;
@@ -26,10 +21,10 @@ const camposFormularioProveedor = [
       formato: "El apellido solo puede contener letras y espacios.",
     },
   },
-  {id: "proveedorIdentificacion",tipo: "input",regex: expresiones.identificacion,
+  {id: "proveedorIdentificacion",tipo: "input",regex: expresiones.cedula,
     mensajes: {
       vacio: "La identificación es obligatoria.",
-      formato: "Formato de identificación inválido.",
+      formato: "Formato de identificación inválido. Debe contener el formato V/J/E Ejemplo V-12345678 o J-12345678.",
     },
   },
   {id: "proveedorTelefono",tipo: "input",regex: expresiones.telefono,

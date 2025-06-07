@@ -10,7 +10,7 @@ const expresiones = {
   fecha: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, // Fecha
   fechaNacimiento: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, // Fecha de Nacimiento
   nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/,
-  cedula: /^(V|E|P|G|J)?-?\d{6,9}$/i, // Ejemplo: V-12345678 o 12345678
+  cedula: /^(V|E|J)?-?\d{8}$/i, // Ejemplo: V-12345678 o 12345678
   password: /^.{6,16}$/, // Mínimo 6, máximo 16 caracteres
   textoGeneral: /^.{2,100}$/, // Para campos como estado, ciudad, país
   genero: /^(MASCULINO|FEMENINO|OTRO)$/, // Género
