@@ -7,6 +7,7 @@ require_once "helpers/permisosVerificar.php";
 require_once "helpers/PermisosHelper.php";
 require_once "app/models/bitacoraModel.php";
 require_once "helpers/expresiones_regulares.php";
+require_once "helpers/bitacora_helper.php";
 class Proveedores extends Controllers
 {
     private $bitacoraModel;
@@ -226,15 +227,19 @@ class Proveedores extends Controllers
         }
     }
 
-    public function index()
-    {
-        $data['page_tag'] = "Proveedores";
-        $data['page_title'] = "Administración de Proveedores";
-        $data['page_name'] = "proveedores";
-        $data['page_content'] = "Gestión integral de proveedores del sistema";
-        $data['page_functions_js'] = "functions_proveedores.js";
-        $this->views->getView($this, "proveedores", $data);
-    }
+   public function index()
+{
+    // ⬅️ REGISTRAR ACCESO AL MÓDULO USANDO EL HELPER
+    $idusuario = $this->obtenerUsuarioSesion();
+    BitacoraHelper::registrarAccesoModulo('proveedor', $idusuario, $this->bitacoraModel);
+
+    $data['page_tag'] = "Proveedores";
+    $data['page_title'] = "Administración de Proveedores";
+    $data['page_name'] = "proveedores";
+    $data['page_content'] = "Gestión integral de proveedores del sistema";
+    $data['page_functions_js'] = "functions_proveedores.js";
+    $this->views->getView($this, "proveedores", $data);
+}
 
     public function getProveedoresData()
     {
