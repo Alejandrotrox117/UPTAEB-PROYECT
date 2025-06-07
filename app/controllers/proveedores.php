@@ -51,7 +51,7 @@ class Proveedores extends Controllers
                     die();
                 }
 
-                // ⬅️ LIMPIAR Y PREPARAR DATOS CON EXPRESIONES REGULARES
+             
                 $datosLimpios = [
                     'nombre' => ExpresionesRegulares::limpiar($request['nombre'] ?? '', 'nombre'),
                     'apellido' => ExpresionesRegulares::limpiar($request['apellido'] ?? '', 'apellido'),
@@ -64,7 +64,7 @@ class Proveedores extends Controllers
                     'observaciones' => trim($request['observaciones'] ?? '')
                 ];
 
-                // ⬅️ VALIDAR CAMPOS OBLIGATORIOS NO VACÍOS
+        
                 $camposObligatorios = ['nombre', 'apellido', 'identificacion', 'telefono_principal'];
                 foreach ($camposObligatorios as $campo) {
                     if (empty($datosLimpios[$campo])) {
@@ -74,7 +74,6 @@ class Proveedores extends Controllers
                     }
                 }
 
-                // ⬅️ VALIDAR FORMATOS CON EXPRESIONES REGULARES
                 $reglasValidacion = [
                     'nombre' => 'nombre',
                     'apellido' => 'apellido',
@@ -97,10 +96,9 @@ class Proveedores extends Controllers
                     $reglasValidacion['genero'] = 'genero';
                 }
 
-                // ⬅️ EJECUTAR VALIDACIONES
                 $resultadosValidacion = ExpresionesRegulares::validarCampos($datosLimpios, $reglasValidacion);
 
-                // ⬅️ RECOPILAR ERRORES
+      
                 $errores = [];
                 foreach ($resultadosValidacion as $campo => $resultado) {
                     if (!$resultado['valido']) {
@@ -108,7 +106,7 @@ class Proveedores extends Controllers
                     }
                 }
 
-                // ⬅️ SI HAY ERRORES, RESPONDER CON TODOS LOS ERRORES
+       
                 if (!empty($errores)) {
                     $arrResponse = array(
                         'status' => false,
@@ -120,29 +118,22 @@ class Proveedores extends Controllers
 
 
 
+              
                 if (!empty($datosLimpios['fecha_nacimiento'])) {
-
                     $fechaOriginal = $datosLimpios['fecha_nacimiento'];
 
-
-                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaOriginal)) {
-                        $fechaFormateada = DateTime::createFromFormat('Y-m-d', $fechaOriginal);
-                        if ($fechaFormateada) {
-                            $datosLimpios['fecha_nacimiento'] = $fechaFormateada->format('d/m/Y');
-                        }
-                    }
-
-                    if (!ExpresionesRegulares::validar($datosLimpios['fecha_nacimiento'], 'fechaNacimiento')) {
+                    // Validar que la fecha tenga formato YYYY-MM-DD
+                    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaOriginal)) {
                         $arrResponse = array(
                             'status' => false,
-                            'message' => 'El formato de fecha de nacimiento debe ser DD/MM/AAAA'
+                            'message' => 'El formato de fecha de nacimiento debe ser YYYY-MM-DD'
                         );
                         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                         die();
                     }
 
-                    // Validar que no sea fecha futura
-                    $fechaNacimiento = DateTime::createFromFormat('d/m/Y', $datosLimpios['fecha_nacimiento']);
+                    // Crear objeto DateTime para validaciones
+                    $fechaNacimiento = DateTime::createFromFormat('Y-m-d', $fechaOriginal);
                     if (!$fechaNacimiento) {
                         $arrResponse = array(
                             'status' => false,
@@ -153,6 +144,8 @@ class Proveedores extends Controllers
                     }
 
                     $fechaHoy = new DateTime();
+                    
+                    // Validar que no sea fecha futura
                     if ($fechaNacimiento > $fechaHoy) {
                         $arrResponse = array(
                             'status' => false,
@@ -161,6 +154,26 @@ class Proveedores extends Controllers
                         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                         die();
                     }
+
+                    // ⬅️ VALIDACIÓN DE EDAD MÍNIMA DE 18 AÑOS
+                    $fechaMinima = clone $fechaHoy;
+                    $fechaMinima->sub(new DateInterval('P18Y')); // Restar 18 años a la fecha actual
+                    
+                    if ($fechaNacimiento > $fechaMinima) {
+                        $edad = $fechaHoy->diff($fechaNacimiento)->y;
+                        $arrResponse = array(
+                            'status' => false,
+                            'message' => "La persona debe ser mayor de 18 años. Edad actual: {$edad} años"
+                        );
+                        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+
+              
+                    $datosLimpios['fecha_nacimiento'] = $fechaOriginal;
+                } else {
+               
+                    $datosLimpios['fecha_nacimiento'] = null;
                 }
 
                 $arrData = array(
@@ -373,28 +386,22 @@ class Proveedores extends Controllers
                 }
 
 
+                // ⬅️ VALIDACIÓN Y PROCESAMIENTO DE FECHA DE NACIMIENTO SIMPLIFICADO
                 if (!empty($datosLimpios['fecha_nacimiento'])) {
                     $fechaOriginal = $datosLimpios['fecha_nacimiento'];
 
-                    // Si viene en formato YYYY-MM-DD (desde HTML date input)
-                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaOriginal)) {
-                        $fechaFormateada = DateTime::createFromFormat('Y-m-d', $fechaOriginal);
-                        if ($fechaFormateada) {
-                            $datosLimpios['fecha_nacimiento'] = $fechaFormateada->format('d/m/Y');
-                        }
-                    }
-
-                    if (!ExpresionesRegulares::validar($datosLimpios['fecha_nacimiento'], 'fechaNacimiento')) {
+                    // Validar que la fecha tenga formato YYYY-MM-DD
+                    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaOriginal)) {
                         $arrResponse = array(
                             'status' => false,
-                            'message' => 'El formato de fecha de nacimiento debe ser DD/MM/AAAA'
+                            'message' => 'El formato de fecha de nacimiento debe ser YYYY-MM-DD'
                         );
                         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                         die();
                     }
 
-                    // Validar que no sea fecha futura
-                    $fechaNacimiento = DateTime::createFromFormat('d/m/Y', $datosLimpios['fecha_nacimiento']);
+                    // Crear objeto DateTime para validaciones
+                    $fechaNacimiento = DateTime::createFromFormat('Y-m-d', $fechaOriginal);
                     if (!$fechaNacimiento) {
                         $arrResponse = array(
                             'status' => false,
@@ -405,6 +412,8 @@ class Proveedores extends Controllers
                     }
 
                     $fechaHoy = new DateTime();
+                    
+                    // Validar que no sea fecha futura
                     if ($fechaNacimiento > $fechaHoy) {
                         $arrResponse = array(
                             'status' => false,
@@ -413,6 +422,26 @@ class Proveedores extends Controllers
                         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                         die();
                     }
+
+                    // ⬅️ VALIDACIÓN DE EDAD MÍNIMA DE 18 AÑOS
+                    $fechaMinima = clone $fechaHoy;
+                    $fechaMinima->sub(new DateInterval('P18Y')); // Restar 18 años a la fecha actual
+                    
+                    if ($fechaNacimiento > $fechaMinima) {
+                        $edad = $fechaHoy->diff($fechaNacimiento)->y;
+                        $arrResponse = array(
+                            'status' => false,
+                            'message' => "La persona debe ser mayor de 18 años. Edad actual: {$edad} años"
+                        );
+                        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+
+                    // ⬅️ MANTENER FORMATO DE BASE DE DATOS (YYYY-MM-DD)
+                    $datosLimpios['fecha_nacimiento'] = $fechaOriginal;
+                } else {
+                    // ⬅️ MANEJO CORRECTO CUANDO LA FECHA ESTÁ VACÍA
+                    $datosLimpios['fecha_nacimiento'] = null;
                 }
 
                 $arrData = array(
