@@ -11,7 +11,7 @@ class ProveedoresModel extends Mysql
     private $proveedorId;
     private $message;
     private $status;
-
+ 
     public function __construct()
     {
         
@@ -73,6 +73,7 @@ class ProveedoresModel extends Mysql
     public function setStatus(bool $status){
         $this->status = $status;
     }
+   
 
     private function ejecutarVerificacionProveedor(string $identificacion, int $idProveedorExcluir = null){
         $conexion = new Conexion();

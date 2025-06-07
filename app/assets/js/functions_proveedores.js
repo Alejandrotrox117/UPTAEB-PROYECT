@@ -2,10 +2,8 @@ import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import {
   expresiones,
   inicializarValidaciones,
-  validarCamposVacios,
-  validarCampo,
-  validarSelect,
   limpiarValidaciones,
+  registrarEntidad,
 } from "./validaciones.js";
 
 let tablaProveedores;
@@ -17,16 +15,16 @@ const camposFormularioProveedor = [
       formato: "El nombre solo puede contener letras y espacios.",
     },
   },
-  {id: "proveedorApellido",tipo: "input",regex: expresiones.nombre,
+  {id: "proveedorApellido",tipo: "input",regex: expresiones.apellido,
     mensajes: {
       vacio: "El apellido es obligatorio.",
       formato: "El apellido solo puede contener letras y espacios.",
     },
   },
-  {id: "proveedorIdentificacion",tipo: "input",regex: expresiones.identificacion,
+  {id: "proveedorIdentificacion",tipo: "input",regex: expresiones.cedula,
     mensajes: {
       vacio: "La identificación es obligatoria.",
-      formato: "Formato de identificación inválido.",
+      formato: "Formato de identificación inválido. Debe contener el formato V/J/E Ejemplo V-12345678 o J-12345678.",
     },
   },
   {id: "proveedorTelefono",tipo: "input",regex: expresiones.telefono,
@@ -35,7 +33,7 @@ const camposFormularioProveedor = [
       formato: "Formato de teléfono inválido.",
     },
   },
-  {id: "proveedorCorreo",tipo: "input",regex: expresiones.correo,
+  {id: "proveedorCorreo",tipo: "input",regex: expresiones.email,
     mensajes: {
       formato: "Formato de correo electrónico inválido.",
     },
@@ -43,6 +41,23 @@ const camposFormularioProveedor = [
   {id: "proveedorDireccion",tipo: "textarea",regex: expresiones.textoGeneral,
     mensajes: {
       formato: "Dirección inválida.",
+    },
+  },
+  {
+    id: "proveedorGenero",
+    tipo: "select",
+    regex: expresiones.genero,
+    mensajes: {
+      formato: "Género inválido.",
+    },
+  },
+
+  {
+    id: "proveedorFechaNacimiento",
+    tipo: "fechaNacimiento",
+    mensajes: {
+      vacio: "La fecha de nacimiento es obligatoria.",
+      fechaPosterior: "La fecha de nacimiento no puede ser posterior a hoy.",
     },
   }
 ];
@@ -54,25 +69,25 @@ const camposFormularioActualizarProveedor = [
       formato: "El nombre solo puede contener letras y espacios.",
     },
   },
-  {id: "proveedorApellidoActualizar",tipo: "input",regex: expresiones.nombre,
+  {id: "proveedorApellidoActualizar",tipo: "input",regex: expresiones.apellido,
     mensajes: {
       vacio: "El apellido es obligatorio.",
       formato: "El apellido solo puede contener letras y espacios.",
     },
   },
-  {id: "proveedorIdentificacionActualizar",tipo: "input",regex: expresiones.identificacion,
+  {id: "proveedorIdentificacionActualizar",tipo: "input",regex: expresiones.cedula,
     mensajes: {
       vacio: "La identificación es obligatoria.",
       formato: "Formato de identificación inválido.",
     },
   },
-  {id: "proveedorTelefonoActualizar",tipo: "input",regex: expresiones.telefono,
+  {id: "proveedorTelefonoActualizar",tipo: "input",regex: expresiones.telefono_principal,
     mensajes: {
       vacio: "El teléfono es obligatorio.",
       formato: "Formato de teléfono inválido.",
     },
   },
-  {id: "proveedorCorreoActualizar",tipo: "input",regex: expresiones.correo,
+  {id: "proveedorCorreoActualizar",tipo: "input",regex: expresiones.email,
     mensajes: {
       formato: "Formato de correo electrónico inválido.",
     },
@@ -87,6 +102,23 @@ const camposFormularioActualizarProveedor = [
       formato: "Observaciones inválidas.",
     },
   },
+  {
+    id: "proveedorGeneroActualizar",
+    tipo: "select",
+    regex: expresiones.genero,
+    mensajes: {
+      formato: "Género inválido.",
+    },
+  },
+
+  {
+    id: "proveedorFechaNacimientoActualizar",
+    tipo: "fechaNacimiento",
+    mensajes: {
+      vacio: "La fecha de nacimiento es obligatoria.",
+      fechaPosterior: "La fecha de nacimiento no puede ser posterior a hoy.",
+    },
+  }
 ];
 
 
@@ -398,114 +430,55 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // FUNCIONES
 function registrarProveedor() {
-  const formRegistrar = document.getElementById("formRegistrarProveedor");
   const btnGuardarProveedor = document.getElementById("btnGuardarProveedor");
-
-  if (!validarCamposVacios(camposFormularioProveedor, "formRegistrarProveedor")) {
-    return;
-  }
-
-  let formularioConErroresEspecificos = false;
-  for (const campo of camposFormularioProveedor) {
-    const inputElement = formRegistrar.querySelector(`#${campo.id}`);
-    if (!inputElement) continue;
-
-    let esValidoEsteCampo = true;
-    if (campo.tipo === "select") {
-      if (campo.mensajes && campo.mensajes.vacio) {
-        esValidoEsteCampo = validarSelect(
-          campo.id,
-          campo.mensajes,
-          "formRegistrarProveedor"
-        );
-      }
-    } else if (["input", "textarea", "text"].includes(campo.tipo)) {
-      if (
-        inputElement.value.trim() !== "" ||
-        (campo.mensajes && campo.mensajes.vacio)
-      ) {
-        esValidoEsteCampo = validarCampo(
-          inputElement,
-          campo.regex,
-          campo.mensajes
-        );
-      }
-    }
-    if (!esValidoEsteCampo) {
-      formularioConErroresEspecificos = true;
-    }
-  }
-
-  if (formularioConErroresEspecificos) {
-    Swal.fire("Atención", "Por favor, corrija los campos marcados.", "warning");
-    return;
-  }
-
-  const formData = new FormData(formRegistrar);
-  const dataParaEnviar = {
-    nombre: formData.get("nombre") || "",
-    apellido: formData.get("apellido") || "",
-    identificacion: formData.get("identificacion") || "",
-    fecha_nacimiento: formData.get("fecha_nacimiento") || "",
-    direccion: formData.get("direccion") || "",
-    correo_electronico: formData.get("correo_electronico") || "",
-    telefono_principal: formData.get("telefono_principal") || "",
-    observaciones: formData.get("observaciones") || "",
-    genero: formData.get("genero") || "",
-  };
 
   if (btnGuardarProveedor) {
     btnGuardarProveedor.disabled = true;
     btnGuardarProveedor.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
   }
-
-  fetch("Proveedores/createProveedor", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
+   
+  registrarEntidad({
+    formId: "formRegistrarProveedor",
+    endpoint: "Proveedores/createProveedor",
+    campos: camposFormularioProveedor,
+    mapeoNombres: {
+  
+      "proveedorNombre": "nombre",
+      "proveedorApellido": "apellido",
+      "proveedorIdentificacion": "identificacion",
+      "proveedorTelefono": "telefono_principal",
+      "proveedorCorreo": "correo_electronico",
+      "proveedorDireccion": "direccion",
+      "proveedorFechaNacimiento": "fecha_nacimiento"
     },
-    body: JSON.stringify(dataParaEnviar),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        return response.json().then((errData) => {
-          throw { status: response.status, data: errData };
-        });
-      }
-      return response.json();
-    })
-    .then((result) => {
-      if (result.status) {
-        Swal.fire("¡Éxito!", result.message, "success").then(() => {
-          cerrarModal("modalRegistrarProveedor");
-          recargarTablaProveedores();
-        });
-      } else {
-        Swal.fire(
-          "Error",
-          result.message || "No se pudo registrar el proveedor.",
-          "error"
-        );
-      }
-    })
-    .catch((error) => {
-      console.error("Error en fetch:", error);
-      let errorMessage = "Ocurrió un error de conexión.";
-      if (error.data && error.data.message) {
-        errorMessage = error.data.message;
-      } else if (error.status) {
-        errorMessage = `Error del servidor: ${error.status}.`;
-      }
-      Swal.fire("Error", errorMessage, "error");
-    })
-    .finally(() => {
-      if (btnGuardarProveedor) {
-        btnGuardarProveedor.disabled = false;
-        btnGuardarProveedor.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Proveedor`;
-      }
-    });
+
+    onSuccess: (result) => {
+      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+        cerrarModal("modalRegistrarProveedor");
+        recargarTablaProveedores();
+        
+        const formRegistrar = document.getElementById("formRegistrarProveedor");
+        if (formRegistrar) {
+          formRegistrar.reset();
+          limpiarValidaciones(camposFormularioProveedor, "formRegistrarProveedor");
+        }
+      });
+    },
+    onError: (result) => {
+      Swal.fire(
+        "Error",
+        result.message || "No se pudo registrar el proveedor.",
+        "error"
+      );
+    }
+  }).finally(() => {
+    if (btnGuardarProveedor) {
+      btnGuardarProveedor.disabled = false;
+      btnGuardarProveedor.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Proveedor`;
+    }
+  });
 }
+
 
 function editarProveedor(idProveedor) {
   fetch(`Proveedores/getProveedorById/${idProveedor}`, {
@@ -563,125 +536,55 @@ function mostrarModalEditarProveedor(proveedor) {
 }
 
 function actualizarProveedor() {
-  const formActualizar = document.getElementById("formActualizarProveedor");
-  const btnActualizarProveedor = document.getElementById(
-    "btnActualizarProveedor"
-  );
-  const idProveedor = document.getElementById("idProveedorActualizar").value;
-
-  // Validar campos vacíos obligatorios
-  const camposObligatorios = camposFormularioActualizarProveedor.filter((c) => {
-    return c.mensajes && c.mensajes.vacio;
-  });
-
-  if (!validarCamposVacios(camposObligatorios, "formActualizarProveedor")) {
-    return;
-  }
-
-  // Validar formatos específicos
-  let formularioConErroresEspecificos = false;
-  for (const campo of camposFormularioActualizarProveedor) {
-    const inputElement = formActualizar.querySelector(`#${campo.id}`);
-    if (!inputElement) continue;
-
-    let esValidoEsteCampo = true;
-    if (campo.tipo === "select") {
-      if (campo.mensajes && campo.mensajes.vacio) {
-        esValidoEsteCampo = validarSelect(
-          campo.id,
-          campo.mensajes,
-          "formActualizarProveedor"
-        );
-      }
-    } else if (["input", "textarea", "text"].includes(campo.tipo)) {
-      if (
-        inputElement.value.trim() !== "" ||
-        (campo.mensajes && campo.mensajes.vacio)
-      ) {
-        esValidoEsteCampo = validarCampo(
-          inputElement,
-          campo.regex,
-          campo.mensajes
-        );
-      }
-    }
-    if (!esValidoEsteCampo) {
-      formularioConErroresEspecificos = true;
-    }
-  }
-
-  if (formularioConErroresEspecificos) {
-    Swal.fire("Atención", "Por favor, corrija los campos marcados.", "warning");
-    return;
-  }
-
-  const formData = new FormData(formActualizar);
-  const dataParaEnviar = {
-    idproveedor: idProveedor,
-    nombre: formData.get("nombre") || "",
-    apellido: formData.get("apellido") || "",
-    identificacion: formData.get("identificacion") || "",
-    fecha_nacimiento: formData.get("fecha_nacimiento") || "",
-    direccion: formData.get("direccion") || "",
-    correo_electronico: formData.get("correo_electronico") || "",
-    telefono_principal: formData.get("telefono_principal") || "",
-    observaciones: formData.get("observaciones") || "",
-    genero: formData.get("genero") || "",
-  };
+  const btnActualizarProveedor = document.getElementById("btnActualizarProveedor");
 
   if (btnActualizarProveedor) {
     btnActualizarProveedor.disabled = true;
     btnActualizarProveedor.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...`;
   }
 
-  fetch("Proveedores/updateProveedor", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
+  registrarEntidad({
+    formId: "formActualizarProveedor",
+    endpoint: "Proveedores/updateProveedor",
+    campos: camposFormularioActualizarProveedor,
+    mapeoNombres: {
+      "idProveedorActualizar": "idproveedor",
+      "proveedorNombreActualizar": "nombre",
+      "proveedorApellidoActualizar": "apellido",
+      "proveedorIdentificacionActualizar": "identificacion",
+      "proveedorTelefonoActualizar": "telefono_principal",
+      "proveedorCorreoActualizar": "correo_electronico",
+      "proveedorDireccionActualizar": "direccion",
+      "proveedorFechaNacimientoActualizar": "fecha_nacimiento",
+      "proveedorGeneroActualizar": "genero",
+      "proveedorObservacionesActualizar": "observaciones"
     },
-    body: JSON.stringify(dataParaEnviar),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        return response.json().then((errData) => {
-          throw { status: response.status, data: errData };
-        });
-      }
-      return response.json();
-    })
-    .then((result) => {
-      if (result.status) {
-        Swal.fire("¡Éxito!", result.message, "success").then(() => {
-          cerrarModal("modalActualizarProveedor");
-          recargarTablaProveedores();
-        });
-      } else {
-        Swal.fire(
-          "Error",
-          result.message || "No se pudo actualizar el proveedor.",
-          "error"
-        );
-      }
-    })
-    .catch((error) => {
-      console.error("Error en fetch:", error);
-      let errorMessage = "Ocurrió un error de conexión.";
-      if (error.data && error.data.message) {
-        errorMessage = error.data.message;
-      } else if (error.status) {
-        errorMessage = `Error del servidor: ${error.status}.`;
-      }
-      Swal.fire("Error", errorMessage, "error");
-    })
-    .finally(() => {
-      if (btnActualizarProveedor) {
-        btnActualizarProveedor.disabled = false;
-        btnActualizarProveedor.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Proveedor`;
-      }
-    });
-}
+    onSuccess: (result) => {
+      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+        cerrarModal("modalActualizarProveedor");
+        recargarTablaProveedores();
 
+        const formActualizar = document.getElementById("formActualizarProveedor");
+        if (formActualizar) {
+          formActualizar.reset();
+          limpiarValidaciones(camposFormularioActualizarProveedor, "formActualizarProveedor");
+        }
+      });
+    },
+    onError: (result) => {
+      Swal.fire(
+        "Error",
+        result.message || "No se pudo actualizar el proveedor.",
+        "error"
+      );
+    }
+  }).finally(() => {
+    if (btnActualizarProveedor) {
+      btnActualizarProveedor.disabled = false;
+      btnActualizarProveedor.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Proveedor`;
+    }
+  });
+}
 function verProveedor(idProveedor) {
   fetch(`Proveedores/getProveedorById/${idProveedor}`, {
     method: "GET",

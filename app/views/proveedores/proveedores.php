@@ -49,22 +49,22 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
                     <label for="proveedorNombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre <span class="text-red-500">*</span></label>
-                    <input type="text" id="proveedorNombre" name="nombre" placeholder="Nombre del proveedor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
+                    <input type="text" id="proveedorNombre" name="nombre" placeholder="Nombre del proveedor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm">
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div>
                     <label for="proveedorApellido" class="block text-sm font-medium text-gray-700 mb-1">Apellido <span class="text-red-500">*</span></label>
-                    <input type="text" id="proveedorApellido" name="apellido" placeholder="Apellido del proveedor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
+                    <input type="text" id="proveedorApellido" name="apellido" placeholder="Apellido del proveedor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" >
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div>
                     <label for="proveedorIdentificacion" class="block text-sm font-medium text-gray-700 mb-1">Identificación <span class="text-red-500">*</span></label>
-                    <input type="text" id="proveedorIdentificacion" name="identificacion" placeholder="CI, RIF, Pasaporte" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
+                    <input type="text" id="proveedorIdentificacion" name="identificacion" placeholder="CI, RIF, Pasaporte" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" >
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div>
                     <label for="proveedorTelefono" class="block text-sm font-medium text-gray-700 mb-1">Teléfono Principal <span class="text-red-500">*</span></label>
-                    <input type="text" id="proveedorTelefono" name="telefono_principal" placeholder="0000-0000000" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
+                    <input type="text" id="proveedorTelefono" name="telefono_principal" placeholder="0000-0000000" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" >
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div>
