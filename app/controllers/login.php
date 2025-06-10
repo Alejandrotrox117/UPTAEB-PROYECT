@@ -31,13 +31,53 @@ class Login extends Controllers
         $data["page_tag"] = "Inicio";
         $data["page_name"] = "login";
         $data["page_functions_js"] = "functions_login.js";
+        $data["recaptcha_site_key"] = getRecaptchaSiteKey(); // Agregar clave del sitio para reCAPTCHA
         $this->views->getView($this, "login", $data);
+    }
+
+    /**
+     * Verificar reCAPTCHA
+     */
+    private function verifyRecaptcha($recaptcha_response)
+    {
+        if (empty($recaptcha_response)) {
+            return false;
+        }
+
+        $data = array(
+            'secret' => getRecaptchaSecretKey(),
+            'response' => $recaptcha_response,
+            'remoteip' => $_SERVER['REMOTE_ADDR']
+        );
+
+        $options = array(
+            'http' => array(
+                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method' => 'POST',
+                'content' => http_build_query($data)
+            )
+        );
+
+        $context = stream_context_create($options);
+        $result = file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
+        $resultJson = json_decode($result);
+
+        return $resultJson->success;
     }
 
     public function loginUser()
     {
-        
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            
+            // Verificar reCAPTCHA
+            $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+            
+            if (!$this->verifyRecaptcha($recaptcha_response)) {
+                $arrResponse = array('status' => false, 'msg' => 'Por favor, verifica que no eres un robot');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
             $email = strtolower(($_POST['txtEmail']));
             $password = hash("SHA256", strClean($_POST['txtPass']));
 
@@ -74,6 +114,16 @@ class Login extends Controllers
     public function resetPass()
     {
         if (!empty($_POST)) {
+            
+            // Verificar reCAPTCHA para reseteo de contraseña
+            $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+            
+            if (!$this->verifyRecaptcha($recaptcha_response)) {
+                $arrResponse = array('status' => false, 'msg' => 'Por favor, verifica que no eres un robot');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+
             if (empty($_POST['txtEmailReset'])) {
                 $arrResponse = array("status" => false, "msg" => "El correo es obligatorio");
             } else {
@@ -143,6 +193,7 @@ class Login extends Controllers
                 $data["page_functions_js"] = "functions_login.js";
                 $data['correo'] = $strEmail;
                 $data['token'] = $strToken;
+                $data["recaptcha_site_key"] = getRecaptchaSiteKey(); // Agregar clave para el formulario de cambio de contraseña
 
                 $this->views->getView($this, "Password", $data);
             }
@@ -152,6 +203,15 @@ class Login extends Controllers
 
     public function setPassword()
     {
+        // Verificar reCAPTCHA para cambio de contraseña
+        $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+        
+        if (!$this->verifyRecaptcha($recaptcha_response)) {
+            $arrResponse = array('status' => false, 'msg' => 'Por favor, verifica que no eres un robot');
+            echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
         if (empty($_POST['txtPassWord']) || empty($_POST['txtConfirmPassWord'])) {
             $arrResponse = array("status" => false, "msg" => "Error en Datos");
         } else {
