@@ -39,15 +39,55 @@ class Login extends Controllers
         $data["page_tag"] = "Inicio";
         $data["page_name"] = "login";
         $data["page_functions_js"] = "functions_login.js";
+        $data["recaptcha_site_key"] = getRecaptchaSiteKey(); // Agregar clave del sitio para reCAPTCHA
         $this->views->getView($this, "login", $data);
+    }
+
+    /**
+     * Verificar reCAPTCHA
+     */
+    private function verifyRecaptcha($recaptcha_response)
+    {
+        if (empty($recaptcha_response)) {
+            return false;
+        }
+
+        $data = array(
+            'secret' => getRecaptchaSecretKey(),
+            'response' => $recaptcha_response,
+            'remoteip' => $_SERVER['REMOTE_ADDR']
+        );
+
+        $options = array(
+            'http' => array(
+                'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+                'method' => 'POST',
+                'content' => http_build_query($data)
+            )
+        );
+
+        $context = stream_context_create($options);
+        $result = file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $context);
+        $resultJson = json_decode($result);
+
+        return $resultJson->success;
     }
 
     public function loginUser()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                $email = strtolower($_POST['txtEmail']);
-                $password = hash("SHA256", $_POST['txtPass']);
+            
+            // Verificar reCAPTCHA
+            $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+            
+            if (!$this->verifyRecaptcha($recaptcha_response)) {
+                $arrResponse = array('status' => false, 'msg' => 'Por favor, verifica que no eres un robot');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
+            $email = strtolower(($_POST['txtEmail']));
+            $password = hash("SHA256", strClean($_POST['txtPass']));
 
                 $user = $this->model->login($email, $password);
 
@@ -87,12 +127,21 @@ class Login extends Controllers
     public function resetPass()
     {
         if (!empty($_POST)) {
-            try {
-                if (empty($_POST['txtEmailReset'])) {
-                    $arrResponse = array("status" => false, "msg" => "El correo es obligatorio");
-                } else {
-                    $strEmail = strtolower(strClean($_POST['txtEmailReset']));
-                    $arrData = $this->model->getUsuarioEmail($strEmail);
+            
+            // Verificar reCAPTCHA para reseteo de contraseña
+            $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+            
+            if (!$this->verifyRecaptcha($recaptcha_response)) {
+                $arrResponse = array('status' => false, 'msg' => 'Por favor, verifica que no eres un robot');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+
+            if (empty($_POST['txtEmailReset'])) {
+                $arrResponse = array("status" => false, "msg" => "El correo es obligatorio");
+            } else {
+                $strEmail = strtolower(strClean($_POST['txtEmailReset']));
+                $arrData = $this->model->getUsuarioEmail($strEmail);
 
                     if (empty($arrData)) {
                         $arrResponse = array("status" => false, "msg" => "El usuario no existe");
@@ -163,16 +212,15 @@ class Login extends Controllers
             
             if (empty($arrResponse)) {
                 header("Location:" . base_url());
-                die();
-            }
-
-            $data['page_title'] = "Cambiar contraseña";
-            $data['page_tag'] = "Cambiar contraseña";
-            $data['page_name'] = "cambiar_contrasenia";
-            $data['idusuario'] = $arrResponse['idusuario'];
-            $data["page_functions_js"] = "functions_login.js";
-            $data['correo'] = $strEmail;
-            $data['token'] = $strToken;
+            } else {
+                $data['page_title'] = "cambiar contraseña";
+                $data['page_tag'] = "Cambiar contraseña";
+                $data['page_name'] = "cambiar_contrasenia";
+                $data['idusuario'] = $arrResponse['idusuario'];
+                $data["page_functions_js"] = "functions_login.js";
+                $data['correo'] = $strEmail;
+                $data['token'] = $strToken;
+                $data["recaptcha_site_key"] = getRecaptchaSiteKey(); // Agregar clave para el formulario de cambio de contraseña
 
             $this->views->getView($this, "Password", $data);
             
@@ -185,15 +233,23 @@ class Login extends Controllers
 
     public function setPassword()
     {
-        try {
-            if (empty($_POST['txtPassWord']) || empty($_POST['txtConfirmPassWord'])) {
-                $arrResponse = array("status" => false, "msg" => "Todos los campos son obligatorios");
-            } else {
-                $idUsuario = intval($_POST['idusuario']);
-                $password = strClean($_POST['txtPassWord']);
-                $confirmPassword = strClean($_POST['txtConfirmPassWord']);
-                $strEmail = strClean($_POST['txtCorreo']);
-                $strToken = strClean($_POST['txtToken']);
+        // Verificar reCAPTCHA para cambio de contraseña
+        $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+        
+        if (!$this->verifyRecaptcha($recaptcha_response)) {
+            $arrResponse = array('status' => false, 'msg' => 'Por favor, verifica que no eres un robot');
+            echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        if (empty($_POST['txtPassWord']) || empty($_POST['txtConfirmPassWord'])) {
+            $arrResponse = array("status" => false, "msg" => "Error en Datos");
+        } else {
+            $idUsuario = intval($_POST['idusuario']);
+            $password = $_POST['txtPassWord'];
+            $confirmPassword = $_POST['txtConfirmPassWord'];
+            $strEmail = $_POST['txtCorreo'];
+            $strToken = $_POST['txtToken'];
 
                 if ($password != $confirmPassword) {
                     $arrResponse = array("status" => false, "msg" => "Las contraseñas no coinciden");
