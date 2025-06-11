@@ -6,6 +6,7 @@ import {
   validarCampo,
   validarSelect,
   limpiarValidaciones,
+  registrarEntidad,
 } from "./validaciones.js";
 
 let tablaCompras;
@@ -13,6 +14,60 @@ let detalleCompraItemsModal = [];
 let detalleCompraItemsActualizar = [];
 let tasasMonedasActualizar = {};
 let fechaActualCompraActualizar = null;
+
+const camposFormularioProveedor = [
+  {id: "proveedorNombre",tipo: "input",regex: expresiones.nombre,
+    mensajes: {
+      vacio: "El nombre es obligatorio.",
+      formato: "El nombre solo puede contener letras y espacios.",
+    },
+  },
+  {id: "proveedorApellido",tipo: "input",regex: expresiones.apellido,
+    mensajes: {
+      vacio: "El apellido es obligatorio.",
+      formato: "El apellido solo puede contener letras y espacios.",
+    },
+  },
+  {id: "proveedorIdentificacion",tipo: "input",regex: expresiones.cedula,
+    mensajes: {
+      vacio: "La identificación es obligatoria.",
+      formato: "Formato de identificación inválido. Debe contener el formato V/J/E Ejemplo V-12345678 o J-12345678.",
+    },
+  },
+  {id: "proveedorTelefono",tipo: "input",regex: expresiones.telefono,
+    mensajes: {
+      vacio: "El teléfono es obligatorio.",
+      formato: "Formato de teléfono inválido.",
+    },
+  },
+  {id: "proveedorCorreo",tipo: "input",regex: expresiones.email,
+    mensajes: {
+      formato: "Formato de correo electrónico inválido.",
+    },
+  },
+  {id: "proveedorDireccion",tipo: "textarea",regex: expresiones.textoGeneral,
+    mensajes: {
+      formato: "Dirección inválida.",
+    },
+  },
+  {
+    id: "proveedorGenero",
+    tipo: "select",
+    regex: expresiones.genero,
+    mensajes: {
+      formato: "Género inválido.",
+    },
+  },
+
+  {
+    id: "proveedorFechaNacimiento",
+    tipo: "fechaNacimiento",
+    mensajes: {
+      vacio: "La fecha de nacimiento es obligatoria.",
+      fechaPosterior: "La fecha de nacimiento no puede ser posterior a hoy.",
+    },
+  }
+];
 
 const camposCompras = [
   {
@@ -324,7 +379,6 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       className: "compact",
       initComplete: function (settings, json) {
-        console.log("DataTable Compras inicializado correctamente");
         window.tablaCompras = this.api();
       },
       drawCallback: function (settings) {
@@ -1017,99 +1071,128 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL DE PROVEEDOR (MANTENER COMO ESTÁ)
-  const modalProveedor = document.getElementById("proveedorModal");
-  const formProveedor = document.getElementById("proveedorForm");
-  const modalTitulo = document.getElementById("modalProveedorTitulo");
-  const btnSubmitProveedor = document.getElementById("btnSubmitProveedor");
-  const inputIdPersona = document.getElementById("idproveedor");
+// MODAL REGISTRAR PROVEEDOR - CORREGIDO
+  const btnAbrirModalRegistroProveedor = document.getElementById("btnAbrirModalRegistrarProveedor");
+  const formRegistrarProveedor = document.getElementById("formRegistrarProveedor");
+  const btnCerrarModalRegistroProveedor = document.getElementById("btnCerrarModalRegistrar");
+  const btnCancelarModalRegistroProveedor = document.getElementById("btnCancelarModalRegistrar");
+  const modalRegistrarProveedor = document.getElementById("modalRegistrarProveedor");
 
-  window.abrirModalProveedor = function (titulo = "Registrar Proveedor", formAction = "Compras/createProveedorinCompras") {
-    formProveedor.reset(); 
-    inputIdPersona.value = ""; 
-    modalTitulo.textContent = titulo;
-    formProveedor.setAttribute("data-action", formAction); 
-    btnSubmitProveedor.textContent = "Registrar";
-    modalProveedor.classList.remove("opacity-0", "pointer-events-none");
-  };
-
-  window.cerrarModalProveedor = function () {
-    modalProveedor.classList.add("opacity-0", "pointer-events-none");
-    formProveedor.reset();
-    inputIdPersona.value = "";
-  };
-
-  formProveedor.addEventListener("submit", function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const actionUrl = "Compras/createProveedorinCompras";
-    const method = "POST";
-
-    if (!actionUrl) {
-      Swal.fire("Error Interno", "URL de acción no definida para el formulario.", "error");
-      console.error("El atributo data-action del formulario está vacío o no existe.");
-      return;
+  // Función para abrir modal registrar proveedor
+  function abrirModalRegistrarProveedor() {
+    if (modalRegistrarProveedor) {
+      if (formRegistrarProveedor) formRegistrarProveedor.reset();
+      limpiarValidaciones(camposFormularioProveedor, "formRegistrarProveedor");
+      inicializarValidaciones(camposFormularioProveedor, "formRegistrarProveedor");
+      abrirModal("modalRegistrarProveedor");
     }
+  }
 
-    const nombre = formData.get('nombre');
-    const identificacion = formData.get('identificacion');
-    const telefono_principal = formData.get('telefono_principal');
-
-    if (!nombre || !identificacion || !telefono_principal) {
-      Swal.fire("Atención", "Nombre, Identificación y Teléfono son obligatorios.", "warning");
-      return;
+  // Función para cerrar modal registrar proveedor
+  function cerrarModalRegistrarProveedor() {
+    if (modalRegistrarProveedor) {
+      limpiarValidaciones(camposFormularioProveedor, "formRegistrarProveedor");
+      if (formRegistrarProveedor) formRegistrarProveedor.reset();
+      cerrarModal("modalRegistrarProveedor");
     }
+  }
 
-    fetch(actionUrl, {
-      method: method,
-      body: formData
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.json().then(errData => {
-            const error = new Error(errData.message || `Error HTTP: ${response.status}`);
-            error.data = errData;
-            error.status = response.status;
-            throw error;
-          }).catch(() => {
-            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
-          });
-        }
-        return response.json();
-      })
-      .then(async (result) => {
-        if (result.status) {
-          Swal.fire("¡Éxito!", result.message, "success");
-          try {
-            const response = await fetch(`Compras/getProveedorById/${encodeURIComponent(result.idproveedor)}`);
-            if (!response.ok) throw new Error('No se pudo obtener el proveedor');
-            const proveedor = await response.json();
-            hiddenIdProveedorModal.value = proveedor.data.idproveedor;
-            divInfoProveedorModal.innerHTML = `Sel: <strong>${proveedor.data.nombre} ${proveedor.data.apellido}</strong> (ID: ${proveedor.data.identificacion})`;
-            divInfoProveedorModal.classList.remove('hidden');
-            inputCriterioProveedorModal.value = `${proveedor.data.nombre} ${proveedor.data.apellido} (${proveedor.data.identificacion})`;
-            cerrarModalProveedor();
-          } catch (error) {
-            console.error("Error al obtener proveedor:", error);
-            Swal.fire("Error", "Proveedor registrado, pero no se pudo mostrar la información.", "warning");
-            cerrarModalProveedor();
-          }
-        } else {
-          Swal.fire("Error", result.message || "Respuesta no exitosa del servidor.", "error");
-        }
-      })
-      .catch((error) => {
-        console.error("Error en fetch:", error);
-        let errorMessage = "Ocurrió un error al procesar la solicitud.";
-        if (error.data && error.data.message) {
-          errorMessage = error.data.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        Swal.fire("Error", errorMessage, "error");
+  // Event listeners para modal registrar proveedor
+  if (btnAbrirModalRegistroProveedor) {
+    btnAbrirModalRegistroProveedor.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      abrirModalRegistrarProveedor();
+    });
+  }
+
+  if (btnCerrarModalRegistroProveedor) {
+    btnCerrarModalRegistroProveedor.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cerrarModalRegistrarProveedor();
+    });
+  }
+
+  if (btnCancelarModalRegistroProveedor) {
+    btnCancelarModalRegistroProveedor.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cerrarModalRegistrarProveedor();
+    });
+  }
+
+  // Prevenir que el modal se cierre al hacer click dentro del contenido
+  if (modalRegistrarProveedor) {
+    const modalContent = modalRegistrarProveedor.querySelector('.modal-content, .bg-white');
+    if (modalContent) {
+      modalContent.addEventListener('click', function(e) {
+        e.stopPropagation();
       });
-  });
+    }
+  }
 
+  // SUBMIT FORM REGISTRAR PROVEEDOR
+  if (formRegistrarProveedor) {
+    formRegistrarProveedor.addEventListener("submit", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      registrarProveedor();
+    });
+  }
+
+  function registrarProveedor() {
+  const btnGuardarProveedor = document.getElementById("btnGuardarProveedor");
+
+  if (btnGuardarProveedor) {
+    btnGuardarProveedor.disabled = true;
+    btnGuardarProveedor.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+  }
+   
+  registrarEntidad({
+    formId: "formRegistrarProveedor",
+    endpoint: "Proveedores/createProveedor",
+    campos: camposFormularioProveedor,
+    mapeoNombres: {
+      "proveedorNombre": "nombre",
+      "proveedorApellido": "apellido",
+      "proveedorIdentificacion": "identificacion",
+      "proveedorTelefono": "telefono_principal",
+      "proveedorCorreo": "correo_electronico",
+      "proveedorDireccion": "direccion",
+      "proveedorFechaNacimiento": "fecha_nacimiento"
+    },
+    onSuccess: (result) => {
+      const nombre = document.getElementById("proveedorNombre").value;
+      const apellido = document.getElementById("proveedorApellido").value;
+      const identificacion = document.getElementById("proveedorIdentificacion").value;
+      
+      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+        cerrarModalRegistrarProveedor();
+          hiddenIdProveedorModal.value = result.proveedor_id;
+          divInfoProveedorModal.innerHTML = `Sel: <strong>${nombre} ${apellido}</strong> (ID: ${identificacion})`;
+          divInfoProveedorModal.classList.remove('hidden');
+          inputCriterioProveedorModal.value = `${nombre} ${apellido} (${identificacion})`;
+        
+        if (typeof recargarTablaProveedores === 'function') {
+          recargarTablaProveedores();
+        }
+      });
+    },
+    onError: (result) => {
+      Swal.fire(
+        "Error",
+        result.message || "No se pudo registrar el proveedor.",
+        "error"
+      );
+    }
+  }).finally(() => {
+    if (btnGuardarProveedor) {
+      btnGuardarProveedor.disabled = false;
+      btnGuardarProveedor.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Proveedor`;
+    }
+  });
+}
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2")
 
