@@ -4,10 +4,15 @@ require_once "app/core/Mysql.php";
 
 class ComprasModel extends Mysql
 {
-    private $db; 
-    private $conexionObjeto;
 
-    // Propiedades de compra
+    private $query;
+    private $array;
+    private $data;
+    private $result;
+    private $message;
+    private $status;
+
+
     private $idcompra;
     private $nro_compra;
     private $fecha;
@@ -22,7 +27,6 @@ class ComprasModel extends Mysql
     private $termino;
     private $identificacion;
 
-    // Propiedades de detalle de compra
     private $iddetalle_compra;
     private $idproducto;
     private $descripcion_temporal_producto;
@@ -37,247 +41,415 @@ class ComprasModel extends Mysql
     public function __construct()
     {
         parent::__construct();
-        $this->conexionObjeto = new Conexion();
-        $this->conexionObjeto->connect();
-        $this->db = $this->conexionObjeto->get_conectGeneral();
     }
 
-    // SETTERS Y GETTERS (mantener los existentes)
-    public function setIdCompra($idcompra) { $this->idcompra = $idcompra; }
-    public function getIdCompra() { return $this->idcompra; }
-    public function setNroCompra($nro_compra) { $this->nro_compra = $nro_compra; }
-    public function getNroCompra() { return $this->nro_compra; }
-    public function setFecha($fecha) { $this->fecha = $fecha; }
-    public function getFecha() { return $this->fecha; }
-    public function setIdProveedor($idproveedor) { $this->idproveedor = $idproveedor; }
-    public function getIdProveedor() { return $this->idproveedor; }
-    public function setIdMonedaGeneral($idmoneda_general) { $this->idmoneda_general = $idmoneda_general; }
-    public function getIdMonedaGeneral() { return $this->idmoneda_general; }
-    public function setSubtotalGeneral($subtotal_general) { $this->subtotal_general = $subtotal_general; }
-    public function getSubtotalGeneral() { return $this->subtotal_general; }
-    public function setDescuentoPorcentajeGeneral($descuento_porcentaje_general) { $this->descuento_porcentaje_general = $descuento_porcentaje_general; }
-    public function getDescuentoPorcentajeGeneral() { return $this->descuento_porcentaje_general; }
-    public function setMontoDescuentoGeneral($monto_descuento_general) { $this->monto_descuento_general = $monto_descuento_general; }
-    public function getMontoDescuentoGeneral() { return $this->monto_descuento_general; }
-    public function setTotalGeneral($total_general) { $this->total_general = $total_general; }
-    public function getTotalGeneral() { return $this->total_general; }
-    public function setEstatusCompra($estatus_compra) { $this->estatus_compra = $estatus_compra; }
-    public function getEstatusCompra() { return $this->estatus_compra; }
-    public function setObservacionesCompra($observaciones_compra) { $this->observaciones_compra = $observaciones_compra; }
-    public function getObservacionesCompra() { return $this->observaciones_compra; }
-    public function setTermino($termino) { $this->termino = $termino; }
-    public function getTermino() { return $this->termino; }
-    public function setIdentificacion($identificacion) { $this->identificacion = $identificacion; }
-    public function getIdentificacion() { return $this->identificacion; }
-    public function setIdProducto($idproducto) { $this->idproducto = $idproducto; }
-    public function getIdProducto() { return $this->idproducto; }
+    // GETTERS Y SETTERS DE CONTROL
+    public function getQuery(){
+        return $this->query;
+    }
+    public function setQuery(string $query){
+        $this->query = $query; 
+}
+    public function getArray(){ 
+        return $this->array ?? []; 
+    }
+    public function setArray(array $array){
+        $this->array = $array;
+    }
+    public function getData(){
+        return $this->data ?? []; 
+    }
+    public function setData(array $data){
+        $this->data = $data; 
+    }
+    public function getResult(){
+        return $this->result;
+    }
+    public function setResult($result){
+        $this->result = $result;
+    }
+    public function getMessage(){
+        return $this->message ?? ''; 
+    }
+    public function setMessage(string $message){
+        $this->message = $message;
+    }
+    public function getStatus(){
+        return $this->status ?? false;
+    }
+    public function setStatus(bool $status){
+        $this->status = $status;
+    }
 
-    //GET COMPRAS DATATABLE
-    public function selectAllCompras(){
-        $sql = "SELECT 
-                    c.idcompra, 
-                    c.nro_compra, 
-                    c.fecha, 
-                    CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as proveedor,
-                    c.total_general, 
-                    c.estatus_compra,
-                    c.observaciones_compra,
-                    c.fecha_creacion, 
-                    c.fecha_modificacion
-                FROM compra c
-                LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor
-                ORDER BY c.fecha_creacion DESC";
+    // GETTERS Y SETTERS DE COMPRA
+    public function setIdCompra($idcompra){
+        $this->idcompra = $idcompra;
+    }
+    public function getIdCompra(){
+        return $this->idcompra;
+    }
+    public function setNroCompra($nro_compra){
+        $this->nro_compra = $nro_compra;
+    }
+    public function getNroCompra(){
+        return $this->nro_compra;
+    }
+    public function setFecha($fecha){
+        $this->fecha = $fecha;
+    }
+    public function getFecha(){
+        return $this->fecha;
+    }
+    public function setIdProveedor($idproveedor){
+        $this->idproveedor = $idproveedor; 
+    }
+    public function getIdProveedor(){
+        return $this->idproveedor;
+    }
+    public function setIdMonedaGeneral($idmoneda_general){
+        $this->idmoneda_general = $idmoneda_general;
+    }
+    public function getIdMonedaGeneral(){
+        return $this->idmoneda_general; 
+    }
+    public function setSubtotalGeneral($subtotal_general){ 
+        $this->subtotal_general = $subtotal_general;
+    }
+    public function getSubtotalGeneral(){
+        return $this->subtotal_general;
+    }
+    public function setDescuentoPorcentajeGeneral($descuento_porcentaje_general){
+        $this->descuento_porcentaje_general = $descuento_porcentaje_general;
+    }
+    public function getDescuentoPorcentajeGeneral(){
+        return $this->descuento_porcentaje_general;
+    }
+    public function setMontoDescuentoGeneral($monto_descuento_general){
+        $this->monto_descuento_general = $monto_descuento_general;
+    }
+    public function getMontoDescuentoGeneral(){
+        return $this->monto_descuento_general;
+    }
+    public function setTotalGeneral($total_general){
+        $this->total_general = $total_general;
+    }
+    public function getTotalGeneral(){
+        return $this->total_general;
+    }
+    public function setEstatusCompra($estatus_compra){
+        $this->estatus_compra = $estatus_compra;
+    }
+    public function getEstatusCompra(){
+        return $this->estatus_compra;
+    }
+    public function setObservacionesCompra($observaciones_compra){
+        $this->observaciones_compra = $observaciones_compra;
+    }
+    public function getObservacionesCompra(){
+        return $this->observaciones_compra; 
+    }
+    public function setTermino($termino){
+        $this->termino = $termino; 
+    }
+    public function getTermino(){
+        return $this->termino;
+    }
+    public function setIdentificacion($identificacion){ 
+        $this->identificacion = $identificacion; 
+    }
+    public function getIdentificacion(){
+        return $this->identificacion; 
+    }
+    public function setIdProducto($idproducto){
+        $this->idproducto = $idproducto;
+    }
+    public function getIdProducto(){
+        return $this->idproducto;
+    }
+
+    // MÉTODOS PRIVADOS 
+    private function ejecutarConsultaTodasCompras()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->query($sql);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->setQuery("SELECT 
+                        c.idcompra, 
+                        c.nro_compra, 
+                        c.fecha, 
+                        CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as proveedor,
+                        c.total_general, 
+                        c.estatus_compra,
+                        c.observaciones_compra,
+                        c.fecha_creacion, 
+                        c.fecha_modificacion
+                    FROM compra c
+                    LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor
+                    ORDER BY c.fecha_creacion DESC");
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute();
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            return $this->getResult();
+            
         } catch (PDOException $e) {
-            error_log("ComprasModel: Error al seleccionar todas las compras - " . $e->getMessage());
+            error_log("ComprasModel::ejecutarConsultaTodasCompras - Error: " . $e->getMessage());
             return [];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //GENERAR NUMERO DE COMPRA (MANTENER COMO ESTÁ)
-    public function generarNumeroCompra(){
-        $year = date("Y");
-        $sql = "SELECT MAX(CAST(SUBSTRING_INDEX(nro_compra, '-', -1) AS UNSIGNED)) as max_num
-                FROM compra WHERE nro_compra LIKE ?";
-        $arrData = ["C-" . $year . "-%"];
+    private function ejecutarGeneracionNumeroCompra()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($arrData);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $year = date("Y");
+            $this->setQuery("SELECT MAX(CAST(SUBSTRING_INDEX(nro_compra, '-', -1) AS UNSIGNED)) as max_num
+                        FROM compra WHERE nro_compra LIKE ?");
+            $this->setArray(["C-" . $year . "-%"]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+            
+            $result = $this->getResult();
             $next_num = ($result && isset($result['max_num'])) ? intval($result['max_num']) + 1 : 1;
             return "C-" . $year . "-" . str_pad($next_num, 5, "0", STR_PAD_LEFT);
+            
         } catch (PDOException $e) {
-            error_log("ComprasModel::generarNumeroCompra - Error de BD: " . $e->getMessage());
-            return "C-" . $year . "-ERROR";
+            error_log("ComprasModel::ejecutarGeneracionNumeroCompra - Error: " . $e->getMessage());
+            return "C-" . date("Y") . "-ERROR";
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //BUSCAR PROVEEDORES (MANTENER COMO ESTÁ)
-    public function buscarProveedor($termino){
-        $this->setTermino($termino);
-        $sql = "SELECT idproveedor, nombre, apellido, identificacion
-                FROM proveedor
-                WHERE (nombre LIKE ? OR apellido LIKE ? OR identificacion LIKE ?)
-                AND estatus = 'ACTIVO'
-                LIMIT 10";
-        $param = "%{$this->getTermino()}%";
-        $arrData = [$param, $param, $param];
+    private function ejecutarBusquedaProveedor()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($arrData);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->setQuery("SELECT idproveedor, nombre, apellido, identificacion
+                        FROM proveedor
+                        WHERE (nombre LIKE ? OR apellido LIKE ? OR identificacion LIKE ?)
+                        AND estatus = 'ACTIVO'
+                        LIMIT 10");
+            
+            $param = "%{$this->getTermino()}%";
+            $this->setArray([$param, $param, $param]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            return $this->getResult();
+            
         } catch (PDOException $e) {
-            error_log("Error al buscar Proveedores: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarBusquedaProveedor - Error: " . $e->getMessage());
             return [];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //BUSCAR PRODUCTOS (MANTENER COMO ESTÁ)
-    public function getProductosConCategoria(){
-        $sql = "SELECT
-                    p.idproducto,
-                    p.nombre AS nombre_producto,
-                    p.idcategoria,
-                    cp.nombre AS nombre_categoria,
-                    p.precio AS precio_referencia_compra,
-                    m.idmoneda AS idmoneda_producto,
-                    p.moneda AS codigo_moneda
-                FROM
-                    producto p
-                JOIN
-                    categoria cp ON p.idcategoria = cp.idcategoria
-                LEFT JOIN
-                    monedas m ON p.moneda = m.codigo_moneda 
-                WHERE
-                    p.estatus = 'activo'";
+    private function ejecutarConsultaProductosConCategoria()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->prepare($sql);
+            $this->setQuery("SELECT
+                        p.idproducto,
+                        p.nombre AS nombre_producto,
+                        p.idcategoria,
+                        cp.nombre AS nombre_categoria,
+                        p.precio AS precio_referencia_compra,
+                        m.idmoneda AS idmoneda_producto,
+                        p.moneda AS codigo_moneda
+                    FROM
+                        producto p
+                    JOIN
+                        categoria cp ON p.idcategoria = cp.idcategoria
+                    LEFT JOIN
+                        monedas m ON p.moneda = m.codigo_moneda 
+                    WHERE
+                        p.estatus = 'activo'");
+            
+            $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            return $this->getResult();
+            
         } catch (PDOException $e) {
-            error_log("Error al obtener los productos" . $e->getMessage());
+            error_log("ComprasModel::ejecutarConsultaProductosConCategoria - Error: " . $e->getMessage());
             return [];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //BUSCAR PRODUCTO POR ID (MANTENER COMO ESTÁ)
-    public function getProductoById(int $idproducto){
-        $this->setIdProducto($idproducto);
-        $sql = "SELECT p.idproducto, p.nombre, p.idcategoria,
-                       p.precio, p.moneda,
-                       m.codigo_moneda as codigo_moneda,
-                       m.idmoneda as idmoneda_producto,
-                       cp.nombre as nombre_categoria
-                FROM producto p
-                JOIN categoria cp ON p.idcategoria = cp.idcategoria
-                LEFT JOIN monedas m ON p.moneda = m.idmoneda
-                WHERE p.idproducto = ? AND p.estatus = 'activo'";
-        $arrData = [$this->getIdProducto()];
+    private function ejecutarBusquedaProductoPorId()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($arrData);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->setQuery("SELECT p.idproducto, p.nombre, p.idcategoria,
+                           p.precio, p.moneda,
+                           m.codigo_moneda as codigo_moneda,
+                           m.idmoneda as idmoneda_producto,
+                           cp.nombre as nombre_categoria
+                    FROM producto p
+                    JOIN categoria cp ON p.idcategoria = cp.idcategoria
+                    LEFT JOIN monedas m ON p.moneda = m.idmoneda
+                    WHERE p.idproducto = ? AND p.estatus = 'activo'");
+            
+            $this->setArray([$this->getIdProducto()]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+            
+            return $this->getResult();
+            
         } catch (PDOException $e) {
-            error_log("Error al Obtener Producto: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarBusquedaProductoPorId - Error: " . $e->getMessage());
             return false;
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //BUSCAR MONEDAS (MANTENER COMO ESTÁ)
-    public function getMonedasActivas(){
-        $sql = "SELECT idmoneda, codigo_moneda, valor FROM monedas WHERE estado = 'activo'";
+    private function ejecutarConsultaMonedasActivas()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->prepare($sql);
+            $this->setQuery("SELECT idmoneda, codigo_moneda, valor FROM monedas WHERE estado = 'activo'");
+            
+            $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            return $this->getResult();
+            
         } catch (PDOException $e) {
-            error_log("Error al Obtener las monedas" . $e->getMessage());
+            error_log("ComprasModel::ejecutarConsultaMonedasActivas - Error: " . $e->getMessage());
             return [];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //BUSCAR TASAS BCV POR FECHA (MANTENER COMO ESTÁ)
-    public function getTasasPorFecha($fecha){
-        $this->setFecha($fecha);
-        $sql = "SELECT codigo_moneda, tasa_a_bs 
-            FROM historial_tasas_bcv 
-            WHERE fecha_publicacion_bcv = ?";
-        $arrData = [$this->getFecha()];
+    private function ejecutarConsultaTasasPorFecha()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($arrData);
+            $this->setQuery("SELECT codigo_moneda, tasa_a_bs 
+                    FROM historial_tasas_bcv 
+                    WHERE fecha_publicacion_bcv = ?");
+            
+            $this->setArray([$this->getFecha()]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            
             $tasas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $tasas[$row['codigo_moneda']] = floatval($row['tasa_a_bs']);
             }
+            
             return $tasas;
+            
         } catch (PDOException $e) {
-            error_log("Error al Consultar las Tasas: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarConsultaTasasPorFecha - Error: " . $e->getMessage());
             return [];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //BUSCAR ULTIMO PESO REGISTRADO EN HISTORICO DE ROMANA (MANTENER COMO ESTÁ)
-    public function getUltimoPesoRomana(){
-        $sql = "SELECT peso FROM historial_romana ORDER BY idromana DESC LIMIT 1";
+    private function ejecutarConsultaUltimoPesoRomana()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->prepare($sql);
+            $this->setQuery("SELECT peso FROM historial_romana ORDER BY idromana DESC LIMIT 1");
+            
+            $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row && isset($row['peso'])) {
-                return floatval($row['peso']);
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+            
+            $result = $this->getResult();
+            if ($result && isset($result['peso'])) {
+                return floatval($result['peso']);
             } else {
                 return null;
             }
+            
         } catch (PDOException $e) {
-            error_log("Ultimo Peso de la Romana - Error de BD: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarConsultaUltimoPesoRomana - Error: " . $e->getMessage());
             return null;
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //INSERTAR COMPRA (MANTENER COMO ESTÁ - FUNCIONAL)
-    public function insertarCompra(array $datosCompra, array $detallesCompra){
-        // ... Mantener toda la lógica existente de insertar compra que ya funciona
-        $this->setNroCompra($datosCompra['nro_compra']);
-        $this->setFecha($datosCompra['fecha_compra']);
-        $this->setIdProveedor($datosCompra['idproveedor']);
-        $this->setIdMonedaGeneral($datosCompra['idmoneda_general']);
-        $this->setSubtotalGeneral($datosCompra['subtotal_general_compra']);
-        $this->setDescuentoPorcentajeGeneral($datosCompra['descuento_porcentaje_compra']);
-        $this->setMontoDescuentoGeneral($datosCompra['monto_descuento_compra']);
-        $this->setTotalGeneral($datosCompra['total_general_compra']);
-        $this->setObservacionesCompra($datosCompra['observaciones_compra']);
+    private function ejecutarInsercionCompra(array $datosCompra, array $detallesCompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
         try {
-            $this->db->beginTransaction();
+            $db->beginTransaction();
 
-            $sqlCompra = "INSERT INTO compra (nro_compra, fecha, idproveedor, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, total_general, observaciones_compra, estatus_compra)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'BORRADOR')";
-            $arrDataCompra = [
-                $this->getNroCompra(),
-                $this->getFecha(),
-                $this->getIdProveedor(),
-                $this->getIdMonedaGeneral(),
-                $this->getSubtotalGeneral(),
-                $this->getDescuentoPorcentajeGeneral(),
-                $this->getMontoDescuentoGeneral(),
-                $this->getTotalGeneral(),
-                $this->getObservacionesCompra()
-            ];
+            $this->setQuery("INSERT INTO compra (nro_compra, fecha, idproveedor, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, total_general, observaciones_compra, estatus_compra)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'BORRADOR')");
+            
+            $this->setArray([
+                $datosCompra['nro_compra'],
+                $datosCompra['fecha_compra'],
+                $datosCompra['idproveedor'],
+                $datosCompra['idmoneda_general'],
+                $datosCompra['subtotal_general_compra'],
+                $datosCompra['descuento_porcentaje_compra'],
+                $datosCompra['monto_descuento_compra'],
+                $datosCompra['total_general_compra'],
+                $datosCompra['observaciones_compra']
+            ]);
 
-            $stmtCompra = $this->db->prepare($sqlCompra);
-            if (!$stmtCompra->execute($arrDataCompra)) {
-                $this->db->rollBack();
+            $stmtCompra = $db->prepare($this->getQuery());
+            if (!$stmtCompra->execute($this->getArray())) {
+                $db->rollBack();
                 throw new Exception("Error al insertar cabecera de compra");
             }
-            $idCompra = $this->db->lastInsertId();
+            
+            $idCompra = $db->lastInsertId();
 
-            // Insertar detalles
-            $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, descuento, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmtDetalle = $this->db->prepare($sqlDetalle);
+            $this->setQuery("INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, descuento, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            
+            $stmtDetalle = $db->prepare($this->getQuery());
 
             foreach ($detallesCompra as $detalle) {
                 $arrDataDetalle = [
@@ -295,42 +467,46 @@ class ComprasModel extends Mysql
                 ];
 
                 if (!$stmtDetalle->execute($arrDataDetalle)) {
-                    $this->db->rollBack();
+                    $db->rollBack();
                     throw new Exception("Error al insertar detalle de compra");
                 }
             }
 
-            $this->db->commit();
+            $db->commit();
             return $idCompra;
 
         } catch (Exception $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
             }
-            error_log("Error al insertar compra: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarInsercionCompra - Error: " . $e->getMessage());
             return false;
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //ACTUALIZAR COMPRA
-    public function actualizarCompra(int $idcompra, array $datosCompra, array $detallesCompra){
-        try {
-            $this->db->beginTransaction();
+    private function ejecutarActualizacionCompra(int $idcompra, array $datosCompra, array $detallesCompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
-            // Actualizar cabecera de compra
-            $sqlCompra = "UPDATE compra SET 
-                            fecha = ?, 
-                            idproveedor = ?, 
-                            idmoneda_general = ?, 
-                            subtotal_general = ?, 
-                            descuento_porcentaje_general = ?, 
-                            monto_descuento_general = ?, 
-                            total_general = ?, 
-                            observaciones_compra = ?,
-                            fecha_modificacion = NOW()
-                        WHERE idcompra = ?";
+        try {
+            $db->beginTransaction();
+            $this->setQuery("UPDATE compra SET 
+                        fecha = ?, 
+                        idproveedor = ?, 
+                        idmoneda_general = ?, 
+                        subtotal_general = ?, 
+                        descuento_porcentaje_general = ?, 
+                        monto_descuento_general = ?, 
+                        total_general = ?, 
+                        observaciones_compra = ?,
+                        fecha_modificacion = NOW()
+                    WHERE idcompra = ?");
             
-            $arrDataCompra = [
+            $this->setArray([
                 $datosCompra['fecha_compra'],
                 $datosCompra['idproveedor'],
                 $datosCompra['idmoneda_general'],
@@ -340,26 +516,25 @@ class ComprasModel extends Mysql
                 $datosCompra['total_general_compra'],
                 $datosCompra['observaciones_compra'],
                 $idcompra
-            ];
+            ]);
 
-            $stmtCompra = $this->db->prepare($sqlCompra);
-            if (!$stmtCompra->execute($arrDataCompra)) {
-                $this->db->rollBack();
+            $stmtCompra = $db->prepare($this->getQuery());
+            if (!$stmtCompra->execute($this->getArray())) {
+                $db->rollBack();
                 throw new Exception("Error al actualizar cabecera de compra");
             }
 
-            // Eliminar detalles existentes
-            $sqlDeleteDetalle = "DELETE FROM detalle_compra WHERE idcompra = ?";
-            $stmtDelete = $this->db->prepare($sqlDeleteDetalle);
+            $this->setQuery("DELETE FROM detalle_compra WHERE idcompra = ?");
+            $stmtDelete = $db->prepare($this->getQuery());
             if (!$stmtDelete->execute([$idcompra])) {
-                $this->db->rollBack();
+                $db->rollBack();
                 throw new Exception("Error al eliminar detalles existentes");
             }
 
-            // Insertar nuevos detalles
-            $sqlDetalle = "INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, descuento, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmtDetalle = $this->db->prepare($sqlDetalle);
+            $this->setQuery("INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, descuento, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            
+            $stmtDetalle = $db->prepare($this->getQuery());
 
             foreach ($detallesCompra as $detalle) {
                 $arrDataDetalle = [
@@ -377,48 +552,34 @@ class ComprasModel extends Mysql
                 ];
 
                 if (!$stmtDetalle->execute($arrDataDetalle)) {
-                    $this->db->rollBack();
+                    $db->rollBack();
                     throw new Exception("Error al insertar detalle actualizado de compra");
                 }
             }
 
-            $this->db->commit();
+            $db->commit();
             return true;
 
         } catch (Exception $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
             }
-            error_log("Error al actualizar compra: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarActualizacionCompra - Error: " . $e->getMessage());
             return false;
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //OBTENER COMPRA COMPLETA PARA EDITAR
-    public function getCompraCompletaParaEditar($idcompra) {
+    private function ejecutarBusquedaCompraCompletaParaEditar($idcompra)
+    {
         try {
-            // Obtener datos de la compra
-            $compra = $this->getCompraById($idcompra);
+            $compra = $this->ejecutarBusquedaCompraPorId($idcompra);
             if (!$compra) {
                 return false;
             }
 
-            // Obtener detalles con información adicional para edición
-            $sqlDetalles = "SELECT 
-                                dc.*,
-                                p.nombre as producto_nombre,
-                                p.idcategoria,
-                                m.codigo_moneda,
-                                cat.nombre as categoria_nombre
-                            FROM detalle_compra dc
-                            LEFT JOIN producto p ON dc.idproducto = p.idproducto
-                            LEFT JOIN monedas m ON dc.idmoneda_detalle = m.idmoneda
-                            LEFT JOIN categoria cat ON p.idcategoria = cat.idcategoria
-                            WHERE dc.idcompra = ?";
-            
-            $stmt = $this->db->prepare($sqlDetalles);
-            $stmt->execute([$idcompra]);
-            $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $detalles = $this->ejecutarBusquedaDetalleCompraPorIdParaEditar($idcompra);
 
             return [
                 'compra' => $compra,
@@ -426,112 +587,165 @@ class ComprasModel extends Mysql
             ];
 
         } catch (PDOException $e) {
-            error_log("Error al obtener compra completa para editar: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarBusquedaCompraCompletaParaEditar - Error: " . $e->getMessage());
             return false;
         }
     }
 
-    //BUSCAR COMPRA POR ID
-    public function getCompraById($idcompra) {
-        $codigoMonedaEuro = 'EUR';
-        $codigoMonedaDolar = 'USD';
-
-        $sql = "SELECT 
-                    c.*,
-                    CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as proveedor_nombre,
-                    m.codigo_moneda AS moneda_general_compra_codigo,
-                    (SELECT ht_eur.tasa_a_bs
-                    FROM historial_tasas_bcv ht_eur
-                    WHERE ht_eur.codigo_moneda = ?
-                    AND DATE(ht_eur.fecha_publicacion_bcv) <= DATE(c.fecha)
-                    ORDER BY ht_eur.fecha_publicacion_bcv DESC
-                    LIMIT 1) AS tasa_eur_ves,
-                    (SELECT ht_usd.tasa_a_bs
-                    FROM historial_tasas_bcv ht_usd
-                    WHERE ht_usd.codigo_moneda = ?
-                    AND DATE(ht_usd.fecha_publicacion_bcv) <= DATE(c.fecha)
-                    ORDER BY ht_usd.fecha_publicacion_bcv DESC
-                    LIMIT 1) AS tasa_usd_ves
-                FROM compra c 
-                LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor
-                LEFT JOIN monedas m ON c.idmoneda_general = m.idmoneda
-                WHERE c.idcompra = ?";
+    private function ejecutarBusquedaDetalleCompraPorIdParaEditar($idcompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
         try {
-            $stmt = $this->db->prepare($sql);
-            $array = [
-                $codigoMonedaEuro,
-                $codigoMonedaDolar,
-                $idcompra
-            ];
-            $stmt->execute($array);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error al obtener compra por ID con tasas: " . $e->getMessage());
-            return false;
-        }
-    }
-
-
-    //BUSCAR DETALLE DE COMPRA POR ID
-    public function getDetalleCompraById($idcompra){
-        $sql = "SELECT 
-                    dc.*,
-                    p.nombre as producto_nombre,
-                    m.codigo_moneda
-                FROM detalle_compra dc
-                LEFT JOIN producto p ON dc.idproducto = p.idproducto
-                LEFT JOIN monedas m ON dc.idmoneda_detalle = m.idmoneda
-                WHERE dc.idcompra = ?";
-        try {
-            $stmt = $this->db->prepare($sql);
+            $this->setQuery("SELECT 
+                            dc.*,
+                            p.nombre as producto_nombre,
+                            p.idcategoria,
+                            m.codigo_moneda,
+                            cat.nombre as categoria_nombre
+                        FROM detalle_compra dc
+                        LEFT JOIN producto p ON dc.idproducto = p.idproducto
+                        LEFT JOIN monedas m ON dc.idmoneda_detalle = m.idmoneda
+                        LEFT JOIN categoria cat ON p.idcategoria = cat.idcategoria
+                        WHERE dc.idcompra = ?");
+            
+            $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idcompra]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+
+            return $this->getResult();
+
         } catch (PDOException $e) {
-            error_log("Error al obtener detalle de compra: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarBusquedaDetalleCompraPorIdParaEditar - Error: " . $e->getMessage());
             return [];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //Eliminacion Logica
-    public function deleteCompraById(int $idcompra)
+    private function ejecutarBusquedaCompraPorId($idcompra)
     {
-        try {
-            $this->db->beginTransaction();
-            $sqlCompra = "
-                UPDATE compra
-                SET estatus_compra = 'inactivo'
-                WHERE idcompra = ?
-            ";
-            $stmtCompra = $this->db->prepare($sqlCompra);
-            $stmtCompra->execute([$idcompra]);
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
-            $this->db->commit();
-            return $stmtCompra->rowCount() > 0;
+        try {
+            $codigoMonedaEuro = 'EUR';
+            $codigoMonedaDolar = 'USD';
+
+            $this->setQuery("SELECT 
+                        c.*,
+                        CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as proveedor_nombre,
+                        m.codigo_moneda AS moneda_general_compra_codigo,
+                        (SELECT ht_eur.tasa_a_bs
+                        FROM historial_tasas_bcv ht_eur
+                        WHERE ht_eur.codigo_moneda = ?
+                        AND DATE(ht_eur.fecha_publicacion_bcv) <= DATE(c.fecha)
+                        ORDER BY ht_eur.fecha_publicacion_bcv DESC
+                        LIMIT 1) AS tasa_eur_ves,
+                        (SELECT ht_usd.tasa_a_bs
+                        FROM historial_tasas_bcv ht_usd
+                        WHERE ht_usd.codigo_moneda = ?
+                        AND DATE(ht_usd.fecha_publicacion_bcv) <= DATE(c.fecha)
+                        ORDER BY ht_usd.fecha_publicacion_bcv DESC
+                        LIMIT 1) AS tasa_usd_ves
+                    FROM compra c 
+                    LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor
+                    LEFT JOIN monedas m ON c.idmoneda_general = m.idmoneda
+                    WHERE c.idcompra = ?");
+            
+            $this->setArray([$codigoMonedaEuro, $codigoMonedaDolar, $idcompra]);
+
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+
+            return $this->getResult();
+
         } catch (PDOException $e) {
-            $this->db->rollBack();
-            error_log("Error al marcar eliminar logicamente la compra " . $e->getMessage());
+            error_log("ComprasModel::ejecutarBusquedaCompraPorId - Error: " . $e->getMessage());
             return false;
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-
-    //CAMBIAR ESTADO DE COMPRA
-    public function cambiarEstadoCompra(int $idcompra, string $nuevoEstado)
+    private function ejecutarBusquedaDetalleCompraPorId($idcompra)
     {
-        $estadosValidos = ['BORRADOR', 'POR_AUTORIZAR', 'AUTORIZADA', 'POR_PAGAR', 'PAGADA'];
-        
-        if (!in_array($nuevoEstado, $estadosValidos)) {
-            return [
-                'status' => false,
-                'message' => 'Estado no válido.'
-            ];
-        }
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
         try {
-            // Obtener estado actual
-            $sqlGetEstado = "SELECT estatus_compra FROM compra WHERE idcompra = ?";
-            $stmtGet = $this->db->prepare($sqlGetEstado);
+            $this->setQuery("SELECT 
+                        dc.*,
+                        p.nombre as producto_nombre,
+                        m.codigo_moneda
+                    FROM detalle_compra dc
+                    LEFT JOIN producto p ON dc.idproducto = p.idproducto
+                    LEFT JOIN monedas m ON dc.idmoneda_detalle = m.idmoneda
+                    WHERE dc.idcompra = ?");
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idcompra]);
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+
+            return $this->getResult();
+
+        } catch (PDOException $e) {
+            error_log("ComprasModel::ejecutarBusquedaDetalleCompraPorId - Error: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarEliminacionLogicaCompra(int $idcompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+            
+            $this->setQuery("UPDATE compra SET estatus_compra = 'inactivo' WHERE idcompra = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idcompra]);
+            
+            $db->commit();
+            
+            return $stmt->rowCount() > 0;
+
+        } catch (PDOException $e) {
+            $db->rollBack();
+            error_log("ComprasModel::ejecutarEliminacionLogicaCompra - Error: " . $e->getMessage());
+            return false;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarCambioEstadoCompra(int $idcompra, string $nuevoEstado)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $estadosValidos = ['BORRADOR', 'POR_AUTORIZAR', 'AUTORIZADA', 'POR_PAGAR', 'PAGADA'];
+            
+            if (!in_array($nuevoEstado, $estadosValidos)) {
+                return [
+                    'status' => false,
+                    'message' => 'Estado no válido.'
+                ];
+            }
+
+            $this->setQuery("SELECT estatus_compra FROM compra WHERE idcompra = ?");
+            $stmtGet = $db->prepare($this->getQuery());
             $stmtGet->execute([$idcompra]);
             $compra = $stmtGet->fetch(PDO::FETCH_ASSOC);
 
@@ -544,7 +758,6 @@ class ComprasModel extends Mysql
 
             $estadoActual = $compra['estatus_compra'];
 
-            // Validar transición de estado
             if (!$this->validarTransicionEstado($estadoActual, $nuevoEstado)) {
                 return [
                     'status' => false,
@@ -552,14 +765,12 @@ class ComprasModel extends Mysql
                 ];
             }
 
-            // Actualizar estado
-            $sql = "UPDATE compra SET estatus_compra = ?, fecha_modificacion = NOW() WHERE idcompra = ?";
-            $stmt = $this->db->prepare($sql);
+            $this->setQuery("UPDATE compra SET estatus_compra = ?, fecha_modificacion = NOW() WHERE idcompra = ?");
+            $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$nuevoEstado, $idcompra]);
 
-            // Si el estado es PAGADA, generar nota de entrega
             if ($nuevoEstado === 'PAGADA') {
-                $this->generarNotaEntrega($idcompra);
+                $this->ejecutarGeneracionNotaEntrega($idcompra, $db);
             }
 
             return [
@@ -568,64 +779,27 @@ class ComprasModel extends Mysql
             ];
 
         } catch (PDOException $e) {
-            error_log("Error al cambiar estado de compra: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarCambioEstadoCompra - Error: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error de base de datos al cambiar estado.'
+                'message' => 'Error de base de datos al cambiar estado: ' . $e->getMessage()
             ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //VALIDAR TRANSICIÓN DE ESTADO
-    private function validarTransicionEstado($estadoActual, $nuevoEstado): bool
+    private function ejecutarInsercionProveedor(array $data)
     {
-        $transicionesValidas = [
-            'BORRADOR' => ['POR_AUTORIZAR'],
-            'POR_AUTORIZAR' => ['AUTORIZADA', 'BORRADOR'],
-            'AUTORIZADA' => ['POR_PAGAR'],
-            'POR_PAGAR' => ['PAGADA', 'AUTORIZADA'],
-            'PAGADA' => [] // Estado final
-        ];
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
-        return isset($transicionesValidas[$estadoActual]) && 
-               in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
-    }
-
-    //GENERAR NOTA DE ENTREGA
-    private function generarNotaEntrega($idcompra)
-    {
         try {
-            // Generar número de nota de entrega
-            $year = date("Y");
-            $sqlNum = "SELECT MAX(CAST(SUBSTRING_INDEX(numero_nota, '-', -1) AS UNSIGNED)) as max_num
-                       FROM notas_entrega WHERE numero_nota LIKE ?";
-            $stmtNum = $this->db->prepare($sqlNum);
-            $stmtNum->execute(["NE-" . $year . "-%"]);
-            $result = $stmtNum->fetch(PDO::FETCH_ASSOC);
-            $next_num = ($result && isset($result['max_num'])) ? intval($result['max_num']) + 1 : 1;
-            $numeroNota = "NE-" . $year . "-" . str_pad($next_num, 5, "0", STR_PAD_LEFT);
-
-            // Insertar nota de entrega
-            $sqlNota = "INSERT INTO notas_entrega (numero_nota, idcompra, fecha_creacion, estado) 
-                        VALUES (?, ?, NOW(), 'PENDIENTE')";
-            $stmtNota = $this->db->prepare($sqlNota);
-            $stmtNota->execute([$numeroNota, $idcompra]);
-
-            return $numeroNota;
-        } catch (Exception $e) {
-            error_log("Error al generar nota de entrega: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    //INSERTAR PROVEEDOR
-    public function insertProveedor(array $data): array
-    {
-        try {
-            $sql = "INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_creacion, fecha_modificacion) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVO', NOW(), NOW())";
+            $this->setQuery("INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_creacion, fecha_modificacion) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVO', NOW(), NOW())");
             
-            $valores = [
+            $this->setArray([
                 $data['nombre'],
                 $data['apellido'],
                 $data['identificacion'],
@@ -635,13 +809,13 @@ class ComprasModel extends Mysql
                 $data['fecha_nacimiento'],
                 $data['genero'],
                 $data['observaciones']
-            ];
+            ]);
             
-            $stmt = $this->db->prepare($sql);
-            $insertExitoso = $stmt->execute($valores);
+            $stmt = $db->prepare($this->getQuery());
+            $insertExitoso = $stmt->execute($this->getArray());
             
             if ($insertExitoso) {
-                $idProveedor = $this->db->lastInsertId();
+                $idProveedor = $db->lastInsertId();
                 return [
                     'status' => true,
                     'message' => 'Proveedor registrado exitosamente.',
@@ -655,26 +829,164 @@ class ComprasModel extends Mysql
             }
 
         } catch (PDOException $e) {
-            error_log("Error al insertar proveedor: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarInsercionProveedor - Error: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error de base de datos al registrar proveedor: ' . $e->getMessage()
             ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    //OBTENER PROVEEDOR POR ID
-    public function getProveedorById($idproveedor)
+    private function ejecutarBusquedaProveedorPorId($idproveedor)
     {
-        $sql = "SELECT * FROM proveedor WHERE idproveedor = ?";
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
         try {
-            $stmt = $this->db->prepare($sql);
+            $this->setQuery("SELECT * FROM proveedor WHERE idproveedor = ?");
+            $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idproveedor]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+
+            return $this->getResult();
+
         } catch (Exception $e) {
-            error_log("Error al obtener proveedor por ID: " . $e->getMessage());
+            error_log("ComprasModel::ejecutarBusquedaProveedorPorId - Error: " . $e->getMessage());
+            return false;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+
+    private function validarTransicionEstado($estadoActual, $nuevoEstado): bool
+    {
+        $transicionesValidas = [
+            'BORRADOR' => ['POR_AUTORIZAR'],
+            'POR_AUTORIZAR' => ['AUTORIZADA', 'BORRADOR'],
+            'AUTORIZADA' => ['POR_PAGAR'],
+            'POR_PAGAR' => ['PAGADA', 'AUTORIZADA'],
+            'PAGADA' => [] 
+        ];
+
+        return isset($transicionesValidas[$estadoActual]) && 
+               in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
+    }
+
+    private function ejecutarGeneracionNotaEntrega($idcompra, $db)
+    {
+        try {
+            $year = date("Y");
+            $this->setQuery("SELECT MAX(CAST(SUBSTRING_INDEX(numero_nota, '-', -1) AS UNSIGNED)) as max_num
+                           FROM notas_entrega WHERE numero_nota LIKE ?");
+            $stmtNum = $db->prepare($this->getQuery());
+            $stmtNum->execute(["NE-" . $year . "-%"]);
+            $result = $stmtNum->fetch(PDO::FETCH_ASSOC);
+            $next_num = ($result && isset($result['max_num'])) ? intval($result['max_num']) + 1 : 1;
+            $numeroNota = "NE-" . $year . "-" . str_pad($next_num, 5, "0", STR_PAD_LEFT);
+
+            $this->setQuery("INSERT INTO notas_entrega (numero_nota, idcompra, fecha_creacion, estado) 
+                        VALUES (?, ?, NOW(), 'PENDIENTE')");
+            $stmtNota = $db->prepare($this->getQuery());
+            $stmtNota->execute([$numeroNota, $idcompra]);
+
+            return $numeroNota;
+        } catch (Exception $e) {
+            error_log("ComprasModel::ejecutarGeneracionNotaEntrega - Error: " . $e->getMessage());
             return false;
         }
+    }
+
+    // MÉTODOS PÚBLICOS QUE SE LLAMAN EN EL CONTROLADOR
+    public function selectAllCompras()
+    {
+        return $this->ejecutarConsultaTodasCompras();
+    }
+
+    public function generarNumeroCompra()
+    {
+        return $this->ejecutarGeneracionNumeroCompra();
+    }
+
+    public function buscarProveedor($termino)
+    {
+        $this->setTermino($termino);
+        return $this->ejecutarBusquedaProveedor();
+    }
+
+    public function getProductosConCategoria()
+    {
+        return $this->ejecutarConsultaProductosConCategoria();
+    }
+
+    public function getProductoById(int $idproducto)
+    {
+        $this->setIdProducto($idproducto);
+        return $this->ejecutarBusquedaProductoPorId();
+    }
+
+    public function getMonedasActivas()
+    {
+        return $this->ejecutarConsultaMonedasActivas();
+    }
+
+    public function getTasasPorFecha($fecha)
+    {
+        $this->setFecha($fecha);
+        return $this->ejecutarConsultaTasasPorFecha();
+    }
+
+    public function getUltimoPesoRomana()
+    {
+        return $this->ejecutarConsultaUltimoPesoRomana();
+    }
+
+    public function insertarCompra(array $datosCompra, array $detallesCompra)
+    {
+        return $this->ejecutarInsercionCompra($datosCompra, $detallesCompra);
+    }
+
+    public function actualizarCompra(int $idcompra, array $datosCompra, array $detallesCompra)
+    {
+        return $this->ejecutarActualizacionCompra($idcompra, $datosCompra, $detallesCompra);
+    }
+
+    public function getCompraCompletaParaEditar($idcompra)
+    {
+        return $this->ejecutarBusquedaCompraCompletaParaEditar($idcompra);
+    }
+
+    public function getCompraById($idcompra)
+    {
+        return $this->ejecutarBusquedaCompraPorId($idcompra);
+    }
+
+    public function getDetalleCompraById($idcompra)
+    {
+        return $this->ejecutarBusquedaDetalleCompraPorId($idcompra);
+    }
+
+    public function deleteCompraById(int $idcompra)
+    {
+        return $this->ejecutarEliminacionLogicaCompra($idcompra);
+    }
+
+    public function cambiarEstadoCompra(int $idcompra, string $nuevoEstado)
+    {
+        return $this->ejecutarCambioEstadoCompra($idcompra, $nuevoEstado);
+    }
+
+    public function insertProveedor(array $data): array
+    {
+        return $this->ejecutarInsercionProveedor($data);
+    }
+
+    public function getProveedorById($idproveedor)
+    {
+        return $this->ejecutarBusquedaProveedorPorId($idproveedor);
     }
 }
 ?>
