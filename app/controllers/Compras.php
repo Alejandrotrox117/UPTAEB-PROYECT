@@ -80,16 +80,33 @@ class Compras extends Controllers
     }
 
     //BUSCAR ULTIMO PESO DE ROMANA
-    public function getUltimoPesoRomana(){
-        header('Content-Type: application/json');
-        $modelo = $this->get_model();
-        $peso = $modelo->getUltimoPesoRomana();
-        if ($peso !== null) {
-            echo json_encode(['status' => true, 'peso' => $peso]);
-        } else {
-            echo json_encode(['status' => false, 'message' => 'No hay registros de peso.']);
+    public function getUltimoPesoRomana() {
+        $filePath = 'C:\com_data\peso_mysql.json';
+        
+        if (!file_exists($filePath)) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Archivo de peso no encontrado'
+            ]);
+            return;
         }
-        exit();
+        
+        $jsonData = file_get_contents($filePath);
+        $data = json_decode($jsonData, true);
+        
+        if ($data === null) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al leer datos de peso'
+            ]);
+            return;
+        }
+        
+        echo json_encode([
+            'status' => true, 
+            'peso' => $data["peso_numerico"],
+            'fecha_hora' => $data["fecha_hora"],
+        ]);
     }
 
     //GUARDAR COMPRA

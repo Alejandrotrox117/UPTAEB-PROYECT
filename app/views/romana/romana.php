@@ -14,7 +14,7 @@
             <div class="flex justify-between items-center mb-4">
             </div>
 
-            <table id="TablaProductos" class="w-full text-left border-collapse mt-6">
+            <table id="TablaRomana" class="w-full text-left border-collapse mt-6">
                 <thead>
                     <tr class="text-gray-500 text-sm border-b">
                         <th class="py-2">Peso</th>

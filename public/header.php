@@ -142,7 +142,7 @@
               </summary>
               <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
                 <?php if (PermisosVerificar::verificarPermisoAccion('romana', 'ver')): ?>
-                <li class="menu-item"><a href="/project/romana" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-weight-scale w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Pagos</span></a></li>
+                <li class="menu-item"><a href="/project/romana" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-weight-scale w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Romana</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('personas', 'ver')): ?>
                 <li class="menu-item"><a href="/project/personas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-shield w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Personas</span></a></li>

@@ -886,13 +886,22 @@ document.addEventListener("DOMContentLoaded", function () {
       if (isNaN(index) || index >= detalleCompraItemsModal.length) return;
       const item = detalleCompraItemsModal[index];
 
-      // Event listeners para pesos de romana
+      // Event listeners para pesos de romana actualizados el 12-06-2025
       const btnUltimoPesoBruto = row.querySelector(".btnUltimoPesoRomanaBruto");
       if (btnUltimoPesoBruto) {
         btnUltimoPesoBruto.addEventListener("click", async function () {
           try {
+            console.log("Consultando romana...");
             const response = await fetch("Compras/getUltimoPesoRomana");
+            console.log("Response status:", response.status);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log("Data received:", data);
+            
             if (data.status) {
               if (item.no_usa_vehiculo) {
                 item.peso_neto_directo = data.peso;
@@ -906,7 +915,8 @@ document.addEventListener("DOMContentLoaded", function () {
               Swal.fire("Atención", data.message || "No se pudo obtener el peso.", "warning");
             }
           } catch (e) {
-            Swal.fire("Error", "Error al consultar la romana.", "error");
+            console.error("Error completo:", e);
+            Swal.fire("Error", "Error al consultar la romana: " + e.message, "error");
           }
         });
       }
