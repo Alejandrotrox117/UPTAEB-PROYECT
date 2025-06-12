@@ -107,11 +107,11 @@
                 <table id="tablaDetalleCompraModal" class="w-full text-xs sm:text-sm">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="px-3 py-2 text-left font-medium text-gray-600">Producto</th>
-                            <th class="px-3 py-2 text-left font-medium text-gray-600">Info Específica</th>
-                            <th class="px-3 py-2 text-left font-medium text-gray-600">Precio U.</th>
-                            <th class="px-3 py-2 text-left font-medium text-gray-600">Subtotal</th>
-                            <th class="px-3 py-2 text-center font-medium text-gray-600">Acción</th>
+                            <th class="px-1 py-1 text-left font-medium text-gray-600">Producto</th>
+                            <th class="px-1 py-1 text-left font-medium text-gray-600">Info Específica</th>
+                            <th class="px-1 py-1 text-left font-medium text-gray-600">Precio U.</th>
+                            <th class="px-1 py-1 text-left font-medium text-gray-600">Subtotal</th>
+                            <th class="px-1 py-1 text-center font-medium text-gray-600">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaDetalleCompraModal" class="divide-y divide-gray-200">
@@ -290,11 +290,11 @@
                 <table id="tablaDetalleCompraActualizar" class="w-full text-xs sm:text-sm">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="px-3 py-2 text-left font-medium text-gray-600">Producto</th>
-                            <th class="px-3 py-2 text-left font-medium text-gray-600">Info Específica</th>
-                            <th class="px-3 py-2 text-left font-medium text-gray-600">Precio U.</th>
-                            <th class="px-3 py-2 text-left font-medium text-gray-600">Subtotal</th>
-                            <th class="px-3 py-2 text-center font-medium text-gray-600">Acción</th>
+                            <th class="px-1 py-1 text-left font-medium text-gray-600">Producto</th>
+                            <th class="px-1 py-1 text-left font-medium text-gray-600">Info Específica</th>
+                            <th class="px-1 py-1 text-left font-medium text-gray-600">Precio U.</th>
+                            <th class="px-1 py-1 text-left font-medium text-gray-600">Subtotal</th>
+                            <th class="px-1 py-1 text-center font-medium text-gray-600">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="cuerpoTablaDetalleCompraActualizar" class="divide-y divide-gray-200">

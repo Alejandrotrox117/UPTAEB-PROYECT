@@ -4,14 +4,12 @@ require_once "app/core/Mysql.php";
 
 class ComprasModel extends Mysql
 {
-
     private $query;
     private $array;
     private $data;
     private $result;
     private $message;
     private $status;
-
 
     private $idcompra;
     private $nro_compra;
@@ -49,7 +47,7 @@ class ComprasModel extends Mysql
     }
     public function setQuery(string $query){
         $this->query = $query; 
-}
+    }
     public function getArray(){ 
         return $this->array ?? []; 
     }
@@ -143,7 +141,7 @@ class ComprasModel extends Mysql
         return $this->estatus_compra;
     }
     public function setObservacionesCompra($observaciones_compra){
-        $this->observaciones_compra = $observaciones_compra;
+        $this->observaciones_compra = $observaciones_compra; 
     }
     public function getObservacionesCompra(){
         return $this->observaciones_compra; 
@@ -431,9 +429,9 @@ class ComprasModel extends Mysql
                 $datosCompra['fecha_compra'],
                 $datosCompra['idproveedor'],
                 $datosCompra['idmoneda_general'],
-                $datosCompra['subtotal_general_compra'],
-                $datosCompra['descuento_porcentaje_compra'],
-                $datosCompra['monto_descuento_compra'],
+                $datosCompra['subtotal_general_compra'] ?? 0,
+                $datosCompra['descuento_porcentaje_compra'] ?? 0,
+                $datosCompra['monto_descuento_compra'] ?? 0,
                 $datosCompra['total_general_compra'],
                 $datosCompra['observaciones_compra']
             ]);
@@ -457,7 +455,7 @@ class ComprasModel extends Mysql
                     $detalle['idproducto'],
                     $detalle['descripcion_temporal_producto'],
                     $detalle['cantidad'],
-                    $detalle['descuento'],
+                    $detalle['descuento'] ?? 0,
                     $detalle['precio_unitario_compra'],
                     $detalle['idmoneda_detalle'],
                     $detalle['subtotal_linea'],
@@ -494,6 +492,7 @@ class ComprasModel extends Mysql
 
         try {
             $db->beginTransaction();
+        
             $this->setQuery("UPDATE compra SET 
                         fecha = ?, 
                         idproveedor = ?, 
@@ -510,9 +509,9 @@ class ComprasModel extends Mysql
                 $datosCompra['fecha_compra'],
                 $datosCompra['idproveedor'],
                 $datosCompra['idmoneda_general'],
-                $datosCompra['subtotal_general_compra'],
-                $datosCompra['descuento_porcentaje_compra'],
-                $datosCompra['monto_descuento_compra'],
+                $datosCompra['subtotal_general_compra'] ?? 0,
+                $datosCompra['descuento_porcentaje_compra'] ?? 0,
+                $datosCompra['monto_descuento_compra'] ?? 0,
                 $datosCompra['total_general_compra'],
                 $datosCompra['observaciones_compra'],
                 $idcompra
@@ -542,7 +541,7 @@ class ComprasModel extends Mysql
                     $detalle['idproducto'],
                     $detalle['descripcion_temporal_producto'],
                     $detalle['cantidad'],
-                    $detalle['descuento'],
+                    $detalle['descuento'] ?? 0,
                     $detalle['precio_unitario_compra'],
                     $detalle['idmoneda_detalle'],
                     $detalle['subtotal_linea'],
@@ -860,7 +859,6 @@ class ComprasModel extends Mysql
             $conexion->disconnect();
         }
     }
-
 
     private function validarTransicionEstado($estadoActual, $nuevoEstado): bool
     {

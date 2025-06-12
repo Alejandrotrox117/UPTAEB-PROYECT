@@ -713,7 +713,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function calcularSubtotalLineaItemModal(item) {
     const precioUnitario = parseFloat(item.precio_unitario) || 0;
     let cantidadBase = 0;
-    if (item.idcategoria === 1) {
+    if (item.idcategoria === 2) {
       cantidadBase = calcularPesoNetoItemModal(item) || 0;
     } else {
       cantidadBase = parseFloat(item.cantidad_unidad) || 0;
@@ -744,7 +744,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   
   function calcularPesoNetoItemModal(item) {
-    if (item.idcategoria === 1) {
+    if (item.idcategoria === 2) {
       if (item.no_usa_vehiculo) {
         return parseFloat(item.peso_neto_directo) || 0;
       } else {
@@ -824,7 +824,7 @@ document.addEventListener("DOMContentLoaded", function () {
       tr.dataset.index = index;
 
       let infoEspecificaHtml = "";
-      if (item.idcategoria === 1) {
+      if (item.idcategoria === 2) {
         infoEspecificaHtml = `
         <div class="space-y-1">
           <div>
@@ -834,39 +834,37 @@ document.addEventListener("DOMContentLoaded", function () {
           </div>
           <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
             P.Bru: 
-            <input type="number" step="0.01" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
+            <input type="number" step="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
             <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
             P.Veh: 
-            <input type="number" step="0.01" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
+            <input type="number" step="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
             <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
             Descuento %: 
-            <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
+            <input type="number" step="0.01" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
           </div>
           <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
-            P.Neto: <input type="number" step="0.01" class="w-20 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
+            P.Neto: <input type="number" step="0.01" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
             <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
             Descuento %: 
-            <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
+            <input type="number" step="0.01" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
           </div>
           Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(item).toFixed(2)}</strong>
         </div>`;
       } else {
         infoEspecificaHtml = `
           <div>
-            Cant: <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${item.cantidad_unidad || "1"}" placeholder="1">
-            Descuento %: 
-            <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
+            Cant: <input type="number" step="0.01" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${item.cantidad_unidad || "1"}" placeholder="1">
           </div>`;
       }
 
       tr.innerHTML = `
-        <td class="py-1 px-1 text-xs">${item.nombre}</td>
-        <td class="py-1 px-1 text-xs">${infoEspecificaHtml}</td>
-        <td class="py-1 px-1 text-xs">
-            ${item.idmoneda_item} <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
+        <td class="py-0.5 px-0.5 text-xs">${item.nombre}</td>
+        <td class="py-0.5 px-0.5 text-xs">${infoEspecificaHtml}</td>
+        <td class="py-0.5 px-0.5 text-xs">
+            ${item.idmoneda_item} <input type="number" step="0.01" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
         </td>
-        <td class="py-1 px-1 text-xs subtotal_linea_display_modal">${item.idmoneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
-        <td class="py-1 px-1 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs"></button></td>
+        <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_modal">${item.idmoneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
+        <td class="py-0.5 px-0.5 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs"></button></td>
       `;
       cuerpoTablaDetalleCompraModal.appendChild(tr);
     });
@@ -1008,7 +1006,7 @@ document.addEventListener("DOMContentLoaded", function () {
       for (const item of detalleCompraItemsModal) {
         const precio = parseFloat(item.precio_unitario) || 0;
         let cantidadValida = false;
-        if (item.idcategoria === 1) {
+        if (item.idcategoria === 2) {
           cantidadValida = calcularPesoNetoItemModal(item) > 0;
         } else {
           cantidadValida = (parseFloat(item.cantidad_unidad) || 0) > 0;
@@ -1024,7 +1022,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const productosDetalle = detalleCompraItemsModal.map(item => ({
         idproducto: item.idproducto,
         nombre_producto: item.nombre,
-        cantidad: item.idcategoria === 1 ? calcularPesoNetoItemModal(item) : item.cantidad_unidad,
+        cantidad: item.idcategoria === 2 ? calcularPesoNetoItemModal(item) : item.cantidad_unidad,
         precio_unitario_compra: item.precio_unitario,
         idmoneda_detalle: item.idmoneda_item,
         descuento: item.descuento || 0, // CAMPO DESCUENTO AGREGADO
@@ -1032,9 +1030,9 @@ document.addEventListener("DOMContentLoaded", function () {
         subtotal_original_linea: item.subtotal_original_linea || 0,
         monto_descuento_linea: item.monto_descuento_linea || 0,
         subtotal_linea: item.subtotal_linea,
-        peso_vehiculo: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
-        peso_bruto: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_bruto : null,
-        peso_neto: item.idcategoria === 1 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemModal(item)) : null,
+        peso_vehiculo: item.idcategoria === 2 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
+        peso_bruto: item.idcategoria === 2 && !item.no_usa_vehiculo ? item.peso_bruto : null,
+        peso_neto: item.idcategoria === 2 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemModal(item)) : null,
       }));
       
       formData.append("productos_detalle", JSON.stringify(productosDetalle));
@@ -1372,7 +1370,7 @@ const btnCerrarModalEditarCompra = document.getElementById("btnCerrarModalEditar
       for (const item of detalleCompraItemsActualizar) {
         const precio = parseFloat(item.precio_unitario) || 0;
         let cantidadValida = false;
-        if (item.idcategoria === 1) {
+        if (item.idcategoria === 2) {
           cantidadValida = calcularPesoNetoItemActualizar(item) > 0;
         } else {
           cantidadValida = (parseFloat(item.cantidad_unidad) || 0) > 0;
@@ -1387,7 +1385,7 @@ const btnCerrarModalEditarCompra = document.getElementById("btnCerrarModalEditar
       const productosDetalle = detalleCompraItemsActualizar.map(item => ({
         idproducto: item.idproducto,
         nombre_producto: item.nombre,
-        cantidad: item.idcategoria === 1 ? calcularPesoNetoItemActualizar(item) : item.cantidad_unidad,
+        cantidad: item.idcategoria === 2 ? calcularPesoNetoItemActualizar(item) : item.cantidad_unidad,
         precio_unitario_compra: item.precio_unitario,
         idmoneda_detalle: item.idmoneda_item,
         descuento: item.descuento || 0,
@@ -1395,9 +1393,9 @@ const btnCerrarModalEditarCompra = document.getElementById("btnCerrarModalEditar
         subtotal_original_linea: item.subtotal_original_linea || 0,
         monto_descuento_linea: item.monto_descuento_linea || 0,
         subtotal_linea: item.subtotal_linea,
-        peso_vehiculo: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
-        peso_bruto: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_bruto : null,
-        peso_neto: item.idcategoria === 1 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemActualizar(item)) : null,
+        peso_vehiculo: item.idcategoria === 2 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
+        peso_bruto: item.idcategoria === 2 && !item.no_usa_vehiculo ? item.peso_bruto : null,
+        peso_neto: item.idcategoria === 2 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemActualizar(item)) : null,
       }));
       
       formData.append("productos_detalle", JSON.stringify(productosDetalle));
@@ -1804,7 +1802,7 @@ async function abrirModalEditarCompra(compra, detalles) {
         peso_vehiculo: parseFloat(detalle.peso_vehiculo) || 0,
         peso_bruto: parseFloat(detalle.peso_bruto) || 0,
         peso_neto_directo: (detalle.peso_vehiculo === null && detalle.peso_bruto === null) ? parseFloat(detalle.peso_neto) || 0 : 0,
-        cantidad_unidad: parseInt(detalle.idcategoria) === 1 ? 0 : parseFloat(detalle.cantidad),
+        cantidad_unidad: parseInt(detalle.idcategoria) === 2 ? 0 : parseFloat(detalle.cantidad),
         descuento: parseFloat(detalle.descuento) || 0,
         moneda: detalle.idmoneda_detalle,
         subtotal_linea: parseFloat(detalle.subtotal_linea)
@@ -1913,7 +1911,7 @@ async function cargarProductosParaActualizar() {
 }
 
 function calcularPesoNetoItemActualizar(item) {
-  if (item.idcategoria === 1) {
+  if (item.idcategoria === 2) {
     if (item.no_usa_vehiculo) {
       return parseFloat(item.peso_neto_directo) || 0;
     } else {
@@ -1928,7 +1926,7 @@ function calcularPesoNetoItemActualizar(item) {
 function calcularSubtotalLineaItemActualizar(item) {
   const precioUnitario = parseFloat(item.precio_unitario) || 0;
   let cantidadBase = 0;
-  if (item.idcategoria === 1) {
+  if (item.idcategoria === 2) {
     cantidadBase = calcularPesoNetoItemActualizar(item) || 0;
   } else {
     cantidadBase = parseFloat(item.cantidad_unidad) || 0;
@@ -1975,7 +1973,7 @@ function renderizarTablaDetalleActualizar() {
     tr.dataset.index = index;
 
     let infoEspecificaHtml = "";
-    if (item.idcategoria === 1) {
+    if (item.idcategoria === 2) {
       infoEspecificaHtml = `
       <div class="space-y-1">
         <div>

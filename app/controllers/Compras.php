@@ -105,13 +105,10 @@ class Compras extends Controllers
             $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
             $idmoneda_general = intval($_POST['idmoneda_general_compra'] ?? 0);
             $observaciones_compra = $_POST['observaciones_compra'] ?? '';
-            $subtotal_general_compra = floatval($_POST['subtotal_general_input'] ?? 0);
-            $descuento_porcentaje_compra = floatval($_POST['descuento_porcentaje_input'] ?? 0);
-            $monto_descuento_compra = floatval($_POST['monto_descuento_input'] ?? 0);
             $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
 
             if (empty($idproveedor) || empty($fecha_compra) || empty($idmoneda_general) || !isset($_POST['productos_detalle'])) {
-                $response['message'] = "Faltan datos obligatorios para la compra (proveedor, fecha, moneda o detalles).";
+                $response['message'] = "Faltan datos obligatorios para la compra.";
                 echo json_encode($response);
                 exit();
             }
@@ -123,17 +120,22 @@ class Compras extends Controllers
                 exit();
             }
 
+            $subtotal_general_compra = $total_general_compra;
+            $descuento_porcentaje_general = 0;
+            $monto_descuento_general = 0;
+
             $datosCompra = [
                 "nro_compra" => $nro_compra,
                 "fecha_compra" => $fecha_compra,
                 "idproveedor" => $idproveedor,
                 "idmoneda_general" => $idmoneda_general,
                 "subtotal_general_compra" => $subtotal_general_compra,
-                "descuento_porcentaje_compra" => $descuento_porcentaje_compra,
-                "monto_descuento_compra" => $monto_descuento_compra,
+                "descuento_porcentaje_compra" => $descuento_porcentaje_general,
+                "monto_descuento_compra" => $monto_descuento_general,
                 "total_general_compra" => $total_general_compra,
                 "observaciones_compra" => $observaciones_compra
             ];
+
             $detallesCompraInput = json_decode($_POST['productos_detalle'], true);
             if (json_last_error() !== JSON_ERROR_NONE || empty($detallesCompraInput)) {
                  $response['message'] = "No hay productos en el detalle o el formato es incorrecto.";
@@ -149,59 +151,49 @@ class Compras extends Controllers
                     echo json_encode($response);
                     exit();
                 }
+
                 $productoInfo = $modelo->getProductoById($idProductoItem);
-
                 if (!$productoInfo) {
-                    $response['message'] = "Producto no encontrado o inválido en el detalle: ID " . $idProductoItem;
+                    $response['message'] = "Producto no encontrado: ID " . $idProductoItem;
                     echo json_encode($response);
                     exit();
                 }
 
-                $peso_neto_calculado = 0;
-                $cantidad_base = 0;
-                $idCategoriaProducto = intval($productoInfo['idcategoria'] ?? 0);
+                $cantidad_final = floatval($item['cantidad'] ?? 0);
+                $peso_vehiculo = isset($item['peso_vehiculo']) ? floatval($item['peso_vehiculo']) : null;
+                $peso_bruto = isset($item['peso_bruto']) ? floatval($item['peso_bruto']) : null;
+                $peso_neto = isset($item['peso_neto']) ? floatval($item['peso_neto']) : null;
 
-                if ($idCategoriaProducto === 1) { 
-                    $noUsaVehiculo = filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN);
-                    if ($noUsaVehiculo) {
-                        $peso_neto_calculado = floatval($item['peso_neto_directo'] ?? 0);
-                    } else {
-                        $peso_bruto_val = floatval($item['peso_bruto'] ?? 0);
-                        $peso_vehiculo_val = floatval($item['peso_vehiculo'] ?? 0);
-                        $peso_neto_calculado = $peso_bruto_val - $peso_vehiculo_val;
-                    }
-                    $cantidad_base = $peso_neto_calculado;
-                } else { 
-                    $cantidad_base = floatval($item['cantidad_unidad'] ?? 0);
-                }
-
-                if ($cantidad_base <= 0) {
-                    $response['message'] = "Cantidad/Peso neto debe ser mayor a cero para el producto: " . htmlspecialchars($productoInfo['nombre_producto'], ENT_QUOTES, 'UTF-8');
+                if ($cantidad_final <= 0) {
+                    $response['message'] = "Cantidad debe ser mayor a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
                     echo json_encode($response);
                     exit();
                 }
+
                 if (floatval($item['precio_unitario_compra'] ?? 0) <= 0) {
-                    $response['message'] = "Precio unitario debe ser mayor a cero para el producto: " . htmlspecialchars($productoInfo['nombre_producto'], ENT_QUOTES, 'UTF-8');
+                    $response['message'] = "Precio debe ser mayor a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
                     echo json_encode($response);
                     exit();
                 }
 
                 $detallesParaGuardar[] = [
                     "idproducto" => $productoInfo['idproducto'],
-                    "descripcion_temporal_producto" => $productoInfo['nombre'],
-                    "cantidad" => $cantidad_base,
+                    "descripcion_temporal_producto" => $item['nombre_producto'] ?? $productoInfo['nombre'],
+                    "cantidad" => $cantidad_final,
                     "descuento" => floatval($item['descuento'] ?? 0),
                     "precio_unitario_compra" => floatval($item['precio_unitario_compra'] ?? 0),
                     "idmoneda_detalle" => $item['moneda'],
                     "subtotal_linea" => floatval($item['subtotal_linea'] ?? 0),
-                    "peso_vehiculo" => ($idCategoriaProducto === 1 && !filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN)) ? floatval($item['peso_vehiculo'] ?? 0) : null,
-                    "peso_bruto" => ($idCategoriaProducto === 1 && !filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN)) ? floatval($item['peso_bruto'] ?? 0) : null,
-                    "peso_neto" => ($idCategoriaProducto === 1) ? $peso_neto_calculado : null,
+                    "subtotal_original_linea" => floatval($item['subtotal_original_linea'] ?? 0),
+                    "monto_descuento_linea" => floatval($item['monto_descuento_linea'] ?? 0),
+                    "peso_vehiculo" => $peso_vehiculo,
+                    "peso_bruto" => $peso_bruto,
+                    "peso_neto" => $peso_neto,
                 ];
             }
 
             if (empty($detallesParaGuardar)) {
-                $response['message'] = "No se procesaron productos válidos para el detalle.";
+                $response['message'] = "No se procesaron productos válidos.";
                 echo json_encode($response);
                 exit();
             }
@@ -209,15 +201,18 @@ class Compras extends Controllers
             $idCompraInsertada = $modelo->insertarCompra($datosCompra, $detallesParaGuardar);
 
             if ($idCompraInsertada) {
-                $response = ["status" => true, "message" => "Compra registrada correctamente con Nro: " . htmlspecialchars($nro_compra, ENT_QUOTES, 'UTF-8'), "idcompra" => $idCompraInsertada];
+                $response = [
+                    "status" => true, 
+                    "message" => "Compra registrada correctamente con Nro: " . htmlspecialchars($nro_compra, ENT_QUOTES, 'UTF-8'), 
+                    "idcompra" => $idCompraInsertada
+                ];
             } else {
-                $response = ["status" => false, "message" => "Error al registrar la compra en la base de datos. Revise los logs del servidor."];
-                $response['debug'] = error_get_last();
+                $response = ["status" => false, "message" => "Error al registrar la compra."];
             }
+
             echo json_encode($response, JSON_UNESCAPED_UNICODE);
         } else {
-            $response = ["status" => false, "message" => "Método no permitido."];
-            echo json_encode($response);
+            echo json_encode(["status" => false, "message" => "Método no permitido."], JSON_UNESCAPED_UNICODE);
         }
         exit();
     }
@@ -275,7 +270,6 @@ class Compras extends Controllers
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit;
     }
-
 
     //CAMBIAR ESTADO DE COMPRA
     public function cambiarEstadoCompra(){
@@ -373,10 +367,11 @@ class Compras extends Controllers
             $fecha_compra = $_POST['fechaActualizar'] ?? '';
             $idmoneda_general = intval($_POST['idmoneda_general_compra'] ?? 0);
             $observaciones_compra = $_POST['observacionesActualizar'] ?? '';
-            $subtotal_general_compra = floatval($_POST['subtotal_general_input'] ?? 0);
-            $descuento_porcentaje_compra = floatval($_POST['descuento_porcentaje_input'] ?? 0);
-            $monto_descuento_compra = floatval($_POST['monto_descuento_input'] ?? 0);
             $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
+
+            $subtotal_general_compra = $total_general_compra;
+            $descuento_porcentaje_compra = 0;
+            $monto_descuento_compra = 0;
 
             if (empty($idcompra) || empty($idproveedor) || empty($fecha_compra) || empty($idmoneda_general) || !isset($_POST['productos_detalle'])) {
                 $response['message'] = "Faltan datos obligatorios para actualizar la compra.";
@@ -418,42 +413,41 @@ class Compras extends Controllers
                     exit();
                 }
 
-                $peso_neto_calculado = 0;
-                $cantidad_base = 0;
-                $idCategoriaProducto = intval($productoInfo['idcategoria'] ?? 0);
+                $cantidad_final = floatval($item['cantidad'] ?? 0);
+                $peso_vehiculo = isset($item['peso_vehiculo']) ? floatval($item['peso_vehiculo']) : null;
+                $peso_bruto = isset($item['peso_bruto']) ? floatval($item['peso_bruto']) : null;
+                $peso_neto = isset($item['peso_neto']) ? floatval($item['peso_neto']) : null;
 
-                if ($idCategoriaProducto === 1) {
-                    $noUsaVehiculo = filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN);
-                    if ($noUsaVehiculo) {
-                        $peso_neto_calculado = floatval($item['peso_neto_directo'] ?? 0);
-                    } else {
-                        $peso_bruto_val = floatval($item['peso_bruto'] ?? 0);
-                        $peso_vehiculo_val = floatval($item['peso_vehiculo'] ?? 0);
-                        $peso_neto_calculado = $peso_bruto_val - $peso_vehiculo_val;
-                    }
-                    $cantidad_base = $peso_neto_calculado;
-                } else {
-                    $cantidad_base = floatval($item['cantidad_unidad'] ?? 0);
+                if ($cantidad_final <= 0) {
+                    $response['message'] = "Cantidad debe ser mayor a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
+                    echo json_encode($response);
+                    exit();
                 }
 
-                if ($cantidad_base <= 0 || floatval($item['precio_unitario_compra'] ?? 0) <= 0) {
-                    $response['message'] = "Cantidad y precio deben ser mayores a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
+                if (floatval($item['precio_unitario_compra'] ?? 0) <= 0) {
+                    $response['message'] = "Precio debe ser mayor a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
                     echo json_encode($response);
                     exit();
                 }
 
                 $detallesParaGuardar[] = [
                     "idproducto" => $productoInfo['idproducto'],
-                    "descripcion_temporal_producto" => $productoInfo['nombre'],
-                    "cantidad" => $cantidad_base,
+                    "descripcion_temporal_producto" => $item['nombre_producto'] ?? $productoInfo['nombre'],
+                    "cantidad" => $cantidad_final,
                     "descuento" => floatval($item['descuento'] ?? 0),
                     "precio_unitario_compra" => floatval($item['precio_unitario_compra'] ?? 0),
                     "idmoneda_detalle" => $item['moneda'],
                     "subtotal_linea" => floatval($item['subtotal_linea'] ?? 0),
-                    "peso_vehiculo" => ($idCategoriaProducto === 1 && !filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN)) ? floatval($item['peso_vehiculo'] ?? 0) : null,
-                    "peso_bruto" => ($idCategoriaProducto === 1 && !filter_var($item['no_usa_vehiculo'] ?? false, FILTER_VALIDATE_BOOLEAN)) ? floatval($item['peso_bruto'] ?? 0) : null,
-                    "peso_neto" => ($idCategoriaProducto === 1) ? $peso_neto_calculado : null,
+                    "peso_vehiculo" => $peso_vehiculo,
+                    "peso_bruto" => $peso_bruto,
+                    "peso_neto" => $peso_neto,
                 ];
+            }
+
+            if (empty($detallesParaGuardar)) {
+                $response['message'] = "No se procesaron productos válidos.";
+                echo json_encode($response);
+                exit();
             }
 
             $actualizacionExitosa = $modelo->actualizarCompra($idcompra, $datosCompra, $detallesParaGuardar);
