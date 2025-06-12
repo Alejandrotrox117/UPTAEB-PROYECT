@@ -275,8 +275,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     <i class="fas fa-undo fa-fw text-base"></i>
                   </button>`;
                 break;
-              case "PAGADA":
+                case "PAGADA":
                 botonesEstado = `
+                  <a
+                    href="./compras/factura/${idCompra}"
+                    target="_blank"
+                    class="text-blue-600 hover:text-blue-800 p-1 transition-colors duration-150"
+                    title="Ver Factura"
+                  >
+                    <i class="fas fa-file-alt fa-fw text-base"></i>
+                  </a>
                   <span class="text-green-600 font-semibold text-xs px-1.5 py-0.5">
                     FINALIZADA
                   </span>`;

@@ -464,5 +464,14 @@ class Compras extends Controllers
         }
         exit();
     }
+
+    // GENERAR NOTA DE ENTREGA/FACTURA
+    public function factura($idcompra){
+    $data['page_tag'] = "Compra - Sistema de Compras";
+    $data['page_title'] = "Factura de Compra <small>Sistema de Compras</small>";
+    $data['page_name'] = "Factura de Compra";
+    $data['arrCompra'] = $this->get_model()->selectCompra($idcompra);
+    $this->views->getView($this,"factura_compra",$data);
+    }
 }
 ?>

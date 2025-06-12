@@ -897,6 +897,7 @@ class ComprasModel extends Mysql
             return false;
         }
     }
+    
 
     // MÉTODOS PÚBLICOS QUE SE LLAMAN EN EL CONTROLADOR
     public function selectAllCompras()
@@ -985,6 +986,69 @@ class ComprasModel extends Mysql
     public function getProveedorById($idproveedor)
     {
         return $this->ejecutarBusquedaProveedorPorId($idproveedor);
+    }
+
+    public function selectCompra($idcompra){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+
+            $this->setQuery("SELECT 
+                        c.idcompra,
+                        c.nro_compra,
+                        c.fecha,
+                        c.total_general,
+                        c.observaciones_compra,
+                        c.estatus_compra,
+                        p.nombre as nombrePersona,
+                        p.apellido as apellidoPersona,
+                        p.identificacion as personaId,
+                        p.direccion,
+                        p.telefono_principal as telefono,
+                        p.correo_electronico as email
+                    FROM compra c
+                    LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor  
+                    WHERE c.idcompra = ?");
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idcompra]);
+            $compra = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$compra) {
+                return [];
+            }
+
+            $this->setQuery("SELECT 
+                        dc.cantidad,
+                        dc.precio_unitario_compra as precio,
+                        dc.subtotal_linea,
+                        dc.idproducto as productoId,
+                        COALESCE(p.nombre, dc.descripcion_temporal_producto) as nombreProducto,
+                        p.descripcion as modelo,
+                        '' as color,
+                        '' as capacidad
+                    FROM detalle_compra dc
+                    LEFT JOIN producto p ON dc.idproducto = p.idproducto
+                    WHERE dc.idcompra = ?");
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idcompra]);
+            $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'solicitud' => $compra,
+                'detalles' => $detalles,
+                'pago' => [] 
+            ];
+
+        } catch (PDOException $e) {
+            error_log("ComprasModel::selectCompra - Error: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
     }
 }
 ?>
