@@ -186,6 +186,46 @@ function llenarSelectCategorias() {
   }
 }
 
+function generarNotificacionesProductos() {
+  const btnGenerar = document.getElementById("btnGenerarNotificacionesProductos");
+  
+  if (btnGenerar) {
+    btnGenerar.disabled = true;
+    btnGenerar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...';
+  }
+
+  fetch("./Productos/generarNotificacionesProductos", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status) {
+        Swal.fire("¡Éxito!", result.message, "success").then(() => {
+          // Actualizar contador de notificaciones si existe la función
+          if (typeof actualizarContadorNotificaciones === 'function') {
+            actualizarContadorNotificaciones();
+          }
+        });
+      } else {
+        Swal.fire("Error", result.message || "No se pudieron generar las notificaciones.", "error");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      Swal.fire("Error", "Error de conexión al generar notificaciones.", "error");
+    })
+    .finally(() => {
+      if (btnGenerar) {
+        btnGenerar.disabled = false;
+        btnGenerar.innerHTML = '<i class="fas fa-bell mr-2"></i> Actualizar Notificaciones Stock';
+      }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   // Cargar categorías al inicio
   cargarCategorias();
@@ -265,7 +305,22 @@ document.addEventListener("DOMContentLoaded", function () {
         { 
           data: "existencia", 
           title: "Existencia", 
-          className: "min-tablet-p text-center py-2 px-3 text-gray-700" 
+          className: "min-tablet-p text-center py-2 px-3 text-gray-700",
+          render: function (data, type, row) {
+            if (data !== null && data !== undefined) {
+              const existencia = parseInt(data);
+              let badgeClass = "bg-green-100 text-green-800";
+              
+              if (existencia === 0) {
+                badgeClass = "bg-red-100 text-red-800";
+              } else if (existencia <= 9) {
+                badgeClass = "bg-yellow-100 text-yellow-800";
+              }
+              
+              return `<span class="${badgeClass} text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${existencia}</span>`;
+            }
+            return '<span class="text-xs italic text-gray-500">N/A</span>';
+          }
         },
         {
           data: "estatus",
@@ -489,6 +544,14 @@ document.addEventListener("DOMContentLoaded", function () {
       cerrarModal("modalVerProducto");
     });
   }
+
+  // BOTÓN GENERAR NOTIFICACIONES
+  const btnGenerarNotificaciones = document.getElementById("btnGenerarNotificacionesProductos");
+  if (btnGenerarNotificaciones) {
+    btnGenerarNotificaciones.addEventListener("click", function () {
+      generarNotificacionesProductos();
+    });
+  }
 });
 
 // FUNCIONES
@@ -528,6 +591,11 @@ function registrarProducto() {
         if (formRegistrar) {
           formRegistrar.reset();
           limpiarValidaciones(camposFormularioProducto, "formRegistrarProducto");
+        }
+
+        // Actualizar contador de notificaciones si existe la función
+        if (typeof actualizarContadorNotificaciones === 'function') {
+          actualizarContadorNotificaciones();
         }
       });
     },
@@ -620,6 +688,11 @@ function actualizarProducto() {
           formActualizar.reset();
           limpiarValidaciones(camposFormularioActualizarProducto, "formActualizarProducto");
         }
+
+        // Actualizar contador de notificaciones si existe la función
+        if (typeof actualizarContadorNotificaciones === 'function') {
+          actualizarContadorNotificaciones();
+        }
       });
     },
     onError: (result) => {
@@ -701,6 +774,11 @@ function eliminarProducto(idProducto, nombreProducto) {
           if (result.status) {
             Swal.fire("¡Desactivado!", result.message, "success").then(() => {
               recargarTablaProductos();
+              
+              // Actualizar contador de notificaciones si existe la función
+              if (typeof actualizarContadorNotificaciones === 'function') {
+                actualizarContadorNotificaciones();
+              }
             });
           } else {
             Swal.fire(

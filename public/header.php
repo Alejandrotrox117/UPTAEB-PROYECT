@@ -19,6 +19,61 @@
     #sidebar nav::-webkit-scrollbar { width: 6px; }
     #sidebar nav::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
     #sidebar nav::-webkit-scrollbar-track { background-color: #f7fafc; }
+    
+    /* Estilos para notificaciones */
+    .notification-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background-color: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .notification-item {
+      transition: all 0.3s ease;
+    }
+
+    .notification-item:hover {
+      background-color: #f3f4f6;
+      transform: translateX(4px);
+    }
+
+    .notification-item.unread {
+      background-color: #fef3c7;
+      border-left: 4px solid #f59e0b;
+    }
+
+    .notification-dropdown {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .notification-dropdown::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .notification-dropdown::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .notification-dropdown::-webkit-scrollbar-track {
+      background-color: #f7fafc;
+    }
   </style>
 </head>
 
@@ -27,9 +82,22 @@
     class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md p-4 flex items-center justify-between z-50 h-16">
     
     <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="h-16 w-auto">
-    <button id="mobile-menu-toggle" class="text-gray-700 hover:text-green-600 focus:outline-none p-2">
-      <i class="fa-solid fa-bars text-2xl"></i>
-    </button>
+    
+    <div class="flex items-center space-x-4">
+      <!-- Notificaciones en móvil -->
+      <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
+      <div class="relative">
+        <button id="mobile-notifications-toggle" class="text-gray-700 hover:text-green-600 focus:outline-none p-2 relative">
+          <i class="fas fa-bell text-xl"></i>
+          <span id="mobile-notification-badge" class="notification-badge hidden">0</span>
+        </button>
+      </div>
+      <?php endif; ?>
+      
+      <button id="mobile-menu-toggle" class="text-gray-700 hover:text-green-600 focus:outline-none p-2">
+        <i class="fa-solid fa-bars text-2xl"></i>
+      </button>
+    </div>
   </header>
 
   <div id="sidebar-overlay" class="fixed inset-0 bg-transparent bg-opacity-50 z-30 lg:hidden hidden"></div>
@@ -43,9 +111,22 @@
       
       <div class="flex items-center justify-between p-4 border-b border-gray-200 h-17">
         <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="h-16 w-auto">
-        <button id="sidebar-close" class="text-gray-600 hover:text-green-600 lg:hidden p-2">
-          <i class="fa-solid fa-times text-2xl"></i>
-        </button>
+        
+        <div class="flex items-center space-x-2">
+          <!-- Notificaciones en desktop -->
+          <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
+          <div class="relative">
+            <button id="desktop-notifications-toggle" class="text-gray-600 hover:text-green-600 p-2 relative">
+              <i class="fas fa-bell text-lg"></i>
+              <span id="desktop-notification-badge" class="notification-badge hidden">0</span>
+            </button>
+          </div>
+          <?php endif; ?>
+          
+          <button id="sidebar-close" class="text-gray-600 hover:text-green-600 lg:hidden p-2">
+            <i class="fa-solid fa-times text-2xl"></i>
+          </button>
+        </div>
       </div>
 
       <nav class="flex-1 flex flex-col overflow-y-auto p-3 text-sm">
@@ -264,6 +345,40 @@
       </nav>
     </aside>
 
+    <!-- Dropdown de notificaciones -->
+    <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
+    <div id="notifications-dropdown" class="fixed top-16 right-4 lg:top-20 lg:right-auto lg:left-72 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-900">
+          <i class="fas fa-bell mr-2 text-green-600"></i>
+          Notificaciones
+        </h3>
+        <div class="flex space-x-2">
+          <button id="mark-all-read-btn" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+            Marcar todas como leídas
+          </button>
+          <button id="close-notifications-btn" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div id="notifications-list" class="notification-dropdown p-2">
+        <div class="text-center py-4 text-gray-500">
+          <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+          <p>Cargando notificaciones...</p>
+        </div>
+      </div>
+      
+      <div class="p-3 border-t border-gray-200 text-center">
+        <button id="refresh-notifications-btn" class="text-sm text-green-600 hover:text-green-800 font-medium">
+          <i class="fas fa-sync-alt mr-1"></i>
+          Actualizar
+        </button>
+      </div>
+    </div>
+    <?php endif; ?>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
@@ -312,16 +427,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener("resize", () => {
     if (window.innerWidth >= 1024) {
-      // En desktop, el sidebar es visible por layout (lg:relative) y el overlay no es necesario.
-      closeSidebar(); // Esto asegura que si se redimensiona de móvil a desktop con el menú abierto, se oculte el overlay y se quite el overflow-hidden del body.
-      document.body.classList.remove("overflow-hidden"); // Asegurar que el body pueda hacer scroll
-      if(sidebarOverlay) sidebarOverlay.classList.add("hidden"); // Asegurar que el overlay esté oculto
+      closeSidebar();
+      document.body.classList.remove("overflow-hidden");
+      if(sidebarOverlay) sidebarOverlay.classList.add("hidden");
     }
   });
 
   // Active link functionality
   const currentPath = window.location.pathname;
-  const navLinksQuery = "#sidebar nav a.nav-link"; // Usar la clase común
+  const navLinksQuery = "#sidebar nav a.nav-link";
   const allNavLinks = document.querySelectorAll(navLinksQuery);
 
   allNavLinks.forEach((link) => {
@@ -335,30 +449,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (icon) icon.classList.remove("text-white");
     if (textSpan) textSpan.classList.remove("text-white");
 
-
     if (linkElement.getAttribute("href") === currentPath) {
       if (listItem) {
-        // Aplicar estilos activos al LI y al A
-        listItem.classList.add("bg-green-600"); // Fondo verde al LI
-        listItem.classList.add("rounded-md"); // Fondo verde al LI
-        linkElement.classList.add("text-white"); // Texto blanco al A
-        if (icon) icon.classList.add("text-white"); // Icono blanco
-        if (textSpan) textSpan.classList.add("text-white"); // Texto del span blanco
+        listItem.classList.add("bg-green-600");
+        listItem.classList.add("rounded-md");
+        linkElement.classList.add("text-white");
+        if (icon) icon.classList.add("text-white");
+        if (textSpan) textSpan.classList.add("text-white");
         
-        // Quitar clases de hover/group-hover para el estado activo
         linkElement.classList.remove("hover:bg-green-100", "hover:text-green-700");
         if(icon) icon.classList.remove("text-gray-500", "group-hover:text-green-600");
         if(textSpan) textSpan.classList.remove("text-gray-700");
 
-
-        // Si el enlace activo está dentro de un <details>, abrirlo
         let parentDetails = linkElement.closest("details");
         if (parentDetails) {
           parentDetails.setAttribute("open", "");
-          // También aplicar estilo activo al summary del details
           const summary = parentDetails.querySelector("summary.nav-link-summary");
           if (summary) {
-            summary.classList.add("bg-green-600", "text-white"); // Fondo y texto al summary
+            summary.classList.add("bg-green-600", "text-white");
             const summaryIcon = summary.querySelector("i.nav-icon");
             const summaryText = summary.querySelector("span.nav-text");
             if(summaryIcon) summaryIcon.classList.add("text-white");
@@ -369,5 +477,300 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+
+  // Sistema de notificaciones
+  <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
+  initNotificationSystem();
+  <?php endif; ?>
 });
+
+// Funciones del sistema de notificaciones
+<?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
+function initNotificationSystem() {
+  const mobileNotificationsToggle = document.getElementById("mobile-notifications-toggle");
+  const desktopNotificationsToggle = document.getElementById("desktop-notifications-toggle");
+  const notificationsDropdown = document.getElementById("notifications-dropdown");
+  const closeNotificationsBtn = document.getElementById("close-notifications-btn");
+  const markAllReadBtn = document.getElementById("mark-all-read-btn");
+  const refreshNotificationsBtn = document.getElementById("refresh-notifications-btn");
+
+  // Event listeners
+  if (mobileNotificationsToggle) {
+    mobileNotificationsToggle.addEventListener("click", toggleNotifications);
+  }
+
+  if (desktopNotificationsToggle) {
+    desktopNotificationsToggle.addEventListener("click", toggleNotifications);
+  }
+
+  if (closeNotificationsBtn) {
+    closeNotificationsBtn.addEventListener("click", closeNotifications);
+  }
+
+  if (markAllReadBtn) {
+    markAllReadBtn.addEventListener("click", markAllNotificationsAsRead);
+  }
+
+  if (refreshNotificationsBtn) {
+    refreshNotificationsBtn.addEventListener("click", () => {
+      loadNotifications();
+      actualizarContadorNotificaciones();
+    });
+  }
+
+  // Cerrar dropdown al hacer clic fuera
+  document.addEventListener("click", (event) => {
+    if (notificationsDropdown && 
+        !notificationsDropdown.contains(event.target) && 
+        !mobileNotificationsToggle?.contains(event.target) && 
+        !desktopNotificationsToggle?.contains(event.target)) {
+      closeNotifications();
+    }
+  });
+
+  // Cargar notificaciones al inicio
+  loadNotifications();
+  actualizarContadorNotificaciones();
+
+  // Actualizar cada 30 segundos
+  setInterval(actualizarContadorNotificaciones, 30000);
+}
+
+function toggleNotifications() {
+  const dropdown = document.getElementById("notifications-dropdown");
+  if (dropdown) {
+    if (dropdown.classList.contains("hidden")) {
+      dropdown.classList.remove("hidden");
+      loadNotifications();
+    } else {
+      dropdown.classList.add("hidden");
+    }
+  }
+}
+
+function closeNotifications() {
+  const dropdown = document.getElementById("notifications-dropdown");
+  if (dropdown) {
+    dropdown.classList.add("hidden");
+  }
+}
+
+function loadNotifications() {
+  const notificationsList = document.getElementById("notifications-list");
+  if (!notificationsList) return;
+
+  // Mostrar loading
+  notificationsList.innerHTML = `
+    <div class="text-center py-4 text-gray-500">
+      <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+      <p>Cargando notificaciones...</p>
+    </div>
+  `;
+
+  fetch("./Notificaciones/getNotificaciones", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        displayNotifications(result.data);
+      } else {
+        notificationsList.innerHTML = `
+          <div class="text-center py-4 text-gray-500">
+            <i class="fas fa-bell-slash fa-2x mb-2"></i>
+            <p>No hay notificaciones</p>
+          </div>
+        `;
+      }
+    })
+    .catch((error) => {
+      console.error("Error al cargar notificaciones:", error);
+      notificationsList.innerHTML = `
+        <div class="text-center py-4 text-red-500">
+          <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+          <p>Error al cargar notificaciones</p>
+        </div>
+      `;
+    });
+}
+
+function displayNotifications(notifications) {
+  const notificationsList = document.getElementById("notifications-list");
+  if (!notificationsList) return;
+
+  if (notifications.length === 0) {
+    notificationsList.innerHTML = `
+      <div class="text-center py-4 text-gray-500">
+        <i class="fas fa-bell-slash fa-2x mb-2"></i>
+        <p>No hay notificaciones</p>
+      </div>
+    `;
+    return;
+  }
+
+  let notificationsHTML = "";
+  notifications.forEach((notification) => {
+    const isUnread = notification.leida == 0;
+    const prioridad = notification.prioridad || 'MEDIA';
+    
+    let iconClass = "fas fa-info-circle text-blue-500";
+    let priorityColor = "text-blue-600";
+    
+    switch (notification.tipo) {
+      case "STOCK_BAJO":
+        iconClass = "fas fa-exclamation-triangle text-yellow-500";
+        priorityColor = "text-yellow-600";
+        break;
+      case "SIN_STOCK":
+        iconClass = "fas fa-times-circle text-red-500";
+        priorityColor = "text-red-600";
+        break;
+      case "PRODUCTO_NUEVO":
+        iconClass = "fas fa-plus-circle text-green-500";
+        priorityColor = "text-green-600";
+        break;
+      case "PRODUCTO_ACTUALIZADO":
+        iconClass = "fas fa-edit text-blue-500";
+        priorityColor = "text-blue-600";
+        break;
+      case "PRODUCTO_DESACTIVADO":
+        iconClass = "fas fa-minus-circle text-red-500";
+        priorityColor = "text-red-600";
+        break;
+      case "PRODUCTO_ACTIVADO":
+        iconClass = "fas fa-check-circle text-green-500";
+        priorityColor = "text-green-600";
+        break;
+    }
+
+    notificationsHTML += `
+      <div class="notification-item p-3 border-b border-gray-100 cursor-pointer ${isUnread ? 'unread' : ''}" 
+           data-notification-id="${notification.idnotificacion}" 
+           onclick="markNotificationAsRead(${notification.idnotificacion})">
+        <div class="flex items-start space-x-3">
+          <div class="flex-shrink-0">
+            <i class="${iconClass} text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-medium text-gray-900 truncate">
+                ${notification.titulo}
+              </p>
+              ${isUnread ? '<div class="w-2 h-2 bg-red-500 rounded-full"></div>' : ''}
+            </div>
+            <p class="text-xs text-gray-600 mt-1">
+              ${notification.mensaje}
+            </p>
+            <div class="flex items-center justify-between mt-2">
+              <span class="text-xs ${priorityColor} font-medium">
+                ${prioridad}
+              </span>
+              <span class="text-xs text-gray-400">
+                ${notification.fecha_formato}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  notificationsList.innerHTML = notificationsHTML;
+}
+
+function actualizarContadorNotificaciones() {
+  fetch("./Notificaciones/getContadorNotificaciones", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      const mobileBadge = document.getElementById("mobile-notification-badge");
+      const desktopBadge = document.getElementById("desktop-notification-badge");
+      
+      const count = result.count || 0;
+      
+      [mobileBadge, desktopBadge].forEach(badge => {
+        if (badge) {
+          if (count > 0) {
+            badge.textContent = count > 99 ? "99+" : count;
+            badge.classList.remove("hidden");
+          } else {
+            badge.classList.add("hidden");
+          }
+        }
+      });
+    })
+    .catch((error) => {
+      console.error("Error al obtener contador de notificaciones:", error);
+    });
+}
+
+function markNotificationAsRead(notificationId) {
+  fetch("./Notificaciones/marcarLeida", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({ idnotificacion: notificationId }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status) {
+        // Remover clase unread del elemento
+        const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`);
+        if (notificationElement) {
+          notificationElement.classList.remove("unread");
+          const unreadDot = notificationElement.querySelector(".w-2.h-2.bg-red-500");
+          if (unreadDot) {
+            unreadDot.remove();
+          }
+        }
+        actualizarContadorNotificaciones();
+      }
+    })
+    .catch((error) => {
+      console.error("Error al marcar notificación como leída:", error);
+    });
+}
+
+function markAllNotificationsAsRead() {
+  fetch("./Notificaciones/marcarTodasLeidas", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status) {
+        // Actualizar UI
+        const unreadItems = document.querySelectorAll(".notification-item.unread");
+        unreadItems.forEach(item => {
+          item.classList.remove("unread");
+          const unreadDot = item.querySelector(".w-2.h-2.bg-red-500");
+          if (unreadDot) {
+            unreadDot.remove();
+          }
+        });
+        actualizarContadorNotificaciones();
+      }
+    })
+    .catch((error) => {
+      console.error("Error al marcar todas las notificaciones como leídas:", error);
+    });
+}
+
+// Hacer la función disponible globalmente
+window.actualizarContadorNotificaciones = actualizarContadorNotificaciones;
+<?php endif; ?>
 </script>
