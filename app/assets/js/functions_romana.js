@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  $("#TablaProductos").DataTable({
+  $("#TablaRomana").DataTable({
     processing: true,
     serverSide: true,
     ajax: {

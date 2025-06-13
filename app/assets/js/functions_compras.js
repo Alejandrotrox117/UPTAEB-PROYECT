@@ -6,6 +6,7 @@ import {
   validarCampo,
   validarSelect,
   limpiarValidaciones,
+  registrarEntidad,
 } from "./validaciones.js";
 
 let tablaCompras;
@@ -13,6 +14,60 @@ let detalleCompraItemsModal = [];
 let detalleCompraItemsActualizar = [];
 let tasasMonedasActualizar = {};
 let fechaActualCompraActualizar = null;
+
+const camposFormularioProveedor = [
+  {id: "proveedorNombre",tipo: "input",regex: expresiones.nombre,
+    mensajes: {
+      vacio: "El nombre es obligatorio.",
+      formato: "El nombre solo puede contener letras y espacios.",
+    },
+  },
+  {id: "proveedorApellido",tipo: "input",regex: expresiones.apellido,
+    mensajes: {
+      vacio: "El apellido es obligatorio.",
+      formato: "El apellido solo puede contener letras y espacios.",
+    },
+  },
+  {id: "proveedorIdentificacion",tipo: "input",regex: expresiones.cedula,
+    mensajes: {
+      vacio: "La identificación es obligatoria.",
+      formato: "Formato de identificación inválido. Debe contener el formato V/J/E Ejemplo V-12345678 o J-12345678.",
+    },
+  },
+  {id: "proveedorTelefono",tipo: "input",regex: expresiones.telefono,
+    mensajes: {
+      vacio: "El teléfono es obligatorio.",
+      formato: "Formato de teléfono inválido.",
+    },
+  },
+  {id: "proveedorCorreo",tipo: "input",regex: expresiones.email,
+    mensajes: {
+      formato: "Formato de correo electrónico inválido.",
+    },
+  },
+  {id: "proveedorDireccion",tipo: "textarea",regex: expresiones.textoGeneral,
+    mensajes: {
+      formato: "Dirección inválida.",
+    },
+  },
+  {
+    id: "proveedorGenero",
+    tipo: "select",
+    regex: expresiones.genero,
+    mensajes: {
+      formato: "Género inválido.",
+    },
+  },
+
+  {
+    id: "proveedorFechaNacimiento",
+    tipo: "fechaNacimiento",
+    mensajes: {
+      vacio: "La fecha de nacimiento es obligatoria.",
+      fechaPosterior: "La fecha de nacimiento no puede ser posterior a hoy.",
+    },
+  }
+];
 
 const camposCompras = [
   {
@@ -220,8 +275,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     <i class="fas fa-undo fa-fw text-base"></i>
                   </button>`;
                 break;
-              case "PAGADA":
+                case "PAGADA":
                 botonesEstado = `
+                  <a
+                    href="./compras/factura/${idCompra}"
+                    target="_blank"
+                    class="text-blue-600 hover:text-blue-800 p-1 transition-colors duration-150"
+                    title="Ver Factura"
+                  >
+                    <i class="fas fa-file-alt fa-fw text-base"></i>
+                  </a>
                   <span class="text-green-600 font-semibold text-xs px-1.5 py-0.5">
                     FINALIZADA
                   </span>`;
@@ -324,7 +387,6 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       className: "compact",
       initComplete: function (settings, json) {
-        console.log("DataTable Compras inicializado correctamente");
         window.tablaCompras = this.api();
       },
       drawCallback: function (settings) {
@@ -659,7 +721,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function calcularSubtotalLineaItemModal(item) {
     const precioUnitario = parseFloat(item.precio_unitario) || 0;
     let cantidadBase = 0;
-    if (item.idcategoria === 1) {
+    if (item.idcategoria === 2) {
       cantidadBase = calcularPesoNetoItemModal(item) || 0;
     } else {
       cantidadBase = parseFloat(item.cantidad_unidad) || 0;
@@ -690,7 +752,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   
   function calcularPesoNetoItemModal(item) {
-    if (item.idcategoria === 1) {
+    if (item.idcategoria === 2) {
       if (item.no_usa_vehiculo) {
         return parseFloat(item.peso_neto_directo) || 0;
       } else {
@@ -770,7 +832,7 @@ document.addEventListener("DOMContentLoaded", function () {
       tr.dataset.index = index;
 
       let infoEspecificaHtml = "";
-      if (item.idcategoria === 1) {
+      if (item.idcategoria === 2) {
         infoEspecificaHtml = `
         <div class="space-y-1">
           <div>
@@ -780,39 +842,37 @@ document.addEventListener("DOMContentLoaded", function () {
           </div>
           <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""}">
             P.Bru: 
-            <input type="number" step="0.01" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
+            <input type="number" step="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""}" placeholder="0.00">
             <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
             P.Veh: 
-            <input type="number" step="0.01" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
+            <input type="number" step="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""}" placeholder="0.00">
             <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
             Descuento %: 
-            <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
+            <input type="number" step="0.01" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
           </div>
           <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""}">
-            P.Neto: <input type="number" step="0.01" class="w-20 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
+            P.Neto: <input type="number" step="0.01" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""}" placeholder="0.00">
             <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
             Descuento %: 
-            <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
+            <input type="number" step="0.01" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
           </div>
           Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(item).toFixed(2)}</strong>
         </div>`;
       } else {
         infoEspecificaHtml = `
           <div>
-            Cant: <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${item.cantidad_unidad || "1"}" placeholder="1">
-            Descuento %: 
-            <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""}" placeholder="0.00">
+            Cant: <input type="number" step="0.01" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${item.cantidad_unidad || "1"}" placeholder="1">
           </div>`;
       }
 
       tr.innerHTML = `
-        <td class="py-1 px-1 text-xs">${item.nombre}</td>
-        <td class="py-1 px-1 text-xs">${infoEspecificaHtml}</td>
-        <td class="py-1 px-1 text-xs">
-            ${item.idmoneda_item} <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
+        <td class="py-0.5 px-0.5 text-xs">${item.nombre}</td>
+        <td class="py-0.5 px-0.5 text-xs">${infoEspecificaHtml}</td>
+        <td class="py-0.5 px-0.5 text-xs">
+            ${item.idmoneda_item} <input type="number" step="0.01" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
         </td>
-        <td class="py-1 px-1 text-xs subtotal_linea_display_modal">${item.idmoneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
-        <td class="py-1 px-1 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs"></button></td>
+        <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_modal">${item.idmoneda_item} ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
+        <td class="py-0.5 px-0.5 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs"></button></td>
       `;
       cuerpoTablaDetalleCompraModal.appendChild(tr);
     });
@@ -826,13 +886,22 @@ document.addEventListener("DOMContentLoaded", function () {
       if (isNaN(index) || index >= detalleCompraItemsModal.length) return;
       const item = detalleCompraItemsModal[index];
 
-      // Event listeners para pesos de romana
+      // Event listeners para pesos de romana actualizados el 12-06-2025
       const btnUltimoPesoBruto = row.querySelector(".btnUltimoPesoRomanaBruto");
       if (btnUltimoPesoBruto) {
         btnUltimoPesoBruto.addEventListener("click", async function () {
           try {
+            console.log("Consultando romana...");
             const response = await fetch("Compras/getUltimoPesoRomana");
+            console.log("Response status:", response.status);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log("Data received:", data);
+            
             if (data.status) {
               if (item.no_usa_vehiculo) {
                 item.peso_neto_directo = data.peso;
@@ -846,7 +915,8 @@ document.addEventListener("DOMContentLoaded", function () {
               Swal.fire("Atención", data.message || "No se pudo obtener el peso.", "warning");
             }
           } catch (e) {
-            Swal.fire("Error", "Error al consultar la romana.", "error");
+            console.error("Error completo:", e);
+            Swal.fire("Error", "Error al consultar la romana: " + e.message, "error");
           }
         });
       }
@@ -954,7 +1024,7 @@ document.addEventListener("DOMContentLoaded", function () {
       for (const item of detalleCompraItemsModal) {
         const precio = parseFloat(item.precio_unitario) || 0;
         let cantidadValida = false;
-        if (item.idcategoria === 1) {
+        if (item.idcategoria === 2) {
           cantidadValida = calcularPesoNetoItemModal(item) > 0;
         } else {
           cantidadValida = (parseFloat(item.cantidad_unidad) || 0) > 0;
@@ -970,7 +1040,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const productosDetalle = detalleCompraItemsModal.map(item => ({
         idproducto: item.idproducto,
         nombre_producto: item.nombre,
-        cantidad: item.idcategoria === 1 ? calcularPesoNetoItemModal(item) : item.cantidad_unidad,
+        cantidad: item.idcategoria === 2 ? calcularPesoNetoItemModal(item) : item.cantidad_unidad,
         precio_unitario_compra: item.precio_unitario,
         idmoneda_detalle: item.idmoneda_item,
         descuento: item.descuento || 0, // CAMPO DESCUENTO AGREGADO
@@ -978,9 +1048,9 @@ document.addEventListener("DOMContentLoaded", function () {
         subtotal_original_linea: item.subtotal_original_linea || 0,
         monto_descuento_linea: item.monto_descuento_linea || 0,
         subtotal_linea: item.subtotal_linea,
-        peso_vehiculo: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
-        peso_bruto: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_bruto : null,
-        peso_neto: item.idcategoria === 1 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemModal(item)) : null,
+        peso_vehiculo: item.idcategoria === 2 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
+        peso_bruto: item.idcategoria === 2 && !item.no_usa_vehiculo ? item.peso_bruto : null,
+        peso_neto: item.idcategoria === 2 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemModal(item)) : null,
       }));
       
       formData.append("productos_detalle", JSON.stringify(productosDetalle));
@@ -1017,99 +1087,128 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL DE PROVEEDOR (MANTENER COMO ESTÁ)
-  const modalProveedor = document.getElementById("proveedorModal");
-  const formProveedor = document.getElementById("proveedorForm");
-  const modalTitulo = document.getElementById("modalProveedorTitulo");
-  const btnSubmitProveedor = document.getElementById("btnSubmitProveedor");
-  const inputIdPersona = document.getElementById("idproveedor");
+// MODAL REGISTRAR PROVEEDOR - CORREGIDO
+  const btnAbrirModalRegistroProveedor = document.getElementById("btnAbrirModalRegistrarProveedor");
+  const formRegistrarProveedor = document.getElementById("formRegistrarProveedor");
+  const btnCerrarModalRegistroProveedor = document.getElementById("btnCerrarModalRegistrar");
+  const btnCancelarModalRegistroProveedor = document.getElementById("btnCancelarModalRegistrar");
+  const modalRegistrarProveedor = document.getElementById("modalRegistrarProveedor");
 
-  window.abrirModalProveedor = function (titulo = "Registrar Proveedor", formAction = "Compras/createProveedorinCompras") {
-    formProveedor.reset(); 
-    inputIdPersona.value = ""; 
-    modalTitulo.textContent = titulo;
-    formProveedor.setAttribute("data-action", formAction); 
-    btnSubmitProveedor.textContent = "Registrar";
-    modalProveedor.classList.remove("opacity-0", "pointer-events-none");
-  };
-
-  window.cerrarModalProveedor = function () {
-    modalProveedor.classList.add("opacity-0", "pointer-events-none");
-    formProveedor.reset();
-    inputIdPersona.value = "";
-  };
-
-  formProveedor.addEventListener("submit", function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const actionUrl = "Compras/createProveedorinCompras";
-    const method = "POST";
-
-    if (!actionUrl) {
-      Swal.fire("Error Interno", "URL de acción no definida para el formulario.", "error");
-      console.error("El atributo data-action del formulario está vacío o no existe.");
-      return;
+  // Función para abrir modal registrar proveedor
+  function abrirModalRegistrarProveedor() {
+    if (modalRegistrarProveedor) {
+      if (formRegistrarProveedor) formRegistrarProveedor.reset();
+      limpiarValidaciones(camposFormularioProveedor, "formRegistrarProveedor");
+      inicializarValidaciones(camposFormularioProveedor, "formRegistrarProveedor");
+      abrirModal("modalRegistrarProveedor");
     }
+  }
 
-    const nombre = formData.get('nombre');
-    const identificacion = formData.get('identificacion');
-    const telefono_principal = formData.get('telefono_principal');
-
-    if (!nombre || !identificacion || !telefono_principal) {
-      Swal.fire("Atención", "Nombre, Identificación y Teléfono son obligatorios.", "warning");
-      return;
+  // Función para cerrar modal registrar proveedor
+  function cerrarModalRegistrarProveedor() {
+    if (modalRegistrarProveedor) {
+      limpiarValidaciones(camposFormularioProveedor, "formRegistrarProveedor");
+      if (formRegistrarProveedor) formRegistrarProveedor.reset();
+      cerrarModal("modalRegistrarProveedor");
     }
+  }
 
-    fetch(actionUrl, {
-      method: method,
-      body: formData
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.json().then(errData => {
-            const error = new Error(errData.message || `Error HTTP: ${response.status}`);
-            error.data = errData;
-            error.status = response.status;
-            throw error;
-          }).catch(() => {
-            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
-          });
-        }
-        return response.json();
-      })
-      .then(async (result) => {
-        if (result.status) {
-          Swal.fire("¡Éxito!", result.message, "success");
-          try {
-            const response = await fetch(`Compras/getProveedorById/${encodeURIComponent(result.idproveedor)}`);
-            if (!response.ok) throw new Error('No se pudo obtener el proveedor');
-            const proveedor = await response.json();
-            hiddenIdProveedorModal.value = proveedor.data.idproveedor;
-            divInfoProveedorModal.innerHTML = `Sel: <strong>${proveedor.data.nombre} ${proveedor.data.apellido}</strong> (ID: ${proveedor.data.identificacion})`;
-            divInfoProveedorModal.classList.remove('hidden');
-            inputCriterioProveedorModal.value = `${proveedor.data.nombre} ${proveedor.data.apellido} (${proveedor.data.identificacion})`;
-            cerrarModalProveedor();
-          } catch (error) {
-            console.error("Error al obtener proveedor:", error);
-            Swal.fire("Error", "Proveedor registrado, pero no se pudo mostrar la información.", "warning");
-            cerrarModalProveedor();
-          }
-        } else {
-          Swal.fire("Error", result.message || "Respuesta no exitosa del servidor.", "error");
-        }
-      })
-      .catch((error) => {
-        console.error("Error en fetch:", error);
-        let errorMessage = "Ocurrió un error al procesar la solicitud.";
-        if (error.data && error.data.message) {
-          errorMessage = error.data.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        Swal.fire("Error", errorMessage, "error");
+  // Event listeners para modal registrar proveedor
+  if (btnAbrirModalRegistroProveedor) {
+    btnAbrirModalRegistroProveedor.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      abrirModalRegistrarProveedor();
+    });
+  }
+
+  if (btnCerrarModalRegistroProveedor) {
+    btnCerrarModalRegistroProveedor.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cerrarModalRegistrarProveedor();
+    });
+  }
+
+  if (btnCancelarModalRegistroProveedor) {
+    btnCancelarModalRegistroProveedor.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cerrarModalRegistrarProveedor();
+    });
+  }
+
+  // Prevenir que el modal se cierre al hacer click dentro del contenido
+  if (modalRegistrarProveedor) {
+    const modalContent = modalRegistrarProveedor.querySelector('.modal-content, .bg-white');
+    if (modalContent) {
+      modalContent.addEventListener('click', function(e) {
+        e.stopPropagation();
       });
-  });
+    }
+  }
 
+  // SUBMIT FORM REGISTRAR PROVEEDOR
+  if (formRegistrarProveedor) {
+    formRegistrarProveedor.addEventListener("submit", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      registrarProveedor();
+    });
+  }
+
+  function registrarProveedor() {
+  const btnGuardarProveedor = document.getElementById("btnGuardarProveedor");
+
+  if (btnGuardarProveedor) {
+    btnGuardarProveedor.disabled = true;
+    btnGuardarProveedor.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+  }
+   
+  registrarEntidad({
+    formId: "formRegistrarProveedor",
+    endpoint: "Proveedores/createProveedor",
+    campos: camposFormularioProveedor,
+    mapeoNombres: {
+      "proveedorNombre": "nombre",
+      "proveedorApellido": "apellido",
+      "proveedorIdentificacion": "identificacion",
+      "proveedorTelefono": "telefono_principal",
+      "proveedorCorreo": "correo_electronico",
+      "proveedorDireccion": "direccion",
+      "proveedorFechaNacimiento": "fecha_nacimiento"
+    },
+    onSuccess: (result) => {
+      const nombre = document.getElementById("proveedorNombre").value;
+      const apellido = document.getElementById("proveedorApellido").value;
+      const identificacion = document.getElementById("proveedorIdentificacion").value;
+      
+      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+        cerrarModalRegistrarProveedor();
+          hiddenIdProveedorModal.value = result.proveedor_id;
+          divInfoProveedorModal.innerHTML = `Sel: <strong>${nombre} ${apellido}</strong> (ID: ${identificacion})`;
+          divInfoProveedorModal.classList.remove('hidden');
+          inputCriterioProveedorModal.value = `${nombre} ${apellido} (${identificacion})`;
+        
+        if (typeof recargarTablaProveedores === 'function') {
+          recargarTablaProveedores();
+        }
+      });
+    },
+    onError: (result) => {
+      Swal.fire(
+        "Error",
+        result.message || "No se pudo registrar el proveedor.",
+        "error"
+      );
+    }
+  }).finally(() => {
+    if (btnGuardarProveedor) {
+      btnGuardarProveedor.disabled = false;
+      btnGuardarProveedor.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Proveedor`;
+    }
+  });
+}
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2")
 
@@ -1289,7 +1388,7 @@ const btnCerrarModalEditarCompra = document.getElementById("btnCerrarModalEditar
       for (const item of detalleCompraItemsActualizar) {
         const precio = parseFloat(item.precio_unitario) || 0;
         let cantidadValida = false;
-        if (item.idcategoria === 1) {
+        if (item.idcategoria === 2) {
           cantidadValida = calcularPesoNetoItemActualizar(item) > 0;
         } else {
           cantidadValida = (parseFloat(item.cantidad_unidad) || 0) > 0;
@@ -1304,7 +1403,7 @@ const btnCerrarModalEditarCompra = document.getElementById("btnCerrarModalEditar
       const productosDetalle = detalleCompraItemsActualizar.map(item => ({
         idproducto: item.idproducto,
         nombre_producto: item.nombre,
-        cantidad: item.idcategoria === 1 ? calcularPesoNetoItemActualizar(item) : item.cantidad_unidad,
+        cantidad: item.idcategoria === 2 ? calcularPesoNetoItemActualizar(item) : item.cantidad_unidad,
         precio_unitario_compra: item.precio_unitario,
         idmoneda_detalle: item.idmoneda_item,
         descuento: item.descuento || 0,
@@ -1312,9 +1411,9 @@ const btnCerrarModalEditarCompra = document.getElementById("btnCerrarModalEditar
         subtotal_original_linea: item.subtotal_original_linea || 0,
         monto_descuento_linea: item.monto_descuento_linea || 0,
         subtotal_linea: item.subtotal_linea,
-        peso_vehiculo: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
-        peso_bruto: item.idcategoria === 1 && !item.no_usa_vehiculo ? item.peso_bruto : null,
-        peso_neto: item.idcategoria === 1 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemActualizar(item)) : null,
+        peso_vehiculo: item.idcategoria === 2 && !item.no_usa_vehiculo ? item.peso_vehiculo : null,
+        peso_bruto: item.idcategoria === 2 && !item.no_usa_vehiculo ? item.peso_bruto : null,
+        peso_neto: item.idcategoria === 2 ? (item.no_usa_vehiculo ? item.peso_neto_directo : calcularPesoNetoItemActualizar(item)) : null,
       }));
       
       formData.append("productos_detalle", JSON.stringify(productosDetalle));
@@ -1721,7 +1820,7 @@ async function abrirModalEditarCompra(compra, detalles) {
         peso_vehiculo: parseFloat(detalle.peso_vehiculo) || 0,
         peso_bruto: parseFloat(detalle.peso_bruto) || 0,
         peso_neto_directo: (detalle.peso_vehiculo === null && detalle.peso_bruto === null) ? parseFloat(detalle.peso_neto) || 0 : 0,
-        cantidad_unidad: parseInt(detalle.idcategoria) === 1 ? 0 : parseFloat(detalle.cantidad),
+        cantidad_unidad: parseInt(detalle.idcategoria) === 2 ? 0 : parseFloat(detalle.cantidad),
         descuento: parseFloat(detalle.descuento) || 0,
         moneda: detalle.idmoneda_detalle,
         subtotal_linea: parseFloat(detalle.subtotal_linea)
@@ -1830,7 +1929,7 @@ async function cargarProductosParaActualizar() {
 }
 
 function calcularPesoNetoItemActualizar(item) {
-  if (item.idcategoria === 1) {
+  if (item.idcategoria === 2) {
     if (item.no_usa_vehiculo) {
       return parseFloat(item.peso_neto_directo) || 0;
     } else {
@@ -1845,7 +1944,7 @@ function calcularPesoNetoItemActualizar(item) {
 function calcularSubtotalLineaItemActualizar(item) {
   const precioUnitario = parseFloat(item.precio_unitario) || 0;
   let cantidadBase = 0;
-  if (item.idcategoria === 1) {
+  if (item.idcategoria === 2) {
     cantidadBase = calcularPesoNetoItemActualizar(item) || 0;
   } else {
     cantidadBase = parseFloat(item.cantidad_unidad) || 0;
@@ -1892,7 +1991,7 @@ function renderizarTablaDetalleActualizar() {
     tr.dataset.index = index;
 
     let infoEspecificaHtml = "";
-    if (item.idcategoria === 1) {
+    if (item.idcategoria === 2) {
       infoEspecificaHtml = `
       <div class="space-y-1">
         <div>
