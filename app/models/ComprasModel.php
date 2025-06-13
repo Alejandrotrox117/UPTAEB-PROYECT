@@ -1050,5 +1050,57 @@ class ComprasModel extends Mysql
             $conexion->disconnect();
         }
     }
+
+    // MÉTODO PRIVADO
+    private function ejecutarGuardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("INSERT INTO historial_romana 
+            (peso, fecha, estatus, fecha_creacion) 
+            VALUES (?, ?, ?, NOW())");
+
+            $this->setArray([
+                $peso,
+                $fecha ?? date('Y-m-d H:i:s'),
+                $estatus
+            ]);
+
+            $stmt = $db->prepare($this->getQuery());
+            $insertExitoso = $stmt->execute($this->getArray());
+
+            if ($insertExitoso) {
+                $idRomana = $db->lastInsertId();
+                return [
+                    'status' => true,
+                    'message' => 'Peso registrado exitosamente.',
+                    'idromana' => $idRomana
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'Error al registrar el peso.'
+                ];
+            }
+
+        } catch (PDOException $e) {
+            error_log("ComprasModel::ejecutarGuardarPesoRomana - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error de base de datos al registrar peso: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    // MÉTODO PÚBLICO
+    public function guardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
+    {
+        return $this->ejecutarGuardarPesoRomana($peso, $fecha, $estatus);
+    }
 }
 ?>

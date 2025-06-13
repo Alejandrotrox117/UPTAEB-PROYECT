@@ -490,5 +490,38 @@ class Compras extends Controllers
     $data['arrCompra'] = $this->get_model()->selectCompra($idcompra);
     $this->views->getView($this,"factura_compra",$data);
     }
+
+    //GUARDAR PESO DE ROMANA
+    public function guardarPesoRomana()
+    {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['status' => false, 'message' => 'Método no permitido.']);
+            exit();
+        }
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            echo json_encode(['status' => false, 'message' => 'JSON inválido.']);
+            exit();
+        }
+
+        $peso = isset($data['peso']) ? $data['peso'] : null;
+        $fecha = $data['fecha'] ?? date('Y-m-d H:i:s');
+        $estatus = $data['estatus'] ?? 'activo';
+
+        if ($peso === null) {
+            echo json_encode(['status' => false, 'message' => 'El campo peso es obligatorio.']);
+            exit();
+        }
+
+        $modelo = $this->get_model();
+        $resultado = $modelo->guardarPesoRomana($peso, $fecha, $estatus);
+
+        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
 }
 ?>

@@ -58,6 +58,16 @@
             </a>
           </li>
 
+          <!-- Acceso directo a Romana -->
+          <?php if (PermisosVerificar::verificarPermisoAccion('romana', 'ver')): ?>
+          <li class="menu-item">
+            <a href="/project/romana" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
+              <i class="nav-icon fa-solid fa-weight-scale w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+              <span class="nav-text ml-3 font-medium">Romana</span>
+            </a>
+          </li>
+          <?php endif; ?>
+
           <!-- Gestionar Compras -->
           <?php if (PermisosVerificar::verificarPermisoAccion('compras', 'ver') || PermisosVerificar::verificarPermisoAccion('proveedores', 'ver')): ?>
           <li class="menu-item-group">
@@ -141,9 +151,7 @@
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
               <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                <?php if (PermisosVerificar::verificarPermisoAccion('romana', 'ver')): ?>
-                <li class="menu-item"><a href="/project/romana" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-weight-scale w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Romana</span></a></li>
-                <?php endif; ?>
+              
                 <?php if (PermisosVerificar::verificarPermisoAccion('personas', 'ver')): ?>
                 <li class="menu-item"><a href="/project/personas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-shield w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Personas</span></a></li>
                 <?php endif; ?>
