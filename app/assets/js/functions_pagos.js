@@ -481,34 +481,38 @@ function abrirModalRegistro() {
   limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
   configurarEventosTipoPago();
   establecerFechaActual();
-  cargarMetodosPago();
   
   // Configurar modal para registro
   document.getElementById("tituloModalRegistrar").textContent = "Registrar Pago";
   document.getElementById("btnGuardarPago").innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Guardar Pago';
   
-  abrirModal("modalRegistrarPago");
+  // Cargar métodos de pago y abrir modal
+  cargarMetodosPago().finally(() => {
+    abrirModal("modalRegistrarPago");
+  });
 }
 
 function cargarTiposPago() {
-  fetch('Pagos/getTiposPago')
+  return fetch('Pagos/getTiposPago')
     .then(response => response.json())
     .then(result => {
       if (result.status && result.data) {
         tiposPago = result.data;
       }
+      return result;
     })
     .catch(error => {
       console.error('Error al cargar tipos de pago:', error);
+      return { status: false };
     });
 }
 
 function cargarMetodosPago() {
-  fetch('Pagos/getTiposPago')
+  return fetch('Pagos/getTiposPago')
     .then(response => response.json())
     .then(result => {
       const select = document.getElementById('pagoMetodoPago');
-      if (!select) return;
+      if (!select) return result;
       
       select.innerHTML = '<option value="">Seleccionar método...</option>';
       
@@ -520,10 +524,12 @@ function cargarMetodosPago() {
           select.appendChild(option);
         });
       }
+      return result;
     })
     .catch(error => {
       console.error('Error:', error);
       mostrarNotificacion('Error al cargar métodos de pago', 'error');
+      return { status: false };
     });
 }
 
@@ -606,11 +612,11 @@ function mostrarContainer(containerId) {
 }
 
 function cargarComprasPendientes() {
-  fetch('Pagos/getComprasPendientes')
+  return fetch('Pagos/getComprasPendientes')
     .then(response => response.json())
     .then(result => {
       const select = document.getElementById('pagoCompra');
-      if (!select) return;
+      if (!select) return result;
       
       select.innerHTML = '<option value="">Seleccionar compra...</option>';
       
@@ -618,10 +624,10 @@ function cargarComprasPendientes() {
         result.data.forEach(compra => {
           const option = document.createElement('option');
           option.value = compra.idcompra;
-          option.textContent = `#${compra.nro_compra} - ${compra.proveedor} - Bs. ${compra.balance}`;
+          option.textContent = `#${compra.nro_compra} - ${compra.proveedor} - $${compra.total}`;
           option.dataset.proveedor = compra.proveedor;
           option.dataset.identificacion = compra.proveedor_identificacion;
-          option.dataset.total = compra.balance;
+          option.dataset.total = compra.total;
           select.appendChild(option);
         });
         
@@ -643,19 +649,21 @@ function cargarComprasPendientes() {
       } else {
         mostrarNotificacion('No hay compras disponibles', 'info');
       }
+      return result;
     })
     .catch(error => {
       console.error('Error:', error);
       mostrarNotificacion('Error al cargar compras', 'error');
+      return { status: false };
     });
 }
 
 function cargarVentasPendientes() {
-  fetch('Pagos/getVentasPendientes')
+  return fetch('Pagos/getVentasPendientes')
     .then(response => response.json())
     .then(result => {
       const select = document.getElementById('pagoVenta');
-      if (!select) return;
+      if (!select) return result;
       
       select.innerHTML = '<option value="">Seleccionar venta...</option>';
       
@@ -688,19 +696,21 @@ function cargarVentasPendientes() {
       } else {
         mostrarNotificacion('No hay ventas disponibles', 'info');
       }
+      return result;
     })
     .catch(error => {
       console.error('Error:', error);
       mostrarNotificacion('Error al cargar ventas', 'error');
+      return { status: false };
     });
 }
 
 function cargarSueldosPendientes() {
-  fetch('Pagos/getSueldosPendientes')
+  return fetch('Pagos/getSueldosPendientes')
     .then(response => response.json())
     .then(result => {
       const select = document.getElementById('pagoSueldo');
-      if (!select) return;
+      if (!select) return result;
       
       select.innerHTML = '<option value="">Seleccionar sueldo...</option>';
       
@@ -733,10 +743,12 @@ function cargarSueldosPendientes() {
       } else {
         mostrarNotificacion('No hay sueldos disponibles', 'info');
       }
+      return result;
     })
     .catch(error => {
       console.error('Error:', error);
       mostrarNotificacion('Error al cargar sueldos', 'error');
+      return { status: false };
     });
 }
 
@@ -1075,10 +1087,14 @@ window.verPago = function(idPago) {
 };
 
 window.editarPago = function(idPago) {
+  console.log('Editando pago ID:', idPago); // Debug
+  
   // Obtener datos del pago
   fetch(`Pagos/getPagoById/${idPago}`)
     .then(response => response.json())
     .then(result => {
+      console.log('Datos del pago a editar:', result.data); // Debug
+      
       if (result.status && result.data) {
         abrirModalEdicion(result.data);
       } else {
@@ -1092,72 +1108,146 @@ window.editarPago = function(idPago) {
 };
 
 function abrirModalEdicion(pago) {
-  pagoEditando = pago; // Guardar datos del pago en edición
-  
-  // Resetear y configurar formulario
-  resetearFormulario();
-  limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
-  
-  // Configurar modal para edición
-  document.getElementById("tituloModalRegistrar").textContent = "Editar Pago";
-  document.getElementById("btnGuardarPago").innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Pago';
-  
-  // Cargar métodos de pago primero
-  cargarMetodosPago().then(() => {
-    // Llenar datos del formulario
-    llenarFormularioEdicion(pago);
-  });
-  
-  configurarEventosTipoPago();
-  abrirModal("modalRegistrarPago");
+  try {
+    console.log('Abriendo modal de edición para pago:', pago); // Debug
+    
+    pagoEditando = pago; // Guardar datos del pago en edición
+    
+    // Resetear y configurar formulario
+    resetearFormulario();
+    limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
+    
+    // Configurar modal para edición
+    document.getElementById("tituloModalRegistrar").textContent = "Editar Pago";
+    document.getElementById("btnGuardarPago").innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Pago';
+    
+    // Cargar métodos de pago primero, luego llenar formulario
+    cargarMetodosPago()
+      .then(() => {
+        // Llenar datos del formulario
+        llenarFormularioEdicion(pago);
+        
+        // Configurar eventos después de llenar
+        configurarEventosTipoPago();
+        
+        // Abrir modal
+        abrirModal("modalRegistrarPago");
+      })
+      .catch(error => {
+        console.error('Error al cargar métodos de pago:', error);
+        mostrarNotificacion('Error al cargar los datos necesarios', 'error');
+      });
+      
+  } catch (error) {
+    console.error('Error en abrirModalEdicion:', error);
+    mostrarNotificacion('Error al abrir el modal de edición', 'error');
+  }
 }
 
 function llenarFormularioEdicion(pago) {
-  // Determinar tipo de pago
-  let tipoPago = 'otro'; // por defecto
-  if (pago.idcompra) tipoPago = 'compra';
-  else if (pago.idventa) tipoPago = 'venta';
-  else if (pago.idsueldotemp) tipoPago = 'sueldo';
-  
-  // Seleccionar tipo de pago
-  const radioTipo = document.querySelector(`input[name="tipoPago"][value="${tipoPago}"]`);
-  if (radioTipo) {
-    radioTipo.checked = true;
-    manejarCambioTipoPago(tipoPago);
-  }
-  
-  // Llenar campos básicos
-  setTimeout(() => {
-    document.getElementById('pagoMonto').value = pago.monto || '';
-    document.getElementById('pagoMetodoPago').value = pago.idtipo_pago || '';
-    document.getElementById('pagoReferencia').value = pago.referencia || '';
-    document.getElementById('pagoFecha').value = pago.fecha_pago || '';
-    document.getElementById('pagoObservaciones').value = pago.observaciones || '';
+  try {
+    console.log('Llenando formulario con datos:', pago); // Debug
     
-    // Llenar campos específicos según el tipo
+    // Determinar tipo de pago
+    let tipoPago = 'otro'; // por defecto
+    if (pago.idcompra) tipoPago = 'compra';
+    else if (pago.idventa) tipoPago = 'venta';
+    else if (pago.idsueldotemp) tipoPago = 'sueldo';
+    
+    console.log('Tipo de pago detectado:', tipoPago); // Debug
+    
+    // Seleccionar tipo de pago
+    const radioTipo = document.querySelector(`input[name="tipoPago"][value="${tipoPago}"]`);
+    if (radioTipo) {
+      radioTipo.checked = true;
+      manejarCambioTipoPago(tipoPago);
+    }
+    
+    // Llenar campos básicos después de un pequeño delay para asegurar que el DOM esté listo
     setTimeout(() => {
-      if (tipoPago === 'compra' && pago.idcompra) {
-        cargarComprasPendientes().then(() => {
-          document.getElementById('pagoCompra').value = pago.idcompra;
-          // Disparar evento change para mostrar info del destinatario
-          document.getElementById('pagoCompra').dispatchEvent(new Event('change'));
-        });
-      } else if (tipoPago === 'venta' && pago.idventa) {
-        cargarVentasPendientes().then(() => {
-          document.getElementById('pagoVenta').value = pago.idventa;
-          document.getElementById('pagoVenta').dispatchEvent(new Event('change'));
-        });
-      } else if (tipoPago === 'sueldo' && pago.idsueldotemp) {
-        cargarSueldosPendientes().then(() => {
-          document.getElementById('pagoSueldo').value = pago.idsueldotemp;
-          document.getElementById('pagoSueldo').dispatchEvent(new Event('change'));
-        });
-      } else if (tipoPago === 'otro') {
-        // Para tipo "otro", no hay descripción en la base de datos actual
-        // Se podría agregar un campo descripcion en el futuro
-      }
-    }, 300);
-  }, 100);
+      document.getElementById('pagoMonto').value = pago.monto || '';
+      document.getElementById('pagoMetodoPago').value = pago.idtipo_pago || '';
+      document.getElementById('pagoReferencia').value = pago.referencia || '';
+      document.getElementById('pagoFecha').value = pago.fecha_pago || '';
+      document.getElementById('pagoObservaciones').value = pago.observaciones || '';
+      
+      // Llenar campos específicos según el tipo
+      setTimeout(() => {
+        if (tipoPago === 'compra' && pago.idcompra) {
+          cargarComprasPendientes().then(() => {
+            // Agregar la compra actual si no está en la lista
+            const select = document.getElementById('pagoCompra');
+            let optionExists = false;
+            for (let i = 0; i < select.options.length; i++) {
+              if (select.options[i].value == pago.idcompra) {
+                optionExists = true;
+                break;
+              }
+            }
+            
+            if (!optionExists) {
+              const option = document.createElement('option');
+              option.value = pago.idcompra;
+              option.textContent = `Compra #${pago.idcompra} (Actual)`;
+              select.appendChild(option);
+            }
+            
+            select.value = pago.idcompra;
+            select.dispatchEvent(new Event('change'));
+          });
+        } else if (tipoPago === 'venta' && pago.idventa) {
+          cargarVentasPendientes().then(() => {
+            const select = document.getElementById('pagoVenta');
+            let optionExists = false;
+            for (let i = 0; i < select.options.length; i++) {
+              if (select.options[i].value == pago.idventa) {
+                optionExists = true;
+                break;
+              }
+            }
+            
+            if (!optionExists) {
+              const option = document.createElement('option');
+              option.value = pago.idventa;
+              option.textContent = `Venta #${pago.idventa} (Actual)`;
+              select.appendChild(option);
+            }
+            
+            select.value = pago.idventa;
+            select.dispatchEvent(new Event('change'));
+          });
+        } else if (tipoPago === 'sueldo' && pago.idsueldotemp) {
+          cargarSueldosPendientes().then(() => {
+            const select = document.getElementById('pagoSueldo');
+            let optionExists = false;
+            for (let i = 0; i < select.options.length; i++) {
+              if (select.options[i].value == pago.idsueldotemp) {
+                optionExists = true;
+                break;
+              }
+            }
+            
+            if (!optionExists) {
+              const option = document.createElement('option');
+              option.value = pago.idsueldotemp;
+              option.textContent = `Sueldo #${pago.idsueldotemp} (Actual)`;
+              select.appendChild(option);
+            }
+            
+            select.value = pago.idsueldotemp;
+            select.dispatchEvent(new Event('change'));
+          });
+        } else if (tipoPago === 'otro') {
+          // Para tipo "otro", no hay campos adicionales específicos por ahora
+          console.log('Tipo otro - sin campos adicionales');
+        }
+      }, 500);
+    }, 200);
+    
+  } catch (error) {
+    console.error('Error en llenarFormularioEdicion:', error);
+    mostrarNotificacion('Error al llenar el formulario', 'error');
+  }
 }
 
 window.eliminarPago = function(idPago, descripcion) {
