@@ -629,22 +629,6 @@ function displayNotifications(notifications) {
         iconClass = "fas fa-times-circle text-red-500";
         priorityColor = "text-red-600";
         break;
-      case "PRODUCTO_NUEVO":
-        iconClass = "fas fa-plus-circle text-green-500";
-        priorityColor = "text-green-600";
-        break;
-      case "PRODUCTO_ACTUALIZADO":
-        iconClass = "fas fa-edit text-blue-500";
-        priorityColor = "text-blue-600";
-        break;
-      case "PRODUCTO_DESACTIVADO":
-        iconClass = "fas fa-minus-circle text-red-500";
-        priorityColor = "text-red-600";
-        break;
-      case "PRODUCTO_ACTIVADO":
-        iconClass = "fas fa-check-circle text-green-500";
-        priorityColor = "text-green-600";
-        break;
     }
 
     notificationsHTML += `
@@ -753,7 +737,6 @@ function markAllNotificationsAsRead() {
     .then((response) => response.json())
     .then((result) => {
       if (result.status) {
-        // Actualizar UI
         const unreadItems = document.querySelectorAll(".notification-item.unread");
         unreadItems.forEach(item => {
           item.classList.remove("unread");
@@ -770,7 +753,6 @@ function markAllNotificationsAsRead() {
     });
 }
 
-// Hacer la función disponible globalmente
 window.actualizarContadorNotificaciones = actualizarContadorNotificaciones;
 <?php endif; ?>
 </script>
