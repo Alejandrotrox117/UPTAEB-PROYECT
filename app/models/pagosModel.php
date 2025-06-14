@@ -264,7 +264,6 @@ class PagosModel extends Mysql
             LEFT JOIN venta v ON p.idventa = v.idventa  
             LEFT JOIN cliente cli ON v.idcliente = cli.idcliente
             LEFT JOIN sueldos_temporales st ON p.idsueldotemp = st.idsueldotemp
-            WHERE p.estatus = 'activo'
             ORDER BY p.fecha_pago DESC, p.idpago DESC";
 
             $result = $this->searchAll($query);
@@ -501,6 +500,55 @@ class PagosModel extends Mysql
             return [
                 'status' => false,
                 'message' => 'Error al obtener sueldos: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function conciliarPago(int $idpago, int $idusuario)
+    {
+        try {
+            // Verificar que el pago existe y está activo
+            $queryCheck = "SELECT idpago, estatus FROM pagos WHERE idpago = ?";
+            $pago = $this->search($queryCheck, [$idpago]);
+            
+            if (empty($pago)) {
+                return [
+                    'status' => false,
+                    'message' => 'Pago no encontrado'
+                ];
+            }
+            
+            if ($pago['estatus'] !== 'activo') {
+                return [
+                    'status' => false,
+                    'message' => 'El pago no está activo y no se puede conciliar'
+                ];
+            }
+            
+            // Actualizar el estatus a conciliado
+            $query = "UPDATE pagos SET 
+                estatus = 'conciliado',
+                ultima_modificacion = NOW()
+            WHERE idpago = ?";
+
+            $result = $this->update($query, [$idpago]);
+
+            if ($result > 0) {
+                return [
+                    'status' => true,
+                    'message' => 'Pago conciliado exitosamente'
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'No se pudo conciliar el pago'
+                ];
+            }
+        } catch (Exception $e) {
+            error_log("Error en conciliarPago: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al conciliar el pago: ' . $e->getMessage()
             ];
         }
     }

@@ -118,149 +118,292 @@ function inicializarModulo() {
   inicializarValidaciones(camposFormularioPago, "formRegistrarPago");
 }
 
+
+$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+  // Only apply this filter to TablaPagos
+  if (settings.nTable.id !== "TablaPagos") {
+    return true;
+  }
+  var api = new $.fn.dataTable.Api(settings);
+  var rowData = api.row(dataIndex).data();
+
+  // Return true (show row) if status is not 'inactivo'
+  return rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
+});
+
 function inicializarTablaPagos() {
-  if ($.fn.DataTable.isDataTable('#TablaPagos')) {
-    $('#TablaPagos').DataTable().destroy();
+  if ($.fn.DataTable.isDataTable("#TablaPagos")) {
+    $("#TablaPagos").DataTable().destroy();
   }
 
-  tablaPagos = $('#TablaPagos').DataTable({
+  tablaPagos = $("#TablaPagos").DataTable({
     ajax: {
-      url: 'Pagos/getPagosData',
-      type: 'GET',
-      dataSrc: function(json) {
+      url: "Pagos/getPagosData",
+      type: "GET",
+      dataSrc: function (json) {
         if (json.status === true && Array.isArray(json.data)) {
           return json.data;
         }
-        console.error('Error en la respuesta del servidor:', json);
-        mostrarNotificacion('Error al cargar los datos', 'error');
+        console.error("Error en la respuesta del servidor:", json);
+        alert("Error al cargar los datos de pagos.");
         return [];
       },
-      error: function(xhr, error, thrown) {
-        console.error('Error en la petición AJAX:', error);
-        mostrarNotificacion('Error al cargar los datos', 'error');
-      }
+      error: function (xhr, error, thrown) {
+        console.error("Error en la petición AJAX:", error);
+        alert("Error de comunicación al cargar los datos de pagos.");
+      },
     },
     columns: [
-      { 
-        data: null,
-        title: '#',
-        render: function(data, type, row, meta) {
-          return meta.row + 1;
-        },
-        orderable: false,
-        searchable: false,
-        width: '50px'
+      {
+        data: "destinatario",
+        title: "Destinatario",
+        className:
+          "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
       },
-      { 
-        data: 'tipo_pago_texto',
-        title: 'Tipo',
-        render: function(data) {
+      // Column 1: Tipo
+      {
+        data: "tipo_pago_texto",
+        title: "Tipo",
+        className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+        render: function (data) {
           const badges = {
-            'Compra': '<span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Compra</span>',
-            'Venta': '<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Venta</span>',
-            'Sueldo': '<span class="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">Sueldo</span>',
-            'Otro': '<span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Otro</span>'
+            Compra:
+              '<span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">Compra</span>',
+            Venta:
+              '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Venta</span>',
+            Sueldo:
+              '<span class="px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-800 rounded-full">Sueldo</span>',
+            Otro:
+              '<span class="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded-full">Otro</span>',
           };
           return badges[data] || data;
-        }
+        },
       },
-      { 
-        data: 'destinatario',
-        title: 'Destinatario'
+      // Column 2: Monto
+      {
+        data: "monto",
+        title: "Monto",
+        className: "tablet-l whitespace-nowrap py-2 px-3 text-right",
+        render: function (data) {
+          return `<span class="font-semibold text-green-600">$${parseFloat(
+            data
+          ).toFixed(2)}</span>`;
+        },
       },
-      { 
-        data: 'monto',
-        title: 'Monto',
-        render: function(data) {
-          return `<span class="font-semibold text-green-600">$${parseFloat(data).toFixed(2)}</span>`;
-        }
+      // Column 3: Método
+      {
+        data: "metodo_pago",
+        title: "Método",
+        className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
       },
-      { 
-        data: 'metodo_pago',
-        title: 'Método'
+      // Column 4: Fecha
+      {
+        data: "fecha_pago_formato",
+        title: "Fecha",
+        className: "all whitespace-nowrap py-2 px-3 text-gray-700",
       },
-      { 
-        data: 'fecha_pago_formato',
-        title: 'Fecha'
+      // Column 5: Estatus
+      {
+        data: "estatus",
+        title: "Estatus",
+        className: "min-tablet-p text-center py-2 px-3",
+        render: function (data) {
+          const estatus = String(data).toLowerCase();
+          if (estatus === "activo") {
+            return '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">ACTIVO</span>';
+          } else if (estatus === "conciliado") {
+            return '<span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">CONCILIADO</span>';
+          } else {
+            return '<span class="px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">INACTIVO</span>';
+          }
+        },
       },
-      { 
-        data: 'estatus',
-        title: 'Estatus',
-        render: function(data) {
-          return data === 'activo' ? 
-            '<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">ACTIVO</span>' :
-            '<span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">INACTIVO</span>';
-        }
-      },
+      // Column 6: Acciones
       {
         data: null,
-        title: 'Acciones',
+        title: "Acciones",
         orderable: false,
         searchable: false,
-        render: function(data, type, row) {
-          return `
-            <div class="flex space-x-2">
-              <button onclick="verPago(${row.idpago})" 
-                      class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs transition-colors"
-                      title="Ver detalles">
-                <i class="fas fa-eye"></i>
-              </button>
-              ${row.estatus === 'activo' ? `
-                <button onclick="eliminarPago(${row.idpago}, '${row.destinatario}')" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs transition-colors"
-                        title="Desactivar">
-                  <i class="fas fa-ban"></i>
-                </button>
-              ` : ''}
-            </div>
+        className: "all text-center actions-column py-1 px-2",
+        render: function (data, type, row) {
+          let buttons = `
+            <button onclick="verPago(${row.idpago})" 
+                    class="text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
+                    title="Ver detalles">
+              <i class="fas fa-eye fa-fw text-base"></i>
+            </button>
           `;
+          if (row.estatus === "activo") {
+            buttons += `
+              <button onclick="conciliarPago(${row.idpago}, '${row.destinatario}')" 
+                      class="text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
+                      title="Conciliar">
+                <i class="fas fa-check fa-fw text-base"></i>
+              </button>
+              <button onclick="eliminarPago(${row.idpago}, '${row.destinatario}')" 
+                      class="text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
+                      title="Eliminar">
+                <i class="fas fa-trash-alt fa-fw text-base"></i>
+              </button>
+            `;
+          } else if (row.estatus === "conciliado") {
+            buttons += `
+              <span class="text-xs text-gray-500 italic px-2">Conciliado</span>
+            `;
+          }
+          return `<div class="inline-flex items-center space-x-1">${buttons}</div>`;
         },
-        width: '120px'
-      }
-    ],
-    responsive: true,
-    language: {
-      processing: "Procesando...",
-      lengthMenu: "Mostrar _MENU_ registros",
-      zeroRecords: "No se encontraron resultados",
-      emptyTable: "Ningún dato disponible en esta tabla",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-      infoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
-      infoFiltered: "(filtrado de un total de _MAX_ registros)",
-      search: "Buscar:",
-      loadingRecords: "Cargando...",
-      paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior"
+        width: "auto",
       },
-      aria: {
-        sortAscending: ": Activar para ordenar la columna de manera ascendente",
-        sortDescending: ": Activar para ordenar la columna de manera descendente"
-      }
+    ],
+    responsive: {
+      details: {
+        type: "column",
+        target: -1,
+        renderer: function (api, rowIdx, columns) {
+          var data = $.map(columns, function (col, i) {
+            return col.hidden && col.title
+              ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
+                                   <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                                   <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                               </tr>`
+              : "";
+          }).join("");
+          return data
+            ? $(
+                '<table class="w-full table-fixed details-table border-t border-gray-200"/>'
+              ).append(data)
+            : false;
+        },
+      },
+    },
+    language: {
+      processing: `
+        <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]" style="margin-left:0;">
+            <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+                <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+                <span class="text-lg font-medium text-gray-700">Procesando...</span>
+            </div>
+        </div>`,
+      emptyTable:
+        '<div class="text-center py-4"><i class="fas fa-dollar-sign fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No hay pagos disponibles.</p></div>',
+      info: "Mostrando _START_ a _END_ de _TOTAL_ pagos",
+      infoEmpty: "Mostrando 0 pagos",
+      infoFiltered: "(filtrado de _MAX_ pagos totales)",
+      lengthMenu: "Mostrar _MENU_ pagos",
+      search: "_INPUT_",
+      searchPlaceholder: "Buscar pago...",
+      zeroRecords:
+        '<div class="text-center py-4"><i class="fas fa-search fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No se encontraron coincidencias.</p></div>',
+      paginate: {
+        first: '<i class="fas fa-angle-double-left"></i>',
+        last: '<i class="fas fa-angle-double-right"></i>',
+        next: '<i class="fas fa-angle-right"></i>',
+        previous: '<i class="fas fa-angle-left"></i>',
+      },
     },
     pageLength: 25,
-    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-    order: [[5, 'desc']],
-    dom: 'Bfrtip',
+    lengthMenu: [
+      [10, 25, 50, 100, -1],
+      [10, 25, 50, 100, "Todos"],
+    ],
+    order: [[4, "desc"]], // UPDATED: Sort by Fecha (now column 4) descending
+    dom:
+      "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4'" +
+      "l" +
+      "<'flex items-center'Bf>" +
+      ">" +
+      "<'overflow-x-auto't>" +
+      "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mt-4'i p>",
     buttons: [
       {
-        extend: 'excelHtml5',
-        text: '<i class="fas fa-file-excel"></i> Excel',
-        className: 'btn-excel',
-        title: 'Reporte_Pagos'
+        extend: "excelHtml5",
+        text: '<i class="fas fa-file-excel mr-2"></i>Excel',
+        className:
+          "bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm inline-flex items-center",
+        title: "Reporte_Pagos",
       },
       {
-        extend: 'pdfHtml5',
-        text: '<i class="fas fa-file-pdf"></i> PDF',
-        className: 'btn-pdf',
-        title: 'Reporte de Pagos',
-        orientation: 'landscape'
+        extend: "pdfHtml5",
+        text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
+        className:
+          "bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md text-sm inline-flex items-center ml-2",
+        title: "Reporte de Pagos",
+        orientation: "landscape",
+      },
+    ],
+    autoWidth: false,
+    scrollX: true,
+    fixedColumns: {
+      left: 1,
+    },
+    className: "compact",
+    initComplete: function (settings, json) {
+      console.log("DataTable Pagos inicializado correctamente");
+      window.tablaPagos = this.api();
+    },
+    drawCallback: function (settings) {
+      $(settings.nTableWrapper)
+        .find('.dataTables_filter input[type="search"]')
+        .addClass(
+          "py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+        )
+        .removeClass("form-control-sm");
+
+      var api = new $.fn.dataTable.Api(settings);
+      if (
+        api.fixedColumns &&
+        typeof api.fixedColumns === "function" &&
+        api.fixedColumns().relayout
+      ) {
+        api.fixedColumns().relayout();
       }
-    ]
+    },
   });
 }
+
+window.conciliarPago = function(idPago, descripcion) {
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: `¿Deseas conciliar el pago "${descripcion}"? Esta acción no se puede deshacer.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#10B981",
+    cancelButtonColor: "#6B7280",
+    confirmButtonText: "Sí, conciliar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Pagos/conciliarPago", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idpago: idPago }),
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.status) {
+            Swal.fire({
+              title: '¡Éxito!',
+              text: result.message,
+              icon: 'success',
+              confirmButtonText: 'Aceptar',
+              confirmButtonColor: '#10B981'
+            }).then(() => {
+              tablaPagos.ajax.reload();
+            });
+          } else {
+            mostrarNotificacion(result.message, 'error');
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          mostrarNotificacion('Error de conexión al conciliar', 'error');
+        });
+    }
+  });
+};
 
 function configurarEventos() {
   // Modal eventos
