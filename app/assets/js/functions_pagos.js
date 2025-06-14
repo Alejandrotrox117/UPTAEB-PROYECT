@@ -345,7 +345,6 @@ function inicializarTablaPagos() {
     },
     className: "compact",
     initComplete: function (settings, json) {
-      console.log("DataTable Pagos inicializado correctamente");
       window.tablaPagos = this.api();
     },
     drawCallback: function (settings) {
@@ -1072,7 +1071,6 @@ window.verPago = function(idPago) {
   fetch(`Pagos/getPagoById/${idPago}`)
     .then(response => response.json())
     .then(result => {
-      console.log('Respuesta del servidor:', result); // Debug
       
       if (result.status && result.data) {
         mostrarModalVerPago(result.data);
@@ -1087,14 +1085,11 @@ window.verPago = function(idPago) {
 };
 
 window.editarPago = function(idPago) {
-  console.log('Editando pago ID:', idPago); // Debug
   
   // Obtener datos del pago
   fetch(`Pagos/getPagoById/${idPago}`)
     .then(response => response.json())
     .then(result => {
-      console.log('Datos del pago a editar:', result.data); // Debug
-      
       if (result.status && result.data) {
         abrirModalEdicion(result.data);
       } else {
@@ -1109,8 +1104,6 @@ window.editarPago = function(idPago) {
 
 function abrirModalEdicion(pago) {
   try {
-    console.log('Abriendo modal de edición para pago:', pago); // Debug
-    
     pagoEditando = pago; // Guardar datos del pago en edición
     
     // Resetear y configurar formulario
@@ -1146,36 +1139,27 @@ function abrirModalEdicion(pago) {
 
 function llenarFormularioEdicion(pago) {
   try {
-    console.log('Llenando formulario con datos:', pago); // Debug
-    
-    // Determinar tipo de pago
-    let tipoPago = 'otro'; // por defecto
+
+    let tipoPago = 'otro'; 
     if (pago.idcompra) tipoPago = 'compra';
     else if (pago.idventa) tipoPago = 'venta';
     else if (pago.idsueldotemp) tipoPago = 'sueldo';
     
-    console.log('Tipo de pago detectado:', tipoPago); // Debug
-    
-    // Seleccionar tipo de pago
     const radioTipo = document.querySelector(`input[name="tipoPago"][value="${tipoPago}"]`);
     if (radioTipo) {
       radioTipo.checked = true;
       manejarCambioTipoPago(tipoPago);
     }
-    
-    // Llenar campos básicos después de un pequeño delay para asegurar que el DOM esté listo
     setTimeout(() => {
       document.getElementById('pagoMonto').value = pago.monto || '';
       document.getElementById('pagoMetodoPago').value = pago.idtipo_pago || '';
       document.getElementById('pagoReferencia').value = pago.referencia || '';
       document.getElementById('pagoFecha').value = pago.fecha_pago || '';
       document.getElementById('pagoObservaciones').value = pago.observaciones || '';
-      
-      // Llenar campos específicos según el tipo
+
       setTimeout(() => {
         if (tipoPago === 'compra' && pago.idcompra) {
           cargarComprasPendientes().then(() => {
-            // Agregar la compra actual si no está en la lista
             const select = document.getElementById('pagoCompra');
             let optionExists = false;
             for (let i = 0; i < select.options.length; i++) {
@@ -1238,8 +1222,6 @@ function llenarFormularioEdicion(pago) {
             select.dispatchEvent(new Event('change'));
           });
         } else if (tipoPago === 'otro') {
-          // Para tipo "otro", no hay campos adicionales específicos por ahora
-          console.log('Tipo otro - sin campos adicionales');
         }
       }, 500);
     }, 200);
@@ -1294,9 +1276,7 @@ window.eliminarPago = function(idPago, descripcion) {
 };
 
 function mostrarModalVerPago(pago) {
-  console.log('Datos del pago a mostrar:', pago); // Debug
-  
-  // Llenar elementos del modal de visualización
+
   const elementos = {
     'verPagoId': pago.idpago || "N/A",
     'verPagoTipo': pago.tipo_pago_texto || "N/A",
@@ -1315,7 +1295,6 @@ function mostrarModalVerPago(pago) {
     const elemento = document.getElementById(id);
     if (elemento) {
       elemento.textContent = valor;
-      console.log(`Llenando ${id} con: ${valor}`); // Debug
     } else {
       console.warn(`Elemento ${id} no encontrado en el DOM`); // Debug
     }
