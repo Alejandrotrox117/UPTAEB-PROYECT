@@ -6,9 +6,6 @@
 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <h2 class="text-xl font-semibold text-gray-800">Hola, <?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Usuario') ?> 👋</h2>
-        <button id="btnGenerarNotificacionesProductos" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold shadow text-sm">
-            <i class="fas fa-bell mr-2"></i> Actualizar Notificaciones Stock
-        </button>
     </div>
 
     <div class="mt-0 sm:mt-6">

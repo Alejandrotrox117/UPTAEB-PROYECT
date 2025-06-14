@@ -37,6 +37,18 @@ class Productos extends Controllers
         }
     }
 
+    
+    public function index()
+    {
+        $data['page_tag'] = "Productos";
+        $data['page_title'] = "Administración de Productos";
+        $data['page_name'] = "productos";
+        $data['page_content'] = "Gestión integral de productos del sistema";
+        $data['page_functions_js'] = "functions_productos.js";
+        $this->views->getView($this, "productos", $data);
+    }
+
+
     public function createProducto()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -50,7 +62,6 @@ class Productos extends Controllers
                     die();
                 }
 
-                // Limpiar y preparar datos con expresiones regulares
                 $datosLimpios = [
                     'nombre' => ExpresionesRegulares::limpiar($request['nombre'] ?? '', 'nombre'),
                     'descripcion' => trim($request['descripcion'] ?? ''),
@@ -59,8 +70,6 @@ class Productos extends Controllers
                     'idcategoria' => intval($request['idcategoria'] ?? 0),
                     'moneda' => strtoupper(trim($request['moneda'] ?? 'BS'))
                 ];
-
-                // Validar campos obligatorios no vacíos
                 $camposObligatorios = ['nombre', 'unidad_medida', 'precio', 'idcategoria'];
                 foreach ($camposObligatorios as $campo) {
                     if (empty($datosLimpios[$campo]) || ($campo === 'precio' && $datosLimpios[$campo] <= 0)) {
@@ -69,29 +78,19 @@ class Productos extends Controllers
                         die();
                     }
                 }
-
-                // Validar formatos con expresiones regulares
                 $reglasValidacion = [
                     'nombre' => 'nombre'
                 ];
-
-                // Agregar descripción si no está vacía
                 if (!empty($datosLimpios['descripcion'])) {
                     $reglasValidacion['descripcion'] = 'textoGeneral';
                 }
-
-                // Ejecutar validaciones
                 $resultadosValidacion = ExpresionesRegulares::validarCampos($datosLimpios, $reglasValidacion);
-
-                // Recopilar errores
                 $errores = [];
                 foreach ($resultadosValidacion as $campo => $resultado) {
                     if (!$resultado['valido']) {
                         $errores[] = ExpresionesRegulares::obtenerMensajeError($campo, $reglasValidacion[$campo]);
                     }
                 }
-
-                // Validaciones adicionales específicas para productos
                 if ($datosLimpios['precio'] <= 0) {
                     $errores[] = 'El precio debe ser mayor a 0';
                 }
@@ -104,7 +103,6 @@ class Productos extends Controllers
                     $errores[] = 'Moneda inválida';
                 }
 
-                // Si hay errores, responder con todos los errores
                 if (!empty($errores)) {
                     $arrResponse = array(
                         'status' => false,
@@ -123,7 +121,6 @@ class Productos extends Controllers
                     'moneda' => $datosLimpios['moneda']
                 );
 
-                // Obtener ID de usuario
                 $idusuario = $this->obtenerUsuarioSesion();
 
                 if (!$idusuario) {
@@ -135,7 +132,6 @@ class Productos extends Controllers
 
                 $arrResponse = $this->model->insertProducto($arrData);
 
-                // Registrar en bitácora si la inserción fue exitosa
                 if ($arrResponse['status'] === true) {
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('producto', 'INSERTAR', $idusuario);
 
@@ -143,8 +139,6 @@ class Productos extends Controllers
                         error_log("Warning: No se pudo registrar en bitácora la creación del producto ID: " .
                             ($arrResponse['producto_id'] ?? 'desconocido'));
                     }
-
-                    // Generar notificaciones automáticas de stock después de crear producto
                     $this->notificacionesModel->generarNotificacionesProductos();
                 }
 
@@ -175,16 +169,6 @@ class Productos extends Controllers
             error_log("ERROR: No se encontró ID de usuario en la sesión");
             return null;
         }
-    }
-
-    public function index()
-    {
-        $data['page_tag'] = "Productos";
-        $data['page_title'] = "Administración de Productos";
-        $data['page_name'] = "productos";
-        $data['page_content'] = "Gestión integral de productos del sistema";
-        $data['page_functions_js'] = "functions_productos.js";
-        $this->views->getView($this, "productos", $data);
     }
 
     public function getProductosData()
@@ -330,7 +314,6 @@ class Productos extends Controllers
                         error_log("Warning: No se pudo registrar en bitácora la actualización del producto ID: " . $intIdProducto);
                     }
 
-                    // Generar notificaciones automáticas de stock después de actualizar producto
                     $this->notificacionesModel->generarNotificacionesProductos();
                 }
 
@@ -380,7 +363,6 @@ class Productos extends Controllers
                         error_log("Warning: No se pudo registrar en bitácora la eliminación del producto ID: " . $intIdProducto);
                     }
 
-                    // Generar notificaciones automáticas de stock después de eliminar producto
                     $this->notificacionesModel->generarNotificacionesProductos();
                 }
 
@@ -449,8 +431,6 @@ class Productos extends Controllers
                 
                 if ($requestActivar) {
                     $arrResponse = array('status' => true, 'message' => 'Producto activado correctamente');
-                    
-                    // Generar notificaciones automáticas de stock después de activar producto
                     $this->notificacionesModel->generarNotificacionesProductos();
                 } else {
                     $arrResponse = array('status' => false, 'message' => 'Error al activar el producto');

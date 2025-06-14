@@ -186,45 +186,6 @@ function llenarSelectCategorias() {
   }
 }
 
-function generarNotificacionesProductos() {
-  const btnGenerar = document.getElementById("btnGenerarNotificacionesProductos");
-  
-  if (btnGenerar) {
-    btnGenerar.disabled = true;
-    btnGenerar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...';
-  }
-
-  fetch("./Productos/generarNotificacionesProductos", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        Swal.fire("¡Éxito!", result.message, "success").then(() => {
-          // Actualizar contador de notificaciones si existe la función
-          if (typeof actualizarContadorNotificaciones === 'function') {
-            actualizarContadorNotificaciones();
-          }
-        });
-      } else {
-        Swal.fire("Error", result.message || "No se pudieron generar las notificaciones.", "error");
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire("Error", "Error de conexión al generar notificaciones.", "error");
-    })
-    .finally(() => {
-      if (btnGenerar) {
-        btnGenerar.disabled = false;
-        btnGenerar.innerHTML = '<i class="fas fa-bell mr-2"></i> Actualizar Notificaciones Stock';
-      }
-    });
-}
 
 document.addEventListener("DOMContentLoaded", function () {
   // Cargar categorías al inicio

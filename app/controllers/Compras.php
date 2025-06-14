@@ -2,11 +2,15 @@
 require_once "app/core/Controllers.php";
 require_once "app/models/ComprasModel.php";
 require_once "helpers/helpers.php";
+require_once "app/models/notificacionesModel.php";
 
 class Compras extends Controllers
 {
+    private $notificacionesModel;
+
     public function __construct() {
         parent::__construct();
+        $this->notificacionesModel = new NotificacionesModel();
     }
 
     public function set_model($model)
@@ -299,6 +303,7 @@ class Compras extends Controllers
             if ($idcompra > 0 && !empty($nuevoEstado)) {
                 $resultado = $this->get_model()->cambiarEstadoCompra($idcompra, $nuevoEstado);
                 echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+                $this->notificacionesModel->generarNotificacionesProductos();
             } else {
                 $response = ["status" => false, "message" => "Datos incompletos para cambiar estado."];
                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
