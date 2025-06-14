@@ -221,6 +221,7 @@
             PermisosVerificar::verificarPermisoAccion('usuarios', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('roles', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver') ||
+            PermisosVerificar::verificarPermisoAccion('RolesAsignaciones', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('modulos', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')||
             PermisosVerificar::verificarPermisoAccion('bitacora', 'ver')
@@ -243,6 +244,9 @@
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver')): ?>
                 <li class="menu-item"><a href="/project/RolesPermisos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-key w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Permisos</span></a></li>
+                <?php endif; ?>
+                <?php if (PermisosVerificar::verificarPermisoAccion('RolesAsignaciones', 'ver')): ?>
+                <li class="menu-item"><a href="/project/RolesAsignaciones" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-sliders-h w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignaciones Integrales</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('modulos', 'ver')): ?>
                 <li class="menu-item"><a href="/project/modulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-puzzle-piece w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Modulos</span></a></li>
