@@ -210,7 +210,8 @@
            <?php if (
             PermisosVerificar::verificarPermisoAccion('romana', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('personas', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('tasas', 'ver')
+            PermisosVerificar::verificarPermisoAccion('tasas', 'ver')||
+            PermisosVerificar::verificarPermisoAccion('pagos', 'ver')
           ): ?>
           <li class="menu-item-group">
             <details class="group">
@@ -222,6 +223,9 @@
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
               <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
+                <?php if (PermisosVerificar::verificarPermisoAccion('pagos', 'ver')): ?>
+                <li class="menu-item"><a href="/project/pagos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-credit-card w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Pagos</span></a></li>
+                <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('romana', 'ver')): ?>
                 <li class="menu-item"><a href="/project/romana" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-weight-scale w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Romana</span></a></li>
                 <?php endif; ?>

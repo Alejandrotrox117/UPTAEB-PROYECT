@@ -15,37 +15,27 @@ class PagosModel extends Mysql
             // Verificar si idpersona es válido antes de insertar
             if ($data['idpersona'] !== null) {
                 if (!$this->verificarPersonaExiste($data['idpersona'])) {
-                    return [
-                        'status' => false,
-                        'message' => 'La persona especificada no existe en el sistema'
-                    ];
+                    error_log("Persona con ID {$data['idpersona']} no existe");
+                    $data['idpersona'] = null;
                 }
             }
 
             $query = "INSERT INTO pagos (
-                idpersona, 
-                idtipo_pago, 
-                idventa, 
-                idcompra, 
-                idsueldotemp,
-                monto, 
-                referencia, 
-                fecha_pago, 
-                observaciones, 
-                estatus, 
+                idpersona, idtipo_pago, idventa, idcompra, idsueldotemp, 
+                monto, referencia, fecha_pago, observaciones, estatus, 
                 fecha_creacion
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', NOW())";
 
             $params = [
-                $data['idpersona'], // Puede ser NULL
+                $data['idpersona'],
                 $data['idtipo_pago'],
-                $data['idventa'] ?: null,
-                $data['idcompra'] ?: null,
-                $data['idsueldotemp'] ?: null,
+                $data['idventa'],
+                $data['idcompra'],
+                $data['idsueldotemp'],
                 $data['monto'],
-                $data['referencia'] ?: null,
+                $data['referencia'],
                 $data['fecha_pago'],
-                $data['observaciones'] ?: null
+                $data['observaciones']
             ];
 
             $idpago = $this->insert($query, $params);
@@ -54,7 +44,7 @@ class PagosModel extends Mysql
                 return [
                     'status' => true,
                     'message' => 'Pago registrado exitosamente',
-                    'idpago' => $idpago
+                    'data' => ['idpago' => $idpago]
                 ];
             } else {
                 return [
@@ -66,7 +56,65 @@ class PagosModel extends Mysql
             error_log("Error en insertPago: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error interno al registrar el pago: ' . $e->getMessage()
+                'message' => 'Error interno del servidor'
+            ];
+        }
+    }
+
+    public function updatePago(int $idpago, array $data)
+    {
+        try {
+            // Verificar si idpersona es válido antes de actualizar
+            if ($data['idpersona'] !== null) {
+                if (!$this->verificarPersonaExiste($data['idpersona'])) {
+                    error_log("Persona con ID {$data['idpersona']} no existe");
+                    $data['idpersona'] = null;
+                }
+            }
+
+            $query = "UPDATE pagos SET 
+                idpersona = ?, 
+                idtipo_pago = ?, 
+                idventa = ?, 
+                idcompra = ?, 
+                idsueldotemp = ?, 
+                monto = ?, 
+                referencia = ?, 
+                fecha_pago = ?, 
+                observaciones = ?
+                WHERE idpago = ? AND estatus = 'activo'";
+
+            $params = [
+                $data['idpersona'],
+                $data['idtipo_pago'],
+                $data['idventa'],
+                $data['idcompra'],
+                $data['idsueldotemp'],
+                $data['monto'],
+                $data['referencia'],
+                $data['fecha_pago'],
+                $data['observaciones'],
+                $idpago
+            ];
+
+            $result = $this->update($query, $params);
+
+            if ($result) {
+                return [
+                    'status' => true,
+                    'message' => 'Pago actualizado exitosamente'
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'No se pudo actualizar el pago'
+                ];
+            }
+        } catch (Exception $e) {
+            error_log("Error en updatePago: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error interno del servidor'
             ];
         }
     }
@@ -91,19 +139,17 @@ class PagosModel extends Mysql
             // Primero verificamos si el proveedor tiene una persona asociada
             $query = "SELECT p.idproveedor, per.idpersona
                      FROM compra c 
-                     INNER JOIN proveedor p ON c.idproveedor = p.idproveedor 
-                     LEFT JOIN personas per ON p.idproveedor = per.idpersona
+                     INNER JOIN proveedor p ON c.idproveedor = p.idproveedor
+                     LEFT JOIN personas per ON p.identificacion = per.identificacion
                      WHERE c.idcompra = ?";
             
             $result = $this->search($query, [$idcompra]);
             
             if (!empty($result)) {
-                // Si el proveedor tiene una persona asociada, la usamos
-                // Si no, intentamos crear o buscar una persona para este proveedor
                 if ($result['idpersona']) {
                     return ['idpersona' => $result['idpersona']];
                 } else {
-                    // Intentamos crear una persona para el proveedor si no existe
+                    // Crear persona para el proveedor si no existe
                     return $this->crearPersonaParaProveedor($result['idproveedor']);
                 }
             }
@@ -121,8 +167,8 @@ class PagosModel extends Mysql
             // Similar para clientes
             $query = "SELECT c.idcliente, per.idpersona
                      FROM venta v 
-                     INNER JOIN cliente c ON v.idcliente = c.idcliente 
-                     LEFT JOIN personas per ON c.idcliente = per.idpersona
+                     INNER JOIN cliente c ON v.idcliente = c.idcliente
+                     LEFT JOIN personas per ON c.cedula = per.identificacion
                      WHERE v.idventa = ?";
             
             $result = $this->search($query, [$idventa]);
@@ -131,6 +177,7 @@ class PagosModel extends Mysql
                 if ($result['idpersona']) {
                     return ['idpersona' => $result['idpersona']];
                 } else {
+                    // Crear persona para el cliente si no existe
                     return $this->crearPersonaParaCliente($result['idcliente']);
                 }
             }
@@ -151,13 +198,12 @@ class PagosModel extends Mysql
             $proveedor = $this->search($query, [$idproveedor]);
             
             if (!empty($proveedor)) {
-                $insertQuery = "INSERT INTO personas (nombre, apellido, identificacion, tipo_persona, estatus, fecha_creacion) 
+                $insertQuery = "INSERT INTO personas (nombre, apellido, identificacion, tipo, estatus, fecha_creacion) 
                                VALUES (?, ?, ?, 'proveedor', 'activo', NOW())";
-                
                 $idpersona = $this->insert($insertQuery, [
-                    $proveedor['nombre'] ?: 'Sin nombre',
-                    $proveedor['apellido'] ?: 'Sin apellido', 
-                    $proveedor['identificacion'] ?: 'Sin identificación'
+                    $proveedor['nombre'],
+                    $proveedor['apellido'] ?? '',
+                    $proveedor['identificacion']
                 ]);
                 
                 if ($idpersona > 0) {
@@ -181,13 +227,12 @@ class PagosModel extends Mysql
             $cliente = $this->search($query, [$idcliente]);
             
             if (!empty($cliente)) {
-                $insertQuery = "INSERT INTO personas (nombre, apellido, identificacion, tipo_persona, estatus, fecha_creacion) 
+                $insertQuery = "INSERT INTO personas (nombre, apellido, identificacion, tipo, estatus, fecha_creacion) 
                                VALUES (?, ?, ?, 'cliente', 'activo', NOW())";
-                
                 $idpersona = $this->insert($insertQuery, [
-                    $cliente['nombre'] ?: 'Sin nombre',
-                    $cliente['apellido'] ?: 'Sin apellido',
-                    $cliente['cedula'] ?: 'Sin cédula'
+                    $cliente['nombre'],
+                    $cliente['apellido'] ?? '',
+                    $cliente['cedula']
                 ]);
                 
                 if ($idpersona > 0) {
@@ -224,38 +269,33 @@ class PagosModel extends Mysql
                 DATE_FORMAT(p.fecha_pago, '%d/%m/%Y') as fecha_pago_formato,
                 p.observaciones,
                 p.estatus,
-                
-                -- Información de la persona (si existe)
-                CASE 
-                    WHEN p.idpersona IS NOT NULL THEN 
-                        CONCAT(per.nombre, ' ', per.apellido)
-                    ELSE 'Sin especificar'
-                END as persona_nombre,
-                
-                -- Tipo de pago desde la tabla tipos_pagos
-                COALESCE(tp.nombre, 'Sin especificar') as metodo_pago,
-                
-                -- Determinar el tipo de operación
+                p.fecha_creacion,
+                tp.nombre as metodo_pago,
+                per.nombre as persona_nombre,
+                per.apellido as persona_apellido,
+                per.identificacion as persona_identificacion,
+                -- Información de compra
+                c.nro_compra,
+                prov.nombre as proveedor_nombre,
+                prov.apellido as proveedor_apellido,
+                prov.identificacion as proveedor_identificacion,
+                -- Información de venta
+                v.nro_venta,
+                cli.nombre as cliente_nombre,
+                cli.apellido as cliente_apellido,
+                cli.cedula as cliente_cedula,
+                -- Determinar tipo y destinatario
                 CASE 
                     WHEN p.idcompra IS NOT NULL THEN 'Compra'
                     WHEN p.idventa IS NOT NULL THEN 'Venta'
                     WHEN p.idsueldotemp IS NOT NULL THEN 'Sueldo'
                     ELSE 'Otro'
                 END as tipo_pago_texto,
-                
-                -- Información del destinatario/operación
                 CASE 
-                    WHEN p.idcompra IS NOT NULL THEN 
-                        CONCAT('Compra #', COALESCE(c.nro_compra, p.idcompra), ' - ', 
-                               COALESCE(CONCAT(prov.nombre, ' ', prov.apellido), 'Proveedor'))
-                    WHEN p.idventa IS NOT NULL THEN 
-                        CONCAT('Venta #', COALESCE(v.nro_venta, p.idventa), ' - ', 
-                               COALESCE(CONCAT(cli.nombre, ' ', cli.apellido), 'Cliente'))
-                    WHEN p.idsueldotemp IS NOT NULL THEN 
-                        CONCAT('Sueldo temporal #', p.idsueldotemp)
-                    ELSE 'Pago general'
+                    WHEN p.idcompra IS NOT NULL THEN CONCAT(COALESCE(prov.nombre, ''), ' ', COALESCE(prov.apellido, ''))
+                    WHEN p.idventa IS NOT NULL THEN CONCAT(COALESCE(cli.nombre, ''), ' ', COALESCE(cli.apellido, ''))
+                    ELSE 'Otro pago'
                 END as destinatario
-                
             FROM pagos p
             LEFT JOIN personas per ON p.idpersona = per.idpersona
             LEFT JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago
@@ -270,13 +310,13 @@ class PagosModel extends Mysql
 
             return [
                 'status' => true,
-                'data' => $result ?? []
+                'data' => $result ?: []
             ];
         } catch (Exception $e) {
             error_log("Error en selectAllPagos: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al obtener los pagos: ' . $e->getMessage()
+                'message' => 'Error al obtener los pagos'
             ];
         }
     }
@@ -298,39 +338,31 @@ class PagosModel extends Mysql
                 p.observaciones,
                 p.estatus,
                 p.fecha_creacion,
-                p.ultima_modificacion,
-                
-                -- Información de la persona (si existe)
-                CASE 
-                    WHEN p.idpersona IS NOT NULL THEN 
-                        CONCAT(per.nombre, ' ', per.apellido)
-                    ELSE 'Sin especificar'
-                END as persona_nombre,
-                
-                -- Tipo de pago desde la tabla tipos_pagos
-                COALESCE(tp.nombre, 'Sin especificar') as metodo_pago,
-                
-                -- Determinar el tipo de operación
+                tp.nombre as metodo_pago,
+                per.nombre as persona_nombre,
+                per.apellido as persona_apellido,
+                per.identificacion as persona_identificacion,
+                -- Información de compra
+                c.nro_compra,
+                prov.nombre as proveedor_nombre,
+                prov.apellido as proveedor_apellido,
+                prov.identificacion as proveedor_identificacion,
+                -- Información de venta
+                v.nro_venta,
+                cli.nombre as cliente_nombre,
+                cli.apellido as cliente_apellido,
+                cli.cedula as cliente_cedula,
                 CASE 
                     WHEN p.idcompra IS NOT NULL THEN 'Compra'
                     WHEN p.idventa IS NOT NULL THEN 'Venta'
                     WHEN p.idsueldotemp IS NOT NULL THEN 'Sueldo'
                     ELSE 'Otro'
                 END as tipo_pago_texto,
-                
-                -- Información del destinatario/operación
                 CASE 
-                    WHEN p.idcompra IS NOT NULL THEN 
-                        CONCAT('Compra #', COALESCE(c.nro_compra, p.idcompra), ' - ', 
-                               COALESCE(CONCAT(prov.nombre, ' ', prov.apellido), 'Proveedor'))
-                    WHEN p.idventa IS NOT NULL THEN 
-                        CONCAT('Venta #', COALESCE(v.nro_venta, p.idventa), ' - ', 
-                               COALESCE(CONCAT(cli.nombre, ' ', cli.apellido), 'Cliente'))
-                    WHEN p.idsueldotemp IS NOT NULL THEN 
-                        CONCAT('Sueldo temporal #', p.idsueldotemp)
-                    ELSE 'Pago general'
+                    WHEN p.idcompra IS NOT NULL THEN CONCAT(COALESCE(prov.nombre, ''), ' ', COALESCE(prov.apellido, ''))
+                    WHEN p.idventa IS NOT NULL THEN CONCAT(COALESCE(cli.nombre, ''), ' ', COALESCE(cli.apellido, ''))
+                    ELSE 'Otro pago'
                 END as destinatario
-                
             FROM pagos p
             LEFT JOIN personas per ON p.idpersona = per.idpersona
             LEFT JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago
@@ -358,7 +390,7 @@ class PagosModel extends Mysql
             error_log("Error en selectPagoById: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al buscar el pago: ' . $e->getMessage()
+                'message' => 'Error al obtener el pago'
             ];
         }
     }
@@ -366,29 +398,25 @@ class PagosModel extends Mysql
     public function deletePagoById(int $idpago)
     {
         try {
-            $query = "UPDATE pagos SET 
-                estatus = 'inactivo',
-                ultima_modificacion = NOW()
-            WHERE idpago = ?";
-
+            $query = "UPDATE pagos SET estatus = 'inactivo' WHERE idpago = ? AND estatus = 'activo'";
             $result = $this->update($query, [$idpago]);
 
-            if ($result > 0) {
+            if ($result) {
                 return [
                     'status' => true,
-                    'message' => 'Pago desactivado exitosamente'
+                    'message' => 'Pago eliminado exitosamente'
                 ];
             } else {
                 return [
                     'status' => false,
-                    'message' => 'No se encontró el pago o ya estaba inactivo'
+                    'message' => 'No se pudo eliminar el pago'
                 ];
             }
         } catch (Exception $e) {
             error_log("Error en deletePagoById: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al desactivar el pago: ' . $e->getMessage()
+                'message' => 'Error interno del servidor'
             ];
         }
     }
@@ -396,22 +424,21 @@ class PagosModel extends Mysql
     public function selectTiposPago()
     {
         try {
-            $query = "SELECT idtipo_pago, nombre 
+            $query = "SELECT idtipo_pago, nombre
                      FROM tipos_pagos 
                      WHERE estatus = 'activo' 
                      ORDER BY nombre";
-
             $result = $this->searchAll($query);
 
             return [
                 'status' => true,
-                'data' => $result ?? []
+                'data' => $result ?: []
             ];
         } catch (Exception $e) {
             error_log("Error en selectTiposPago: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al obtener tipos de pago: ' . $e->getMessage()
+                'message' => 'Error al obtener tipos de pago'
             ];
         }
     }
@@ -419,29 +446,33 @@ class PagosModel extends Mysql
     public function selectComprasPendientes()
     {
         try {
-            $query = "SELECT 
-                c.idcompra,
-                c.nro_compra,
-                c.total_general as total,
-                CONCAT(p.nombre, ' ', p.apellido) as proveedor,
-                p.identificacion as proveedor_identificacion,
-                DATE_FORMAT(c.fecha, '%d/%m/%Y') as fecha_compra_formato
-            FROM compra c
-            INNER JOIN proveedor p ON c.idproveedor = p.idproveedor
-            WHERE c.estatus_compra IN ('BORRADOR', 'POR_PAGAR', 'PAGADA') 
-            ORDER BY c.fecha DESC";
-
+            $query = "SELECT
+                            c.idcompra,
+                            c.nro_compra,
+                            c.balance, 
+                            p.nombre AS proveedor,
+                            p.identificacion AS proveedor_identificacion
+                        FROM
+                            compra c
+                        INNER JOIN
+                            proveedor p ON c.idproveedor = p.idproveedor
+                        WHERE
+                            c.estatus_compra = 'POR_PAGAR'
+                            AND c.balance > 0
+                        ORDER BY
+                            c.fecha DESC;";
+            
             $result = $this->searchAll($query);
 
             return [
                 'status' => true,
-                'data' => $result ?? []
+                'data' => $result ?: []
             ];
         } catch (Exception $e) {
             error_log("Error en selectComprasPendientes: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al obtener compras: ' . $e->getMessage()
+                'message' => 'Error al obtener compras pendientes'
             ];
         }
     }
@@ -452,26 +483,31 @@ class PagosModel extends Mysql
             $query = "SELECT 
                 v.idventa,
                 v.nro_venta,
-                v.total_general as total,
-                CONCAT(c.nombre, ' ', c.apellido) as cliente,
-                c.cedula as cliente_identificacion,
-                DATE_FORMAT(v.fecha_venta, '%d/%m/%Y') as fecha_venta_formato
-            FROM venta v
-            INNER JOIN cliente c ON v.idcliente = c.idcliente
-            WHERE v.estatus = 'activo' 
-            ORDER BY v.fecha_venta DESC";
-
+                v.total,
+                c.nombre as cliente,
+                c.cedula as cliente_identificacion
+                FROM venta v
+                INNER JOIN cliente c ON v.idcliente = c.idcliente
+                WHERE v.estatus = 'activo'
+                AND v.idventa NOT IN (
+                    SELECT pg.idventa 
+                    FROM pagos pg 
+                    WHERE pg.idventa IS NOT NULL 
+                    AND pg.estatus IN ('activo', 'conciliado')
+                )
+                ORDER BY v.fecha_venta DESC";
+            
             $result = $this->searchAll($query);
 
             return [
                 'status' => true,
-                'data' => $result ?? []
+                'data' => $result ?: []
             ];
         } catch (Exception $e) {
             error_log("Error en selectVentasPendientes: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al obtener ventas: ' . $e->getMessage()
+                'message' => 'Error al obtener ventas pendientes'
             ];
         }
     }
@@ -481,25 +517,31 @@ class PagosModel extends Mysql
         try {
             $query = "SELECT 
                 st.idsueldotemp,
-                st.sueldo as total,
-                'Empleado pendiente' as empleado,
-                'Sin ID' as empleado_identificacion,
-                DATE_FORMAT(st.fecha_creacion, '%m/%Y') as periodo
-            FROM sueldos_temporales st
-            WHERE st.estatus = 'activo'
-            ORDER BY st.fecha_creacion DESC";
-
+                st.descripcion as empleado,
+                st.monto as total,
+                st.periodo,
+                '' as empleado_identificacion
+                FROM sueldos_temporales st
+                WHERE st.estatus = 'activo'
+                AND st.idsueldotemp NOT IN (
+                    SELECT pg.idsueldotemp 
+                    FROM pagos pg 
+                    WHERE pg.idsueldotemp IS NOT NULL 
+                    AND pg.estatus IN ('activo', 'conciliado')
+                )
+                ORDER BY st.fecha_creacion DESC";
+            
             $result = $this->searchAll($query);
 
             return [
                 'status' => true,
-                'data' => $result ?? []
+                'data' => $result ?: []
             ];
         } catch (Exception $e) {
             error_log("Error en selectSueldosPendientes: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al obtener sueldos: ' . $e->getMessage()
+                'message' => 'Error al obtener sueldos pendientes'
             ];
         }
     }
@@ -508,32 +550,28 @@ class PagosModel extends Mysql
     {
         try {
             // Verificar que el pago existe y está activo
-            $queryCheck = "SELECT idpago, estatus FROM pagos WHERE idpago = ?";
-            $pago = $this->search($queryCheck, [$idpago]);
-            
-            if (empty($pago)) {
+            $pagoExistente = $this->selectPagoById($idpago);
+            if (!$pagoExistente['status'] || !$pagoExistente['data']) {
                 return [
                     'status' => false,
-                    'message' => 'Pago no encontrado'
+                    'message' => 'El pago no existe'
                 ];
             }
-            
-            if ($pago['estatus'] !== 'activo') {
-                return [
-                    'status' => false,
-                    'message' => 'El pago no está activo y no se puede conciliar'
-                ];
-            }
-            
-            // Actualizar el estatus a conciliado
-            $query = "UPDATE pagos SET 
-                estatus = 'conciliado',
-                ultima_modificacion = NOW()
-            WHERE idpago = ?";
 
+            if (strtolower($pagoExistente['data']['estatus']) !== 'activo') {
+                return [
+                    'status' => false,
+                    'message' => 'Solo se pueden conciliar pagos con estatus activo'
+                ];
+            }
+
+            $query = "UPDATE pagos SET 
+                     estatus = 'conciliado'
+                     WHERE idpago = ? AND estatus = 'activo'";
+            
             $result = $this->update($query, [$idpago]);
 
-            if ($result > 0) {
+            if ($result) {
                 return [
                     'status' => true,
                     'message' => 'Pago conciliado exitosamente'
@@ -548,7 +586,7 @@ class PagosModel extends Mysql
             error_log("Error en conciliarPago: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al conciliar el pago: ' . $e->getMessage()
+                'message' => 'Error interno del servidor'
             ];
         }
     }

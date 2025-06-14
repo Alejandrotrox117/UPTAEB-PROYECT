@@ -119,6 +119,16 @@ class Pagos extends Controllers
 
             $idpago = intval($request['idpago']);
 
+            // Verificar que el pago existe y está activo
+            $pagoExistente = $this->model->selectPagoById($idpago);
+            if (!$pagoExistente['status'] || !$pagoExistente['data']) {
+                throw new Exception('El pago no existe');
+            }
+
+            if (strtolower($pagoExistente['data']['estatus']) !== 'activo') {
+                throw new Exception('Solo se pueden editar pagos con estatus activo');
+            }
+
             // Debug: Log de datos recibidos
             error_log("Datos recibidos en updatePago: " . print_r($request, true));
 
@@ -142,6 +152,19 @@ class Pagos extends Controllers
             ];
 
             $resultado = $this->model->updatePago($idpago, $arrData);
+            
+            // Registrar en bitácora si se actualizó exitosamente
+            if ($resultado['status'] && class_exists('BitacoraHelper')) {
+                $idusuario = $this->obtenerUsuarioSesion();
+                $this->bitacoraModel->registrarAccion(
+                    $idusuario,
+                    'pago',
+                    'actualizar',
+                    "Pago ID: $idpago actualizado",
+                    json_encode($arrData)
+                );
+            }
+
             echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
 
         } catch (Exception $e) {
@@ -181,12 +204,11 @@ class Pagos extends Controllers
             // Registrar en bitácora si se concilió exitosamente
             if ($resultado['status'] && class_exists('BitacoraHelper')) {
                 $this->bitacoraModel->registrarAccion(
-                    'conciliar_pago',
-                    'pagos',
-                    $idpago,
                     $idusuario,
-                    $this->bitacoraModel,
-                    "Pago conciliado por usuario ID: $idusuario"
+                    'pago',
+                    'conciliar',
+                    "Pago ID: $idpago conciliado",
+                    json_encode(['idpago' => $idpago])
                 );
             }
 
@@ -256,7 +278,31 @@ class Pagos extends Controllers
                 }
 
                 $idpago = intval($request['idpago']);
+                
+                // Verificar que el pago existe y está activo
+                $pagoExistente = $this->model->selectPagoById($idpago);
+                if (!$pagoExistente['status'] || !$pagoExistente['data']) {
+                    throw new Exception('El pago no existe');
+                }
+
+                if (strtolower($pagoExistente['data']['estatus']) !== 'activo') {
+                    throw new Exception('Solo se pueden eliminar pagos con estatus activo');
+                }
+
                 $resultado = $this->model->deletePagoById($idpago);
+                
+                // Registrar en bitácora si se eliminó exitosamente
+                if ($resultado['status'] && class_exists('BitacoraHelper')) {
+                    $idusuario = $this->obtenerUsuarioSesion();
+                    $this->bitacoraModel->registrarAccion(
+                        $idusuario,
+                        'pago',
+                        'eliminar',
+                        "Pago ID: $idpago eliminado",
+                        json_encode(['idpago' => $idpago])
+                    );
+                }
+
                 echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
 
             } catch (Exception $e) {
@@ -298,7 +344,7 @@ class Pagos extends Controllers
                 error_log("Error en getComprasPendientes: " . $e->getMessage());
                 echo json_encode([
                     'status' => false,
-                    'message' => 'Error al obtener compras'
+                    'message' => 'Error al obtener compras pendientes'
                 ], JSON_UNESCAPED_UNICODE);
             }
             die();
@@ -315,7 +361,7 @@ class Pagos extends Controllers
                 error_log("Error en getVentasPendientes: " . $e->getMessage());
                 echo json_encode([
                     'status' => false,
-                    'message' => 'Error al obtener ventas'
+                    'message' => 'Error al obtener ventas pendientes'
                 ], JSON_UNESCAPED_UNICODE);
             }
             die();
@@ -332,7 +378,7 @@ class Pagos extends Controllers
                 error_log("Error en getSueldosPendientes: " . $e->getMessage());
                 echo json_encode([
                     'status' => false,
-                    'message' => 'Error al obtener sueldos'
+                    'message' => 'Error al obtener sueldos pendientes'
                 ], JSON_UNESCAPED_UNICODE);
             }
             die();
@@ -376,28 +422,28 @@ class Pagos extends Controllers
                     throw new Exception('Debe seleccionar una compra');
                 }
                 break;
-            
+                
             case 'venta':
                 $datosLimpios['idventa'] = intval($request['idventa'] ?? 0);
                 if (empty($datosLimpios['idventa'])) {
                     throw new Exception('Debe seleccionar una venta');
                 }
                 break;
-            
+                
             case 'sueldo':
                 $datosLimpios['idsueldotemp'] = intval($request['idsueldotemp'] ?? 0);
                 if (empty($datosLimpios['idsueldotemp'])) {
                     throw new Exception('Debe seleccionar un sueldo');
                 }
                 break;
-            
+                
             case 'otro':
                 $datosLimpios['descripcion'] = trim($request['descripcion'] ?? '');
                 if (empty($datosLimpios['descripcion'])) {
                     throw new Exception('La descripción es obligatoria para otros pagos');
                 }
                 break;
-            
+                
             default:
                 throw new Exception('Tipo de pago no válido');
         }
@@ -409,20 +455,32 @@ class Pagos extends Controllers
     {
         switch ($datos['tipo_pago']) {
             case 'compra':
-                return $this->model->getInfoCompra($datos['idcompra']);
-            
+                if (!empty($datos['idcompra'])) {
+                    return $this->model->getInfoCompra($datos['idcompra']);
+                }
+                break;
+                
             case 'venta':
-                return $this->model->getInfoVenta($datos['idventa']);
-            
+                if (!empty($datos['idventa'])) {
+                    return $this->model->getInfoVenta($datos['idventa']);
+                }
+                break;
+                
             case 'sueldo':
-                return $this->model->getInfoSueldo($datos['idsueldotemp']);
-            
+                if (!empty($datos['idsueldotemp'])) {
+                    return $this->model->getInfoSueldo($datos['idsueldotemp']);
+                }
+                break;
+                
             case 'otro':
-                return ['idpersona' => null]; // Para otros pagos
-            
+                // Para tipo "otro" no hay destinatario específico
+                return ['idpersona' => null];
+                
             default:
                 return ['idpersona' => null];
         }
+        
+        return ['idpersona' => null];
     }
 
     private function obtenerUsuarioSesion()

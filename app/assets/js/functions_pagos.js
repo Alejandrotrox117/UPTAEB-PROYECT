@@ -11,6 +11,7 @@ import {
 
 let tablaPagos;
 let tiposPago = [];
+let pagoEditando = null; // Variable para rastrear si estamos editando
 
 // Configuración de campos para validación
 const camposFormularioPago = [
@@ -235,6 +236,11 @@ function inicializarTablaPagos() {
           `;
           if (row.estatus === "activo") {
             buttons += `
+              <button onclick="editarPago(${row.idpago})" 
+                      class="text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
+                      title="Editar">
+                <i class="fas fa-edit fa-fw text-base"></i>
+              </button>
               <button onclick="conciliarPago(${row.idpago}, '${row.destinatario}')" 
                       class="text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
                       title="Conciliar">
@@ -433,7 +439,11 @@ function configurarEventos() {
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function(e) {
       e.preventDefault();
-      registrarPago();
+      if (pagoEditando) {
+        actualizarPago();
+      } else {
+        registrarPago();
+      }
     });
   }
 
@@ -466,11 +476,17 @@ function obtenerCamposDinamicos() {
 }
 
 function abrirModalRegistro() {
+  pagoEditando = null; // Resetear modo edición
   resetearFormulario();
   limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
   configurarEventosTipoPago();
   establecerFechaActual();
   cargarMetodosPago();
+  
+  // Configurar modal para registro
+  document.getElementById("tituloModalRegistrar").textContent = "Registrar Pago";
+  document.getElementById("btnGuardarPago").innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Guardar Pago';
+  
   abrirModal("modalRegistrarPago");
 }
 
@@ -559,9 +575,11 @@ function manejarCambioTipoPago(tipoPago) {
     if (element) element.classList.add('hidden');
   });
   
-  // Limpiar monto
-  const montoInput = document.getElementById("pagoMonto");
-  if (montoInput) montoInput.value = "";
+  // Limpiar monto solo si no estamos editando
+  if (!pagoEditando) {
+    const montoInput = document.getElementById("pagoMonto");
+    if (montoInput) montoInput.value = "";
+  }
   
   switch(tipoPago) {
     case 'compra':
@@ -600,10 +618,10 @@ function cargarComprasPendientes() {
         result.data.forEach(compra => {
           const option = document.createElement('option');
           option.value = compra.idcompra;
-          option.textContent = `#${compra.nro_compra} - ${compra.proveedor} - $${compra.total}`;
+          option.textContent = `#${compra.nro_compra} - ${compra.proveedor} - Bs. ${compra.balance}`;
           option.dataset.proveedor = compra.proveedor;
           option.dataset.identificacion = compra.proveedor_identificacion;
-          option.dataset.total = compra.total;
+          option.dataset.total = compra.balance;
           select.appendChild(option);
         });
         
@@ -615,7 +633,9 @@ function cargarComprasPendientes() {
               option.dataset.identificacion,
               option.dataset.total
             );
-            document.getElementById('pagoMonto').value = option.dataset.total;
+            if (!pagoEditando) {
+              document.getElementById('pagoMonto').value = option.dataset.total;
+            }
           } else {
             ocultarInformacionDestinatario();
           }
@@ -658,7 +678,9 @@ function cargarVentasPendientes() {
               option.dataset.identificacion,
               option.dataset.total
             );
-            document.getElementById('pagoMonto').value = option.dataset.total;
+            if (!pagoEditando) {
+              document.getElementById('pagoMonto').value = option.dataset.total;
+            }
           } else {
             ocultarInformacionDestinatario();
           }
@@ -701,7 +723,9 @@ function cargarSueldosPendientes() {
               option.dataset.identificacion,
               option.dataset.total
             );
-            document.getElementById('pagoMonto').value = option.dataset.total;
+            if (!pagoEditando) {
+              document.getElementById('pagoMonto').value = option.dataset.total;
+            }
           } else {
             ocultarInformacionDestinatario();
           }
@@ -730,15 +754,13 @@ function mostrarInformacionDestinatario(nombre, identificacion, total) {
 
 function ocultarInformacionDestinatario() {
   const containerEl = document.getElementById('containerDestinatario');
-  const montoEl = document.getElementById('pagoMonto');
   
   if (containerEl) containerEl.classList.add('hidden');
-  if (montoEl) montoEl.value = '';
 }
 
 function establecerFechaActual() {
   const fechaEl = document.getElementById('pagoFecha');
-  if (fechaEl) {
+  if (fechaEl && !pagoEditando) {
     const hoy = new Date().toISOString().split('T')[0];
     fechaEl.value = hoy;
   }
@@ -861,6 +883,146 @@ function registrarPago() {
   });
 }
 
+function actualizarPago() {
+  const btnGuardar = document.getElementById("btnGuardarPago");
+  
+  if (!pagoEditando) {
+    mostrarNotificacion('Error: No se está editando ningún pago', 'error');
+    return;
+  }
+
+  // Obtener tipo de pago seleccionado
+  const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value;
+  
+  if (!tipoPago) {
+    mostrarNotificacion('Debe seleccionar un tipo de pago', 'warning');
+    return;
+  }
+
+  // Obtener campos completos (básicos + dinámicos)
+  const camposCompletos = [...camposFormularioPago, ...obtenerCamposDinamicos()];
+
+  // Validar todos los campos
+  if (!validarCamposVacios(camposCompletos, "formRegistrarPago")) {
+    return;
+  }
+
+  // Validar formatos específicos
+  let formularioConErrores = false;
+  for (const campo of camposCompletos) {
+    const inputElement = document.getElementById(campo.id);
+    if (!inputElement || inputElement.offsetParent === null) continue;
+
+    let esValido = true;
+    
+    if (campo.tipo === "select") {
+      esValido = validarSelect(inputElement, campo.mensajes, "formRegistrarPago");
+    } else if (campo.tipo === "fecha") {
+      esValido = validarFecha(inputElement, campo.mensajes);
+    } else if (campo.tipo === "radio") {
+      continue;
+    } else if (["input", "textarea"].includes(campo.tipo) && campo.regex) {
+      const valor = inputElement.value.trim();
+      if (valor !== "" && !campo.regex.test(valor)) {
+        const errorDiv = inputElement.nextElementSibling;
+        if (errorDiv && campo.mensajes.formato) {
+          errorDiv.textContent = campo.mensajes.formato;
+          errorDiv.classList.remove("hidden");
+        }
+        inputElement.classList.add("border-red-500", "focus:ring-red-500");
+        esValido = false;
+      }
+    }
+    
+    if (!esValido) formularioConErrores = true;
+  }
+
+  if (formularioConErrores) {
+    mostrarNotificacion('Por favor, corrija los campos marcados en rojo', 'warning');
+    return;
+  }
+
+  // Deshabilitar botón y mostrar loading
+  if (btnGuardar) {
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Actualizando...';
+  }
+
+  // Preparar datos para envío
+  const formData = new FormData(document.getElementById("formRegistrarPago"));
+  const data = {};
+  
+  // Agregar ID del pago
+  data.idpago = pagoEditando.idpago;
+  
+  // Mapear campos del formulario
+  const mapeoNombres = {
+    "tipoPago": "tipo_pago",
+    "pagoCompra": "idcompra",
+    "pagoVenta": "idventa", 
+    "pagoSueldo": "idsueldotemp",
+    "pagoDescripcion": "descripcion",
+    "pagoMonto": "monto",
+    "pagoMetodoPago": "idtipo_pago",
+    "pagoReferencia": "referencia",
+    "pagoFecha": "fecha_pago",
+    "pagoObservaciones": "observaciones"
+  };
+
+  // Obtener valores del formulario
+  for (const [formKey, dataKey] of Object.entries(mapeoNombres)) {
+    const element = document.getElementById(formKey) || document.querySelector(`input[name="${formKey}"]:checked`);
+    if (element) {
+      data[dataKey] = element.value || '';
+    }
+  }
+
+  // Realizar petición de actualización
+  fetch("Pagos/updatePago", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (result.status) {
+        Swal.fire({
+          title: '¡Éxito!',
+          text: result.message || 'Pago actualizado exitosamente',
+          icon: 'success',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#10B981'
+        }).then(() => {
+          limpiarValidaciones(camposCompletos, "formRegistrarPago");
+          cerrarModal('modalRegistrarPago');
+          tablaPagos.ajax.reload();
+          pagoEditando = null; // Resetear modo edición
+        });
+      } else {
+        Swal.fire({
+          title: '¡Error!',
+          text: result.message || 'Error al actualizar el pago',
+          icon: 'error',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#EF4444'
+        });
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      mostrarNotificacion('Error de conexión al actualizar', 'error');
+    })
+    .finally(() => {
+      // Restaurar botón
+      if (btnGuardar) {
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Pago';
+      }
+    });
+}
+
 // Función para mostrar notificaciones (compatible con tu sistema)
 function mostrarNotificacion(mensaje, tipo) {
   // Si existe Swal, usarlo
@@ -911,6 +1073,92 @@ window.verPago = function(idPago) {
       mostrarNotificacion('Error de conexión al obtener el pago', 'error');
     });
 };
+
+window.editarPago = function(idPago) {
+  // Obtener datos del pago
+  fetch(`Pagos/getPagoById/${idPago}`)
+    .then(response => response.json())
+    .then(result => {
+      if (result.status && result.data) {
+        abrirModalEdicion(result.data);
+      } else {
+        mostrarNotificacion(result.message || 'Error al obtener el pago', 'error');
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      mostrarNotificacion('Error de conexión al obtener el pago', 'error');
+    });
+};
+
+function abrirModalEdicion(pago) {
+  pagoEditando = pago; // Guardar datos del pago en edición
+  
+  // Resetear y configurar formulario
+  resetearFormulario();
+  limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
+  
+  // Configurar modal para edición
+  document.getElementById("tituloModalRegistrar").textContent = "Editar Pago";
+  document.getElementById("btnGuardarPago").innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Pago';
+  
+  // Cargar métodos de pago primero
+  cargarMetodosPago().then(() => {
+    // Llenar datos del formulario
+    llenarFormularioEdicion(pago);
+  });
+  
+  configurarEventosTipoPago();
+  abrirModal("modalRegistrarPago");
+}
+
+function llenarFormularioEdicion(pago) {
+  // Determinar tipo de pago
+  let tipoPago = 'otro'; // por defecto
+  if (pago.idcompra) tipoPago = 'compra';
+  else if (pago.idventa) tipoPago = 'venta';
+  else if (pago.idsueldotemp) tipoPago = 'sueldo';
+  
+  // Seleccionar tipo de pago
+  const radioTipo = document.querySelector(`input[name="tipoPago"][value="${tipoPago}"]`);
+  if (radioTipo) {
+    radioTipo.checked = true;
+    manejarCambioTipoPago(tipoPago);
+  }
+  
+  // Llenar campos básicos
+  setTimeout(() => {
+    document.getElementById('pagoMonto').value = pago.monto || '';
+    document.getElementById('pagoMetodoPago').value = pago.idtipo_pago || '';
+    document.getElementById('pagoReferencia').value = pago.referencia || '';
+    document.getElementById('pagoFecha').value = pago.fecha_pago || '';
+    document.getElementById('pagoObservaciones').value = pago.observaciones || '';
+    
+    // Llenar campos específicos según el tipo
+    setTimeout(() => {
+      if (tipoPago === 'compra' && pago.idcompra) {
+        cargarComprasPendientes().then(() => {
+          document.getElementById('pagoCompra').value = pago.idcompra;
+          // Disparar evento change para mostrar info del destinatario
+          document.getElementById('pagoCompra').dispatchEvent(new Event('change'));
+        });
+      } else if (tipoPago === 'venta' && pago.idventa) {
+        cargarVentasPendientes().then(() => {
+          document.getElementById('pagoVenta').value = pago.idventa;
+          document.getElementById('pagoVenta').dispatchEvent(new Event('change'));
+        });
+      } else if (tipoPago === 'sueldo' && pago.idsueldotemp) {
+        cargarSueldosPendientes().then(() => {
+          document.getElementById('pagoSueldo').value = pago.idsueldotemp;
+          document.getElementById('pagoSueldo').dispatchEvent(new Event('change'));
+        });
+      } else if (tipoPago === 'otro') {
+        // Para tipo "otro", no hay descripción en la base de datos actual
+        // Se podría agregar un campo descripcion en el futuro
+      }
+    }, 300);
+  }, 100);
+}
 
 window.eliminarPago = function(idPago, descripcion) {
   Swal.fire({
@@ -986,11 +1234,19 @@ function mostrarModalVerPago(pago) {
   // Aplicar badge de estatus
   const estatusEl = document.getElementById('verPagoEstatus');
   if (estatusEl && pago.estatus) {
-    if (pago.estatus === 'activo') {
-      estatusEl.className = 'inline-flex px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full';
+    const status = pago.estatus.toLowerCase();
+
+    if (status === 'activo') {
+      estatusEl.className =
+        'inline-flex px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full';
       estatusEl.textContent = 'ACTIVO';
+    } else if (status === 'conciliado') {
+      estatusEl.className =
+        'inline-flex px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full';
+      estatusEl.textContent = 'CONCILIADO';
     } else {
-      estatusEl.className = 'inline-flex px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full';
+      estatusEl.className =
+        'inline-flex px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full';
       estatusEl.textContent = 'INACTIVO';
     }
   }
