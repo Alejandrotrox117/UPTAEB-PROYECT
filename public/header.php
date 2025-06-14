@@ -60,12 +60,12 @@
 
           <!-- Acceso directo a Romana -->
           <?php if (PermisosVerificar::verificarPermisoAccion('romana', 'ver')): ?>
-          <li class="menu-item">
+          <!-- <li class="menu-item">
             <a href="/project/romana" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
               <i class="nav-icon fa-solid fa-weight-scale w-5 text-center text-gray-500 group-hover:text-green-600"></i>
               <span class="nav-text ml-3 font-medium">Romana</span>
             </a>
-          </li>
+          </li> -->
           <?php endif; ?>
 
           <!-- Gestionar Compras -->

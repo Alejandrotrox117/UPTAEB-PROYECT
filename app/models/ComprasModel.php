@@ -337,7 +337,7 @@ class ComprasModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            $this->setQuery("SELECT idmoneda, codigo_moneda, valor FROM monedas WHERE estado = 'activo'");
+            $this->setQuery("SELECT idmoneda, codigo_moneda, valor FROM monedas WHERE estatus = 'activo'");
             
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();

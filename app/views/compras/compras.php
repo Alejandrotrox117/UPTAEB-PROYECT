@@ -60,12 +60,12 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
                     <label for="fecha_compra_modal" class="block text-sm font-medium text-gray-700 mb-1">Fecha Compra <span class="text-red-500">*</span></label>
-                    <input type="date" id="fecha_compra_modal" name="fecha_compra" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                    <input type="date" id="fecha_compra_modal" name="fecha_compra" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" >
                     <div id="tasaDelDiaInfo" class="text-xs text-blue-700 font-semibold my-2"></div>
                 </div>
                 <div>
-                    <label for="idmoneda_general_compra_modal" class="hidden block text-sm font-medium text-gray-700 mb-1">Moneda General <span class="text-red-500">*</span></label>
-                    <select id="idmoneda_general_compra_modal" name="idmoneda_general_compra" class="hidden w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                    <label for="idmoneda_general_compra_modal" class="hidden text-sm font-medium text-gray-700 mb-1">Moneda General <span class="text-red-500">*</span></label>
+                    <select id="idmoneda_general_compra_modal" name="idmoneda_general_compra" class="hidden w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" >
                         <option value="">Cargando...</option>
                     </select>
                 </div>

@@ -1299,6 +1299,7 @@ document.addEventListener("DOMContentLoaded", function () {
             data.message || "Error al guardar.";
         }
       } catch (error) {
+        console.log(detalleCompraItemsModal);
         console.error("Error al guardar compra:", error);
         Swal.fire("Error", "Ocurrió un error de conexión al guardar.", "error");
         mensajeErrorFormCompraModal.textContent =
