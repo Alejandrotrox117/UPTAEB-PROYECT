@@ -351,7 +351,7 @@
 
     <!-- Dropdown de notificaciones -->
     <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
-    <div id="notifications-dropdown" class="fixed top-16 right-4 lg:top-20 lg:right-auto lg:left-72 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
+    <div id="notifications-dropdown" class="fixed top-10 right-4 lg:top-10 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
         <h3 class="text-lg font-semibold text-gray-900">
           <i class="fas fa-bell mr-2 text-green-600"></i>
