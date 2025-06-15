@@ -76,12 +76,12 @@
         </div>
         <div>
           <label
-            for="filtro_tipo_pago"
+            for="filtro_tipo_pago_ingresos"
             class="text-sm font-medium text-gray-700"
             >Tipo de Pago:</label
           >
           <select
-            id="filtro_tipo_pago"
+            id="filtro_tipo_pago_ingresos"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           >
             <option value="">Todos</option>
@@ -102,10 +102,23 @@
 
     <!-- Columna de Egresos -->
     <div class="bg-white p-6 rounded-lg shadow">
-      <h2 class="text-xl font-semibold mb-4">
-        Reporte de Egresos (Conciliados)
-      </h2>
-      <div class="flex flex-wrap gap-4 mb-4 items-center">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Reporte de Egresos (Conciliados)</h2>
+        <button
+          id="btnDescargarEgresos"
+          class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded inline-flex items-center text-sm"
+        >
+          <svg
+            class="fill-current w-4 h-4 mr-2"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+          >
+            <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
+          </svg>
+          <span>Descargar PDF</span>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 items-end">
         <div>
           <label
             for="fecha_desde_egresos"
@@ -129,6 +142,40 @@
             id="fecha_hasta_egresos"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
+        </div>
+        <div>
+          <label
+            for="filtro_tipo_pago_egresos"
+            class="text-sm font-medium text-gray-700"
+            >Tipo de Pago:</label
+          >
+          <select
+            id="filtro_tipo_pago_egresos"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos</option>
+            <?php foreach ($data['tipos_pago'] as $tipo): ?>
+            <option value="<?php echo $tipo['idtipo_pago']; ?>">
+              <?php echo $tipo['nombre']; ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div>
+          <label
+            for="filtro_tipo_egreso"
+            class="text-sm font-medium text-gray-700"
+            >Tipo de Egreso:</label
+          >
+          <select
+            id="filtro_tipo_egreso"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos</option>
+            <?php foreach ($data['tipos_egreso'] as $tipo): ?>
+            <option value="<?php echo $tipo; ?>"><?php echo $tipo; ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
       </div>
       <div id="error-egresos" class="text-red-600 text-sm mb-2"></div>

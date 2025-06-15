@@ -50,15 +50,23 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("fecha_hasta_ingresos")
     .addEventListener("change", cargarDatosDashboard);
   document
-    .getElementById("filtro_tipo_pago")
+    .getElementById("filtro_tipo_pago_ingresos")
     .addEventListener("change", cargarDatosDashboard);
+
   document
     .getElementById("fecha_desde_egresos")
     .addEventListener("change", cargarDatosDashboard);
   document
     .getElementById("fecha_hasta_egresos")
     .addEventListener("change", cargarDatosDashboard);
+  document
+    .getElementById("filtro_tipo_pago_egresos")
+    .addEventListener("change", cargarDatosDashboard);
+  document
+    .getElementById("filtro_tipo_egreso")
+    .addEventListener("change", cargarDatosDashboard);
 
+  // Listener para descarga de INGRESOS
   document
     .getElementById("btnDescargarIngresos")
     .addEventListener("click", function () {
@@ -67,12 +75,34 @@ document.addEventListener("DOMContentLoaded", function () {
         "fecha_hasta_ingresos",
         "error-ingresos"
       );
-
       if (esValido) {
         const fecha_desde = document.getElementById("fecha_desde_ingresos").value;
         const fecha_hasta = document.getElementById("fecha_hasta_ingresos").value;
-        const idtipo_pago = document.getElementById("filtro_tipo_pago").value;
+        const idtipo_pago = document.getElementById(
+          "filtro_tipo_pago_ingresos"
+        ).value;
         const url = `dashboard/descargarIngresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}&idtipo_pago=${idtipo_pago}`;
+        window.open(url, "_blank");
+      }
+    });
+
+  // Listener para descarga de EGRESOS
+  document
+    .getElementById("btnDescargarEgresos")
+    .addEventListener("click", function () {
+      const esValido = validarRangoFechas(
+        "fecha_desde_egresos",
+        "fecha_hasta_egresos",
+        "error-egresos"
+      );
+      if (esValido) {
+        const fecha_desde = document.getElementById("fecha_desde_egresos").value;
+        const fecha_hasta = document.getElementById("fecha_hasta_egresos").value;
+        const idtipo_pago = document.getElementById(
+          "filtro_tipo_pago_egresos"
+        ).value;
+        const tipo_egreso = document.getElementById("filtro_tipo_egreso").value;
+        const url = `dashboard/descargarEgresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}&idtipo_pago=${idtipo_pago}&tipo_egreso=${tipo_egreso}`;
         window.open(url, "_blank");
       }
     });
@@ -101,15 +131,32 @@ function cargarDatosDashboard() {
   const fecha_hasta_ingresos = document.getElementById(
     "fecha_hasta_ingresos"
   ).value;
-  const idtipo_pago = document.getElementById("filtro_tipo_pago").value;
+  const idtipo_pago_ingresos = document.getElementById(
+    "filtro_tipo_pago_ingresos"
+  ).value;
+
   const fecha_desde_egresos = document.getElementById(
     "fecha_desde_egresos"
   ).value;
   const fecha_hasta_egresos = document.getElementById(
     "fecha_hasta_egresos"
   ).value;
+  const idtipo_pago_egresos = document.getElementById(
+    "filtro_tipo_pago_egresos"
+  ).value;
+  const tipo_egreso = document.getElementById("filtro_tipo_egreso").value;
 
-  const url = `dashboard/getDashboardData?fecha_desde_ingresos=${fecha_desde_ingresos}&fecha_hasta_ingresos=${fecha_hasta_ingresos}&idtipo_pago=${idtipo_pago}&fecha_desde_egresos=${fecha_desde_egresos}&fecha_hasta_egresos=${fecha_hasta_egresos}`;
+  const params = new URLSearchParams({
+    fecha_desde_ingresos,
+    fecha_hasta_ingresos,
+    idtipo_pago_ingresos,
+    fecha_desde_egresos,
+    fecha_hasta_egresos,
+    idtipo_pago_egresos,
+    tipo_egreso,
+  });
+
+  const url = `dashboard/getDashboardData?${params.toString()}`;
 
   fetch(url)
     .then((response) => {
@@ -200,7 +247,7 @@ function renderizarGraficoIngresos(datos) {
     totalIngresos.toLocaleString("es-VE", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    });
+    }) + " Bs.";
   const ctx = document.getElementById("graficoIngresos").getContext("2d");
   if (graficoIngresos) {
     graficoIngresos.destroy();
@@ -242,7 +289,7 @@ function renderizarGraficoEgresos(datos) {
     totalEgresos.toLocaleString("es-VE", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    });
+    }) + " Bs.";
   const ctx = document.getElementById("graficoEgresos").getContext("2d");
   if (graficoEgresos) {
     graficoEgresos.destroy();
