@@ -30,6 +30,7 @@ class ComposerStaticInitf78dd311a332ffb6d5b7c3808e50ac7f
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'FPDF' => __DIR__ . '/..' . '/setasign/fpdf/fpdf.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

@@ -3,38 +3,30 @@ let graficoVentasMensuales;
 let graficoIngresos;
 let graficoEgresos;
 
-/**
- * Valida un par de campos de fecha.
- * Muestra/oculta un mensaje de error y devuelve true si es válido, false si no.
- */
 function validarRangoFechas(idDesde, idHasta, idErrorContainer) {
   const fechaDesdeInput = document.getElementById(idDesde);
   const fechaHastaInput = document.getElementById(idHasta);
   const errorContainer = document.getElementById(idErrorContainer);
-
   const fechaDesde = fechaDesdeInput.value;
   const fechaHasta = fechaHastaInput.value;
 
-  // Solo valida si ambas fechas están presentes
   if (fechaDesde && fechaHasta) {
     if (fechaDesde > fechaHasta) {
       errorContainer.textContent =
         "La fecha 'Desde' no puede ser posterior a la fecha 'Hasta'.";
       fechaDesdeInput.classList.add("border-red-500");
       fechaHastaInput.classList.add("border-red-500");
-      return false; // Rango inválido
+      return false;
     }
   }
 
-  // Si el rango es válido o no está completo, limpia el error
   errorContainer.textContent = "";
   fechaDesdeInput.classList.remove("border-red-500");
   fechaHastaInput.classList.remove("border-red-500");
-  return true; // Rango válido
+  return true;
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Establecer fechas por defecto en los inputs (mes actual)
   const hoy = new Date();
   const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
     .toISOString()
@@ -48,10 +40,8 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("fecha_desde_egresos").value = primerDiaMes;
   document.getElementById("fecha_hasta_egresos").value = ultimoDiaMes;
 
-  // Cargar datos iniciales
   cargarDatosDashboard();
 
-  // Añadir event listeners a los filtros de fecha para recargar los datos
   document
     .getElementById("fecha_desde_ingresos")
     .addEventListener("change", cargarDatosDashboard);
@@ -64,10 +54,29 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("fecha_hasta_egresos")
     .addEventListener("change", cargarDatosDashboard);
+
+  // NUEVO: Event listener para el botón de descarga
+  document
+    .getElementById("btnDescargarIngresos")
+    .addEventListener("click", function () {
+      // Primero, validar el rango de fechas de ingresos
+      const esValido = validarRangoFechas(
+        "fecha_desde_ingresos",
+        "fecha_hasta_ingresos",
+        "error-ingresos"
+      );
+
+      if (esValido) {
+        const fecha_desde = document.getElementById("fecha_desde_ingresos").value;
+        const fecha_hasta = document.getElementById("fecha_hasta_ingresos").value;
+        const url = `dashboard/descargarIngresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}`;
+        // Abrir la URL en una nueva pestaña para iniciar la descarga
+        window.open(url, "_blank");
+      }
+    });
 });
 
 function cargarDatosDashboard() {
-  // Validar los rangos de fecha antes de hacer la petición
   const esRangoIngresosValido = validarRangoFechas(
     "fecha_desde_ingresos",
     "fecha_hasta_ingresos",
@@ -79,12 +88,10 @@ function cargarDatosDashboard() {
     "error-egresos"
   );
 
-  // Si alguno de los rangos es inválido, no se hace la petición al servidor.
   if (!esRangoIngresosValido || !esRangoEgresosValido) {
     return;
   }
 
-  // Recoger las fechas de los filtros
   const fecha_desde_ingresos = document.getElementById(
     "fecha_desde_ingresos"
   ).value;
