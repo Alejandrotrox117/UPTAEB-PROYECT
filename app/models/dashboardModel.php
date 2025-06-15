@@ -14,23 +14,20 @@ class DashboardModel
         $this->db = $conexion->get_conectGeneral();
         $this->dbSeguridad = $conexion->get_conectSeguridad();
     }
+
   public function getResumen()
   {
     $sqlVentas =
       "SELECT COUNT(*) as ventas_totales FROM venta WHERE DATE(fecha_venta) = CURDATE()";
     $ventas = $this->db->query($sqlVentas)->fetch(PDO::FETCH_ASSOC);
-
     $sqlCompras =
       "SELECT COUNT(*) as compras_totales FROM compra WHERE fecha = CURDATE()";
     $compras = $this->db->query($sqlCompras)->fetch(PDO::FETCH_ASSOC);
-
     $sqlInventario = "SELECT SUM(existencia) as total_inventario FROM producto";
     $inventario = $this->db->query($sqlInventario)->fetch(PDO::FETCH_ASSOC);
-
     $sqlEmpleados =
       "SELECT COUNT(*) as empleados_activos FROM empleados WHERE estatus = 'activo'";
     $empleados = $this->db->query($sqlEmpleados)->fetch(PDO::FETCH_ASSOC);
-
     return [
       "ventas_totales" => $ventas["ventas_totales"] ?? 0,
       "compras_totales" => $compras["compras_totales"] ?? 0,
@@ -63,8 +60,11 @@ class DashboardModel
     return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
   }
 
-  public function getIngresosReporte($fecha_desde, $fecha_hasta)
-  {
+  public function getIngresosReporte(
+    $fecha_desde,
+    $fecha_hasta,
+    $idtipo_pago = null
+  ) {
     $sql = "SELECT 
                     tp.nombre AS categoria, 
                     SUM(p.monto) AS total
@@ -73,14 +73,21 @@ class DashboardModel
                 WHERE 
                     p.idventa IS NOT NULL
                     AND p.estatus = 'conciliado'
-                    AND p.fecha_pago BETWEEN :fecha_desde AND :fecha_hasta
-                GROUP BY tp.nombre
-                HAVING SUM(p.monto) > 0";
+                    AND p.fecha_pago BETWEEN :fecha_desde AND :fecha_hasta";
+
+    if (!empty($idtipo_pago)) {
+      $sql .= " AND p.idtipo_pago = :idtipo_pago";
+    }
+
+    $sql .= " GROUP BY tp.nombre HAVING SUM(p.monto) > 0";
 
     try {
       $stmt = $this->db->prepare($sql);
       $stmt->bindParam(":fecha_desde", $fecha_desde);
       $stmt->bindParam(":fecha_hasta", $fecha_hasta);
+      if (!empty($idtipo_pago)) {
+        $stmt->bindParam(":idtipo_pago", $idtipo_pago, PDO::PARAM_INT);
+      }
       $stmt->execute();
       return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
@@ -105,7 +112,6 @@ class DashboardModel
                     AND p.fecha_pago BETWEEN :fecha_desde AND :fecha_hasta
                 GROUP BY categoria
                 HAVING SUM(p.monto) > 0";
-
     try {
       $stmt = $this->db->prepare($sql);
       $stmt->bindParam(":fecha_desde", $fecha_desde);
@@ -114,6 +120,62 @@ class DashboardModel
       return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
       error_log("DashboardModel::getEgresosReporte Error: " . $e->getMessage());
+      return [];
+    }
+  }
+
+  public function getIngresosDetallados(
+    $fecha_desde,
+    $fecha_hasta,
+    $idtipo_pago = null
+  ) {
+    $sql = "SELECT 
+                    p.fecha_pago,
+                    v.nro_venta,
+                    CONCAT(c.nombre, ' ', c.apellido) AS cliente,
+                    tp.nombre AS tipo_pago,
+                    p.referencia,
+                    p.monto
+                FROM pagos p
+                JOIN venta v ON p.idventa = v.idventa
+                JOIN cliente c ON v.idcliente = c.idcliente
+                JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago
+                WHERE
+                    p.idventa IS NOT NULL
+                    AND p.estatus = 'conciliado'
+                    AND p.fecha_pago BETWEEN :fecha_desde AND :fecha_hasta";
+
+    if (!empty($idtipo_pago)) {
+      $sql .= " AND p.idtipo_pago = :idtipo_pago";
+    }
+
+    $sql .= " ORDER BY p.fecha_pago ASC";
+
+    try {
+      $stmt = $this->db->prepare($sql);
+      $stmt->bindParam(":fecha_desde", $fecha_desde);
+      $stmt->bindParam(":fecha_hasta", $fecha_hasta);
+      if (!empty($idtipo_pago)) {
+        $stmt->bindParam(":idtipo_pago", $idtipo_pago, PDO::PARAM_INT);
+      }
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log(
+        "DashboardModel::getIngresosDetallados Error: " . $e->getMessage()
+      );
+      return [];
+    }
+  }
+
+  public function getTiposDePago()
+  {
+    $sql = "SELECT idtipo_pago, nombre FROM tipos_pagos WHERE estatus = 'activo' ORDER BY nombre ASC";
+    try {
+      $stmt = $this->db->query($sql);
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+      error_log("DashboardModel::getTiposDePago Error: " . $e->getMessage());
       return [];
     }
   }

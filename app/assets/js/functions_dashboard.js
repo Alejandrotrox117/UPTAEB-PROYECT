@@ -42,11 +42,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   cargarDatosDashboard();
 
+  // Event listeners para todos los filtros
   document
     .getElementById("fecha_desde_ingresos")
     .addEventListener("change", cargarDatosDashboard);
   document
     .getElementById("fecha_hasta_ingresos")
+    .addEventListener("change", cargarDatosDashboard);
+  document
+    .getElementById("filtro_tipo_pago")
     .addEventListener("change", cargarDatosDashboard);
   document
     .getElementById("fecha_desde_egresos")
@@ -55,11 +59,9 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("fecha_hasta_egresos")
     .addEventListener("change", cargarDatosDashboard);
 
-  // NUEVO: Event listener para el botón de descarga
   document
     .getElementById("btnDescargarIngresos")
     .addEventListener("click", function () {
-      // Primero, validar el rango de fechas de ingresos
       const esValido = validarRangoFechas(
         "fecha_desde_ingresos",
         "fecha_hasta_ingresos",
@@ -69,8 +71,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (esValido) {
         const fecha_desde = document.getElementById("fecha_desde_ingresos").value;
         const fecha_hasta = document.getElementById("fecha_hasta_ingresos").value;
-        const url = `dashboard/descargarIngresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}`;
-        // Abrir la URL en una nueva pestaña para iniciar la descarga
+        const idtipo_pago = document.getElementById("filtro_tipo_pago").value;
+        const url = `dashboard/descargarIngresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}&idtipo_pago=${idtipo_pago}`;
         window.open(url, "_blank");
       }
     });
@@ -92,12 +94,14 @@ function cargarDatosDashboard() {
     return;
   }
 
+  // Recoger todos los filtros
   const fecha_desde_ingresos = document.getElementById(
     "fecha_desde_ingresos"
   ).value;
   const fecha_hasta_ingresos = document.getElementById(
     "fecha_hasta_ingresos"
   ).value;
+  const idtipo_pago = document.getElementById("filtro_tipo_pago").value;
   const fecha_desde_egresos = document.getElementById(
     "fecha_desde_egresos"
   ).value;
@@ -105,7 +109,7 @@ function cargarDatosDashboard() {
     "fecha_hasta_egresos"
   ).value;
 
-  const url = `dashboard/getDashboardData?fecha_desde_ingresos=${fecha_desde_ingresos}&fecha_hasta_ingresos=${fecha_hasta_ingresos}&fecha_desde_egresos=${fecha_desde_egresos}&fecha_hasta_egresos=${fecha_hasta_egresos}`;
+  const url = `dashboard/getDashboardData?fecha_desde_ingresos=${fecha_desde_ingresos}&fecha_hasta_ingresos=${fecha_hasta_ingresos}&idtipo_pago=${idtipo_pago}&fecha_desde_egresos=${fecha_desde_egresos}&fecha_hasta_egresos=${fecha_hasta_egresos}`;
 
   fetch(url)
     .then((response) => {

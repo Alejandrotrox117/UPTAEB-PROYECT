@@ -35,7 +35,6 @@
     <div class="bg-white p-6 rounded-lg shadow">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold">Reporte de Ingresos (Conciliados)</h2>
-        <!-- NUEVO: Botón de descarga -->
         <button
           id="btnDescargarIngresos"
           class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded inline-flex items-center text-sm"
@@ -50,7 +49,7 @@
           <span>Descargar PDF</span>
         </button>
       </div>
-      <div class="flex flex-wrap gap-4 mb-4 items-center">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
         <div>
           <label
             for="fecha_desde_ingresos"
@@ -74,6 +73,24 @@
             id="fecha_hasta_ingresos"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
+        </div>
+        <div>
+          <label
+            for="filtro_tipo_pago"
+            class="text-sm font-medium text-gray-700"
+            >Tipo de Pago:</label
+          >
+          <select
+            id="filtro_tipo_pago"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos</option>
+            <?php foreach ($data['tipos_pago'] as $tipo): ?>
+            <option value="<?php echo $tipo['idtipo_pago']; ?>">
+              <?php echo $tipo['nombre']; ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
         </div>
       </div>
       <div id="error-ingresos" class="text-red-600 text-sm mb-2"></div>
