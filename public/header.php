@@ -294,21 +294,15 @@ if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
                 <?php if (PermisosVerificar::verificarPermisoAccion('roles', 'ver')): ?>
                 <li class="menu-item"><a href="/project/roles" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-tag w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Rol</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver')): ?>
-                <li class="menu-item"><a href="/project/RolesPermisos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-key w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Permisos</span></a></li>
-                <?php endif; ?>
+               
                 <?php if (PermisosVerificar::verificarPermisoAccion('RolesIntegrado', 'ver')): ?>
                 <li class="menu-item"><a href="/project/RolesIntegrado" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestión Integral</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('RolesAsignaciones', 'ver')): ?>
-                <li class="menu-item"><a href="/project/RolesAsignaciones" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-sliders-h w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignaciones Específicas</span></a></li>
-                <?php endif; ?>
+             
                 <?php if (PermisosVerificar::verificarPermisoAccion('modulos', 'ver')): ?>
                 <li class="menu-item"><a href="/project/modulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-puzzle-piece w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Modulos</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')): ?>
-                <li class="menu-item"><a href="/project/rolesmodulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-link w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Modulos</span></a></li>
-                <?php endif; ?>
+               
                  <?php if (PermisosVerificar::verificarPermisoAccion('bitacora', 'ver')): ?>
                 <li class="menu-item"><a href="/project/bitacora" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-clipboard-list w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Bitácora</span></a></li>
                 <?php endif; ?>

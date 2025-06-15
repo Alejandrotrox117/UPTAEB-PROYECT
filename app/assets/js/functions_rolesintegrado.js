@@ -155,7 +155,7 @@ function mostrarModulosConPermisos() {
                                value="${modulo.idmodulo}" 
                                class="modulo-checkbox mt-1 mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                ${tieneAcceso ? 'checked' : ''}
-                               onchange="toggleModulo(${modulo.idmodulo}, this.checked)">
+                               data-modulo-id="${modulo.idmodulo}">
                         <div class="flex-1">
                             <span class="font-medium text-gray-800 block">${modulo.titulo}</span>
                             <p class="text-sm text-gray-600 mt-1">${modulo.descripcion || 'Sin descripción'}</p>
@@ -178,6 +178,24 @@ function mostrarModulosConPermisos() {
     });
 
     container.innerHTML = html;
+    
+    // Agregar event listeners después de crear el HTML
+    agregarEventListenersModulos();
+}
+
+function agregarEventListenersModulos() {
+    // Event listeners para checkboxes de módulos
+    document.querySelectorAll('.modulo-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const idmodulo = parseInt(this.getAttribute('data-modulo-id'));
+            toggleModulo(idmodulo, this.checked);
+        });
+    });
+    
+    // Event listeners para checkboxes de permisos
+    document.querySelectorAll('.permiso-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', actualizarContadores);
+    });
 }
 
 function crearCheckboxesPermisos(idmodulo, permisosAsignados = []) {
@@ -190,8 +208,7 @@ function crearCheckboxesPermisos(idmodulo, permisosAsignados = []) {
                        value="${permiso.idpermiso}" 
                        class="permiso-checkbox mr-2 h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" 
                        data-modulo="${idmodulo}"
-                       ${checked}
-                       onchange="actualizarContadores()">
+                       ${checked}>
                 <span class="text-gray-700">${permiso.nombre_permiso}</span>
             </label>
         `;
@@ -343,3 +360,11 @@ function hideNotification() {
     const toast = document.getElementById('notificationToast');
     toast.classList.add('hidden');
 }
+
+// Exponer funciones necesarias al scope global si es necesario
+window.RolesIntegrado = {
+    toggleModulo,
+    actualizarContadores,
+    showNotification,
+    hideNotification
+};
