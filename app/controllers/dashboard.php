@@ -4,12 +4,15 @@ require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
 require_once "app/Models/DashboardModel.php";
 
+/**
+ * Clase PDF personalizada que hereda de FPDF.
+ * Esto nos permite crear un encabezado y pie de página personalizados.
+ */
 class PDF extends FPDF
 {
   // Cabecera de página
   function Header()
   {
-
     $this->SetFont("Arial", "B", 14);
     $this->Cell(0, 7, utf8_decode("Recuperadora La Pradera de Pavia, C.A."), 0, 1, "C");
     $this->SetFont("Arial", "", 10);
@@ -19,6 +22,7 @@ class PDF extends FPDF
     $this->Ln(10);
   }
 
+  // Pie de página
   function Footer()
   {
     $this->SetY(-15);
@@ -42,6 +46,9 @@ class Dashboard extends Controllers
     $data["page_functions_js"] = "functions_dashboard.js";
     $data["tipos_pago"] = $model->getTiposDePago();
     $data["tipos_egreso"] = ["Compras", "Sueldos", "Otros Egresos"];
+    // NUEVO: Datos para los filtros del reporte de compras
+    $data["proveedores"] = $model->getProveedoresActivos();
+    $data["productos"] = $model->getProductos();
 
     $this->views->getView($this, "dashboard", $data);
   }
@@ -60,6 +67,7 @@ class Dashboard extends Controllers
   public function getDashboardData()
   {
     $model = new DashboardModel();
+    // Validar filtros de ingresos
     $fecha_desde_ingresos = $this->validarYFormatearFecha(
       $_GET["fecha_desde_ingresos"] ?? null,
       "inicio"
@@ -73,6 +81,7 @@ class Dashboard extends Controllers
       FILTER_VALIDATE_INT
     ) ?: null;
 
+    // Validar filtros de egresos
     $fecha_desde_egresos = $this->validarYFormatearFecha(
       $_GET["fecha_desde_egresos"] ?? null,
       "inicio"
@@ -365,5 +374,155 @@ class Dashboard extends Controllers
     }
 
     $pdf->Output("D", "Reporte_Egresos_Detallado_" . date("Y-m-d") . ".pdf");
+  }
+
+  /**
+   * NUEVO: Obtiene los datos para el reporte de compras vía AJAX.
+   */
+  public function getReporteComprasData()
+  {
+    $model = new DashboardModel();
+    $fecha_desde = $this->validarYFormatearFecha(
+      $_GET["fecha_desde"] ?? null,
+      "inicio"
+    );
+    $fecha_hasta = $this->validarYFormatearFecha(
+      $_GET["fecha_hasta"] ?? null,
+      "fin"
+    );
+    $idproveedor = filter_var(
+      $_GET["idproveedor"] ?? null,
+      FILTER_VALIDATE_INT
+    ) ?: null;
+    $idproducto = filter_var(
+      $_GET["idproducto"] ?? null,
+      FILTER_VALIDATE_INT
+    ) ?: null;
+
+    if ($fecha_desde > $fecha_hasta) {
+      http_response_code(400);
+      echo json_encode(["error" => "El rango de fechas es inválido."]);
+      exit();
+    }
+
+    $data = $model->getReporteCompras(
+      $fecha_desde,
+      $fecha_hasta,
+      $idproveedor,
+      $idproducto
+    );
+    echo json_encode($data);
+    exit();
+  }
+
+  /**
+   * NUEVO: Genera y descarga un reporte de compras en PDF.
+   */
+  public function descargarReporteComprasPDF()
+  {
+    $fecha_desde = $this->validarYFormatearFecha(
+      $_GET["fecha_desde"] ?? null,
+      "inicio"
+    );
+    $fecha_hasta = $this->validarYFormatearFecha(
+      $_GET["fecha_hasta"] ?? null,
+      "fin"
+    );
+    $idproveedor = filter_var(
+      $_GET["idproveedor"] ?? null,
+      FILTER_VALIDATE_INT
+    ) ?: null;
+    $idproducto = filter_var(
+      $_GET["idproducto"] ?? null,
+      FILTER_VALIDATE_INT
+    ) ?: null;
+
+    if ($fecha_desde > $fecha_hasta) {
+      die("Error: Rango de fechas inválido.");
+    }
+
+    $model = new DashboardModel();
+    $compras = $model->getReporteCompras(
+      $fecha_desde,
+      $fecha_hasta,
+      $idproveedor,
+      $idproducto
+    );
+
+    $pdf = new PDF("L", "mm", "Letter"); // 'L' para Landscape (apaisado)
+    $pdf->AliasNbPages();
+    $pdf->AddPage();
+    $pdf->SetFont("Arial", "B", 16);
+    $pdf->Cell(0, 10, "Reporte de Compras Finalizadas", 0, 1, "C");
+    $pdf->SetFont("Arial", "", 12);
+    $pdf->Cell(
+      0,
+      10,
+      "Periodo: " . $fecha_desde . " al " . $fecha_hasta,
+      0,
+      1,
+      "C"
+    );
+    $pdf->Ln(5);
+
+    $pdf->SetFont("Arial", "B", 9);
+    $pdf->SetFillColor(230, 230, 230);
+    $pdf->Cell(20, 7, "Fecha", 1, 0, "C", true);
+    $pdf->Cell(25, 7, "Nro. Compra", 1, 0, "C", true);
+    $pdf->Cell(50, 7, "Proveedor", 1, 0, "C", true);
+    $pdf->Cell(60, 7, "Producto", 1, 0, "C", true);
+    $pdf->Cell(25, 7, "Cantidad", 1, 0, "C", true);
+    $pdf->Cell(30, 7, "Precio Unit.", 1, 0, "C", true);
+    $pdf->Cell(30, 7, "Subtotal", 1, 1, "C", true);
+
+    $pdf->SetFont("Arial", "", 8);
+    $totalGeneral = 0;
+    if (empty($compras)) {
+      $pdf->Cell(240, 10, "No se encontraron compras con los filtros aplicados.", 1, 1, "C");
+    } else {
+      foreach ($compras as $item) {
+        $pdf->Cell(20, 7, $item["fecha"], 1, 0);
+        $pdf->Cell(25, 7, $item["nro_compra"], 1, 0);
+        $pdf->Cell(50, 7, utf8_decode($item["proveedor"]), 1, 0);
+        $pdf->Cell(60, 7, utf8_decode($item["producto"]), 1, 0);
+        $pdf->Cell(
+          25,
+          7,
+          number_format($item["cantidad"], 2, ",", "."),
+          1,
+          0,
+          "R"
+        );
+        $pdf->Cell(
+          30,
+          7,
+          number_format($item["precio_unitario_compra"], 2, ",", "."),
+          1,
+          0,
+          "R"
+        );
+        $pdf->Cell(
+          30,
+          7,
+          number_format($item["subtotal_linea"], 2, ",", "."),
+          1,
+          1,
+          "R"
+        );
+        $totalGeneral += $item["subtotal_linea"];
+      }
+    }
+    $pdf->SetFont("Arial", "B", 10);
+    $pdf->Cell(210, 8, "TOTAL GENERAL", 1, 0, "R");
+    $pdf->Cell(
+      30,
+      8,
+      number_format($totalGeneral, 2, ",", ".") . " Bs.",
+      1,
+      1,
+      "R"
+    );
+
+    $pdf->Output("D", "Reporte_Compras_" . date("Y-m-d") . ".pdf");
   }
 }

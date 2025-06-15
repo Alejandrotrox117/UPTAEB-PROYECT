@@ -35,14 +35,19 @@ document.addEventListener("DOMContentLoaded", function () {
     .toISOString()
     .split("T")[0];
 
+  // Seteo de fechas para reportes financieros
   document.getElementById("fecha_desde_ingresos").value = primerDiaMes;
   document.getElementById("fecha_hasta_ingresos").value = ultimoDiaMes;
   document.getElementById("fecha_desde_egresos").value = primerDiaMes;
   document.getElementById("fecha_hasta_egresos").value = ultimoDiaMes;
 
+  // NUEVO: Seteo de fechas para reporte de compras
+  document.getElementById("fecha_desde_compras").value = primerDiaMes;
+  document.getElementById("fecha_hasta_compras").value = ultimoDiaMes;
+
   cargarDatosDashboard();
 
-  // Event listeners para todos los filtros
+  // Event listeners para filtros de reportes financieros
   document
     .getElementById("fecha_desde_ingresos")
     .addEventListener("change", cargarDatosDashboard);
@@ -52,7 +57,6 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("filtro_tipo_pago_ingresos")
     .addEventListener("change", cargarDatosDashboard);
-
   document
     .getElementById("fecha_desde_egresos")
     .addEventListener("change", cargarDatosDashboard);
@@ -66,46 +70,21 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("filtro_tipo_egreso")
     .addEventListener("change", cargarDatosDashboard);
 
-  // Listener para descarga de INGRESOS
+  // Listeners para botones de descarga
   document
     .getElementById("btnDescargarIngresos")
-    .addEventListener("click", function () {
-      const esValido = validarRangoFechas(
-        "fecha_desde_ingresos",
-        "fecha_hasta_ingresos",
-        "error-ingresos"
-      );
-      if (esValido) {
-        const fecha_desde = document.getElementById("fecha_desde_ingresos").value;
-        const fecha_hasta = document.getElementById("fecha_hasta_ingresos").value;
-        const idtipo_pago = document.getElementById(
-          "filtro_tipo_pago_ingresos"
-        ).value;
-        const url = `dashboard/descargarIngresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}&idtipo_pago=${idtipo_pago}`;
-        window.open(url, "_blank");
-      }
-    });
-
-  // Listener para descarga de EGRESOS
+    .addEventListener("click", descargarIngresosPDF);
   document
     .getElementById("btnDescargarEgresos")
-    .addEventListener("click", function () {
-      const esValido = validarRangoFechas(
-        "fecha_desde_egresos",
-        "fecha_hasta_egresos",
-        "error-egresos"
-      );
-      if (esValido) {
-        const fecha_desde = document.getElementById("fecha_desde_egresos").value;
-        const fecha_hasta = document.getElementById("fecha_hasta_egresos").value;
-        const idtipo_pago = document.getElementById(
-          "filtro_tipo_pago_egresos"
-        ).value;
-        const tipo_egreso = document.getElementById("filtro_tipo_egreso").value;
-        const url = `dashboard/descargarEgresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}&idtipo_pago=${idtipo_pago}&tipo_egreso=${tipo_egreso}`;
-        window.open(url, "_blank");
-      }
-    });
+    .addEventListener("click", descargarEgresosPDF);
+
+  // NUEVO: Listeners para el reporte de compras
+  document
+    .getElementById("btnGenerarReporteCompras")
+    .addEventListener("click", cargarReporteCompras);
+  document
+    .getElementById("btnDescargarReporteCompras")
+    .addEventListener("click", descargarReporteCompras);
 });
 
 function cargarDatosDashboard() {
@@ -124,7 +103,6 @@ function cargarDatosDashboard() {
     return;
   }
 
-  // Recoger todos los filtros
   const fecha_desde_ingresos = document.getElementById(
     "fecha_desde_ingresos"
   ).value;
@@ -134,7 +112,6 @@ function cargarDatosDashboard() {
   const idtipo_pago_ingresos = document.getElementById(
     "filtro_tipo_pago_ingresos"
   ).value;
-
   const fecha_desde_egresos = document.getElementById(
     "fecha_desde_egresos"
   ).value;
@@ -159,12 +136,7 @@ function cargarDatosDashboard() {
   const url = `dashboard/getDashboardData?${params.toString()}`;
 
   fetch(url)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Error en la respuesta del servidor.");
-      }
-      return response.json();
-    })
+    .then((response) => response.json())
     .then((data) => {
       actualizarResumen(data.resumen);
       llenarTablaVentas(data.ventas);
@@ -173,10 +145,149 @@ function cargarDatosDashboard() {
       renderizarGraficoEgresos(data.reporteEgresos);
     })
     .catch((error) =>
-      console.error("Error al cargar los datos del dashboard:", error)
+      console.error("Error al cargar datos del dashboard:", error)
     );
 }
 
+function descargarIngresosPDF() {
+  const esValido = validarRangoFechas(
+    "fecha_desde_ingresos",
+    "fecha_hasta_ingresos",
+    "error-ingresos"
+  );
+  if (esValido) {
+    const fecha_desde = document.getElementById("fecha_desde_ingresos").value;
+    const fecha_hasta = document.getElementById("fecha_hasta_ingresos").value;
+    const idtipo_pago = document.getElementById(
+      "filtro_tipo_pago_ingresos"
+    ).value;
+    const url = `dashboard/descargarIngresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}&idtipo_pago=${idtipo_pago}`;
+    window.open(url, "_blank");
+  }
+}
+
+function descargarEgresosPDF() {
+  const esValido = validarRangoFechas(
+    "fecha_desde_egresos",
+    "fecha_hasta_egresos",
+    "error-egresos"
+  );
+  if (esValido) {
+    const fecha_desde = document.getElementById("fecha_desde_egresos").value;
+    const fecha_hasta = document.getElementById("fecha_hasta_egresos").value;
+    const idtipo_pago = document.getElementById(
+      "filtro_tipo_pago_egresos"
+    ).value;
+    const tipo_egreso = document.getElementById("filtro_tipo_egreso").value;
+    const url = `dashboard/descargarEgresosPDF?fecha_desde=${fecha_desde}&fecha_hasta=${fecha_hasta}&idtipo_pago=${idtipo_pago}&tipo_egreso=${tipo_egreso}`;
+    window.open(url, "_blank");
+  }
+}
+
+/**
+ * NUEVO: Carga y renderiza el reporte de compras.
+ */
+function cargarReporteCompras() {
+  const esValido = validarRangoFechas(
+    "fecha_desde_compras",
+    "fecha_hasta_compras",
+    "error-compras"
+  );
+  if (!esValido) return;
+
+  const fecha_desde = document.getElementById("fecha_desde_compras").value;
+  const fecha_hasta = document.getElementById("fecha_hasta_compras").value;
+  const idproveedor = document.getElementById("filtro_proveedor_compras").value;
+  const idproducto = document.getElementById("filtro_producto_compras").value;
+
+  const params = new URLSearchParams({
+    fecha_desde,
+    fecha_hasta,
+    idproveedor,
+    idproducto,
+  });
+  const url = `dashboard/getReporteComprasData?${params.toString()}`;
+
+  const tbody = document.getElementById("comprasReporteBody");
+  tbody.innerHTML =
+    '<tr><td colspan="7" class="p-4 text-center">Cargando...</td></tr>';
+
+  fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      renderizarTablaCompras(data);
+    })
+    .catch((error) => {
+      console.error("Error al cargar reporte de compras:", error);
+      tbody.innerHTML =
+        '<tr><td colspan="7" class="p-4 text-center text-red-500">Error al cargar el reporte.</td></tr>';
+    });
+}
+
+/**
+ * NUEVO: Renderiza la tabla de compras con los datos obtenidos.
+ */
+function renderizarTablaCompras(data) {
+  const tbody = document.getElementById("comprasReporteBody");
+  const tfootTotal = document.getElementById("comprasReporteTotal");
+  tbody.innerHTML = "";
+  let totalGeneral = 0;
+
+  if (data.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="7" class="p-4 text-center text-gray-500">No se encontraron resultados con los filtros seleccionados.</td></tr>';
+    tfootTotal.textContent = "0.00";
+    return;
+  }
+
+  data.forEach((item) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+            <td class="px-2 py-2">${item.fecha}</td>
+            <td class="px-2 py-2">${item.nro_compra}</td>
+            <td class="px-2 py-2">${item.proveedor}</td>
+            <td class="px-2 py-2">${item.producto}</td>
+            <td class="px-2 py-2 text-right">${parseFloat(item.cantidad).toLocaleString("es-VE", { minimumFractionDigits: 2 })}</td>
+            <td class="px-2 py-2 text-right">${parseFloat(item.precio_unitario_compra).toLocaleString("es-VE", { minimumFractionDigits: 2 })}</td>
+            <td class="px-2 py-2 text-right">${parseFloat(item.subtotal_linea).toLocaleString("es-VE", { minimumFractionDigits: 2 })}</td>
+        `;
+    tbody.appendChild(tr);
+    totalGeneral += parseFloat(item.subtotal_linea);
+  });
+
+  tfootTotal.textContent = totalGeneral.toLocaleString("es-VE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * NUEVO: Inicia la descarga del PDF del reporte de compras.
+ */
+function descargarReporteCompras() {
+  const esValido = validarRangoFechas(
+    "fecha_desde_compras",
+    "fecha_hasta_compras",
+    "error-compras"
+  );
+  if (!esValido) return;
+
+  const fecha_desde = document.getElementById("fecha_desde_compras").value;
+  const fecha_hasta = document.getElementById("fecha_hasta_compras").value;
+  const idproveedor = document.getElementById("filtro_proveedor_compras").value;
+  const idproducto = document.getElementById("filtro_producto_compras").value;
+
+  const params = new URLSearchParams({
+    fecha_desde,
+    fecha_hasta,
+    idproveedor,
+    idproducto,
+  });
+  const url = `dashboard/descargarReporteComprasPDF?${params.toString()}`;
+  window.open(url, "_blank");
+}
+
+// --- Funciones de renderizado de gráficos (sin cambios) ---
 function actualizarResumen(resumen) {
   document.getElementById("ventasHoy").textContent = resumen.ventas_totales;
   document.getElementById("comprasHoy").textContent = resumen.compras_totales;

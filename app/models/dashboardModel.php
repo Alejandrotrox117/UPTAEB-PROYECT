@@ -1,14 +1,17 @@
 <?php
+
 require_once "app/core/conexion.php";
 
 class DashboardModel
 {
+  // Propiedades privadas para encapsular el estado del modelo
   private $query;
   private $array;
   private $result;
 
   public function __construct()
   {
+    // El constructor está vacío, la conexión se maneja en cada método privado
   }
 
   // --- Getters y Setters ---
@@ -249,7 +252,89 @@ class DashboardModel
     }
   }
 
-  // --- Métodos Públicos---
+  private function ejecutarGetProveedoresActivos()
+  {
+    $conexion = new Conexion();
+    $conexion->connect();
+    $db = $conexion->get_conectGeneral();
+    try {
+      $this->setQuery("SELECT idproveedor, CONCAT(nombre, ' ', apellido) as nombre_completo FROM proveedor WHERE estatus = 'activo' ORDER BY nombre_completo ASC");
+      $stmt = $db->prepare($this->getQuery());
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+      error_log("DashboardModel::ejecutarGetProveedoresActivos - Error: " . $e->getMessage());
+      return [];
+    } finally {
+      $conexion->disconnect();
+    }
+  }
+
+  private function ejecutarGetProductos()
+  {
+    $conexion = new Conexion();
+    $conexion->connect();
+    $db = $conexion->get_conectGeneral();
+    try {
+      $this->setQuery("SELECT idproducto, nombre FROM producto WHERE estatus = 'activo' ORDER BY nombre ASC");
+      $stmt = $db->prepare($this->getQuery());
+      $stmt->execute();
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+      error_log("DashboardModel::ejecutarGetProductos - Error: " . $e->getMessage());
+      return [];
+    } finally {
+      $conexion->disconnect();
+    }
+  }
+
+  private function ejecutarGetReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto)
+  {
+    $conexion = new Conexion();
+    $conexion->connect();
+    $db = $conexion->get_conectGeneral();
+    try {
+      $baseSql = "SELECT 
+                        c.fecha, 
+                        c.nro_compra, 
+                        CONCAT(pr.nombre, ' ', pr.apellido) as proveedor, 
+                        p.nombre as producto, 
+                        dc.cantidad, 
+                        dc.precio_unitario_compra, 
+                        dc.subtotal_linea
+                    FROM compra c
+                    JOIN detalle_compra dc ON c.idcompra = dc.idcompra
+                    JOIN proveedor pr ON c.idproveedor = pr.idproveedor
+                    JOIN producto p ON dc.idproducto = p.idproducto
+                    WHERE c.estatus_compra = 'PAGADA'
+                    AND c.fecha BETWEEN ? AND ?";
+
+      $this->setArray([$fecha_desde, $fecha_hasta]);
+
+      if (!empty($idproveedor)) {
+        $baseSql .= " AND c.idproveedor = ?";
+        $this->setArray(array_merge($this->getArray(), [$idproveedor]));
+      }
+      if (!empty($idproducto)) {
+        $baseSql .= " AND dc.idproducto = ?";
+        $this->setArray(array_merge($this->getArray(), [$idproducto]));
+      }
+
+      $baseSql .= " ORDER BY c.fecha ASC, c.nro_compra ASC";
+      $this->setQuery($baseSql);
+
+      $stmt = $db->prepare($this->getQuery());
+      $stmt->execute($this->getArray());
+      return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+      error_log("DashboardModel::ejecutarGetReporteCompras - Error: " . $e->getMessage());
+      return [];
+    } finally {
+      $conexion->disconnect();
+    }
+  }
+
+  // --- Métodos Públicos (API del Modelo) ---
 
   public function getResumen()
   {
@@ -263,7 +348,7 @@ class DashboardModel
 
   public function getTareasPendientes()
   {
-    return []; 
+    return [];
   }
 
   public function getVentasMensuales()
@@ -294,5 +379,20 @@ class DashboardModel
   public function getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
   {
     return $this->ejecutarGetEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+  }
+
+  public function getProveedoresActivos()
+  {
+    return $this->ejecutarGetProveedoresActivos();
+  }
+
+  public function getProductos()
+  {
+    return $this->ejecutarGetProductos();
+  }
+
+  public function getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor = null, $idproducto = null)
+  {
+    return $this->ejecutarGetReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto);
   }
 }

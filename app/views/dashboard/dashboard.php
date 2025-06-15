@@ -8,7 +8,6 @@
         <h1 class="text-2xl md:text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
         <p class="text-green-600 text-base md:text-lg">Reportes Estadisticos</p>
     </div>
-
   <!-- Resumen General -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
     <div class="bg-white p-6 rounded-lg shadow">
@@ -29,7 +28,7 @@
     </div>
   </div>
 
-  <!-- Reportes Financieros -->
+  <!-- Reportes Financieros (Ingresos y Egresos) -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <!-- Columna de Ingresos -->
     <div class="bg-white p-6 rounded-lg shadow">
@@ -186,6 +185,127 @@
     </div>
   </div>
 
+  <!-- NUEVO: Reporte de Compras Finalizadas -->
+  <div class="bg-white p-6 rounded-lg shadow mb-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-semibold">Reporte de Compras Finalizadas</h2>
+      <button
+        id="btnDescargarReporteCompras"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center text-sm"
+      >
+        <svg
+          class="fill-current w-4 h-4 mr-2"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+        >
+          <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
+        </svg>
+        <span>Descargar PDF</span>
+      </button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+      <div>
+        <label
+          for="fecha_desde_compras"
+          class="text-sm font-medium text-gray-700"
+          >Desde:</label
+        >
+        <input
+          type="date"
+          id="fecha_desde_compras"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        />
+      </div>
+      <div>
+        <label
+          for="fecha_hasta_compras"
+          class="text-sm font-medium text-gray-700"
+          >Hasta:</label
+        >
+        <input
+          type="date"
+          id="fecha_hasta_compras"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        />
+      </div>
+      <div>
+        <label
+          for="filtro_proveedor_compras"
+          class="text-sm font-medium text-gray-700"
+          >Proveedor:</label
+        >
+        <select
+          id="filtro_proveedor_compras"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        >
+          <option value="">Todos</option>
+          <?php foreach ($data['proveedores'] as $proveedor): ?>
+          <option value="<?php echo $proveedor['idproveedor']; ?>">
+            <?php echo $proveedor['nombre_completo']; ?>
+          </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div>
+        <label
+          for="filtro_producto_compras"
+          class="text-sm font-medium text-gray-700"
+          >Producto:</label
+        >
+        <select
+          id="filtro_producto_compras"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        >
+          <option value="">Todos</option>
+          <?php foreach ($data['productos'] as $producto): ?>
+          <option value="<?php echo $producto['idproducto']; ?>">
+            <?php echo $producto['nombre']; ?>
+          </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
+    <div class="flex justify-end mb-4">
+      <button
+        id="btnGenerarReporteCompras"
+        class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded"
+      >
+        Generar Reporte
+      </button>
+    </div>
+    <div id="error-compras" class="text-red-600 text-sm mb-2"></div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-2 py-3 text-left text-xs font-medium">Fecha</th>
+            <th class="px-2 py-3 text-left text-xs font-medium">Nro. Compra</th>
+            <th class="px-2 py-3 text-left text-xs font-medium">Proveedor</th>
+            <th class="px-2 py-3 text-left text-xs font-medium">Producto</th>
+            <th class="px-2 py-3 text-right text-xs font-medium">Cantidad</th>
+            <th class="px-2 py-3 text-right text-xs font-medium">
+              Precio Unit.
+            </th>
+            <th class="px-2 py-3 text-right text-xs font-medium">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody id="comprasReporteBody" class="bg-white divide-y">
+          <tr>
+            <td colspan="7" class="p-4 text-center text-gray-500">
+              Seleccione los filtros y genere el reporte.
+            </td>
+          </tr>
+        </tbody>
+        <tfoot class="bg-gray-100 font-bold">
+          <tr>
+            <td colspan="6" class="px-2 py-3 text-right">TOTAL GENERAL:</td>
+            <td id="comprasReporteTotal" class="px-2 py-3 text-right">0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
   <!-- Gráficos y Tablas existentes -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="bg-white p-6 rounded-lg shadow">
@@ -228,5 +348,4 @@
     </div>
   </div>
 </div>
-
 <?php footerAdmin($data); ?>
