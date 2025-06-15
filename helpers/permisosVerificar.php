@@ -56,6 +56,13 @@ class PermisosVerificar
             return false;
         }
 
+        // Agregar debug temporal
+        if ($modulo === 'RolesIntegrado') {
+            error_log("Verificando permiso para RolesIntegrado - acción: $accion");
+            error_log("Usuario ID: " . ($_SESSION['usuario_id'] ?? 'No definido'));
+            error_log("Rol ID: " . ($_SESSION['rol_id'] ?? 'No definido'));
+        }
+        
         switch (strtolower($accion)) { 
             case 'crear':
             case 'registrar':

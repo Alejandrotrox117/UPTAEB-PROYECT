@@ -1,4 +1,55 @@
-<?php require_once __DIR__ . '/../helpers/permisosVerificar.php'; ?>
+<?php 
+// INICIAR SESIÓN SIEMPRE
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// VERIFICAR SI EL USUARIO ESTÁ LOGUEADO
+if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['rol_id'])) {
+    // Si no está logueado y no está en la página de login, redirigir
+    $current_page = basename($_SERVER['REQUEST_URI']);
+    if ($current_page !== 'login' && strpos($_SERVER['REQUEST_URI'], 'login') === false) {
+        header('Location: /project/login');
+        exit();
+    }
+}
+
+// DEBUG COMPLETO - TEMPORAL
+if (isset($_GET['debug']) && $_GET['debug'] == 'session') {
+    echo "<div style='background: #f0f0f0; padding: 20px; margin: 10px; border: 2px solid #000;'>";
+    echo "<h2>DEBUG COMPLETO DE SESIÓN:</h2>";
+    echo "<h3>Estado de la sesión:</h3>";
+    echo "Session Status: " . session_status() . " (1=disabled, 2=none, 3=active)<br>";
+    echo "Session ID: " . session_id() . "<br>";
+    echo "<h3>Variables de sesión:</h3>";
+    echo "<pre>";
+    print_r($_SESSION);
+    echo "</pre>";
+    echo "<h3>Cookies:</h3>";
+    echo "<pre>";
+    print_r($_COOKIE);
+    echo "</pre>";
+    echo "<h3>Información adicional:</h3>";
+    echo "REQUEST_URI: " . $_SERVER['REQUEST_URI'] . "<br>";
+    echo "Está logueado: " . (isset($_SESSION['usuario_id']) ? 'SÍ' : 'NO') . "<br>";
+    echo "</div>";
+}
+
+require_once __DIR__ . '/../helpers/permisosVerificar.php'; 
+
+// DEBUG TEMPORAL - Eliminar después
+if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
+    echo "<pre>";
+    echo "Usuario ID: " . ($_SESSION['usuario_id'] ?? 'No definido') . "\n";
+    echo "Rol ID: " . ($_SESSION['rol_id'] ?? 'No definido') . "\n";
+    echo "Nombre Usuario: " . ($_SESSION['usuario_nombre'] ?? 'No definido') . "\n";
+    
+    // Verificar permisos específicos
+    $permisoRolesIntegrado = PermisosVerificar::verificarPermisoAccion('RolesIntegrado', 'ver');
+    echo "Permiso RolesIntegrado: " . ($permisoRolesIntegrado ? 'SÍ' : 'NO') . "\n";
+    echo "</pre>";
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -222,6 +273,7 @@
             PermisosVerificar::verificarPermisoAccion('roles', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('RolesAsignaciones', 'ver') ||
+            PermisosVerificar::verificarPermisoAccion('RolesIntegrado', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('modulos', 'ver') ||
             PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')||
             PermisosVerificar::verificarPermisoAccion('bitacora', 'ver')
@@ -245,8 +297,11 @@
                 <?php if (PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver')): ?>
                 <li class="menu-item"><a href="/project/RolesPermisos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-key w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Permisos</span></a></li>
                 <?php endif; ?>
+                <?php if (PermisosVerificar::verificarPermisoAccion('RolesIntegrado', 'ver')): ?>
+                <li class="menu-item"><a href="/project/RolesIntegrado" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestión Integral</span></a></li>
+                <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('RolesAsignaciones', 'ver')): ?>
-                <li class="menu-item"><a href="/project/RolesAsignaciones" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-sliders-h w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignaciones Integrales</span></a></li>
+                <li class="menu-item"><a href="/project/RolesAsignaciones" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-sliders-h w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignaciones Específicas</span></a></li>
                 <?php endif; ?>
                 <?php if (PermisosVerificar::verificarPermisoAccion('modulos', 'ver')): ?>
                 <li class="menu-item"><a href="/project/modulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-puzzle-piece w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Modulos</span></a></li>
