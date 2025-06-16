@@ -1,8 +1,8 @@
 <?php
-
 require_once "app/core/conexion.php";
+require_once "app/core/mysql.php";
 
-class DashboardModel
+class DashboardModel extends mysql
 {
   // Propiedades privadas para encapsular el estado del modelo
   private $query;

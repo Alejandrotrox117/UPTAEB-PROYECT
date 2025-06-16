@@ -1,28 +1,59 @@
 <?php
 
-
-class ExpresionesRegulares 
+class ExpresionesRegulares
 {
-    // Expresiones regulares para validación
+    // Expresiones existentes
+    const NOMBRE = '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/';
+    const APELLIDO = '/^[a-zA-Z\s]{3,12}$/';
+    const CEDULA = '/^(V|E|J)?-?\d{8}$/i';
+    const TELEFONO = '/^\d{11}$/';
+    const EMAIL = '/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/';
+    const DIRECCION = '/^.{5,100}$/';
+    const TEXTO_GENERAL = '/^.{2,100}$/';
+    const GENERO = '/^(MASCULINO|FEMENINO|OTRO)$/';
+    
+    // Nuevas expresiones para campos numéricos de ventas
+    const PRECIO = '/^[0-9]+(\.[0-9]{1,2})?$/';              // Precio positivo con hasta 2 decimales
+    const CANTIDAD = '/^[0-9]+(\.[0-9]{1,3})?$/';            // Cantidad positiva con hasta 3 decimales
+    const SUBTOTAL = '/^[0-9]+(\.[0-9]{1,2})?$/';            // Subtotal positivo con hasta 2 decimales
+    const TOTAL = '/^[0-9]+(\.[0-9]{1,2})?$/';               // Total positivo con hasta 2 decimales
+    const DESCUENTO_PORCENTAJE = '/^([0-9]|[1-9][0-9]|100)(\.[0-9]{1,2})?$/'; // 0-100 con hasta 2 decimales
+    const MONTO_DESCUENTO = '/^[0-9]+(\.[0-9]{1,2})?$/';     // Monto descuento positivo con hasta 2 decimales
+
     private static $expresiones = [
-        'nombre' => '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/',
-        'apellido' => '/^[a-zA-Z\s]{3,12}$/',
-        'telefono_principal' => '/^\d{11}$/',
-        'telefono' => '/^\d{11}$/', // Alias para telefono_principal
-        'direccion' => '/^.{5,100}$/',
-        'estatus' => '/^(Activo|Inactivo)$/',
-        'observaciones' => '/^.{0,50}$/',
-        'email' => '/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/',
-        'fecha' => '/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/',
-        'fechaNacimiento' => '/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/',
-        'cedula' => '/^(V|E|J)?-?\d{8}$/i',
-        'password' => '/^.{6,16}$/',
-        'textoGeneral' => '/^.{2,100}$/',
-        'genero' => '/^(MASCULINO|FEMENINO|OTRO)$/i',
-        // Expresiones adicionales
-        'entero' => '/^\d+$/',
-        'decimal' => '/^\d+(\.\d{1,2})?$/',
-        
+        'nombre' => self::NOMBRE,
+        'apellido' => self::APELLIDO,
+        'cedula' => self::CEDULA,
+        'telefono' => self::TELEFONO,
+        'email' => self::EMAIL,
+        'direccion' => self::DIRECCION,
+        'textoGeneral' => self::TEXTO_GENERAL,
+        'genero' => self::GENERO,
+        // Campos numéricos para ventas
+        'precio' => self::PRECIO,
+        'cantidad' => self::CANTIDAD,
+        'subtotal' => self::SUBTOTAL,
+        'total' => self::TOTAL,
+        'descuentoPorcentaje' => self::DESCUENTO_PORCENTAJE,
+        'montoDescuento' => self::MONTO_DESCUENTO
+    ];
+
+    private static $mensajes = [
+        'nombre' => 'El nombre debe contener solo letras y espacios, entre 2 y 50 caracteres.',
+        'apellido' => 'El apellido debe contener solo letras y espacios, entre 3 y 12 caracteres.',
+        'cedula' => 'Formato de cédula inválido. Ejemplo: V-12345678',
+        'telefono' => 'El teléfono debe tener exactamente 11 dígitos.',
+        'email' => 'Formato de email inválido.',
+        'direccion' => 'La dirección debe tener entre 5 y 100 caracteres.',
+        'textoGeneral' => 'El texto debe tener entre 2 y 100 caracteres.',
+        'genero' => 'El género debe ser MASCULINO, FEMENINO u OTRO.',
+        // Mensajes para campos numéricos de ventas
+        'precio' => 'El precio debe ser un número positivo con hasta 2 decimales.',
+        'cantidad' => 'La cantidad debe ser un número positivo con hasta 3 decimales.',
+        'subtotal' => 'El subtotal debe ser un número positivo con hasta 2 decimales.',
+        'total' => 'El total debe ser un número positivo con hasta 2 decimales.',
+        'descuentoPorcentaje' => 'El descuento debe estar entre 0% y 100% con hasta 2 decimales.',
+        'montoDescuento' => 'El monto de descuento debe ser un número positivo con hasta 2 decimales.'
     ];
 
     /**
@@ -57,6 +88,31 @@ class ExpresionesRegulares
             return false;
         }
         return preg_match($regex, $valor) === 1;
+    }
+
+    /**
+     * Valida un valor contra una expresión regular específica y devuelve array con detalles
+     * @param string $valor Valor a validar
+     * @param string $expresion Nombre de la expresión regular
+     * @return array Array con 'valido' y 'mensaje'
+     */
+    public static function validarConDetalle(string $valor, string $expresion): array 
+    {
+        $regex = self::obtener($expresion);
+        if ($regex === null) {
+            return [
+                'valido' => false,
+                'mensaje' => "Tipo de validación '$expresion' no existe."
+            ];
+        }
+        
+        $esValido = preg_match($regex, $valor) === 1;
+        $mensaje = $esValido ? '' : (self::$mensajes[$expresion] ?? "Formato inválido para '$expresion'.");
+        
+        return [
+            'valido' => $esValido,
+            'mensaje' => $mensaje
+        ];
     }
 
     /**
@@ -136,22 +192,17 @@ class ExpresionesRegulares
      */
     public static function obtenerMensajeError(string $campo, string $expresion): string 
     {
-        $mensajes = [
-            'nombre' => "El {$campo} solo puede contener letras y espacios (2-50 caracteres).",
-            'apellido' => "El {$campo} solo puede contener letras y espacios (3-12 caracteres).",
-            'telefono' => "El {$campo} debe contener exactamente 11 dígitos.",
-            'telefono_principal' => "El teléfono debe contener exactamente 11 dígitos.",
-            'email' => "El formato del {$campo} no es válido.",
-            'cedula' => "El formato de la {$campo} no es válido (Ej: V-12345678).",
-            'fecha' => "El formato de fecha debe ser DD/MM/AAAA.",
-            'fechaNacimiento' => "El formato de fecha de nacimiento debe ser DD/MM/AAAA.",
-            'genero' => "El {$campo} debe ser MASCULINO, FEMENINO u OTRO.",
-            'direccion' => "La {$campo} debe tener entre 5 y 100 caracteres.",
-            'password' => "La contraseña debe tener entre 6 y 16 caracteres.",
-            'textoGeneral' => "El {$campo} debe tener entre 2 y 100 caracteres.",
-        ];
+        return self::$mensajes[$expresion] ?? "Error de validación en el campo '$campo'.";
+    }
 
-        return $mensajes[$expresion] ?? "El formato del {$campo} no es válido.";
+    /**
+     * Obtiene una expresión regular por su tipo
+     * @param string $tipo Tipo de expresión
+     * @return string|null La expresión regular o null si no existe
+     */
+    public static function obtenerExpresion(string $tipo): ?string
+    {
+        return self::$expresiones[$tipo] ?? null;
     }
 }
 ?>

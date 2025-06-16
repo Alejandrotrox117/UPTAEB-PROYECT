@@ -1,4 +1,56 @@
-<?php require_once __DIR__ . '/../helpers/permisosVerificar.php'; ?>
+<?php 
+// INICIAR SESIÓN SIEMPRE
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// VERIFICAR SI EL USUARIO ESTÁ LOGUEADO
+if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['rol_id'])) {
+    // Si no está logueado y no está en la página de login, redirigir
+    $current_page = basename($_SERVER['REQUEST_URI']);
+    if ($current_page !== 'login' && strpos($_SERVER['REQUEST_URI'], 'login') === false) {
+        header('Location: /project/login');
+        exit();
+    }
+}
+
+// DEBUG COMPLETO - TEMPORAL
+if (isset($_GET['debug']) && $_GET['debug'] == 'session') {
+    echo "<div style='background: #f0f0f0; padding: 20px; margin: 10px; border: 2px solid #000;'>";
+    echo "<h2>DEBUG COMPLETO DE SESIÓN:</h2>";
+    echo "<h3>Estado de la sesión:</h3>";
+    echo "Session Status: " . session_status() . " (1=disabled, 2=none, 3=active)<br>";
+    echo "Session ID: " . session_id() . "<br>";
+    echo "<h3>Variables de sesión:</h3>";
+    echo "<pre>";
+    print_r($_SESSION);
+    echo "</pre>";
+    echo "<h3>Cookies:</h3>";
+    echo "<pre>";
+    print_r($_COOKIE);
+    echo "</pre>";
+    echo "<h3>Información adicional:</h3>";
+    echo "REQUEST_URI: " . $_SERVER['REQUEST_URI'] . "<br>";
+    echo "Está logueado: " . (isset($_SESSION['usuario_id']) ? 'SÍ' : 'NO') . "<br>";
+    echo "</div>";
+}
+
+// ✅ CAMBIAR AL SISTEMA NUEVO DE PERMISOS
+require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
+
+// DEBUG TEMPORAL - Eliminar después
+if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
+    echo "<pre>";
+    echo "Usuario ID: " . ($_SESSION['usuario_id'] ?? 'No definido') . "\n";
+    echo "Rol ID: " . ($_SESSION['rol_id'] ?? 'No definido') . "\n";
+    echo "Nombre Usuario: " . ($_SESSION['usuario_nombre'] ?? 'No definido') . "\n";
+    
+    // ✅ USAR EL SISTEMA NUEVO
+    $permisoRolesIntegrado = PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver');
+    echo "Permiso RolesIntegrado: " . ($permisoRolesIntegrado ? 'SÍ' : 'NO') . "\n";
+    echo "</pre>";
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -139,8 +191,18 @@
             </a>
           </li>
 
+          <!-- Acceso directo a Romana -->
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('romana', 'ver')): ?>
+          <!-- <li class="menu-item">
+            <a href="/project/romana" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
+              <i class="nav-icon fa-solid fa-weight-scale w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+              <span class="nav-text ml-3 font-medium">Romana</span>
+            </a>
+          </li> -->
+          <?php endif; ?>
+
           <!-- Gestionar Compras -->
-          <?php if (PermisosVerificar::verificarPermisoAccion('compras', 'ver') || PermisosVerificar::verificarPermisoAccion('proveedores', 'ver')): ?>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('proveedores', 'ver')): ?>
           <li class="menu-item-group">
             <details class="group">
               <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
@@ -151,7 +213,7 @@
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
               <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                <?php if (PermisosVerificar::verificarPermisoAccion('compras', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver')): ?>
                 <li class="menu-item">
                   <a href="/project/compras" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
                     <i class="nav-icon fa-solid fa-cart-shopping w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
@@ -159,7 +221,7 @@
                   </a>
                 </li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('proveedores', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('proveedores', 'ver')): ?>
                 <li class="menu-item">
                   <a href="/project/proveedores" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
                     <i class="nav-icon fa-solid fa-truck w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
@@ -174,10 +236,10 @@
 
           <!-- Gestionar Produccion -->
           <?php if (
-            PermisosVerificar::verificarPermisoAccion('produccion', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('empleados', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('productos', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('categorias', 'ver')
+            PermisosModuloVerificar::verificarPermisoModuloAccion('produccion', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('empleados', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('categorias', 'ver')
           ): ?>
           <li class="menu-item-group">
             <details class="group">
@@ -189,16 +251,16 @@
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
               <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                <?php if (PermisosVerificar::verificarPermisoAccion('produccion', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('produccion', 'ver')): ?>
                 <li class="menu-item"><a href="/project/produccion" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-industry w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Produccion</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('empleados', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('empleados', 'ver')): ?>
                 <li class="menu-item"><a href="/project/empleados" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-group w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Empleados</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?>
                 <li class="menu-item"><a href="/project/productos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-box w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Productos</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('categorias', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('categorias', 'ver')): ?>
                 <li class="menu-item"><a href="/project/categorias" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-tags w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Categorias</span></a></li>
                 <?php endif; ?>
               </ul>
@@ -208,10 +270,9 @@
 
           <!-- Gestionar Pagos -->
            <?php if (
-            PermisosVerificar::verificarPermisoAccion('romana', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('personas', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('tasas', 'ver')||
-            PermisosVerificar::verificarPermisoAccion('pagos', 'ver')
+            PermisosModuloVerificar::verificarPermisoModuloAccion('romana', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')
           ): ?>
           <li class="menu-item-group">
             <details class="group">
@@ -223,16 +284,11 @@
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
               <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                <?php if (PermisosVerificar::verificarPermisoAccion('pagos', 'ver')): ?>
-                <li class="menu-item"><a href="/project/pagos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-credit-card w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Pagos</span></a></li>
-                <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('romana', 'ver')): ?>
-                <li class="menu-item"><a href="/project/romana" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-weight-scale w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Romana</span></a></li>
-                <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('personas', 'ver')): ?>
+              
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver')): ?>
                 <li class="menu-item"><a href="/project/personas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-shield w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Personas</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('tasas', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')): ?>
                 <li class="menu-item"><a href="/project/tasas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fas fa-coins w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Historico de Tasas BCV</span></a></li>
                 <?php endif; ?>
               </ul>
@@ -241,7 +297,7 @@
           <?php endif; ?>
 
           <!-- Movimientos de existencias -->
-          <?php if (PermisosVerificar::verificarPermisoAccion('movimientos', 'ver')): ?>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('movimientos', 'ver')): ?>
           <li class="menu-item">
             <a href="/project/movimientos" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
               <i class="nav-icon fa-solid fa-boxes-stacked w-5 text-center text-gray-500 group-hover:text-green-600"></i>
@@ -251,7 +307,7 @@
           <?php endif; ?>
 
           <!-- Sueldos Temporales -->
-          <?php if (PermisosVerificar::verificarPermisoAccion('sueldos_temporales', 'ver')): ?>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos_temporales', 'ver')): ?>
           <li class="menu-item">
             <a href="/project/sueldos_temporales" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
               <i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i>
@@ -261,7 +317,7 @@
           <?php endif; ?>
 
           <!-- Gestionar Ventas -->
-          <?php if (PermisosVerificar::verificarPermisoAccion('ventas', 'ver') || PermisosVerificar::verificarPermisoAccion('clientes', 'ver')): ?>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')): ?>
           <li class="menu-item-group">
             <details class="group">
               <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
@@ -272,10 +328,10 @@
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
               <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                <?php if (PermisosVerificar::verificarPermisoAccion('ventas', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')): ?>
                 <li class="menu-item"><a href="/project/ventas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-file-invoice-dollar w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Ventas</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('clientes', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')): ?>
                 <li class="menu-item"><a href="/project/clientes" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-users w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Clientes</span></a></li>
                 <?php endif; ?>
               </ul>
@@ -284,7 +340,7 @@
           <?php endif; ?>
 
           <!-- Generar Reportes -->
-          <?php if (PermisosVerificar::verificarPermisoAccion('reportes', 'ver')): ?>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('reportes', 'ver')): ?>
           <li class="menu-item">
             <a href="/project/reportes" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
               <i class="nav-icon fa-solid fa-file-lines w-5 text-center text-gray-500 group-hover:text-green-600"></i>
@@ -295,12 +351,14 @@
 
           <!-- Seguridad -->
           <?php if (
-            PermisosVerificar::verificarPermisoAccion('usuarios', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('roles', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('modulos', 'ver') ||
-            PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')||
-            PermisosVerificar::verificarPermisoAccion('bitacora', 'ver')
+            PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('RolesPermisos', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('RolesAsignaciones', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver') ||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('rolesmodulos', 'ver')||
+            PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')
           ): ?>
           <li class="menu-item-group">
             <details class="group">
@@ -312,22 +370,22 @@
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
               <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                 <?php if (PermisosVerificar::verificarPermisoAccion('usuarios', 'ver')): ?>
+                 <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver')): ?>
                 <li class="menu-item"><a href="/project/usuarios" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Usuarios</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('roles', 'ver')): ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
                 <li class="menu-item"><a href="/project/roles" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-tag w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Rol</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('RolesPermisos', 'ver')): ?>
-                <li class="menu-item"><a href="/project/RolesPermisos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-key w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Permisos</span></a></li>
+               
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver')): ?>
+                <li class="menu-item"><a href="/project/RolesIntegrado" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestión Integral</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('modulos', 'ver')): ?>
+             
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver')): ?>
                 <li class="menu-item"><a href="/project/modulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-puzzle-piece w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Modulos</span></a></li>
                 <?php endif; ?>
-                <?php if (PermisosVerificar::verificarPermisoAccion('rolesmodulos', 'ver')): ?>
-                <li class="menu-item"><a href="/project/rolesmodulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-link w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Asignar Modulos</span></a></li>
-                <?php endif; ?>
-                 <?php if (PermisosVerificar::verificarPermisoAccion('bitacora', 'ver')): ?>
+               
+                 <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
                 <li class="menu-item"><a href="/project/bitacora" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-clipboard-list w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Bitácora</span></a></li>
                 <?php endif; ?>
               </ul>

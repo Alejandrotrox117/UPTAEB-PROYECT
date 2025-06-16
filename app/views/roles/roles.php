@@ -1,6 +1,12 @@
-<?php headerAdmin($data);?>
+<?php headerAdmin($data); ?>
 <input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
 <input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
+
+<!-- ✅ CAMPOS OCULTOS PARA PERMISOS -->
+<input type="hidden" id="permisoCrear" value="<?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear') ? '1' : '0'; ?>">
+<input type="hidden" id="permisoEditar" value="<?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar') ? '1' : '0'; ?>">
+<input type="hidden" id="permisoEliminar" value="<?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar') ? '1' : '0'; ?>">
+<input type="hidden" id="permisoVer" value="<?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') ? '1' : '0'; ?>">
 
 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -14,15 +20,23 @@
 
     <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
         <div class="flex justify-between items-center mb-6">
+            <!-- ✅ BOTÓN CREAR CON VERIFICACIÓN DE PERMISOS -->
+            <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear')): ?>
             <button id="btnAbrirModalRegistrarRol"
                 class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
-                <i class="mr-1 md:mr-2"></i> Registrar Rol
+                <i class="fas fa-plus mr-1 md:mr-2"></i> Registrar Rol
             </button>
+            <?php else: ?>
+            <div class="text-gray-500 text-sm">
+                <i class="fas fa-info-circle mr-1"></i>
+                No tiene permisos para crear roles
+            </div>
+            <?php endif; ?>
         </div>
 
         <div class="overflow-x-auto w-full relative">
             <!-- DataTable -->
-            <table id="TablaRoles" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 600px;"> <!-- Adjust min-width as needed -->
+            <table id="TablaRoles" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 600px;">
                 <thead>
                     <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
                     </tr>
@@ -37,7 +51,8 @@
     </div>
 </main>
 
-<!-- Modal Registrar Rol -->
+<!-- ✅ MODAL REGISTRAR ROL - SOLO SI TIENE PERMISOS -->
+<?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear')): ?>
 <div id="modalRegistrarRol"
     class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-2xl max-h-[95vh]">
@@ -85,8 +100,10 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<!-- Modal Actualizar Rol -->
+<!-- ✅ MODAL ACTUALIZAR ROL - SOLO SI TIENE PERMISOS -->
+<?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar')): ?>
 <div id="modalActualizarRol"
     class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-2xl max-h-[95vh]">
@@ -135,8 +152,10 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<!-- Modal Ver Rol -->
+<!-- ✅ MODAL VER ROL - SIEMPRE DISPONIBLE SI PUEDE VER -->
+<?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
 <div id="modalVerRol" class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-2xl max-h-[95vh]">
         <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
@@ -189,8 +208,10 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<!-- Modal Confirmar Eliminar -->
+<!-- ✅ MODAL CONFIRMAR ELIMINAR - SOLO SI TIENE PERMISOS -->
+<?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar')): ?>
 <div id="modalConfirmarEliminar" class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-[60] p-4">
   <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-md max-h-[95vh]">
     <div class="px-4 md:px-6 py-4 border-b border-gray-200">
@@ -211,5 +232,48 @@
     </div>
   </div>
 </div>
+<?php endif; ?>
+
+<!-- ✅ MENSAJE DE PERMISOS INSUFICIENTES -->
+<?php if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
+<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800">
+                Permisos Limitados
+            </h3>
+            <div class="mt-2 text-sm text-yellow-700">
+                <p>Su nivel de acceso actual no permite ver el contenido de este módulo. Contacte al administrador si necesita acceso adicional.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- ✅ AGREGAR REQUIRE PARA USAR EL HELPER EN LA VISTA -->
+<?php
+require_once "helpers/PermisosModuloVerificar.php";
+?>
+
+<script>
+// ✅ VARIABLES GLOBALES DE PERMISOS PARA JAVASCRIPT
+window.PERMISOS_ROLES = {
+    crear: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear') ? 'true' : 'false'; ?>,
+    editar: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar') ? 'true' : 'false'; ?>,
+    eliminar: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar') ? 'true' : 'false'; ?>,
+    ver: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') ? 'true' : 'false'; ?>
+};
+
+// ✅ FUNCIÓN PARA VERIFICAR PERMISOS EN JAVASCRIPT
+window.tienePermiso = function(accion) {
+    return window.PERMISOS_ROLES[accion] || false;
+};
+
+// ✅ LOG DE PERMISOS PARA DEBUG
+console.log('🔐 Permisos del usuario para módulo Roles:', window.PERMISOS_ROLES);
+</script>
 
 <?php footerAdmin($data); ?>

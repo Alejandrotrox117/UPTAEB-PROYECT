@@ -27,10 +27,10 @@ const camposFormularioProveedor = [
       formato: "Formato de identificación inválido. Debe contener el formato V/J/E Ejemplo V-12345678 o J-12345678.",
     },
   },
-  {id: "proveedorTelefono",tipo: "input",regex: expresiones.telefono,
+  {id: "proveedorTelefono",tipo: "input",regex: expresiones.telefono_principal,
     mensajes: {
       vacio: "El teléfono es obligatorio.",
-      formato: "Formato de teléfono inválido.",
+      formato: "Formato de teléfono inválido. Debe ser 0414-0424-0412-0416-0426",
     },
   },
   {id: "proveedorCorreo",tipo: "input",regex: expresiones.email,
@@ -57,7 +57,7 @@ const camposFormularioProveedor = [
     tipo: "fechaNacimiento",
     mensajes: {
       vacio: "La fecha de nacimiento es obligatoria.",
-      fechaPosterior: "La fecha de nacimiento no puede ser posterior a hoy.",
+      fechaPosterior: "La fecha de nacimiento no puede ser superior a hoy.",
     },
   }
 ];

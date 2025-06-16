@@ -11,7 +11,7 @@ require_once "helpers/bitacora_helper.php";
 class Proveedores extends Controllers
 {
     private $bitacoraModel;
-
+    private $BitacoraHelper;
 
     public function get_model()
     {
@@ -25,15 +25,19 @@ class Proveedores extends Controllers
     public function __construct()
     {
         parent::__construct();
-        $this->model = new ProveedoresModel();
+     
         $this->bitacoraModel = new BitacoraModel();
-
+        $this->BitacoraHelper = new BitacoraHelper();
 
         // Verificar si el usuario está logueado antes de verificar permisos
-        if (!$this->obtenerUsuarioSesion()) {
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
         }
+
+        // Solo verificar permisos si está logueado
+        permisosVerificar::verificarAccesoModulo('Proveedores');
+
     }
 
 
@@ -189,7 +193,7 @@ class Proveedores extends Controllers
                 );
 
                 // Obtener ID de usuario
-                $idusuario = $this->obtenerUsuarioSesion();
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
                 if (!$idusuario) {
                     error_log("ERROR: No se encontró ID de usuario en la sesión durante createProveedor()");
@@ -220,30 +224,12 @@ class Proveedores extends Controllers
         }
     }
 
-    private function obtenerUsuarioSesion()
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        // Buscar en todas las posibles variables de sesión donde podría estar el ID
-        if (isset($_SESSION['idusuario'])) {
-            return $_SESSION['idusuario'];
-        } elseif (isset($_SESSION['idUser'])) {
-            return $_SESSION['idUser'];
-        } elseif (isset($_SESSION['usuario_id'])) {
-            return $_SESSION['usuario_id'];
-        } else {
-            // Si llegamos aquí, no hay ID de usuario en la sesión
-            error_log("ERROR: No se encontró ID de usuario en la sesión");
-            return null;
-        }
-    }
+  
 
    public function index()
 {
-    // ⬅️ REGISTRAR ACCESO AL MÓDULO USANDO EL HELPER
-    $idusuario = $this->obtenerUsuarioSesion();
+ 
+   $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
     BitacoraHelper::registrarAccesoModulo('proveedor', $idusuario, $this->bitacoraModel);
 
     $data['page_tag'] = "Proveedores";
@@ -457,7 +443,7 @@ class Proveedores extends Controllers
                 );
 
                 // Obtener ID de usuario
-                $idusuario = $this->obtenerUsuarioSesion();
+              $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
                 if (!$idusuario) {
                     error_log("ERROR: No se encontró ID de usuario en la sesión durante updateProveedor()");
@@ -509,7 +495,7 @@ class Proveedores extends Controllers
                 }
 
                 // CAMBIO IMPORTANTE: Pasar el ID del usuario al modelo
-                $idusuario = $this->obtenerUsuarioSesion();
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                 $requestDelete = $this->model->deleteProveedorById($intIdProveedor, $idusuario);
                 if ($requestDelete) {
                     $arrResponse = array('status' => true, 'message' => 'Proveedor desactivado correctamente');
@@ -573,7 +559,7 @@ class Proveedores extends Controllers
                 }
 
 
-                $idusuario = $this->obtenerUsuarioSesion();
+               $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                 $requestActivar = $this->model->activarProveedorById($intIdProveedor, $idusuario);
                 if ($requestActivar) {
                     $arrResponse = array('status' => true, 'message' => 'Proveedor activado correctamente');
