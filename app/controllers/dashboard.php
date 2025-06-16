@@ -1,7 +1,7 @@
 <?php
 
 require_once "app/core/Controllers.php";
-require_once "helpers/permisosVerificar.php";
+require_once "helpers/PermisosModuloVerificar.php";
 require_once "helpers/helpers.php";
 
 class Dashboard extends Controllers
@@ -11,7 +11,7 @@ class Dashboard extends Controllers
         parent::__construct();
         
         // Verificar que el usuario tenga acceso al dashboard
-        PermisosVerificar::verificarAccesoModulo('dashboard');
+        PermisosModuloVerificar::verificarAccesoModulo('dashboard');
     }
 
     public function index()

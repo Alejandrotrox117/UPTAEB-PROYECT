@@ -2,7 +2,6 @@
 
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
-require_once "helpers/permisosVerificar.php";
 require_once "helpers/PermisosModuloVerificar.php";
 require_once "app/models/bitacoraModel.php";
 require_once "helpers/bitacora_helper.php";
