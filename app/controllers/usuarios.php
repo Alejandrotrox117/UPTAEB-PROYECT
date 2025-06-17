@@ -1,5 +1,4 @@
 <?php
-
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
 require_once "helpers/PermisosModuloVerificar.php";
@@ -28,33 +27,25 @@ class Usuarios extends Controllers
         $this->bitacoraModel = new BitacoraModel();
         $this->BitacoraHelper = new BitacoraHelper();
 
-        // Verificar si el usuario está logueado antes de verificar permisos
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
         }
 
-        // ✅ CAMBIAR A SISTEMA NUEVO (PermisosModuloVerificar)
         if (!PermisosModuloVerificar::verificarAccesoModulo('usuarios')) {
-            // Mostrar página de error de permisos
             $this->views->getView($this, "permisos");
             exit();
         }
     }
 
-    /**
-     * Vista principal del módulo usuarios
-     */
+
     public function index()
     {
-        // Ya no es necesario verificar permisos aquí porque se hace en el constructor
-        // Pero si quieres verificación adicional:
         if (!PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver')) {
             $this->views->getView($this, "permisos");
             exit();
         }
 
-        // Obtener ID del usuario y registrar acceso
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
         BitacoraHelper::registrarAccesoModulo('Usuarios', $idusuario, $this->bitacoraModel);
 
@@ -67,14 +58,10 @@ class Usuarios extends Controllers
         $this->views->getView($this, "usuarios", $data);
     }
 
-    /**
-     * Crear nuevo usuario
-     */
     public function createUsuario()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
                 if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'crear')) {
                     $arrResponse = array('status' => false, 'message' => 'No tienes permisos para crear usuarios');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -90,7 +77,6 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                // Limpiar y validar datos
                 $datosLimpios = [
                     'usuario' => strClean($request['usuario'] ?? ''),
                     'correo' => filter_var($request['correo'] ?? '', FILTER_SANITIZE_EMAIL),
@@ -98,7 +84,6 @@ class Usuarios extends Controllers
                     'idrol' => intval($request['idrol'] ?? 0),
                     'personaId' => !empty($request['personaId']) ? intval($request['personaId']) : null];
 
-                // Validar campos obligatorios
                 $camposObligatorios = ['usuario', 'correo', 'clave', 'idrol'];
                 foreach ($camposObligatorios as $campo) {
                     if (empty($datosLimpios[$campo])) {
@@ -108,7 +93,6 @@ class Usuarios extends Controllers
                     }
                 }
 
-                // Validaciones de negocio
                 if (strlen($datosLimpios['usuario']) < 3 || strlen($datosLimpios['usuario']) > 20) {
                     $arrResponse = array('status' => false, 'message' => 'El nombre de usuario debe tener entre 3 y 20 caracteres');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -141,7 +125,6 @@ class Usuarios extends Controllers
                     'personaId' => $datosLimpios['personaId']
                 );
 
-                // Obtener ID de usuario
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
                 if (!$idusuario) {
@@ -153,7 +136,6 @@ class Usuarios extends Controllers
 
                 $arrResponse = $this->model->insertUsuario($arrData);
 
-                // Registrar en bitácora si la inserción fue exitosa
                 if ($arrResponse['status'] === true) {
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('Usuarios', 'CREAR_USUARIO', $idusuario);
 
@@ -173,14 +155,10 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Obtener datos de usuarios para DataTable
-     */
     public function getUsuariosData()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
                 if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
                     $response = array('status' => false, 'message' => 'No tienes permisos para ver usuarios', 'data' => []);
                     echo json_encode($response, JSON_UNESCAPED_UNICODE);
@@ -188,8 +166,7 @@ class Usuarios extends Controllers
                 }
 
                 $arrResponse = $this->model->selectAllUsuariosActivos();
-                
-                // Registrar consulta en bitácora si fue exitosa
+
                 if ($arrResponse['status']) {
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                     $this->bitacoraModel->registrarAccion('Usuarios', 'CONSULTA_LISTADO', $idusuario);
@@ -204,14 +181,9 @@ class Usuarios extends Controllers
             die();
         }
     }
-
-    /**
-     * Obtener usuario por ID
-     */
     public function getUsuarioById($idusuario)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
                 $arrResponse = array('status' => false, 'message' => 'No tienes permisos para ver usuarios');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -227,7 +199,6 @@ class Usuarios extends Controllers
             try {
                 $arrData = $this->model->selectUsuarioById(intval($idusuario));
                 if (!empty($arrData)) {
-                    // Registrar consulta individual en bitácora
                     $idUsuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
                     $this->bitacoraModel->registrarAccion('Usuarios', 'VER_USUARIO', $idUsuarioSesion);
                     
@@ -245,14 +216,10 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Actualizar usuario existente
-     */
     public function updateUsuario()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
                 if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'editar')) {
                     $arrResponse = array('status' => false, 'message' => 'No tienes permisos para editar usuarios');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -363,14 +330,10 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Desactivar usuario (eliminar lógico)
-     */
     public function deleteUsuario()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
                 if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'eliminar')) {
                     $arrResponse = array('status' => false, 'message' => 'No tienes permisos para eliminar usuarios');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -427,14 +390,10 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Obtener roles para selects
-     */
     public function getRoles()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                // ✅ VERIFICAR PERMISOS BÁSICOS
                 if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
                     $response = array('status' => false, 'message' => 'No tienes permisos para acceder a esta información', 'data' => []);
                     echo json_encode($response, JSON_UNESCAPED_UNICODE);
@@ -452,14 +411,10 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Obtener personas disponibles para selects
-     */
     public function getPersonas()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                // ✅ VERIFICAR PERMISOS BÁSICOS
                 if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
                     $response = array('status' => false, 'message' => 'No tienes permisos para acceder a esta información', 'data' => []);
                     echo json_encode($response, JSON_UNESCAPED_UNICODE);
@@ -478,14 +433,10 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Exportar usuarios (opcional)
-     */
     public function exportarUsuarios()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                // ✅ VERIFICAR PERMISOS DE EXPORTACIÓN
                 if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'exportar')) {
                     $arrResponse = array('status' => false, 'message' => 'No tienes permisos para exportar usuarios');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -518,14 +469,10 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Buscar usuario por término
-     */
     public function buscarUsuario()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                // ✅ VERIFICAR PERMISOS DE BÚSQUEDA
                 if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
                     $arrResponse = array('status' => false, 'message' => 'No tienes permisos para buscar usuarios');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -548,7 +495,6 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                // Nota: Necesitarías implementar buscarUsuarios en el modelo
                 $arrData = $this->model->buscarUsuarios($strTermino);
                 if ($arrData['status']) {
                     $arrResponse = array('status' => true, 'data' => $arrData['data']);
@@ -566,9 +512,6 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Método de debug temporal para permisos
-     */
     public function debugPermisos()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -596,7 +539,6 @@ class Usuarios extends Controllers
             $conexion->connect();
             $db = $conexion->get_conectSeguridad();
 
-            // ✅ CONSULTA CORREGIDA CON TU ESTRUCTURA REAL
             $query = "
                 SELECT 
                     u.idusuario,
@@ -622,7 +564,6 @@ class Usuarios extends Controllers
             $stmt->execute([$debug['session_usuario_id']]);
             $debug['consulta_directa'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // ✅ CONSULTA ADICIONAL PARA VER TODOS LOS MÓDULOS DEL USUARIO
             $query2 = "
                 SELECT 
                     m.titulo as modulo,
@@ -651,9 +592,6 @@ class Usuarios extends Controllers
         exit();
     }
 
-    /**
-     * Método de debug detallado para permisos
-     */
     public function debugPermisosDetallado()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -670,13 +608,11 @@ class Usuarios extends Controllers
             $conexion->connect();
             $db = $conexion->get_conectSeguridad();
 
-            // 1. Verificar que el módulo existe
             $queryModulo = "SELECT * FROM modulos WHERE LOWER(titulo) = LOWER('usuarios')";
             $stmtModulo = $db->prepare($queryModulo);
             $stmtModulo->execute();
             $debug['modulo_existe'] = $stmtModulo->fetch(PDO::FETCH_ASSOC);
 
-            // 2. Verificar todos los permisos del rol
             $queryPermisosRol = "
                 SELECT 
                     rmp.*,
@@ -691,7 +627,6 @@ class Usuarios extends Controllers
             $stmtPermisosRol->execute([$debug['rol_id']]);
             $debug['todos_permisos_rol'] = $stmtPermisosRol->fetchAll(PDO::FETCH_ASSOC);
 
-            // 3. Buscar específicamente usuarios
             $queryUsuarios = "
                 SELECT 
                     rmp.*,
@@ -707,7 +642,6 @@ class Usuarios extends Controllers
             $stmtUsuarios->execute([$debug['rol_id']]);
             $debug['permisos_usuarios_encontrados'] = $stmtUsuarios->fetchAll(PDO::FETCH_ASSOC);
 
-            // 4. Obtener permisos usando el helper
             $debug['permisos_helper'] = PermisosModuloVerificar::getPermisosUsuarioModulo('usuarios');
 
             $conexion->disconnect();

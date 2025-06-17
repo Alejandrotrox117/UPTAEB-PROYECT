@@ -21,6 +21,7 @@
 <?php if (isset($data['page_functions_js'])): ?>
   <script type="module" src="/project/app/assets/js/<?php echo $data['page_functions_js']; ?>"></script>
 <?php endif; ?>
+ <script type="module" src="/project/app/assets/js/functions_header.js"></script>
 
 </div>
 </body>

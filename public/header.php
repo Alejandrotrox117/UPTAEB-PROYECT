@@ -14,42 +14,7 @@ if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['rol_id'])) {
     }
 }
 
-// DEBUG COMPLETO - TEMPORAL
-if (isset($_GET['debug']) && $_GET['debug'] == 'session') {
-    echo "<div style='background: #f0f0f0; padding: 20px; margin: 10px; border: 2px solid #000;'>";
-    echo "<h2>DEBUG COMPLETO DE SESIÓN:</h2>";
-    echo "<h3>Estado de la sesión:</h3>";
-    echo "Session Status: " . session_status() . " (1=disabled, 2=none, 3=active)<br>";
-    echo "Session ID: " . session_id() . "<br>";
-    echo "<h3>Variables de sesión:</h3>";
-    echo "<pre>";
-    print_r($_SESSION);
-    echo "</pre>";
-    echo "<h3>Cookies:</h3>";
-    echo "<pre>";
-    print_r($_COOKIE);
-    echo "</pre>";
-    echo "<h3>Información adicional:</h3>";
-    echo "REQUEST_URI: " . $_SERVER['REQUEST_URI'] . "<br>";
-    echo "Está logueado: " . (isset($_SESSION['usuario_id']) ? 'SÍ' : 'NO') . "<br>";
-    echo "</div>";
-}
-
-// ✅ CAMBIAR AL SISTEMA NUEVO DE PERMISOS
 require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
-
-// DEBUG TEMPORAL - Eliminar después
-if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
-    echo "<pre>";
-    echo "Usuario ID: " . ($_SESSION['usuario_id'] ?? 'No definido') . "\n";
-    echo "Rol ID: " . ($_SESSION['rol_id'] ?? 'No definido') . "\n";
-    echo "Nombre Usuario: " . ($_SESSION['usuario_nombre'] ?? 'No definido') . "\n";
-    
-    // ✅ USAR EL SISTEMA NUEVO
-    $permisoRolesIntegrado = PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver');
-    echo "Permiso RolesIntegrado: " . ($permisoRolesIntegrado ? 'SÍ' : 'NO') . "\n";
-    echo "</pre>";
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -65,79 +30,28 @@ if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
   <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
   <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
   <style>
-    body {
-      overflow-x: hidden;
-    }
+    body { overflow-x: hidden; }
     #sidebar nav::-webkit-scrollbar { width: 6px; }
     #sidebar nav::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
     #sidebar nav::-webkit-scrollbar-track { background-color: #f7fafc; }
-    
-    /* Estilos para notificaciones */
-    .notification-badge {
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background-color: #ef4444;
-      color: white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: 12px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-    }
-
-    .notification-item {
-      transition: all 0.3s ease;
-    }
-
-    .notification-item:hover {
-      background-color: #f3f4f6;
-      transform: translateX(4px);
-    }
-
-    .notification-item.unread {
-      background-color: #fef3c7;
-      border-left: 4px solid #f59e0b;
-    }
-
-    .notification-dropdown {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .notification-dropdown::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .notification-dropdown::-webkit-scrollbar-thumb {
-      background-color: #cbd5e1;
-      border-radius: 3px;
-    }
-
-    .notification-dropdown::-webkit-scrollbar-track {
-      background-color: #f7fafc;
-    }
+    .notification-badge { position: absolute; top: -8px; right: -8px; background-color: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .notification-item { transition: all 0.3s ease; }
+    .notification-item:hover { background-color: #f3f4f6; transform: translateX(4px); }
+    .notification-item.unread { background-color: #fef3c7; border-left: 4px solid #f59e0b; }
+    .notification-dropdown { max-height: 400px; overflow-y: auto; }
+    .notification-dropdown::-webkit-scrollbar { width: 6px; }
+    .notification-dropdown::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
+    .notification-dropdown::-webkit-scrollbar-track { background-color: #f7fafc; }
   </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
-  <header 
-    class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md p-4 flex items-center justify-between z-50 h-16">
-    
+  <!-- Header para Móvil -->
+  <header class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md p-4 flex items-center justify-between z-50 h-16">
     <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="h-16 w-auto">
-    
     <div class="flex items-center space-x-4">
-      <!-- Notificaciones en móvil -->
-      <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
+      <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?>
       <div class="relative">
         <button id="mobile-notifications-toggle" class="text-gray-700 hover:text-green-600 focus:outline-none p-2 relative">
           <i class="fas fa-bell text-xl"></i>
@@ -145,7 +59,6 @@ if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
         </button>
       </div>
       <?php endif; ?>
-      
       <button id="mobile-menu-toggle" class="text-gray-700 hover:text-green-600 focus:outline-none p-2">
         <i class="fa-solid fa-bars text-2xl"></i>
       </button>
@@ -154,31 +67,15 @@ if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
 
   <div id="sidebar-overlay" class="fixed inset-0 bg-transparent bg-opacity-50 z-30 lg:hidden hidden"></div>
 
-  <div class="flex min-h-screen pt-16 lg:pt-0">
+  <div class="flex min-h-screen">
     
-    <aside id="sidebar" 
-           class="fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-xl 
-                  transform -translate-x-full transition-transform duration-300 ease-in-out 
-                  lg:relative lg:translate-x-0 lg:shadow-md lg:flex lg:flex-col">
-      
+    <!-- Menú Lateral (Sidebar) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:shadow-md lg:flex lg:flex-col">
       <div class="flex items-center justify-between p-4 border-b border-gray-200 h-17">
         <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="h-16 w-auto">
-        
-        <div class="flex items-center space-x-2">
-          <!-- Notificaciones en desktop -->
-          <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
-          <div class="relative">
-            <button id="desktop-notifications-toggle" class="text-gray-600 hover:text-green-600 p-2 relative">
-              <i class="fas fa-bell text-lg"></i>
-              <span id="desktop-notification-badge" class="notification-badge hidden">0</span>
-            </button>
-          </div>
-          <?php endif; ?>
-          
-          <button id="sidebar-close" class="text-gray-600 hover:text-green-600 lg:hidden p-2">
-            <i class="fa-solid fa-times text-2xl"></i>
-          </button>
-        </div>
+        <button id="sidebar-close" class="text-gray-600 hover:text-green-600 lg:hidden p-2">
+          <i class="fa-solid fa-times text-2xl"></i>
+        </button>
       </div>
 
       <nav class="flex-1 flex flex-col overflow-y-auto p-3 text-sm">
@@ -191,206 +88,44 @@ if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
             </a>
           </li>
 
-          <!-- Acceso directo a Romana -->
-          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('romana', 'ver')): ?>
-          <!-- <li class="menu-item">
-            <a href="/project/romana" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-              <i class="nav-icon fa-solid fa-weight-scale w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-              <span class="nav-text ml-3 font-medium">Romana</span>
-            </a>
-          </li> -->
-          <?php endif; ?>
-
           <!-- Gestionar Compras -->
           <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('proveedores', 'ver')): ?>
-          <li class="menu-item-group">
-            <details class="group">
-              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-                <div class="flex items-center">
-                  <i class="nav-icon fa-solid fa-cart-shopping w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-                  <span class="nav-text ml-3 font-medium">Gestionar Compras</span>
-                </div>
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
-              </summary>
-              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver')): ?>
-                <li class="menu-item">
-                  <a href="/project/compras" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
-                    <i class="nav-icon fa-solid fa-cart-shopping w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
-                    <span class="nav-text ml-3">Compras</span>
-                  </a>
-                </li>
-                <?php endif; ?>
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('proveedores', 'ver')): ?>
-                <li class="menu-item">
-                  <a href="/project/proveedores" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
-                    <i class="nav-icon fa-solid fa-truck w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
-                    <span class="nav-text ml-3">Proveedores</span>
-                  </a>
-                </li>
-                <?php endif; ?>
-              </ul>
-            </details>
-          </li>
+          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-cart-shopping w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Compras</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver')): ?><li class="menu-item"><a href="/project/compras" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-cart-shopping w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Compras</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('proveedores', 'ver')): ?><li class="menu-item"><a href="/project/proveedores" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-truck w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Proveedores</span></a></li><?php endif; ?></ul></details></li>
           <?php endif; ?>
 
           <!-- Gestionar Produccion -->
-          <?php if (
-            PermisosModuloVerificar::verificarPermisoModuloAccion('produccion', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('empleados', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('categorias', 'ver')
-          ): ?>
-          <li class="menu-item-group">
-            <details class="group">
-              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-                <div class="flex items-center">
-                  <i class="nav-icon fa-solid fa-cogs w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-                  <span class="nav-text ml-3 font-medium">Gestionar Produccion</span>
-                </div>
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
-              </summary>
-              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('produccion', 'ver')): ?>
-                <li class="menu-item"><a href="/project/produccion" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-industry w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Produccion</span></a></li>
-                <?php endif; ?>
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('empleados', 'ver')): ?>
-                <li class="menu-item"><a href="/project/empleados" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-group w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Empleados</span></a></li>
-                <?php endif; ?>
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?>
-                <li class="menu-item"><a href="/project/productos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-box w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Productos</span></a></li>
-                <?php endif; ?>
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('categorias', 'ver')): ?>
-                <li class="menu-item"><a href="/project/categorias" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-tags w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Categorias</span></a></li>
-                <?php endif; ?>
-              </ul>
-            </details>
-          </li>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('produccion', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('empleados', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('categorias', 'ver')): ?>
+          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-cogs w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Produccion</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('produccion', 'ver')): ?><li class="menu-item"><a href="/project/produccion" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-industry w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Produccion</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('empleados', 'ver')): ?><li class="menu-item"><a href="/project/empleados" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-group w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Empleados</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?><li class="menu-item"><a href="/project/productos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-box w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Productos</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('categorias', 'ver')): ?><li class="menu-item"><a href="/project/categorias" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-tags w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Categorias</span></a></li><?php endif; ?></ul></details></li>
           <?php endif; ?>
 
           <!-- Gestionar Pagos -->
-           <?php if (
-            PermisosModuloVerificar::verificarPermisoModuloAccion('romana', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')
-          ): ?>
-          <li class="menu-item-group">
-            <details class="group">
-              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-                <div class="flex items-center">
-                  <i class="nav-icon fa-solid fa-credit-card w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-                  <span class="nav-text ml-3 font-medium">Gestionar Pagos</span>
-                </div>
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
-              </summary>
-              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-              
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver')): ?>
-                <li class="menu-item"><a href="/project/personas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-shield w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Personas</span></a></li>
-                <?php endif; ?>
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')): ?>
-                <li class="menu-item"><a href="/project/tasas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fas fa-coins w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Historico de Tasas BCV</span></a></li>
-                <?php endif; ?>
-              </ul>
-            </details>
-          </li>
+           <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('pagos', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')): ?>
+          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-credit-card w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Pagos</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('pagos', 'ver')): ?><li class="menu-item"><a href="/project/pagos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-credit-card w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Pagos</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver')): ?><li class="menu-item"><a href="/project/personas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-shield w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Personas</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')): ?><li class="menu-item"><a href="/project/tasas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fas fa-coins w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Historico de Tasas BCV</span></a></li><?php endif; ?></ul></details></li>
           <?php endif; ?>
 
           <!-- Movimientos de existencias -->
           <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('movimientos', 'ver')): ?>
-          <li class="menu-item">
-            <a href="/project/movimientos" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-              <i class="nav-icon fa-solid fa-boxes-stacked w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-              <span class="nav-text ml-3 font-medium">Gestionar Movimientos</span>
-            </a>
-          </li>
+          <li class="menu-item"><a href="/project/movimientos" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-boxes-stacked w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Movimientos</span></a></li>
           <?php endif; ?>
 
           <!-- Sueldos Temporales -->
           <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos_temporales', 'ver')): ?>
-          <li class="menu-item">
-            <a href="/project/sueldos_temporales" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-              <i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-              <span class="nav-text ml-3 font-medium">Gestionar Sueldos</span>
-            </a>
-          </li>
+          <li class="menu-item"><a href="/project/sueldos_temporales" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Sueldos</span></a></li>
           <?php endif; ?>
 
           <!-- Gestionar Ventas -->
           <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')): ?>
-          <li class="menu-item-group">
-            <details class="group">
-              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-                <div class="flex items-center">
-                  <i class="nav-icon fa-solid fa-cash-register w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-                  <span class="nav-text ml-3 font-medium">Gestionar Ventas</span>
-                </div>
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
-              </summary>
-              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')): ?>
-                <li class="menu-item"><a href="/project/ventas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-file-invoice-dollar w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Ventas</span></a></li>
-                <?php endif; ?>
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')): ?>
-                <li class="menu-item"><a href="/project/clientes" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-users w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Clientes</span></a></li>
-                <?php endif; ?>
-              </ul>
-            </details>
-          </li>
+          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-cash-register w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Ventas</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')): ?><li class="menu-item"><a href="/project/ventas" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-file-invoice-dollar w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Ventas</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')): ?><li class="menu-item"><a href="/project/clientes" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-users w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Clientes</span></a></li><?php endif; ?></ul></details></li>
           <?php endif; ?>
 
           <!-- Generar Reportes -->
           <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('reportes', 'ver')): ?>
-          <li class="menu-item">
-            <a href="/project/reportes" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-              <i class="nav-icon fa-solid fa-file-lines w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-              <span class="nav-text ml-3 font-medium">Generar Reportes</span>
-            </a>
-          </li>
+          <li class="menu-item"><a href="/project/reportes" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-file-lines w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Generar Reportes</span></a></li>
           <?php endif; ?>
 
           <!-- Seguridad -->
-          <?php if (
-            PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('RolesPermisos', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('RolesAsignaciones', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver') ||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('rolesmodulos', 'ver')||
-            PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')
-          ): ?>
-          <li class="menu-item-group">
-            <details class="group">
-              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
-                <div class="flex items-center">
-                  <i class="nav-icon fa-solid fa-user-lock w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-                  <span class="nav-text ml-3 font-medium">Seguridad</span>
-                </div>
-                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
-              </summary>
-              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
-                 <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver')): ?>
-                <li class="menu-item"><a href="/project/usuarios" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Usuarios</span></a></li>
-                <?php endif; ?>
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
-                <li class="menu-item"><a href="/project/roles" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-tag w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Rol</span></a></li>
-                <?php endif; ?>
-               
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver')): ?>
-                <li class="menu-item"><a href="/project/RolesIntegrado" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestión Integral</span></a></li>
-                <?php endif; ?>
-             
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver')): ?>
-                <li class="menu-item"><a href="/project/modulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-puzzle-piece w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Modulos</span></a></li>
-                <?php endif; ?>
-               
-                 <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
-                <li class="menu-item"><a href="/project/bitacora" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-clipboard-list w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Bitácora</span></a></li>
-                <?php endif; ?>
-              </ul>
-            </details>
-          </li>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
+          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-user-lock w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Seguridad</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver')): ?><li class="menu-item"><a href="/project/usuarios" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Usuarios</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver')): ?><li class="menu-item"><a href="/project/RolesIntegrado" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestión de Roles</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?><li class="menu-item"><a href="/project/bitacora" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-clipboard-list w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Bitácora</span></a></li><?php endif; ?></ul></details></li>
           <?php endif; ?>
         </ul>
 
@@ -407,414 +142,38 @@ if (isset($_GET['debug']) && $_GET['debug'] == 'permisos') {
       </nav>
     </aside>
 
-    <!-- Dropdown de notificaciones -->
-    <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
-    <div id="notifications-dropdown" class="fixed top-10 right-4 lg:top-10 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
-      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 class="text-lg font-semibold text-gray-900">
-          <i class="fas fa-bell mr-2 text-green-600"></i>
-          Notificaciones
-        </h3>
-        <div class="flex space-x-2">
-          <button id="mark-all-read-btn" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
-            Marcar todas como leídas
-          </button>
-          <button id="close-notifications-btn" class="text-gray-500 hover:text-gray-700">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
-      
-      <div id="notifications-list" class="notification-dropdown p-2">
-        <div class="text-center py-4 text-gray-500">
-          <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-          <p>Cargando notificaciones...</p>
-        </div>
-      </div>
-      
-      <div class="p-3 border-t border-gray-200 text-center">
-        <button id="refresh-notifications-btn" class="text-sm text-green-600 hover:text-green-800 font-medium">
-          <i class="fas fa-sync-alt mr-1"></i>
-          Actualizar
-        </button>
-      </div>
-    </div>
-    <?php endif; ?>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
-  const sidebar = document.getElementById("sidebar");
-  const sidebarOverlay = document.getElementById("sidebar-overlay");
-  const sidebarClose = document.getElementById("sidebar-close");
-
-  function openSidebar() {
-    if (sidebar && sidebarOverlay) {
-      sidebar.classList.remove("-translate-x-full");
-      sidebarOverlay.classList.remove("hidden");
-      document.body.classList.add("overflow-hidden");
-    }
-  }
-
-  function closeSidebar() {
-    if (sidebar && sidebarOverlay) {
-      sidebar.classList.add("-translate-x-full");
-      sidebarOverlay.classList.add("hidden");
-      document.body.classList.remove("overflow-hidden");
-    }
-  }
-
-  if (mobileMenuToggle) {
-    mobileMenuToggle.addEventListener("click", openSidebar);
-  } else {
-    console.error("Botón de menú móvil (mobile-menu-toggle) no encontrado.");
-  }
-
-  if (sidebarClose) {
-    sidebarClose.addEventListener("click", closeSidebar);
-  }
-
-  if (sidebarOverlay) {
-    sidebarOverlay.addEventListener("click", closeSidebar);
-  }
-
-  const sidebarLinks = sidebar ? sidebar.querySelectorAll("a.nav-link") : [];
-  sidebarLinks.forEach((link) => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth < 1024) { // Tailwind's lg breakpoint
-        closeSidebar();
-      }
-    });
-  });
-
-  window.addEventListener("resize", () => {
-    if (window.innerWidth >= 1024) {
-      closeSidebar();
-      document.body.classList.remove("overflow-hidden");
-      if(sidebarOverlay) sidebarOverlay.classList.add("hidden");
-    }
-  });
-
-  // Active link functionality
-  const currentPath = window.location.pathname;
-  const navLinksQuery = "#sidebar nav a.nav-link";
-  const allNavLinks = document.querySelectorAll(navLinksQuery);
-
-  allNavLinks.forEach((link) => {
-    const linkElement = link;
-    const listItem = linkElement.closest("li.menu-item, li.menu-item-group"); 
-    const icon = linkElement.querySelector("i.nav-icon");
-    const textSpan = linkElement.querySelector("span.nav-text");
-
-    if (listItem) listItem.classList.remove("bg-green-600");
-    linkElement.classList.remove("text-white");
-    if (icon) icon.classList.remove("text-white");
-    if (textSpan) textSpan.classList.remove("text-white");
-
-    if (linkElement.getAttribute("href") === currentPath) {
-      if (listItem) {
-        listItem.classList.add("bg-green-600");
-        listItem.classList.add("rounded-md");
-        linkElement.classList.add("text-white");
-        if (icon) icon.classList.add("text-white");
-        if (textSpan) textSpan.classList.add("text-white");
+    <!-- Contenedor Principal -->
+    <div class="flex-1 w-full relative">
         
-        linkElement.classList.remove("hover:bg-green-100", "hover:text-green-700");
-        if(icon) icon.classList.remove("text-gray-500", "group-hover:text-green-600");
-        if(textSpan) textSpan.classList.remove("text-gray-700");
-
-        let parentDetails = linkElement.closest("details");
-        if (parentDetails) {
-          parentDetails.setAttribute("open", "");
-          const summary = parentDetails.querySelector("summary.nav-link-summary");
-          if (summary) {
-            summary.classList.add("bg-green-600", "text-white");
-            const summaryIcon = summary.querySelector("i.nav-icon");
-            const summaryText = summary.querySelector("span.nav-text");
-            if(summaryIcon) summaryIcon.classList.add("text-white");
-            if(summaryText) summaryText.classList.add("text-white");
-            summary.classList.remove("hover:bg-green-100", "hover:text-green-700");
-          }
-        }
-      }
-    }
-  });
-
-  // Sistema de notificaciones
-  <?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
-  initNotificationSystem();
-  <?php endif; ?>
-});
-
-// Funciones del sistema de notificaciones
-<?php if (PermisosVerificar::verificarPermisoAccion('productos', 'ver')): ?>
-function initNotificationSystem() {
-  const mobileNotificationsToggle = document.getElementById("mobile-notifications-toggle");
-  const desktopNotificationsToggle = document.getElementById("desktop-notifications-toggle");
-  const notificationsDropdown = document.getElementById("notifications-dropdown");
-  const closeNotificationsBtn = document.getElementById("close-notifications-btn");
-  const markAllReadBtn = document.getElementById("mark-all-read-btn");
-  const refreshNotificationsBtn = document.getElementById("refresh-notifications-btn");
-
-  // Event listeners
-  if (mobileNotificationsToggle) {
-    mobileNotificationsToggle.addEventListener("click", toggleNotifications);
-  }
-
-  if (desktopNotificationsToggle) {
-    desktopNotificationsToggle.addEventListener("click", toggleNotifications);
-  }
-
-  if (closeNotificationsBtn) {
-    closeNotificationsBtn.addEventListener("click", closeNotifications);
-  }
-
-  if (markAllReadBtn) {
-    markAllReadBtn.addEventListener("click", markAllNotificationsAsRead);
-  }
-
-  if (refreshNotificationsBtn) {
-    refreshNotificationsBtn.addEventListener("click", () => {
-      loadNotifications();
-      actualizarContadorNotificaciones();
-    });
-  }
-
-  // Cerrar dropdown al hacer clic fuera
-  document.addEventListener("click", (event) => {
-    if (notificationsDropdown && 
-        !notificationsDropdown.contains(event.target) && 
-        !mobileNotificationsToggle?.contains(event.target) && 
-        !desktopNotificationsToggle?.contains(event.target)) {
-      closeNotifications();
-    }
-  });
-
-  // Cargar notificaciones al inicio
-  loadNotifications();
-  actualizarContadorNotificaciones();
-
-  // Actualizar cada 30 segundos
-  setInterval(actualizarContadorNotificaciones, 30000);
-}
-
-function toggleNotifications() {
-  const dropdown = document.getElementById("notifications-dropdown");
-  if (dropdown) {
-    if (dropdown.classList.contains("hidden")) {
-      dropdown.classList.remove("hidden");
-      loadNotifications();
-    } else {
-      dropdown.classList.add("hidden");
-    }
-  }
-}
-
-function closeNotifications() {
-  const dropdown = document.getElementById("notifications-dropdown");
-  if (dropdown) {
-    dropdown.classList.add("hidden");
-  }
-}
-
-function loadNotifications() {
-  const notificationsList = document.getElementById("notifications-list");
-  if (!notificationsList) return;
-
-  // Mostrar loading
-  notificationsList.innerHTML = `
-    <div class="text-center py-4 text-gray-500">
-      <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
-      <p>Cargando notificaciones...</p>
-    </div>
-  `;
-
-  fetch("./Notificaciones/getNotificaciones", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        displayNotifications(result.data);
-      } else {
-        notificationsList.innerHTML = `
-          <div class="text-center py-4 text-gray-500">
-            <i class="fas fa-bell-slash fa-2x mb-2"></i>
-            <p>No hay notificaciones</p>
-          </div>
-        `;
-      }
-    })
-    .catch((error) => {
-      console.error("Error al cargar notificaciones:", error);
-      notificationsList.innerHTML = `
-        <div class="text-center py-4 text-red-500">
-          <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-          <p>Error al cargar notificaciones</p>
-        </div>
-      `;
-    });
-}
-
-function displayNotifications(notifications) {
-  const notificationsList = document.getElementById("notifications-list");
-  if (!notificationsList) return;
-
-  if (notifications.length === 0) {
-    notificationsList.innerHTML = `
-      <div class="text-center py-4 text-gray-500">
-        <i class="fas fa-bell-slash fa-2x mb-2"></i>
-        <p>No hay notificaciones</p>
-      </div>
-    `;
-    return;
-  }
-
-  let notificationsHTML = "";
-  notifications.forEach((notification) => {
-    const isUnread = notification.leida == 0;
-    const prioridad = notification.prioridad || 'MEDIA';
-    
-    let iconClass = "fas fa-info-circle text-blue-500";
-    let priorityColor = "text-blue-600";
-    
-    switch (notification.tipo) {
-      case "STOCK_BAJO":
-        iconClass = "fas fa-exclamation-triangle text-yellow-500";
-        priorityColor = "text-yellow-600";
-        break;
-      case "SIN_STOCK":
-        iconClass = "fas fa-times-circle text-red-500";
-        priorityColor = "text-red-600";
-        break;
-    }
-
-    notificationsHTML += `
-      <div class="notification-item p-3 border-b border-gray-100 cursor-pointer ${isUnread ? 'unread' : ''}" 
-           data-notification-id="${notification.idnotificacion}" 
-           onclick="markNotificationAsRead(${notification.idnotificacion})">
-        <div class="flex items-start space-x-3">
-          <div class="flex-shrink-0">
-            <i class="${iconClass} text-lg"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between">
-              <p class="text-sm font-medium text-gray-900 truncate">
-                ${notification.titulo}
-              </p>
-              ${isUnread ? '<div class="w-2 h-2 bg-red-500 rounded-full"></div>' : ''}
+        <!-- Icono de notificaciones posicionado absolutamente (solo para desktop) -->
+        <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?>
+        <div class="hidden lg:block absolute top-4 right-6 z-20">
+            <div class="relative">
+                <button id="desktop-notifications-toggle" class="text-gray-600 hover:text-green-600 p-2 relative bg-white rounded-full shadow-md">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span id="desktop-notification-badge" class="notification-badge hidden">0</span>
+                </button>
             </div>
-            <p class="text-xs text-gray-600 mt-1">
-              ${notification.mensaje}
-            </p>
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-xs ${priorityColor} font-medium">
-                ${prioridad}
-              </span>
-              <span class="text-xs text-gray-400">
-                ${notification.fecha_formato}
-              </span>
+        </div>
+        <?php endif; ?>
+
+        <!-- El tag <main> de tus vistas se renderizará aquí -->
+        
+        <!-- Dropdown de notificaciones -->
+        <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?>
+        <div id="notifications-dropdown" class="fixed top-16 right-6 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
+          <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-bell mr-2 text-green-600"></i> Notificaciones</h3>
+            <div class="flex space-x-2">
+              <button id="mark-all-read-btn" class="text-xs text-blue-600 hover:text-blue-800 font-medium">Marcar todas leídas</button>
+              <button id="close-notifications-btn" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
             </div>
           </div>
+          <div id="notifications-list" class="notification-dropdown p-2">
+            <!-- Contenido se carga con JS -->
+          </div>
+          <div class="p-3 border-t border-gray-200 text-center">
+            <button id="refresh-notifications-btn" class="text-sm text-green-600 hover:text-green-800 font-medium"><i class="fas fa-sync-alt mr-1"></i> Actualizar</button>
+          </div>
         </div>
-      </div>
-    `;
-  });
-
-  notificationsList.innerHTML = notificationsHTML;
-}
-
-function actualizarContadorNotificaciones() {
-  fetch("./Notificaciones/getContadorNotificaciones", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      const mobileBadge = document.getElementById("mobile-notification-badge");
-      const desktopBadge = document.getElementById("desktop-notification-badge");
-      
-      const count = result.count || 0;
-      
-      [mobileBadge, desktopBadge].forEach(badge => {
-        if (badge) {
-          if (count > 0) {
-            badge.textContent = count > 99 ? "99+" : count;
-            badge.classList.remove("hidden");
-          } else {
-            badge.classList.add("hidden");
-          }
-        }
-      });
-    })
-    .catch((error) => {
-      console.error("Error al obtener contador de notificaciones:", error);
-    });
-}
-
-function markNotificationAsRead(notificationId) {
-  fetch("./Notificaciones/marcarLeida", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-    body: JSON.stringify({ idnotificacion: notificationId }),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        // Remover clase unread del elemento
-        const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`);
-        if (notificationElement) {
-          notificationElement.classList.remove("unread");
-          const unreadDot = notificationElement.querySelector(".w-2.h-2.bg-red-500");
-          if (unreadDot) {
-            unreadDot.remove();
-          }
-        }
-        actualizarContadorNotificaciones();
-      }
-    })
-    .catch((error) => {
-      console.error("Error al marcar notificación como leída:", error);
-    });
-}
-
-function markAllNotificationsAsRead() {
-  fetch("./Notificaciones/marcarTodasLeidas", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        const unreadItems = document.querySelectorAll(".notification-item.unread");
-        unreadItems.forEach(item => {
-          item.classList.remove("unread");
-          const unreadDot = item.querySelector(".w-2.h-2.bg-red-500");
-          if (unreadDot) {
-            unreadDot.remove();
-          }
-        });
-        actualizarContadorNotificaciones();
-      }
-    })
-    .catch((error) => {
-      console.error("Error al marcar todas las notificaciones como leídas:", error);
-    });
-}
-
-window.actualizarContadorNotificaciones = actualizarContadorNotificaciones;
-<?php endif; ?>
-</script>
+        <?php endif; ?>

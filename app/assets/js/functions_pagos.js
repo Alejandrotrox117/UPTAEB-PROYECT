@@ -6,12 +6,29 @@ import {
   registrarEntidad,
   validarCamposVacios,
   validarFecha,
-  validarSelect
+  validarSelect,
 } from "./validaciones.js";
 
 let tablaPagos;
 let tiposPago = [];
 let pagoEditando = null; // Variable para rastrear si estamos editando
+
+function mostrarModalPermisosDenegados(
+  mensaje = "No tienes permisos para realizar esta acción."
+) {
+  Swal.fire({
+    icon: "warning",
+    title: "Acceso Denegado",
+    text: mensaje,
+    confirmButtonColor: "#d33",
+  });
+}
+
+function tienePermiso(accion) {
+  return window.permisosPagos && window.permisosPagos[accion] === true;
+}
+
+// --- FIN: SECCIÓN DE PERMISOS ---
 
 // Configuración de campos para validación
 const camposFormularioPago = [
@@ -25,7 +42,7 @@ const camposFormularioPago = [
   {
     id: "pagoMonto",
     tipo: "input",
-    regex: /^\d+(\.\d{1,2})?$/, // Números decimales con hasta 2 decimales
+    regex: /^\d+(\.\d{1,2})?$/,
     mensajes: {
       vacio: "El monto es obligatorio.",
       formato: "El monto debe ser un número válido con hasta 2 decimales.",
@@ -50,7 +67,7 @@ const camposFormularioPago = [
   {
     id: "pagoReferencia",
     tipo: "input",
-    regex: expresiones.textoGeneral, // Texto general opcional
+    regex: expresiones.textoGeneral,
     mensajes: {
       formato: "La referencia debe tener entre 2 y 100 caracteres.",
     },
@@ -58,41 +75,34 @@ const camposFormularioPago = [
   {
     id: "pagoObservaciones",
     tipo: "textarea",
-    regex: /^.{0,200}$/, // Observaciones opcionales hasta 200 caracteres
+    regex: /^.{0,200}$/,
     mensajes: {
       formato: "Las observaciones no pueden exceder 200 caracteres.",
     },
-  }
+  },
 ];
 
-// Campos dinámicos según el tipo de pago
 const camposDinamicos = {
   compra: [
     {
       id: "pagoCompra",
       tipo: "select",
-      mensajes: {
-        vacio: "Debe seleccionar una compra.",
-      },
-    }
+      mensajes: { vacio: "Debe seleccionar una compra." },
+    },
   ],
   venta: [
     {
       id: "pagoVenta",
       tipo: "select",
-      mensajes: {
-        vacio: "Debe seleccionar una venta.",
-      },
-    }
+      mensajes: { vacio: "Debe seleccionar una venta." },
+    },
   ],
   sueldo: [
     {
       id: "pagoSueldo",
       tipo: "select",
-      mensajes: {
-        vacio: "Debe seleccionar un sueldo.",
-      },
-    }
+      mensajes: { vacio: "Debe seleccionar un sueldo." },
+    },
   ],
   otro: [
     {
@@ -103,8 +113,8 @@ const camposDinamicos = {
         vacio: "La descripción es obligatoria para otros pagos.",
         formato: "La descripción debe tener entre 2 y 100 caracteres.",
       },
-    }
-  ]
+    },
+  ],
 };
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -112,29 +122,54 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function inicializarModulo() {
+  if (!tienePermiso("ver")) {
+    mostrarModalPermisosDenegados("No tienes permisos para ver los pagos.");
+    // Ocultar el contenedor principal si es necesario
+    const mainContainer = document.querySelector(".container-fluid");
+    if (mainContainer) mainContainer.innerHTML = "";
+    return;
+  }
   inicializarTablaPagos();
   configurarEventos();
   cargarTiposPago();
-  // Inicializar validaciones básicas
   inicializarValidaciones(camposFormularioPago, "formRegistrarPago");
 }
 
-
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-  // Only apply this filter to TablaPagos
   if (settings.nTable.id !== "TablaPagos") {
     return true;
   }
   var api = new $.fn.dataTable.Api(settings);
   var rowData = api.row(dataIndex).data();
-
-  // Return true (show row) if status is not 'inactivo'
-  return rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
+  return (
+    rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo"
+  );
 });
 
 function inicializarTablaPagos() {
   if ($.fn.DataTable.isDataTable("#TablaPagos")) {
     $("#TablaPagos").DataTable().destroy();
+  }
+
+  let dataTableButtons = [];
+  if (tienePermiso("exportar")) {
+    dataTableButtons.push(
+      {
+        extend: "excelHtml5",
+        text: '<i class="fas fa-file-excel mr-2"></i>Excel',
+        className:
+          "bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm inline-flex items-center",
+        title: "Reporte_Pagos",
+      },
+      {
+        extend: "pdfHtml5",
+        text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
+        className:
+          "bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md text-sm inline-flex items-center ml-2",
+        title: "Reporte de Pagos",
+        orientation: "landscape",
+      }
+    );
   }
 
   tablaPagos = $("#TablaPagos").DataTable({
@@ -145,8 +180,12 @@ function inicializarTablaPagos() {
         if (json.status === true && Array.isArray(json.data)) {
           return json.data;
         }
-        console.error("Error en la respuesta del servidor:", json);
-        alert("Error al cargar los datos de pagos.");
+        if (json.message && json.message.includes("permiso")) {
+          mostrarModalPermisosDenegados(json.message);
+        } else {
+          console.error("Error en la respuesta del servidor:", json);
+          alert("Error al cargar los datos de pagos.");
+        }
         return [];
       },
       error: function (xhr, error, thrown) {
@@ -161,7 +200,6 @@ function inicializarTablaPagos() {
         className:
           "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
       },
-      // Column 1: Tipo
       {
         data: "tipo_pago_texto",
         title: "Tipo",
@@ -174,13 +212,11 @@ function inicializarTablaPagos() {
               '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Venta</span>',
             Sueldo:
               '<span class="px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-800 rounded-full">Sueldo</span>',
-            Otro:
-              '<span class="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded-full">Otro</span>',
+            Otro: '<span class="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded-full">Otro</span>',
           };
           return badges[data] || data;
         },
       },
-      // Column 2: Monto
       {
         data: "monto",
         title: "Monto",
@@ -191,19 +227,16 @@ function inicializarTablaPagos() {
           ).toFixed(2)}</span>`;
         },
       },
-      // Column 3: Método
       {
         data: "metodo_pago",
         title: "Método",
         className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
       },
-      // Column 4: Fecha
       {
         data: "fecha_pago_formato",
         title: "Fecha",
         className: "all whitespace-nowrap py-2 px-3 text-gray-700",
       },
-      // Column 5: Estatus
       {
         data: "estatus",
         title: "Estatus",
@@ -219,7 +252,6 @@ function inicializarTablaPagos() {
           }
         },
       },
-      // Column 6: Acciones
       {
         data: null,
         title: "Acciones",
@@ -227,35 +259,45 @@ function inicializarTablaPagos() {
         searchable: false,
         className: "all text-center actions-column py-1 px-2",
         render: function (data, type, row) {
-          let buttons = `
-            <button onclick="verPago(${row.idpago})" 
-                    class="text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
-                    title="Ver detalles">
-              <i class="fas fa-eye fa-fw text-base"></i>
-            </button>
-          `;
-          if (row.estatus === "activo") {
+          let buttons = "";
+          if (tienePermiso("ver")) {
             buttons += `
-              <button onclick="editarPago(${row.idpago})" 
-                      class="text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
-                      title="Editar">
-                <i class="fas fa-edit fa-fw text-base"></i>
-              </button>
-              <button onclick="conciliarPago(${row.idpago}, '${row.destinatario}')" 
+              <button onclick="verPago(${row.idpago})" 
                       class="text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
-                      title="Conciliar">
-                <i class="fas fa-check fa-fw text-base"></i>
-              </button>
-              <button onclick="eliminarPago(${row.idpago}, '${row.destinatario}')" 
-                      class="text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
-                      title="Eliminar">
-                <i class="fas fa-trash-alt fa-fw text-base"></i>
+                      title="Ver detalles">
+                <i class="fas fa-eye fa-fw text-base"></i>
               </button>
             `;
-          } else if (row.estatus === "conciliado") {
-            buttons += `
-              <span class="text-xs text-gray-500 italic px-2">Conciliado</span>
-            `;
+          }
+          if (row.estatus === "activo") {
+            if (tienePermiso("editar")) {
+              buttons += `
+                <button onclick="editarPago(${row.idpago})" 
+                        class="text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
+                        title="Editar">
+                  <i class="fas fa-edit fa-fw text-base"></i>
+                </button>
+                <button onclick="conciliarPago(${row.idpago}, '${row.destinatario}')" 
+                        class="text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
+                        title="Conciliar">
+                  <i class="fas fa-check fa-fw text-base"></i>
+                </button>
+              `;
+            }
+            if (tienePermiso("eliminar")) {
+              buttons += `
+                <button onclick="eliminarPago(${row.idpago}, '${row.destinatario}')" 
+                        class="text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
+                        title="Eliminar">
+                  <i class="fas fa-trash-alt fa-fw text-base"></i>
+                </button>
+              `;
+            }
+          } else if (row.estatus === "conciliado" && tienePermiso("ver")) {
+            // No se añade nada extra, el botón de ver ya está
+          }
+          if (buttons === "") {
+            return '<span class="text-gray-400 text-xs">Sin permisos</span>';
           }
           return `<div class="inline-flex items-center space-x-1">${buttons}</div>`;
         },
@@ -313,7 +355,7 @@ function inicializarTablaPagos() {
       [10, 25, 50, 100, -1],
       [10, 25, 50, 100, "Todos"],
     ],
-    order: [[4, "desc"]], // UPDATED: Sort by Fecha (now column 4) descending
+    order: [[4, "desc"]],
     dom:
       "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4'" +
       "l" +
@@ -321,23 +363,7 @@ function inicializarTablaPagos() {
       ">" +
       "<'overflow-x-auto't>" +
       "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mt-4'i p>",
-    buttons: [
-      {
-        extend: "excelHtml5",
-        text: '<i class="fas fa-file-excel mr-2"></i>Excel',
-        className:
-          "bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md text-sm inline-flex items-center",
-        title: "Reporte_Pagos",
-      },
-      {
-        extend: "pdfHtml5",
-        text: '<i class="fas fa-file-pdf mr-2"></i>PDF',
-        className:
-          "bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md text-sm inline-flex items-center ml-2",
-        title: "Reporte de Pagos",
-        orientation: "landscape",
-      },
-    ],
+    buttons: dataTableButtons,
     autoWidth: false,
     scrollX: true,
     fixedColumns: {
@@ -367,7 +393,12 @@ function inicializarTablaPagos() {
   });
 }
 
-window.conciliarPago = function(idPago, descripcion) {
+window.conciliarPago = function (idPago, descripcion) {
+  if (!tienePermiso("editar")) {
+    mostrarModalPermisosDenegados("No tienes permisos para conciliar pagos.");
+    return;
+  }
+
   Swal.fire({
     title: "¿Estás seguro?",
     text: `¿Deseas conciliar el pago "${descripcion}"? Esta acción no se puede deshacer.`,
@@ -386,35 +417,36 @@ window.conciliarPago = function(idPago, descripcion) {
         },
         body: JSON.stringify({ idpago: idPago }),
       })
-        .then(response => response.json())
-        .then(result => {
+        .then((response) => response.json())
+        .then((result) => {
           if (result.status) {
             Swal.fire({
-              title: '¡Éxito!',
+              title: "¡Éxito!",
               text: result.message,
-              icon: 'success',
-              confirmButtonText: 'Aceptar',
-              confirmButtonColor: '#10B981'
+              icon: "success",
+              confirmButtonText: "Aceptar",
+              confirmButtonColor: "#10B981",
             }).then(() => {
               tablaPagos.ajax.reload();
             });
           } else {
-            mostrarNotificacion(result.message, 'error');
+            mostrarNotificacion(result.message, "error");
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error:", error);
-          mostrarNotificacion('Error de conexión al conciliar', 'error');
+          mostrarNotificacion("Error de conexión al conciliar", "error");
         });
     }
   });
 };
 
 function configurarEventos() {
-  // Modal eventos
   const btnAbrirModal = document.getElementById("btnAbrirModalRegistrarPago");
   const btnCerrarModal = document.getElementById("btnCerrarModalRegistrar");
-  const btnCancelarModal = document.getElementById("btnCancelarModalRegistrar");
+  const btnCancelarModal = document.getElementById(
+    "btnCancelarModalRegistrar"
+  );
   const formRegistrar = document.getElementById("formRegistrarPago");
 
   if (btnAbrirModal) {
@@ -423,20 +455,26 @@ function configurarEventos() {
 
   if (btnCerrarModal) {
     btnCerrarModal.addEventListener("click", () => {
-      limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
+      limpiarValidaciones(
+        [...camposFormularioPago, ...obtenerCamposDinamicos()],
+        "formRegistrarPago"
+      );
       cerrarModal("modalRegistrarPago");
     });
   }
 
   if (btnCancelarModal) {
     btnCancelarModal.addEventListener("click", () => {
-      limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
+      limpiarValidaciones(
+        [...camposFormularioPago, ...obtenerCamposDinamicos()],
+        "formRegistrarPago"
+      );
       cerrarModal("modalRegistrarPago");
     });
   }
 
   if (formRegistrar) {
-    formRegistrar.addEventListener("submit", function(e) {
+    formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
       if (pagoEditando) {
         actualizarPago();
@@ -446,22 +484,26 @@ function configurarEventos() {
     });
   }
 
-  // Eventos para cerrar modal de ver pago
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
-  const btnCerrarModalVerFooter = document.getElementById("btnCerrarModalVerFooter");
-  
+  const btnCerrarModalVerFooter = document.getElementById(
+    "btnCerrarModalVerFooter"
+  );
+
   if (btnCerrarModalVer) {
-    btnCerrarModalVer.addEventListener("click", () => cerrarModal("modalVerPago"));
-  }
-  
-  if (btnCerrarModalVerFooter) {
-    btnCerrarModalVerFooter.addEventListener("click", () => cerrarModal("modalVerPago"));
+    btnCerrarModalVer.addEventListener("click", () =>
+      cerrarModal("modalVerPago")
+    );
   }
 
-  // También permitir cerrar con clic fuera del modal
+  if (btnCerrarModalVerFooter) {
+    btnCerrarModalVerFooter.addEventListener("click", () =>
+      cerrarModal("modalVerPago")
+    );
+  }
+
   const modalVerPago = document.getElementById("modalVerPago");
   if (modalVerPago) {
-    modalVerPago.addEventListener("click", function(e) {
+    modalVerPago.addEventListener("click", function (e) {
       if (e.target === this) {
         cerrarModal("modalVerPago");
       }
@@ -470,54 +512,64 @@ function configurarEventos() {
 }
 
 function obtenerCamposDinamicos() {
-  const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value;
-  return tipoPago ? (camposDinamicos[tipoPago] || []) : [];
+  const tipoPago = document.querySelector(
+    'input[name="tipoPago"]:checked'
+  )?.value;
+  return tipoPago ? camposDinamicos[tipoPago] || [] : [];
 }
 
 function abrirModalRegistro() {
-  pagoEditando = null; // Resetear modo edición
+  if (!tienePermiso("crear")) {
+    mostrarModalPermisosDenegados("No tienes permisos para registrar pagos.");
+    return;
+  }
+
+  pagoEditando = null;
   resetearFormulario();
-  limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
+  limpiarValidaciones(
+    [...camposFormularioPago, ...obtenerCamposDinamicos()],
+    "formRegistrarPago"
+  );
   configurarEventosTipoPago();
   establecerFechaActual();
-  
-  // Configurar modal para registro
-  document.getElementById("tituloModalRegistrar").textContent = "Registrar Pago";
-  document.getElementById("btnGuardarPago").innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Guardar Pago';
-  
-  // Cargar métodos de pago y abrir modal
+
+  document.getElementById("tituloModalRegistrar").textContent =
+    "Registrar Pago";
+  document.getElementById("btnGuardarPago").innerHTML =
+    '<i class="fas fa-save mr-1 md:mr-2"></i> Guardar Pago';
+
   cargarMetodosPago().finally(() => {
     abrirModal("modalRegistrarPago");
   });
 }
 
 function cargarTiposPago() {
-  return fetch('Pagos/getTiposPago')
-    .then(response => response.json())
-    .then(result => {
+  return fetch("Pagos/getTiposPago")
+    .then((response) => response.json())
+    .then((result) => {
       if (result.status && result.data) {
         tiposPago = result.data;
       }
       return result;
     })
-    .catch(error => {
-      console.error('Error al cargar tipos de pago:', error);
+    .catch((error) => {
+      console.error("Error al cargar tipos de pago:", error);
       return { status: false };
     });
 }
 
 function cargarMetodosPago() {
-  return fetch('Pagos/getTiposPago')
-    .then(response => response.json())
-    .then(result => {
-      const select = document.getElementById('pagoMetodoPago');
+  return fetch("Pagos/getTiposPago")
+    .then((response) => response.json())
+    .then((result) => {
+      const select = document.getElementById("pagoMetodoPago");
       if (!select) return result;
-      
+
       select.innerHTML = '<option value="">Seleccionar método...</option>';
-      
+
       if (result.status && result.data) {
-        result.data.forEach(tipo => {
-          const option = document.createElement('option');
+        result.data.forEach((tipo) => {
+          const option = document.createElement("option");
           option.value = tipo.idtipo_pago;
           option.textContent = tipo.nombre;
           select.appendChild(option);
@@ -525,9 +577,9 @@ function cargarMetodosPago() {
       }
       return result;
     })
-    .catch(error => {
-      console.error('Error:', error);
-      mostrarNotificacion('Error al cargar métodos de pago', 'error');
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarNotificacion("Error al cargar métodos de pago", "error");
       return { status: false };
     });
 }
@@ -535,35 +587,42 @@ function cargarMetodosPago() {
 function resetearFormulario() {
   const form = document.getElementById("formRegistrarPago");
   if (form) form.reset();
-  
-  // Ocultar todos los containers
-  ['containerCompras', 'containerVentas', 'containerSueldos', 'containerDescripcion', 'containerDestinatario'].forEach(id => {
+
+  [
+    "containerCompras",
+    "containerVentas",
+    "containerSueldos",
+    "containerDescripcion",
+    "containerDestinatario",
+  ].forEach((id) => {
     const element = document.getElementById(id);
     if (element) element.classList.add("hidden");
   });
-  
-  // Limpiar selects
-  ['pagoCompra', 'pagoVenta', 'pagoSueldo'].forEach(id => {
+
+  ["pagoCompra", "pagoVenta", "pagoSueldo"].forEach((id) => {
     const element = document.getElementById(id);
     if (element) element.innerHTML = '<option value="">Seleccionar...</option>';
   });
 
-  // Limpiar validaciones
-  limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
+  limpiarValidaciones(
+    [...camposFormularioPago, ...obtenerCamposDinamicos()],
+    "formRegistrarPago"
+  );
 }
 
 function configurarEventosTipoPago() {
   const radioButtons = document.querySelectorAll('input[name="tipoPago"]');
-  
-  radioButtons.forEach(radio => {
-    radio.addEventListener('change', function() {
+
+  radioButtons.forEach((radio) => {
+    radio.addEventListener("change", function () {
       if (this.checked) {
-        // Limpiar validaciones anteriores
-        limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
-        
+        limpiarValidaciones(
+          [...camposFormularioPago, ...obtenerCamposDinamicos()],
+          "formRegistrarPago"
+        );
+
         manejarCambioTipoPago(this.value);
-        
-        // Inicializar validaciones para los nuevos campos dinámicos
+
         const camposDinamicosActuales = obtenerCamposDinamicos();
         if (camposDinamicosActuales.length > 0) {
           inicializarValidaciones(camposDinamicosActuales, "formRegistrarPago");
@@ -574,54 +633,58 @@ function configurarEventosTipoPago() {
 }
 
 function manejarCambioTipoPago(tipoPago) {
-  // Ocultar todos los containers
-  ['containerCompras', 'containerVentas', 'containerSueldos', 'containerDescripcion', 'containerDestinatario'].forEach(id => {
+  [
+    "containerCompras",
+    "containerVentas",
+    "containerSueldos",
+    "containerDescripcion",
+    "containerDestinatario",
+  ].forEach((id) => {
     const element = document.getElementById(id);
-    if (element) element.classList.add('hidden');
+    if (element) element.classList.add("hidden");
   });
-  
-  // Limpiar monto solo si no estamos editando
+
   if (!pagoEditando) {
     const montoInput = document.getElementById("pagoMonto");
     if (montoInput) montoInput.value = "";
   }
-  
-  switch(tipoPago) {
-    case 'compra':
-      mostrarContainer('containerCompras');
+
+  switch (tipoPago) {
+    case "compra":
+      mostrarContainer("containerCompras");
       cargarComprasPendientes();
       break;
-    case 'venta':
-      mostrarContainer('containerVentas');
+    case "venta":
+      mostrarContainer("containerVentas");
       cargarVentasPendientes();
       break;
-    case 'sueldo':
-      mostrarContainer('containerSueldos');
+    case "sueldo":
+      mostrarContainer("containerSueldos");
       cargarSueldosPendientes();
       break;
-    case 'otro':
-      mostrarContainer('containerDescripcion');
+    case "otro":
+      mostrarContainer("containerDescripcion");
       break;
   }
 }
 
 function mostrarContainer(containerId) {
   const container = document.getElementById(containerId);
-  if (container) container.classList.remove('hidden');
+  if (container) container.classList.remove("hidden");
 }
 
 function cargarComprasPendientes() {
-  return fetch('Pagos/getComprasPendientes')
-    .then(response => response.json())
-    .then(result => {
-      const select = document.getElementById('pagoCompra');
+  return fetch("Pagos/getComprasPendientes")
+    .then((response) => response.json())
+    .then((result) => {
+      const select = document.getElementById("pagoCompra");
       if (!select) return result;
-      
+
       select.innerHTML = '<option value="">Seleccionar compra...</option>';
-      
+
       if (result.status && result.data) {
-        result.data.forEach(compra => {
-          const option = document.createElement('option');
+        result.data.forEach((compra) => {
+          const option = document.createElement("option");
           option.value = compra.idcompra;
           option.textContent = `#${compra.nro_compra} - ${compra.proveedor} - $${compra.total}`;
           option.dataset.proveedor = compra.proveedor;
@@ -629,8 +692,8 @@ function cargarComprasPendientes() {
           option.dataset.total = compra.total;
           select.appendChild(option);
         });
-        
-        select.addEventListener('change', function() {
+
+        select.addEventListener("change", function () {
           if (this.value) {
             const option = this.options[this.selectedIndex];
             mostrarInformacionDestinatario(
@@ -639,36 +702,36 @@ function cargarComprasPendientes() {
               option.dataset.total
             );
             if (!pagoEditando) {
-              document.getElementById('pagoMonto').value = option.dataset.total;
+              document.getElementById("pagoMonto").value = option.dataset.total;
             }
           } else {
             ocultarInformacionDestinatario();
           }
         });
       } else {
-        mostrarNotificacion('No hay compras disponibles', 'info');
+        mostrarNotificacion("No hay compras disponibles", "info");
       }
       return result;
     })
-    .catch(error => {
-      console.error('Error:', error);
-      mostrarNotificacion('Error al cargar compras', 'error');
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarNotificacion("Error al cargar compras", "error");
       return { status: false };
     });
 }
 
 function cargarVentasPendientes() {
-  return fetch('Pagos/getVentasPendientes')
-    .then(response => response.json())
-    .then(result => {
-      const select = document.getElementById('pagoVenta');
+  return fetch("Pagos/getVentasPendientes")
+    .then((response) => response.json())
+    .then((result) => {
+      const select = document.getElementById("pagoVenta");
       if (!select) return result;
-      
+
       select.innerHTML = '<option value="">Seleccionar venta...</option>';
-      
+
       if (result.status && result.data) {
-        result.data.forEach(venta => {
-          const option = document.createElement('option');
+        result.data.forEach((venta) => {
+          const option = document.createElement("option");
           option.value = venta.idventa;
           option.textContent = `#${venta.nro_venta} - ${venta.cliente} - $${venta.total}`;
           option.dataset.cliente = venta.cliente;
@@ -676,8 +739,8 @@ function cargarVentasPendientes() {
           option.dataset.total = venta.total;
           select.appendChild(option);
         });
-        
-        select.addEventListener('change', function() {
+
+        select.addEventListener("change", function () {
           if (this.value) {
             const option = this.options[this.selectedIndex];
             mostrarInformacionDestinatario(
@@ -686,36 +749,36 @@ function cargarVentasPendientes() {
               option.dataset.total
             );
             if (!pagoEditando) {
-              document.getElementById('pagoMonto').value = option.dataset.total;
+              document.getElementById("pagoMonto").value = option.dataset.total;
             }
           } else {
             ocultarInformacionDestinatario();
           }
         });
       } else {
-        mostrarNotificacion('No hay ventas disponibles', 'info');
+        mostrarNotificacion("No hay ventas disponibles", "info");
       }
       return result;
     })
-    .catch(error => {
-      console.error('Error:', error);
-      mostrarNotificacion('Error al cargar ventas', 'error');
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarNotificacion("Error al cargar ventas", "error");
       return { status: false };
     });
 }
 
 function cargarSueldosPendientes() {
-  return fetch('Pagos/getSueldosPendientes')
-    .then(response => response.json())
-    .then(result => {
-      const select = document.getElementById('pagoSueldo');
+  return fetch("Pagos/getSueldosPendientes")
+    .then((response) => response.json())
+    .then((result) => {
+      const select = document.getElementById("pagoSueldo");
       if (!select) return result;
-      
+
       select.innerHTML = '<option value="">Seleccionar sueldo...</option>';
-      
+
       if (result.status && result.data) {
-        result.data.forEach(sueldo => {
-          const option = document.createElement('option');
+        result.data.forEach((sueldo) => {
+          const option = document.createElement("option");
           option.value = sueldo.idsueldotemp;
           option.textContent = `${sueldo.empleado} - ${sueldo.periodo} - $${sueldo.total}`;
           option.dataset.empleado = sueldo.empleado;
@@ -723,8 +786,8 @@ function cargarSueldosPendientes() {
           option.dataset.total = sueldo.total;
           select.appendChild(option);
         });
-        
-        select.addEventListener('change', function() {
+
+        select.addEventListener("change", function () {
           if (this.value) {
             const option = this.options[this.selectedIndex];
             mostrarInformacionDestinatario(
@@ -733,88 +796,97 @@ function cargarSueldosPendientes() {
               option.dataset.total
             );
             if (!pagoEditando) {
-              document.getElementById('pagoMonto').value = option.dataset.total;
+              document.getElementById("pagoMonto").value = option.dataset.total;
             }
           } else {
             ocultarInformacionDestinatario();
           }
         });
       } else {
-        mostrarNotificacion('No hay sueldos disponibles', 'info');
+        mostrarNotificacion("No hay sueldos disponibles", "info");
       }
       return result;
     })
-    .catch(error => {
-      console.error('Error:', error);
-      mostrarNotificacion('Error al cargar sueldos', 'error');
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarNotificacion("Error al cargar sueldos", "error");
       return { status: false };
     });
 }
 
 function mostrarInformacionDestinatario(nombre, identificacion, total) {
-  const nombreEl = document.getElementById('destinatarioNombre');
-  const identificacionEl = document.getElementById('destinatarioIdentificacion');
-  const totalEl = document.getElementById('destinatarioTotal');
-  const containerEl = document.getElementById('containerDestinatario');
-  
+  const nombreEl = document.getElementById("destinatarioNombre");
+  const identificacionEl = document.getElementById(
+    "destinatarioIdentificacion"
+  );
+  const totalEl = document.getElementById("destinatarioTotal");
+  const containerEl = document.getElementById("containerDestinatario");
+
   if (nombreEl) nombreEl.textContent = nombre;
   if (identificacionEl) identificacionEl.textContent = identificacion;
   if (totalEl) totalEl.textContent = `$${parseFloat(total).toFixed(2)}`;
-  if (containerEl) containerEl.classList.remove('hidden');
+  if (containerEl) containerEl.classList.remove("hidden");
 }
 
 function ocultarInformacionDestinatario() {
-  const containerEl = document.getElementById('containerDestinatario');
-  
-  if (containerEl) containerEl.classList.add('hidden');
+  const containerEl = document.getElementById("containerDestinatario");
+
+  if (containerEl) containerEl.classList.add("hidden");
 }
 
 function establecerFechaActual() {
-  const fechaEl = document.getElementById('pagoFecha');
+  const fechaEl = document.getElementById("pagoFecha");
   if (fechaEl && !pagoEditando) {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = new Date().toISOString().split("T")[0];
     fechaEl.value = hoy;
   }
 }
 
 function registrarPago() {
-  const btnGuardar = document.getElementById("btnGuardarPago");
-  
-  // Obtener tipo de pago seleccionado
-  const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value;
-  
-  if (!tipoPago) {
-    mostrarNotificacion('Debe seleccionar un tipo de pago', 'warning');
+  if (!tienePermiso("crear")) {
+    mostrarModalPermisosDenegados("No tienes permisos para registrar pagos.");
     return;
   }
 
-  // Obtener campos completos (básicos + dinámicos)
-  const camposCompletos = [...camposFormularioPago, ...obtenerCamposDinamicos()];
+  const btnGuardar = document.getElementById("btnGuardarPago");
+  const tipoPago = document.querySelector(
+    'input[name="tipoPago"]:checked'
+  )?.value;
 
-  // Validar todos los campos
+  if (!tipoPago) {
+    mostrarNotificacion("Debe seleccionar un tipo de pago", "warning");
+    return;
+  }
+
+  const camposCompletos = [
+    ...camposFormularioPago,
+    ...obtenerCamposDinamicos(),
+  ];
+
   if (!validarCamposVacios(camposCompletos, "formRegistrarPago")) {
     return;
   }
 
-  // Validar formatos específicos
   let formularioConErrores = false;
   for (const campo of camposCompletos) {
     const inputElement = document.getElementById(campo.id);
     if (!inputElement || inputElement.offsetParent === null) continue;
 
     let esValido = true;
-    
+
     if (campo.tipo === "select") {
-      esValido = validarSelect(inputElement, campo.mensajes, "formRegistrarPago");
+      esValido = validarSelect(
+        inputElement,
+        campo.mensajes,
+        "formRegistrarPago"
+      );
     } else if (campo.tipo === "fecha") {
       esValido = validarFecha(inputElement, campo.mensajes);
     } else if (campo.tipo === "radio") {
-      // Los radio buttons ya se validaron con validarCamposVacios
       continue;
     } else if (["input", "textarea"].includes(campo.tipo) && campo.regex) {
       const valor = inputElement.value.trim();
       if (valor !== "" && !campo.regex.test(valor)) {
-        // Mostrar error de formato
         const errorDiv = inputElement.nextElementSibling;
         if (errorDiv && campo.mensajes.formato) {
           errorDiv.textContent = campo.mensajes.formato;
@@ -824,110 +896,117 @@ function registrarPago() {
         esValido = false;
       }
     }
-    
+
     if (!esValido) formularioConErrores = true;
   }
 
   if (formularioConErrores) {
-    mostrarNotificacion('Por favor, corrija los campos marcados en rojo', 'warning');
+    mostrarNotificacion(
+      "Por favor, corrija los campos marcados en rojo",
+      "warning"
+    );
     return;
   }
 
-  // Deshabilitar botón y mostrar loading
   if (btnGuardar) {
     btnGuardar.disabled = true;
-    btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+    btnGuardar.innerHTML =
+      '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
   }
 
-  // Preparar mapeo de nombres
   const mapeoNombres = {
-    "tipoPago": "tipo_pago",
-    "pagoCompra": "idcompra",
-    "pagoVenta": "idventa", 
-    "pagoSueldo": "idsueldotemp",
-    "pagoDescripcion": "descripcion",
-    "pagoMonto": "monto",
-    "pagoMetodoPago": "idtipo_pago",
-    "pagoReferencia": "referencia",
-    "pagoFecha": "fecha_pago",
-    "pagoObservaciones": "observaciones"
+    tipoPago: "tipo_pago",
+    pagoCompra: "idcompra",
+    pagoVenta: "idventa",
+    pagoSueldo: "idsueldotemp",
+    pagoDescripcion: "descripcion",
+    pagoMonto: "monto",
+    pagoMetodoPago: "idtipo_pago",
+    pagoReferencia: "referencia",
+    pagoFecha: "fecha_pago",
+    pagoObservaciones: "observaciones",
   };
 
-  // Usar la función registrarEntidad
   registrarEntidad({
     formId: "formRegistrarPago",
     endpoint: "Pagos/createPago",
     campos: camposCompletos,
     mapeoNombres: mapeoNombres,
     onSuccess: (result) => {
-      // Mostrar Sweet Alert de éxito
       Swal.fire({
-        title: '¡Éxito!',
-        text: result.message || 'Pago registrado exitosamente',
-        icon: 'success',
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#10B981'
+        title: "¡Éxito!",
+        text: result.message || "Pago registrado exitosamente",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#10B981",
       }).then(() => {
-        // Limpiar validaciones y cerrar modal
         limpiarValidaciones(camposCompletos, "formRegistrarPago");
-        cerrarModal('modalRegistrarPago');
-        // Recargar tabla
+        cerrarModal("modalRegistrarPago");
         tablaPagos.ajax.reload();
       });
     },
     onError: (result) => {
-      // Mostrar Sweet Alert de error
       Swal.fire({
-        title: '¡Error!',
-        text: result.message || 'Error al registrar el pago',
-        icon: 'error',
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#EF4444'
+        title: "¡Error!",
+        text: result.message || "Error al registrar el pago",
+        icon: "error",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#EF4444",
       });
-    }
+    },
   }).finally(() => {
-    // Restaurar botón
     if (btnGuardar) {
       btnGuardar.disabled = false;
-      btnGuardar.innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Guardar Pago';
+      btnGuardar.innerHTML =
+        '<i class="fas fa-save mr-1 md:mr-2"></i> Guardar Pago';
     }
   });
 }
 
 function actualizarPago() {
+  if (!tienePermiso("editar")) {
+    mostrarModalPermisosDenegados("No tienes permisos para actualizar pagos.");
+    return;
+  }
+
   const btnGuardar = document.getElementById("btnGuardarPago");
-  
+
   if (!pagoEditando) {
-    mostrarNotificacion('Error: No se está editando ningún pago', 'error');
+    mostrarNotificacion("Error: No se está editando ningún pago", "error");
     return;
   }
 
-  // Obtener tipo de pago seleccionado
-  const tipoPago = document.querySelector('input[name="tipoPago"]:checked')?.value;
-  
+  const tipoPago = document.querySelector(
+    'input[name="tipoPago"]:checked'
+  )?.value;
+
   if (!tipoPago) {
-    mostrarNotificacion('Debe seleccionar un tipo de pago', 'warning');
+    mostrarNotificacion("Debe seleccionar un tipo de pago", "warning");
     return;
   }
 
-  // Obtener campos completos (básicos + dinámicos)
-  const camposCompletos = [...camposFormularioPago, ...obtenerCamposDinamicos()];
+  const camposCompletos = [
+    ...camposFormularioPago,
+    ...obtenerCamposDinamicos(),
+  ];
 
-  // Validar todos los campos
   if (!validarCamposVacios(camposCompletos, "formRegistrarPago")) {
     return;
   }
 
-  // Validar formatos específicos
   let formularioConErrores = false;
   for (const campo of camposCompletos) {
     const inputElement = document.getElementById(campo.id);
     if (!inputElement || inputElement.offsetParent === null) continue;
 
     let esValido = true;
-    
+
     if (campo.tipo === "select") {
-      esValido = validarSelect(inputElement, campo.mensajes, "formRegistrarPago");
+      esValido = validarSelect(
+        inputElement,
+        campo.mensajes,
+        "formRegistrarPago"
+      );
     } else if (campo.tipo === "fecha") {
       esValido = validarFecha(inputElement, campo.mensajes);
     } else if (campo.tipo === "radio") {
@@ -944,51 +1023,51 @@ function actualizarPago() {
         esValido = false;
       }
     }
-    
+
     if (!esValido) formularioConErrores = true;
   }
 
   if (formularioConErrores) {
-    mostrarNotificacion('Por favor, corrija los campos marcados en rojo', 'warning');
+    mostrarNotificacion(
+      "Por favor, corrija los campos marcados en rojo",
+      "warning"
+    );
     return;
   }
 
-  // Deshabilitar botón y mostrar loading
   if (btnGuardar) {
     btnGuardar.disabled = true;
-    btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Actualizando...';
+    btnGuardar.innerHTML =
+      '<i class="fas fa-spinner fa-spin mr-2"></i>Actualizando...';
   }
 
-  // Preparar datos para envío
   const formData = new FormData(document.getElementById("formRegistrarPago"));
   const data = {};
-  
-  // Agregar ID del pago
+
   data.idpago = pagoEditando.idpago;
-  
-  // Mapear campos del formulario
+
   const mapeoNombres = {
-    "tipoPago": "tipo_pago",
-    "pagoCompra": "idcompra",
-    "pagoVenta": "idventa", 
-    "pagoSueldo": "idsueldotemp",
-    "pagoDescripcion": "descripcion",
-    "pagoMonto": "monto",
-    "pagoMetodoPago": "idtipo_pago",
-    "pagoReferencia": "referencia",
-    "pagoFecha": "fecha_pago",
-    "pagoObservaciones": "observaciones"
+    tipoPago: "tipo_pago",
+    pagoCompra: "idcompra",
+    pagoVenta: "idventa",
+    pagoSueldo: "idsueldotemp",
+    pagoDescripcion: "descripcion",
+    pagoMonto: "monto",
+    pagoMetodoPago: "idtipo_pago",
+    pagoReferencia: "referencia",
+    pagoFecha: "fecha_pago",
+    pagoObservaciones: "observaciones",
   };
 
-  // Obtener valores del formulario
   for (const [formKey, dataKey] of Object.entries(mapeoNombres)) {
-    const element = document.getElementById(formKey) || document.querySelector(`input[name="${formKey}"]:checked`);
+    const element =
+      document.getElementById(formKey) ||
+      document.querySelector(`input[name="${formKey}"]:checked`);
     if (element) {
-      data[dataKey] = element.value || '';
+      data[dataKey] = element.value || "";
     }
   }
 
-  // Realizar petición de actualización
   fetch("Pagos/updatePago", {
     method: "POST",
     headers: {
@@ -996,171 +1075,183 @@ function actualizarPago() {
     },
     body: JSON.stringify(data),
   })
-    .then(response => response.json())
-    .then(result => {
+    .then((response) => response.json())
+    .then((result) => {
       if (result.status) {
         Swal.fire({
-          title: '¡Éxito!',
-          text: result.message || 'Pago actualizado exitosamente',
-          icon: 'success',
-          confirmButtonText: 'Aceptar',
-          confirmButtonColor: '#10B981'
+          title: "¡Éxito!",
+          text: result.message || "Pago actualizado exitosamente",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#10B981",
         }).then(() => {
           limpiarValidaciones(camposCompletos, "formRegistrarPago");
-          cerrarModal('modalRegistrarPago');
+          cerrarModal("modalRegistrarPago");
           tablaPagos.ajax.reload();
-          pagoEditando = null; // Resetear modo edición
+          pagoEditando = null;
         });
       } else {
         Swal.fire({
-          title: '¡Error!',
-          text: result.message || 'Error al actualizar el pago',
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
-          confirmButtonColor: '#EF4444'
+          title: "¡Error!",
+          text: result.message || "Error al actualizar el pago",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#EF4444",
         });
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error:", error);
-      mostrarNotificacion('Error de conexión al actualizar', 'error');
+      mostrarNotificacion("Error de conexión al actualizar", "error");
     })
     .finally(() => {
-      // Restaurar botón
       if (btnGuardar) {
         btnGuardar.disabled = false;
-        btnGuardar.innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Pago';
+        btnGuardar.innerHTML =
+          '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Pago';
       }
     });
 }
 
-// Función para mostrar notificaciones (compatible con tu sistema)
 function mostrarNotificacion(mensaje, tipo) {
-  // Si existe Swal, usarlo
-  if (typeof Swal !== 'undefined') {
+  if (typeof Swal !== "undefined") {
     const iconos = {
-      'success': 'success',
-      'error': 'error',
-      'warning': 'warning',
-      'info': 'info'
+      success: "success",
+      error: "error",
+      warning: "warning",
+      info: "info",
     };
-    
+
     const colores = {
-      'success': '#10B981',
-      'error': '#EF4444',
-      'warning': '#F59E0B',
-      'info': '#3B82F6'
+      success: "#10B981",
+      error: "#EF4444",
+      warning: "#F59E0B",
+      info: "#3B82F6",
     };
 
     Swal.fire({
-      title: tipo === 'error' ? '¡Error!' : tipo === 'warning' ? '¡Atención!' : tipo === 'info' ? 'Información' : '¡Éxito!',
+      title:
+        tipo === "error"
+          ? "¡Error!"
+          : tipo === "warning"
+          ? "¡Atención!"
+          : tipo === "info"
+          ? "Información"
+          : "¡Éxito!",
       text: mensaje,
-      icon: iconos[tipo] || 'info',
-      confirmButtonText: 'Aceptar',
-      confirmButtonColor: colores[tipo] || '#3B82F6'
+      icon: iconos[tipo] || "info",
+      confirmButtonText: "Aceptar",
+      confirmButtonColor: colores[tipo] || "#3B82F6",
     });
   } else {
-    // Fallback a alert nativo
     alert(mensaje);
   }
 }
 
-// Funciones globales
-window.verPago = function(idPago) {
-  // Mostrar loading
+window.verPago = function (idPago) {
+  if (!tienePermiso("ver")) {
+    mostrarModalPermisosDenegados("No tienes permisos para ver este pago.");
+    return;
+  }
+
   fetch(`Pagos/getPagoById/${idPago}`)
-    .then(response => response.json())
-    .then(result => {
-      
+    .then((response) => response.json())
+    .then((result) => {
       if (result.status && result.data) {
         mostrarModalVerPago(result.data);
       } else {
-        mostrarNotificacion(result.message || 'Error al obtener el pago', 'error');
+        mostrarNotificacion(
+          result.message || "Error al obtener el pago",
+          "error"
+        );
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error:", error);
-      mostrarNotificacion('Error de conexión al obtener el pago', 'error');
+      mostrarNotificacion("Error de conexión al obtener el pago", "error");
     });
 };
 
-window.editarPago = function(idPago) {
-  
-  // Obtener datos del pago
+window.editarPago = function (idPago) {
+  if (!tienePermiso("editar")) {
+    mostrarModalPermisosDenegados("No tienes permisos para editar este pago.");
+    return;
+  }
+
   fetch(`Pagos/getPagoById/${idPago}`)
-    .then(response => response.json())
-    .then(result => {
+    .then((response) => response.json())
+    .then((result) => {
       if (result.status && result.data) {
         abrirModalEdicion(result.data);
       } else {
-        mostrarNotificacion(result.message || 'Error al obtener el pago', 'error');
+        mostrarNotificacion(
+          result.message || "Error al obtener el pago",
+          "error"
+        );
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error:", error);
-      mostrarNotificacion('Error de conexión al obtener el pago', 'error');
+      mostrarNotificacion("Error de conexión al obtener el pago", "error");
     });
 };
 
 function abrirModalEdicion(pago) {
   try {
-    pagoEditando = pago; // Guardar datos del pago en edición
-    
-    // Resetear y configurar formulario
+    pagoEditando = pago;
+
     resetearFormulario();
-    limpiarValidaciones([...camposFormularioPago, ...obtenerCamposDinamicos()], "formRegistrarPago");
-    
-    // Configurar modal para edición
+    limpiarValidaciones(
+      [...camposFormularioPago, ...obtenerCamposDinamicos()],
+      "formRegistrarPago"
+    );
+
     document.getElementById("tituloModalRegistrar").textContent = "Editar Pago";
-    document.getElementById("btnGuardarPago").innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Pago';
-    
-    // Cargar métodos de pago primero, luego llenar formulario
+    document.getElementById("btnGuardarPago").innerHTML =
+      '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Pago';
+
     cargarMetodosPago()
       .then(() => {
-        // Llenar datos del formulario
         llenarFormularioEdicion(pago);
-        
-        // Configurar eventos después de llenar
         configurarEventosTipoPago();
-        
-        // Abrir modal
         abrirModal("modalRegistrarPago");
       })
-      .catch(error => {
-        console.error('Error al cargar métodos de pago:', error);
-        mostrarNotificacion('Error al cargar los datos necesarios', 'error');
+      .catch((error) => {
+        console.error("Error al cargar métodos de pago:", error);
+        mostrarNotificacion("Error al cargar los datos necesarios", "error");
       });
-      
   } catch (error) {
-    console.error('Error en abrirModalEdicion:', error);
-    mostrarNotificacion('Error al abrir el modal de edición', 'error');
+    console.error("Error en abrirModalEdicion:", error);
+    mostrarNotificacion("Error al abrir el modal de edición", "error");
   }
 }
 
 function llenarFormularioEdicion(pago) {
   try {
+    let tipoPago = "otro";
+    if (pago.idcompra) tipoPago = "compra";
+    else if (pago.idventa) tipoPago = "venta";
+    else if (pago.idsueldotemp) tipoPago = "sueldo";
 
-    let tipoPago = 'otro'; 
-    if (pago.idcompra) tipoPago = 'compra';
-    else if (pago.idventa) tipoPago = 'venta';
-    else if (pago.idsueldotemp) tipoPago = 'sueldo';
-    
-    const radioTipo = document.querySelector(`input[name="tipoPago"][value="${tipoPago}"]`);
+    const radioTipo = document.querySelector(
+      `input[name="tipoPago"][value="${tipoPago}"]`
+    );
     if (radioTipo) {
       radioTipo.checked = true;
       manejarCambioTipoPago(tipoPago);
     }
     setTimeout(() => {
-      document.getElementById('pagoMonto').value = pago.monto || '';
-      document.getElementById('pagoMetodoPago').value = pago.idtipo_pago || '';
-      document.getElementById('pagoReferencia').value = pago.referencia || '';
-      document.getElementById('pagoFecha').value = pago.fecha_pago || '';
-      document.getElementById('pagoObservaciones').value = pago.observaciones || '';
+      document.getElementById("pagoMonto").value = pago.monto || "";
+      document.getElementById("pagoMetodoPago").value = pago.idtipo_pago || "";
+      document.getElementById("pagoReferencia").value = pago.referencia || "";
+      document.getElementById("pagoFecha").value = pago.fecha_pago || "";
+      document.getElementById("pagoObservaciones").value =
+        pago.observaciones || "";
 
       setTimeout(() => {
-        if (tipoPago === 'compra' && pago.idcompra) {
+        if (tipoPago === "compra" && pago.idcompra) {
           cargarComprasPendientes().then(() => {
-            const select = document.getElementById('pagoCompra');
+            const select = document.getElementById("pagoCompra");
             let optionExists = false;
             for (let i = 0; i < select.options.length; i++) {
               if (select.options[i].value == pago.idcompra) {
@@ -1168,20 +1259,20 @@ function llenarFormularioEdicion(pago) {
                 break;
               }
             }
-            
+
             if (!optionExists) {
-              const option = document.createElement('option');
+              const option = document.createElement("option");
               option.value = pago.idcompra;
               option.textContent = `Compra #${pago.idcompra} (Actual)`;
               select.appendChild(option);
             }
-            
+
             select.value = pago.idcompra;
-            select.dispatchEvent(new Event('change'));
+            select.dispatchEvent(new Event("change"));
           });
-        } else if (tipoPago === 'venta' && pago.idventa) {
+        } else if (tipoPago === "venta" && pago.idventa) {
           cargarVentasPendientes().then(() => {
-            const select = document.getElementById('pagoVenta');
+            const select = document.getElementById("pagoVenta");
             let optionExists = false;
             for (let i = 0; i < select.options.length; i++) {
               if (select.options[i].value == pago.idventa) {
@@ -1189,20 +1280,20 @@ function llenarFormularioEdicion(pago) {
                 break;
               }
             }
-            
+
             if (!optionExists) {
-              const option = document.createElement('option');
+              const option = document.createElement("option");
               option.value = pago.idventa;
               option.textContent = `Venta #${pago.idventa} (Actual)`;
               select.appendChild(option);
             }
-            
+
             select.value = pago.idventa;
-            select.dispatchEvent(new Event('change'));
+            select.dispatchEvent(new Event("change"));
           });
-        } else if (tipoPago === 'sueldo' && pago.idsueldotemp) {
+        } else if (tipoPago === "sueldo" && pago.idsueldotemp) {
           cargarSueldosPendientes().then(() => {
-            const select = document.getElementById('pagoSueldo');
+            const select = document.getElementById("pagoSueldo");
             let optionExists = false;
             for (let i = 0; i < select.options.length; i++) {
               if (select.options[i].value == pago.idsueldotemp) {
@@ -1210,29 +1301,36 @@ function llenarFormularioEdicion(pago) {
                 break;
               }
             }
-            
+
             if (!optionExists) {
-              const option = document.createElement('option');
+              const option = document.createElement("option");
               option.value = pago.idsueldotemp;
               option.textContent = `Sueldo #${pago.idsueldotemp} (Actual)`;
               select.appendChild(option);
             }
-            
+
             select.value = pago.idsueldotemp;
-            select.dispatchEvent(new Event('change'));
+            select.dispatchEvent(new Event("change"));
           });
-        } else if (tipoPago === 'otro') {
+        } else if (tipoPago === "otro") {
+          // No hay acción específica para 'otro' en la carga
         }
       }, 500);
     }, 200);
-    
   } catch (error) {
-    console.error('Error en llenarFormularioEdicion:', error);
-    mostrarNotificacion('Error al llenar el formulario', 'error');
+    console.error("Error en llenarFormularioEdicion:", error);
+    mostrarNotificacion("Error al llenar el formulario", "error");
   }
 }
 
-window.eliminarPago = function(idPago, descripcion) {
+window.eliminarPago = function (idPago, descripcion) {
+  if (!tienePermiso("eliminar")) {
+    mostrarModalPermisosDenegados(
+      "No tienes permisos para desactivar pagos."
+    );
+    return;
+  }
+
   Swal.fire({
     title: "¿Estás seguro?",
     text: `¿Deseas desactivar el pago "${descripcion}"?`,
@@ -1251,81 +1349,75 @@ window.eliminarPago = function(idPago, descripcion) {
         },
         body: JSON.stringify({ idpago: idPago }),
       })
-        .then(response => response.json())
-        .then(result => {
+        .then((response) => response.json())
+        .then((result) => {
           if (result.status) {
             Swal.fire({
-              title: '¡Éxito!',
+              title: "¡Éxito!",
               text: result.message,
-              icon: 'success',
-              confirmButtonText: 'Aceptar',
-              confirmButtonColor: '#10B981'
+              icon: "success",
+              confirmButtonText: "Aceptar",
+              confirmButtonColor: "#10B981",
             }).then(() => {
               tablaPagos.ajax.reload();
             });
           } else {
-            mostrarNotificacion(result.message, 'error');
+            mostrarNotificacion(result.message, "error");
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error:", error);
-          mostrarNotificacion('Error de conexión al eliminar', 'error');
+          mostrarNotificacion("Error de conexión al eliminar", "error");
         });
     }
   });
 };
 
 function mostrarModalVerPago(pago) {
-
   const elementos = {
-    'verPagoId': pago.idpago || "N/A",
-    'verPagoTipo': pago.tipo_pago_texto || "N/A",
-    'verPagoDestinatario': pago.destinatario || "N/A",
-    'verPagoMonto': `$${parseFloat(pago.monto || 0).toFixed(2)}`,
-    'verPagoMetodo': pago.metodo_pago || "N/A",
-    'verPagoReferencia': pago.referencia || "Sin referencia",
-    'verPagoFecha': pago.fecha_pago_formato || "N/A",
-    'verPagoObservaciones': pago.observaciones || "Sin observaciones",
-    'verPagoFechaCreacion': pago.fecha_creacion ? 
-      new Date(pago.fecha_creacion).toLocaleDateString('es-ES') : "N/A"
+    verPagoId: pago.idpago || "N/A",
+    verPagoTipo: pago.tipo_pago_texto || "N/A",
+    verPagoDestinatario: pago.destinatario || "N/A",
+    verPagoMonto: `$${parseFloat(pago.monto || 0).toFixed(2)}`,
+    verPagoMetodo: pago.metodo_pago || "N/A",
+    verPagoReferencia: pago.referencia || "Sin referencia",
+    verPagoFecha: pago.fecha_pago_formato || "N/A",
+    verPagoObservaciones: pago.observaciones || "Sin observaciones",
+    verPagoFechaCreacion: pago.fecha_creacion
+      ? new Date(pago.fecha_creacion).toLocaleDateString("es-ES")
+      : "N/A",
   };
 
-  // Llenar los elementos del modal
   Object.entries(elementos).forEach(([id, valor]) => {
     const elemento = document.getElementById(id);
     if (elemento) {
       elemento.textContent = valor;
-    } else {
-      console.warn(`Elemento ${id} no encontrado en el DOM`); // Debug
     }
   });
 
-  // Aplicar badge de estatus
-  const estatusEl = document.getElementById('verPagoEstatus');
+  const estatusEl = document.getElementById("verPagoEstatus");
   if (estatusEl && pago.estatus) {
     const status = pago.estatus.toLowerCase();
 
-    if (status === 'activo') {
+    if (status === "activo") {
       estatusEl.className =
-        'inline-flex px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full';
-      estatusEl.textContent = 'ACTIVO';
-    } else if (status === 'conciliado') {
+        "inline-flex px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full";
+      estatusEl.textContent = "ACTIVO";
+    } else if (status === "conciliado") {
       estatusEl.className =
-        'inline-flex px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full';
-      estatusEl.textContent = 'CONCILIADO';
+        "inline-flex px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full";
+      estatusEl.textContent = "CONCILIADO";
     } else {
       estatusEl.className =
-        'inline-flex px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full';
-      estatusEl.textContent = 'INACTIVO';
+        "inline-flex px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full";
+      estatusEl.textContent = "INACTIVO";
     }
   }
 
-  // Mostrar información adicional si existe
-  const personaEl = document.getElementById('verPagoPersona');
+  const personaEl = document.getElementById("verPagoPersona");
   if (personaEl) {
     personaEl.textContent = pago.persona_nombre || "Sin asignar";
   }
 
-  // Abrir el modal
   abrirModal("modalVerPago");
 }
