@@ -268,10 +268,21 @@ class NotificacionesModel extends Mysql
             $stmt->execute();
 
             // Obtener roles que pueden ver productos (una sola vez)
-            $rolQuery = "SELECT r.idrol FROM roles r 
-                    JOIN rol_modulo rm ON r.idrol = rm.idrol
-                    JOIN modulos m ON rm.idmodulo = m.idmodulo 
-                    WHERE m.titulo = 'productos' AND r.estatus = 'ACTIVO'";
+            $rolQuery = "SELECT DISTINCT
+                                r.idrol
+                            FROM 
+                                roles r
+                            INNER JOIN 
+                                rol_modulo_permisos rmp ON r.idrol = rmp.idrol
+                            INNER JOIN 
+                                modulos m ON rmp.idmodulo = m.idmodulo
+                            INNER JOIN 
+                                permisos p ON rmp.idpermiso = p.idpermiso
+                            WHERE 
+                                LOWER(m.titulo) = 'productos'
+                                AND LOWER(p.nombre_permiso) = 'Acceso Total'
+                                AND r.estatus = 'activo'
+                                AND rmp.activo = 1";
             $stmtRol = $db->prepare($rolQuery);
             $stmtRol->execute();
             $roles = $stmtRol->fetchAll(PDO::FETCH_COLUMN);

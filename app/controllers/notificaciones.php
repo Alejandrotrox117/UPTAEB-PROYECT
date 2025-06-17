@@ -2,16 +2,18 @@
 require_once "app/core/Controllers.php";
 require_once "app/models/notificacionesModel.php";
 require_once "helpers/helpers.php";
-require_once "helpers/permisosVerificar.php";
+require_once "helpers/PermisosModuloVerificar.php";
+require_once "helpers/bitacora_helper.php";
 
 class Notificaciones extends Controllers
 {
+    private $BitacoraHelper;
     public function __construct()
     {
         parent::__construct();
         $this->model = new NotificacionesModel();
-
-        if (!$this->obtenerUsuarioSesion()) {
+        $this->BitacoraHelper = new BitacoraHelper();
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
         }
@@ -19,13 +21,9 @@ class Notificaciones extends Controllers
 
     private function obtenerUsuarioSesion()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if (isset($_SESSION['idusuario'])) {
-            return $_SESSION['idusuario'];
-        } elseif (isset($_SESSION['idUser'])) {
-            return $_SESSION['idUser'];
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        if ($idusuario) {
+            return $idusuario;  
         } else {
             return null;
         }
