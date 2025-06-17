@@ -89,11 +89,61 @@ const camposFormularioActualizarUsuario = [
   },
 ];
 
+// ✅ FUNCIÓN PARA MOSTRAR MODAL DE PERMISOS DENEGADOS
+function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realizar esta acción.") {
+  const modal = document.getElementById('modalPermisosDenegados');
+  const mensajeElement = document.getElementById('mensajePermisosDenegados');
+  
+  if (modal && mensajeElement) {
+    mensajeElement.textContent = mensaje;
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+  } else {
+    // Fallback con SweetAlert si no existe el modal
+    Swal.fire({
+      icon: 'warning',
+      title: 'Acceso Denegado',
+      text: mensaje,
+      confirmButtonColor: '#d33'
+    });
+  }
+}
+
+// ✅ FUNCIÓN PARA CERRAR MODAL DE PERMISOS DENEGADOS
+function cerrarModalPermisosDenegados() {
+  const modal = document.getElementById('modalPermisosDenegados');
+  if (modal) {
+    modal.classList.add('opacity-0', 'pointer-events-none');
+  }
+}
+
+// ✅ VERIFICAR SI TIENE PERMISOS
+function tienePermiso(accion) {
+  return window.permisosUsuarios && window.permisosUsuarios[accion] === true;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  // ✅ CONFIGURAR EVENT LISTENERS PARA MODAL DE PERMISOS
+  const btnCerrarModalPermisos = document.getElementById('btnCerrarModalPermisos');
+  const btnCerrarModalPermisos2 = document.getElementById('btnCerrarModalPermisos2');
+  
+  if (btnCerrarModalPermisos) {
+    btnCerrarModalPermisos.addEventListener('click', cerrarModalPermisosDenegados);
+  }
+  
+  if (btnCerrarModalPermisos2) {
+    btnCerrarModalPermisos2.addEventListener('click', cerrarModalPermisosDenegados);
+  }
+
   cargarRoles();
   cargarPersonas(); 
 
   $(document).ready(function () {
+    // ✅ VERIFICAR PERMISOS ANTES DE CARGAR LA TABLA
+    if (!tienePermiso('ver')) {
+      console.warn('Sin permisos para ver usuarios');
+      return;
+    }
+
     if ($.fn.DataTable.isDataTable("#TablaUsuarios")) {
       $("#TablaUsuarios").DataTable().destroy();
     }
@@ -112,9 +162,13 @@ document.addEventListener("DOMContentLoaded", function () {
               json
             );
             $("#TablaUsuarios_processing").css("display", "none"); 
-            alert(
-              "Error: No se pudieron cargar los datos de usuarios correctamente."
-            );
+            
+            // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+            if (json && json.message && json.message.includes('permisos')) {
+              mostrarModalPermisosDenegados(json.message);
+            } else {
+              alert("Error: No se pudieron cargar los datos de usuarios correctamente.");
+            }
             return [];
           }
         },
@@ -126,9 +180,19 @@ document.addEventListener("DOMContentLoaded", function () {
             jqXHR.responseText
           );
           $("#TablaUsuarios_processing").css("display", "none"); 
-          alert(
-            "Error de comunicación al cargar los datos de usuarios. Por favor, intente más tarde."
-          );
+          
+          // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+          try {
+            const response = JSON.parse(jqXHR.responseText);
+            if (response && response.message && response.message.includes('permisos')) {
+              mostrarModalPermisosDenegados(response.message);
+              return;
+            }
+          } catch (e) {
+            // No es JSON válido, continuar con error genérico
+          }
+          
+          alert("Error de comunicación al cargar los datos de usuarios. Por favor, intente más tarde.");
         },
       },
       columns: [
@@ -183,20 +247,47 @@ document.addEventListener("DOMContentLoaded", function () {
           className: "all text-center actions-column py-1 px-2",
           width: "auto",
           render: function (data, type, row) {
-            const nombreUsuarioParaEliminar = row.usuario || row.correo; 
-            return `
-              <div class="inline-flex items-center space-x-1">
-                <button class="ver-usuario-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" data-idusuario="${row.idusuario}" title="Ver detalles">
+            const nombreUsuarioParaEliminar = row.usuario || row.correo;
+            let acciones = '<div class="inline-flex items-center space-x-1">';
+            
+            // ✅ VER - Solo si tiene permisos
+            if (tienePermiso('ver')) {
+              acciones += `
+                <button class="ver-usuario-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                        data-idusuario="${row.idusuario}" 
+                        title="Ver detalles">
                     <i class="fas fa-eye fa-fw text-base"></i>
-                </button>
-                <button class="editar-usuario-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" data-idusuario="${row.idusuario}" title="Editar">
+                </button>`;
+            }
+            
+            // ✅ EDITAR - Solo si tiene permisos
+            if (tienePermiso('editar')) {
+              acciones += `
+                <button class="editar-usuario-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                        data-idusuario="${row.idusuario}" 
+                        title="Editar">
                     <i class="fas fa-edit fa-fw text-base"></i>
-                </button>
-                <button class="eliminar-usuario-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" data-idusuario="${row.idusuario}" data-nombre="${nombreUsuarioParaEliminar}" title="Desactivar">
+                </button>`;
+            }
+            
+            // ✅ ELIMINAR - Solo si tiene permisos
+            if (tienePermiso('eliminar')) {
+              acciones += `
+                <button class="eliminar-usuario-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                        data-idusuario="${row.idusuario}" 
+                        data-nombre="${nombreUsuarioParaEliminar}" 
+                        title="Desactivar">
                     <i class="fas fa-trash-alt fa-fw text-base"></i>
-                </button>
-              </div>
-            `;
+                </button>`;
+            }
+            
+            // Si no tiene permisos para ninguna acción, mostrar mensaje
+            if (!tienePermiso('ver') && !tienePermiso('editar') && !tienePermiso('eliminar')) {
+              acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
+            }
+            
+            acciones += '</div>';
+            return acciones;
           },
         },
       ],
@@ -281,51 +372,72 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-    $("#TablaUsuarios tbody").on("click", ".ver-usuario-btn", function () {
+    // ✅ EVENT LISTENERS CON VERIFICACIÓN DE PERMISOS
+    $("#TablaUsuarios tbody").on("click", ".ver-usuario-btn", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('ver')) {
+        mostrarModalPermisosDenegados("No tienes permisos para ver detalles de usuarios.");
+        return;
+      }
+      
       const idUsuario = $(this).data("idusuario");
-      if (idUsuario && typeof verUsuario === "function") {
+      if (idUsuario) {
         verUsuario(idUsuario);
       } else {
-        console.error(
-          "Función verUsuario no definida o idUsuario no encontrado."
-        );
-        alert("Error: No se pudo obtener el ID del usuario para verlo.");
+        console.error("ID de usuario no encontrado.");
+        Swal.fire("Error", "No se pudo obtener el ID del usuario.", "error");
       }
     });
 
-    $("#TablaUsuarios tbody").on("click", ".editar-usuario-btn", function () {
+    $("#TablaUsuarios tbody").on("click", ".editar-usuario-btn", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('editar')) {
+        mostrarModalPermisosDenegados("No tienes permisos para editar usuarios.");
+        return;
+      }
+      
       const idUsuario = $(this).data("idusuario");
-      if (idUsuario && typeof editarUsuario === "function") {
+      if (idUsuario) {
         editarUsuario(idUsuario);
       } else {
-        console.error(
-          "Función editarUsuario no definida o idUsuario no encontrado."
-        );
-        alert("Error: No se pudo obtener el ID del usuario para editarlo.");
+        console.error("ID de usuario no encontrado.");
+        Swal.fire("Error", "No se pudo obtener el ID del usuario.", "error");
       }
     });
 
-    $("#TablaUsuarios tbody").on("click", ".eliminar-usuario-btn", function () {
+    $("#TablaUsuarios tbody").on("click", ".eliminar-usuario-btn", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('eliminar')) {
+        mostrarModalPermisosDenegados("No tienes permisos para eliminar usuarios.");
+        return;
+      }
+      
       const idUsuario = $(this).data("idusuario");
       const nombreUsuario = $(this).data("nombre"); 
-      if (idUsuario && typeof eliminarUsuario === "function") {
+      if (idUsuario) {
         eliminarUsuario(idUsuario, nombreUsuario);
       } else {
-        console.error(
-          "Función eliminarUsuario no definida o idUsuario no encontrado."
-        );
-        alert("Error: No se pudo obtener el ID del usuario para desactivarlo.");
+        console.error("ID de usuario no encontrado.");
+        Swal.fire("Error", "No se pudo obtener el ID del usuario.", "error");
       }
     });
   });
 
+  // ✅ BOTÓN REGISTRAR CON VERIFICACIÓN DE PERMISOS
   const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarUsuario");
-  const formRegistrar = document.getElementById("formRegistrarUsuario");
-  const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
-  const btnCancelarModalRegistro = document.getElementById("btnCancelarModalRegistrar");
-
   if (btnAbrirModalRegistro) {
-    btnAbrirModalRegistro.addEventListener("click", function () {
+    btnAbrirModalRegistro.addEventListener("click", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('crear')) {
+        mostrarModalPermisosDenegados("No tienes permisos para crear usuarios.");
+        return;
+      }
+      
+      const formRegistrar = document.getElementById("formRegistrarUsuario");
       abrirModal("modalRegistrarUsuario");
       if (formRegistrar) formRegistrar.reset();
       limpiarValidaciones(camposFormularioUsuario, "formRegistrarUsuario");
@@ -333,6 +445,26 @@ document.addEventListener("DOMContentLoaded", function () {
       cargarPersonas(0, "usuarioPersona"); 
     });
   }
+
+  // ✅ BOTÓN EXPORTAR CON VERIFICACIÓN DE PERMISOS
+  const btnExportarUsuarios = document.getElementById("btnExportarUsuarios");
+  if (btnExportarUsuarios) {
+    btnExportarUsuarios.addEventListener("click", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('exportar')) {
+        mostrarModalPermisosDenegados("No tienes permisos para exportar usuarios.");
+        return;
+      }
+      
+      exportarUsuarios();
+    });
+  }
+
+  // Event listeners para modales (sin cambios)
+  const formRegistrar = document.getElementById("formRegistrarUsuario");
+  const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
+  const btnCancelarModalRegistro = document.getElementById("btnCancelarModalRegistrar");
 
   if (btnCerrarModalRegistro) btnCerrarModalRegistro.addEventListener("click", () => cerrarModal("modalRegistrarUsuario"));
   if (btnCancelarModalRegistro) btnCancelarModalRegistro.addEventListener("click", () => cerrarModal("modalRegistrarUsuario"));
@@ -374,6 +506,11 @@ function cargarRoles() {
             });
           }
         });
+      } else {
+        // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+        if (result && result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        }
       }
     })
     .catch(error => console.error("Error al cargar roles:", error));
@@ -423,7 +560,12 @@ function cargarPersonas(idPersonaActual = 0, targetSelectId = null) {
         }
 
       } else {
-        console.error("Error al cargar personas:", result.message || "Datos no válidos");
+        // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+        if (result && result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          console.error("Error al cargar personas:", result.message || "Datos no válidos");
+        }
       }
     })
     .catch((error) => {
@@ -432,6 +574,12 @@ function cargarPersonas(idPersonaActual = 0, targetSelectId = null) {
 }
 
 function registrarUsuario() {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('crear')) {
+    mostrarModalPermisosDenegados("No tienes permisos para crear usuarios.");
+    return;
+  }
+
   const formRegistrar = document.getElementById("formRegistrarUsuario");
   const btnGuardarUsuario = document.getElementById("btnGuardarUsuario");
 
@@ -482,16 +630,26 @@ function registrarUsuario() {
         cerrarModal("modalRegistrarUsuario");
         if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
       } else {
-        // Aquí se manejará el error de correo duplicado con el mensaje del servidor
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: result.message || "No se pudo registrar el usuario.",
-          confirmButtonColor: "#3085d6"
-        });
+        // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: result.message || "No se pudo registrar el usuario.",
+            confirmButtonColor: "#3085d6"
+          });
+        }
       }
     })
-    .catch(error => Swal.fire("Error", error.message || "Error de conexión.", "error"))
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", error.message || "Error de conexión.", "error");
+      }
+    })
     .finally(() => {
       btnGuardarUsuario.disabled = false;
       btnGuardarUsuario.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Usuario`;
@@ -499,6 +657,12 @@ function registrarUsuario() {
 }
 
 function editarUsuario(idUsuario) {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('editar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para editar usuarios.");
+    return;
+  }
+
   fetch(`Usuarios/getUsuarioById/${idUsuario}`, { 
     method: "GET",
     headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
@@ -508,10 +672,21 @@ function editarUsuario(idUsuario) {
       if (result.status && result.data) {
         mostrarModalEditarUsuario(result.data);
       } else {
-        Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
+        // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
+        }
       }
     })
-    .catch(error => Swal.fire("Error", "Error de conexión.", "error"));
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", "Error de conexión.", "error");
+      }
+    });
 }
 
 function mostrarModalEditarUsuario(usuario) {
@@ -532,6 +707,12 @@ function mostrarModalEditarUsuario(usuario) {
 }
 
 function actualizarUsuario() {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('editar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para editar usuarios.");
+    return;
+  }
+
   const formActualizar = document.getElementById("formActualizarUsuario");
   const btnActualizarUsuario = document.getElementById("btnActualizarUsuario");
   const idUsuario = document.getElementById("idUsuarioActualizar").value;
@@ -590,16 +771,26 @@ function actualizarUsuario() {
         cerrarModal("modalActualizarUsuario");
         if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
       } else {
-        // Aquí se manejará el error de correo duplicado con el mensaje del servidor
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: result.message || "No se pudo actualizar el usuario.",
-          confirmButtonColor: "#3085d6"
-        });
+        // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: result.message || "No se pudo actualizar el usuario.",
+            confirmButtonColor: "#3085d6"
+          });
+        }
       }
     })
-    .catch(error => Swal.fire("Error", error.message || "Error de conexión.", "error"))
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", error.message || "Error de conexión.", "error");
+      }
+    })
     .finally(() => {
       btnActualizarUsuario.disabled = false;
       btnActualizarUsuario.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Usuario`;
@@ -607,6 +798,12 @@ function actualizarUsuario() {
 }
 
 function verUsuario(idUsuario) {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('ver')) {
+    mostrarModalPermisosDenegados("No tienes permisos para ver detalles de usuarios.");
+    return;
+  }
+
   fetch(`Usuarios/getUsuarioById/${idUsuario}`, { 
     method: "GET",
     headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
@@ -623,13 +820,30 @@ function verUsuario(idUsuario) {
         document.getElementById("verPersonaCedula").textContent = usuario.persona_cedula || "N/A";
         abrirModal("modalVerUsuario");
       } else {
-        Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
+        // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
+        }
       }
     })
-    .catch(error => Swal.fire("Error", "Error de conexión.", "error"));
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", "Error de conexión.", "error");
+      }
+    });
 }
 
 function eliminarUsuario(idUsuario, nombreUsuario) {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('eliminar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para eliminar usuarios.");
+    return;
+  }
+
   Swal.fire({
     title: "¿Estás seguro?",
     text: `¿Deseas desactivar al usuario ${nombreUsuario}? Esta acción cambiará su estatus a INACTIVO.`,
@@ -652,10 +866,56 @@ function eliminarUsuario(idUsuario, nombreUsuario) {
             Swal.fire("¡Desactivado!", result.message, "success");
             if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
           } else {
-            Swal.fire("Error", result.message || "No se pudo desactivar.", "error");
+            // ✅ VERIFICAR SI ES ERROR DE PERMISOS
+            if (result.message && result.message.includes('permisos')) {
+              mostrarModalPermisosDenegados(result.message);
+            } else {
+              Swal.fire("Error", result.message || "No se pudo desactivar.", "error");
+            }
           }
         })
-        .catch(error => Swal.fire("Error", "Error de conexión.", "error"));
+        .catch(error => {
+          if (error.message && error.message.includes('permisos')) {
+            mostrarModalPermisosDenegados(error.message);
+          } else {
+            Swal.fire("Error", "Error de conexión.", "error");
+          }
+        });
     }
   });
+}
+
+// ✅ FUNCIÓN DE EXPORTAR (NUEVA)
+function exportarUsuarios() {
+  if (!tienePermiso('exportar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para exportar usuarios.");
+    return;
+  }
+
+  fetch("Usuarios/exportarUsuarios", {
+    method: "GET",
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (result.status && result.data) {
+        // Aquí puedes implementar la lógica de exportación
+        // Por ejemplo, generar CSV, Excel, PDF, etc.
+        console.log("Datos para exportar:", result.data);
+        Swal.fire("¡Éxito!", "Datos preparados para exportación.", "success");
+      } else {
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire("Error", result.message || "Error al exportar usuarios.", "error");
+        }
+      }
+    })
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", "Error de conexión.", "error");
+      }
+    });
 }

@@ -1,119 +1,298 @@
 <?php headerAdmin($data); ?>
 
-
 <main class="flex-1 p-6 bg-gray-100 min-h-screen">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold">Hola, <?= $_SESSION['nombre'] ?? 'Usuario' ?> 👋</h2>
-        <input type="text" placeholder="Buscar..." class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none w-64">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">¡Hola, <?= htmlspecialchars($data['usuario_nombre']) ?>! 👋</h2>
+            <p class="text-gray-600 mt-1">Panel de control - Recuperadora de Materiales</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button id="btnActualizar" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-sync-alt mr-2"></i>Actualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center py-8 hidden">
+        <div class="inline-flex items-center">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
+            <span class="text-gray-600">Cargando datos...</span>
+        </div>
     </div>
 
     <!-- Cards Resumen -->
-   <div class="flex justify-between bg-white p-6 rounded-2xl shadow-md space-x-8 mt-5">
-    <!-- Tarjeta: Ventas de Hoy -->
-    <div  class="flex items-center space-x-4">
-        <div class="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full">
-            <i class="fa-solid fa-cart-shopping text-blue-500 text-3xl"></i>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <!-- Compras de Hoy -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mr-4">
+                    <i class="fas fa-truck text-purple-600 text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-gray-500 text-sm font-medium">Compras de Hoy</p>
+                    <p id="comprasHoy" class="text-2xl font-bold text-gray-900">
+                        <span class="loading-skeleton">--</span>
+                    </p>
+                </div>
+            </div>
         </div>
-        <div>
-            <p class="text-gray-500 text-sm">Ventas de Hoy</p>
-            <p id="ventasHoy" class="text-gray-900 text-2xl font-bold">0</p>
+
+        <!-- Ventas de Hoy -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mr-4">
+                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-gray-500 text-sm font-medium">Ventas de Hoy</p>
+                    <p id="ventasHoy" class="text-2xl font-bold text-gray-900">
+                        <span class="loading-skeleton">--</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventario Total -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mr-4">
+                    <i class="fas fa-boxes text-blue-600 text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-gray-500 text-sm font-medium">Inventario Total</p>
+                    <p id="inventarioTotal" class="text-2xl font-bold text-gray-900">
+                        <span class="loading-skeleton">--</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empleados Activos -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mr-4">
+                    <i class="fas fa-users text-orange-600 text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-gray-500 text-sm font-medium">Empleados</p>
+                    <p id="empleadosActivos" class="text-2xl font-bold text-gray-900">
+                        <span class="loading-skeleton">--</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tareas Activas -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="flex items-center">
+                <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-lg mr-4">
+                    <i class="fas fa-tasks text-red-600 text-xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-gray-500 text-sm font-medium">Tareas Activas</p>
+                    <p id="tareasActivas" class="text-2xl font-bold text-gray-900">
+                        <span class="loading-skeleton">--</span>
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
-  
-    <div class="border-l border-gray-300 h-16"></div>
+    <!-- Alertas -->
+    <div id="alertasContainer" class="mb-8"></div>
 
-  
-    <div  class="flex items-center space-x-4">
-        <div class="flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full">
-            <i class="fa-solid fa-truck text-purple-500 text-3xl"></i>
+    <!-- Sección Principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Últimas Compras -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-truck text-purple-500 mr-2"></i>
+                    Últimas Compras
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="pb-3">Nro Compra</th>
+                                <th class="pb-3">Proveedor</th>
+                                <th class="pb-3">Fecha</th>
+                                <th class="pb-3">Total</th>
+                                <th class="pb-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comprasBody" class="text-sm">
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div>
-            <p class="text-gray-500 text-sm">Compras de Hoy</p>
-            <p id="comprasHoy" class="text-gray-900 text-2xl font-bold">0</p>
+
+        <!-- Últimas Ventas -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-shopping-cart text-green-500 mr-2"></i>
+                    Últimas Ventas
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="pb-3">Nro Venta</th>
+                                <th class="pb-3">Cliente</th>
+                                <th class="pb-3">Fecha</th>
+                                <th class="pb-3">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ventasBody" class="text-sm">
+                            <tr>
+                                <td colspan="4" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-   
-    <div class="border-l border-gray-300 h-16"></div>
-
-    <div  class="flex items-center space-x-4">
-        <div class="flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full">
-            <i class="fa-solid fa-boxes-stacked text-yellow-500 text-3xl"></i>
+    <!-- Tareas de Producción y Stock Bajo -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Tareas Pendientes -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-tasks text-orange-500 mr-2"></i>
+                    Tareas de Producción
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="pb-3">ID</th>
+                                <th class="pb-3">Empleado</th>
+                                <th class="pb-3">Producto</th>
+                                <th class="pb-3">Cantidad</th>
+                                <th class="pb-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tareasBody" class="text-sm">
+                            <tr>
+                                <td colspan="5" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div>
-            <p class="text-gray-500 text-sm">Inventario Disponible</p>
-            <p id="inventarioTotal" class="text-gray-900 text-2xl font-bold">0</p>
+
+        <!-- Productos con Stock Bajo -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                    Productos - Stock Bajo
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="pb-3">Producto</th>
+                                <th class="pb-3">Existencia</th>
+                                <th class="pb-3">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockBajoBody" class="text-sm">
+                            <tr>
+                                <td colspan="3" class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando datos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-   
-    <div class="border-l border-gray-300 h-16"></div>
-
-    
-    <div  class="flex items-center space-x-4">
-        <div class="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
-            <i class="fa-solid fa-users text-red-500 text-3xl"></i>
+    <!-- Gráficos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Gráfico de Ventas -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-chart-area text-green-500 mr-2"></i>
+                    Ventas Mensuales
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="relative h-80">
+                    <canvas id="graficoVentas"></canvas>
+                </div>
+            </div>
         </div>
-        <div>
-            <p class="text-gray-500 text-sm">Empleados Activos</p>
-            <p id="empleadosActivos" class="text-gray-900 text-2xl font-bold">0</p>
+
+        <!-- Gráfico de Compras -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-chart-bar text-purple-500 mr-2"></i>
+                    Compras Mensuales
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="relative h-80">
+                    <canvas id="graficoCompras"></canvas>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-<br><br><hr>
-   
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-semibold mb-4">Últimas Ventas</h3>
-            <table id="tablaVentas" class="w-full text-left table-auto">
-                <thead class="bg-gray-100 text-gray-600">
-                    <tr>
-                        <th class="px-4 py-2">Nro Venta</th>
-                        <th class="px-4 py-2">Cliente</th>
-                        <th class="px-4 py-2">Fecha</th>
-                        <th class="px-4 py-2">Total</th>
-                    </tr>
-                </thead>
-                <tbody id="ventasBody">
-                    <tr><td colspan="4" class="text-center py-4">Cargando datos...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-       
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-semibold mb-4">Tareas Pendientes</h3>
-            <table id="tablaTareas" class="w-full text-left table-auto">
-                <thead class="bg-gray-100 text-gray-600">
-                    <tr>
-                        <th class="px-4 py-2">ID</th>
-                        <th class="px-4 py-2">Empleado</th>
-                        <th class="px-4 py-2">Cantidad</th>
-                        <th class="px-4 py-2">Estado</th>
-                    </tr>
-                </thead>
-                <tbody id="tareasBody">
-                    <tr><td colspan="4" class="text-center py-4">Cargando datos...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-   
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-semibold mb-4">Ventas Mensuales</h3>
-            <canvas id="graficoVentas"></canvas>
-        </div>
-
-       
-    </section>
 </main>
 
+<!-- CSS adicional para loading skeleton -->
+<style>
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+    display: inline-block;
+    height: 1em;
+    width: 60px;
+}
 
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.alerta {
+    animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 
 <?php footerAdmin($data); ?>
