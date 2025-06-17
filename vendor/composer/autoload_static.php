@@ -11,6 +11,10 @@ class ComposerStaticInitf78dd311a332ffb6d5b7c3808e50ac7f
         array (
             'app\\' => 4,
         ),
+        'R' => 
+        array (
+            'ReCaptcha\\' => 10,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -18,10 +22,15 @@ class ComposerStaticInitf78dd311a332ffb6d5b7c3808e50ac7f
         array (
             0 => __DIR__ . '/../..' . '/app',
         ),
+        'ReCaptcha\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/google/recaptcha/src/ReCaptcha',
+        ),
     );
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'FPDF' => __DIR__ . '/..' . '/setasign/fpdf/fpdf.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

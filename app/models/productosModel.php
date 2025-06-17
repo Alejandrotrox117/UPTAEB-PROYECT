@@ -2,6 +2,7 @@
 require_once "app/core/conexion.php";
 require_once "app/core/mysql.php";
 require_once "app/models/bitacoraModel.php";
+require_once "app/models/notificacionesModel.php";
 
 class ProductosModel extends Mysql
 {
@@ -12,10 +13,11 @@ class ProductosModel extends Mysql
     private $productoId;
     private $message;
     private $status;
+    private $notificacionesModel;
  
     public function __construct()
     {
-        
+        $this->notificacionesModel = new NotificacionesModel();
     }
 
     // Getters y Setters
@@ -139,6 +141,9 @@ class ProductosModel extends Mysql
             if ($this->getProductoId()) {
                 $this->setStatus(true);
                 $this->setMessage('Producto registrado exitosamente.');
+                
+                // Crear notificación de nuevo producto
+                $this->crearNotificacionNuevoProducto($data['nombre'], $this->getProductoId());
             } else {
                 $this->setStatus(false);
                 $this->setMessage('Error al obtener ID de producto tras registro.');
@@ -196,6 +201,9 @@ class ProductosModel extends Mysql
             if ($rowCount > 0) {
                 $this->setStatus(true);
                 $this->setMessage('Producto actualizado exitosamente.');
+                
+                // Crear notificación de producto actualizado
+                $this->crearNotificacionProductoActualizado($data['nombre'], $idproducto);
             } else {
                 $this->setStatus(false);
                 $this->setMessage('No se pudo actualizar el producto o no se realizaron cambios.');
@@ -264,12 +272,23 @@ class ProductosModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Obtener nombre del producto antes de desactivarlo
+            $this->setQuery("SELECT nombre FROM producto WHERE idproducto = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idproducto]);
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            
             $this->setQuery("UPDATE producto SET estatus = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
             $this->setArray(['INACTIVO', $idproducto]);
             
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount() > 0;
+            
+            if ($resultado && $producto) {
+                // Crear notificación de producto desactivado
+                $this->crearNotificacionProductoDesactivado($producto['nombre'], $idproducto);
+            }
             
         } catch (Exception $e) {
             error_log("ProductosModel::ejecutarEliminacionProducto -> " . $e->getMessage());
@@ -415,12 +434,23 @@ class ProductosModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Obtener nombre del producto antes de activarlo
+            $this->setQuery("SELECT nombre FROM producto WHERE idproducto = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idproducto]);
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            
             $this->setQuery("UPDATE producto SET estatus = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
             $this->setArray(['ACTIVO', $idproducto]);
             
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount() > 0;
+            
+            if ($resultado && $producto) {
+                // Crear notificación de producto activado
+                $this->crearNotificacionProductoActivado($producto['nombre'], $idproducto);
+            }
             
         } catch (Exception $e) {
             error_log("ProductosModel::ejecutarActivacionProducto -> " . $e->getMessage());
@@ -474,6 +504,107 @@ class ProductosModel extends Mysql
         }
 
         return $resultado;
+    }
+
+    // Métodos para crear notificaciones
+    private function crearNotificacionNuevoProducto(string $nombreProducto, int $productoId){
+        try {
+            $dataNotificacion = [
+                'tipo' => 'PRODUCTO_NUEVO',
+                'titulo' => 'Nuevo Producto Registrado',
+                'mensaje' => "Se ha registrado un nuevo producto: '{$nombreProducto}'",
+                'modulo' => 'productos',
+                'referencia_id' => $productoId,
+                'rol_destinatario' => $this->obtenerRolProductos(),
+                'prioridad' => 'MEDIA'
+            ];
+            
+            $this->notificacionesModel->crearNotificacion($dataNotificacion);
+        } catch (Exception $e) {
+            error_log("Error al crear notificación de nuevo producto: " . $e->getMessage());
+        }
+    }
+
+    private function crearNotificacionProductoActualizado(string $nombreProducto, int $productoId){
+        try {
+            $dataNotificacion = [
+                'tipo' => 'PRODUCTO_ACTUALIZADO',
+                'titulo' => 'Producto Actualizado',
+                'mensaje' => "El producto '{$nombreProducto}' ha sido actualizado",
+                'modulo' => 'productos',
+                'referencia_id' => $productoId,
+                'rol_destinatario' => $this->obtenerRolProductos(),
+                'prioridad' => 'BAJA'
+            ];
+            
+            $this->notificacionesModel->crearNotificacion($dataNotificacion);
+        } catch (Exception $e) {
+            error_log("Error al crear notificación de producto actualizado: " . $e->getMessage());
+        }
+    }
+
+    private function crearNotificacionProductoDesactivado(string $nombreProducto, int $productoId){
+        try {
+            $dataNotificacion = [
+                'tipo' => 'PRODUCTO_DESACTIVADO',
+                'titulo' => 'Producto Desactivado',
+                'mensaje' => "El producto '{$nombreProducto}' ha sido desactivado",
+                'modulo' => 'productos',
+                'referencia_id' => $productoId,
+                'rol_destinatario' => $this->obtenerRolProductos(),
+                'prioridad' => 'MEDIA'
+            ];
+            
+            $this->notificacionesModel->crearNotificacion($dataNotificacion);
+        } catch (Exception $e) {
+            error_log("Error al crear notificación de producto desactivado: " . $e->getMessage());
+        }
+    }
+
+    private function crearNotificacionProductoActivado(string $nombreProducto, int $productoId){
+        try {
+            $dataNotificacion = [
+                'tipo' => 'PRODUCTO_ACTIVADO',
+                'titulo' => 'Producto Activado',
+                'mensaje' => "El producto '{$nombreProducto}' ha sido activado",
+                'modulo' => 'productos',
+                'referencia_id' => $productoId,
+                'rol_destinatario' => $this->obtenerRolProductos(),
+                'prioridad' => 'BAJA'
+            ];
+            
+            $this->notificacionesModel->crearNotificacion($dataNotificacion);
+        } catch (Exception $e) {
+            error_log("Error al crear notificación de producto activado: " . $e->getMessage());
+        }
+    }
+
+    private function obtenerRolProductos(){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT r.idrol FROM rol r 
+                JOIN roles_permisos rp ON r.idrol = rp.rol_id 
+                JOIN permisos p ON rp.permiso_id = p.idpermiso 
+                WHERE p.modulo = 'productos' AND p.accion = 'ver' AND r.estatus = 'ACTIVO'
+                LIMIT 1"
+            );
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $result ? $result['idrol'] : null;
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener rol de productos: " . $e->getMessage());
+            return null;
+        } finally {
+            $conexion->disconnect();
+        }
     }
 
     // Métodos públicos que usan las funciones privadas

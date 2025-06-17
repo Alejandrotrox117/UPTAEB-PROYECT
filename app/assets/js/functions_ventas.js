@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
       regex: expresiones.nombre,
       mensajes: {
         vacio: "El nombre es obligatorio.",
-        formato: "El nombre debe tener entre 2 y 30 caracteres.",
+        formato: "El nombre debe tener entre 2 y 50 caracteres.", // Inconsistente con regex
       },
     },
     {
@@ -617,7 +617,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       cargarSelect({
         selectId: "select_producto_agregar_modal",
-        endpoint: "ventas/getProductosLista",
+        endpoint: "ventas/getProductosDisponibles",
         optionTextFn: (p) =>
           `${p.nombre_producto} (${p.nombre_categoria || "N/A"})`,
         optionValueFn: (p) => p.idproducto || p.id || "",
@@ -644,20 +644,6 @@ document.addEventListener("DOMContentLoaded", function () {
       cerrarModal("ventaModal");
       limpiarFormularioVentaCompleto();
     });
-
-  async function obtenerTasaActualSeleccionada(idmoneda, fechaVenta) {
-    // Obtén el código de moneda desde el select
-    const selectMoneda = document.getElementById("idmoneda_general");
-    const option = selectMoneda.options[selectMoneda.selectedIndex];
-    const codigoMoneda = option.dataset.codigo || option.text.split(" ")[0]; // Ajusta según cómo cargues el select
-
-    // Llama al endpoint pasando código y fecha
-    const resp = await fetch(
-      `ventas/getTasa?codigo_moneda=${codigoMoneda}&fecha=${fechaVenta}`
-    );
-    const data = await resp.json();
-    return data.tasa || 1;
-  }
 
   // --- REGISTRAR VENTA PRINCIPAL CON CLIENTE AUTOMÁTICO ---
   document
@@ -759,10 +745,15 @@ document.addEventListener("DOMContentLoaded", function () {
       };
 
       // Obtener la tasa actual de la moneda seleccionada
-      datosVentaFinal.tasa_usada = await obtenerTasaActualSeleccionada(
-        datosVentaFinal.idmoneda_general,
-        datosVentaFinal.fecha_venta
-      );
+      try {
+        datosVentaFinal.tasa_usada = await obtenerTasaActualSeleccionada(
+          datosVentaFinal.idmoneda_general,
+          datosVentaFinal.fecha_venta
+        );
+      } catch (error) {
+        console.warn("Error al obtener tasa, usando valor por defecto:", error);
+        datosVentaFinal.tasa_usada = 1;
+      }
 
       // Recopilar detalles en el formato esperado por el backend PHP
       filas.forEach((fila) => {
@@ -797,7 +788,6 @@ document.addEventListener("DOMContentLoaded", function () {
           precio_unitario_venta: parseFloat(precio),
           subtotal_general: parseFloat(subtotal),
           descuento_porcentaje_general: 0,
-        
           id_moneda_detalle: datosVentaFinal.idmoneda_general,
           peso_vehiculo: 0,
           peso_bruto: 0,
@@ -816,198 +806,333 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // console.log("Datos Finales de VENTA a enviar:", datosVentaFinal);
+      // Deshabilitar botón para evitar múltiples envíos
+      const btnRegistrar = document.getElementById("registrarVentaBtn");
+      const textoOriginal = btnRegistrar.innerHTML;
+      btnRegistrar.disabled = true;
+      btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
 
       // Enviar datos usando fetch directamente para compatibilidad con el backend PHP
-      fetch("ventas/setVenta", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(datosVentaFinal),
-      })
-        .then((response) => response.json())
-        .then((result) => {
-          if (result.status || result.success) {
-            Swal.fire(
-              "¡Éxito!",
-              result.message || "Venta registrada correctamente.",
-              "success"
-            ).then(() => {
-              if (typeof $ !== "undefined" && $("#Tablaventas").length) {
-                $("#Tablaventas").DataTable().ajax.reload();
-              }
-              cerrarModal("ventaModal");
-              limpiarFormularioVentaCompleto();
+      try {
+        const response = await fetch("ventas/setVenta", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(datosVentaFinal),
+        });
+
+        // Verificar que la respuesta sea válida
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        // Manejar la respuesta correctamente
+        if (result.status === true) {
+          // Extraer datos de la respuesta de forma segura
+          const mensaje = result.message || "Venta registrada correctamente.";
+          let mensajeCompleto = mensaje;
+          
+          // Verificar si existen los datos de la venta
+          if (result.data && typeof result.data === 'object') {
+            const { nro_venta, idventa, idcliente } = result.data;
+            
+            if (nro_venta) {
+              mensajeCompleto = `Venta ${nro_venta} registrada correctamente.`;
+            }
+            
+            // Log para debugging (opcional)
+            console.log("Venta creada exitosamente:", {
+              idventa: idventa || 'No disponible',
+              nro_venta: nro_venta || 'No disponible',
+              idcliente: idcliente || 'No disponible'
             });
           } else {
-            Swal.fire(
-              "¡Error!",
-              result.message || "No se pudo registrar la venta.",
-              "error"
-            );
+            console.warn("Datos de respuesta no disponibles o estructura incorrecta:", result);
           }
-        })
-        .catch((error) => {
-          console.error("Error al registrar venta:", error);
-          Swal.fire(
-            "¡Error!",
-            "Error de comunicación con el servidor.",
-            "error"
-          );
-        });
+
+          await Swal.fire("¡Éxito!", mensajeCompleto, "success");
+          
+          // Recargar tabla si existe
+          if (typeof $ !== "undefined" && $("#Tablaventas").length) {
+            $("#Tablaventas").DataTable().ajax.reload();
+          }
+          
+          // Cerrar modal y limpiar formulario
+          cerrarModal("ventaModal");
+          limpiarFormularioVentaCompleto();
+
+        } else {
+          // Manejar errores del servidor
+          const mensajeError = result.message || "No se pudo registrar la venta.";
+          await Swal.fire("¡Error!", mensajeError, "error");
+        }
+
+      } catch (error) {
+        console.error("Error al registrar venta:", error);
+        
+        // Determinar mensaje de error apropiado
+        let mensajeError = "Error de comunicación con el servidor.";
+        if (error.message.includes("HTTP:")) {
+          mensajeError = `Error del servidor: ${error.message}`;
+        } else if (error.name === "SyntaxError") {
+          mensajeError = "Error al procesar la respuesta del servidor.";
+        }
+        
+        await Swal.fire("¡Error!", mensajeError, "error");
+      } finally {
+        // Rehabilitar botón
+        btnRegistrar.disabled = false;
+        btnRegistrar.innerHTML = textoOriginal;
+      }
     });
 
-  // --- Eventos de Tabla y CRUD (Eliminar, Editar - placeholders) ---
-  document.addEventListener("click", function (e) {
-    const eliminarBtn = e.target.closest(".eliminar-btn");
-    const editarBtn = e.target.closest(".editar-btn");
-
-    if (eliminarBtn) {
-      const idventa = eliminarBtn.getAttribute("data-idventa");
-      if (idventa) confirmarEliminacion(idventa);
-    }
-
-    if (editarBtn) {
-      const idventa = editarBtn.getAttribute("data-idventa");
-      if (!idventa || isNaN(idventa)) {
-        Swal.fire("¡Error!", "ID de venta no válido.", "error");
-        return;
+  // Función mejorada para obtener tasa
+  async function obtenerTasaActualSeleccionada(idmoneda, fechaVenta) {
+    try {
+      // Obtén el código de moneda desde el select
+      const selectMoneda = document.getElementById("idmoneda_general");
+      if (!selectMoneda || selectMoneda.selectedIndex === -1) {
+        console.warn("Select de moneda no encontrado o sin selección");
+        return 1;
       }
-      console.warn(
-        `Funcionalidad Editar Venta para ID ${idventa} no implementada.`
-      );
-      // abrirModalventaParaEdicion(idventa);
-    }
-  });
 
- function confirmarEliminacion(idventa) {
-  Swal.fire({
-    title: "¿Estás seguro?",
-    text: "Esta acción cambiará el estatus de la venta a inactivo.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Sí, desactivar",
-    cancelButtonText: "Cancelar",
-  }).then((result) => {
-    if (result.isConfirmed) {
-     
-      fetch("ventas/deleteVenta", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: parseInt(idventa),
-        }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.status) {
-            Swal.fire(
-              "Desactivada",
-              data.message || "Venta desactivada correctamente.",
-              "success"
-            );
+      const option = selectMoneda.options[selectMoneda.selectedIndex];
+      const codigoMoneda = option.dataset.codigo || option.text.split(" ")[0];
+
+      if (!codigoMoneda) {
+        console.warn("Código de moneda no encontrado");
+        return 1;
+      }
+
+      // Llama al endpoint pasando código y fecha
+      const response = await fetch(
+        `ventas/getTasa?codigo_moneda=${encodeURIComponent(codigoMoneda)}&fecha=${encodeURIComponent(fechaVenta)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return parseFloat(data.tasa) || 1;
+
+    } catch (error) {
+      console.error("Error al obtener tasa:", error);
+      return 1; // Valor por defecto
+    }
+  }
+
+  // Función para confirmar eliminación
+  function confirmarEliminacion(idventa) {
+    Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción cambiará el estatus de la venta a inactivo.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, desactivar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // Mostrar loading
+          const loadingSwal = Swal.fire({
+            title: 'Procesando...',
+            text: 'Desactivando venta',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+          const response = await fetch("ventas/deleteVenta", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+              id: parseInt(idventa),
+            }),
+          });
+
+          // Cerrar loading
+          loadingSwal.close();
+
+          if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+          }
+
+          const data = await response.json();
+
+          if (data.status === true) {
+            await Swal.fire({
+              title: "¡Desactivada!",
+              text: data.message || "Venta desactivada correctamente.",
+              icon: "success",
+              confirmButtonText: "Aceptar"
+            });
+            
+            // Recargar tabla si existe
             if (typeof $ !== "undefined" && $("#Tablaventas").length) {
-              $("#Tablaventas").DataTable().ajax.reload();
+              $("#Tablaventas").DataTable().ajax.reload(null, false);
             }
           } else {
-            Swal.fire(
-              "Error",
-              data.message || "No se pudo desactivar la venta.",
-              "error"
-            );
+            await Swal.fire({
+              title: "Error",
+              text: data.message || "No se pudo desactivar la venta.",
+              icon: "error",
+              confirmButtonText: "Aceptar"
+            });
           }
-        })
-        .catch((error) => {
+
+        } catch (error) {
           console.error("Error al desactivar venta:", error);
-          Swal.fire("Error", "Error de comunicación con el servidor.", "error");
+          
+          let mensajeError = "Error de comunicación con el servidor.";
+          if (error.message.includes("HTTP:")) {
+            mensajeError = `Error del servidor: ${error.message}`;
+          } else if (error.name === "SyntaxError") {
+            mensajeError = "Error al procesar la respuesta del servidor.";
+          }
+          
+          await Swal.fire({
+            title: "Error", 
+            text: mensajeError,
+            icon: "error",
+            confirmButtonText: "Aceptar"
+          });
+        }
+      }
+    });
+  }
+
+  // Event listener para el botón eliminar
+  document.addEventListener("click", function (e) {
+    const eliminarBtn = e.target.closest(".eliminar-btn");
+    if (eliminarBtn) {
+      const idventa = eliminarBtn.getAttribute("data-idventa");
+      
+      if (!idventa || isNaN(parseInt(idventa))) {
+        Swal.fire({
+          title: "Error",
+          text: "ID de venta no válido.",
+          icon: "error",
+          confirmButtonText: "Aceptar"
         });
+        return;
+      }
+
+      confirmarEliminacion(idventa);
     }
   });
-}
 
-
-  //DETALLE DE VENTA
+  // DETALLE DE VENTA - Mejorado
   document.addEventListener("click", async function (e) {
     const verDetalleBtn = e.target.closest(".ver-detalle-btn");
     if (verDetalleBtn) {
       const idventa = verDetalleBtn.getAttribute("data-idventa");
-      if (!idventa) return;
+      if (!idventa || isNaN(parseInt(idventa))) {
+        await Swal.fire("Error", "ID de venta no válido.", "error");
+        return;
+      }
 
       // Mostrar el modal
       const modal = document.getElementById("modalDetalleVenta");
+      if (!modal) {
+        console.error("Modal de detalle no encontrado");
+        return;
+      }
+
       modal.classList.remove("opacity-0", "pointer-events-none", "transparent");
       modal.classList.add("opacity-100");
 
-      // Cargar datos de la venta
-      try {
-        const respVenta = await fetch(
-          `ventas/getVentaDetalle?idventa=${idventa}`
-        );
-        const data = await respVenta.json();
-        if (!data.status)
-          throw new Error(data.message || "No se pudo obtener el detalle.");
+      // Mostrar loading
+      const contenido = document.getElementById("detalleVentaContenido");
+      if (contenido) {
+        contenido.innerHTML = '<div class="flex justify-center items-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando...</div>';
+      }
 
-        // Renderizar los datos en el modal
-        document.getElementById("detalleVentaContenido").innerHTML = `
-  <div class="mb-4">
-    <h4 class="font-semibold text-gray-700 mb-2">Datos Generales</h4>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      <div><b>Nro Venta:</b> ${data.venta.nro_venta}</div>
-      <div><b>Fecha:</b> ${data.venta.fecha_venta}</div>
-      <div><b>Cliente:</b> ${
-        data.venta.cliente_nombre + data.venta.cliente_apellido
-      }</div>
-      <div><b>Cédula:</b> ${data.venta.cliente_cedula}</div>
-      <div><b>Tasa usada:</b> ${data.venta.tasa_usada || "-"}</div>
-      <div><b>Estatus:</b> ${data.venta.estatus}</div>
-      <div><b>Observaciones:</b> ${data.venta.observaciones || "-"}</div>
-    </div>
-  </div>
-  <div class="mb-4">
-    <h4 class="font-semibold text-gray-700 mb-2">Detalle de Productos</h4>
-    <table class="w-full text-xs border border-collapse border-gray-300">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">Producto</th>
-          <th class="px-2 py-1 border">Cantidad</th>
-          <th class="px-2 py-1 border">Precio U.</th>
-          <th class="px-2 py-1 border">Subtotal</th>
-          <th class="px-2 py-1 border">Moneda</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${data.detalle
-          .map(
-            (d) => `
-          <tr>
-            <td class="px-2 py-1 border">${d.producto_nombre}</td>
-            <td class="px-2 py-1 border">${d.cantidad}</td>
-            <td class="px-2 py-1 border">${d.precio_unitario_venta}</td>
-            <td class="px-2 py-1 border">${
-              d.subtotal_general || d.subtotal
-            }</td>
-            <td class="px-2 py-1 border">${d.codigo_moneda}</td>
-          </tr>
-        `
-          )
-          .join("")}
-      </tbody>
-    </table>
-  </div>
-  <div class="mb-2">
-    <b>Subtotal:</b> ${data.venta.subtotal_general} <br>
-    <b>Descuento :</b> ${data.venta.descuento_porcentaje_general} (%)<br>
-    <b>Monto Descuento:</b> ${data.venta.monto_descuento_general} <br>
-    <b>Total General:</b> ${data.venta.total_general}
-  </div>
-`;
-      } catch (err) {
-        document.getElementById(
-          "detalleVentaContenido"
-        ).innerHTML = `<div class="text-red-500">Error: ${err.message}</div>`;
+      try {
+        const response = await fetch(`ventas/getVentaDetalle?idventa=${encodeURIComponent(idventa)}`);
+        
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.status) {
+          throw new Error(data.message || "No se pudo obtener el detalle.");
+        }
+
+        // Verificar que existan los datos necesarios
+        if (!data.data || !data.data.venta || !data.data.detalle) {
+          throw new Error("Estructura de datos incompleta.");
+        }
+
+        const venta = data.data.venta;
+        const detalle = data.data.detalle;
+
+        // Renderizar los datos en el modal de forma segura
+        if (contenido) {
+          contenido.innerHTML = `
+            <div class="mb-4">
+              <h4 class="font-semibold text-gray-700 mb-2">Datos Generales</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div><b>Nro Venta:</b> ${venta.nro_venta || 'N/A'}</div>
+                <div><b>Fecha:</b> ${venta.fecha_venta || 'N/A'}</div>
+                <div><b>Cliente:</b> ${(venta.cliente_nombre || '') + ' ' + (venta.cliente_apellido || '')}</div>
+                <div><b>Cédula:</b> ${venta.cliente_cedula || 'N/A'}</div>
+                <div><b>Tasa usada:</b> ${venta.tasa_usada || '-'}</div>
+                <div><b>Estatus:</b> ${venta.estatus || 'N/A'}</div>
+                <div><b>Observaciones:</b> ${venta.observaciones || '-'}</div>
+              </div>
+            </div>
+            <div class="mb-4">
+              <h4 class="font-semibold text-gray-700 mb-2">Detalle de Productos</h4>
+              <table class="w-full text-xs border border-collapse border-gray-300">
+                <thead class="bg-gray-100">
+                  <tr>
+                    <th class="px-2 py-1 border">Producto</th>
+                    <th class="px-2 py-1 border">Cantidad</th>
+                    <th class="px-2 py-1 border">Precio U.</th>
+                    <th class="px-2 py-1 border">Subtotal</th>
+                    <th class="px-2 py-1 border">Moneda</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Array.isArray(detalle) ? detalle.map(d => `
+                    <tr>
+                      <td class="px-2 py-1 border">${d.producto_nombre || 'N/A'}</td>
+                      <td class="px-2 py-1 border">${d.cantidad || '0'}</td>
+                      <td class="px-2 py-1 border">${d.precio_unitario_venta || '0.00'}</td>
+                      <td class="px-2 py-1 border">${d.subtotal_general || d.subtotal || '0.00'}</td>
+                      <td class="px-2 py-1 border">${d.codigo_moneda || 'N/A'}</td>
+                    </tr>
+                  `).join("") : '<tr><td colspan="5" class="px-2 py-1 border text-center">No hay detalles</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+            <div class="mb-2">
+              <b>Subtotal:</b> ${venta.subtotal_general || '0.00'} <br>
+              <b>Descuento:</b> ${venta.descuento_porcentaje_general || '0'}% <br>
+              <b>Monto Descuento:</b> ${venta.monto_descuento_general || '0.00'} <br>
+              <b>Total General:</b> ${venta.total_general || '0.00'}
+            </div>
+          `;
+        }
+
+      } catch (error) {
+        console.error("Error al cargar detalle de venta:", error);
+        if (contenido) {
+          contenido.innerHTML = `<div class="text-red-500 text-center py-4">Error: ${error.message}</div>`;
+        }
       }
     }
   });

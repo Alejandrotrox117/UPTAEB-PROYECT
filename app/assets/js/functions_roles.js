@@ -62,7 +62,73 @@ const camposFormularioActualizarRol = [
   },
 ];
 
+// ✅ FUNCIÓN PARA OBTENER PERMISOS
+function obtenerPermisos() {
+  return {
+    crear: document.getElementById('permisoCrear')?.value === '1',
+    editar: document.getElementById('permisoEditar')?.value === '1',
+    eliminar: document.getElementById('permisoEliminar')?.value === '1',
+    ver: document.getElementById('permisoVer')?.value === '1'
+  };
+}
+
+// ✅ FUNCIÓN PARA VERIFICAR PERMISOS
+function tienePermiso(accion) {
+  const permisos = obtenerPermisos();
+  return permisos[accion] || false;
+}
+
+// ✅ FUNCIÓN PARA GENERAR BOTONES SEGÚN PERMISOS
+function generarBotonesAccion(row) {
+  const permisos = obtenerPermisos();
+  let botones = '';
+
+  // Botón Ver (siempre disponible si puede ver)
+  if (permisos.ver) {
+    botones += `
+      <button class="ver-rol-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+              data-idrol="${row.idrol}" 
+              title="Ver detalles">
+        <i class="fas fa-eye fa-fw text-base"></i>
+      </button>
+    `;
+  }
+
+  // Botón Editar (solo si puede editar)
+  if (permisos.editar) {
+    botones += `
+      <button class="editar-rol-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+              data-idrol="${row.idrol}" 
+              title="Editar">
+        <i class="fas fa-edit fa-fw text-base"></i>
+      </button>
+    `;
+  }
+
+  // Botón Eliminar (solo si puede eliminar)
+  if (permisos.eliminar) {
+    botones += `
+      <button class="eliminar-rol-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+              data-idrol="${row.idrol}" 
+              data-nombre="${row.nombre}" 
+              title="Desactivar">
+        <i class="fas fa-trash-alt fa-fw text-base"></i>
+      </button>
+    `;
+  }
+
+  // Si no tiene permisos, mostrar mensaje
+  if (!botones) {
+    botones = '<span class="text-gray-400 text-xs">Sin permisos</span>';
+  }
+
+  return `<div class="inline-flex items-center space-x-1">${botones}</div>`;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  // ✅ VERIFICAR PERMISOS AL CARGAR
+  console.log('🔐 Permisos detectados:', obtenerPermisos());
+
   $(document).ready(function () {
 
     if ($.fn.DataTable.isDataTable("#TablaRoles")) {
@@ -164,19 +230,8 @@ document.addEventListener("DOMContentLoaded", function () {
           className: "all text-center actions-column py-1 px-2",
           width: "auto", 
           render: function (data, type, row) {
-            return `
-              <div class="inline-flex items-center space-x-1">
-                <button class="ver-rol-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" data-idrol="${row.idrol}" title="Ver detalles">
-                    <i class="fas fa-eye fa-fw text-base"></i>
-                </button>
-                <button class="editar-rol-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" data-idrol="${row.idrol}" title="Editar">
-                    <i class="fas fa-edit fa-fw text-base"></i>
-                </button>
-                <button class="eliminar-rol-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" data-idrol="${row.idrol}" data-nombre="${row.nombre}" title="Desactivar">
-                    <i class="fas fa-trash-alt fa-fw text-base"></i>
-                </button>
-              </div>
-            `;
+            // ✅ USAR FUNCIÓN QUE RESPETA PERMISOS
+            return generarBotonesAccion(row);
           },
         },
       ],
@@ -262,7 +317,13 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
+    // ✅ EVENT LISTENERS CON VERIFICACIÓN DE PERMISOS
     $("#TablaRoles tbody").on("click", ".ver-rol-btn", function () {
+      if (!tienePermiso('ver')) {
+        Swal.fire("Sin permisos", "No tiene permisos para ver detalles de roles.", "warning");
+        return;
+      }
+
       const idRol = $(this).data("idrol");
       if (idRol && typeof verRol === "function") {
         verRol(idRol);
@@ -273,6 +334,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $("#TablaRoles tbody").on("click", ".editar-rol-btn", function () {
+      if (!tienePermiso('editar')) {
+        Swal.fire("Sin permisos", "No tiene permisos para editar roles.", "warning");
+        return;
+      }
+
       const idRol = $(this).data("idrol");
       if (idRol && typeof editarRol === "function") {
         editarRol(idRol);
@@ -283,6 +349,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $("#TablaRoles tbody").on("click", ".eliminar-rol-btn", function () {
+      if (!tienePermiso('eliminar')) {
+        Swal.fire("Sin permisos", "No tiene permisos para eliminar roles.", "warning");
+        return;
+      }
+
       const idRol = $(this).data("idrol");
       const nombreRol = $(this).data("nombre");
       if (idRol && typeof eliminarRol === "function") {
@@ -294,21 +365,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // MODAL REGISTRAR ROL
-  const btnAbrirModalRegistro = document.getElementById(
-    "btnAbrirModalRegistrarRol"
-  );
+  // ✅ MODAL REGISTRAR ROL - VERIFICAR PERMISOS
+  const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarRol");
   const formRegistrar = document.getElementById("formRegistrarRol");
-  const btnCerrarModalRegistro = document.getElementById(
-    "btnCerrarModalRegistrar"
-  );
-  const btnCancelarModalRegistro = document.getElementById(
-    "btnCancelarModalRegistrar"
-  );
+  const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
+  const btnCancelarModalRegistro = document.getElementById("btnCancelarModalRegistrar");
+  const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
   const btnGuardarRol = document.getElementById("btnGuardarRol");
 
   if (btnAbrirModalRegistro) {
     btnAbrirModalRegistro.addEventListener("click", function () {
+      if (!tienePermiso('crear')) {
+        Swal.fire("Sin permisos", "No tiene permisos para crear roles.", "warning");
+        return;
+      }
+
       abrirModal("modalRegistrarRol");
       if (formRegistrar) formRegistrar.reset();
       inicializarValidaciones(camposFormularioRol, "formRegistrarRol");
@@ -327,21 +398,29 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  if (btnCerrarModalVer2) {
+    btnCerrarModalVer2.addEventListener("click", function () {
+      cerrarModal("modalVerRol");
+    });
+  }
+
   // SUBMIT FORM REGISTRAR
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
+      
+      if (!tienePermiso('crear')) {
+        Swal.fire("Sin permisos", "No tiene permisos para crear roles.", "warning");
+        return;
+      }
+
       registrarRol();
     });
   }
 
   // MODAL ACTUALIZAR ROL
-  const btnCerrarModalActualizar = document.getElementById(
-    "btnCerrarModalActualizar"
-  );
-  const btnCancelarModalActualizar = document.getElementById(
-    "btnCancelarModalActualizar"
-  );
+  const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
+  const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
   const formActualizar = document.getElementById("formActualizarRol");
   const btnActualizarRol = document.getElementById("btnActualizarRol");
 
@@ -360,6 +439,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (formActualizar) {
     formActualizar.addEventListener("submit", function (e) {
       e.preventDefault();
+      
+      if (!tienePermiso('editar')) {
+        Swal.fire("Sin permisos", "No tiene permisos para editar roles.", "warning");
+        return;
+      }
+
       actualizarRol();
     });
   }
@@ -374,6 +459,12 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function editarRol(idRol) {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  if (!tienePermiso('editar')) {
+    Swal.fire("Sin permisos", "No tiene permisos para editar roles.", "warning");
+    return;
+  }
+
   fetch(`Roles/getRolById/${idRol}`, {
     method: "GET",
     headers: {
@@ -399,8 +490,7 @@ function editarRol(idRol) {
 function mostrarModalEditarRol(rol) {
   document.getElementById("idRolActualizar").value = rol.idrol || "";
   document.getElementById("nombreActualizar").value = rol.nombre || "";
-  document.getElementById("descripcionActualizar").value =
-    rol.descripcion || "";
+  document.getElementById("descripcionActualizar").value = rol.descripcion || "";
   document.getElementById("estatusActualizar").value = rol.estatus || "";
   inicializarValidaciones(camposFormularioActualizarRol, "formActualizarRol");
 
@@ -408,6 +498,12 @@ function mostrarModalEditarRol(rol) {
 }
 
 function actualizarRol() {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  if (!tienePermiso('editar')) {
+    Swal.fire("Sin permisos", "No tiene permisos para editar roles.", "warning");
+    return;
+  }
+
   const formActualizar = document.getElementById("formActualizarRol");
   const btnActualizarRol = document.getElementById("btnActualizarRol");
   const idRol = document.getElementById("idRolActualizar").value;
@@ -512,6 +608,12 @@ function actualizarRol() {
 }
 
 function registrarRol() {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  if (!tienePermiso('crear')) {
+    Swal.fire("Sin permisos", "No tiene permisos para crear roles.", "warning");
+    return;
+  }
+
   const formRegistrar = document.getElementById("formRegistrarRol");
   const btnGuardarRol = document.getElementById("btnGuardarRol");
 
@@ -610,6 +712,12 @@ function registrarRol() {
 }
 
 function verRol(idRol) {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  if (!tienePermiso('ver')) {
+    Swal.fire("Sin permisos", "No tiene permisos para ver detalles de roles.", "warning");
+    return;
+  }
+
   fetch(`Roles/getRolById/${idRol}`, {
     method: "GET",
     headers: {
@@ -635,8 +743,7 @@ function verRol(idRol) {
 function mostrarModalVerRol(rol) {
   // Llenar los campos del modal de ver
   document.getElementById("verNombre").textContent = rol.nombre || "N/A";
-  document.getElementById("verDescripcion").textContent =
-    rol.descripcion || "N/A";
+  document.getElementById("verDescripcion").textContent = rol.descripcion || "N/A";
   document.getElementById("verEstatus").textContent = rol.estatus || "N/A";
   document.getElementById("verFechaCreacion").textContent =
     rol.fecha_creacion
@@ -651,6 +758,12 @@ function mostrarModalVerRol(rol) {
 }
 
 function eliminarRol(idRol, nombreRol) {
+  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  if (!tienePermiso('eliminar')) {
+    Swal.fire("Sin permisos", "No tiene permisos para eliminar roles.", "warning");
+    return;
+  }
+
   Swal.fire({
     title: "¿Estás seguro?",
     text: `¿Deseas eliminar el rol "${nombreRol}"? Esta acción no se puede deshacer.`,

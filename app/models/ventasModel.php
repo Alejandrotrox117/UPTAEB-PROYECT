@@ -1,9 +1,18 @@
 <?php
+
 require_once("app/core/conexion.php");
 require_once("app/core/mysql.php");
 
 class VentasModel extends Mysql
 {
+    // Propiedades privadas
+    private $query;
+    private $array;
+    private $data;
+    private $result;
+    private $ventaId;
+    private $message;
+    private $status;
     private $idventa;
     private $idcliente;
     private $fecha_venta;
@@ -16,6 +25,76 @@ class VentasModel extends Mysql
     }
 
     // Getters y Setters
+    public function getQuery()
+    {
+        return $this->query;
+    }
+
+    public function setQuery(string $query)
+    {
+        $this->query = $query;
+    }
+
+    public function getArray()
+    {
+        return $this->array ?? [];
+    }
+
+    public function setArray(array $array)
+    {
+        $this->array = $array;
+    }
+
+    public function getData()
+    {
+        return $this->data ?? [];
+    }
+
+    public function setData(array $data)
+    {
+        $this->data = $data;
+    }
+
+    public function getResult()
+    {
+        return $this->result;
+    }
+
+    public function setResult($result)
+    {
+        $this->result = $result;
+    }
+
+    public function getVentaId()
+    {
+        return $this->ventaId;
+    }
+
+    public function setVentaId($ventaId)
+    {
+        $this->ventaId = $ventaId;
+    }
+
+    public function getMessage()
+    {
+        return $this->message;
+    }
+
+    public function setMessage(string $message)
+    {
+        $this->message = $message;
+    }
+
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    public function setStatus(bool $status)
+    {
+        $this->status = $status;
+    }
+
     public function getIdVenta()
     {
         return $this->idventa;
@@ -66,135 +145,78 @@ class VentasModel extends Mysql
         $this->estatus = $estatus;
     }
 
-
-    public function getTasaPorCodigoYFecha()
+    // Métodos privados encapsulados
+    private function ejecutarBusquedaTodasVentas()
     {
-        $codigo = $_GET['codigo_moneda'] ?? '';
-        $fecha = $_GET['fecha'] ?? date('Y-m-d');
-        if (!$codigo) {
-            echo json_encode(['tasa' => 1]);
-            exit;
-        }
-        $sql = "SELECT tasa_a_bs FROM historial_tasas_bcv WHERE codigo_moneda = ? AND fecha_publicacion_bcv = ? LIMIT 1";
-        $result = $this->search($sql, [$codigo, $fecha]);
-        echo json_encode(['tasa' => $result['tasa_a_bs'] ?? 1]);
-        exit;
-    }
-    // Método para obtener productos activos
-  
-public function obtenerProductos()
-{
-    $sql = "SELECT
-                p.idproducto,
-                p.nombre AS nombre_producto,
-                p.idcategoria,
-                c.nombre AS nombre_categoria,
-                p.precio AS precio_unitario,
-                p.moneda AS idmoneda_producto
-            FROM
-                producto p
-            JOIN
-                categoria c ON p.idcategoria = c.idcategoria
-            LEFT JOIN
-                monedas m ON p.moneda = m.idmoneda
-            WHERE
-                p.estatus = 'activo'";
-    try {
-        return $this->searchAll($sql);
-    } catch (Exception $e) {
-        error_log("ventasModel::obtenerProductos - Error de BD: " . $e->getMessage());
-        return [];
-    }
-}
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
-    private function generarNumeroVenta()
-    {
-        // Busca el último idventa registrado
-        $sql = "SELECT MAX(idventa) as ultimo_id FROM venta";
-        $result = $this->search($sql);
-        $ultimoId = isset($result['ultimo_id']) ? intval($result['ultimo_id']) : 0;
-        $nuevoId = $ultimoId + 1;
-        // Formato: V-000001
-        return 'V-' . str_pad($nuevoId, 6, '0', STR_PAD_LEFT);
-    }
-
-
-    public function getVentasDatatable()
-    {
         try {
-            $sql = "SELECT v.idventa,
-                           CONCAT('V-', LPAD(v.idventa, 6, '0')) as nro_venta, 
-                           CONCAT(c.nombre, ' ', c.apellido) as cliente_nombre,
-                           DATE_FORMAT(v.fecha_creacion, '%d/%m/%Y') as fecha_venta,
-                           FORMAT(v.total_general, 2) as total_formateado, 
-                           v.estatus
-                    FROM venta v
-                    INNER JOIN cliente c ON v.idcliente = c.idcliente
-                    ORDER BY v.idventa DESC";
-            return $this->searchAll($sql);
-        } catch (Exception $e) {
-            error_log("Error al obtener ventas con cliente: " . $e->getMessage());
-            throw new Exception("Error al obtener ventas con cliente: " . $e->getMessage());
-        }
-    }
-
-    public function crearCliente($datosCliente)
-    {
-        try {
-            // Verificar si ya existe un cliente con la misma cédula
-            $sqlVerificar = "SELECT COUNT(*) as count FROM cliente WHERE cedula = ?";
-            $existe = $this->search($sqlVerificar, [$datosCliente['cedula']]);
-
-            if ($existe['count'] > 0) {
-                throw new Exception("Ya existe un cliente con la cédula: " . $datosCliente['cedula']);
-            }
-
-            $sqlCliente = "INSERT INTO cliente 
-                          (cedula, nombre, apellido, telefono_principal, direccion, observaciones, estatus, fecha_creacion) 
-                          VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
-
-            $paramsCliente = [
-                $datosCliente['cedula'],
-                $datosCliente['nombre'],
-                $datosCliente['apellido'],
-                $datosCliente['telefono_principal'],
-                $datosCliente['direccion'],
-                $datosCliente['observaciones'] ?? '',
-                $datosCliente['estatus'] ?? 'Activo'
+            $this->setQuery(
+                "SELECT 
+                    v.idventa,
+                    v.nro_venta, 
+                    v.fecha_venta,
+                    CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
+                    v.total_general,
+                    v.estatus,
+                    DATE_FORMAT(v.fecha_venta, '%d/%m/%Y') as fecha_formato,
+                    DATE_FORMAT(v.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
+                    CASE 
+                        WHEN v.estatus = 'activo' THEN 'Activo'
+                      
+                     
+                    END as estatus_formato
+                FROM venta v
+                LEFT JOIN cliente c ON v.idcliente = c.idcliente
+                WHERE v.estatus IN ('activo')
+                ORDER BY v.fecha_venta DESC, v.nro_venta DESC"
+            );
+            
+            $this->setArray([]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            $resultado = [
+                "status" => true,
+                "message" => "Ventas obtenidas exitosamente.",
+                "data" => $this->getResult()
             ];
-
-            $idCliente = $this->insert($sqlCliente, $paramsCliente);
-
-            if (!$idCliente) {
-                throw new Exception("No se pudo crear el cliente");
-            }
-
-            return $idCliente;
+            
         } catch (Exception $e) {
-            throw new Exception("Error al crear cliente: " . $e->getMessage());
+            error_log("VentasModel::ejecutarBusquedaTodasVentas - Error: " . $e->getMessage());
+            $resultado = [
+                "status" => false,
+                "message" => "Error al obtener ventas: " . $e->getMessage(),
+                "data" => []
+            ];
+        } finally {
+            $conexion->disconnect();
         }
+
+        return $resultado;
     }
 
-    /**
-     * Método para crear venta con cliente nuevo (si es necesario)
-     */
-    public function insertVenta($data, $detalles, $datosClienteNuevo = null)
+    private function ejecutarInsercionVenta(array $data, array $detalles, array $datosClienteNuevo = null)
     {
-        return $this->executeTransaction(function ($mysql) use ($data, $detalles, $datosClienteNuevo) {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
             $idCliente = $data['idcliente'];
 
-            // Si no hay cliente seleccionado pero hay datos de cliente nuevo
+            // Crear cliente nuevo si es necesario
             if (!$idCliente && $datosClienteNuevo) {
-                // Crear el cliente primero
-                $idCliente = $this->crearCliente($datosClienteNuevo);
-
-                // Actualizar los datos de la venta con el nuevo ID de cliente
-                $data['idcliente'] = $idCliente;
-            }
-
-            // Validar que tenemos un cliente
-            if (!$idCliente) {
-                throw new Exception("No se pudo determinar el cliente para la venta");
+                $idCliente = $this->crearClienteNuevo($db, $datosClienteNuevo);
+                if (!$idCliente) {
+                    throw new Exception("No se pudo crear el cliente nuevo");
+                }
             }
 
             // Validar que el cliente existe
@@ -203,48 +225,23 @@ public function obtenerProductos()
                 throw new Exception("El cliente especificado no existe");
             }
 
-            // Validar datos obligatorios de la venta
-            $camposObligatorios = [
-                'idcliente',
-                'fecha_venta',
-                'idmoneda_general',
-                'subtotal_general',
-                'descuento_porcentaje_general',
-                'monto_descuento_general',
-                'total_general',
-                'estatus'
-            ];
-            foreach ($camposObligatorios as $campo) {
-                if (!isset($data[$campo]) || $data[$campo] === '') {
-                    throw new Exception("Falta el campo obligatorio: $campo");
-                }
-            }
-
-            // Validar que hay detalles
-            if (empty($detalles)) {
-                throw new Exception("La venta debe tener al menos un producto");
-            }
-
             // Generar número de venta
-
             $nro_venta = $this->generarNumeroVenta();
             if (!$nro_venta) {
-                // Si es una petición AJAX, responde con JSON y termina la ejecución
-                echo json_encode([
-                    'status' => false,
-                    'message' => 'Error: No se pudo generar el número de venta'
-                ]);
-                exit;
+                throw new Exception('No se pudo generar el número de venta');
             }
+
             // Insertar venta
-            $sqlVenta = "INSERT INTO venta 
+            $this->setQuery(
+                "INSERT INTO venta 
                 (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, 
                  monto_descuento_general, estatus, total_general, observaciones, tasa, fecha_creacion, ultima_modificacion)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+            );
 
-            $paramsVenta = [
+            $this->setArray([
                 $nro_venta,
-                $data['idcliente'],
+                $idCliente,
                 $data['fecha_venta'],
                 $data['idmoneda_general'],
                 $data['subtotal_general'],
@@ -254,76 +251,433 @@ public function obtenerProductos()
                 $data['total_general'],
                 $data['observaciones'] ?? '',
                 $data['tasa_usada'] ?? 1
-            ];
+            ]);
 
-            $idventa = $this->insert($sqlVenta, $paramsVenta);
-            if (!$idventa) throw new Exception("No se pudo crear la venta.");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $idventa = $db->lastInsertId();
+
+            if (!$idventa) {
+                throw new Exception("No se pudo crear la venta");
+            }
 
             // Insertar detalles
-            $sqlDetalle = "INSERT INTO detalle_venta 
-                (idventa, idproducto, cantidad, precio_unitario_venta, 
-                 idmoneda, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $this->insertarDetallesVenta($db, $idventa, $detalles, $data['idmoneda_general']);
 
-            foreach ($detalles as $detalle) {
-                // Validar que el producto existe
-                $productoExiste = $this->search("SELECT COUNT(*) as count FROM producto WHERE idproducto = ?", [$detalle['idproducto']]);
-                if ($productoExiste['count'] == 0) {
-                    throw new Exception("El producto con ID " . $detalle['idproducto'] . " no existe");
-                }
+            $db->commit();
 
-                $paramsDetalle = [
-                    $idventa,
-                    $detalle['idproducto'],
-                    
-                    $detalle['cantidad'],
-                    $detalle['precio_unitario_venta'],
-                    $detalle['id_moneda_detalle'] ?? $data['idmoneda_general'],
-                    $detalle['subtotal_general'] ?? 0,
-                    $detalle['peso_vehiculo'] ?? 0,
-                    $detalle['peso_bruto'] ?? 0,
-                    $detalle['peso_neto'] ?? 0
-                ];
-
-                $detalleInsertado = $this->insert($sqlDetalle, $paramsDetalle);
-                if (!$detalleInsertado) {
-                    throw new Exception("No se pudo insertar el detalle del producto ID: " . $detalle['idproducto']);
-                }
-            }
+            $this->setStatus(true);
+            $this->setMessage('Venta registrada exitosamente');
+            $this->setVentaId($idventa);
 
             return [
                 'success' => true,
-                'message' => 'Venta y cliente registrados exitosamente',
-                'idventa' => $idventa,
+                'message' => $this->getMessage(),
+                'idventa' => $this->getVentaId(),
                 'idcliente' => $idCliente,
                 'nro_venta' => $nro_venta
             ];
-        });
+
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log("VentasModel::ejecutarInsercionVenta - Error: " . $e->getMessage());
+            
+            return [
+                'success' => false,
+                'message' => 'Error al registrar venta: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarBusquedaVentaPorId(int $idventa)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
+                        v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
+                        v.tasa as tasa_usada,
+                        CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
+                        c.nombre as cliente_nombre,
+                        c.apellido as cliente_apellido,
+                        c.cedula as cliente_cedula,
+                        m.codigo_moneda, m.nombre_moneda
+                 FROM venta v
+                 LEFT JOIN cliente c ON v.idcliente = c.idcliente
+                 LEFT JOIN monedas m ON v.idmoneda = m.idmoneda
+                 WHERE v.idventa = ?"
+            );
+            
+            $this->setArray([$idventa]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+            
+        } catch (Exception $e) {
+            error_log("VentasModel::ejecutarBusquedaVentaPorId - Error: " . $e->getMessage());
+            $this->setResult(false);
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $this->getResult();
+    }
+
+    private function ejecutarBusquedaDetalleVenta(int $idventa)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT dv.*, p.nombre as nombre_producto, c.nombre as nombre_categoria
+                 FROM detalle_venta dv
+                 LEFT JOIN producto p ON dv.idproducto = p.idproducto
+                 LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+                 WHERE dv.idventa = ?
+                 ORDER BY dv.iddetalle_venta"
+            );
+            
+            $this->setArray([$idventa]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+        } catch (Exception $e) {
+            error_log("VentasModel::ejecutarBusquedaDetalleVenta - Error: " . $e->getMessage());
+            $this->setResult([]);
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $this->getResult();
+    }
+
+    private function ejecutarEliminacionVenta(int $idventa)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Verificar que la venta existe
+            $venta = $this->search("SELECT COUNT(*) as count FROM venta WHERE idventa = ?", [$idventa]);
+            if ($venta['count'] == 0) {
+                throw new Exception("La venta especificada no existe.");
+            }
+
+            $this->setQuery("UPDATE venta SET estatus = 'Inactivo', ultima_modificacion = NOW() WHERE idventa = ?");
+            $this->setArray([$idventa]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $resultado = $stmt->rowCount() > 0;
+            
+        } catch (Exception $e) {
+            error_log("VentasModel::ejecutarEliminacionVenta - Error: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
+    private function ejecutarBusquedaClientes(string $criterio)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT idcliente as id, nombre, apellido, cedula
+                 FROM cliente
+                 WHERE estatus = 'Activo' 
+                 AND (nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ?)
+                 ORDER BY nombre, apellido
+                 LIMIT 20"
+            );
+            
+            $parametroBusqueda = '%' . $criterio . '%';
+            $this->setArray([$parametroBusqueda, $parametroBusqueda, $parametroBusqueda]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+        } catch (Exception $e) {
+            error_log("VentasModel::ejecutarBusquedaClientes - Error: " . $e->getMessage());
+            $this->setResult([]);
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $this->getResult();
+    }
+
+    private function ejecutarBusquedaProductosParaFormulario()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT p.idproducto, 
+                        p.nombre as nombre_producto,
+                        p.precio as precio_unitario,
+                        c.nombre as nombre_categoria
+                 FROM producto p
+                 LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+                 WHERE p.estatus = 'ACTIVO'
+                 ORDER BY p.nombre"
+            );
+            
+            $this->setArray([]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+        } catch (Exception $e) {
+            error_log("VentasModel::ejecutarBusquedaProductosParaFormulario - Error: " . $e->getMessage());
+            $this->setResult([]);
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $this->getResult();
+    }
+
+    private function ejecutarBusquedaMonedasActivas()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT idmoneda, codigo_moneda, nombre_moneda, valor
+                 FROM monedas 
+                 WHERE estatus = 'Activo'
+                 ORDER BY codigo_moneda"
+            );
+            
+            $this->setArray([]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+        } catch (Exception $e) {
+            error_log("VentasModel::ejecutarBusquedaMonedasActivas - Error: " . $e->getMessage());
+            $this->setResult([]);
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $this->getResult();
+    }
+
+    // Métodos auxiliares privados
+    private function crearClienteNuevo($db, array $datosCliente)
+    {
+        $sqlCliente = "INSERT INTO cliente (nombre, apellido, cedula, telefono_principal, direccion, estatus, fecha_creacion, ultima_modificacion)
+                       VALUES (?, ?, ?, ?, ?, 'Activo', NOW(), NOW())";
+        
+        $paramsCliente = [
+            $datosCliente['nombre'],
+            $datosCliente['apellido'] ?? '',
+            $datosCliente['cedula'],
+            $datosCliente['telefono_principal'],
+            $datosCliente['direccion']
+        ];
+
+        $stmtCliente = $db->prepare($sqlCliente);
+        if ($stmtCliente->execute($paramsCliente)) {
+            return $db->lastInsertId();
+        }
+        return false;
+    }
+
+    private function insertarDetallesVenta($db, $idventa, array $detalles, $idmoneda_general)
+    {
+        $sqlDetalle = "INSERT INTO detalle_venta 
+                       (idventa, idproducto, cantidad, precio_unitario_venta, 
+                        idmoneda, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        foreach ($detalles as $detalle) {
+            // Validar que el producto existe
+            $productoExiste = $this->search("SELECT COUNT(*) as count FROM producto WHERE idproducto = ?", [$detalle['idproducto']]);
+            if ($productoExiste['count'] == 0) {
+                throw new Exception("El producto con ID " . $detalle['idproducto'] . " no existe");
+            }
+
+            $paramsDetalle = [
+                $idventa,
+                $detalle['idproducto'],
+                $detalle['cantidad'],
+                $detalle['precio_unitario_venta'],
+                $detalle['id_moneda_detalle'] ?? $idmoneda_general,
+                $detalle['subtotal_general'] ?? 0,
+                $detalle['peso_vehiculo'] ?? 0,
+                $detalle['peso_bruto'] ?? 0,
+                $detalle['peso_neto'] ?? 0
+            ];
+
+            $stmtDetalle = $db->prepare($sqlDetalle);
+            if (!$stmtDetalle->execute($paramsDetalle)) {
+                throw new Exception("No se pudo insertar el detalle del producto ID: " . $detalle['idproducto']);
+            }
+        }
+    }
+
+    private function generarNumeroVenta()
+    {
+        try {
+            $sql = "SELECT COALESCE(MAX(CAST(SUBSTRING(nro_venta, 3) AS UNSIGNED)), 0) + 1 as siguiente_numero 
+                    FROM venta 
+                    WHERE nro_venta LIKE 'VT%'";
+            $result = $this->search($sql);
+            return 'VT' . str_pad($result['siguiente_numero'], 6, '0', STR_PAD_LEFT);
+        } catch (Exception $e) {
+            error_log("Error al generar número de venta: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Métodos públicos que usan las funciones privadas
+    public function getVentasDatatable()
+    {
+        $resultado = $this->ejecutarBusquedaTodasVentas();
+        return $resultado['data'] ?? [];
+    }
+
+    public function insertVenta(array $data, array $detalles, array $datosClienteNuevo = null)
+    {
+        $this->setData($data);
+        return $this->ejecutarInsercionVenta($this->getData(), $detalles, $datosClienteNuevo);
+    }
+
+    public function obtenerVentaPorId(int $idventa)
+    {
+        $this->setVentaId($idventa);
+        return $this->ejecutarBusquedaVentaPorId($this->getVentaId());
+    }
+
+    public function obtenerDetalleVenta(int $idventa)
+    {
+        $this->setVentaId($idventa);
+        return $this->ejecutarBusquedaDetalleVenta($this->getVentaId());
     }
 
     /**
-     * Validar datos de cliente antes de crear
+     * Obtiene el detalle completo de una venta con información de productos
      */
+    public function obtenerDetalleVentaCompleto($idventa)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT 
+                dv.iddetalle_venta,
+                dv.idventa,
+                dv.idproducto,
+                dv.cantidad,
+                dv.precio_unitario_venta,
+                dv.subtotal_general,
+                dv.descuento_porcentaje_general as descuento_detalle,
+                dv.id_moneda_detalle,
+                dv.tasa_usada,
+                dv.peso_vehiculo,
+                dv.peso_bruto,
+                dv.peso_neto,
+                p.nombre as producto_nombre,
+                p.codigo as producto_codigo,
+                c.nombre as categoria_nombre,
+                m.codigo_moneda,
+                m.nombre_moneda
+             FROM detalle_venta dv
+             INNER JOIN producto p ON dv.idproducto = p.idproducto
+             LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
+             LEFT JOIN monedas m ON dv.id_moneda_detalle = m.idmoneda
+             WHERE dv.idventa = ?
+             ORDER BY dv.iddetalle_venta"
+            );
+            
+            $this->setArray([$idventa]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+        } catch (Exception $e) {
+            error_log("VentasModel::obtenerDetalleVentaCompleto - Error: " . $e->getMessage());
+            $this->setResult([]);
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $this->getResult();
+    }
+
+    public function eliminarVenta(int $idventa)
+    {
+        $this->setVentaId($idventa);
+        $resultado = $this->ejecutarEliminacionVenta($this->getVentaId());
+        
+        if ($resultado) {
+            return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
+        } else {
+            return ['success' => false, 'message' => 'No se pudo desactivar la venta'];
+        }
+    }
+
+    public function buscarClientes(string $criterio)
+    {
+        return $this->ejecutarBusquedaClientes($criterio);
+    }
+
+    public function getListaProductosParaFormulario()
+    {
+        return $this->ejecutarBusquedaProductosParaFormulario();
+    }
+
+    public function getMonedasActivas()
+    {
+        return $this->ejecutarBusquedaMonedasActivas();
+    }
+
+    public function obtenerProductos()
+    {
+        return $this->ejecutarBusquedaProductosParaFormulario();
+    }
+
     public function validarDatosCliente($datos)
     {
         $errores = [];
 
-        if (empty($datos['cedula'])) {
-            $errores[] = "La cédula es obligatoria";
-        } elseif (!preg_match('/^[VEJP]-\d{6,8}$/', $datos['cedula'])) {
-            $errores[] = "Formato de cédula inválido (ej: V-12345678)";
-        }
-
-        if (empty($datos['nombre'])) {
-            $errores[] = "El nombre es obligatorio";
-        } elseif (strlen($datos['nombre']) < 2 || strlen($datos['nombre']) > 50) {
+        if (empty($datos['nombre']) || strlen($datos['nombre']) < 2 || strlen($datos['nombre']) > 50) {
             $errores[] = "El nombre debe tener entre 2 y 50 caracteres";
         }
 
-        if (empty($datos['apellido'])) {
-            $errores[] = "El apellido es obligatorio";
-        } elseif (strlen($datos['apellido']) < 2 || strlen($datos['apellido']) > 50) {
-            $errores[] = "El apellido debe tener entre 2 y 50 caracteres";
+        if (empty($datos['cedula'])) {
+            $errores[] = "La cédula es obligatoria";
+        } elseif (!preg_match('/^\d{7,8}$/', $datos['cedula'])) {
+            $errores[] = "La cédula debe tener entre 7 y 8 dígitos";
         }
 
         if (empty($datos['telefono_principal'])) {
@@ -340,120 +694,17 @@ public function obtenerProductos()
 
         return $errores;
     }
-    public function obtenerVentaPorId($idventa)
+
+    public function getTasaPorCodigoYFecha($codigo, $fecha)
     {
         try {
-            $sql = "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
-               v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
-               v.tasa as tasa_usada,
-               c.nombre as cliente_nombre, c.apellido as cliente_apellido, c.cedula as cliente_cedula
-        FROM venta v
-        INNER JOIN cliente c ON v.idcliente = c.idcliente
-        WHERE v.idventa = ?";
-            return $this->search($sql, [$idventa]);
+            $sql = "SELECT tasa_a_bs FROM historial_tasas_bcv WHERE codigo_moneda = ? AND DATE(fecha_publicacion_bcv) <= DATE(?) ORDER BY fecha_publicacion_bcv DESC LIMIT 1";
+            $result = $this->search($sql, [$codigo, $fecha]);
+            return $result['tasa_a_bs'] ?? 1;
         } catch (Exception $e) {
-            error_log("Error al obtener la venta: " . $e->getMessage());
-            throw new Exception("Error al obtener la venta: " . $e->getMessage());
-        }
-    }
-
-    // Método para obtener el detalle de una venta
-
-    public function obtenerDetalleVenta($idventa)
-    {
-        try {
-            $sql = "SELECT dv.cantidad, 
-                       dv.precio_unitario_venta, 
-                       dv.subtotal_general, 
-                       
-                       p.nombre as producto_nombre,
-                       m.codigo_moneda
-                FROM detalle_venta dv
-                INNER JOIN producto p ON dv.idproducto = p.idproducto
-                INNER JOIN monedas m ON dv.idmoneda = m.idmoneda
-                WHERE dv.idventa = ?
-                ORDER BY p.nombre";
-            return $this->searchAll($sql, [$idventa]);
-        } catch (Exception $e) {
-            error_log("Error al obtener el detalle de la venta: " . $e->getMessage());
-            throw new Exception("Error al obtener el detalle de la venta: " . $e->getMessage());
-        }
-    }
-
-    // Método para eliminar/desactivar venta
-    public function eliminarVenta($idventa)
-    {
-        return $this->executeTransaction(function ($mysql) use ($idventa) {
-
-            // Verificar que la venta existe
-            $venta = $this->search("SELECT COUNT(*) as count FROM venta WHERE idventa = ?", [$idventa]);
-            if ($venta['count'] == 0) {
-                throw new Exception("La venta especificada no existe.");
-            }
-
-            
-            $sqlUpdate = "UPDATE venta SET estatus = 'Inactivo', ultima_modificacion = NOW() WHERE idventa = ?";
-            $result = $this->update($sqlUpdate, [$idventa]);
-
-            if ($result > 0) {
-                return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
-            } else {
-                throw new Exception("No se pudo desactivar la venta.");
-            }
-        });
-    }
-
-
-    // Método para buscar clientes por criterio
-    public function buscarClientes($criterio)
-    {
-        try {
-            $sql = "SELECT idcliente as id, nombre, apellido, cedula
-                    FROM cliente
-                    WHERE estatus = 'Activo' 
-                    AND (nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ?)
-                    ORDER BY nombre, apellido
-                    LIMIT 20";
-
-            $parametroBusqueda = '%' . $criterio . '%';
-            return $this->searchAll($sql, [$parametroBusqueda, $parametroBusqueda, $parametroBusqueda]);
-        } catch (Exception $e) {
-            error_log("Error al buscar clientes: " . $e->getMessage());
-            throw new Exception("Error al buscar clientes: " . $e->getMessage());
-        }
-    }
-
-    // Método para obtener productos para formulario
-    public function getListaProductosParaFormulario()
-    {
-        try {
-            $sql = "SELECT p.idproducto, 
-                           p.nombre as nombre_producto,
-                           p.precio as precio_unitario,
-                           c.nombre as nombre_categoria
-                    FROM productos p
-                    LEFT JOIN categorias c ON p.idcategoria = c.idcategoria
-                    WHERE p.activo = 1
-                    ORDER BY p.nombre";
-            return $this->searchAll($sql);
-        } catch (Exception $e) {
-            error_log("Error al obtener productos para formulario: " . $e->getMessage());
-            throw new Exception("Error al obtener productos para formulario: " . $e->getMessage());
-        }
-    }
-
-    // Método para obtener monedas activas
-    public function getMonedasActivas()
-    {
-        try {
-            $sql = "SELECT idmoneda, codigo_moneda, nombre_moneda, valor
-                    FROM monedas 
-                    WHERE estatus = 'Activo'
-                    ORDER BY codigo_moneda";
-            return $this->searchAll($sql);
-        } catch (Exception $e) {
-            error_log("Error al obtener monedas: " . $e->getMessage());
-            throw new Exception("Error al obtener monedas: " . $e->getMessage());
+            error_log("Error al obtener tasa: " . $e->getMessage());
+            return 1;
         }
     }
 }
+?>
