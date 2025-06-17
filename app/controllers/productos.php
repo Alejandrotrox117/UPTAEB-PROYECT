@@ -1,16 +1,17 @@
 <?php
-
 require_once "app/core/Controllers.php";
 require_once "app/models/productosModel.php";
 require_once "helpers/helpers.php";
 require_once "helpers/permisosVerificar.php";
 require_once "helpers/PermisosHelper.php";
 require_once "app/models/bitacoraModel.php";
+require_once "app/models/notificacionesModel.php";
 require_once "helpers/expresiones_regulares.php";
 
 class Productos extends Controllers
 {
     private $bitacoraModel;
+    private $notificacionesModel;
 
     public function get_model()
     {
@@ -27,6 +28,7 @@ class Productos extends Controllers
         parent::__construct();
         $this->model = new ProductosModel();
         $this->bitacoraModel = new BitacoraModel();
+        $this->notificacionesModel = new NotificacionesModel();
 
         // Verificar si el usuario está logueado antes de verificar permisos
         if (!$this->obtenerUsuarioSesion()) {
@@ -34,6 +36,18 @@ class Productos extends Controllers
             die();
         }
     }
+
+    
+    public function index()
+    {
+        $data['page_tag'] = "Productos";
+        $data['page_title'] = "Administración de Productos";
+        $data['page_name'] = "productos";
+        $data['page_content'] = "Gestión integral de productos del sistema";
+        $data['page_functions_js'] = "functions_productos.js";
+        $this->views->getView($this, "productos", $data);
+    }
+
 
     public function createProducto()
     {
@@ -48,7 +62,6 @@ class Productos extends Controllers
                     die();
                 }
 
-                // Limpiar y preparar datos con expresiones regulares
                 $datosLimpios = [
                     'nombre' => ExpresionesRegulares::limpiar($request['nombre'] ?? '', 'nombre'),
                     'descripcion' => trim($request['descripcion'] ?? ''),
@@ -57,8 +70,6 @@ class Productos extends Controllers
                     'idcategoria' => intval($request['idcategoria'] ?? 0),
                     'moneda' => strtoupper(trim($request['moneda'] ?? 'BS'))
                 ];
-
-                // Validar campos obligatorios no vacíos
                 $camposObligatorios = ['nombre', 'unidad_medida', 'precio', 'idcategoria'];
                 foreach ($camposObligatorios as $campo) {
                     if (empty($datosLimpios[$campo]) || ($campo === 'precio' && $datosLimpios[$campo] <= 0)) {
@@ -67,29 +78,19 @@ class Productos extends Controllers
                         die();
                     }
                 }
-
-                // Validar formatos con expresiones regulares
                 $reglasValidacion = [
                     'nombre' => 'nombre'
                 ];
-
-                // Agregar descripción si no está vacía
                 if (!empty($datosLimpios['descripcion'])) {
                     $reglasValidacion['descripcion'] = 'textoGeneral';
                 }
-
-                // Ejecutar validaciones
                 $resultadosValidacion = ExpresionesRegulares::validarCampos($datosLimpios, $reglasValidacion);
-
-                // Recopilar errores
                 $errores = [];
                 foreach ($resultadosValidacion as $campo => $resultado) {
                     if (!$resultado['valido']) {
                         $errores[] = ExpresionesRegulares::obtenerMensajeError($campo, $reglasValidacion[$campo]);
                     }
                 }
-
-                // Validaciones adicionales específicas para productos
                 if ($datosLimpios['precio'] <= 0) {
                     $errores[] = 'El precio debe ser mayor a 0';
                 }
@@ -102,7 +103,6 @@ class Productos extends Controllers
                     $errores[] = 'Moneda inválida';
                 }
 
-                // Si hay errores, responder con todos los errores
                 if (!empty($errores)) {
                     $arrResponse = array(
                         'status' => false,
@@ -121,7 +121,6 @@ class Productos extends Controllers
                     'moneda' => $datosLimpios['moneda']
                 );
 
-                // Obtener ID de usuario
                 $idusuario = $this->obtenerUsuarioSesion();
 
                 if (!$idusuario) {
@@ -133,7 +132,6 @@ class Productos extends Controllers
 
                 $arrResponse = $this->model->insertProducto($arrData);
 
-                // Registrar en bitácora si la inserción fue exitosa
                 if ($arrResponse['status'] === true) {
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('producto', 'INSERTAR', $idusuario);
 
@@ -141,6 +139,7 @@ class Productos extends Controllers
                         error_log("Warning: No se pudo registrar en bitácora la creación del producto ID: " .
                             ($arrResponse['producto_id'] ?? 'desconocido'));
                     }
+                    $this->notificacionesModel->generarNotificacionesProductos();
                 }
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -170,16 +169,6 @@ class Productos extends Controllers
             error_log("ERROR: No se encontró ID de usuario en la sesión");
             return null;
         }
-    }
-
-    public function index()
-    {
-        $data['page_tag'] = "Productos";
-        $data['page_title'] = "Administración de Productos";
-        $data['page_name'] = "productos";
-        $data['page_content'] = "Gestión integral de productos del sistema";
-        $data['page_functions_js'] = "functions_productos.js";
-        $this->views->getView($this, "productos", $data);
     }
 
     public function getProductosData()
@@ -324,6 +313,8 @@ class Productos extends Controllers
                     if (!$resultadoBitacora) {
                         error_log("Warning: No se pudo registrar en bitácora la actualización del producto ID: " . $intIdProducto);
                     }
+
+                    $this->notificacionesModel->generarNotificacionesProductos();
                 }
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -371,6 +362,8 @@ class Productos extends Controllers
                     if (!$resultadoBitacora) {
                         error_log("Warning: No se pudo registrar en bitácora la eliminación del producto ID: " . $intIdProducto);
                     }
+
+                    $this->notificacionesModel->generarNotificacionesProductos();
                 }
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -438,6 +431,7 @@ class Productos extends Controllers
                 
                 if ($requestActivar) {
                     $arrResponse = array('status' => true, 'message' => 'Producto activado correctamente');
+                    $this->notificacionesModel->generarNotificacionesProductos();
                 } else {
                     $arrResponse = array('status' => false, 'message' => 'Error al activar el producto');
                 }
@@ -514,4 +508,27 @@ class Productos extends Controllers
             die();
         }
     }
+
+    public function generarNotificacionesProductos()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $resultado = $this->notificacionesModel->generarNotificacionesProductos();
+                
+                if ($resultado) {
+                    $arrResponse = array('status' => true, 'message' => 'Notificaciones de stock actualizadas correctamente');
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'Error al generar notificaciones de stock');
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en generarNotificacionesProductos: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
 }
+?>

@@ -12,6 +12,17 @@ function base_url()
     return BASE_URL;
 }
 
+const RECAPTCHA_SITE_KEY = "6LdZw1srAAAAAKMqgrnpTZzD52Mb1piDmpwMR-VX";
+function getRecaptchaSiteKey()
+{
+    return RECAPTCHA_SITE_KEY;
+}
+const RECAPTCHA_SECRET_KEY = "6LdZw1srAAAAALfwJOzFS-1PER0cHv-elWV-5-xZ";
+function getRecaptchaSecretKey()
+{
+    return RECAPTCHA_SECRET_KEY;
+}
+
 //permite fragmentar el header del html principal
 function headerAdmin($data = "")
 {

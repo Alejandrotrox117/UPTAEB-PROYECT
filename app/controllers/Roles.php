@@ -1,45 +1,77 @@
 <?php
+
 require_once "app/core/Controllers.php";
-require_once "helpers/permisosVerificar.php";
-require_once "helpers/PermisosHelper.php";
 require_once "helpers/helpers.php";
+require_once "helpers/PermisosModuloVerificar.php";
+require_once "app/models/bitacoraModel.php";
+require_once "helpers/bitacora_helper.php";
 
 class Roles extends Controllers
 {
-    public function set_model($model)
-    {
-        $this->model = $model;
-    }
+    private $bitacoraModel;
+    private $BitacoraHelper;
 
     public function get_model()
     {
         return $this->model;
     }
 
+    public function set_model($model)
+    {
+        $this->model = $model;
+    }
+
     public function __construct()
     {
         parent::__construct();
-        // Verificar acceso al módulo
-        permisosVerificar::verificarAccesoModulo('Roles');
+        
+        $this->bitacoraModel = new BitacoraModel();
+        $this->BitacoraHelper = new BitacoraHelper();
+
+        // Verificar si el usuario está logueado antes de verificar permisos
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+            header('Location: ' . base_url() . '/login');
+            die();
+        }
+
+        // Verificar acceso al módulo usando el sistema nuevo
+        if (!PermisosModuloVerificar::verificarAccesoModulo('roles')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
     }
 
+    /**
+     * Vista principal del módulo roles
+     */
     public function index()
     {
-        // Obtener permisos del usuario para este módulo
-        $idUsuario = $_SESSION['usuario_id'];
-        $permisos = PermisosHelper::getPermisosDetalle($idUsuario, 'Roles');
+        // Verificar permiso específico para ver
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
 
+        // Obtener ID del usuario y registrar acceso
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        BitacoraHelper::registrarAccesoModulo('Roles', $idusuario, $this->bitacoraModel);
+
+        $data['page_tag'] = "Roles";
         $data['page_title'] = "Gestión de Roles";
-        $data['page_name'] = "Roles";
+        $data['page_name'] = "roles";
+        $data['page_content'] = "Gestión integral de roles del sistema";
         $data['page_functions_js'] = "functions_roles.js";
-        $data['permisos'] = $permisos;
         
         $this->views->getView($this, "roles", $data);
     }
 
+    /**
+     * Obtener todos los roles para DataTable
+     */
     public function getRolesData()
     {
-        if (!permisosVerificar::verificarPermisoAccion('Roles', 'ver')) {
+        // Verificar permiso para ver
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para ver roles',
@@ -49,15 +81,33 @@ class Roles extends Controllers
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            $arrData = $this->model->selectAllRolesActivos();
-            echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
+            try {
+                $arrData = $this->model->selectAllRolesActivos();
+                
+                // Registrar consulta en bitácora
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                BitacoraHelper::registrarAccion('Roles', 'consulta', $idusuario, $this->bitacoraModel, 'Consulta de roles');
+                
+                echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getRolesData: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error al obtener los roles',
+                    'data' => []
+                ]);
+            }
         }
         die();
     }
 
+    /**
+     * Crear nuevo rol
+     */
     public function createRol()
     {
-        if (!permisosVerificar::verificarPermisoAccion('Roles', 'crear')) {
+        // Verificar permiso para crear
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para crear roles'
@@ -66,24 +116,64 @@ class Roles extends Controllers
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
+            try {
+                $json = file_get_contents('php://input');
+                $data = json_decode($json, true);
 
-            $rolData = [
-                'nombre' => trim($data['nombre']),
-                'descripcion' => trim($data['descripcion']),
-                'estatus' => $data['estatus'] ?? 'ACTIVO'
-            ];
+                if (!$data) {
+                    echo json_encode(['status' => false, 'message' => 'Datos no válidos']);
+                    return;
+                }
 
-            $request = $this->model->insertRol($rolData);
-            echo json_encode($request, JSON_UNESCAPED_UNICODE);
+                // Validar datos requeridos
+                if (empty(trim($data['nombre'] ?? ''))) {
+                    echo json_encode(['status' => false, 'message' => 'El nombre del rol es requerido']);
+                    return;
+                }
+
+                $rolData = [
+                    'nombre' => trim($data['nombre']),
+                    'descripcion' => trim($data['descripcion'] ?? ''),
+                    'estatus' => $data['estatus'] ?? 'ACTIVO'
+                ];
+
+                $request = $this->model->insertRol($rolData);
+
+                // Registrar en bitácora
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                if ($request['status']) {
+                    BitacoraHelper::registrarAccion('Roles', 'crear', $idusuario, $this->bitacoraModel, 
+                        "Rol creado: {$rolData['nombre']}", $request['idrol'] ?? null);
+                } else {
+                    BitacoraHelper::registrarAccion('Roles', 'crear_error', $idusuario, $this->bitacoraModel, 
+                        "Error al crear rol: {$rolData['nombre']} - {$request['message']}");
+                }
+
+                echo json_encode($request, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en createRol: " . $e->getMessage());
+                
+                // Registrar error en bitácora
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                BitacoraHelper::registrarError('Roles', "Error en createRol: " . $e->getMessage(), $idusuario, $this->bitacoraModel);
+                
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor'
+                ]);
+            }
         }
         die();
     }
 
+    /**
+     * Obtener rol por ID
+     */
     public function getRolById(int $idrol)
     {
-        if (!permisosVerificar::verificarPermisoAccion('Roles', 'ver')) {
+        // Verificar permiso para ver
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para ver detalles de roles'
@@ -92,20 +182,50 @@ class Roles extends Controllers
         }
 
         if ($idrol > 0) {
-            $arrData = $this->model->selectRolById($idrol);
-            if (empty($arrData)) {
-                $response = ["status" => false, "message" => "Datos no encontrados."];
-            } else {
-                $response = ["status" => true, "data" => $arrData];
+            try {
+                $arrData = $this->model->selectRolById($idrol);
+                
+                if (empty($arrData)) {
+                    $response = ["status" => false, "message" => "Rol no encontrado."];
+                } else {
+                    $response = ["status" => true, "data" => $arrData];
+                    
+                    // Registrar consulta específica en bitácora
+                    $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                    BitacoraHelper::registrarAccion('Roles', 'consulta_detalle', $idusuario, $this->bitacoraModel, 
+                        "Consulta detalle rol ID: {$idrol}", $idrol);
+                }
+                
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en getRolById: " . $e->getMessage());
+                
+                // Registrar error en bitácora
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                BitacoraHelper::registrarError('Roles', "Error en getRolById ID {$idrol}: " . $e->getMessage(), $idusuario, $this->bitacoraModel);
+                
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error al obtener el rol'
+                ]);
             }
-            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode([
+                'status' => false,
+                'message' => 'ID de rol no válido'
+            ]);
         }
         die();
     }
 
+    /**
+     * Actualizar rol
+     */
     public function updateRol()
     {
-        if (!permisosVerificar::verificarPermisoAccion('Roles', 'editar')) {
+        // Verificar permiso para editar
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para editar roles'
@@ -127,18 +247,52 @@ class Roles extends Controllers
                 return;
             }
 
+            // Validar datos requeridos
+            if (empty(trim($input['nombre'] ?? ''))) {
+                echo json_encode(['status' => false, 'message' => 'El nombre del rol es requerido']);
+                return;
+            }
+
+            // Obtener datos actuales para la bitácora
+            $rolAnterior = $this->model->selectRolById($idRol);
+
             $dataParaModelo = [
-                'nombre' => trim($input['nombre'] ?? ''),
+                'nombre' => trim($input['nombre']),
                 'descripcion' => trim($input['descripcion'] ?? ''),
-                'estatus' => trim($input['estatus'] ?? ''),
+                'estatus' => trim($input['estatus'] ?? 'ACTIVO'),
             ];
 
             $resultado = $this->model->updateRol($idRol, $dataParaModelo);
+
+            // Registrar en bitácora
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($resultado['status']) {
+                $cambios = [];
+                if ($rolAnterior && is_array($rolAnterior)) {
+                    foreach ($dataParaModelo as $campo => $valor) {
+                        if (isset($rolAnterior[$campo]) && $rolAnterior[$campo] != $valor) {
+                            $cambios[] = "{$campo}: '{$rolAnterior[$campo]}' → '{$valor}'";
+                        }
+                    }
+                }
+                
+                $detalleCambios = !empty($cambios) ? implode(', ', $cambios) : 'Actualización general';
+                BitacoraHelper::registrarAccion('Roles', 'editar', $idusuario, $this->bitacoraModel, 
+                    "Rol editado ID: {$idRol} - {$detalleCambios}", $idRol);
+            } else {
+                BitacoraHelper::registrarAccion('Roles', 'editar_error', $idusuario, $this->bitacoraModel, 
+                    "Error al editar rol ID: {$idRol} - {$resultado['message']}", $idRol);
+            }
             
             echo json_encode($resultado);
 
         } catch (Exception $e) {
             error_log("Error en updateRol: " . $e->getMessage());
+            
+            // Registrar error en bitácora
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            BitacoraHelper::registrarError('Roles', "Error en updateRol: " . $e->getMessage(), $idusuario, $this->bitacoraModel);
+            
             echo json_encode([
                 'status' => false, 
                 'message' => 'Error interno del servidor'
@@ -146,9 +300,13 @@ class Roles extends Controllers
         }
     }
 
+    /**
+     * Eliminar rol
+     */
     public function deleteRol()
     {
-        if (!permisosVerificar::verificarPermisoAccion('Roles', 'eliminar')) {
+        // Verificar permiso para eliminar
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para eliminar roles'
@@ -157,29 +315,61 @@ class Roles extends Controllers
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-             $json = file_get_contents('php://input');
-             $data = json_decode($json, true);
-             $idrol = isset($data['idrol']) ? intval($data['idrol']) : 0;
+            try {
+                $json = file_get_contents('php://input');
+                $data = json_decode($json, true);
+                $idrol = isset($data['idrol']) ? intval($data['idrol']) : 0;
 
-            if ($idrol > 0) {
+                if ($idrol <= 0) {
+                    echo json_encode(['status' => false, 'message' => 'ID de rol no válido']);
+                    return;
+                }
+
+                // Obtener datos del rol antes de eliminar para la bitácora
+                $rolAnterior = $this->model->selectRolById($idrol);
+
                 $requestDelete = $this->model->deleteRolById($idrol);
+
+                // Registrar en bitácora
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                 if ($requestDelete['status']) {
+                    $nombreRol = $rolAnterior['nombre'] ?? "ID: {$idrol}";
+                    BitacoraHelper::registrarAccion('Roles', 'eliminar', $idusuario, $this->bitacoraModel, 
+                        "Rol eliminado: {$nombreRol}", $idrol);
+                    
                     $response = ["status" => true, "message" => $requestDelete['message']];
                 } else {
+                    BitacoraHelper::registrarAccion('Roles', 'eliminar_error', $idusuario, $this->bitacoraModel, 
+                        "Error al eliminar rol ID: {$idrol} - {$requestDelete['message']}", $idrol);
+                    
                     $response = ["status" => false, "message" => $requestDelete['message']];
                 }
+
                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
-            } else {
-                 $response = ["status" => false, "message" => "ID de rol no válido."];
-                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en deleteRol: " . $e->getMessage());
+                
+                // Registrar error en bitácora
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                BitacoraHelper::registrarError('Roles', "Error en deleteRol: " . $e->getMessage(), $idusuario, $this->bitacoraModel);
+                
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor'
+                ]);
             }
         }
         die();
     }
 
+    /**
+     * Obtener todos los roles (para select/dropdown)
+     */
     public function getAllRoles()
     {
-        if (!permisosVerificar::verificarPermisoAccion('Roles', 'ver')) {
+        // Verificar permiso para ver
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para ver roles',
@@ -189,10 +379,50 @@ class Roles extends Controllers
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            $arrData = $this->model->selectAllRolesActivos();
-            echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
+            try {
+                $arrData = $this->model->selectAllRolesActivos();
+                echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getAllRoles: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error al obtener los roles',
+                    'data' => []
+                ]);
+            }
         }
         die();
+    }
+
+    /**
+     * Método de debug para verificar permisos
+     */
+    public function debugPermisos()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $debug = [
+            'sesion_activa' => isset($_SESSION['login']) && $_SESSION['login'] === true,
+            'usuario_id' => $_SESSION['usuario_id'] ?? 'no definido',
+            'rol_id' => $_SESSION['user']['idrol'] ?? $_SESSION['rol_id'] ?? 'no definido',
+            'usuario_nombre' => $_SESSION['usuario_nombre'] ?? 'no definido',
+        ];
+
+        // Obtener permisos del módulo roles
+        $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('roles');
+        $debug['permisos_roles'] = $permisos;
+
+        // Verificar permisos específicos
+        $debug['puede_ver'] = PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver');
+        $debug['puede_crear'] = PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear');
+        $debug['puede_editar'] = PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar');
+        $debug['puede_eliminar'] = PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar');
+
+        header('Content-Type: application/json');
+        echo json_encode($debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit();
     }
 }
 ?>

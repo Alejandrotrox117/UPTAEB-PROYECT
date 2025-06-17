@@ -1,21 +1,209 @@
 // Expresiones regulares para validación
 const expresiones = {
-  nombre: /^[a-zA-Z\s]{5,30}$/, // Nombre
-  apellido: /^[a-zA-Z\s]{3,12}$/, // Apellido
-  telefono_principal: /^\d{11}$/, // Teléfono
-  direccion: /^.{5,100}$/, // Dirección
-  estatus: /^(Activo|Inactivo)$/, // Estatus
-  observaciones: /^.{0,50}$/, // Observaciones
-  email: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/, // Email
-  fecha: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, // Fecha
-  fechaNacimiento: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/, // Fecha de Nacimiento
   nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/,
-  cedula: /^(V|E|J)?-?\d{8}$/i, // Ejemplo: V-12345678 o 12345678
-  password: /^.{6,16}$/, // Mínimo 6, máximo 16 caracteres
-  textoGeneral: /^.{2,100}$/, // Para campos como estado, ciudad, país
-  genero: /^(MASCULINO|FEMENINO|OTRO)$/, // Género
-
+  apellido: /^[a-zA-Z\s]{3,20}$/,
+  telefono_principal: /^(0414|0424|0426|0416|0412)\d{7}$/,
+  direccion: /^.{5,100}$/,
+  estatus: /^(Activo|Inactivo)$/,
+  observaciones: /^.{0,50}$/,
+  email: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+  fecha: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
+  fechaNacimiento: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
+  cedula: /^(V|E|J)?-?\d{8}$/i,
+  password: /^.{6,16}$/,
+  textoGeneral: /^.{2,100}$/,
+  genero: /^(MASCULINO|FEMENINO|OTRO)$/,
+  
+  // Nuevas expresiones para campos numéricos de ventas
+  precio: /^\d+(\.\d{1,4})?$/,                    // Precio: números positivos con hasta 4 decimales
+  cantidad: /^\d+(\.\d{1,3})?$/,                  // Cantidad: números positivos con hasta 3 decimales
+  porcentajeDescuento: /^(0|[1-9]\d?|100)(\.\d{1,2})?$/, // Descuento: 0-100 con hasta 2 decimales
+  subtotal: /^\d+(\.\d{1,2})?$/,                  // Subtotal: números positivos con hasta 2 decimales
+  total: /^\d+(\.\d{1,2})?$/,                     // Total: números positivos con hasta 2 decimales
+  peso: /^\d+(\.\d{1,3})?$/,                      // Peso: números positivos con hasta 3 decimales
+  tasa: /^\d+(\.\d{1,4})?$/,                      // Tasa de cambio: números positivos con hasta 4 decimales
+  montoDescuento: /^\d+(\.\d{1,2})?$/,            // Monto descuento: números positivos con hasta 2 decimales
+  
+  // Validaciones específicas para rangos
+  cantidadMinima: /^([1-9]\d*(\.\d{1,3})?|0\.[0-9]{1,3})$/, // Cantidad mínima 0.001
+  precioMinimo: /^([1-9]\d*(\.\d{1,4})?|0\.[0-9]{1,4})$/,   // Precio mínimo 0.0001
+  
+  // Para campos de código de moneda
+  codigoMoneda: /^[A-Z]{3}$/,                     // Código de moneda: 3 letras mayúsculas (USD, EUR, etc.)
+  
+  // Para números de venta/factura
+  numeroVenta: /^VT\d{6}$/,                       // Número de venta: VT seguido de 6 dígitos
+  
+  // Para validar decimales en general
+  decimal2: /^\d+(\.\d{1,2})?$/,                  // Números con hasta 2 decimales
+  decimal3: /^\d+(\.\d{1,3})?$/,                  // Números con hasta 3 decimales
+  decimal4: /^\d+(\.\d{1,4})?$/,                  // Números con hasta 4 decimales
+  
+  // Para validar enteros positivos
+  enteroPositivo: /^[1-9]\d*$/,                   // Enteros mayores a 0
+  enteroNoNegativo: /^(0|[1-9]\d*)$/              // Enteros mayores o iguales a 0
 };
+
+// Función para validar campos numéricos con validaciones específicas
+function validarCampoNumerico(input, tipo, mensajes) {
+  if (!input || input.offsetParent === null) {
+    return true;
+  }
+
+  const errorDiv = input.nextElementSibling;
+  const valor = parseFloat(input.value.trim());
+  const valorTexto = input.value.trim();
+
+  // Limpiar mensajes de error previos
+  if (errorDiv) {
+    errorDiv.textContent = "";
+    errorDiv.classList.add("hidden");
+  }
+  input.classList.remove("border-red-500", "focus:ring-red-500");
+  input.classList.add("border-gray-300", "focus:ring-green-400");
+
+  // Validar si el campo está vacío
+  if (valorTexto === "") {
+    if (mensajes.vacio) {
+      if (errorDiv) {
+        errorDiv.textContent = mensajes.vacio;
+        errorDiv.classList.remove("hidden");
+      }
+      input.classList.add("border-red-500", "focus:ring-red-500");
+      input.classList.remove("border-gray-300", "focus:ring-green-400");
+      return false;
+    }
+    return true;
+  }
+
+  // Validar formato numérico
+  const regex = expresiones[tipo];
+  if (regex && !regex.test(valorTexto)) {
+    if (mensajes.formato) {
+      if (errorDiv) {
+        errorDiv.textContent = mensajes.formato;
+        errorDiv.classList.remove("hidden");
+      }
+      input.classList.add("border-red-500", "focus:ring-red-500");
+      input.classList.remove("border-gray-300", "focus:ring-green-400");
+      return false;
+    }
+  }
+
+  // Validaciones específicas por tipo
+  switch (tipo) {
+    case 'precio':
+    case 'precioMinimo':
+      if (valor <= 0) {
+        if (mensajes.minimo || mensajes.formato) {
+          if (errorDiv) {
+            errorDiv.textContent = mensajes.minimo || "El precio debe ser mayor a 0";
+            errorDiv.classList.remove("hidden");
+          }
+          input.classList.add("border-red-500", "focus:ring-red-500");
+          input.classList.remove("border-gray-300", "focus:ring-green-400");
+          return false;
+        }
+      }
+      break;
+
+    case 'cantidad':
+    case 'cantidadMinima':
+      if (valor <= 0) {
+        if (mensajes.minimo || mensajes.formato) {
+          if (errorDiv) {
+            errorDiv.textContent = mensajes.minimo || "La cantidad debe ser mayor a 0";
+            errorDiv.classList.remove("hidden");
+          }
+          input.classList.add("border-red-500", "focus:ring-red-500");
+          input.classList.remove("border-gray-300", "focus:ring-green-400");
+          return false;
+        }
+      }
+      break;
+
+    case 'porcentajeDescuento':
+      if (valor < 0 || valor > 100) {
+        if (mensajes.rango || mensajes.formato) {
+          if (errorDiv) {
+            errorDiv.textContent = mensajes.rango || "El descuento debe estar entre 0% y 100%";
+            errorDiv.classList.remove("hidden");
+          }
+          input.classList.add("border-red-500", "focus:ring-red-500");
+          input.classList.remove("border-gray-300", "focus:ring-green-400");
+          return false;
+        }
+      }
+      break;
+
+    case 'peso':
+      if (valor < 0) {
+        if (mensajes.minimo || mensajes.formato) {
+          if (errorDiv) {
+            errorDiv.textContent = mensajes.minimo || "El peso no puede ser negativo";
+            errorDiv.classList.remove("hidden");
+          }
+          input.classList.add("border-red-500", "focus:ring-red-500");
+          input.classList.remove("border-gray-300", "focus:ring-green-400");
+          return false;
+        }
+      }
+      break;
+
+    case 'tasa':
+      if (valor <= 0) {
+        if (mensajes.minimo || mensajes.formato) {
+          if (errorDiv) {
+            errorDiv.textContent = mensajes.minimo || "La tasa debe ser mayor a 0";
+            errorDiv.classList.remove("hidden");
+          }
+          input.classList.add("border-red-500", "focus:ring-red-500");
+          input.classList.remove("border-gray-300", "focus:ring-green-400");
+          return false;
+        }
+      }
+      break;
+  }
+
+  // Si pasa todas las validaciones
+  if (errorDiv) {
+    errorDiv.textContent = "";
+    errorDiv.classList.add("hidden");
+  }
+  input.classList.remove("border-red-500", "focus:ring-red-500");
+  input.classList.add("border-green-300", "focus:ring-green-400");
+  return true;
+}
+
+// Función para validar rangos de valores
+function validarRango(input, min, max, mensajes) {
+  if (!input || input.offsetParent === null) {
+    return true;
+  }
+
+  const valor = parseFloat(input.value.trim());
+  const errorDiv = input.nextElementSibling;
+
+  if (isNaN(valor)) {
+    return true; // Si no es número, lo maneja validarCampoNumerico
+  }
+
+  if (valor < min || valor > max) {
+    if (mensajes.rango) {
+      if (errorDiv) {
+        errorDiv.textContent = mensajes.rango;
+        errorDiv.classList.remove("hidden");
+      }
+      input.classList.add("border-red-500", "focus:ring-red-500");
+      input.classList.remove("border-gray-300", "focus:ring-green-400");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// Función para validar campos
 function validarCampo(input, regex, mensajes) {
   // Solo valida si el input está visible
   if (!input || input.offsetParent === null) {
@@ -308,9 +496,32 @@ const inicializarValidaciones = (campos, formId = null) => {
             validarFechaNacimiento(input, campo.mensajes);
           }
         });
+        input.addEventListener("fechaNacimiento", () => {
+          if (input.offsetParent !== null) {
+            validarFechaNacimiento(input, campo.mensajes);
+          }
+        });
         input.addEventListener("change", () => {
           if (input.offsetParent !== null) {
             validarFechaNacimiento(input, campo.mensajes);
+          }
+        });
+      } else if (campo.tipoNumerico) {
+        // Nueva validación para campos numéricos
+        input.addEventListener("input", () => {
+          if (input.offsetParent !== null) {
+            validarCampoNumerico(input, campo.tipoNumerico, campo.mensajes);
+            if (campo.min !== undefined && campo.max !== undefined) {
+              validarRango(input, campo.min, campo.max, campo.mensajes);
+            }
+          }
+        });
+        input.addEventListener("blur", () => {
+          if (input.offsetParent !== null) {
+            validarCampoNumerico(input, campo.tipoNumerico, campo.mensajes);
+            if (campo.min !== undefined && campo.max !== undefined) {
+              validarRango(input, campo.min, campo.max, campo.mensajes);
+            }
           }
         });
       } else {
@@ -324,13 +535,6 @@ const inicializarValidaciones = (campos, formId = null) => {
           if (input.offsetParent !== null) {
             validarCampo(input, campo.regex, campo.mensajes);
           }
-        });
-        input.addEventListener("paste", () => {
-          setTimeout(() => {
-            if (input.offsetParent !== null) {
-              validarCampo(input, campo.regex, campo.mensajes);
-            }
-          }, 10);
         });
       }
     }
@@ -568,4 +772,12 @@ export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, p
 
 
 // Exportar las funciones y expresiones
-export { expresiones, validarCampo, inicializarValidaciones,validarFecha,validarSelect };
+export { 
+  expresiones, 
+  validarCampo, 
+  validarCampoNumerico, 
+  validarRango, 
+  inicializarValidaciones, 
+  validarFecha, 
+  validarSelect 
+};

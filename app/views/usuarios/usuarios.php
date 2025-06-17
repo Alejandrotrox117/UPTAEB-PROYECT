@@ -1,7 +1,17 @@
-<?php headerAdmin($data);?>
+<?php 
+headerAdmin($data);
+
+// ✅ OBTENER PERMISOS DEL USUARIO PARA EL MÓDULO
+$permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Usuarios');
+?>
 
 <input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
 <input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
+
+<!-- ✅ PASAR PERMISOS AL JAVASCRIPT -->
+<script>
+window.permisosUsuarios = <?php echo json_encode($permisos); ?>;
+</script>
 
 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -13,16 +23,50 @@
         <p class="text-green-600 text-base md:text-lg">Listado de usuarios registrados en el sistema</p>
     </div>
 
+    <!-- ✅ MOSTRAR MENSAJE SI NO TIENE PERMISOS PARA VER -->
+    <?php if (!$permisos['ver']): ?>
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 mt-6 rounded-r-lg">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-yellow-700 font-medium">
+                    <strong>Acceso Restringido:</strong> No tienes permisos para ver la lista de usuarios.
+                </p>
+                <p class="text-xs text-yellow-600 mt-1">
+                    Contacta al administrador del sistema si necesitas acceso a este módulo.
+                </p>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
+
     <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
         <div class="flex justify-between items-center mb-6">
+            <!-- ✅ BOTÓN CREAR SOLO SI TIENE PERMISOS -->
+            <?php if ($permisos['crear']): ?>
             <button id="btnAbrirModalRegistrarUsuario"
                 class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
                 <i class="fas fa-user-plus mr-1 md:mr-2"></i> Registrar Usuario
             </button>
+            <?php else: ?>
+            <div class="bg-gray-100 px-4 py-2 md:px-6 rounded-lg text-gray-500 text-sm md:text-base">
+                <i class="fas fa-lock mr-1 md:mr-2"></i> Sin permisos para crear usuarios
+            </div>
+            <?php endif; ?>
+
+            <!-- ✅ BOTÓN EXPORTAR SOLO SI TIENE PERMISOS -->
+            <?php if ($permisos['exportar']): ?>
+            <button id="btnExportarUsuarios"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base ml-2">
+                <i class="fas fa-download mr-1 md:mr-2"></i> Exportar
+            </button>
+            <?php endif; ?>
         </div>
 
         <div class="overflow-x-auto w-full relative">
-            <table id="TablaUsuarios" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 700px;"> <!-- Adjust min-width as needed -->
+            <table id="TablaUsuarios" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 700px;">
                 <thead>
                     <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
                     </tr>
@@ -35,8 +79,13 @@
             </div>
         </div>
     </div>
+
+    <?php endif; ?>
 </main>
 
+<!-- ✅ MODALES SOLO SI TIENE PERMISOS CORRESPONDIENTES -->
+
+<?php if ($permisos['crear']): ?>
 <!-- Modal Registrar Usuario -->
 <div id="modalRegistrarUsuario"
     class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] transition-opacity duration-300 z-50 p-4">
@@ -101,7 +150,9 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
+<?php if ($permisos['editar']): ?>
 <!-- Modal Actualizar Usuario -->
 <div id="modalActualizarUsuario"
     class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] transition-opacity duration-300 z-50 p-4">
@@ -166,7 +217,9 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
+<?php if ($permisos['ver']): ?>
 <!-- Modal Ver Usuario -->
 <div id="modalVerUsuario" class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-2xl max-h-[95vh]">
@@ -228,6 +281,43 @@
                         class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 text-sm md:text-base font-medium">
                     <i class="fas fa-times mr-1 md:mr-2"></i>
                     Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- ✅ MODAL DE MENSAJE PARA PERMISOS DENEGADOS -->
+<div id="modalPermisosDenegados" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-96 max-w-md">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-red-50">
+            <h3 class="text-lg font-semibold text-red-800">
+                <i class="fas fa-lock mr-2"></i>
+                Acceso Denegado
+            </h3>
+            <button id="btnCerrarModalPermisos" class="text-red-600 hover:text-red-800">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-500 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="mensajePermisosDenegados" class="text-sm text-gray-700 font-medium">
+                        No tienes permisos para realizar esta acción.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="button" id="btnCerrarModalPermisos2" 
+                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 text-sm font-medium">
+                    <i class="fas fa-check mr-1"></i>
+                    Entendido
                 </button>
             </div>
         </div>
