@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a4b4d94d934596b000a6dbc010d41e99",
+    "content-hash": "a01d756baa7783c5d646f85f24bcc8fa",
     "packages": [
         {
             "name": "components/jquery",
@@ -312,6 +312,48 @@
                 "source": "https://github.com/google/recaptcha"
             },
             "time": "2023-02-18T17:41:46+00:00"
+        },
+        {
+            "name": "setasign/fpdf",
+            "version": "1.8.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Setasign/FPDF.git",
+                "reference": "d77904018090c17dc9f3ab6e944679a7a47e710a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Setasign/FPDF/zipball/d77904018090c17dc9f3ab6e944679a7a47e710a",
+                "reference": "d77904018090c17dc9f3ab6e944679a7a47e710a",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "fpdf.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Olivier Plathey",
+                    "email": "oliver@fpdf.org",
+                    "homepage": "http://fpdf.org/"
+                }
+            ],
+            "description": "FPDF is a PHP class which allows to generate PDF files with pure PHP. F from FPDF stands for Free: you may use it for any kind of usage and modify it to suit your needs.",
+            "homepage": "http://www.fpdf.org",
+            "keywords": [
+                "fpdf",
+                "pdf"
+            ],
+            "support": {
+                "source": "https://github.com/Setasign/FPDF/tree/1.8.2"
+            },
+            "time": "2019-12-08T10:32:10+00:00"
         }
     ],
     "packages-dev": [],

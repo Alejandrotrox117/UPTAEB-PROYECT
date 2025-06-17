@@ -1,298 +1,351 @@
 <?php headerAdmin($data); ?>
 
-<main class="flex-1 p-6 bg-gray-100 min-h-screen">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+<main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Hola, <?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Usuario') ?> 👋</h2>
+    </div>
+    <div class="mt-0 sm:mt-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
+        <p class="text-green-600 text-base md:text-lg">Reportes Estadisticos</p>
+    </div>
+  <!-- Resumen General -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-gray-600 text-sm font-medium">Ventas de Hoy</h2>
+      <p id="ventasHoy" class="text-3xl font-bold">0</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-gray-600 text-sm font-medium">Compras de Hoy</h2>
+      <p id="comprasHoy" class="text-3xl font-bold">0</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-gray-600 text-sm font-medium">Inventario Total (Uds)</h2>
+      <p id="inventarioTotal" class="text-3xl font-bold">0</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-gray-600 text-sm font-medium">Empleados Activos</h2>
+      <p id="empleadosActivos" class="text-3xl font-bold">0</p>
+    </div>
+  </div>
+
+  <!-- Reportes Financieros (Ingresos y Egresos) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Columna de Ingresos -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Reporte de Ingresos (Conciliados)</h2>
+        <button
+          id="btnDescargarIngresos"
+          class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded inline-flex items-center text-sm"
+        >
+          <svg
+            class="fill-current w-4 h-4 mr-2"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+          >
+            <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
+          </svg>
+          <span>Descargar PDF</span>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 items-end">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">¡Hola, <?= htmlspecialchars($data['usuario_nombre']) ?>! 👋</h2>
-            <p class="text-gray-600 mt-1">Panel de control - Recuperadora de Materiales</p>
+          <label
+            for="fecha_desde_ingresos"
+            class="text-sm font-medium text-gray-700"
+            >Desde:</label
+          >
+          <input
+            type="date"
+            id="fecha_desde_ingresos"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
         </div>
-        <div class="flex items-center space-x-4">
-            <button id="btnActualizar" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
-                <i class="fas fa-sync-alt mr-2"></i>Actualizar
-            </button>
+        <div>
+          <label
+            for="fecha_hasta_ingresos"
+            class="text-sm font-medium text-gray-700"
+            >Hasta:</label
+          >
+          <input
+            type="date"
+            id="fecha_hasta_ingresos"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
         </div>
+        <div>
+          <label
+            for="filtro_tipo_pago_ingresos"
+            class="text-sm font-medium text-gray-700"
+            >Tipo de Pago:</label
+          >
+          <select
+            id="filtro_tipo_pago_ingresos"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos</option>
+            <?php foreach ($data['tipos_pago'] as $tipo): ?>
+            <option value="<?php echo $tipo['idtipo_pago']; ?>">
+              <?php echo $tipo['nombre']; ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <div id="error-ingresos" class="text-red-600 text-sm mb-2"></div>
+      <div class="h-64 w-full"><canvas id="graficoIngresos"></canvas></div>
+      <p class="text-center mt-4 font-bold text-lg">
+        Total Ingresos: <span id="totalIngresos">0.00</span>
+      </p>
     </div>
 
-    <!-- Loading Indicator -->
-    <div id="loadingIndicator" class="text-center py-8 hidden">
-        <div class="inline-flex items-center">
-            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
-            <span class="text-gray-600">Cargando datos...</span>
+    <!-- Columna de Egresos -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Reporte de Egresos (Conciliados)</h2>
+        <button
+          id="btnDescargarEgresos"
+          class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded inline-flex items-center text-sm"
+        >
+          <svg
+            class="fill-current w-4 h-4 mr-2"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+          >
+            <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
+          </svg>
+          <span>Descargar PDF</span>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 items-end">
+        <div>
+          <label
+            for="fecha_desde_egresos"
+            class="text-sm font-medium text-gray-700"
+            >Desde:</label
+          >
+          <input
+            type="date"
+            id="fecha_desde_egresos"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
         </div>
+        <div>
+          <label
+            for="fecha_hasta_egresos"
+            class="text-sm font-medium text-gray-700"
+            >Hasta:</label
+          >
+          <input
+            type="date"
+            id="fecha_hasta_egresos"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
+        </div>
+        <div>
+          <label
+            for="filtro_tipo_pago_egresos"
+            class="text-sm font-medium text-gray-700"
+            >Tipo de Pago:</label
+          >
+          <select
+            id="filtro_tipo_pago_egresos"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos</option>
+            <?php foreach ($data['tipos_pago'] as $tipo): ?>
+            <option value="<?php echo $tipo['idtipo_pago']; ?>">
+              <?php echo $tipo['nombre']; ?>
+            </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div>
+          <label
+            for="filtro_tipo_egreso"
+            class="text-sm font-medium text-gray-700"
+            >Tipo de Egreso:</label
+          >
+          <select
+            id="filtro_tipo_egreso"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Todos</option>
+            <?php foreach ($data['tipos_egreso'] as $tipo): ?>
+            <option value="<?php echo $tipo; ?>"><?php echo $tipo; ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+      <div id="error-egresos" class="text-red-600 text-sm mb-2"></div>
+      <div class="h-64 w-full"><canvas id="graficoEgresos"></canvas></div>
+      <p class="text-center mt-4 font-bold text-lg">
+        Total Egresos: <span id="totalEgresos">0.00</span>
+      </p>
     </div>
+  </div>
 
-    <!-- Cards Resumen -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <!-- Compras de Hoy -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div class="flex items-center">
-                <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mr-4">
-                    <i class="fas fa-truck text-purple-600 text-xl"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-gray-500 text-sm font-medium">Compras de Hoy</p>
-                    <p id="comprasHoy" class="text-2xl font-bold text-gray-900">
-                        <span class="loading-skeleton">--</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Ventas de Hoy -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div class="flex items-center">
-                <div class="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mr-4">
-                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-gray-500 text-sm font-medium">Ventas de Hoy</p>
-                    <p id="ventasHoy" class="text-2xl font-bold text-gray-900">
-                        <span class="loading-skeleton">--</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Inventario Total -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div class="flex items-center">
-                <div class="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mr-4">
-                    <i class="fas fa-boxes text-blue-600 text-xl"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-gray-500 text-sm font-medium">Inventario Total</p>
-                    <p id="inventarioTotal" class="text-2xl font-bold text-gray-900">
-                        <span class="loading-skeleton">--</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Empleados Activos -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div class="flex items-center">
-                <div class="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mr-4">
-                    <i class="fas fa-users text-orange-600 text-xl"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-gray-500 text-sm font-medium">Empleados</p>
-                    <p id="empleadosActivos" class="text-2xl font-bold text-gray-900">
-                        <span class="loading-skeleton">--</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tareas Activas -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div class="flex items-center">
-                <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-lg mr-4">
-                    <i class="fas fa-tasks text-red-600 text-xl"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-gray-500 text-sm font-medium">Tareas Activas</p>
-                    <p id="tareasActivas" class="text-2xl font-bold text-gray-900">
-                        <span class="loading-skeleton">--</span>
-                    </p>
-                </div>
-            </div>
-        </div>
+  <!-- NUEVO: Reporte de Compras Finalizadas -->
+  <div class="bg-white p-6 rounded-lg shadow mb-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-semibold">Reporte de Compras Finalizadas</h2>
+      <button
+        id="btnDescargarReporteCompras"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center text-sm"
+      >
+        <svg
+          class="fill-current w-4 h-4 mr-2"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+        >
+          <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
+        </svg>
+        <span>Descargar PDF</span>
+      </button>
     </div>
-
-    <!-- Alertas -->
-    <div id="alertasContainer" class="mb-8"></div>
-
-    <!-- Sección Principal -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Últimas Compras -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-truck text-purple-500 mr-2"></i>
-                    Últimas Compras
-                </h3>
-            </div>
-            <div class="p-6">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <th class="pb-3">Nro Compra</th>
-                                <th class="pb-3">Proveedor</th>
-                                <th class="pb-3">Fecha</th>
-                                <th class="pb-3">Total</th>
-                                <th class="pb-3">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="comprasBody" class="text-sm">
-                            <tr>
-                                <td colspan="5" class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando datos...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Últimas Ventas -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-shopping-cart text-green-500 mr-2"></i>
-                    Últimas Ventas
-                </h3>
-            </div>
-            <div class="p-6">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <th class="pb-3">Nro Venta</th>
-                                <th class="pb-3">Cliente</th>
-                                <th class="pb-3">Fecha</th>
-                                <th class="pb-3">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ventasBody" class="text-sm">
-                            <tr>
-                                <td colspan="4" class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando datos...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+      <div>
+        <label
+          for="fecha_desde_compras"
+          class="text-sm font-medium text-gray-700"
+          >Desde:</label
+        >
+        <input
+          type="date"
+          id="fecha_desde_compras"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        />
+      </div>
+      <div>
+        <label
+          for="fecha_hasta_compras"
+          class="text-sm font-medium text-gray-700"
+          >Hasta:</label
+        >
+        <input
+          type="date"
+          id="fecha_hasta_compras"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        />
+      </div>
+      <div>
+        <label
+          for="filtro_proveedor_compras"
+          class="text-sm font-medium text-gray-700"
+          >Proveedor:</label
+        >
+        <select
+          id="filtro_proveedor_compras"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        >
+          <option value="">Todos</option>
+          <?php foreach ($data['proveedores'] as $proveedor): ?>
+          <option value="<?php echo $proveedor['idproveedor']; ?>">
+            <?php echo $proveedor['nombre_completo']; ?>
+          </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div>
+        <label
+          for="filtro_producto_compras"
+          class="text-sm font-medium text-gray-700"
+          >Producto:</label
+        >
+        <select
+          id="filtro_producto_compras"
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        >
+          <option value="">Todos</option>
+          <?php foreach ($data['productos'] as $producto): ?>
+          <option value="<?php echo $producto['idproducto']; ?>">
+            <?php echo $producto['nombre']; ?>
+          </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
-
-    <!-- Tareas de Producción y Stock Bajo -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Tareas Pendientes -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-tasks text-orange-500 mr-2"></i>
-                    Tareas de Producción
-                </h3>
-            </div>
-            <div class="p-6">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <th class="pb-3">ID</th>
-                                <th class="pb-3">Empleado</th>
-                                <th class="pb-3">Producto</th>
-                                <th class="pb-3">Cantidad</th>
-                                <th class="pb-3">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tareasBody" class="text-sm">
-                            <tr>
-                                <td colspan="5" class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando datos...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Productos con Stock Bajo -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
-                    Productos - Stock Bajo
-                </h3>
-            </div>
-            <div class="p-6">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <th class="pb-3">Producto</th>
-                                <th class="pb-3">Existencia</th>
-                                <th class="pb-3">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stockBajoBody" class="text-sm">
-                            <tr>
-                                <td colspan="3" class="text-center py-8 text-gray-500">
-                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando datos...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    <div class="flex justify-end mb-4">
+      <button
+        id="btnGenerarReporteCompras"
+        class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded"
+      >
+        Generar Reporte
+      </button>
     </div>
-
-    <!-- Gráficos -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Gráfico de Ventas -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-chart-area text-green-500 mr-2"></i>
-                    Ventas Mensuales
-                </h3>
-            </div>
-            <div class="p-6">
-                <div class="relative h-80">
-                    <canvas id="graficoVentas"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráfico de Compras -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div class="px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-chart-bar text-purple-500 mr-2"></i>
-                    Compras Mensuales
-                </h3>
-            </div>
-            <div class="p-6">
-                <div class="relative h-80">
-                    <canvas id="graficoCompras"></canvas>
-                </div>
-            </div>
-        </div>
+    <div id="error-compras" class="text-red-600 text-sm mb-2"></div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-2 py-3 text-left text-xs font-medium">Fecha</th>
+            <th class="px-2 py-3 text-left text-xs font-medium">Nro. Compra</th>
+            <th class="px-2 py-3 text-left text-xs font-medium">Proveedor</th>
+            <th class="px-2 py-3 text-left text-xs font-medium">Producto</th>
+            <th class="px-2 py-3 text-right text-xs font-medium">Cantidad</th>
+            <th class="px-2 py-3 text-right text-xs font-medium">
+              Precio Unit.
+            </th>
+            <th class="px-2 py-3 text-right text-xs font-medium">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody id="comprasReporteBody" class="bg-white divide-y">
+          <tr>
+            <td colspan="7" class="p-4 text-center text-gray-500">
+              Seleccione los filtros y genere el reporte.
+            </td>
+          </tr>
+        </tbody>
+        <tfoot class="bg-gray-100 font-bold">
+          <tr>
+            <td colspan="6" class="px-2 py-3 text-right">TOTAL GENERAL:</td>
+            <td id="comprasReporteTotal" class="px-2 py-3 text-right">0.00</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
-</main>
+  </div>
 
-<!-- CSS adicional para loading skeleton -->
-<style>
-.loading-skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: 4px;
-    display: inline-block;
-    height: 1em;
-    width: 60px;
-}
-
-@keyframes loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-.alerta {
-    animation: slideInDown 0.5s ease-out;
-}
-
-@keyframes slideInDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-</style>
-
+  <!-- Gráficos y Tablas existentes -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-xl font-semibold mb-4">
+        Ventas Mensuales (Últimos 6 meses)
+      </h2>
+      <div class="h-80 w-full"><canvas id="graficoVentas"></canvas></div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h2 class="text-xl font-semibold mb-4">Últimas Ventas</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Nro. Venta
+              </th>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Cliente
+              </th>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Fecha
+              </th>
+              <th
+                class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody id="ventasBody" class="bg-white divide-y divide-gray-200"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 <?php footerAdmin($data); ?>
