@@ -79,18 +79,6 @@ class BitacoraModel
                     b.fecha_accion as fecha
                 FROM bitacora b
                 LEFT JOIN usuario u ON b.idusuario = u.idusuario";
-private function construirYEjecutarConsulta($filtros)
-{
-    $sql = "SELECT 
-            b.idbitacora,
-            b.tabla,
-            b.accion,
-            b.idusuario,
-            CONCAT(p.nombre, ' ', p.apellido) AS nombre_usuario,
-            b.fecha
-        FROM bitacora b
-        LEFT JOIN usuario u ON b.idusuario = u.idusuario
-        LEFT JOIN recuperadora.personas p ON u.idpersona = p.idpersona";
 
         $parametros = [];
         $whereClause = $this->construirFiltros($filtros, $parametros);
