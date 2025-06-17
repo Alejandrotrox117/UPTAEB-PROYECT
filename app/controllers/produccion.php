@@ -1,10 +1,13 @@
 <?php
 require_once "app/core/Controllers.php";
-require_once "helpers/permisosVerificar.php";
+require_once "helpers/PermisosModuloVerificar.php";
 require_once "helpers/PermisosHelper.php";
 require_once "helpers/helpers.php";
 require_once "app/models/produccionModel.php";
 require_once "app/models/tareaProduccionModel.php";
+require_once "app/models/bitacoraModel.php";
+require_once "helpers/bitacora_helper.php";
+require_once "app/models/PermisosModel.php";
 class Produccion extends Controllers
 {
     private $tarea_model;
@@ -21,7 +24,7 @@ class Produccion extends Controllers
             $this->redirigirLogin();
             return;
         }
-        permisosVerificar::verificarAccesoModulo('Produccion');
+        PermisosModuloVerificar::verificarAccesoModulo('Produccion');
         // Solo verificar permisos si está logueado
         
         $this->model = new produccionModel();
@@ -78,23 +81,11 @@ private function redirigirLogin()
             return;
         }
 
-        try {
-            $permisos = PermisosHelper::getPermisosDetalle($idUsuario, 'Produccion');
-        } catch (Exception $e) {
-            error_log("Error al obtener permisos: " . $e->getMessage());
-            // Permisos por defecto (sin acceso)
-            $permisos = [
-                'puede_ver' => false,
-                'puede_crear' => false,
-                'puede_editar' => false,
-                'puede_eliminar' => false,
-                'acceso_total' => false
-            ];
-        }
+      
         $data['page_title'] = "Gestión de Producción";
         $data['page_name'] = "produccion";
         $data['page_functions_js'] = "functions_produccion.js";
-        $data['permisos'] = $permisos;
+   
         $this->views->getView($this, "produccion", $data);
     }
 
