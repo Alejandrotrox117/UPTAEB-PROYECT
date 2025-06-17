@@ -6,6 +6,7 @@ import {
 import {
   expresiones,
   inicializarValidaciones,
+  validarCampo,
   validarCamposVacios,
   validarSelect,
   validarFecha,
@@ -72,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
     order: [[0, "asc"]],
   });
   let detalleProduccionItems = [];
+  // Define los campos a validar en producción
   const camposProduccion = [
     {
       id: "fecha_inicio",
@@ -108,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .addEventListener("click", function () {
       abrirModal("produccionModal");
       cargarSelect({
-        selectId: "select_producto_principal",
+        selectId: "select_producto",
         endpoint: "productos/getListaProductosParaFormulario",
         optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
         optionValueFn: (p) => p.idproducto || "",
@@ -147,9 +149,7 @@ document.addEventListener("DOMContentLoaded", function () {
       limpiarValidaciones(camposProduccion, "formRegistrarProduccion");
       limpiarFormularioProduccion();
     });
-  const selectProductoPrincipal = document.getElementById(
-    "select_producto_principal"
-  );
+  const selectProductoPrincipal = document.getElementById("select_producto");
   if (selectProductoPrincipal) {
     selectProductoPrincipal.addEventListener("change", function () {
       const selectedOption = this.options[this.selectedIndex];
@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", function () {
         Swal.fire("Error", "ID inválido.", "error");
         return;
       }
-      abrirModalProduccionParaEdicion(idproduccion);
+      editarProduccion(idproduccion);
       cargarTareas(idproduccion);
       actualizarProgresoProduccion(idproduccion);
       inicializarBuscadorEmpleado();
@@ -302,7 +302,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // 🔴 Validar insumos solo si es creación
+      
       if (!idproduccion && detalleProduccionItems.length === 0) {
         Swal.fire(
           "Atención",
@@ -624,8 +624,8 @@ document.addEventListener("DOMContentLoaded", function () {
                   <tbody class="bg-white divide-y divide-gray-100">
         `;
 
-                detalle.forEach((insumo) => {
-                  html += `
+        detalle.forEach((insumo) => {
+          html += `
                     <tr>
                       <td class="px-4 py-3">${insumo.nombre_producto}</td>
                       <td class="px-4 py-3">${insumo.cantidad}</td>
@@ -633,9 +633,9 @@ document.addEventListener("DOMContentLoaded", function () {
                       <td class="px-4 py-3">${insumo.observaciones || "-"}</td>
                     </tr>
           `;
-                });
+        });
 
-                html += `
+        html += `
                   </tbody>
                 </table>
               </div>
@@ -663,89 +663,68 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("cerrarDetalleProduccion")
     .addEventListener("click", cerrarModalDetalleProduccion);
-  function abrirModalProduccionParaEdicion(idproduccion) {
-    const tbody = document.getElementById("cuerpoTablaDetalleProduccion");
-    if (!tbody) {
-      console.error(
-        "No se encontró el tbody con ID 'cuerpoTablaDetalleProduccion'"
-      );
-      return;
-    }
-    tbody.innerHTML = "";
-    fetch(`produccion/getDetalleProduccionData/${idproduccion}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-        return res.json();
-      })
-      .then((detalle) => {
-        if (detalle.status && detalle.data.length > 0) {
-          detalle.data.forEach((insumo) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                        <td class="px-3 py-2">${insumo.nombre_producto}</td>
-                        <td><input type="number" name="cantidad_insumo[]" class="w-full border rounded p-2" value="${
-                          insumo.cantidad
-                        }" required></td>
-                        <td><input type="number" name="cantidad_utilizada[]" class="w-full border rounded p-2" value="${
-                          insumo.cantidad_consumida
-                        }" required></td>
-                        <td><input type="text" name="observaciones[]" class="w-full border rounded p-2" value="${
-                          insumo.observaciones || ""
-                        }"></td>
-                        <td><button type="button" class="eliminarInsumoBtn text-red-500"><i class="fas fa-trash"></i></button></td>
-                    `;
-            tbody.appendChild(tr);
-          });
-        } else {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td colspan="5" class="text-center p-2">No hay insumos registrados.</td>`;
-          tbody.appendChild(tr);
-        }
-      })
-      .catch((err) => {
-        console.error("Error al obtener detalle:", err);
-        alert("Error al cargar los insumos.");
-      });
-    fetch(`produccion/getProduccionById/${idproduccion}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status) {
-          const p = data.data;
+  function editarProduccion(idproduccion) {
+    limpiarFormularioProduccion();
+    // Cargar selects antes de asignar valores
+    cargarSelectsProductos().then(() => {
+      fetch(`produccion/getProduccionById/${idproduccion}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status) {
+            const p = data.data;
+            // Asignar valores a los campos
+            document.getElementById("idproduccion").value = p.idproduccion;
+            document.getElementById("idempleado_seleccionado").value = p.idempleado;
+            document.getElementById("select_producto").value = p.idproducto;
+            document.getElementById("cantidad_a_realizar").value = p.cantidad_a_realizar;
+            document.getElementById("fecha_inicio").value = p.fecha_inicio;
+            document.getElementById("fecha_fin").value = p.fecha_fin;
+            document.getElementById("estado").value = p.estado;
 
-          document.getElementById("idproduccion").value = p.idproduccion;
-          document.getElementById("idempleado_seleccionado").value =
-            p.idempleado;
-          const divInfoEmpleado = document.getElementById(
-            "empleado_seleccionado_info"
-          );
-          divInfoEmpleado.innerHTML = `Empleado A Cargo: <strong>${p.nombre_empleado}</strong>`;
-          divInfoEmpleado.classList.remove("hidden");
+            // Mostrar info de empleado seleccionado
+            const divInfoEmpleado = document.getElementById("empleado_seleccionado_info");
+            if (divInfoEmpleado) {
+              divInfoEmpleado.innerHTML = `Empleado A Cargo: <strong>${p.nombre_empleado}</strong>`;
+              divInfoEmpleado.classList.remove("hidden");
+            }
 
-          document.getElementById("select_producto").value = p.idproducto;
-          document.getElementById("cantidad_a_realizar").value =
-            p.cantidad_a_realizar;
-          const fecha_inicio = p.fecha_inicio
-            ? p.fecha_inicio.split(" ")[0]
-            : "";
-          const fecha_fin = p.fecha_fin ? p.fecha_fin.split(" ")[0] : "";
-          document.getElementById("fecha_inicio").value = fecha_inicio;
-          document.getElementById("fecha_fin").value = fecha_fin;
-          document.getElementById("estado").value = p.estado;
-          document.getElementById("empleado").classList.add("hidden");
-          document.getElementById("registrarEmpleado").classList.add("hidden");
-          document
-            .getElementById("inputCriterioEmpleado")
-            .classList.add("hidden");
-          abrirModal("produccionModal");
-        } else {
-          alert("Producción no encontrada.");
-        }
-      })
-      .catch((err) => {
-        console.error("Error al obtener producción:", err);
-        alert("Error al cargar los datos.");
-      });
+            // Ocultar campos de búsqueda de empleado si es necesario
+            const inputCriterioEmpleado = document.getElementById("inputCriterioEmpleado");
+            if (inputCriterioEmpleado) inputCriterioEmpleado.classList.add("hidden");
+            const btnBuscarEmpleado = document.getElementById("btnBuscarEmpleado");
+            if (btnBuscarEmpleado) btnBuscarEmpleado.classList.add("hidden");
+            const registrarEmpleado = document.getElementById("registrarEmpleado");
+            if (registrarEmpleado) registrarEmpleado.classList.add("hidden");
+
+            abrirModal("produccionModal");
+
+            // Cargar detalle de insumos
+            fetch(`produccion/getDetalleProduccionData/${idproduccion}`)
+              .then((res) => res.json())
+              .then((detalle) => {
+                detalleProduccionItems = [];
+                if (detalle.status && detalle.data.length > 0) {
+                  detalle.data.forEach((insumo) => {
+                    detalleProduccionItems.push({
+                      idproducto: insumo.idproducto,
+                      nombre: insumo.nombre_producto,
+                      cantidad: insumo.cantidad,
+                      cantidad_consumida: insumo.cantidad_consumida,
+                      observaciones: insumo.observaciones || "",
+                    });
+                  });
+                }
+                renderizarTablaDetalleProduccion();
+              })
+              .catch(() => Swal.fire("Error", "Error al cargar los insumos.", "error"));
+          } else {
+            Swal.fire("Error", "Producción no encontrada.", "error");
+          }
+        })
+        .catch(() => Swal.fire("Error", "Error al cargar los datos.", "error"));
+    });
   }
+
   let listaProductos = [];
   let listaEmpleados = [];
   async function cargarProducto() {
@@ -968,3 +947,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+function cargarSelectsProductos() {
+  return Promise.all([
+    cargarSelect({
+      selectId: "select_producto",
+      endpoint: "productos/getListaProductosParaFormulario",
+      optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
+      optionValueFn: (p) => p.idproducto || "",
+      placeholder: "Seleccione un producto terminado...",
+    }),
+    cargarSelect({
+      selectId: "select_producto_agregar_detalle",
+      endpoint: "productos/getListaProductosParaFormulario",
+      optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
+      optionValueFn: (p) => p.idproducto || "",
+      placeholder: "Seleccione un insumo...",
+    }),
+  ]);
+}
