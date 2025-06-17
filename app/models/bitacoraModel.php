@@ -159,7 +159,7 @@ private function construirYEjecutarConsulta($filtros)
             b.fecha
         FROM bitacora b
         LEFT JOIN usuario u ON b.idusuario = u.idusuario
-        LEFT JOIN bd_pda.personas p ON u.idpersona = p.idpersona";
+        LEFT JOIN recuperadora.personas p ON u.idpersona = p.idpersona";
 
         // Agregar filtros si existen
         $whereClause = $this->construirFiltros($filtros);
