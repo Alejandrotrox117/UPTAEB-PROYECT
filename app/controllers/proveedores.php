@@ -3,9 +3,9 @@
 require_once "app/core/Controllers.php";
 require_once "app/models/proveedoresModel.php";
 require_once "helpers/helpers.php";
-require_once "helpers/permisosVerificar.php";
-require_once "helpers/PermisosHelper.php";
+require_once "helpers/PermisosModuloVerificar.php";
 require_once "app/models/bitacoraModel.php";
+require_once "helpers/PermisosHelper.php";
 require_once "helpers/expresiones_regulares.php";
 require_once "helpers/bitacora_helper.php";
 class Proveedores extends Controllers
@@ -35,8 +35,10 @@ class Proveedores extends Controllers
             die();
         }
 
-        // Solo verificar permisos si está logueado
-        permisosVerificar::verificarAccesoModulo('Proveedores');
+      if (!PermisosModuloVerificar::verificarAccesoModulo('proveedores')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
 
     }
 

@@ -124,8 +124,71 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
           <?php endif; ?>
 
           <!-- Seguridad -->
-          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
-          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-user-lock w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Seguridad</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver')): ?><li class="menu-item"><a href="/project/usuarios" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestionar Usuarios</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver')): ?><li class="menu-item"><a href="/project/RolesIntegrado" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Gestión de Roles</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?><li class="menu-item"><a href="/project/bitacora" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-clipboard-list w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Bitácora</span></a></li><?php endif; ?></ul></details></li>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
+          <li class="menu-item-group">
+            <details class="group">
+              <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
+                <div class="flex items-center">
+                  <i class="nav-icon fa-solid fa-user-lock w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+                  <span class="nav-text ml-3 font-medium">Seguridad</span>
+                </div>
+                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
+              </summary>
+              <ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200">
+                
+                <!-- Gestionar Usuarios -->
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver')): ?>
+                <li class="menu-item">
+                  <a href="/project/usuarios" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-user w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Gestionar Usuarios</span>
+                  </a>
+                </li>
+                <?php endif; ?>
+                
+                <!-- Gestionar Roles (Básico) -->
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
+                <li class="menu-item">
+                  <a href="/project/roles" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-user-tag w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Gestionar Roles</span>
+                  </a>
+                </li>
+                <?php endif; ?>
+                
+                <!-- Gestión Integral de Permisos -->
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver')): ?>
+                <li class="menu-item">
+                  <a href="/project/RolesIntegrado" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Gestión Integral de Permisos</span>
+                  </a>
+                </li>
+                <?php endif; ?>
+                
+                <!-- Gestionar Módulos -->
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver')): ?>
+                <li class="menu-item">
+                  <a href="/project/modulos" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-th-large w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Gestionar Módulos</span>
+                  </a>
+                </li>
+                <?php endif; ?>
+                
+                <!-- Bitácora -->
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
+                <li class="menu-item">
+                  <a href="/project/bitacora" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-history w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Bitácora</span>
+                  </a>
+                </li>
+                <?php endif; ?>
+                
+              </ul>
+            </details>
+          </li>
           <?php endif; ?>
         </ul>
 

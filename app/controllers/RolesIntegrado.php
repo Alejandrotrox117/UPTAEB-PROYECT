@@ -12,7 +12,7 @@ class RolesIntegrado extends Controllers
 
     public function index()
     {
-        $data['page_title'] = "Gestión Integral de Roles";
+        $data['page_title'] = "Gestión Integral de Permisos";
         $data['page_name'] = "Roles Integrado";
         $data['page_functions_js'] = "functions_rolesintegrado.js";
         $this->views->getView($this, "rolesintegrado", $data);
