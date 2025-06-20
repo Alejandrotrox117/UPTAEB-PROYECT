@@ -4,11 +4,47 @@ require_once "app/core/mysql.php";
 
 class DashboardModel extends mysql
 {
-    public function __construct() {}
+private $query;
+  private $array;
+  private $result;
+
+  public function __construct()
+  {
+  }
+
+  // --- Getters y Setters ---
+  public function getQuery()
+  {
+    return $this->query;
+  }
+
+  public function setQuery(string $query)
+  {
+    $this->query = $query;
+  }
+
+  public function getArray()
+  {
+    return $this->array ?? [];
+  }
+
+  public function setArray(array $array)
+  {
+    $this->array = $array;
+  }
+
+  public function getResult()
+  {
+    return $this->result;
+  }
+
+  public function setResult($result)
+  {
+    $this->result = $result;
+  }
 
     // --- MÉTODO CORREGIDO ---
-    public function getResumen()
-    {
+    public function getResumen(){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -33,9 +69,6 @@ class DashboardModel extends mysql
         }
     }
 
-    // --- MÉTODOS AVANZADOS CORREGIDOS Y COMPLETADOS ---
-
-    // CORREGIDO: Este método ahora devuelve todos los datos que el JS espera.
     public function getAnalisisInventario()
     {
         $conexion = new Conexion();
@@ -154,15 +187,6 @@ class DashboardModel extends mysql
         }
     }
 
-    public function getTiposDePago()
-    {
-        // Como está vacía, devolvemos tipos básicos
-        return [
-            ['idtipo_pago' => 1, 'nombre' => 'Efectivo'],
-            ['idtipo_pago' => 2, 'nombre' => 'Transferencia'],
-            ['idtipo_pago' => 3, 'nombre' => 'Pago Móvil']
-        ];
-    }
 
     public function getProveedoresActivos()
     {
@@ -215,108 +239,142 @@ class DashboardModel extends mysql
         }
     }
 
-    // --- MÉTODOS DE INGRESOS (USANDO TABLA VENTA) ---
-    
-    public function getIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null)
+    private function ejecutarGetTiposDePago()
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-            $stmt = $db->prepare("SELECT 
-                'Ventas Totales' as categoria,
-                SUM(total_general) as total
-                FROM venta 
-                WHERE fecha_venta BETWEEN ? AND ?
-                AND estatus = 'activo'");
-            $stmt->execute([$fecha_desde, $fecha_hasta]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->setQuery("SELECT idtipo_pago, nombre FROM tipos_pagos WHERE estatus = 'activo' ORDER BY nombre ASC");
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getIngresosReporte: " . $e->getMessage());
-            return [];
+        error_log("DashboardModel::ejecutarGetTiposDePago - Error: " . $e->getMessage());
+        return [];
         } finally {
-            $conexion->disconnect();
+        $conexion->disconnect();
         }
     }
 
-    public function getIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null)
+    private function ejecutarGetIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago)
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-            $stmt = $db->prepare("SELECT 
-                v.fecha_venta as fecha_pago,
-                v.nro_venta,
-                CONCAT(c.nombre, ' ', c.apellido) as cliente,
-                'Venta' as tipo_pago,
-                v.observaciones as referencia,
-                v.total_general as monto
-                FROM venta v
-                JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.fecha_venta BETWEEN ? AND ?
-                AND v.estatus = 'activo'
-                ORDER BY v.fecha_venta DESC");
-            $stmt->execute([$fecha_desde, $fecha_hasta]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $baseSql = "SELECT tp.nombre AS categoria, SUM(p.monto) AS total FROM pagos p JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago WHERE p.idventa IS NOT NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
+        $this->setArray([$fecha_desde, $fecha_hasta]);
+
+        if (!empty($idtipo_pago)) {
+            $baseSql .= " AND p.idtipo_pago = ?";
+            $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
+        }
+        $baseSql .= " GROUP BY tp.nombre HAVING SUM(p.monto) > 0";
+        $this->setQuery($baseSql);
+
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getIngresosDetallados: " . $e->getMessage());
-            return [];
+        error_log("DashboardModel::ejecutarGetIngresosReporte - Error: " . $e->getMessage());
+        return [];
         } finally {
-            $conexion->disconnect();
+        $conexion->disconnect();
         }
     }
 
-    // --- MÉTODOS DE EGRESOS (USANDO TABLA COMPRA) ---
-    
-    public function getEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
+    private function ejecutarGetIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago)
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-            $stmt = $db->prepare("SELECT 
-                'Compras Totales' as categoria,
-                SUM(total_general) as total
-                FROM compra 
-                WHERE fecha BETWEEN ? AND ?
-                AND estatus_compra = 'Pendiente'");
-            $stmt->execute([$fecha_desde, $fecha_hasta]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $baseSql = "SELECT p.fecha_pago, v.nro_venta, CONCAT(c.nombre, ' ', c.apellido) AS cliente, tp.nombre AS tipo_pago, p.referencia, p.monto FROM pagos p JOIN venta v ON p.idventa = v.idventa JOIN cliente c ON v.idcliente = c.idcliente JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago WHERE p.idventa IS NOT NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
+        $this->setArray([$fecha_desde, $fecha_hasta]);
+
+        if (!empty($idtipo_pago)) {
+            $baseSql .= " AND p.idtipo_pago = ?";
+            $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
+        }
+        $baseSql .= " ORDER BY p.fecha_pago ASC";
+        $this->setQuery($baseSql);
+
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getEgresosReporte: " . $e->getMessage());
-            return [];
+        error_log("DashboardModel::ejecutarGetIngresosDetallados - Error: " . $e->getMessage());
+        return [];
         } finally {
-            $conexion->disconnect();
+        $conexion->disconnect();
         }
     }
 
-    public function getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
+    private function ejecutarGetEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso)
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-            $stmt = $db->prepare("SELECT 
-                c.fecha as fecha_pago,
-                CONCAT('Compra #', c.nro_compra, ' - ', pr.nombre, ' ', pr.apellido) as descripcion,
-                'Compra' as tipo_pago,
-                c.observaciones_compra as referencia,
-                c.total_general as monto
-                FROM compra c
-                JOIN proveedor pr ON c.idproveedor = pr.idproveedor
-                WHERE c.fecha BETWEEN ? AND ?
-                AND c.estatus_compra = 'Pendiente'
-                ORDER BY c.fecha DESC");
-            $stmt->execute([$fecha_desde, $fecha_hasta]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $baseSql = "SELECT CASE WHEN p.idcompra IS NOT NULL THEN 'Compras' WHEN p.idsueldotemp IS NOT NULL THEN 'Sueldos' ELSE 'Otros Egresos' END AS categoria, SUM(p.monto) AS total FROM pagos p WHERE p.idventa IS NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
+        $this->setArray([$fecha_desde, $fecha_hasta]);
+
+        if (!empty($idtipo_pago)) {
+            $baseSql .= " AND p.idtipo_pago = ?";
+            $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
+        }
+        if (!empty($tipo_egreso)) {
+            if ($tipo_egreso === "Compras") $baseSql .= " AND p.idcompra IS NOT NULL";
+            elseif ($tipo_egreso === "Sueldos") $baseSql .= " AND p.idsueldotemp IS NOT NULL";
+            elseif ($tipo_egreso === "Otros Egresos") $baseSql .= " AND p.idcompra IS NULL AND p.idsueldotemp IS NULL";
+        }
+        $baseSql .= " GROUP BY categoria HAVING SUM(p.monto) > 0";
+        $this->setQuery($baseSql);
+
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getEgresosDetallados: " . $e->getMessage());
-            return [];
+        error_log("DashboardModel::ejecutarGetEgresosReporte - Error: " . $e->getMessage());
+        return [];
         } finally {
-            $conexion->disconnect();
+        $conexion->disconnect();
         }
     }
+
+    private function ejecutarGetEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+        $baseSql = "SELECT p.fecha_pago, CASE WHEN p.idcompra IS NOT NULL THEN CONCAT('Compra #', c.nro_compra) WHEN p.idsueldotemp IS NOT NULL THEN 'Pago de Sueldo' ELSE p.observaciones END AS descripcion, tp.nombre AS tipo_pago, p.referencia, p.monto FROM pagos p JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago LEFT JOIN compra c ON p.idcompra = c.idcompra WHERE p.idventa IS NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
+        $this->setArray([$fecha_desde, $fecha_hasta]);
+
+        if (!empty($idtipo_pago)) {
+            $baseSql .= " AND p.idtipo_pago = ?";
+            $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
+        }
+        if (!empty($tipo_egreso)) {
+            if ($tipo_egreso === "Compras") $baseSql .= " AND p.idcompra IS NOT NULL";
+            elseif ($tipo_egreso === "Sueldos") $baseSql .= " AND p.idsueldotemp IS NOT NULL";
+            elseif ($tipo_egreso === "Otros Egresos") $baseSql .= " AND p.idcompra IS NULL AND p.idsueldotemp IS NULL";
+        }
+        $baseSql .= " ORDER BY p.fecha_pago ASC";
+        $this->setQuery($baseSql);
+
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+        error_log("DashboardModel::ejecutarGetEgresosDetallados - Error: " . $e->getMessage());
+        return [];
+        } finally {
+        $conexion->disconnect();
+        }
+    }
+
 
     public function getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor = null, $idproducto = null)
     {
@@ -367,44 +425,44 @@ class DashboardModel extends mysql
     // --- MÉTODOS AVANZADOS SIMPLIFICADOS ---
 
     public function getKPIsEjecutivos()
-{
-    $conexion = new Conexion();
-    $conexion->connect();
-    $db = $conexion->get_conectGeneral();
-    try {
-        // CORRECIÓN: Usamos CAST(... AS DECIMAL(10,2)) para asegurar que MySQL
-        // devuelva un número con punto decimal, no una cadena con coma.
-        $stmt = $db->prepare("SELECT 
-            CAST(COALESCE(
-                (SELECT (SUM(v.total_general) - (SELECT COALESCE(SUM(c.total_general), 0) FROM compra c WHERE MONTH(c.fecha) = MONTH(CURDATE()))) / NULLIF(SUM(v.total_general), 0) * 100
-                 FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'activo'), 0
-            ) AS DECIMAL(10,2)) as margen_ganancia,
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            // CORRECIÓN: Usamos CAST(... AS DECIMAL(10,2)) para asegurar que MySQL
+            // devuelva un número con punto decimal, no una cadena con coma.
+            $stmt = $db->prepare("SELECT 
+                CAST(COALESCE(
+                    (SELECT (SUM(v.total_general) - (SELECT COALESCE(SUM(c.total_general), 0) FROM compra c WHERE MONTH(c.fecha) = MONTH(CURDATE()))) / NULLIF(SUM(v.total_general), 0) * 100
+                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'activo'), 0
+                ) AS DECIMAL(10,2)) as margen_ganancia,
+                
+                CAST(COALESCE(
+                    (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()))) / 
+                    NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE())), 0)) * 100
+                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'activo'), 0
+                ) AS DECIMAL(10,2)) as roi_mes,
+                
+                CAST(COALESCE(
+                    (SELECT AVG(existencia) * 30 / NULLIF(COUNT(*), 0) FROM producto WHERE estatus = 'activo'), 0
+                ) AS DECIMAL(10,2)) as rotacion_inventario,
+                
+                CAST(COALESCE(
+                    (SELECT SUM(cantidad_a_realizar) / NULLIF(COUNT(*), 0)
+                    FROM produccion 
+                    WHERE estado = 'realizado' AND MONTH(fecha_inicio) = MONTH(CURDATE())), 0
+                ) AS DECIMAL(10,2)) as productividad_general");
             
-            CAST(COALESCE(
-                (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()))) / 
-                 NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE())), 0)) * 100
-                 FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'activo'), 0
-            ) AS DECIMAL(10,2)) as roi_mes,
-            
-            CAST(COALESCE(
-                (SELECT AVG(existencia) * 30 / NULLIF(COUNT(*), 0) FROM producto WHERE estatus = 'activo'), 0
-            ) AS DECIMAL(10,2)) as rotacion_inventario,
-            
-            CAST(COALESCE(
-                (SELECT SUM(cantidad_a_realizar) / NULLIF(COUNT(*), 0)
-                 FROM produccion 
-                 WHERE estado = 'realizado' AND MONTH(fecha_inicio) = MONTH(CURDATE())), 0
-            ) AS DECIMAL(10,2)) as productividad_general");
-        
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error en getKPIsEjecutivos: " . $e->getMessage());
-        return ['margen_ganancia' => 0, 'roi_mes' => 0, 'rotacion_inventario' => 0, 'productividad_general' => 0];
-    } finally {
-        $conexion->disconnect();
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getKPIsEjecutivos: " . $e->getMessage());
+            return ['margen_ganancia' => 0, 'roi_mes' => 0, 'rotacion_inventario' => 0, 'productividad_general' => 0];
+        } finally {
+            $conexion->disconnect();
+        }
     }
-}
 
     public function getTendenciasVentas()
     {
@@ -571,64 +629,64 @@ class DashboardModel extends mysql
         }
     }
 
-public function getTopClientes($limit = 10)
-{
-    $conexion = new Conexion();
-    $conexion->connect();
-    $db = $conexion->get_conectGeneral();
-    try {
-        $stmt = $db->prepare("SELECT 
-            c.idcliente,
-            CONCAT(c.nombre, ' ', c.apellido) as cliente_nombre,
-            COUNT(v.idventa) as num_compras,
-            SUM(v.total_general) as total_comprado,
-            AVG(v.total_general) as ticket_promedio
-            FROM cliente c
-            JOIN venta v ON c.idcliente = v.idcliente
-            WHERE c.estatus = 'activo' AND v.estatus = 'activo'
-            GROUP BY c.idcliente, cliente_nombre
-            HAVING total_comprado > 0
-            ORDER BY total_comprado DESC
-            LIMIT :limit");
-        $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error en getTopClientes: " . $e->getMessage());
-        return [];
-    } finally {
-        $conexion->disconnect();
+    public function getTopClientes($limit = 10)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            $stmt = $db->prepare("SELECT 
+                c.idcliente,
+                CONCAT(c.nombre, ' ', c.apellido) as cliente_nombre,
+                COUNT(v.idventa) as num_compras,
+                SUM(v.total_general) as total_comprado,
+                AVG(v.total_general) as ticket_promedio
+                FROM cliente c
+                JOIN venta v ON c.idcliente = v.idcliente
+                WHERE c.estatus = 'activo' AND v.estatus = 'activo'
+                GROUP BY c.idcliente, cliente_nombre
+                HAVING total_comprado > 0
+                ORDER BY total_comprado DESC
+                LIMIT :limit");
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getTopClientes: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
     }
-}
 
-public function getTopProveedores($limit = 10)
-{
-    $conexion = new Conexion();
-    $conexion->connect();
-    $db = $conexion->get_conectGeneral();
-    try {
-        $stmt = $db->prepare("SELECT 
-            pr.idproveedor,
-            CONCAT(pr.nombre, ' ', pr.apellido) as proveedor_nombre,
-            COUNT(c.idcompra) as num_compras,
-            SUM(c.total_general) as total_comprado
-            FROM proveedor pr
-            JOIN compra c ON pr.idproveedor = c.idproveedor
-            WHERE pr.estatus = 'activo'
-            GROUP BY pr.idproveedor, proveedor_nombre
-            HAVING total_comprado > 0
-            ORDER BY total_comprado DESC
-            LIMIT :limit");
-        $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error en getTopProveedores: " . $e->getMessage());
-        return [];
-    } finally {
-        $conexion->disconnect();
+    public function getTopProveedores($limit = 10)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            $stmt = $db->prepare("SELECT 
+                pr.idproveedor,
+                CONCAT(pr.nombre, ' ', pr.apellido) as proveedor_nombre,
+                COUNT(c.idcompra) as num_compras,
+                SUM(c.total_general) as total_comprado
+                FROM proveedor pr
+                JOIN compra c ON pr.idproveedor = c.idproveedor
+                WHERE pr.estatus = 'activo'
+                GROUP BY pr.idproveedor, proveedor_nombre
+                HAVING total_comprado > 0
+                ORDER BY total_comprado DESC
+                LIMIT :limit");
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en getTopProveedores: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
     }
-}
 
     public function getKPIsTiempoReal()
     {
@@ -673,4 +731,38 @@ public function getTopProveedores($limit = 10)
             $conexion->disconnect();
         }
     }
+
+      // --- Métodos Públicos---
+
+
+  public function getTareasPendientes()
+  {
+    return []; 
+  }
+
+
+  public function getTiposDePago()
+  {
+    return $this->ejecutarGetTiposDePago();
+  }
+
+  public function getIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null)
+  {
+    return $this->ejecutarGetIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago);
+  }
+
+  public function getIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null)
+  {
+    return $this->ejecutarGetIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago);
+  }
+
+  public function getEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
+  {
+    return $this->ejecutarGetEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+  }
+
+  public function getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
+  {
+    return $this->ejecutarGetEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+  }
 }
