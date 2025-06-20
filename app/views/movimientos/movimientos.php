@@ -1,200 +1,498 @@
-<?php
-headerAdmin($data); 
-$permisos = $data['permisos'] ?? []; 
+<?php 
+headerAdmin($data);
+$permisos = $data['permisos'];
 ?>
-<!-- Main Content -->
-<main class="flex-1 p-6">
-    <div class="flex justify-between items-center">
-        <h2 class="text-xl font-semibold">Hola, <?= $_SESSION['usuario_nombre'] ?? 'Usuario' ?> 👋</h2>
-        <input type="text" placeholder="Search" class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none">
+
+<script>
+    window.permisosMovimientos = <?php echo json_encode($permisos); ?>;
+</script>
+
+<main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Hola, <?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Usuario') ?> 👋</h2>
     </div>
 
-    <div class="min-h-screen mt-4">
-        <h1 class="text-3xl font-bold text-gray-900">Gestión de Movimientos de existencias</h1>
-        <p class="text-green-500 text-lg">Movimientos</p>
+    <div class="mt-0 sm:mt-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Movimientos de Inventario</h1>
+        <p class="text-green-600 text-base md:text-lg">Gestión integral de movimientos de existencias</p>
+    </div>
 
-        <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
-            <div class="flex justify-between items-center mb-4">
-                <?php if ($permisos['puede_crear']): ?>
-                    <button id="btnAbrirModalMovimiento" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-600 transition">
-                        <i class="fas fa-plus mr-2"></i>Registrar Movimiento
-                    </button>
-                <?php else: ?>
-                    <div class="text-gray-500 text-sm">
-                        <i class="fas fa-lock mr-2"></i>No tiene permisos para registrar movimientos
+    <?php if (!$permisos['ver']): ?>
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 mt-6 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700 font-medium">
+                        <strong>Acceso Restringido:</strong> No tienes permisos para ver la lista de movimientos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    <?php else: ?>
+
+        <!-- ✅ ESTADÍSTICAS SIMPLES -->
+        <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2 text-blue-500"></i>
+                    Estadísticas de Movimientos
+                </h3>
+                <div id="estadisticas-movimientos">
+                    <!-- Se llena dinámicamente con JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ FILTROS Y BÚSQUEDA (SIMILAR A BITÁCORA) -->
+        <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+                <div class="flex flex-col sm:flex-row gap-4 flex-1">
+                    <!-- Select de Tipo de Movimiento -->
+                    <div class="flex-1 min-w-64">
+                        <label for="filtro-tipo-movimiento" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-filter mr-1"></i>Filtrar por Tipo
+                        </label>
+                        <select id="filtro-tipo-movimiento" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Cargando tipos...</option>
+                        </select>
                     </div>
-                <?php endif; ?>
-                
-                <?php if (!$permisos['puede_ver']): ?>
-                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm">Acceso limitado: Solo puede ver la información básica.</p>
+
+                    <!-- Búsqueda Personalizada -->
+                    <div class="flex-1 min-w-64">
+                        <label for="busqueda-movimientos" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-search mr-1"></i>Búsqueda
+                        </label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="busqueda-movimientos" 
+                                   placeholder="Buscar en movimientos..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Indicador de Filtro Actual -->
+            <div class="flex items-center justify-between text-sm border-t pt-4">
+                <div id="indicador-filtro-actual" class="text-gray-600 flex items-center">
+                    <i class="fas fa-list mr-1"></i>Mostrando todos los movimientos
+                </div>
+                <div class="text-gray-500 text-xs">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Los contadores se actualizan automáticamente
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ TABLA DE MOVIMIENTOS -->
+        <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <?php if ($permisos['crear']): ?>
+                        <button id="btnAbrirModalMovimiento"
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base transition-colors duration-200">
+                            <i class="fas fa-plus mr-1 md:mr-2"></i> Registrar Movimiento
+                        </button>
+                    <?php endif; ?>
+
+                    <?php if ($permisos['exportar']): ?>
+                        <button id="btnExportarMovimientos"
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base transition-colors duration-200">
+                            <i class="fas fa-download mr-1 md:mr-2"></i> Exportar
+                        </button>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (!$permisos['crear']): ?>
+                    <div class="bg-gray-100 px-4 py-2 rounded-lg text-gray-500 text-sm">
+                        <i class="fas fa-lock mr-2"></i> Sin permisos para crear movimientos
+                    </div>
                 <?php endif; ?>
             </div>
 
-            <table id="TablaMovimiento" class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="text-gray-500 text-sm border-b">
-                        <th class="py-2">Nro. Movimiento</th>
-                        <th class="py-2">Producto</th>
-                        <th class="py-2">Tipo de Movimiento</th>
-                        <th class="py-2">Entrada</th>
-                        <th class="py-2">Salida</th>
-                        <th class="py-2">Stock Resultante</th>
-                        <th class="py-2">Estatus</th>
-                        <?php if ($permisos['puede_editar'] || $permisos['puede_eliminar']): ?>
-                            <th class="py-2">Acciones</th>
-                        <?php endif; ?>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-900">
-                </tbody>
-            </table>
+            <div class="overflow-x-auto w-full relative">
+                <table id="TablaMovimiento" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 700px;">
+                    <thead>
+                        <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
+                            <!-- Headers generados automáticamente por DataTables -->
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
+                        <!-- Datos cargados automáticamente por DataTables -->
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+
+    <?php endif; ?>
 </main>
-</div>
 
-<?php if ($permisos['puede_crear']): ?>
-<!-- Modal para Registrar Nuevo Movimiento -->
-<div id="movimientoModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+<!-- ✅ MODAL VER DETALLE MOVIMIENTO -->
+<?php if ($permisos['ver']): ?>
+<div id="modalVerDetalleMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-2xl">
-        <!-- Encabezado -->
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xl font-bold text-gray-800">
-                <i class="fas fa-box mr-2 text-green-600"></i>
-                <span id="tituloModalMovimiento">Registrar Nuevo Movimiento</span>
-            </h3>
-            <button id="cerrarModalMovimiento" class="p-1 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-200">
-                <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
+        <div class="px-4 py-4 border-b flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-800">Detalle del Movimiento</h3>
+            <button type="button" id="btnCerrarModalDetalle" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
             </button>
         </div>
-        
-        <!-- Formulario -->
-        <form id="formMovimiento" class="px-6 py-4">
-            <input type="hidden" id="idmovimiento" name="idmovimiento" value="">
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="producto" class="block text-gray-700 font-medium mb-2">
-                        Producto <span class="text-red-500">*</span>
-                    </label>
-                    <select id="producto" name="producto" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                        <option value="">Seleccione un producto</option>
-                    </select>
-                    <div id="error-producto-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        Este campo es obligatorio
-                    </div>
-                </div>
 
+        <div class="px-4 py-4 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="tipo_movimiento" class="block text-gray-700 font-medium mb-2">
-                        Tipo de Movimiento <span class="text-red-500">*</span>
-                    </label>
-                    <select id="tipo_movimiento" name="tipo_movimiento" class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                        <option value="">Seleccione tipo</option>
-                        <option value="ENTRADA">Entrada</option>
-                        <option value="SALIDA">Salida</option>
-                        <option value="AJUSTE">Ajuste</option>
-                    </select>
-                    <div id="error-tipo_movimiento-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        Este campo es obligatorio
-                    </div>
+                    <label class="block text-sm font-medium text-gray-600">Nro. Movimiento:</label>
+                    <p id="verMovimientoNumero" class="text-gray-900 font-semibold"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Producto:</label>
+                    <p id="verMovimientoProducto" class="text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Tipo:</label>
+                    <p id="verMovimientoTipo" class="text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Cantidad:</label>
+                    <p id="verMovimientoCantidad" class="text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Stock Resultante:</label>
+                    <p id="verMovimientoStock" class="text-gray-900"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600">Estatus:</label>
+                    <p id="verMovimientoEstatus" class="text-gray-900"></p>
                 </div>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <label for="cantidad" class="block text-gray-700 font-medium mb-2">
-                        Cantidad <span class="text-red-500">*</span>
-                    </label>
-                    <input type="number" id="cantidad" name="cantidad" 
-                           class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                           min="0.01" step="0.01" placeholder="0.00" required>
-                    <div id="error-cantidad-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        La cantidad debe ser mayor a 0
-                    </div>
-                </div>
-
-                <div>
-                    <label for="fecha" class="block text-gray-700 font-medium mb-2">
-                        Fecha <span class="text-red-500">*</span>
-                    </label>
-                    <input type="date" id="fecha" name="fecha" 
-                           class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                           value="<?= date('Y-m-d') ?>" required>
-                    <div id="error-fecha-vacio" class="text-red-500 text-sm mt-1 hidden">
-                        La fecha es obligatoria
-                    </div>
-                </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-600">Observaciones:</label>
+                <p id="verMovimientoObservaciones" class="text-gray-900"></p>
             </div>
-
-            <div class="mt-4">
-                <label for="observaciones" class="block text-gray-700 font-medium mb-2">
-                    Observaciones
-                </label>
-                <textarea id="observaciones" name="observaciones" rows="3"
-                          class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400 resize-none"
-                          placeholder="Ingrese observaciones adicionales (opcional)"></textarea>
-                <div id="error-observaciones-formato" class="text-red-500 text-sm mt-1 hidden">
-                    Formato de observaciones inválido
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mt-6">
-                <div>
-                    <button type="button" id="cancelarMovimiento" 
-                            class="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
-                        Cancelar
-                    </button>
-                </div>
-                <div>
-                    <button type="button" id="guardarMovimiento"
-                            class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
-                        Registrar Movimiento
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- Modal Detalle de Movimiento -->
-<div id="modalDetalleMovimiento" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-2xl">
-        <!-- Encabezado -->
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xl font-bold text-gray-800">
-                <i class="mr-2 text-indigo-600 fas fa-eye"></i>Detalle de Movimiento
-            </h3>
-            <button id="cerrarDetalleMovimiento" class="p-1 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-200">
-                <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                </svg>
-            </button>
         </div>
-        
-        <div class="px-6 py-4" id="detalleMovimientoContenido">
-            <!-- Contenido del detalle se carga dinámicamente -->
-        </div>
-        
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
-            <button type="button" id="cerrarDetalleMovimiento2" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition text-lg">
+
+        <div class="px-4 py-4 border-t bg-gray-50 flex justify-end">
+            <button type="button" id="btnCerrarModalDetalle2"
+                class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition text-lg">
                 Cerrar
             </button>
         </div>
     </div>
 </div>
+<?php endif; ?>
 
-<div id="permisosUsuario" data-permisos='<?= json_encode($permisos) ?>' style="display:none"></div>
+<!-- ✅ MODAL REGISTRAR MOVIMIENTO -->
+<?php if ($permisos['crear']): ?>
+<div id="modalRegistrarMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
+        <div class="px-6 py-4 border-b border-gray-200 bg-green-50 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-green-800">
+                    <i class="fas fa-plus-circle mr-2"></i>Registrar Nuevo Movimiento
+                </h3>
+                <button type="button" id="btnCerrarModalRegistrar" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto">
+            <form id="formRegistrarMovimiento" class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Producto -->
+                    <div>
+                        <label for="idproducto" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-box mr-1"></i>Producto *
+                        </label>
+                        <select id="idproducto" name="idproducto" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                            <option value="">Seleccione un producto</option>
+                        </select>
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Tipo de Movimiento -->
+                    <div>
+                        <label for="idtipomovimiento" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-tag mr-1"></i>Tipo de Movimiento *
+                        </label>
+                        <select id="idtipomovimiento" name="idtipomovimiento" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                            <option value="">Seleccione un tipo</option>
+                        </select>
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Cantidad Entrada -->
+                    <div>
+                        <label for="cantidad_entrada" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-arrow-up text-green-500 mr-1"></i>Cantidad Entrada
+                        </label>
+                        <input type="number" id="cantidad_entrada" name="cantidad_entrada" 
+                               step="0.01" min="0" placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Cantidad Salida -->
+                    <div>
+                        <label for="cantidad_salida" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-arrow-down text-red-500 mr-1"></i>Cantidad Salida
+                        </label>
+                        <input type="number" id="cantidad_salida" name="cantidad_salida" 
+                               step="0.01" min="0" placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Stock Anterior -->
+                    <div>
+                        <label for="stock_anterior" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-history mr-1"></i>Stock Anterior
+                        </label>
+                        <input type="number" id="stock_anterior" name="stock_anterior" 
+                               step="0.01" min="0" placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Stock Resultante -->
+                    <div>
+                        <label for="stock_resultante" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calculator mr-1"></i>Stock Resultante
+                        </label>
+                        <input type="number" id="stock_resultante" name="stock_resultante" 
+                               step="0.01" min="0" placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div>
+                    <label for="observaciones" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-comment mr-1"></i>Observaciones
+                    </label>
+                    <textarea id="observaciones" name="observaciones" rows="3" placeholder="Observaciones opcionales..."
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+                    <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                </div>
+
+                <!-- Nota informativa -->
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                <strong>Nota:</strong> Debe especificar cantidad de entrada O salida, no ambas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3 flex-shrink-0">
+            <button type="button" id="btnCancelarModalRegistrar" 
+                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium">
+                <i class="fas fa-times mr-2"></i>Cancelar
+            </button>
+            <button type="submit" form="formRegistrarMovimiento" id="btnRegistrarMovimiento"
+                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium">
+                <i class="fas fa-save mr-2"></i>Registrar Movimiento
+            </button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- ✅ MODAL ACTUALIZAR MOVIMIENTO -->
+<?php if ($permisos['editar']): ?>
+<div id="modalActualizarMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
+        <div class="px-6 py-4 border-b border-gray-200 bg-blue-50 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-blue-800">
+                    <i class="fas fa-edit mr-2"></i>Actualizar Movimiento
+                </h3>
+                <button type="button" id="btnCerrarModalActualizar" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto">
+            <form id="formActualizarMovimiento" class="p-6 space-y-6">
+                <!-- ID del Movimiento (hidden) -->
+                <input type="hidden" id="idmovimientoActualizar" name="idmovimientoActualizar">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Número de Movimiento -->
+                    <div>
+                        <label for="numeroMovimientoActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-hashtag mr-1"></i>Número de Movimiento
+                        </label>
+                        <input type="text" id="numeroMovimientoActualizar" name="numeroMovimientoActualizar" 
+                               readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
+                    </div>
+
+                    <!-- Producto -->
+                    <div>
+                        <label for="idproductoActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-box mr-1"></i>Producto *
+                        </label>
+                        <select id="idproductoActualizar" name="idproductoActualizar" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Seleccione un producto</option>
+                        </select>
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Tipo de Movimiento -->
+                    <div>
+                        <label for="idtipomovimientoActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-tag mr-1"></i>Tipo de Movimiento *
+                        </label>
+                        <select id="idtipomovimientoActualizar" name="idtipomovimientoActualizar" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Seleccione un tipo</option>
+                        </select>
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Estatus -->
+                    <div>
+                        <label for="estatusActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-toggle-on mr-1"></i>Estatus *
+                        </label>
+                        <select id="estatusActualizar" name="estatusActualizar" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Cantidad Entrada -->
+                    <div>
+                        <label for="cantidad_entradaActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-arrow-up text-green-500 mr-1"></i>Cantidad Entrada
+                        </label>
+                        <input type="number" id="cantidad_entradaActualizar" name="cantidad_entradaActualizar" 
+                               step="0.01" min="0" placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Cantidad Salida -->
+                    <div>
+                        <label for="cantidad_salidaActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-arrow-down text-red-500 mr-1"></i>Cantidad Salida
+                        </label>
+                        <input type="number" id="cantidad_salidaActualizar" name="cantidad_salidaActualizar" 
+                               step="0.01" min="0" placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Stock Anterior -->
+                    <div>
+                        <label for="stock_anteriorActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-history mr-1"></i>Stock Anterior
+                        </label>
+                        <input type="number" id="stock_anteriorActualizar" name="stock_anteriorActualizar" 
+                               step="0.01" min="0" placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Stock Resultante -->
+                    <div>
+                        <label for="stock_resultanteActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-calculator mr-1"></i>Stock Resultante
+                        </label>
+                        <input type="number" id="stock_resultanteActualizar" name="stock_resultanteActualizar" 
+                               step="0.01" min="0" placeholder="0.00"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div>
+                    <label for="observacionesActualizar" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-comment mr-1"></i>Observaciones
+                    </label>
+                    <textarea id="observacionesActualizar" name="observacionesActualizar" rows="3" placeholder="Observaciones opcionales..."
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
+                </div>
+
+                <!-- Nota informativa -->
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                <strong>Nota:</strong> Debe especificar cantidad de entrada O salida, no ambas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3 flex-shrink-0">
+            <button type="button" id="btnCancelarModalActualizar" 
+                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium">
+                <i class="fas fa-times mr-2"></i>Cancelar
+            </button>
+            <button type="submit" form="formActualizarMovimiento" id="btnActualizarMovimiento"
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium">
+                <i class="fas fa-save mr-2"></i>Actualizar Movimiento
+            </button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- ✅ MODAL PERMISOS DENEGADOS -->
+<div id="modalPermisosDenegados" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-[60]">
+    <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-md transform transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-semibold text-red-800">Acceso Denegado</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-6 py-4">
+            <p id="mensajePermisosDenegados" class="text-gray-700 text-base">
+                No tienes permisos para realizar esta acción.
+            </p>
+        </div>
+        
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+            <button type="button" id="btnCerrarModalPermisos" 
+                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 font-medium">
+                Entendido
+            </button>
+        </div>
+    </div>
+</div>
+
 <?php footerAdmin($data); ?>
