@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "La respuesta del servidor no tiene la estructura esperada (falta 'data'):",
             json
           );
-          $("#TablaRolesModulos_processing").css("display", "none"); // Hide processing
+          $("#TablaRolesModulos_processing").css("display", "none"); 
           alert(
             "Error: No se pudieron cargar los datos de asignaciones correctamente."
           );
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
           errorThrown,
           jqXHR.responseText
         );
-        $("#TablaRolesModulos_processing").css("display", "none"); // Hide processing
+        $("#TablaRolesModulos_processing").css("display", "none"); 
         alert(
           "Error de comunicación al cargar los datos de asignaciones. Por favor, intente más tarde."
         );
@@ -298,7 +298,7 @@ document.addEventListener("DOMContentLoaded", function () {
   );
   });
 
-  // MODAL REGISTRAR ASIGNACIÓN
+  
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarRolModulo"
   );
@@ -332,7 +332,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // SUBMIT FORM REGISTRAR
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -340,7 +340,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL ACTUALIZAR ASIGNACIÓN
+  
   const btnCerrarModalActualizar = document.getElementById(
     "btnCerrarModalActualizar"
   );
@@ -368,7 +368,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER ASIGNACIÓN
+  
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
   
@@ -385,7 +385,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// FUNCIONES
+
 function cargarRoles() {
   fetch("RolesModulos/getRoles", {
     method: "GET",
@@ -576,12 +576,12 @@ function editarRolModulo(idRolModulo) {
 }
 
 function mostrarModalEditarRolModulo(rolModulo) {
-  // Llenar los campos del formulario con los datos existentes
+  
   document.getElementById("idRolModuloActualizar").value = rolModulo.idrolmodulo || "";
   document.getElementById("rolSelectActualizar").value = rolModulo.idrol || "";
   document.getElementById("moduloSelectActualizar").value = rolModulo.idmodulo || "";
 
-  // Inicializar validaciones para el formulario de actualizar
+  
   inicializarValidaciones(
     camposFormularioActualizarRolModulo,
     "formActualizarRolModulo"
@@ -595,7 +595,7 @@ function actualizarRolModulo() {
   const btnActualizarRolModulo = document.getElementById("btnActualizarRolModulo");
   const idRolModulo = document.getElementById("idRolModuloActualizar").value;
 
-  // Validar campos vacíos obligatorios
+  
   const camposObligatorios = camposFormularioActualizarRolModulo.filter((c) => {
     return c.mensajes && c.mensajes.vacio;
   });
@@ -604,7 +604,7 @@ function actualizarRolModulo() {
     return;
   }
 
-  // Validar formatos específicos
+  
   let formularioConErroresEspecificos = false;
   for (const campo of camposFormularioActualizarRolModulo) {
     const inputElement = formActualizar.querySelector(`#${campo.id}`);
@@ -715,7 +715,7 @@ function verRolModulo(idRolModulo) {
 }
 
 function mostrarModalVerRolModulo(rolModulo) {
-  // Llenar los campos del modal de ver
+  
   document.getElementById("verRolNombre").textContent = rolModulo.nombre_rol || "N/A";
   document.getElementById("verRolDescripcion").textContent = rolModulo.descripcion_rol || "Sin descripción";
   document.getElementById("verModuloTitulo").textContent = rolModulo.titulo_modulo || "N/A";

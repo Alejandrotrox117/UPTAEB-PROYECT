@@ -72,7 +72,7 @@ class Clientes extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -100,7 +100,7 @@ class Clientes extends Controllers
                     }
                 }
 
-                // Validaciones específicas
+                
                 if (strlen($datosLimpios['nombre']) < 2 || strlen($datosLimpios['nombre']) > 50) {
                     $arrResponse = array('status' => false, 'message' => 'El nombre debe tener entre 2 y 50 caracteres');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -227,7 +227,7 @@ class Clientes extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -263,7 +263,7 @@ class Clientes extends Controllers
                     }
                 }
 
-                // Validaciones similares al create
+                
                 if (strlen($datosLimpios['nombre']) < 2 || strlen($datosLimpios['nombre']) > 50) {
                     $arrResponse = array('status' => false, 'message' => 'El nombre debe tener entre 2 y 50 caracteres');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -310,7 +310,7 @@ class Clientes extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -363,7 +363,7 @@ class Clientes extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {

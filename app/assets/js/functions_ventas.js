@@ -16,14 +16,14 @@ import {
 } from "./validaciones.js";
 
 document.addEventListener("DOMContentLoaded", function () {
-  // --- Inicialización General ---
+  
   const PERMISOS_USUARIO = obtenerPermisosUsuario();
   window.PERMISOS_USUARIO = PERMISOS_USUARIO;
 
   inicializarDataTable();
   const ventaForm = document.getElementById("ventaForm");
 
-  // --- Definición de Campos para Validación ---
+  
   const camposCabeceraVenta = [
     {
       id: "fecha_venta_modal",
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
       regex: expresiones.nombre,
       mensajes: {
         vacio: "El nombre es obligatorio.",
-        formato: "El nombre debe tener entre 2 y 50 caracteres.", // Inconsistente con regex
+        formato: "El nombre debe tener entre 2 y 50 caracteres.", 
       },
     },
     {
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let listaProductosCargadosSelect = [];
 
-  // --- Elementos del DOM ---
+  
   const btnToggleNuevoCliente = document.getElementById(
     "btnToggleNuevoCliente"
   );
@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const detalleVentaBody = document.getElementById("detalleVentaBody");
   const noDetallesMsg = document.getElementById("noDetallesMensaje");
 
-  // --- Funciones Auxiliares de UI y Estado ---
+  
   function setCamposEmbebidosHabilitados(habilitar) {
     if (!nuevoClienteContainer) return;
     camposNuevoClienteEmbebido.forEach((campo) => {
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (detalleVentaBody) detalleVentaBody.innerHTML = "";
     if (noDetallesMsg) noDetallesMsg.classList.remove("hidden");
 
-    // Limpiar campos de totales
+    
     [
       "subtotal_general_display_modal",
       "subtotal_general",
@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (msgErrorForm) msgErrorForm.classList.add("hidden");
   }
 
-  // --- Lógica para Cliente Embebido ---
+  
   if (nuevoClienteContainer) resetYDeshabilitarFormClienteEmbebido();
 
   if (btnToggleNuevoCliente && nuevoClienteContainer) {
@@ -261,18 +261,18 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- Función para validar cliente nuevo (será usada en el registro de venta) ---
+  
   function validarClienteNuevo() {
     if (!nuevoClienteContainer || nuevoClienteContainer.classList.contains("hidden")) {
       return { esValido: true, datos: null };
     }
 
-    // Validar campos vacíos
+    
     if (!validarCamposVacios(camposNuevoClienteEmbebido, "ventaForm")) {
       return { esValido: false, datos: null };
     }
 
-    // Validar formato de campos
+    
     let formClienteValido = true;
     camposNuevoClienteEmbebido.forEach((campo) => {
       const inputElement = ventaForm.querySelector(`#${campo.id}`);
@@ -295,7 +295,7 @@ document.addEventListener("DOMContentLoaded", function () {
       return { esValido: false, datos: null };
     }
 
-    // Recopilar datos del cliente
+    
     const datosCliente = {};
     camposNuevoClienteEmbebido.forEach((c) => {
       const input = ventaForm.querySelector(`#${c.id}`);
@@ -305,7 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return { esValido: true, datos: datosCliente };
   }
 
-  // --- Lógica de Buscador de Clientes ---
+  
   function inicializarBuscadorCliente() {
     const inputCriterio = document.getElementById("inputCriterioClienteModal");
     const btnBuscar = document.getElementById("btnBuscarClienteModal");
@@ -406,7 +406,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- Lógica de Detalle de Venta ---
+  
   document
     .getElementById("agregarDetalleBtn")
     .addEventListener("click", function () {
@@ -434,7 +434,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // Buscar el producto en la lista cargada
+      
       const productoData = listaProductosCargadosSelect.find(
         (p) => String(p.idproducto || p.id) === String(idProductoSel)
       );
@@ -444,7 +444,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Verificar si el producto ya está agregado
+      
       const yaAgregado = Array.from(
         detalleVentaBody.querySelectorAll("input[name='detalle_idproducto[]']")
       ).some(
@@ -457,7 +457,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Preparar datos del producto
+      
       const idProd = productoData.idproducto || productoData.id;
       const nombreProd = `${productoData.nombre_producto} (${
         productoData.nombre_categoria || "N/A"
@@ -466,7 +466,7 @@ document.addEventListener("DOMContentLoaded", function () {
         2
       );
 
-      // Validar que el ID del producto sea válido
+      
       if (!idProd || idProd === "" || idProd === "0") {
         Swal.fire("Error", "ID de producto no válido.", "error");
         return;
@@ -509,7 +509,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
   function actualizarEventosDetalle() {
-    // Eventos para cambio de cantidad
+    
     detalleVentaBody.querySelectorAll(".cantidad-input").forEach((input) => {
       input.oninput = function () {
         const fila = this.closest("tr");
@@ -517,7 +517,7 @@ document.addEventListener("DOMContentLoaded", function () {
           parseFloat(fila.querySelector(".precio-input").value) || 0;
         let cantidad = parseFloat(this.value) || 0;
 
-        // Validar cantidad mínima
+        
         if (cantidad < 1 && this.value !== "") {
           cantidad = 1;
           this.value = 1;
@@ -529,7 +529,7 @@ document.addEventListener("DOMContentLoaded", function () {
       };
     });
 
-    // Eventos para eliminar detalle
+    
     detalleVentaBody
       .querySelectorAll(".eliminar-detalle-btn")
       .forEach((btn) => {
@@ -547,23 +547,23 @@ document.addEventListener("DOMContentLoaded", function () {
   function calcularTotalesGenerales() {
     let subtotalGeneral = 0;
 
-    // Sumar todos los subtotales
+    
     detalleVentaBody.querySelectorAll(".subtotal-input").forEach((input) => {
       subtotalGeneral += parseFloat(input.value) || 0;
     });
 
-    // Calcular descuento
+    
     const descuentoP = parseFloat(descuentoPorcentajeGeneralInput?.value) || 0;
     const montoDesc = (subtotalGeneral * descuentoP) / 100;
     const totalGen = subtotalGeneral - montoDesc;
 
-    // Actualizar campos de subtotal
+    
     ["subtotal_general_display_modal", "subtotal_general"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.value = subtotalGeneral.toFixed(2);
     });
 
-    // Actualizar campos de descuento
+    
     ["monto_descuento_general_display", "monto_descuento_general"].forEach(
       (id) => {
         const el = document.getElementById(id);
@@ -571,7 +571,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     );
 
-    // Actualizar campos de total
+    
     ["total_general_display_modal", "total_general"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.value = totalGen.toFixed(2);
@@ -585,14 +585,14 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  // --- Eventos de Apertura/Cierre Modal y Registro de Venta Principal ---
+  
   document
     .getElementById("abrirModalBtn")
     .addEventListener("click", function () {
       abrirModal("ventaModal");
       limpiarFormularioVentaCompleto();
 
-      // Establecer fecha actual
+      
       const fechaInput = document.getElementById("fecha_venta_modal");
       if (fechaInput) {
         fechaInput.value = new Date().toISOString().split("T")[0];
@@ -607,7 +607,7 @@ document.addEventListener("DOMContentLoaded", function () {
         onLoaded: (monedas) => {
           const select = document.getElementById("idmoneda_general");
           monedas.forEach((m, i) => {
-            const option = select.options[i + 1]; // +1 si tienes placeholder
+            const option = select.options[i + 1]; 
             if (option) option.dataset.codigo = m.codigo_moneda;
           });
         },
@@ -645,7 +645,7 @@ document.addEventListener("DOMContentLoaded", function () {
       limpiarFormularioVentaCompleto();
     });
 
-  // --- REGISTRAR VENTA PRINCIPAL CON CLIENTE AUTOMÁTICO ---
+  
   document
     .getElementById("registrarVentaBtn")
     .addEventListener("click", async function () {
@@ -654,7 +654,7 @@ document.addEventListener("DOMContentLoaded", function () {
         nuevoClienteContainer &&
         !nuevoClienteContainer.classList.contains("hidden");
 
-      // Validar cliente: debe haber un cliente seleccionado O datos de cliente nuevo
+      
       if (!idClienteSeleccionado && !nuevoClienteFormActivo) {
         Swal.fire(
           "Atención",
@@ -665,7 +665,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Si se está registrando un nuevo cliente, validar sus datos
+      
       let datosClienteNuevo = null;
       if (nuevoClienteFormActivo) {
         const validacionCliente = validarClienteNuevo();
@@ -680,7 +680,7 @@ document.addEventListener("DOMContentLoaded", function () {
         datosClienteNuevo = validacionCliente.datos;
       }
 
-      // Validar campos de cabecera
+      
       if (!validarCamposVacios(camposCabeceraVenta, "ventaForm")) return;
 
       let cabeceraValida = true;
@@ -704,10 +704,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!cabeceraValida) return;
 
-      // Validar detalle de venta
+      
       if (!validarDetalleVenta()) return;
 
-      // Validar que haya al menos un producto
+      
       const filas = detalleVentaBody.querySelectorAll("tr");
       if (filas.length === 0) {
         Swal.fire(
@@ -718,11 +718,11 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Preparar datos para envío - FORMATO COMPATIBLE CON EL BACKEND PHP
+      
       const datosVentaFinal = {
-        // Si hay cliente nuevo, se enviará null y se creará automáticamente
+        
         idcliente: idClienteSeleccionado ? parseInt(idClienteSeleccionado) : null,
-        cliente_nuevo: datosClienteNuevo, // Datos del cliente nuevo si aplica
+        cliente_nuevo: datosClienteNuevo, 
         fecha_venta: document.getElementById("fecha_venta_modal").value,
         idmoneda_general: parseInt(
           document.getElementById("idmoneda_general").value
@@ -744,7 +744,7 @@ document.addEventListener("DOMContentLoaded", function () {
         detalles: [],
       };
 
-      // Obtener la tasa actual de la moneda seleccionada
+      
       try {
         datosVentaFinal.tasa_usada = await obtenerTasaActualSeleccionada(
           datosVentaFinal.idmoneda_general,
@@ -755,7 +755,7 @@ document.addEventListener("DOMContentLoaded", function () {
         datosVentaFinal.tasa_usada = 1;
       }
 
-      // Recopilar detalles en el formato esperado por el backend PHP
+      
       filas.forEach((fila) => {
         const idProducto = fila.querySelector(
           "input[name='detalle_idproducto[]']"
@@ -771,7 +771,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ).value;
         const tasa = datosVentaFinal.tasa_usada || 1;
 
-        // Validar que los datos no estén vacíos
+        
         if (!idProducto || !cantidad || !precio || !subtotal) {
           console.warn("Detalle con datos incompletos encontrado:", {
             idProducto,
@@ -796,7 +796,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       });
 
-      // Validar que se agregaron detalles válidos
+      
       if (datosVentaFinal.detalles.length === 0) {
         Swal.fire(
           "Error",
@@ -806,13 +806,13 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Deshabilitar botón para evitar múltiples envíos
+      
       const btnRegistrar = document.getElementById("registrarVentaBtn");
       const textoOriginal = btnRegistrar.innerHTML;
       btnRegistrar.disabled = true;
       btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
 
-      // Enviar datos usando fetch directamente para compatibilidad con el backend PHP
+      
       try {
         const response = await fetch("ventas/setVenta", {
           method: "POST",
@@ -822,20 +822,20 @@ document.addEventListener("DOMContentLoaded", function () {
           body: JSON.stringify(datosVentaFinal),
         });
 
-        // Verificar que la respuesta sea válida
+        
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
         }
 
         const result = await response.json();
 
-        // Manejar la respuesta correctamente
+        
         if (result.status === true) {
-          // Extraer datos de la respuesta de forma segura
+          
           const mensaje = result.message || "Venta registrada correctamente.";
           let mensajeCompleto = mensaje;
           
-          // Verificar si existen los datos de la venta
+          
           if (result.data && typeof result.data === 'object') {
             const { nro_venta, idventa, idcliente } = result.data;
             
@@ -843,7 +843,7 @@ document.addEventListener("DOMContentLoaded", function () {
               mensajeCompleto = `Venta ${nro_venta} registrada correctamente.`;
             }
             
-            // Log para debugging (opcional)
+            
             console.log("Venta creada exitosamente:", {
               idventa: idventa || 'No disponible',
               nro_venta: nro_venta || 'No disponible',
@@ -855,17 +855,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
           await Swal.fire("¡Éxito!", mensajeCompleto, "success");
           
-          // Recargar tabla si existe
+          
           if (typeof $ !== "undefined" && $("#Tablaventas").length) {
             $("#Tablaventas").DataTable().ajax.reload();
           }
           
-          // Cerrar modal y limpiar formulario
+          
           cerrarModal("ventaModal");
           limpiarFormularioVentaCompleto();
 
         } else {
-          // Manejar errores del servidor
+          
           const mensajeError = result.message || "No se pudo registrar la venta.";
           await Swal.fire("¡Error!", mensajeError, "error");
         }
@@ -873,7 +873,7 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (error) {
         console.error("Error al registrar venta:", error);
         
-        // Determinar mensaje de error apropiado
+        
         let mensajeError = "Error de comunicación con el servidor.";
         if (error.message.includes("HTTP:")) {
           mensajeError = `Error del servidor: ${error.message}`;
@@ -883,16 +883,16 @@ document.addEventListener("DOMContentLoaded", function () {
         
         await Swal.fire("¡Error!", mensajeError, "error");
       } finally {
-        // Rehabilitar botón
+        
         btnRegistrar.disabled = false;
         btnRegistrar.innerHTML = textoOriginal;
       }
     });
 
-  // Función mejorada para obtener tasa
+  
   async function obtenerTasaActualSeleccionada(idmoneda, fechaVenta) {
     try {
-      // Obtén el código de moneda desde el select
+      
       const selectMoneda = document.getElementById("idmoneda_general");
       if (!selectMoneda || selectMoneda.selectedIndex === -1) {
         console.warn("Select de moneda no encontrado o sin selección");
@@ -907,7 +907,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return 1;
       }
 
-      // Llama al endpoint pasando código y fecha
+      
       const response = await fetch(
         `ventas/getTasa?codigo_moneda=${encodeURIComponent(codigoMoneda)}&fecha=${encodeURIComponent(fechaVenta)}`
       );
@@ -921,11 +921,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     } catch (error) {
       console.error("Error al obtener tasa:", error);
-      return 1; // Valor por defecto
+      return 1; 
     }
   }
 
-  // Función para confirmar eliminación
+  
   function confirmarEliminacion(idventa) {
     Swal.fire({
       title: "¿Estás seguro?",
@@ -939,7 +939,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          // Mostrar loading
+          
           const loadingSwal = Swal.fire({
             title: 'Procesando...',
             text: 'Desactivando venta',
@@ -961,7 +961,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }),
           });
 
-          // Cerrar loading
+          
           loadingSwal.close();
 
           if (!response.ok) {
@@ -978,7 +978,7 @@ document.addEventListener("DOMContentLoaded", function () {
               confirmButtonText: "Aceptar"
             });
             
-            // Recargar tabla si existe
+            
             if (typeof $ !== "undefined" && $("#Tablaventas").length) {
               $("#Tablaventas").DataTable().ajax.reload(null, false);
             }
@@ -1012,7 +1012,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Event listener para el botón eliminar
+  
   document.addEventListener("click", function (e) {
     const eliminarBtn = e.target.closest(".eliminar-btn");
     if (eliminarBtn) {
@@ -1032,7 +1032,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // DETALLE DE VENTA - Mejorado
+  
   document.addEventListener("click", async function (e) {
     const verDetalleBtn = e.target.closest(".ver-detalle-btn");
     if (verDetalleBtn) {
@@ -1042,7 +1042,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Mostrar el modal
+      
       const modal = document.getElementById("modalDetalleVenta");
       if (!modal) {
         console.error("Modal de detalle no encontrado");
@@ -1052,7 +1052,7 @@ document.addEventListener("DOMContentLoaded", function () {
       modal.classList.remove("opacity-0", "pointer-events-none", "transparent");
       modal.classList.add("opacity-100");
 
-      // Mostrar loading
+      
       const contenido = document.getElementById("detalleVentaContenido");
       if (contenido) {
         contenido.innerHTML = '<div class="flex justify-center items-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando...</div>';
@@ -1071,7 +1071,7 @@ document.addEventListener("DOMContentLoaded", function () {
           throw new Error(data.message || "No se pudo obtener el detalle.");
         }
 
-        // Verificar que existan los datos necesarios
+        
         if (!data.data || !data.data.venta || !data.data.detalle) {
           throw new Error("Estructura de datos incompleta.");
         }
@@ -1079,7 +1079,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const venta = data.data.venta;
         const detalle = data.data.detalle;
 
-        // Renderizar los datos en el modal de forma segura
+        
         if (contenido) {
           contenido.innerHTML = `
             <div class="mb-4">
@@ -1137,7 +1137,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Cerrar el modal
+  
   ["cerrarModalDetalleVentaBtn", "cerrarModalDetalleVentaBtn2"].forEach(
     (id) => {
       document.getElementById(id).addEventListener("click", function () {

@@ -29,7 +29,7 @@ class Proveedores extends Controllers
         $this->bitacoraModel = new BitacoraModel();
         $this->BitacoraHelper = new BitacoraHelper();
 
-        // Verificar si el usuario está logueado antes de verificar permisos
+        
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
@@ -48,7 +48,7 @@ class Proveedores extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -87,17 +87,17 @@ class Proveedores extends Controllers
                     'telefono_principal' => 'telefono'
                 ];
 
-                // Agregar email si no está vacío
+                
                 if (!empty($datosLimpios['correo_electronico'])) {
                     $reglasValidacion['correo_electronico'] = 'email';
                 }
 
-                // Agregar dirección si no está vacía
+                
                 if (!empty($datosLimpios['direccion'])) {
                     $reglasValidacion['direccion'] = 'direccion';
                 }
 
-                // Agregar género si no está vacío
+                
                 if (!empty($datosLimpios['genero'])) {
                     $reglasValidacion['genero'] = 'genero';
                 }
@@ -128,7 +128,7 @@ class Proveedores extends Controllers
                 if (!empty($datosLimpios['fecha_nacimiento'])) {
                     $fechaOriginal = $datosLimpios['fecha_nacimiento'];
 
-                    // Validar que la fecha tenga formato YYYY-MM-DD
+                    
                     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaOriginal)) {
                         $arrResponse = array(
                             'status' => false,
@@ -138,7 +138,7 @@ class Proveedores extends Controllers
                         die();
                     }
 
-                    // Crear objeto DateTime para validaciones
+                    
                     $fechaNacimiento = DateTime::createFromFormat('Y-m-d', $fechaOriginal);
                     if (!$fechaNacimiento) {
                         $arrResponse = array(
@@ -151,7 +151,7 @@ class Proveedores extends Controllers
 
                     $fechaHoy = new DateTime();
                     
-                    // Validar que no sea fecha futura
+                    
                     if ($fechaNacimiento > $fechaHoy) {
                         $arrResponse = array(
                             'status' => false,
@@ -161,9 +161,9 @@ class Proveedores extends Controllers
                         die();
                     }
 
-                    // ⬅️ VALIDACIÓN DE EDAD MÍNIMA DE 18 AÑOS
+                    
                     $fechaMinima = clone $fechaHoy;
-                    $fechaMinima->sub(new DateInterval('P18Y')); // Restar 18 años a la fecha actual
+                    $fechaMinima->sub(new DateInterval('P18Y')); 
                     
                     if ($fechaNacimiento > $fechaMinima) {
                         $edad = $fechaHoy->diff($fechaNacimiento)->y;
@@ -194,7 +194,7 @@ class Proveedores extends Controllers
                     'observaciones' => $datosLimpios['observaciones']
                 );
 
-                // Obtener ID de usuario
+                
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
                 if (!$idusuario) {
@@ -206,7 +206,7 @@ class Proveedores extends Controllers
 
                 $arrResponse = $this->model->insertProveedor($arrData);
 
-                // Registrar en bitácora si la inserción fue exitosa
+                
                 if ($arrResponse['status'] === true) {
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('proveedor', 'INSERTAR', $idusuario);
 
@@ -291,7 +291,7 @@ class Proveedores extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -338,17 +338,17 @@ class Proveedores extends Controllers
                     'telefono_principal' => 'telefono'
                 ];
 
-                // Agregar email si no está vacío
+                
                 if (!empty($datosLimpios['correo_electronico'])) {
                     $reglasValidacion['correo_electronico'] = 'email';
                 }
 
-                // Agregar dirección si no está vacía
+                
                 if (!empty($datosLimpios['direccion'])) {
                     $reglasValidacion['direccion'] = 'direccion';
                 }
 
-                // Agregar género si no está vacío
+                
                 if (!empty($datosLimpios['genero'])) {
                     $reglasValidacion['genero'] = 'genero';
                 }
@@ -374,11 +374,11 @@ class Proveedores extends Controllers
                 }
 
 
-                // ⬅️ VALIDACIÓN Y PROCESAMIENTO DE FECHA DE NACIMIENTO SIMPLIFICADO
+                
                 if (!empty($datosLimpios['fecha_nacimiento'])) {
                     $fechaOriginal = $datosLimpios['fecha_nacimiento'];
 
-                    // Validar que la fecha tenga formato YYYY-MM-DD
+                    
                     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaOriginal)) {
                         $arrResponse = array(
                             'status' => false,
@@ -388,7 +388,7 @@ class Proveedores extends Controllers
                         die();
                     }
 
-                    // Crear objeto DateTime para validaciones
+                    
                     $fechaNacimiento = DateTime::createFromFormat('Y-m-d', $fechaOriginal);
                     if (!$fechaNacimiento) {
                         $arrResponse = array(
@@ -401,7 +401,7 @@ class Proveedores extends Controllers
 
                     $fechaHoy = new DateTime();
                     
-                    // Validar que no sea fecha futura
+                    
                     if ($fechaNacimiento > $fechaHoy) {
                         $arrResponse = array(
                             'status' => false,
@@ -411,9 +411,9 @@ class Proveedores extends Controllers
                         die();
                     }
 
-                    // ⬅️ VALIDACIÓN DE EDAD MÍNIMA DE 18 AÑOS
+                    
                     $fechaMinima = clone $fechaHoy;
-                    $fechaMinima->sub(new DateInterval('P18Y')); // Restar 18 años a la fecha actual
+                    $fechaMinima->sub(new DateInterval('P18Y')); 
                     
                     if ($fechaNacimiento > $fechaMinima) {
                         $edad = $fechaHoy->diff($fechaNacimiento)->y;
@@ -425,10 +425,10 @@ class Proveedores extends Controllers
                         die();
                     }
 
-                    // ⬅️ MANTENER FORMATO DE BASE DE DATOS (YYYY-MM-DD)
+                    
                     $datosLimpios['fecha_nacimiento'] = $fechaOriginal;
                 } else {
-                    // ⬅️ MANEJO CORRECTO CUANDO LA FECHA ESTÁ VACÍA
+                    
                     $datosLimpios['fecha_nacimiento'] = null;
                 }
 
@@ -444,7 +444,7 @@ class Proveedores extends Controllers
                     'observaciones' => $datosLimpios['observaciones']
                 );
 
-                // Obtener ID de usuario
+                
               $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
                 if (!$idusuario) {
@@ -457,7 +457,7 @@ class Proveedores extends Controllers
 
                 $arrResponse = $this->model->updateProveedor($intIdProveedor, $arrData);
 
-                // Registrar en bitácora si la actualización fue exitosa
+                
                 if ($arrResponse['status'] === true) {
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('proveedor', 'ACTUALIZAR', $idusuario);
 
@@ -480,7 +480,7 @@ class Proveedores extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -496,7 +496,7 @@ class Proveedores extends Controllers
                     die();
                 }
 
-                // CAMBIO IMPORTANTE: Pasar el ID del usuario al modelo
+                
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                 $requestDelete = $this->model->deleteProveedorById($intIdProveedor, $idusuario);
                 if ($requestDelete) {
@@ -505,7 +505,7 @@ class Proveedores extends Controllers
                     $arrResponse = array('status' => false, 'message' => 'Error al desactivar el proveedor');
                 }
                 if ($arrResponse['status'] === true) {
-                    // Registrar acción en bitácora
+                    
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('proveedor', 'ELIMINAR', $idusuario);
 
                     if (!$resultadoBitacora) {
@@ -539,12 +539,12 @@ class Proveedores extends Controllers
         }
     }
 
-    // Método para activar proveedor (si existe)
+    
     public function activarProveedor()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -608,7 +608,7 @@ class Proveedores extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {

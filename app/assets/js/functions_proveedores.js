@@ -137,7 +137,7 @@ function recargarTablaProveedores() {
       return true;
     }
 
-    //Recargar página como último recurso
+    
     console.log("Recargando página completa");
     window.location.reload();
     return true;
@@ -340,7 +340,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   });
 
-  // MODAL REGISTRAR PROVEEDOR
+  
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarProveedor"
   );
@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // SUBMIT FORM REGISTRAR
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL ACTUALIZAR PROVEEDOR
+  
   const btnCerrarModalActualizar = document.getElementById(
     "btnCerrarModalActualizar"
   );
@@ -411,7 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER PROVEEDOR
+  
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
 
@@ -428,7 +428,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// FUNCIONES
+
 function registrarProveedor() {
   const btnGuardarProveedor = document.getElementById("btnGuardarProveedor");
 
@@ -504,7 +504,7 @@ function editarProveedor(idProveedor) {
 }
 
 function mostrarModalEditarProveedor(proveedor) {
-  // Llenar los campos del formulario con los datos existentes
+  
   document.getElementById("idProveedorActualizar").value =
     proveedor.idproveedor || "";
   document.getElementById("proveedorNombreActualizar").value =
@@ -526,7 +526,7 @@ function mostrarModalEditarProveedor(proveedor) {
   document.getElementById("proveedorObservacionesActualizar").value =
     proveedor.observaciones || "";
 
-  // Inicializar validaciones para el formulario de actualizar
+  
   inicializarValidaciones(
     camposFormularioActualizarProveedor,
     "formActualizarProveedor"

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Selectores
+    
     const tbodyTasasUsd = document.getElementById('tbodyTasasUsd');
     const tbodyTasasEur = document.getElementById('tbodyTasasEur');
     const mensajeNoDatosUsd = document.getElementById('mensajeNoDatosUsd');
@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let dataTasasEur = [];
     let dataTableUsd = null;
     let dataTableEur = null;
-    let monedaActiva = 'USD'; // Por defecto
+    let monedaActiva = 'USD'; 
 
-    // SweetAlert
+    
     function mostrarAlertaSweet(tipo, titulo, textoHtml = '') {
         let icono;
         switch (tipo) {
@@ -85,9 +85,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // MEJORADO: Garantiza la destrucción correcta de DataTables
+    
     function limpiarDataTable(tablaId) {
-        // Método más seguro para destruir un DataTable
+        
         try {
             const tabla = $('#' + tablaId);
             if ($.fn.DataTable.isDataTable(tabla)) {
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function inicializarDataTable(tablaId, instancia) {
-        // Primero destruimos completamente
+        
         limpiarDataTable(tablaId);
 
         console.log(`Inicializando DataTable para ${tablaId}`);
@@ -141,10 +141,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // MEJORADO: Reinicializa explícitamente los DataTables
+    
     async function cargarDatosTasas() {
         try {
-            // Destruir DataTables antes de cargar nuevos datos
+            
             limpiarDataTable('tablaTasasUsd');
             limpiarDataTable('tablaTasasEur');
 
@@ -163,14 +163,14 @@ document.addEventListener('DOMContentLoaded', function () {
             dataTasasUsd = data.tasasUsd || [];
             dataTasasEur = data.tasasEur || [];
 
-            // Renderizar datos
+            
             renderizarTabla(tbodyTasasUsd, dataTasasUsd, mensajeNoDatosUsd);
             renderizarTabla(tbodyTasasEur, dataTasasEur, mensajeNoDatosEur);
 
-            // Esperar a que el DOM se actualice
+            
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Reinicializar ambos DataTables
+            
             dataTableUsd = inicializarDataTable('tablaTasasUsd', dataTableUsd);
             dataTableEur = inicializarDataTable('tablaTasasEur', dataTableEur);
 
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // MEJORADO: Garantiza actualización correcta después de operación
+    
     async function manejarActualizacionGeneralBCV(event) {
         event.preventDefault();
         const form = event.currentTarget;
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(URL_ACTUALIZAR_TASAS_BCV, { method: 'POST' });
             if (!response.ok) {
                 let errorData = { tipo: 'error', texto: `Error del servidor: ${response.status}` };
-                try { errorData = await response.json(); } catch (e) { /* no es json */ }
+                try { errorData = await response.json(); } catch (e) { }
                 throw errorData;
             }
             
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
             );
             
             if (resultado.tipo === 'exito' || resultado.tipo === 'advertencia') {
-                // Forzar recarga de datos y DataTables
+                
                 console.log("Actualizando datos después de operación exitosa...");
                 await cargarDatosTasas();
                 console.log("Datos actualizados con éxito.");
@@ -239,9 +239,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const esActiva = button === pestanaActiva;
             button.setAttribute('aria-selected', esActiva.toString());
 
-            // Clases para estado activo
+            
             const clasesActivo = ['text-yellow-600', 'shadow', 'bg-white', 'dark:text-white', 'dark:bg-yellow-600'];
-            // Clases para estado inactivo
+            
             const clasesInactivoHoverFocus = [
                 'hover:text-gray-800',
                 'dark:text-gray-400',
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pestanaActiva) actualizarEstilosPestana(pestanaActiva);
     }
 
-    // Pestañas
+    
     if (tabsContainer) {
         tabsContainer.addEventListener('click', function (event) {
             const botonPestanaClickeado = event.target.closest('.tab-button');
@@ -285,16 +285,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Inicialización de formularios
+    
     if (formActualizarUSD) {
         formActualizarUSD.addEventListener('submit', manejarActualizacionGeneralBCV);
-        // CORREGIDO: Eliminada la llamada redundante a cargarDatosTasas()
+        
     }
     if (formActualizarEUR) {
         formActualizarEUR.addEventListener('submit', manejarActualizacionGeneralBCV);
-        // CORREGIDO: Eliminada la llamada redundante a cargarDatosTasas()
+        
     }
 
-    // Carga inicial de datos
+    
     cargarDatosTasas();
 });

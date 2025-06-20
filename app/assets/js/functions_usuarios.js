@@ -98,7 +98,7 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
     mensajeElement.textContent = mensaje;
     modal.classList.remove('opacity-0', 'pointer-events-none');
   } else {
-    // Fallback con SweetAlert si no existe el modal
+    
     Swal.fire({
       icon: 'warning',
       title: 'Acceso Denegado',
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
             $("#TablaUsuarios_processing").css("display", "none"); 
             
-            //  VERIFICAR SI ES ERROR DE PERMISOS
+            
             if (json && json.message && json.message.includes('permisos')) {
               mostrarModalPermisosDenegados(json.message);
             } else {
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
           );
           $("#TablaUsuarios_processing").css("display", "none"); 
           
-          //  VERIFICAR SI ES ERROR DE PERMISOS
+          
           try {
             const response = JSON.parse(jqXHR.responseText);
             if (response && response.message && response.message.includes('permisos')) {
@@ -188,7 +188,7 @@ document.addEventListener("DOMContentLoaded", function () {
               return;
             }
           } catch (e) {
-            // No es JSON válido, continuar con error genérico
+            
           }
           
           alert("Error de comunicación al cargar los datos de usuarios. Por favor, intente más tarde.");
@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const nombreUsuarioParaEliminar = row.usuario || row.correo;
             let acciones = '<div class="inline-flex items-center space-x-1">';
             
-            //  VER - Solo si tiene permisos
+            
             if (tienePermiso('ver')) {
               acciones += `
                 <button class="ver-usuario-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            //  EDITAR - Solo si tiene permisos
+            
             if (tienePermiso('editar')) {
               acciones += `
                 <button class="editar-usuario-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
@@ -269,7 +269,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            //  ELIMINAR - Solo si tiene permisos
+            
             if (tienePermiso('eliminar')) {
               acciones += `
                 <button class="eliminar-usuario-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
@@ -280,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            // Si no tiene permisos para ninguna acción, mostrar mensaje
+            
             if (!tienePermiso('ver') && !tienePermiso('editar') && !tienePermiso('eliminar')) {
               acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
             }
@@ -371,7 +371,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-    //  EVENT LISTENERS CON VERIFICACIÓN DE PERMISOS
+    
     $("#TablaUsuarios tbody").on("click", ".ver-usuario-btn", function (e) {
       e.preventDefault();
       
@@ -425,7 +425,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  //  BOTÓN REGISTRAR CON VERIFICACIÓN DE PERMISOS
+  
   const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarUsuario");
   if (btnAbrirModalRegistro) {
     btnAbrirModalRegistro.addEventListener("click", function (e) {
@@ -445,7 +445,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  //  BOTÓN EXPORTAR CON VERIFICACIÓN DE PERMISOS
+  
   const btnExportarUsuarios = document.getElementById("btnExportarUsuarios");
   if (btnExportarUsuarios) {
     btnExportarUsuarios.addEventListener("click", function (e) {
@@ -460,7 +460,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Event listeners para modales (sin cambios)
+  
   const formRegistrar = document.getElementById("formRegistrarUsuario");
   const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
   const btnCancelarModalRegistro = document.getElementById("btnCancelarModalRegistrar");
@@ -506,7 +506,7 @@ function cargarRoles() {
           }
         });
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result && result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         }
@@ -559,7 +559,7 @@ function cargarPersonas(idPersonaActual = 0, targetSelectId = null) {
         }
 
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result && result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -573,7 +573,7 @@ function cargarPersonas(idPersonaActual = 0, targetSelectId = null) {
 }
 
 function registrarUsuario() {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('crear')) {
     mostrarModalPermisosDenegados("No tienes permisos para crear usuarios.");
     return;
@@ -629,7 +629,7 @@ function registrarUsuario() {
         cerrarModal("modalRegistrarUsuario");
         if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -656,7 +656,7 @@ function registrarUsuario() {
 }
 
 function editarUsuario(idUsuario) {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('editar')) {
     mostrarModalPermisosDenegados("No tienes permisos para editar usuarios.");
     return;
@@ -671,7 +671,7 @@ function editarUsuario(idUsuario) {
       if (result.status && result.data) {
         mostrarModalEditarUsuario(result.data);
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -706,7 +706,7 @@ function mostrarModalEditarUsuario(usuario) {
 }
 
 function actualizarUsuario() {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('editar')) {
     mostrarModalPermisosDenegados("No tienes permisos para editar usuarios.");
     return;
@@ -770,7 +770,7 @@ function actualizarUsuario() {
         cerrarModal("modalActualizarUsuario");
         if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -797,7 +797,7 @@ function actualizarUsuario() {
 }
 
 function verUsuario(idUsuario) {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('ver')) {
     mostrarModalPermisosDenegados("No tienes permisos para ver detalles de usuarios.");
     return;
@@ -819,7 +819,7 @@ function verUsuario(idUsuario) {
         document.getElementById("verPersonaCedula").textContent = usuario.persona_cedula || "N/A";
         abrirModal("modalVerUsuario");
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -837,7 +837,7 @@ function verUsuario(idUsuario) {
 }
 
 function eliminarUsuario(idUsuario, nombreUsuario) {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('eliminar')) {
     mostrarModalPermisosDenegados("No tienes permisos para eliminar usuarios.");
     return;
@@ -865,7 +865,7 @@ function eliminarUsuario(idUsuario, nombreUsuario) {
             Swal.fire("¡Desactivado!", result.message, "success");
             if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
           } else {
-            //  VERIFICAR SI ES ERROR DE PERMISOS
+            
             if (result.message && result.message.includes('permisos')) {
               mostrarModalPermisosDenegados(result.message);
             } else {
@@ -884,7 +884,7 @@ function eliminarUsuario(idUsuario, nombreUsuario) {
   });
 }
 
-//  FUNCIÓN DE EXPORTAR (NUEVA)
+
 function exportarUsuarios() {
   if (!tienePermiso('exportar')) {
     mostrarModalPermisosDenegados("No tienes permisos para exportar usuarios.");
@@ -898,8 +898,8 @@ function exportarUsuarios() {
     .then(response => response.json())
     .then(result => {
       if (result.status && result.data) {
-        // Aquí puedes implementar la lógica de exportación
-        // Por ejemplo, generar CSV, Excel, PDF, etc.
+        
+        
         console.log("Datos para exportar:", result.data);
         Swal.fire("¡Éxito!", "Datos preparados para exportación.", "success");
       } else {

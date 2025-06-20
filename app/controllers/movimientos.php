@@ -17,18 +17,18 @@ class Movimientos extends Controllers
         $this->bitacoraModel = new BitacoraModel();
         $this->BitacoraHelper = new BitacoraHelper();
 
-        // Asegurar que la sesión esté iniciada
+        
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        // Verificar si el usuario está logueado antes de verificar permisos
+        
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
         }
 
-        // ✅ USAR EL SISTEMA DE PERMISOS INTEGRADO
+        
         if (!PermisosModuloVerificar::verificarAccesoModulo('movimientos')) {
             $this->views->getView($this, "permisos");
             exit();
@@ -37,17 +37,17 @@ class Movimientos extends Controllers
 
     public function index()
     {
-        // ✅ VERIFICAR PERMISOS PARA VER
+        
         if (!PermisosModuloVerificar::verificarPermisoModuloAccion('movimientos', 'ver')) {
             $this->views->getView($this, "permisos");
             exit();
         }
 
-        // ✅ REGISTRAR EN BITÁCORA
+        
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
         BitacoraHelper::registrarAccesoModulo('movimientos', $idusuario, $this->bitacoraModel);
 
-        // ✅ OBTENER PERMISOS USANDO EL SISTEMA INTEGRADO
+        
         $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('movimientos');
 
         $data['page_tag'] = "Movimientos";
@@ -55,7 +55,7 @@ class Movimientos extends Controllers
         $data['page_name'] = "movimientos";
         $data['page_content'] = "Gestión integral de movimientos de inventario";
         $data['page_functions_js'] = "functions_movimientos.js";
-        $data['permisos'] = $permisos; // ✅ PASAR PERMISOS AL DATA
+        $data['permisos'] = $permisos; 
         
         $this->views->getView($this, "movimientos", $data);
     }
@@ -74,7 +74,7 @@ class Movimientos extends Controllers
             }
 
             try {
-                // ✅ USAR EL MÉTODO ENCAPSULADO DEL MODELO
+                
                 $movimientosResponse = $this->model->selectAllMovimientos();
                 echo json_encode($movimientosResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
@@ -113,7 +113,7 @@ class Movimientos extends Controllers
                     exit;
                 }
 
-                // ✅ USAR EL MÉTODO ENCAPSULADO DEL MODELO
+                
                 $movimientoResponse = $this->model->selectMovimientoById($idmovimiento);
                 echo json_encode($movimientoResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
@@ -128,7 +128,7 @@ class Movimientos extends Controllers
         }
     }
 
-    // ✅ MÉTODO FALTANTE AGREGADO
+    
     public function getTiposMovimiento()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -143,7 +143,7 @@ class Movimientos extends Controllers
             }
 
             try {
-                // ✅ USAR EL MÉTODO ENCAPSULADO DEL MODELO
+                
                 $tiposResponse = $this->model->getTiposMovimientoActivos();
                 echo json_encode($tiposResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
@@ -186,11 +186,11 @@ class Movimientos extends Controllers
                     die();
                 }
 
-                // ✅ USAR EL MÉTODO ENCAPSULADO DEL MODELO
+                
                 $result = $this->model->insertMovimiento($data);
 
                 if ($result['status']) {
-                    // ✅ REGISTRAR EN BITÁCORA
+                    
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                     $this->bitacoraModel->registrarAccion('movimientos', 'CREAR_MOVIMIENTO', $idusuario);
                 }
@@ -237,13 +237,13 @@ class Movimientos extends Controllers
                 }
 
                 $idmovimiento = intval($data['idmovimiento']);
-                unset($data['idmovimiento']); // ✅ REMOVER ID DE LOS DATOS
+                unset($data['idmovimiento']); 
 
-                // ✅ USAR EL MÉTODO ENCAPSULADO DEL MODELO
+                
                 $result = $this->model->updateMovimiento($idmovimiento, $data);
 
                 if ($result['status']) {
-                    // ✅ REGISTRAR EN BITÁCORA
+                    
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                     $this->bitacoraModel->registrarAccion('movimientos', 'ACTUALIZAR_MOVIMIENTO', $idusuario);
                 }
@@ -291,11 +291,11 @@ class Movimientos extends Controllers
 
                 $idmovimiento = intval($data['idmovimiento']);
 
-                // ✅ USAR EL MÉTODO ENCAPSULADO DEL MODELO
+                
                 $result = $this->model->deleteMovimientoById($idmovimiento);
 
                 if ($result['status']) {
-                    // ✅ REGISTRAR EN BITÁCORA
+                    
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                     $this->bitacoraModel->registrarAccion('movimientos', 'ELIMINAR_MOVIMIENTO', $idusuario);
                 }
@@ -328,11 +328,11 @@ class Movimientos extends Controllers
             }
 
             try {
-                // ✅ USAR EL MÉTODO ENCAPSULADO DEL MODELO
+                
                 $movimientosResponse = $this->model->selectAllMovimientos();
                 
                 if ($movimientosResponse['status']) {
-                    // ✅ REGISTRAR EN BITÁCORA
+                    
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                     $this->bitacoraModel->registrarAccion('movimientos', 'EXPORTAR_MOVIMIENTOS', $idusuario);
                 }
@@ -351,7 +351,7 @@ class Movimientos extends Controllers
         }
     }
 
-    // ✅ MÉTODO ADICIONAL PARA OBTENER DATOS PARA FORMULARIOS
+    
     public function getDatosFormulario()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -366,7 +366,7 @@ class Movimientos extends Controllers
             }
 
             try {
-                // ✅ USAR LOS MÉTODOS ENCAPSULADOS DEL MODELO
+                
                 $productosResponse = $this->model->getProductosActivos();
                 $tiposResponse = $this->model->getTiposMovimientoActivos();
 
@@ -393,7 +393,7 @@ class Movimientos extends Controllers
         }
     }
 
-    // ✅ MÉTODO PARA BÚSQUEDA (OPCIONAL)
+    
     public function buscarMovimientos()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -410,7 +410,7 @@ class Movimientos extends Controllers
             try {
                 $criterio = $_GET['criterio'] ?? '';
                 
-                // ✅ USAR EL MÉTODO ENCAPSULADO DEL MODELO
+                
                 $movimientosResponse = $this->model->buscarMovimientos($criterio);
                 echo json_encode($movimientosResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {

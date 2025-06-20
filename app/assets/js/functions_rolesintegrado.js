@@ -179,12 +179,12 @@ function mostrarModulosConPermisos() {
 
     container.innerHTML = html;
     
-    // Agregar event listeners después de crear el HTML
+    
     agregarEventListenersModulos();
 }
 
 function agregarEventListenersModulos() {
-    // Event listeners para checkboxes de módulos
+    
     document.querySelectorAll('.modulo-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             const idmodulo = parseInt(this.getAttribute('data-modulo-id'));
@@ -192,7 +192,7 @@ function agregarEventListenersModulos() {
         });
     });
     
-    // Event listeners para checkboxes de permisos
+    
     document.querySelectorAll('.permiso-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', actualizarContadores);
     });
@@ -228,7 +228,7 @@ function toggleModulo(idmodulo, activo) {
         permisosContainer.classList.add('hidden');
         moduloCard.classList.remove('bg-green-50', 'border-green-200');
         moduloCard.classList.add('bg-gray-50', 'border-gray-200');
-        // Desmarcar todos los permisos de este módulo
+        
         checkboxesPermisos.forEach(cb => cb.checked = false);
     }
     
@@ -260,7 +260,7 @@ async function guardarAsignaciones() {
         return;
     }
 
-    // Recopilar asignaciones
+    
     const asignaciones = [];
     const modulosSeleccionados = document.querySelectorAll('.modulo-checkbox:checked');
 
@@ -300,7 +300,7 @@ async function guardarAsignaciones() {
 
         if (result.status) {
             showNotification(result.message, 'success');
-            // Recargar asignaciones para mostrar los cambios
+            
             await cargarAsignacionesRol(idrol);
             mostrarModulosConPermisos();
             actualizarContadores();
@@ -326,13 +326,13 @@ function limpiarSeleccion() {
     asignacionesActuales = {};
 }
 
-// Funciones de notificación (adaptadas de tu código existente)
+
 function showNotification(message, type = 'info') {
     const toast = document.getElementById('notificationToast');
     const icon = document.getElementById('notificationIcon');
     const messageEl = document.getElementById('notificationMessage');
 
-    // Configurar icono y colores según el tipo
+    
     switch(type) {
         case 'success':
             icon.className = 'fas fa-check-circle text-green-500 text-xl';
@@ -350,7 +350,7 @@ function showNotification(message, type = 'info') {
     messageEl.textContent = message;
     toast.classList.remove('hidden');
 
-    // Auto-ocultar después de 3 segundos
+    
     setTimeout(() => {
         hideNotification();
     }, 3000);
@@ -361,7 +361,7 @@ function hideNotification() {
     toast.classList.add('hidden');
 }
 
-// Exponer funciones necesarias al scope global si es necesario
+
 window.RolesIntegrado = {
     toggleModulo,
     actualizarContadores,

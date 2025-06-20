@@ -62,7 +62,7 @@ const camposFormularioActualizarRol = [
   },
 ];
 
-// ✅ FUNCIÓN PARA OBTENER PERMISOS
+
 function obtenerPermisos() {
   return {
     crear: document.getElementById('permisoCrear')?.value === '1',
@@ -72,18 +72,18 @@ function obtenerPermisos() {
   };
 }
 
-// ✅ FUNCIÓN PARA VERIFICAR PERMISOS
+
 function tienePermiso(accion) {
   const permisos = obtenerPermisos();
   return permisos[accion] || false;
 }
 
-// ✅ FUNCIÓN PARA GENERAR BOTONES SEGÚN PERMISOS
+
 function generarBotonesAccion(row) {
   const permisos = obtenerPermisos();
   let botones = '';
 
-  // Botón Ver (siempre disponible si puede ver)
+  
   if (permisos.ver) {
     botones += `
       <button class="ver-rol-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
@@ -94,7 +94,7 @@ function generarBotonesAccion(row) {
     `;
   }
 
-  // Botón Editar (solo si puede editar)
+  
   if (permisos.editar) {
     botones += `
       <button class="editar-rol-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
@@ -105,7 +105,7 @@ function generarBotonesAccion(row) {
     `;
   }
 
-  // Botón Eliminar (solo si puede eliminar)
+  
   if (permisos.eliminar) {
     botones += `
       <button class="eliminar-rol-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
@@ -117,7 +117,7 @@ function generarBotonesAccion(row) {
     `;
   }
 
-  // Si no tiene permisos, mostrar mensaje
+  
   if (!botones) {
     botones = '<span class="text-gray-400 text-xs">Sin permisos</span>';
   }
@@ -126,7 +126,7 @@ function generarBotonesAccion(row) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  // ✅ VERIFICAR PERMISOS AL CARGAR
+  
   console.log('🔐 Permisos detectados:', obtenerPermisos());
 
   $(document).ready(function () {
@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
           className: "all text-center actions-column py-1 px-2",
           width: "auto", 
           render: function (data, type, row) {
-            // ✅ USAR FUNCIÓN QUE RESPETA PERMISOS
+            
             return generarBotonesAccion(row);
           },
         },
@@ -317,7 +317,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-    // ✅ EVENT LISTENERS CON VERIFICACIÓN DE PERMISOS
+    
     $("#TablaRoles tbody").on("click", ".ver-rol-btn", function () {
       if (!tienePermiso('ver')) {
         Swal.fire("Sin permisos", "No tiene permisos para ver detalles de roles.", "warning");
@@ -365,7 +365,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // ✅ MODAL REGISTRAR ROL - VERIFICAR PERMISOS
+  
   const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarRol");
   const formRegistrar = document.getElementById("formRegistrarRol");
   const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
@@ -404,7 +404,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // SUBMIT FORM REGISTRAR
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -418,7 +418,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL ACTUALIZAR ROL
+  
   const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
   const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
   const formActualizar = document.getElementById("formActualizarRol");
@@ -449,7 +449,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER ROL
+  
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   if (btnCerrarModalVer) {
     btnCerrarModalVer.addEventListener("click", function () {
@@ -459,7 +459,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function editarRol(idRol) {
-  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  
   if (!tienePermiso('editar')) {
     Swal.fire("Sin permisos", "No tiene permisos para editar roles.", "warning");
     return;
@@ -498,7 +498,7 @@ function mostrarModalEditarRol(rol) {
 }
 
 function actualizarRol() {
-  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  
   if (!tienePermiso('editar')) {
     Swal.fire("Sin permisos", "No tiene permisos para editar roles.", "warning");
     return;
@@ -508,12 +508,12 @@ function actualizarRol() {
   const btnActualizarRol = document.getElementById("btnActualizarRol");
   const idRol = document.getElementById("idRolActualizar").value;
 
-  // Validar campos vacíos obligatorios
+  
   if (!validarCamposVacios(camposFormularioActualizarRol, "formActualizarRol")) {
     return;
   }
 
-  // Validar formatos específicos
+  
   let formularioConErroresEspecificos = false;
   for (const campo of camposFormularioActualizarRol) {
     const inputElement = formActualizar.querySelector(`#${campo.id}`);
@@ -608,7 +608,7 @@ function actualizarRol() {
 }
 
 function registrarRol() {
-  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  
   if (!tienePermiso('crear')) {
     Swal.fire("Sin permisos", "No tiene permisos para crear roles.", "warning");
     return;
@@ -712,7 +712,7 @@ function registrarRol() {
 }
 
 function verRol(idRol) {
-  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  
   if (!tienePermiso('ver')) {
     Swal.fire("Sin permisos", "No tiene permisos para ver detalles de roles.", "warning");
     return;
@@ -741,7 +741,7 @@ function verRol(idRol) {
 }
 
 function mostrarModalVerRol(rol) {
-  // Llenar los campos del modal de ver
+  
   document.getElementById("verNombre").textContent = rol.nombre || "N/A";
   document.getElementById("verDescripcion").textContent = rol.descripcion || "N/A";
   document.getElementById("verEstatus").textContent = rol.estatus || "N/A";
@@ -758,7 +758,7 @@ function mostrarModalVerRol(rol) {
 }
 
 function eliminarRol(idRol, nombreRol) {
-  // ✅ VERIFICAR PERMISOS ANTES DE PROCEDER
+  
   if (!tienePermiso('eliminar')) {
     Swal.fire("Sin permisos", "No tiene permisos para eliminar roles.", "warning");
     return;

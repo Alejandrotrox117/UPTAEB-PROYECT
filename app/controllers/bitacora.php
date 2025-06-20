@@ -15,13 +15,13 @@ class Bitacora extends Controllers
         $this->model = new BitacoraModel();
         $this->BitacoraHelper = new BitacoraHelper();
 
-        // Verificar si el usuario está logueado
+        
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
         }
 
-        // ✅ CAMBIAR AL SISTEMA NUEVO DE PERMISOS
+        
         if (!PermisosModuloVerificar::verificarAccesoModulo('bitacora')) {
             $this->views->getView($this, "permisos");
             exit();
@@ -30,13 +30,13 @@ class Bitacora extends Controllers
 
     public function index()
     {
-        // Verificar permisos específicos para ver
+        
         if (!PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')) {
             $this->views->getView($this, "permisos");
             exit();
         }
 
-        // Registrar acceso al módulo
+        
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
         BitacoraHelper::registrarAccesoModulo('Bitacora', $idusuario, $this->model);
 
@@ -44,10 +44,10 @@ class Bitacora extends Controllers
         $data['page_name'] = "Bitácora";
         $data['page_functions_js'] = "functions_bitacora.js";
 
-        // Obtener permisos para la vista
+        
         $data['permisos'] = [
             'puede_ver' => PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver'),
-            'puede_exportar' => PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver'), // Si puede ver, puede exportar
+            'puede_exportar' => PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver'), 
             'puede_filtrar' => PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')
         ];
 
@@ -67,7 +67,7 @@ class Bitacora extends Controllers
         }
 
         try {
-            // Obtener filtros de la solicitud
+            
             $filtros = [];
             if (!empty($_POST['modulo'])) {
                 $filtros['tabla'] = $_POST['modulo'];
@@ -84,7 +84,7 @@ class Bitacora extends Controllers
 
             $arrData = $this->model->obtenerHistorial($filtros);
 
-            // Formatear datos para DataTables
+            
             $data = [];
             foreach ($arrData as $row) {
                 $data[] = [
@@ -199,7 +199,7 @@ class Bitacora extends Controllers
     {
         header('Content-Type: application/json');
 
-        // Solo administradores pueden limpiar bitácora
+        
         if (!PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'eliminar')) {
             echo json_encode([
                 "status" => false,
@@ -220,7 +220,7 @@ class Bitacora extends Controllers
 
             $registrosEliminados = $this->model->limpiarRegistrosAntiguos($dias);
 
-            // Registrar la acción de limpieza
+            
             $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
             BitacoraHelper::registrarAccion('Bitacora', 'LIMPIEZA', $idusuario, $this->model, 
                 "Eliminados {$registrosEliminados} registros anteriores a {$dias} días");
@@ -240,7 +240,7 @@ class Bitacora extends Controllers
         exit();
     }
 
-    // Métodos privados auxiliares
+    
     private function formatearAccion($accion)
     {
         $acciones = [
@@ -263,7 +263,7 @@ class Bitacora extends Controllers
         try {
             return date('d/m/Y H:i:s', strtotime($fecha));
         } catch (Exception $e) {
-            return $fecha; // Devolver fecha original si hay error
+            return $fecha; 
         }
     }
 

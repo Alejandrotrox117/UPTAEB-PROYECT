@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
     order: [[0, "asc"]],
   });
   let detalleProduccionItems = [];
-  // Define los campos a validar en producción
+  
   const camposProduccion = [
     {
       id: "fecha_inicio",
@@ -665,14 +665,14 @@ document.addEventListener("DOMContentLoaded", function () {
     .addEventListener("click", cerrarModalDetalleProduccion);
   function editarProduccion(idproduccion) {
     limpiarFormularioProduccion();
-    // Cargar selects antes de asignar valores
+    
     cargarSelectsProductos().then(() => {
       fetch(`produccion/getProduccionById/${idproduccion}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.status) {
             const p = data.data;
-            // Asignar valores a los campos
+            
             document.getElementById("idproduccion").value = p.idproduccion;
             document.getElementById("idempleado_seleccionado").value = p.idempleado;
             document.getElementById("select_producto").value = p.idproducto;
@@ -681,14 +681,14 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("fecha_fin").value = p.fecha_fin;
             document.getElementById("estado").value = p.estado;
 
-            // Mostrar info de empleado seleccionado
+            
             const divInfoEmpleado = document.getElementById("empleado_seleccionado_info");
             if (divInfoEmpleado) {
               divInfoEmpleado.innerHTML = `Empleado A Cargo: <strong>${p.nombre_empleado}</strong>`;
               divInfoEmpleado.classList.remove("hidden");
             }
 
-            // Ocultar campos de búsqueda de empleado si es necesario
+            
             const inputCriterioEmpleado = document.getElementById("inputCriterioEmpleado");
             if (inputCriterioEmpleado) inputCriterioEmpleado.classList.add("hidden");
             const btnBuscarEmpleado = document.getElementById("btnBuscarEmpleado");
@@ -698,7 +698,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             abrirModal("produccionModal");
 
-            // Cargar detalle de insumos
+            
             fetch(`produccion/getDetalleProduccionData/${idproduccion}`)
               .then((res) => res.json())
               .then((detalle) => {

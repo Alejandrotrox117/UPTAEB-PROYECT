@@ -188,7 +188,7 @@ function llenarSelectCategorias() {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Cargar categorías al inicio
+  
   cargarCategorias();
 
   $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
@@ -432,7 +432,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // MODAL REGISTRAR PRODUCTO
+  
   const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarProducto");
   const formRegistrar = document.getElementById("formRegistrarProducto");
   const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
@@ -458,7 +458,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // SUBMIT FORM REGISTRAR
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -466,7 +466,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL ACTUALIZAR PRODUCTO
+  
   const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
   const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
   const formActualizar = document.getElementById("formActualizarProducto");
@@ -490,7 +490,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER PRODUCTO
+  
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
 
@@ -506,7 +506,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // BOTÓN GENERAR NOTIFICACIONES
+  
   const btnGenerarNotificaciones = document.getElementById("btnGenerarNotificacionesProductos");
   if (btnGenerarNotificaciones) {
     btnGenerarNotificaciones.addEventListener("click", function () {
@@ -515,7 +515,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// FUNCIONES
+
 function registrarProducto() {
   const btnGuardarProducto = document.getElementById("btnGuardarProducto");
 
@@ -554,7 +554,7 @@ function registrarProducto() {
           limpiarValidaciones(camposFormularioProducto, "formRegistrarProducto");
         }
 
-        // Actualizar contador de notificaciones si existe la función
+        
         if (typeof actualizarContadorNotificaciones === 'function') {
           actualizarContadorNotificaciones();
         }
@@ -650,7 +650,7 @@ function actualizarProducto() {
           limpiarValidaciones(camposFormularioActualizarProducto, "formActualizarProducto");
         }
 
-        // Actualizar contador de notificaciones si existe la función
+        
         if (typeof actualizarContadorNotificaciones === 'function') {
           actualizarContadorNotificaciones();
         }
@@ -736,7 +736,7 @@ function eliminarProducto(idProducto, nombreProducto) {
             Swal.fire("¡Desactivado!", result.message, "success").then(() => {
               recargarTablaProductos();
               
-              // Actualizar contador de notificaciones si existe la función
+              
               if (typeof actualizarContadorNotificaciones === 'function') {
                 actualizarContadorNotificaciones();
               }

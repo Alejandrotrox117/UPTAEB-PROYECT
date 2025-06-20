@@ -278,7 +278,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // MODAL REGISTRAR MÓDULO
+  
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarModulo"
   );
@@ -310,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // SUBMIT FORM REGISTRAR
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -318,7 +318,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL ACTUALIZAR MÓDULO
+  
   const btnCerrarModalActualizar = document.getElementById(
     "btnCerrarModalActualizar"
   );
@@ -346,7 +346,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER MÓDULO
+  
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
   
@@ -362,7 +362,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER CONTROLADORES
+  
   const btnVerControladores = document.getElementById("btnVerControladores");
   const btnCerrarModalControladores = document.getElementById("btnCerrarModalControladores");
   const btnCerrarModalControladores2 = document.getElementById("btnCerrarModalControladores2");
@@ -386,7 +386,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// FUNCIONES
+
 function registrarModulo() {
   const formRegistrar = document.getElementById("formRegistrarModulo");
   const btnGuardarModulo = document.getElementById("btnGuardarModulo");
@@ -514,12 +514,12 @@ function editarModulo(idModulo) {
 }
 
 function mostrarModalEditarModulo(modulo) {
-  // Llenar los campos del formulario con los datos existentes
+  
   document.getElementById("idModuloActualizar").value = modulo.idmodulo || "";
   document.getElementById("moduloTituloActualizar").value = modulo.titulo || "";
   document.getElementById("moduloDescripcionActualizar").value = modulo.descripcion || "";
 
-  // Inicializar validaciones para el formulario de actualizar
+  
   inicializarValidaciones(
     camposFormularioActualizarModulo,
     "formActualizarModulo"
@@ -533,7 +533,7 @@ function actualizarModulo() {
   const btnActualizarModulo = document.getElementById("btnActualizarModulo");
   const idModulo = document.getElementById("idModuloActualizar").value;
 
-  // Validar campos vacíos obligatorios
+  
   const camposObligatorios = camposFormularioActualizarModulo.filter((c) => {
     return c.mensajes && c.mensajes.vacio;
   });
@@ -542,7 +542,7 @@ function actualizarModulo() {
     return;
   }
 
-  // Validar formatos específicos
+  
   let formularioConErroresEspecificos = false;
   for (const campo of camposFormularioActualizarModulo) {
     const inputElement = formActualizar.querySelector(`#${campo.id}`);
@@ -663,7 +663,7 @@ function verModulo(idModulo) {
 }
 
 function mostrarModalVerModulo(modulo) {
-  // Llenar los campos del modal de ver
+  
   document.getElementById("verModuloTitulo").textContent = modulo.titulo || "N/A";
   document.getElementById("verModuloDescripcion").textContent = modulo.descripcion || "Sin descripción";
   document.getElementById("verModuloEstatus").textContent = modulo.estatus || "N/A";

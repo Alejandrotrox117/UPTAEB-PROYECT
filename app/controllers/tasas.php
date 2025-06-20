@@ -108,7 +108,7 @@ class Tasas extends Controllers
             $this->set_model(new TasasModel());
         }
         $arrData = $this->get_model()->SelectAllTasas();
-        // Formato para DataTables
+        
         $response = [
             "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
             "recordsTotal" => count($arrData),

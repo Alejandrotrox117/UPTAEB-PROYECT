@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "La respuesta del servidor no tiene la estructura esperada (falta 'data'):",
             json
           );
-          $("#TablaRolesPermisos_processing").css("display", "none"); // Hide processing
+          $("#TablaRolesPermisos_processing").css("display", "none"); 
           alert(
             "Error: No se pudieron cargar los datos de asignaciones correctamente."
           );
@@ -289,7 +289,7 @@ document.addEventListener("DOMContentLoaded", function () {
   );
   });
 
-  // MODAL REGISTRAR ASIGNACIÓN
+  
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarRolPermiso"
   );
@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // SUBMIT FORM REGISTRAR
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -331,7 +331,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL ACTUALIZAR ASIGNACIÓN
+  
   const btnCerrarModalActualizar = document.getElementById(
     "btnCerrarModalActualizar"
   );
@@ -359,7 +359,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER ASIGNACIÓN
+  
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
   
@@ -376,7 +376,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// FUNCIONES
+
 function cargarRoles() {
   fetch("RolesPermisos/getRoles", {
     method: "GET",
@@ -567,12 +567,12 @@ function editarRolPermiso(idRolPermiso) {
 }
 
 function mostrarModalEditarRolPermiso(rolPermiso) {
-  // Llenar los campos del formulario con los datos existentes
+  
   document.getElementById("idRolPermisoActualizar").value = rolPermiso.idrolpermiso || "";
   document.getElementById("rolSelectActualizar").value = rolPermiso.idrol || "";
   document.getElementById("permisoSelectActualizar").value = rolPermiso.idpermiso || "";
 
-  // Inicializar validaciones para el formulario de actualizar
+  
   inicializarValidaciones(
     camposFormularioActualizarRolPermiso,
     "formActualizarRolPermiso"
@@ -586,7 +586,7 @@ function actualizarRolPermiso() {
   const btnActualizarRolPermiso = document.getElementById("btnActualizarRolPermiso");
   const idRolPermiso = document.getElementById("idRolPermisoActualizar").value;
 
-  // Validar campos vacíos obligatorios
+  
   const camposObligatorios = camposFormularioActualizarRolPermiso.filter((c) => {
     return c.mensajes && c.mensajes.vacio;
   });
@@ -595,7 +595,7 @@ function actualizarRolPermiso() {
     return;
   }
 
-  // Validar formatos específicos
+  
   let formularioConErroresEspecificos = false;
   for (const campo of camposFormularioActualizarRolPermiso) {
     const inputElement = formActualizar.querySelector(`#${campo.id}`);
@@ -706,7 +706,7 @@ function verRolPermiso(idRolPermiso) {
 }
 
 function mostrarModalVerRolPermiso(rolPermiso) {
-  // Llenar los campos del modal de ver
+  
   document.getElementById("verRolNombre").textContent = rolPermiso.nombre_rol || "N/A";
   document.getElementById("verRolDescripcion").textContent = rolPermiso.descripcion_rol || "Sin descripción";
   document.getElementById("verPermisoNombre").textContent = rolPermiso.nombre_permiso || "N/A";

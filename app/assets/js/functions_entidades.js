@@ -9,7 +9,7 @@ import {
 } from "./validaciones.js";
 
 
-//REGISTRAR
+
 export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError }) {
   let formularioValido = true;
 
@@ -22,7 +22,7 @@ export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError 
       if (campo.tipo === "date") {
         esValido = validarFecha(input, campo.mensajes);
       } else if (campo.tipo === "select") {
-        esValido = validarSelect(input, campo.mensajes); // <-- pásale el elemento, no el id
+        esValido = validarSelect(input, campo.mensajes); 
       } else {
         esValido = validarCamposVacios([campo], formId);
       }
@@ -70,7 +70,7 @@ export function registrarEntidad({ formId, endpoint, campos, onSuccess, onError 
     });
 }
 
-//CONSULTAR EN UN SELECT
+
 export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, placeholder = "Seleccione...", onLoaded = null}) {
   const select = document.getElementById(selectId);
   if (!select) return;
@@ -80,7 +80,7 @@ export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, p
   fetch(endpoint)
     .then(response => response.json())
     .then(items => {
-      // Soporta respuesta tipo {data: [...]}
+      
       if (items && typeof items === "object" && Array.isArray(items.data)) {
         items = items.data;
       }

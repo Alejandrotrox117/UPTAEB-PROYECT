@@ -29,7 +29,7 @@ class Login extends Controllers
         }
 
         try {
-            // Verificar reCAPTCHA solo si está configurado
+            
             if (defined('RECAPTCHA_SECRET_KEY') && !empty(RECAPTCHA_SECRET_KEY)) {
                 $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
                 if (!$this->verifyRecaptcha($recaptcha_response)) {
@@ -46,10 +46,10 @@ class Login extends Controllers
                 exit();
             }
 
-            // Encriptar la contraseña
+            
             $strPassword = hash("SHA256", $strPassword);
 
-            // Intentar autenticación
+            
             $requestUser = $this->model->login($strUsuario, $strPassword);
 
             if (!$requestUser) {
@@ -57,13 +57,13 @@ class Login extends Controllers
                 exit();
             }
 
-            // Verificar que el usuario esté activo
+            
             if ($requestUser['estatus'] != 'activo') {
                 echo json_encode(['status' => false, 'msg' => 'Usuario inactivo']);
                 exit();
             }
 
-            // Obtener datos completos del usuario para la sesión
+            
             $userData = $this->model->sessionLogin($requestUser['idusuario']);
 
             if (!$userData) {
@@ -71,10 +71,10 @@ class Login extends Controllers
                 exit();
             }
 
-            // 🚀 MIGRACIÓN: Cambiar estructura de sesión de $_SESSION['login'] a $_SESSION['user']
-            $_SESSION = array(); // Limpiar sesión anterior
             
-            // ✅ NUEVA ESTRUCTURA DE SESIÓN para el sistema de permisos
+            $_SESSION = array(); 
+            
+            
             $_SESSION['user'] = [
                 'idusuario' => intval($userData['idusuario']),
                 'usuario' => $userData['usuario'],
@@ -87,22 +87,22 @@ class Login extends Controllers
                 'tiempo_login' => date('Y-m-d H:i:s')
             ];
 
-            // 🔄 COMPATIBILIDAD: Mantener variables legacy si otros archivos las usan
+            
             $_SESSION['sessionUser'] = $_SESSION['user']['idusuario'];
             $_SESSION['login'] = true;
 
-            // NUEVAS VARIABLES DE SESIÓN SUGERIDAS
+            
             $_SESSION['usuario_id'] = $userData['idusuario'];
             $_SESSION['rol_id'] = $userData['idrol'];
             $_SESSION['usuario_nombre'] = $userData['usuario'];
             $_SESSION['usuario_correo'] = $userData['correo'];
 
-            // También asegúrate de que la sesión se inicie
+            
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
             }
 
-            // Respuesta exitosa con redirección
+            
             echo json_encode([
                 'status' => true, 
                 'msg' => 'Login exitoso',
@@ -118,10 +118,10 @@ class Login extends Controllers
 
     public function logout()
     {
-        // Limpiar todas las variables de sesión
+        
         $_SESSION = [];
         
-        // Destruir la cookie de sesión si existe
+        
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '', time() - 42000,
@@ -130,7 +130,7 @@ class Login extends Controllers
             );
         }
         
-        // Destruir la sesión
+        
         session_destroy();
         
         header('Location: ' . base_url() . 'login');

@@ -1,4 +1,4 @@
-// Expresiones regulares para validación
+
 const expresiones = {
   nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,50}$/,
   apellido: /^[a-zA-Z\s]{3,20}$/,
@@ -14,37 +14,37 @@ const expresiones = {
   textoGeneral: /^.{2,100}$/,
   genero: /^(MASCULINO|FEMENINO|OTRO)$/,
   
-  // Nuevas expresiones para campos numéricos de ventas
-  precio: /^\d+(\.\d{1,4})?$/,                    // Precio: números positivos con hasta 4 decimales
-  cantidad: /^\d+(\.\d{1,3})?$/,                  // Cantidad: números positivos con hasta 3 decimales
-  porcentajeDescuento: /^(0|[1-9]\d?|100)(\.\d{1,2})?$/, // Descuento: 0-100 con hasta 2 decimales
-  subtotal: /^\d+(\.\d{1,2})?$/,                  // Subtotal: números positivos con hasta 2 decimales
-  total: /^\d+(\.\d{1,2})?$/,                     // Total: números positivos con hasta 2 decimales
-  peso: /^\d+(\.\d{1,3})?$/,                      // Peso: números positivos con hasta 3 decimales
-  tasa: /^\d+(\.\d{1,4})?$/,                      // Tasa de cambio: números positivos con hasta 4 decimales
-  montoDescuento: /^\d+(\.\d{1,2})?$/,            // Monto descuento: números positivos con hasta 2 decimales
   
-  // Validaciones específicas para rangos
-  cantidadMinima: /^([1-9]\d*(\.\d{1,3})?|0\.[0-9]{1,3})$/, // Cantidad mínima 0.001
-  precioMinimo: /^([1-9]\d*(\.\d{1,4})?|0\.[0-9]{1,4})$/,   // Precio mínimo 0.0001
+  precio: /^\d+(\.\d{1,4})?$/,                    
+  cantidad: /^\d+(\.\d{1,3})?$/,                  
+  porcentajeDescuento: /^(0|[1-9]\d?|100)(\.\d{1,2})?$/, 
+  subtotal: /^\d+(\.\d{1,2})?$/,                  
+  total: /^\d+(\.\d{1,2})?$/,                     
+  peso: /^\d+(\.\d{1,3})?$/,                      
+  tasa: /^\d+(\.\d{1,4})?$/,                      
+  montoDescuento: /^\d+(\.\d{1,2})?$/,            
   
-  // Para campos de código de moneda
-  codigoMoneda: /^[A-Z]{3}$/,                     // Código de moneda: 3 letras mayúsculas (USD, EUR, etc.)
   
-  // Para números de venta/factura
-  numeroVenta: /^VT\d{6}$/,                       // Número de venta: VT seguido de 6 dígitos
+  cantidadMinima: /^([1-9]\d*(\.\d{1,3})?|0\.[0-9]{1,3})$/, 
+  precioMinimo: /^([1-9]\d*(\.\d{1,4})?|0\.[0-9]{1,4})$/,   
   
-  // Para validar decimales en general
-  decimal2: /^\d+(\.\d{1,2})?$/,                  // Números con hasta 2 decimales
-  decimal3: /^\d+(\.\d{1,3})?$/,                  // Números con hasta 3 decimales
-  decimal4: /^\d+(\.\d{1,4})?$/,                  // Números con hasta 4 decimales
   
-  // Para validar enteros positivos
-  enteroPositivo: /^[1-9]\d*$/,                   // Enteros mayores a 0
-  enteroNoNegativo: /^(0|[1-9]\d*)$/              // Enteros mayores o iguales a 0
+  codigoMoneda: /^[A-Z]{3}$/,                     
+  
+  
+  numeroVenta: /^VT\d{6}$/,                       
+  
+  
+  decimal2: /^\d+(\.\d{1,2})?$/,                  
+  decimal3: /^\d+(\.\d{1,3})?$/,                  
+  decimal4: /^\d+(\.\d{1,4})?$/,                  
+  
+  
+  enteroPositivo: /^[1-9]\d*$/,                   
+  enteroNoNegativo: /^(0|[1-9]\d*)$/              
 };
 
-// Función para validar campos numéricos con validaciones específicas
+
 function validarCampoNumerico(input, tipo, mensajes) {
   if (!input || input.offsetParent === null) {
     return true;
@@ -54,7 +54,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
   const valor = parseFloat(input.value.trim());
   const valorTexto = input.value.trim();
 
-  // Limpiar mensajes de error previos
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -62,7 +62,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  // Validar si el campo está vacío
+  
   if (valorTexto === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -76,7 +76,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
     return true;
   }
 
-  // Validar formato numérico
+  
   const regex = expresiones[tipo];
   if (regex && !regex.test(valorTexto)) {
     if (mensajes.formato) {
@@ -90,7 +90,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
     }
   }
 
-  // Validaciones específicas por tipo
+  
   switch (tipo) {
     case 'precio':
     case 'precioMinimo':
@@ -165,7 +165,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
       break;
   }
 
-  // Si pasa todas las validaciones
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -175,7 +175,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
   return true;
 }
 
-// Función para validar rangos de valores
+
 function validarRango(input, min, max, mensajes) {
   if (!input || input.offsetParent === null) {
     return true;
@@ -185,7 +185,7 @@ function validarRango(input, min, max, mensajes) {
   const errorDiv = input.nextElementSibling;
 
   if (isNaN(valor)) {
-    return true; // Si no es número, lo maneja validarCampoNumerico
+    return true; 
   }
 
   if (valor < min || valor > max) {
@@ -203,17 +203,17 @@ function validarRango(input, min, max, mensajes) {
   return true;
 }
 
-// Función para validar campos
+
 function validarCampo(input, regex, mensajes) {
-  // Solo valida si el input está visible
+  
   if (!input || input.offsetParent === null) {
-    return true; // Considera válido si está oculto
+    return true; 
   }
 
   const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
-  // Limpiar mensajes de error previos
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -221,7 +221,7 @@ function validarCampo(input, regex, mensajes) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  // Validar si el campo está vacío
+  
   if (valor === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -234,7 +234,7 @@ function validarCampo(input, regex, mensajes) {
     }
   }
 
-  // Validar si el valor cumple con la expresión regular
+  
   if (regex && !regex.test(valor)) {
     if (mensajes.formato) {
       if (errorDiv) {
@@ -247,7 +247,7 @@ function validarCampo(input, regex, mensajes) {
     }
   }
 
-  // Si pasa todas las validaciones, limpiar errores
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -259,7 +259,7 @@ function validarCampo(input, regex, mensajes) {
 
 function validarSelect(select, mensajes, formId = null) {
   let input = select;
-  // Si se pasa formId y select es un string (id), busca el select dentro del formulario
+  
   if (formId && typeof select === "string") {
     const form = document.getElementById(formId);
     input = form ? form.querySelector(`#${select}`) : null;
@@ -274,7 +274,7 @@ function validarSelect(select, mensajes, formId = null) {
   const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
-  // Limpiar mensajes de error previos
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -282,7 +282,7 @@ function validarSelect(select, mensajes, formId = null) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  // Validar si el campo está vacío
+  
   if (valor === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -295,7 +295,7 @@ function validarSelect(select, mensajes, formId = null) {
     }
   }
 
-  // Si pasa la validación, limpiar errores
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -308,7 +308,7 @@ function validarFecha(input, mensajes) {
   const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
-  // Limpiar mensajes de error previos
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -316,7 +316,7 @@ function validarFecha(input, mensajes) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  // Validar si el campo está vacío
+  
   if (valor === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -327,10 +327,10 @@ function validarFecha(input, mensajes) {
       input.classList.remove("border-gray-300", "focus:ring-green-400");
       return false;
     }
-    return true; // Si no es obligatorio y está vacío, es válido
+    return true; 
   }
 
-  // Validar que sea una fecha válida
+  
   const fechaSeleccionada = new Date(valor);
   if (isNaN(fechaSeleccionada.getTime())) {
     if (mensajes.formato || mensajes.fechaInvalida) {
@@ -344,15 +344,15 @@ function validarFecha(input, mensajes) {
     }
   }
 
-  // ⬅️ VALIDAR QUE SOLO SEA HOY O AYER (presente o pasado inmediato)
+  
   const fechaHoy = new Date();
-  fechaHoy.setHours(23, 59, 59, 999); // Final del día de hoy (presente)
+  fechaHoy.setHours(23, 59, 59, 999); 
   
   const fechaAyer = new Date();
-  fechaAyer.setDate(fechaAyer.getDate() - 1); // Ayer (pasado inmediato)
-  fechaAyer.setHours(0, 0, 0, 0); // Inicio del día de ayer
+  fechaAyer.setDate(fechaAyer.getDate() - 1); 
+  fechaAyer.setHours(0, 0, 0, 0); 
 
-  // Verificar que esté entre ayer y hoy (presente o pasado inmediato)
+  
   if (fechaSeleccionada < fechaAyer || fechaSeleccionada > fechaHoy) {
     if (mensajes.fechaPosterior) {
       if (errorDiv) {
@@ -365,7 +365,7 @@ function validarFecha(input, mensajes) {
     }
   }
 
-  // Si pasa todas las validaciones, limpiar errores
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -374,12 +374,12 @@ function validarFecha(input, mensajes) {
   input.classList.add("border-green-300", "focus:ring-green-400");
   return true;
 }
-// FUNCIÓN PARA FECHAS DE NACIMIENTO (solo pasado, NO futuro)
+
 export function validarFechaNacimiento(input, mensajes) {
   const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
-  // Limpiar mensajes de error previos
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -387,7 +387,7 @@ export function validarFechaNacimiento(input, mensajes) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  // Validar si el campo está vacío
+  
   if (valor === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -398,10 +398,10 @@ export function validarFechaNacimiento(input, mensajes) {
       input.classList.remove("border-gray-300", "focus:ring-green-400");
       return false;
     }
-    return true; // Si no es obligatorio y está vacío, es válido
+    return true; 
   }
 
-  // Validar que sea una fecha válida
+  
   const fechaSeleccionada = new Date(valor);
   if (isNaN(fechaSeleccionada.getTime())) {
     if (mensajes.formato || mensajes.fechaInvalida) {
@@ -415,9 +415,9 @@ export function validarFechaNacimiento(input, mensajes) {
     }
   }
 
-  // ⬅️ NO PERMITIR FECHAS FUTURAS (solo hoy o pasado)
+  
   const fechaHoy = new Date();
-  fechaHoy.setHours(23, 59, 59, 999); // Permitir hasta el final del día de hoy
+  fechaHoy.setHours(23, 59, 59, 999); 
 
   if (fechaSeleccionada > fechaHoy) {
     if (mensajes.fechaPosterior) {
@@ -431,7 +431,7 @@ export function validarFechaNacimiento(input, mensajes) {
     }
   }
 
-  // ⬅️ VALIDAR EDAD MÁXIMA RAZONABLE (120 años)
+  
   const fechaMinima = new Date();
   fechaMinima.setFullYear(fechaMinima.getFullYear() - 120);
   
@@ -447,7 +447,7 @@ export function validarFechaNacimiento(input, mensajes) {
     }
   }
 
-  // Si pasa todas las validaciones, limpiar errores
+  
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -485,7 +485,7 @@ const inicializarValidaciones = (campos, formId = null) => {
           }
         });
       } else if (campo.tipo === "fechaNacimiento") {
-        // ⬅️ NUEVO TIPO PARA FECHAS DE NACIMIENTO
+        
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
             validarFechaNacimiento(input, campo.mensajes);
@@ -507,7 +507,7 @@ const inicializarValidaciones = (campos, formId = null) => {
           }
         });
       } else if (campo.tipoNumerico) {
-        // Nueva validación para campos numéricos
+        
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
             validarCampoNumerico(input, campo.tipoNumerico, campo.mensajes);
@@ -525,7 +525,7 @@ const inicializarValidaciones = (campos, formId = null) => {
           }
         });
       } else {
-        // Validación normal para otros tipos
+        
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
             validarCampo(input, campo.regex, campo.mensajes);
@@ -541,7 +541,7 @@ const inicializarValidaciones = (campos, formId = null) => {
   });
 };
 
-//FUNCIONES DE VALIDACIONES CAMPOS VACIOS
+
 export function validarCamposVacios(campos, formId = null) {
   let formularioValido = true;
 
@@ -554,14 +554,14 @@ export function validarCamposVacios(campos, formId = null) {
       input = document.getElementById(campo.id);
     }
 
-    // Solo valida si el input existe y está visible
+    
     if (!input || input.offsetParent === null) {
-      continue; // Salta campos ocultos o que no existen o están ocultos
+      continue; 
     }
 
     let valor = input.value.trim();
     let nombreCampo = campo.id;
-    // Busca el label asociado al input
+    
     const label = document.querySelector(`label[for="${campo.id}"]`);
     if (label) {
       nombreCampo = label.textContent.replace(/[*:]/g, "").trim();
@@ -576,7 +576,7 @@ export function validarCamposVacios(campos, formId = null) {
       });
       formularioValido = false;
       input.classList.add("border-red-500");
-      break; // Opcional: detener en el primer error
+      break; 
     } else {
       input.classList.remove("border-red-500");
     }
@@ -633,8 +633,8 @@ export function validarDetalleVenta() {
 }
 
 
-//REGISTRAR
-// En validaciones.js - actualizar registrarEntidad
+
+
 export function registrarEntidad({ 
   formId, 
   endpoint, 
@@ -649,12 +649,12 @@ export function registrarEntidad({
     return Promise.reject("Formulario no encontrado");
   }
 
-  // Validar campos vacíos
+  
   if (!validarCamposVacios(campos, formId)) {
     return Promise.reject("Validación de campos vacíos falló");
   }
 
-  // Validar formatos específicos
+  
   let formularioConErrores = false;
   for (const campo of campos) {
     const inputElement = form.querySelector(`#${campo.id}`);
@@ -666,12 +666,12 @@ export function registrarEntidad({
         esValido = validarSelect(campo.id, campo.mensajes, formId);
       }
     } else if (campo.tipo === "fecha") {
-      // ⬅️ FECHA NORMAL
+      
       if (inputElement.value.trim() !== "" || campo.mensajes?.vacio) {
         esValido = validarFecha(inputElement, campo.mensajes);
       }
     } else if (campo.tipo === "fechaNacimiento") {
-      // ⬅️ FECHA DE NACIMIENTO
+      
       if (inputElement.value.trim() !== "" || campo.mensajes?.vacio) {
         esValido = validarFechaNacimiento(inputElement, campo.mensajes);
       }
@@ -688,17 +688,17 @@ export function registrarEntidad({
     return Promise.reject("Errores de validación");
   }
 
-  // Preparar datos
+  
   const formData = new FormData(form);
   const dataParaEnviar = {};
   
-  // Aplicar mapeo de nombres si existe
+  
   for (let [key, value] of formData.entries()) {
     const nombreFinal = mapeoNombres[key] || key;
     dataParaEnviar[nombreFinal] = value || "";
   }
 
-  // Enviar datos
+  
   return fetch(endpoint, {
     method: "POST",
     headers: {
@@ -740,7 +740,7 @@ export function registrarEntidad({
     throw error;
   });
 }
-//CONSULTAR EN UN SELECT
+
 export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, placeholder = "Seleccione...", onLoaded = null}) {
   const select = document.getElementById(selectId);
   if (!select) return;
@@ -750,7 +750,7 @@ export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, p
   fetch(endpoint)
     .then(response => response.json())
     .then(items => {
-      // Soporta respuesta tipo {data: [...]}
+      
       if (items && typeof items === "object" && Array.isArray(items.data)) {
         items = items.data;
       }
@@ -771,7 +771,7 @@ export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, p
 }
 
 
-// Exportar las funciones y expresiones
+
 export { 
   expresiones, 
   validarCampo, 
