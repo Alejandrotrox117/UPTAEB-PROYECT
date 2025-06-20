@@ -1,14 +1,9 @@
 <?php
-
 require_once "app/core/Controllers.php";
 require_once "helpers/PermisosModuloVerificar.php";
 require_once "helpers/helpers.php";
 require_once "app/Models/DashboardModel.php";
-require_once "vendor/pdf/fpdf.php";
 
-/**
- * Clase PDF personalizada para encabezado y pie de página.
- */
 class PDF extends FPDF
 {
     function Header()
