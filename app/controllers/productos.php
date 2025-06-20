@@ -1,7 +1,7 @@
 <?php
 require_once "app/core/Controllers.php";
-// El modelo se carga automáticamente por el controlador base
-// require_once "app/models/productosModel.php"; 
+
+
 require_once "helpers/helpers.php";
 require_once "helpers/PermisosModuloVerificar.php";
 require_once "app/models/bitacoraModel.php";
@@ -18,7 +18,7 @@ class Productos extends Controllers
     public function __construct()
     {
         parent::__construct();
-        // El modelo se carga automáticamente en parent::__construct()
+        
 
         $this->bitacoraModel = new BitacoraModel();
         $this->BitacoraHelper = new BitacoraHelper();
@@ -29,7 +29,7 @@ class Productos extends Controllers
             die();
         }
 
-        // Verificar acceso general al módulo
+        
         if (!PermisosModuloVerificar::verificarAccesoModulo('productos')) {
             $this->views->getView($this, "permisos");
             exit();
@@ -70,7 +70,7 @@ class Productos extends Controllers
                 die();
             }
 
-            $postdata = file_get_contents("php://input");
+            $postdata = file_get_contents('php://input');
             $request = json_decode($postdata, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -114,7 +114,7 @@ class Productos extends Controllers
                 die();
             }
 
-            $postdata = file_get_contents("php://input");
+            $postdata = file_get_contents('php://input');
             $request = json_decode($postdata, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -162,7 +162,7 @@ class Productos extends Controllers
                 die();
             }
 
-            $postdata = file_get_contents("php://input");
+            $postdata = file_get_contents('php://input');
             $request = json_decode($postdata, true);
 
             if (json_last_error() !== JSON_ERROR_NONE || empty($request['idproducto'])) {
@@ -204,7 +204,7 @@ class Productos extends Controllers
                 die();
             }
 
-            $postdata = file_get_contents("php://input");
+            $postdata = file_get_contents('php://input');
             $request = json_decode($postdata, true);
 
             if (json_last_error() !== JSON_ERROR_NONE || empty($request['idproducto'])) {
@@ -230,7 +230,7 @@ class Productos extends Controllers
         die();
     }
 
-    // --- MÉTODOS GET ---
+    
 
     public function getProductosData()
     {
@@ -285,7 +285,7 @@ class Productos extends Controllers
         }
     }
 
-    // --- MÉTODOS AUXILIARES ---
+    
 
     private function validarDatosProducto($request)
     {

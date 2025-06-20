@@ -99,7 +99,7 @@ class Personas extends Controllers
                 return;
             }
 
-            // Preparar datos para el modelo
+            
             $dataParaModelo = [];
             
             if (isset($input['persona'])) {

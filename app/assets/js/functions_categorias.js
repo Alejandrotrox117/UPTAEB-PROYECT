@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
         title: "Acciones",
         orderable: false,
         render: function (data, type, row) {
-          // Generar botones con íconos de Font Awesome
+          
           return `
                 <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idcategoria="${row.idcategoria}">
                   <i class="fas fa-edit"></i>
@@ -56,26 +56,26 @@ document.addEventListener("DOMContentLoaded", function () {
     order: [[0, "asc"]],
   });
   document.getElementById("CategoriaForm").addEventListener("submit", function (e) {
-    e.preventDefault(); // Evita que el formulario se envíe de forma tradicional
+    e.preventDefault(); 
 
-    // Convertir los datos del formulario en un objeto
+    
     const formData = new FormData(this);
     const data = {};
     formData.forEach((value, key) => {
         data[key] = value;
     });
 
-    console.log("Datos a enviar:", data); // Depuración
+    console.log("Datos a enviar:", data); 
 
-    // Determinar si es una edición o una creación
+    
     const idcategoria = document.getElementById("idcategoria").value;
     const url = idcategoria ? "categorias/actualizarCategoria" : "categorias/crearCategoria";
     const method = idcategoria ? "PUT" : "POST";
 
     fetch(url, {
         method: method,
-        headers: { "Content-Type": "application/json" }, // Asegura que los datos sean JSON
-        body: JSON.stringify(data), // Convierte el objeto en una cadena JSON
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(data), 
     })
         .then((response) => {
             if (!response.ok) {
@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const idcategoria = e.target
         .closest(".editar-btn")
         .getAttribute("data-idcategoria");
-      console.log("Botón de edición clicado. ID de categoria:", idcategoria); // Depuración
+      console.log("Botón de edición clicado. ID de categoria:", idcategoria); 
 
       if (!idcategoria || isNaN(idcategoria)) {
         alert("ID de persona no válido.");
@@ -127,18 +127,18 @@ function cerrarModalCategoria() {
 }
 
 function abrirModalCategoriaParaEdicion(idcategoria) {
-  console.log("ID de categoria recibido:", idcategoria); // Depuración
+  console.log("ID de categoria recibido:", idcategoria); 
 
   fetch(`categorias/getCategoriaById/${idcategoria}`)
     .then((response) => {
-      console.log("Respuesta HTTP:", response); // Depuración
+      console.log("Respuesta HTTP:", response); 
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
       return response.json();
     })
     .then((data) => {
-      console.log("Datos recibidos del backend:", data); // Depuración
+      console.log("Datos recibidos del backend:", data); 
 
       if (!data.status) {
         throw new Error(data.message || "Error al cargar los datos.");
@@ -146,24 +146,24 @@ function abrirModalCategoriaParaEdicion(idcategoria) {
 
       const categoria = data.data;
 
-      // Asigna los valores a los campos del modal formulario
+      
       document.getElementById("idcategoria").value = categoria.idcategoria || "";
       document.getElementById("nombre").value = categoria.nombre || "";
       document.getElementById("descripcion").value = categoria.descripcion || "";
       
       document.getElementById("estatus").value = categoria.estatus || "";
      
-      // Abre el modal
+      
       abrirModalCategoria();
     })
     .catch((error) => {
-      console.error("Error capturado:", error.message); // Depuración
+      console.error("Error capturado:", error.message); 
       alert(
         "Ocurrió un error al cargar los datos. Por favor, intenta nuevamente."
       );
     });
 }
-// Manejar el envío del formulario (crear o actualizar)
+
 
 function eliminarcategoria(idcategoria) {
   if (!confirm("¿Estás seguro de que deseas eliminar este categoria?")) {
@@ -176,10 +176,10 @@ function eliminarcategoria(idcategoria) {
     .then((response) => response.json())
     .then((result) => {
       if (result.status) {
-        alert(result.message); // Muestra mensaje de éxito
-        $("#Tablacategorias").DataTable().ajax.reload(); // Recarga la tabla
+        alert(result.message); 
+        $("#Tablacategorias").DataTable().ajax.reload(); 
       } else {
-        alert(result.message); // Muestra mensaje de error
+        alert(result.message); 
       }
     })
     .catch((error) => {

@@ -2,8 +2,8 @@ import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import { expresiones, inicializarValidaciones } from "./validaciones.js";
 import { validarCampo } from "./validaciones.js";
 document.addEventListener("DOMContentLoaded", function () {
-  // Inicialización de DataTables para la tabla de empleados
-   // Definir campos y validaciones
+  
+   
   const campos = [
     { id: "nombre", regex: expresiones.nombre, mensaje: "El nombre debe tener entre 10 y 20 caracteres alfabéticos." },
     { id: "apellido", regex: expresiones.apellido, mensaje: "El apellido debe tener entre 10 y 20 caracteres alfabéticos." },
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     processing: true,
     serverSide: true,
     ajax: {
-      url: "empleados/getEmpleadoData", // URL del controlador para obtener datos
+      url: "empleados/getEmpleadoData", 
       type: "GET",
       dataSrc: "data",
     },
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
         title: "Acciones",
         orderable: false,
         render: function (data, type, row) {
-          // Botones para editar y eliminar empleados
+          
           return `
                 <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idempleado="${row.idempleado}">
                   <i class="fas fa-edit"></i>
@@ -82,47 +82,47 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-  // Evento para el botón "Registrar"
+  
   document
     .getElementById("registrarEmpleadoBtn")
     .addEventListener("click", function () {
       manejarRegistro(campos);
     });
-  // Botón para abrir el modal de registro
+  
   document
     .getElementById("abrirModalBtn")
     .addEventListener("click", function () {
       abrirModal("empleadoModal");
     });
 
-  // Botón para cerrar el modal
+  
   document
     .getElementById("cerrarModalBtn")
     .addEventListener("click", function () {
       cerrarModal("empleadoModal");
     });
-  // Manejador de envío del formulario de empleado
+  
   document
     .getElementById("empleadoForm")
     .addEventListener("submit", function (e) {
-      e.preventDefault(); // Evita que el formulario se envíe de forma tradicional
+      e.preventDefault(); 
 
-      // Convertir los datos del formulario en un objeto
+      
       const formData = new FormData(this);
       const data = {};
       formData.forEach((value, key) => {
         data[key] = value;
       });
 
-      console.log("Datos a enviar:", data); // Depuración
+      console.log("Datos a enviar:", data); 
 
-      // Validar campos obligatorios
+      
       if (!data.nombre || !data.apellido || !data.identificacion) {
         alert("Por favor, completa todos los campos obligatorios.");
         return;
       }
 
-      // Determinar si es una edición o una creación
+      
       const idempleado = document.getElementById("idempleado").value;
       const url = idempleado
         ? "empleados/updateEmpleado"
@@ -131,8 +131,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       fetch(url, {
         method: method,
-        headers: { "Content-Type": "application/json" }, // Asegura que los datos sean JSON
-        body: JSON.stringify(data), // Convierte el objeto en una cadena JSON
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(data), 
       })
         .then((response) => {
           if (!response.ok) {
@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
           if (result.status) {
             alert(result.message);
             cerrarModalEmpleado();
-            $("#TablaEmpleado").DataTable().ajax.reload(); // Recarga la tabla
+            $("#TablaEmpleado").DataTable().ajax.reload(); 
           } else {
             alert(result.message);
           }
@@ -155,13 +155,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-  // Manejador de clic para botones de edición
+  
   document.addEventListener("click", function (e) {
     if (e.target.closest(".editar-btn")) {
       const idempleado = e.target
         .closest(".editar-btn")
         .getAttribute("data-idempleado");
-      console.log("Botón de edición clicado. ID de empleado:", idempleado); // Depuración
+      console.log("Botón de edición clicado. ID de empleado:", idempleado); 
 
       if (!idempleado || isNaN(idempleado)) {
         alert("ID de empleado no válido.");
@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Manejador de clic para botones de eliminación
+  
   document.addEventListener("click", function (e) {
     if (e.target.closest(".eliminar-btn")) {
       const idempleado = e.target
@@ -185,7 +185,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-// Función para eliminar un empleado
+
 function eliminarEmpleado(idempleado) {
   fetch(`empleados/deleteEmpleado`, {
     method: "POST",
@@ -195,29 +195,29 @@ function eliminarEmpleado(idempleado) {
     .then((response) => response.json())
     .then((result) => {
       if (result.status) {
-        alert(result.message); // Muestra mensaje de éxito
-        $("#TablaEmpleado").DataTable().ajax.reload(); // Recarga la tabla
+        alert(result.message); 
+        $("#TablaEmpleado").DataTable().ajax.reload(); 
       } else {
-        alert(result.message); // Muestra mensaje de error
+        alert(result.message); 
       }
     })
     .catch((error) => console.error("Error:", error));
 }
 
-// Función para abrir el modal de edición
+
 function abrirModalEmpleadoParaEdicion(idempleado) {
-  console.log("ID de empleado recibido:", idempleado); // Depuración
+  console.log("ID de empleado recibido:", idempleado); 
 
   fetch(`empleados/getEmpleadoById/${idempleado}`)
     .then((response) => {
-      console.log("Respuesta HTTP:", response); // Depuración
+      console.log("Respuesta HTTP:", response); 
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
       return response.json();
     })
     .then((data) => {
-      console.log("Datos recibidos del backend:", data); // Depuración
+      console.log("Datos recibidos del backend:", data); 
 
       if (!data.status) {
         throw new Error(data.message || "Error al cargar los datos.");
@@ -225,7 +225,7 @@ function abrirModalEmpleadoParaEdicion(idempleado) {
 
       const empleado = data.data;
 
-      // Asigna los valores a los campos del modal formulario
+      
       document.getElementById("idempleado").value = empleado.idempleado || "";
       document.getElementById("nombre").value = empleado.nombre || "";
       document.getElementById("apellido").value = empleado.apellido || "";
@@ -249,24 +249,24 @@ function abrirModalEmpleadoParaEdicion(idempleado) {
         empleado.fecha_inicio || "";
       document.getElementById("fecha_fin").value = empleado.fecha_fin || "";
 
-      // Abre el modal
+      
       abrirModalEmpleado();
     })
     .catch((error) => {
-      console.error("Error capturado:", error.message); // Depuración
+      console.error("Error capturado:", error.message); 
       alert(
         "Ocurrió un error al cargar los datos. Por favor, intenta nuevamente."
       );
     });
 }
 
-// Función para abrir el modal de empleado
+
 function abrirModalEmpleado() {
   const modal = document.getElementById("empleadoModal");
   modal.classList.remove("opacity-0", "pointer-events-none");
 }
 
-// Función para cerrar el modal de empleado
+
 function cerrarModalEmpleado() {
   const modal = document.getElementById("empleadoModal");
   modal.classList.add("opacity-0", "pointer-events-none");
@@ -275,16 +275,16 @@ function cerrarModalEmpleado() {
 
 
 function validarCamposVacios(campos) {
-  let formularioValido = true; // Variable para rastrear si el formulario es válido
+  let formularioValido = true; 
 
-  // Validar campos vacíos
+  
   for (let campo of campos) {
-    // Omitir la validación del campo idempleado
+    
     if (campo.id === "idempleado") {
       continue;
     }
 
-    // Obtener el valor del campo
+    
     const input = document.getElementById(campo.id);
     if (!input) {
       console.warn(`El campo con ID "${campo.id}" no existe en el DOM.`);
@@ -299,21 +299,21 @@ function validarCamposVacios(campos) {
         icon: "error",
         confirmButtonText: "Aceptar",
       });
-      formularioValido = false; // Marcar el formulario como no válido
+      formularioValido = false; 
     }
   }
 
-  return formularioValido; // Retornar true si todos los campos son válidos, false si no
+  return formularioValido; 
 }
 
 function manejarRegistro(campos) {
-  // Validar si hay campos vacíos
+  
   const formularioValido = validarCamposVacios(campos);
   if (!formularioValido) {
-    return; // Detener el proceso si hay campos vacíos
+    return; 
   }
 
-  // Validar el formato de los campos
+  
   let formatoValido = true;
   campos.forEach((campo) => {
     const input = document.getElementById(campo.id);
@@ -323,7 +323,7 @@ function manejarRegistro(campos) {
     }
   });
 
-  // Si el formato no es válido, mostrar alerta y detener el proceso
+  
   if (!formatoValido) {
     Swal.fire({
       title: "¡Error!",
@@ -334,7 +334,7 @@ function manejarRegistro(campos) {
     return;
   }
 
-  // Si el formulario es válido, enviar los datos
+  
   const formData = new FormData(document.getElementById("empleadoForm"));
   const data = {};
   formData.forEach((value, key) => {

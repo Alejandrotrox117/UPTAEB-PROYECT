@@ -68,7 +68,7 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -226,7 +226,7 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -242,16 +242,16 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                // Limpiar datos
+                
                 $datosLimpios = [
                     'usuario' => strClean($request['usuario'] ?? ''),
                     'correo' => filter_var($request['correo'] ?? '', FILTER_SANITIZE_EMAIL),
-                    'clave' => $request['clave'] ?? '', // Puede estar vacío para no cambiar
+                    'clave' => $request['clave'] ?? '', 
                     'idrol' => intval($request['idrol'] ?? 0),
                     'personaId' => !empty($request['personaId']) ? intval($request['personaId']) : null
                 ];
 
-                // Validar campos obligatorios
+                
                 $camposObligatorios = ['usuario', 'correo', 'idrol'];
                 foreach ($camposObligatorios as $campo) {
                     if (empty($datosLimpios[$campo])) {
@@ -261,7 +261,7 @@ class Usuarios extends Controllers
                     }
                 }
 
-                // Validaciones de negocio
+                
                 if (strlen($datosLimpios['usuario']) < 3 || strlen($datosLimpios['usuario']) > 20) {
                     $arrResponse = array('status' => false, 'message' => 'El nombre de usuario debe tener entre 3 y 20 caracteres');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -274,7 +274,7 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                // Validar contraseña solo si se proporciona
+                
                 if (!empty($datosLimpios['clave']) && strlen($datosLimpios['clave']) < 6) {
                     $arrResponse = array('status' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -294,12 +294,12 @@ class Usuarios extends Controllers
                     'personaId' => $datosLimpios['personaId']
                 );
 
-                // Solo incluir contraseña si se proporciona
+                
                 if (!empty($datosLimpios['clave'])) {
                     $arrData['clave'] = $datosLimpios['clave'];
                 }
 
-                // Obtener ID de usuario de sesión
+                
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
                 if (!$idusuario) {
@@ -311,7 +311,7 @@ class Usuarios extends Controllers
 
                 $arrResponse = $this->model->updateUsuario($intIdUsuario, $arrData);
 
-                // Registrar en bitácora si la actualización fue exitosa
+                
                 if ($arrResponse['status'] === true) {
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('Usuarios', 'ACTUALIZAR_USUARIO', $idusuario);
 
@@ -340,7 +340,7 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -356,7 +356,7 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                // Validar que no se elimine a sí mismo
+                
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                 if ($intIdUsuario === $idusuario) {
                     $arrResponse = array('status' => false, 'message' => 'No puedes desactivar tu propia cuenta');
@@ -371,7 +371,7 @@ class Usuarios extends Controllers
                     $arrResponse = array('status' => false, 'message' => 'Error al desactivar el usuario');
                 }
 
-                // Registrar en bitácora si la eliminación fue exitosa
+                
                 if ($arrResponse['status'] === true) {
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('Usuarios', 'ELIMINAR_USUARIO', $idusuario);
 
@@ -450,7 +450,7 @@ class Usuarios extends Controllers
                     $data['page_title'] = "Reporte de Usuarios";
                     $data['fecha_reporte'] = date('d/m/Y H:i:s');
 
-                    // Registrar exportación en bitácora
+                    
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                     $this->bitacoraModel->registrarAccion('Usuarios', 'EXPORTAR_USUARIOS', $idusuario);
 
@@ -479,7 +479,7 @@ class Usuarios extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -526,14 +526,14 @@ class Usuarios extends Controllers
             'session_usuario_nombre' => $_SESSION['usuario_nombre'] ?? 'no definido',
         ];
 
-        // Obtener permisos directamente
+        
         $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('usuarios');
         
         $debug['permisos_obtenidos'] = $permisos;
         $debug['verificacion_ver'] = PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver');
         $debug['verificacion_crear'] = PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'crear');
 
-        // Verificar en base de datos directamente con tu estructura
+        
         try {
             $conexion = new Conexion();
             $conexion->connect();

@@ -1,7 +1,7 @@
-// ============================================================================
-//  VARIABLES GLOBALES PARA GRÁFICOS
-// ============================================================================
-// Se mantienen para que Chart.js pueda destruir y recrear los gráficos.
+
+
+
+
 let graficoIngresos,
   graficoEgresos,
   graficoVentas,
@@ -19,11 +19,11 @@ let graficoStockCritico,
   graficoMovimientosInventario,
   graficoProductosMasVendidos;
 
-// ============================================================================
-//  INICIALIZACIÓN PRINCIPAL
-// ============================================================================
-// Este es el único punto de entrada. Llama a la función de inicialización
-// cuando el DOM está listo.
+
+
+
+
+
 document.addEventListener("DOMContentLoaded", inicializarDashboard);
 
 /**
@@ -33,30 +33,30 @@ document.addEventListener("DOMContentLoaded", inicializarDashboard);
  */
 function inicializarDashboard() {
   try {
-    // Este es el console.log clave. Si lo ves, el script se está ejecutando.
+    
     console.log("✅ Inicializando Dashboard...");
 
     configurarFechasPorDefecto();
     configurarEventListeners();
 
-    // Cargar todos los datos iniciales para el dashboard.
+    
     cargarDatosDashboard();
     cargarDashboardAvanzado();
     cargarReporteCompras();
 
-    // Configurar la actualización automática.
-    setInterval(cargarDashboardAvanzado, 300000); // 5 minutos
+    
+    setInterval(cargarDashboardAvanzado, 300000); 
 
     console.log("🚀 Dashboard inicializado correctamente.");
   } catch (error) {
-    // Si algo falla, lo veremos aquí.
+    
     console.error("❌ Error fatal durante la inicialización del dashboard:", error);
   }
 }
 
-// ============================================================================
-//  CONFIGURACIÓN DE EVENTOS Y VALORES INICIALES
-// ============================================================================
+
+
+
 
 /**
  * Establece las fechas de inicio y fin del mes actual en todos los
@@ -97,12 +97,12 @@ function configurarEventListeners() {
     if (element) {
       element.addEventListener(event, handler);
     } else {
-      // Este aviso es oro para depurar si un ID está mal escrito en el HTML.
+      
       console.warn(`Elemento para listener no encontrado: #${id}`);
     }
   };
 
-  // Listeners para reportes financieros
+  
   addSafeListener("fecha_desde_ingresos", "change", cargarDatosDashboard);
   addSafeListener("fecha_hasta_ingresos", "change", cargarDatosDashboard);
   addSafeListener("filtro_tipo_pago_ingresos", "change", cargarDatosDashboard);
@@ -111,19 +111,19 @@ function configurarEventListeners() {
   addSafeListener("filtro_tipo_pago_egresos", "change", cargarDatosDashboard);
   addSafeListener("filtro_tipo_egreso", "change", cargarDatosDashboard);
 
-  // Listeners para filtros de producción
+  
   addSafeListener("prod_fecha_desde", "change", cargarDashboardAvanzado);
   addSafeListener("prod_fecha_hasta", "change", cargarDashboardAvanzado);
   addSafeListener("prod_empleado", "change", cargarDashboardAvanzado);
   addSafeListener("prod_estado", "change", cargarDashboardAvanzado);
 
-  // Listeners para reporte de compras
+  
   addSafeListener("fecha_desde_compras", "change", cargarReporteCompras);
   addSafeListener("fecha_hasta_compras", "change", cargarReporteCompras);
   addSafeListener("filtro_proveedor_compras", "change", cargarReporteCompras);
   addSafeListener("filtro_producto_compras", "change", cargarReporteCompras);
 
-  // Listeners para botones de acción y descarga
+  
   addSafeListener("btnGenerarReporteCompras", "click", cargarReporteCompras);
   addSafeListener("btnDescargarIngresos", "click", descargarIngresosPDF);
   addSafeListener("btnDescargarEgresos", "click", descargarEgresosPDF);
@@ -131,10 +131,10 @@ function configurarEventListeners() {
   addSafeListener("btnDescargarReporteEjecutivo", "click", descargarReporteEjecutivo);
 }
 
-// ============================================================================
-//  FUNCIONES DE CARGA DE DATOS (FETCH)
-// ============================================================================
-// Estas funciones se comunican con el backend para obtener los datos.
+
+
+
+
 
 function cargarDatosDashboard() {
   if (
@@ -168,7 +168,7 @@ function cargarDatosDashboard() {
     .then(response => response.json())
     .then(data => {
       actualizarResumen(data.resumen);
-      // Aquí faltaban las llamadas a renderizar los gráficos de ingresos/egresos
+      
       renderizarGraficoIngresos(data.reporteIngresos);
       renderizarGraficoEgresos(data.reporteEgresos);
     })
@@ -242,16 +242,16 @@ function cargarReporteCompras() {
     });
 }
 
-// ============================================================================
-//  FUNCIONES DE RENDERIZADO Y DESCARGA
-// ============================================================================
-// (Aquí van todas tus funciones existentes: validarRangoFechas,
-// renderizarTablaCompras, actualizarResumen, renderizarGrafico...,
-// descargar...PDF, etc. Se mantienen sin cambios ya que su lógica interna
-// es correcta).
-// ... PEGA AQUÍ TODAS LAS DEMÁS FUNCIONES DE TU ARCHIVO ORIGINAL ...
-// Por brevedad, no las repito todas, pero asegúrate de que estén aquí.
-// Ejemplo de una de ellas:
+
+
+
+
+
+
+
+
+
+
 
 function renderizarGraficoIngresos(datos) {
   const labels = datos.map(d => d.categoria);
@@ -333,15 +333,15 @@ function renderizarGraficoEgresos(datos) {
   });
 }
 
-// ... (Y así con todas las demás funciones que ya tenías)
-// --- FUNCIONES ORIGINALES (MANTENER SIN CAMBIOS) ---
+
+
 
 function validarRangoFechas(idDesde, idHasta, idErrorContainer) {
   const fechaDesdeInput = document.getElementById(idDesde);
   const fechaHastaInput = document.getElementById(idHasta);
   const errorContainer = document.getElementById(idErrorContainer);
 
-  // Verificación de que los elementos existen
+  
   if (!fechaDesdeInput || !fechaHastaInput || !errorContainer) {
     console.error("Faltan elementos para validarRangoFechas:", {
       idDesde,
@@ -417,7 +417,7 @@ function actualizarResumen(resumen) {
       currency: "VES",
     });
 
-  // Actualizar tarjetas principales con comparaciones
+  
   document.getElementById("ventasHoy").textContent = formatMoney(
     resumen.ventas_hoy
   );
@@ -430,7 +430,7 @@ function actualizarResumen(resumen) {
   document.getElementById("empleadosActivos").textContent =
     resumen.producciones_activas;
 
-  // Calcular comparaciones
+  
   const ventasComparacion =
     resumen.ventas_ayer > 0
       ? ((resumen.ventas_hoy - resumen.ventas_ayer) / resumen.ventas_ayer) * 100
@@ -452,7 +452,7 @@ function actualizarResumen(resumen) {
     1
   )}% vs ayer`;
 
-  // Clases CSS para los indicadores
+  
   document.getElementById("ventasHoyComparacion").className = `text-xs ${
     ventasComparacion >= 0 ? "text-green-600" : "text-red-600"
   }`;
@@ -461,7 +461,7 @@ function actualizarResumen(resumen) {
   }`;
 }
 
-// --- NUEVAS FUNCIONES AVANZADAS ---
+
 
 function actualizarKPIsEjecutivos(kpis) {
  console.log("Actualizando KPIs Ejecutivos:", kpis);
@@ -716,7 +716,7 @@ function renderizarGraficoTopProveedores(datos) {
 }
 
 function renderizarAnalisisInventario(datos) {
-  // Stock Crítico
+  
   const ctxStock = document.getElementById("graficoStockCritico").getContext("2d");
   if (graficoStockCritico) graficoStockCritico.destroy();
 
@@ -738,7 +738,7 @@ function renderizarAnalisisInventario(datos) {
     },
   });
 
-  // Valor por Categoría
+  
   try {
     const valorCategoria =
       typeof datos.valor_por_categoria === "string"
@@ -777,7 +777,7 @@ function renderizarAnalisisInventario(datos) {
     console.error("Error renderizando valor por categoría:", e);
   }
 
-  // Productos Más Vendidos
+  
   try {
     const productosMasVendidos =
       typeof datos.productos_mas_vendidos === "string"
@@ -841,7 +841,7 @@ function renderizarTablaKPIs(datos) {
   });
 }
 
-// --- FUNCIONES DE DESCARGA (MANTENER ORIGINALES) ---
+
 
 function descargarIngresosPDF() {
   if (
@@ -902,7 +902,7 @@ function descargarReporteCompras() {
   );
 }
 
-// NUEVA FUNCIÓN DE DESCARGA
+
 function descargarReporteEjecutivo() {
   window.open(`dashboard/descargarReporteEjecutivoPDF`, "_blank");
 }

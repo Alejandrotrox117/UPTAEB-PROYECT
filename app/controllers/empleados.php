@@ -19,7 +19,7 @@ class Empleados extends Controllers
         parent::__construct();
     }
 
-    // Método para mostrar la vista principal de gestión de empleados
+    
     public function index()
     {
         $data['page_title'] = "Gestión de Empleados";
@@ -28,7 +28,7 @@ class Empleados extends Controllers
         $this->views->getView($this, "empleados", $data);
     }
 
-    // Método para obtener todos los empleados en formato JSON
+    
     public function getEmpleadoData()
     {
         $arrData = $this->get_model()->SelectAllEmpleados();
@@ -44,20 +44,20 @@ class Empleados extends Controllers
         exit();
     }
 
-    // Método para crear un nuevo empleado
+    
     public function createEmpleado()
     {
         try {
-            $json = file_get_contents('php://input'); // Lee los datos JSON enviados por el frontend
-            $data = json_decode($json, true); // Decodifica los datos JSON
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true); 
 
-            // Validar que los datos no sean nulos
+            
             if (!$data || !is_array($data)) {
                 echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
                 exit();
             }
 
-            // Extraer los datos del JSON
+            
             $nombre = trim($data['nombre'] ?? '');
             $apellido = trim($data['apellido'] ?? '');
             $identificacion = trim($data['identificacion'] ?? '');
@@ -73,13 +73,13 @@ class Empleados extends Controllers
             $puesto = trim($data['puesto'] ?? '');
             $salario = trim($data['salario'] ?? '');
 
-            // Validar campos obligatorios
+            
             if (empty($nombre) || empty($apellido) || empty($identificacion)) {
                 echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
                 exit();
             }
 
-            // Insertar los datos usando el modelo
+            
             $insertData = $this->model->insertEmpleado([
                 "nombre" => $nombre,
                 "apellido" => $apellido,
@@ -97,7 +97,7 @@ class Empleados extends Controllers
                 "salario" => $salario,
             ]);
 
-            // Respuesta al cliente
+            
             if ($insertData) {
                 echo json_encode(["status" => true, "message" => "Empleado registrado correctamente."]);
             } else {
@@ -109,26 +109,26 @@ class Empleados extends Controllers
         exit();
     }
 
-    // Método para eliminar lógicamente un empleado
+    
     public function deleteEmpleado()
     {
-        $json = file_get_contents('php://input'); // Lee los datos JSON enviados por el frontend
-        $data = json_decode($json, true); // Decodifica los datos JSON
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true); 
 
-        // Extraer el ID del empleado a desactivar
+        
         $idempleado = trim($data['idempleado']) ?? null;
 
-        // Validar que el ID no esté vacío
+        
         if (empty($idempleado)) {
             $response = ["status" => false, "message" => "ID de empleado no proporcionado."];
             echo json_encode($response);
             return;
         }
 
-        // Desactivar el empleado usando el modelo
+        
         $deleteData = $this->get_model()->deleteEmpleado($idempleado);
 
-        // Respuesta al cliente
+        
         if ($deleteData) {
             $response = ["status" => true, "message" => "Empleado desactivado correctamente."];
         } else {
@@ -139,13 +139,13 @@ class Empleados extends Controllers
         exit();
     }
 
-    // Método para actualizar un empleado existente
+    
     public function updateEmpleado()
     {
-        $json = file_get_contents('php://input'); // Lee los datos JSON enviados por la vista
-        $data = json_decode($json, true); // Decodifica los datos JSON
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true); 
 
-        // Extraer los datos del JSON
+        
         $idempleado = trim($data['idempleado']) ?? null;
         $nombre = trim($data['nombre']) ?? null;
         $apellido = trim($data['apellido']) ?? null;
@@ -163,21 +163,21 @@ class Empleados extends Controllers
         $puesto = trim($data['puesto']) ?? null;
         $salario = trim($data['salario']) ?? null;
 
-        // Validar campos obligatorios
+        
         if (empty($idempleado) || empty($nombre) || empty($apellido) || empty($identificacion)) {
             $response = ["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."];
             echo json_encode($response);
             return;
         }
 
-        // Validar formato del correo electrónico
+        
         if (!filter_var($correo_electronico, FILTER_VALIDATE_EMAIL)) {
             $response = ["status" => false, "message" => "El correo electrónico no es válido."];
             echo json_encode($response);
             return;
         }
 
-        // Actualizar los datos usando el modelo
+        
         $updateData = $this->get_model()->updateEmpleado([
             "idempleado" => $idempleado,
             "nombre" => $nombre,
@@ -197,7 +197,7 @@ class Empleados extends Controllers
             "salario" => $salario,
         ]);
 
-        // Respuesta al cliente
+        
         if ($updateData) {
             $response = ["status" => true, "message" => "Empleado actualizado correctamente."];
         } else {
@@ -208,7 +208,7 @@ class Empleados extends Controllers
         exit();
     }
 
-    // Método para obtener un empleado por su ID
+    
     public function getEmpleadoById($idempleado)
     {
         try {

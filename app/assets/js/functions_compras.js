@@ -708,7 +708,7 @@ document.addEventListener("DOMContentLoaded", function () {
         option.textContent = `${moneda.codigo_moneda} (${simbolo})`;
         selectMonedaGeneralModal.appendChild(option);
       });
-      selectMonedaGeneralModal.value = "3"; // VES por defecto
+      selectMonedaGeneralModal.value = "3"; 
     } catch (error) {
       console.error("Error al cargar monedas:", error);
       selectMonedaGeneralModal.innerHTML =
@@ -743,7 +743,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Buscar proveedores
+  
   if (btnBuscarProveedorModal && inputCriterioProveedorModal) {
     btnBuscarProveedorModal.addEventListener("click", async function () {
       const termino = inputCriterioProveedorModal.value.trim();
@@ -865,12 +865,12 @@ document.addEventListener("DOMContentLoaded", function () {
     let subtotalGeneralBs = 0;
     let totalDescuentosBs = 0;
 
-    // Calcular subtotal sumando los subtotales de cada línea ya convertidos a bolívares
+    
     detalleCompraItemsModal.forEach((item) => {
       subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
     });
 
-    // Calcular y mostrar el total general (subtotal - descuentos)
+    
     const totalGeneral = subtotalGeneralBs - totalDescuentosBs;
     totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toLocaleString(
       "es-VE",
@@ -878,7 +878,7 @@ document.addEventListener("DOMContentLoaded", function () {
     )}`;
     totalGeneralInputModal.value = totalGeneral.toFixed(2);
   }
-  //DETALLE DE COMPRA
+  
   if (btnAgregarProductoDetalleModal && selectProductoAgregarModal) {
     btnAgregarProductoDetalleModal.addEventListener("click", function () {
       const selectedOption =
@@ -1020,7 +1020,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isNaN(index) || index >= detalleCompraItemsModal.length) return;
         const item = detalleCompraItemsModal[index];
 
-        // Event listeners para pesos de romana actualizados el 12-06-2025
+        
         const btnUltimoPesoBruto = row.querySelector(
           ".btnUltimoPesoRomanaBruto"
         );
@@ -1043,7 +1043,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 actualizarCalculosFilaModal(row, item);
 
-                // Guardar el peso en la base de datos
+                
                 await fetch("Compras/guardarPesoRomana", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -1086,7 +1086,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 row.querySelector(".peso_vehiculo_modal").value = data.peso;
                 actualizarCalculosFilaModal(row, item);
 
-                // Guardar el peso en la base de datos
+                
                 await fetch("Compras/guardarPesoRomana", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -1097,7 +1097,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     variacion: data.variacion || null,
                     promedio: data.promedio || null,
                     observaciones: "Peso registrado desde interfaz de compra",
-                    usuario_id: window.ID_USUARIO_ACTUAL || null, // Ajusta según tu sistema
+                    usuario_id: window.ID_USUARIO_ACTUAL || null, 
                     fecha: new Date()
                       .toISOString()
                       .slice(0, 19)
@@ -1117,7 +1117,7 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         }
 
-        // Checkbox no usa vehículo
+        
         const cbNoUsaVehiculo = row.querySelector(".no_usa_vehiculo_cb_modal");
         if (cbNoUsaVehiculo) {
           cbNoUsaVehiculo.addEventListener("change", function (e) {
@@ -1164,7 +1164,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
               let valor = parseFloat(e.target.value) || 0;
 
-              // Validar que el descuento no sea mayor a 100%
+              
               if (fieldName === "descuento" && valor > 100) {
                 valor = 100;
                 e.target.value = 100;
@@ -1180,7 +1180,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
           });
 
-        // Botón eliminar item
+        
         row
           .querySelector(".btnEliminarItemDetalleModal")
           .addEventListener("click", function () {
@@ -1210,7 +1210,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  // GUARDAR COMPRA - ACTUALIZADO PARA ENVIAR DESCUENTOS
+  
   if (btnGuardarCompraModal) {
     btnGuardarCompraModal.addEventListener("click", async function () {
       if (!validarCamposVacios(camposCompras, "formNuevaCompraModal")) return;
@@ -1243,7 +1243,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const formData = new FormData(formNuevaCompraModal);
-      // Mapear productos con todos los datos incluyendo descuento
+      
       const productosDetalle = detalleCompraItemsModal.map((item) => ({
         idproducto: item.idproducto,
         nombre_producto: item.nombre,
@@ -1253,7 +1253,7 @@ document.addEventListener("DOMContentLoaded", function () {
             : item.cantidad_unidad,
         precio_unitario_compra: item.precio_unitario,
         idmoneda_detalle: item.idmoneda_item,
-        descuento: item.descuento || 0, // CAMPO DESCUENTO AGREGADO
+        descuento: item.descuento || 0, 
         moneda: item.moneda,
         subtotal_original_linea: item.subtotal_original_linea || 0,
         monto_descuento_linea: item.monto_descuento_linea || 0,
@@ -1311,7 +1311,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL REGISTRAR PROVEEDOR - CORREGIDO
+  
   const btnAbrirModalRegistroProveedor = document.getElementById(
     "btnAbrirModalRegistrarProveedor"
   );
@@ -1328,7 +1328,7 @@ document.addEventListener("DOMContentLoaded", function () {
     "modalRegistrarProveedor"
   );
 
-  // Función para abrir modal registrar proveedor
+  
   function abrirModalRegistrarProveedor() {
     if (modalRegistrarProveedor) {
       if (formRegistrarProveedor) formRegistrarProveedor.reset();
@@ -1341,7 +1341,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Función para cerrar modal registrar proveedor
+  
   function cerrarModalRegistrarProveedor() {
     if (modalRegistrarProveedor) {
       limpiarValidaciones(camposFormularioProveedor, "formRegistrarProveedor");
@@ -1350,7 +1350,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Event listeners para modal registrar proveedor
+  
   if (btnAbrirModalRegistroProveedor) {
     btnAbrirModalRegistroProveedor.addEventListener("click", function (e) {
       e.preventDefault();
@@ -1375,7 +1375,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Prevenir que el modal se cierre al hacer click dentro del contenido
+  
   if (modalRegistrarProveedor) {
     const modalContent = modalRegistrarProveedor.querySelector(
       ".modal-content, .bg-white"
@@ -1387,7 +1387,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // SUBMIT FORM REGISTRAR PROVEEDOR
+  
   if (formRegistrarProveedor) {
     formRegistrarProveedor.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -1516,7 +1516,7 @@ document.addEventListener("DOMContentLoaded", function () {
     "btnActualizarCompraModal"
   );
 
-  // Event listeners para cerrar modal
+  
   if (btnCerrarModalEditarCompra) {
     btnCerrarModalEditarCompra.addEventListener("click", function () {
       cerrarModalEditarCompra();
@@ -1529,7 +1529,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Cerrar modal al hacer click fuera
+  
   if (modalEditarCompra) {
     modalEditarCompra.addEventListener("click", (e) => {
       if (e.target === modalEditarCompra) {
@@ -1538,7 +1538,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Event listener para cambio de fecha
+  
   if (fechaActualizar) {
     fechaActualizar.addEventListener("change", function () {
       fechaActualCompraActualizar = this.value;
@@ -1548,7 +1548,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Event listener para cambio de moneda
+  
   if (selectMonedaGeneralActualizar) {
     selectMonedaGeneralActualizar.addEventListener(
       "change",
@@ -1556,7 +1556,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  // Event listener para buscar proveedor
+  
   if (btnBuscarProveedorActualizar && inputCriterioProveedorActualizar) {
     btnBuscarProveedorActualizar.addEventListener("click", async function () {
       const termino = inputCriterioProveedorActualizar.value.trim();
@@ -1623,7 +1623,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Event listener para agregar producto
+  
   if (btnAgregarProductoDetalleActualizar && selectProductoAgregarActualizar) {
     btnAgregarProductoDetalleActualizar.addEventListener("click", function () {
       const selectedOption =
@@ -1678,7 +1678,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Event listener para actualizar compra
+  
   if (btnActualizarCompraModal) {
     btnActualizarCompraModal.addEventListener("click", async function () {
       if (
@@ -1788,7 +1788,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// Ver compra
+
 function verCompra(idCompra) {
   fetch(`Compras/getCompraById/${idCompra}`, {
     method: "GET",
@@ -1857,7 +1857,7 @@ function verCompra(idCompra) {
       Swal.fire("Error", "Error de conexión.", "error");
     });
 }
-// Mostrar modal de compra
+
 function mostrarModalVerCompra(
   compra,
   detalles,
@@ -2006,7 +2006,7 @@ function mostrarModalVerCompra(
 
   abrirModal("modalVerCompra");
 }
-// Eliminar compra
+
 function eliminarCompra(idCompra, nroCompra) {
   Swal.fire({
     title: "¿Estás seguro?",
@@ -2053,7 +2053,7 @@ function eliminarCompra(idCompra, nroCompra) {
     }
   });
 }
-// Cambiar estado de compra
+
 function cambiarEstadoCompra(idCompra, nuevoEstado) {
   const mensajesEstado = {
     POR_AUTORIZAR: "enviar a autorización",
@@ -2112,7 +2112,7 @@ function cambiarEstadoCompra(idCompra, nuevoEstado) {
   });
 }
 
-// Función para abrir modal de editar
+
 async function editarCompra(idCompra) {
   try {
     const response = await fetch(`Compras/getCompraParaEditar/${idCompra}`);
@@ -2134,9 +2134,9 @@ async function editarCompra(idCompra) {
   }
 }
 
-// Función para abrir modal de editar con datos
+
 async function abrirModalEditarCompra(compra, detalles) {
-  // Resetear formulario
+  
   const formEditarCompraModal = document.getElementById(
     "formEditarCompraModal"
   );
@@ -2162,30 +2162,30 @@ async function abrirModalEditarCompra(compra, detalles) {
   detalleCompraItemsActualizar = [];
   mensajeErrorFormCompraActualizar.textContent = "";
 
-  // Cargar datos básicos
+  
   document.getElementById("idcompra_editar").value = compra.idcompra;
   fechaActualizar.value = compra.fecha;
   fechaActualCompraActualizar = compra.fecha;
   document.getElementById("observacionesActualizar").value =
     compra.observaciones_compra || "";
 
-  // Cargar tasas por fecha
+  
   await cargarTasasPorFechaActualizar(compra.fecha);
 
-  // Cargar monedas y seleccionar la moneda general
+  
   await cargarMonedasParaActualizar();
   selectMonedaGeneralActualizar.value = compra.idmoneda_general;
 
-  // Cargar productos
+  
   await cargarProductosParaActualizar();
 
-  // Configurar proveedor
+  
   hiddenIdProveedorActualizar.value = compra.idproveedor;
   divInfoProveedorActualizar.innerHTML = `Sel: <strong>${compra.proveedor_nombre}</strong>`;
   divInfoProveedorActualizar.classList.remove("hidden");
   inputCriterioProveedorActualizar.value = compra.proveedor_nombre;
 
-  // Cargar detalles
+  
   if (detalles && detalles.length > 0) {
     detalles.forEach((detalle) => {
       const item = {
@@ -2223,12 +2223,12 @@ async function abrirModalEditarCompra(compra, detalles) {
     "formEditarCompraModal"
   );
 
-  // Mostrar modal
+  
   modalEditarCompra.classList.remove("opacity-0", "pointer-events-none");
   document.body.classList.add("overflow-hidden");
 }
 
-// Función para cerrar modal de editar
+
 function cerrarModalEditarCompra() {
   const modalEditarCompra = document.getElementById("modalEditarCompra");
   const formEditarCompraModal = document.getElementById(
@@ -2245,7 +2245,7 @@ function cerrarModalEditarCompra() {
   detalleCompraItemsActualizar = [];
 }
 
-// Funciones auxiliares para el modal de actualizar (similares a las del modal de registro)
+
 async function cargarTasasPorFechaActualizar(fecha) {
   const divTasa = document.getElementById("tasaDelDiaInfoActualizar");
   divTasa.textContent = "Cargando tasas del día...";
@@ -2497,7 +2497,7 @@ function addEventListenersToDetalleInputsActualizar() {
       if (isNaN(index) || index >= detalleCompraItemsActualizar.length) return;
       const item = detalleCompraItemsActualizar[index];
 
-      // Event listeners para pesos de romana
+      
       const btnUltimoPesoBruto = row.querySelector(
         ".btnUltimoPesoRomanaBrutoActualizar"
       );
@@ -2520,7 +2520,7 @@ function addEventListenersToDetalleInputsActualizar() {
               }
               actualizarCalculosFilaActualizar(row, item);
 
-              // Guardar el peso en la base de datos
+              
               await fetch("Compras/guardarPesoRomana", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -2531,7 +2531,7 @@ function addEventListenersToDetalleInputsActualizar() {
                   variacion: data.variacion || null,
                   promedio: data.promedio || null,
                   observaciones: "Peso registrado desde interfaz de compra",
-                  usuario_id: window.ID_USUARIO_ACTUAL || null, // Ajusta según tu sistema
+                  usuario_id: window.ID_USUARIO_ACTUAL || null, 
                   fecha: new Date()
                     .toISOString()
                     .slice(0, 19)
@@ -2569,7 +2569,7 @@ function addEventListenersToDetalleInputsActualizar() {
               row.querySelector(".peso_vehiculo_actualizar").value = data.peso;
               actualizarCalculosFilaActualizar(row, item);
 
-              // Guardar el peso en la base de datos
+              
               await fetch("Compras/guardarPesoRomana", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -2580,7 +2580,7 @@ function addEventListenersToDetalleInputsActualizar() {
                   variacion: data.variacion || null,
                   promedio: data.promedio || null,
                   observaciones: "Peso registrado desde interfaz de compra",
-                  usuario_id: window.ID_USUARIO_ACTUAL || null, // Ajusta según tu sistema
+                  usuario_id: window.ID_USUARIO_ACTUAL || null, 
                   fecha: new Date()
                     .toISOString()
                     .slice(0, 19)
@@ -2600,7 +2600,7 @@ function addEventListenersToDetalleInputsActualizar() {
         });
       }
 
-      // Checkbox no usa vehículo
+      
       const cbNoUsaVehiculo = row.querySelector(
         ".no_usa_vehiculo_cb_actualizar"
       );
@@ -2664,7 +2664,7 @@ function addEventListenersToDetalleInputsActualizar() {
           });
         });
 
-      // Botón eliminar item
+      
       row
         .querySelector(".btnEliminarItemDetalleActualizar")
         .addEventListener("click", function () {

@@ -134,7 +134,7 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
     mensajeElement.textContent = mensaje;
     modal.classList.remove('opacity-0', 'pointer-events-none');
   } else {
-    // Fallback con SweetAlert si no existe el modal
+    
     Swal.fire({
       icon: 'warning',
       title: 'Acceso Denegado',
@@ -166,13 +166,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   $(document).ready(function () {
-    //  VERIFICAR PERMISOS ANTES DE CARGAR LA TABLA
+    
     if (!tienePermiso('ver')) {
       console.warn('Sin permisos para ver clientes');
       return;
     }
 
-    //  NOMBRE CORRECTO DE LA TABLA
+    
     if ($.fn.DataTable.isDataTable("#Tablaclientes")) {
       $("#Tablaclientes").DataTable().destroy();
     }
@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
             $("#Tablaclientes_processing").css("display", "none"); 
             
-            //  VERIFICAR SI ES ERROR DE PERMISOS
+            
             if (json && json.message && json.message.includes('permisos')) {
               mostrarModalPermisosDenegados(json.message);
             } else {
@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
           );
           $("#Tablaclientes_processing").css("display", "none"); 
           
-          //  VERIFICAR SI ES ERROR DE PERMISOS
+          
           try {
             const response = JSON.parse(jqXHR.responseText);
             if (response && response.message && response.message.includes('permisos')) {
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
               return;
             }
           } catch (e) {
-            // No es JSON válido, continuar con error genérico
+            
           }
           
           alert("Error de comunicación al cargar los datos de clientes. Por favor, intente más tarde.");
@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
           title: "Nro",
           className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background break-all",
           render: function (data, type, row, meta) {
-            return meta.row + 1; // Numeración automática
+            return meta.row + 1; 
           }
         },
         {
@@ -302,7 +302,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const nombreClienteParaEliminar = `${row.nombre} ${row.apellido}` || row.cedula;
             let acciones = '<div class="inline-flex items-center space-x-1">';
             
-            //  VER - Solo si tiene permisos
+            
             if (tienePermiso('ver')) {
               acciones += `
                 <button class="ver-cliente-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
@@ -312,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            //  EDITAR - Solo si tiene permisos
+            
             if (tienePermiso('editar')) {
               acciones += `
                 <button class="editar-cliente-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
@@ -322,7 +322,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            //  ELIMINAR - Solo si tiene permisos
+            
             if (tienePermiso('eliminar')) {
               acciones += `
                 <button class="eliminar-cliente-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
@@ -333,7 +333,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            // Si no tiene permisos para ninguna acción, mostrar mensaje
+            
             if (!tienePermiso('ver') && !tienePermiso('editar') && !tienePermiso('eliminar')) {
               acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
             }
@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-    //  EVENT LISTENERS CON VERIFICACIÓN DE PERMISOS - TABLA CORRECTA
+    
     $("#Tablaclientes tbody").on("click", ".ver-cliente-btn", function (e) {
       e.preventDefault();
       
@@ -478,7 +478,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  //  BOTÓN REGISTRAR CON VERIFICACIÓN DE PERMISOS
+  
   const btnAbrirModalRegistro = document.getElementById("abrirModalBtn");
   if (btnAbrirModalRegistro) {
     btnAbrirModalRegistro.addEventListener("click", function (e) {
@@ -512,7 +512,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  //  Event listeners para modales CON IDS CORRECTOS
+  
   const formRegistrar = document.getElementById("clienteForm");
   const btnCerrarModalRegistro = document.getElementById("cerrarModalBtn");
   const btnCerrarModalRegistroX = document.getElementById("cerrarModalBtnX");
@@ -525,7 +525,7 @@ document.addEventListener("DOMContentLoaded", function () {
     btnCerrarModalRegistroX.addEventListener("click", () => cerrarModal("clienteModal"));
   }
 
-  //  CORREGIR - EL FORMULARIO DEBE MANEJAR EL SUBMIT, NO EL BOTÓN
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", (e) => { 
       e.preventDefault(); 
@@ -533,7 +533,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  //  TAMBIÉN AGREGAR EVENT LISTENER AL BOTÓN DIRECTAMENTE COMO RESPALDO
+  
   const btnRegistrarCliente = document.getElementById("registrarClienteBtn");
   if (btnRegistrarCliente) {
     btnRegistrarCliente.addEventListener("click", (e) => {
@@ -615,7 +615,7 @@ function registrarCliente() {
         cerrarModal("clienteModal");
         if (tablaClientes && tablaClientes.ajax) tablaClientes.ajax.reload(null, false);
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -642,7 +642,7 @@ function registrarCliente() {
 }
 
 function editarCliente(idCliente) {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('editar')) {
     mostrarModalPermisosDenegados("No tienes permisos para editar clientes.");
     return;
@@ -657,7 +657,7 @@ function editarCliente(idCliente) {
       if (result.status && result.data) {
         mostrarModalEditarCliente(result.data);
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -675,13 +675,13 @@ function editarCliente(idCliente) {
 }
 
 function mostrarModalEditarCliente(cliente) {
-  console.log("📋 Datos del cliente recibidos:", cliente); //  DEBUG
+  console.log("📋 Datos del cliente recibidos:", cliente); 
   
   const formActualizar = document.getElementById("formActualizarCliente");
   if (formActualizar) formActualizar.reset();
   limpiarValidaciones(camposFormularioActualizarCliente, "formActualizarCliente");
 
-  //  VERIFICAR QUE EXISTAN LOS ELEMENTOS ANTES DE ASIGNAR
+  
   const elementos = {
     idclienteActualizar: document.getElementById("idclienteActualizar"),
     cedulaActualizar: document.getElementById("cedulaActualizar"),
@@ -693,7 +693,7 @@ function mostrarModalEditarCliente(cliente) {
     estatusActualizar: document.getElementById("estatusActualizar")
   };
 
-  //  VERIFICAR ELEMENTOS FALTANTES
+  
   const elementosFaltantes = [];
   for (const [nombre, elemento] of Object.entries(elementos)) {
     if (!elemento) {
@@ -707,7 +707,7 @@ function mostrarModalEditarCliente(cliente) {
     return;
   }
 
-  //  ASIGNAR VALORES SOLO SI LOS ELEMENTOS EXISTEN
+  
   try {
     elementos.idclienteActualizar.value = cliente.idcliente || "";
     elementos.cedulaActualizar.value = cliente.cedula || "";
@@ -730,7 +730,7 @@ function mostrarModalEditarCliente(cliente) {
 }
 
 function actualizarCliente() {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('editar')) {
     mostrarModalPermisosDenegados("No tienes permisos para editar clientes.");
     return;
@@ -790,7 +790,7 @@ function actualizarCliente() {
         cerrarModal("modalActualizarCliente");
         if (tablaClientes && tablaClientes.ajax) tablaClientes.ajax.reload(null, false);
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -817,7 +817,7 @@ function actualizarCliente() {
 }
 
 function verCliente(idCliente) {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('ver')) {
     mostrarModalPermisosDenegados("No tienes permisos para ver detalles de clientes.");
     return;
@@ -841,7 +841,7 @@ function verCliente(idCliente) {
         
         abrirModal("modalVerCliente");
       } else {
-        //  VERIFICAR SI ES ERROR DE PERMISOS
+        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -859,7 +859,7 @@ function verCliente(idCliente) {
 }
 
 function eliminarCliente(idCliente, nombreCliente) {
-  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  
   if (!tienePermiso('eliminar')) {
     mostrarModalPermisosDenegados("No tienes permisos para eliminar clientes.");
     return;
@@ -887,7 +887,7 @@ function eliminarCliente(idCliente, nombreCliente) {
             Swal.fire("¡Desactivado!", result.message, "success");
             if (tablaClientes && tablaClientes.ajax) tablaClientes.ajax.reload(null, false);
           } else {
-            //  VERIFICAR SI ES ERROR DE PERMISOS
+            
             if (result.message && result.message.includes('permisos')) {
               mostrarModalPermisosDenegados(result.message);
             } else {
@@ -908,7 +908,7 @@ function eliminarCliente(idCliente, nombreCliente) {
 
 
 function exportarClientes() {
-  console.log("🔄 Iniciando exportación de clientes..."); // DEBUG
+  console.log("🔄 Iniciando exportación de clientes..."); 
   
   if (!tienePermiso('exportar')) {
     mostrarModalPermisosDenegados("No tienes permisos para exportar clientes.");
@@ -932,18 +932,18 @@ function exportarClientes() {
     headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
   })
     .then(response => {
-      console.log("📥 Respuesta del servidor:", response); // DEBUG
+      console.log("📥 Respuesta del servidor:", response); 
       return response.json();
     })
     .then(result => {
-      console.log("📋 Resultado procesado:", result); // DEBUG
+      console.log("📋 Resultado procesado:", result); 
       Swal.close(); 
       
       if (result.status && result.data) {
      
         console.log("📊 Datos para exportar:", result.data);
         
-        // Crear y descargar archivo CSV
+        
         const csvContent = generarCSV(result.data);
         descargarCSV(csvContent, 'clientes_export.csv');
         
@@ -957,7 +957,7 @@ function exportarClientes() {
       }
     })
     .catch(error => {
-      console.error("❌ Error en exportación:", error); // DEBUG
+      console.error("❌ Error en exportación:", error); 
       Swal.close(); 
       
       if (error.message && error.message.includes('permisos')) {
@@ -968,7 +968,7 @@ function exportarClientes() {
     });
 }
 
-//  FUNCIÓN PARA GENERAR CSV
+
 function generarCSV(datos) {
   const headers = ['ID', 'Cédula', 'Nombre', 'Apellido', 'Teléfono', 'Dirección', 'Estatus', 'Observaciones'];
   const csvContent = [
@@ -988,7 +988,7 @@ function generarCSV(datos) {
   return csvContent;
 }
 
-//  FUNCIÓN PARA DESCARGAR CSV
+
 function descargarCSV(csvContent, filename) {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');

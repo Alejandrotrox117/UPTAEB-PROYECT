@@ -39,7 +39,7 @@ class TiposPagos extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -175,7 +175,7 @@ class TiposPagos extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -245,7 +245,7 @@ class TiposPagos extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {

@@ -39,7 +39,7 @@ class RolesModulos extends Controllers
     public function createRolModulo()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $json = file_get_contents('php://input');
+            $json = file_get_contents('php://input');//input');
             $data = json_decode($json, true);
 
             if (!$data) {

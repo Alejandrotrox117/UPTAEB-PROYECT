@@ -10,16 +10,16 @@ import {
 } from "./validaciones.js";
 
 let tablaMovimientos;
-let tiposMovimientoDisponibles = []; // ✅ VARIABLE GLOBAL
+let tiposMovimientoDisponibles = []; 
 
-// ✅ MANTENER VALIDACIONES Y FUNCIONES DE PERMISOS (igual que antes)
+
 const expresionesMovimientos = {
   numeros_decimales: /^\d+(\.\d{1,4})?$/,
   cantidad_positiva: /^[1-9]\d*(\.\d{1,3})?$/,
   stock: /^\d+(\.\d{1,3})?$/
 };
 
-// ✅ CAMPOS DE VALIDACIÓN (mantener igual)
+
 const camposFormularioMovimiento = [
   {
     id: "idproducto",
@@ -119,7 +119,7 @@ const camposFormularioActualizarMovimiento = [
   }
 ];
 
-// ✅ FUNCIÓN PARA MOSTRAR MODAL DE PERMISOS DENEGADOS
+
 function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realizar esta acción.") {
   const modal = document.getElementById('modalPermisosDenegados');
   const mensajeElement = document.getElementById('mensajePermisosDenegados');
@@ -128,7 +128,7 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
     mensajeElement.textContent = mensaje;
     modal.classList.remove('opacity-0', 'pointer-events-none');
   } else {
-    // Fallback con SweetAlert si no existe el modal
+    
     Swal.fire({
       icon: 'warning',
       title: 'Acceso Denegado',
@@ -138,7 +138,7 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
   }
 }
 
-// ✅ FUNCIÓN PARA CERRAR MODAL DE PERMISOS DENEGADOS
+
 function cerrarModalPermisosDenegados() {
   const modal = document.getElementById('modalPermisosDenegados');
   if (modal) {
@@ -146,12 +146,12 @@ function cerrarModalPermisosDenegados() {
   }
 }
 
-// ✅ VERIFICAR SI TIENE PERMISOS
+
 function tienePermiso(accion) {
   return window.permisosMovimientos && window.permisosMovimientos[accion] === true;
 }
 
-// ✅ VALIDACIÓN PERSONALIZADA PARA MOVIMIENTOS
+
 function validarFormularioMovimiento(camposArray, formId) {
   const form = document.getElementById(formId);
   if (!form) return false;
@@ -160,7 +160,7 @@ function validarFormularioMovimiento(camposArray, formId) {
   let tieneEntrada = false;
   let tieneSalida = false;
 
-  // ✅ VALIDAR CAMPOS OBLIGATORIOS PRIMERO
+  
   for (const campo of camposArray) {
     if (campo.opcional) continue;
 
@@ -180,7 +180,7 @@ function validarFormularioMovimiento(camposArray, formId) {
     if (!esValido) formularioValido = false;
   }
 
-  // ✅ VALIDAR CANTIDADES ESPECÍFICAS
+  
   const entradaField = form.querySelector('#cantidad_entrada, #cantidad_entradaActualizar');
   const salidaField = form.querySelector('#cantidad_salida, #cantidad_salidaActualizar');
 
@@ -206,13 +206,13 @@ function validarFormularioMovimiento(camposArray, formId) {
     }
   }
 
-  // ✅ VALIDAR QUE TENGA AL MENOS UNA CANTIDAD
+  
   if (!tieneEntrada && !tieneSalida) {
     Swal.fire("Atención", "Debe especificar al menos una cantidad (entrada o salida).", "warning");
     formularioValido = false;
   }
 
-  // ✅ VALIDAR QUE NO TENGA AMBAS CANTIDADES
+  
   if (tieneEntrada && tieneSalida) {
     Swal.fire("Atención", "No puede tener cantidad de entrada y salida al mismo tiempo.", "warning");
     formularioValido = false;
@@ -221,15 +221,15 @@ function validarFormularioMovimiento(camposArray, formId) {
   return formularioValido;
 }
 
-// ✅ FUNCIÓN PARA MOSTRAR ERROR EN CAMPO
+
 function mostrarErrorCampo(inputElement, mensaje) {
-  // Remover clases de éxito
+  
   inputElement.classList.remove('border-green-500', 'ring-green-500');
   
-  // Agregar clases de error
+  
   inputElement.classList.add('border-red-500', 'ring-red-500');
   
-  // Buscar o crear elemento de mensaje de error
+  
   let errorElement = inputElement.parentNode.querySelector('.error-message');
   if (!errorElement) {
     errorElement = document.createElement('span');
@@ -241,7 +241,7 @@ function mostrarErrorCampo(inputElement, mensaje) {
   errorElement.style.display = 'block';
 }
 
-// ✅ FUNCIÓN PARA LIMPIAR ERRORES DE CAMPO
+
 function limpiarErroresCampo(inputElement) {
   inputElement.classList.remove('border-red-500', 'ring-red-500');
   inputElement.classList.add('border-green-500', 'ring-green-500');
@@ -252,7 +252,7 @@ function limpiarErroresCampo(inputElement) {
   }
 }
 
-// ✅ NUEVAS FUNCIONES PARA FILTROS POR TIPO DE MOVIMIENTO
+
 
 /**
  * Cargar tipos de movimiento disponibles para filtros
@@ -267,10 +267,10 @@ function cargarTiposMovimientoParaFiltros() {
         tiposMovimientoDisponibles = result.data;
         console.log("📋 Tipos de movimiento cargados:", tiposMovimientoDisponibles);
         
-        // ✅ LLENAR SELECT
+        
         llenarSelectFiltroTipos();
         
-        // ✅ MOSTRAR ESTADÍSTICAS SIMPLES
+        
         mostrarEstadisticasMovimientos();
       } else {
         console.error("Error al cargar tipos de movimiento:", result.message);
@@ -291,10 +291,10 @@ function llenarSelectFiltroTipos() {
     return;
   }
 
-  // ✅ OPCIÓN "TODOS"
+  
   let optionsHTML = '<option value="">Todos los tipos de movimiento</option>';
   
-  // ✅ OPCIONES POR CADA TIPO
+  
   tiposMovimientoDisponibles.forEach(tipo => {
     const descripcion = tipo.descripcion ? ` - ${tipo.descripcion}` : '';
     optionsHTML += `<option value="${tipo.idtipomovimiento}">${tipo.nombre}${descripcion}</option>`;
@@ -302,7 +302,7 @@ function llenarSelectFiltroTipos() {
 
   selectFiltro.innerHTML = optionsHTML;
 
-  // ✅ EVENT LISTENER PARA FILTRAR
+  
   selectFiltro.addEventListener('change', function() {
     const tipoSeleccionado = this.value;
     const nombreTipo = this.options[this.selectedIndex].text;
@@ -317,7 +317,7 @@ function llenarSelectFiltroTipos() {
 function filtrarMovimientosPorTipo(tipoId, nombreTipo) {
   console.log(`🔍 Filtrando por tipo: ${nombreTipo} (ID: ${tipoId})`);
   
-  // ✅ ACTUALIZAR INDICADOR
+  
   const indicadorFiltro = document.getElementById('indicador-filtro-actual');
   if (indicadorFiltro) {
     if (!tipoId) {
@@ -329,13 +329,13 @@ function filtrarMovimientosPorTipo(tipoId, nombreTipo) {
     }
   }
 
-  // ✅ FILTRAR DATATABLE
+  
   if (tablaMovimientos) {
     if (!tipoId) {
-      // Mostrar todos
-      tablaMovimientos.column(3).search('').draw(); // Columna de tipo de movimiento
+      
+      tablaMovimientos.column(3).search('').draw(); 
     } else {
-      // Buscar por nombre del tipo
+      
       const tipoMovimiento = tiposMovimientoDisponibles.find(t => t.idtipomovimiento == tipoId);
       if (tipoMovimiento) {
         tablaMovimientos.column(3).search('^' + tipoMovimiento.nombre + '$', true, false).draw();
@@ -343,7 +343,7 @@ function filtrarMovimientosPorTipo(tipoId, nombreTipo) {
     }
   }
 
-  // ✅ ACTUALIZAR CONTADORES
+  
   actualizarContadoresSimples();
 }
 
@@ -417,7 +417,7 @@ function actualizarContadoresSimples() {
 
   const datos = tablaMovimientos.rows({ search: 'applied' }).data().toArray();
   
-  // ✅ CONTAR TOTALES
+  
   const totalMovimientos = datos.length;
   
   let totalEntradas = 0;
@@ -431,7 +431,7 @@ function actualizarContadoresSimples() {
     if (salida > 0) totalSalidas++;
   });
 
-  // ✅ ACTUALIZAR DOM
+  
   const statTotal = document.getElementById('stat-total');
   const statEntradas = document.getElementById('stat-entradas');
   const statSalidas = document.getElementById('stat-salidas');
@@ -464,7 +464,7 @@ function buscarMovimientosPersonalizado() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  // ✅ MANTENER EVENT LISTENERS DE PERMISOS
+  
   const btnCerrarModalPermisos = document.getElementById('btnCerrarModalPermisos');
   
   if (btnCerrarModalPermisos) {
@@ -472,16 +472,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   $(document).ready(function () {
-    // ✅ VERIFICAR PERMISOS
+    
     if (!tienePermiso('ver')) {
       console.warn('Sin permisos para ver movimientos');
       return;
     }
 
-    // ✅ CARGAR TIPOS PARA SELECT
+    
     cargarTiposMovimientoParaFiltros();
 
-    // ✅ INICIALIZAR DATATABLE (mantener igual pero agregar callback)
+    
     if ($.fn.DataTable.isDataTable("#TablaMovimiento")) {
       $("#TablaMovimiento").DataTable().destroy();
     }
@@ -495,7 +495,7 @@ document.addEventListener("DOMContentLoaded", function () {
           console.log("📊 Respuesta del servidor:", json);
           
           if (json && json.status && json.data) {
-            // ✅ ACTUALIZAR CONTADORES DESPUÉS DE CARGAR
+            
             setTimeout(() => {
               actualizarContadoresSimples();
             }, 500);
@@ -524,14 +524,14 @@ document.addEventListener("DOMContentLoaded", function () {
               return;
             }
           } catch (e) {
-            // No es JSON válido, continuar con error genérico
+            
           }
           
           Swal.fire("Error", "Error de comunicación al cargar movimientos.", "error");
         },
       },
       columns: [
-        // ✅ MANTENER TODAS LAS COLUMNAS IGUAL
+        
         {
           data: null,
           title: "Nro",
@@ -608,7 +608,7 @@ document.addEventListener("DOMContentLoaded", function () {
           render: function (data, type, row) {
             let acciones = '<div class="inline-flex items-center space-x-1">';
             
-            // ✅ VER - Solo si tiene permisos
+            
             if (tienePermiso('ver')) {
               acciones += `
                 <button class="ver-detalle-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
@@ -618,7 +618,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            // ✅ EDITAR - Solo si tiene permisos
+            
             if (tienePermiso('editar')) {
               acciones += `
                 <button class="editar-movimiento-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
@@ -628,7 +628,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            // ✅ ELIMINAR - Solo si tiene permisos
+            
             if (tienePermiso('eliminar')) {
               acciones += `
                 <button class="eliminar-movimiento-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
@@ -638,7 +638,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            // Si no tiene permisos para ninguna acción, mostrar mensaje
+            
             if (!tienePermiso('ver') && !tienePermiso('editar') && !tienePermiso('eliminar')) {
               acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
             }
@@ -682,18 +682,18 @@ document.addEventListener("DOMContentLoaded", function () {
         window.tablaMovimientos = this.api();
         console.log("✅ DataTable inicializada correctamente");
         
-        // ✅ ACTUALIZAR CONTADORES
+        
         setTimeout(() => {
           actualizarContadoresSimples();
         }, 1000);
       },
-      // ✅ CALLBACK PARA ACTUALIZAR CONTADORES AL FILTRAR
+      
       drawCallback: function(settings) {
         actualizarContadoresSimples();
       }
     });
 
-    // ✅ EVENT LISTENERS CON VERIFICACIÓN DE PERMISOS (mantener igual)
+    
     $("#TablaMovimiento tbody").on("click", ".ver-detalle-btn", function (e) {
       e.preventDefault();
       
@@ -737,7 +737,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // ✅ BOTÓN REGISTRAR CON VERIFICACIÓN DE PERMISOS (mantener igual)
+  
   const btnAbrirModalMovimiento = document.getElementById("btnAbrirModalMovimiento");
   if (btnAbrirModalMovimiento) {
     btnAbrirModalMovimiento.addEventListener("click", function (e) {
@@ -748,12 +748,12 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
       
-      // ✅ CARGAR DATOS PARA FORMULARIO
+      
       cargarDatosFormulario('registrar');
     });
   }
 
-  // ✅ BOTÓN EXPORTAR CON VERIFICACIÓN DE PERMISOS (mantener igual)
+  
   const btnExportarMovimientos = document.getElementById("btnExportarMovimientos");
   if (btnExportarMovimientos) {
     btnExportarMovimientos.addEventListener("click", function (e) {
@@ -768,7 +768,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ✅ CAMPO DE BÚSQUEDA PERSONALIZADA
+  
   const busquedaPersonalizada = document.getElementById('busqueda-movimientos');
   if (busquedaPersonalizada) {
     busquedaPersonalizada.addEventListener('input', function() {
@@ -783,7 +783,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ✅ EVENT LISTENERS PARA MODAL VER DETALLE
+  
   const btnCerrarModalDetalle = document.getElementById("btnCerrarModalDetalle");
   const btnCerrarModalDetalle2 = document.getElementById("btnCerrarModalDetalle2");
   
@@ -803,7 +803,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ✅ EVENT LISTENERS PARA MODAL REGISTRAR
+  
   const btnCerrarModalRegistrar = document.getElementById("btnCerrarModalRegistrar");
   const btnCancelarModalRegistrar = document.getElementById("btnCancelarModalRegistrar");
   const formRegistrar = document.getElementById("formRegistrarMovimiento");
@@ -858,7 +858,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ✅ EVENT LISTENERS PARA MODAL ACTUALIZAR
+  
   const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
   const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
   const formActualizar = document.getElementById("formActualizarMovimiento");
@@ -913,9 +913,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ✅ EVENT LISTENERS PARA VALIDACIÓN EN TIEMPO REAL
   
-  // Validación de cantidad entrada/salida en registro
+  
+  
   const cantidadEntradaReg = document.getElementById('cantidad_entrada');
   const cantidadSalidaReg = document.getElementById('cantidad_salida');
   
@@ -939,7 +939,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Validación de cantidad entrada/salida en actualización
+  
   const cantidadEntradaAct = document.getElementById('cantidad_entradaActualizar');
   const cantidadSalidaAct = document.getElementById('cantidad_salidaActualizar');
   
@@ -963,9 +963,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ✅ EVENT LISTENERS PARA CALCULAR STOCK AUTOMÁTICAMENTE
   
-  // Cálculo automático de stock en registro
+  
+  
   const stockAnteriorReg = document.getElementById('stock_anterior');
   const stockResultanteReg = document.getElementById('stock_resultante');
   
@@ -990,7 +990,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (cantidadSalidaReg) cantidadSalidaReg.addEventListener('input', calcularStockRegistro);
   }
 
-  // Cálculo automático de stock en actualización
+  
   const stockAnteriorAct = document.getElementById('stock_anteriorActualizar');
   const stockResultanteAct = document.getElementById('stock_resultanteActualizar');
   
@@ -1015,9 +1015,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (cantidadSalidaAct) cantidadSalidaAct.addEventListener('input', calcularStockActualizacion);
   }
 
-  // ✅ EVENT LISTENERS PARA LIMPIAR ERRORES AL ESCRIBIR
   
-  // Limpiar errores en campos de formulario de registro
+  
+  
   camposFormularioMovimiento.forEach(campo => {
     const elemento = document.getElementById(campo.id);
     if (elemento) {
@@ -1037,7 +1037,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Limpiar errores en campos de formulario de actualización
+  
   camposFormularioActualizarMovimiento.forEach(campo => {
     const elemento = document.getElementById(campo.id);
     if (elemento) {
@@ -1060,7 +1060,7 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("✅ Todos los event listeners de movimientos han sido configurados");
 });
 
-// ✅ FUNCIONES ESPECÍFICAS
+
 
 /**
  * Cargar datos para formularios (productos y tipos de movimiento)
@@ -1076,7 +1076,7 @@ function cargarDatosFormulario(modo = 'registrar') {
       if (result.status && result.data) {
         const { productos, tipos_movimiento } = result.data;
         
-        // ✅ LLENAR SELECTS SEGÚN EL MODO
+        
         if (modo === 'registrar') {
           llenarSelectProductos('idproducto', productos);
           llenarSelectTiposMovimiento('idtipomovimiento', tipos_movimiento);
@@ -1112,7 +1112,7 @@ function llenarSelectProductos(selectId, productos) {
   if (select) {
     select.innerHTML = '<option value="">Seleccione un producto</option>';
     productos.forEach(producto => {
-      // ✅ NO USAR CAMPO 'codigo' QUE NO EXISTE
+      
       select.innerHTML += `<option value="${producto.idproducto}">${producto.nombre} - Stock: ${producto.stock_actual || 0}</option>`;
     });
     console.log(`✅ Select ${selectId} poblado con ${productos.length} productos`);
@@ -1157,12 +1157,12 @@ function verDetalleMovimiento(idMovimiento) {
       if (result.status && result.data) {
         const movimiento = result.data;
         
-        // ✅ ASIGNAR DATOS USANDO LA ESTRUCTURA CORRECTA
+        
         document.getElementById("verMovimientoNumero").textContent = movimiento.numero_movimiento || `MOV-${movimiento.idmovimiento}`;
         document.getElementById("verMovimientoProducto").textContent = movimiento.producto_nombre || "N/A";
         document.getElementById("verMovimientoTipo").textContent = movimiento.tipo_movimiento || "N/A";
         
-        // ✅ MOSTRAR CANTIDAD CORRECTA (ENTRADA O SALIDA)
+        
         let cantidadTexto = "N/A";
         if (movimiento.cantidad_entrada && parseFloat(movimiento.cantidad_entrada) > 0) {
           cantidadTexto = `${parseFloat(movimiento.cantidad_entrada).toFixed(2)} (Entrada)`;
@@ -1201,7 +1201,7 @@ function registrarMovimiento() {
     btnRegistrarMovimiento.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...`;
   }
 
-  // ✅ USAR VALIDACIÓN PERSONALIZADA
+  
   if (!validarFormularioMovimiento(camposFormularioMovimiento, "formRegistrarMovimiento")) {
     if (btnRegistrarMovimiento) {
       btnRegistrarMovimiento.disabled = false;
@@ -1279,16 +1279,16 @@ function editarMovimiento(idMovimiento) {
 function mostrarModalEditarMovimiento(movimiento) {
   console.log("📋 Datos del movimiento recibidos:", movimiento);
   
-  // ✅ CARGAR DATOS PRIMERO
+  
   cargarDatosFormulario('actualizar');
   
-  // ✅ ESPERAR A QUE SE CARGUEN LOS SELECTS Y LUEGO ASIGNAR VALORES
+  
   setTimeout(() => {
     const formActualizar = document.getElementById("formActualizarMovimiento");
     if (formActualizar) formActualizar.reset();
     limpiarValidaciones(camposFormularioActualizarMovimiento, "formActualizarMovimiento");
 
-    // ✅ ASIGNAR VALORES A LOS CAMPOS
+    
     const elementos = {
       idmovimientoActualizar: document.getElementById("idmovimientoActualizar"),
       numeroMovimientoActualizar: document.getElementById("numeroMovimientoActualizar"),
@@ -1302,7 +1302,7 @@ function mostrarModalEditarMovimiento(movimiento) {
       estatusActualizar: document.getElementById("estatusActualizar")
     };
 
-    // ✅ VERIFICAR ELEMENTOS FALTANTES
+    
     const elementosFaltantes = [];
     for (const [nombre, elemento] of Object.entries(elementos)) {
       if (!elemento) {
@@ -1316,7 +1316,7 @@ function mostrarModalEditarMovimiento(movimiento) {
       return;
     }
 
-    // ✅ ASIGNAR VALORES
+    
     elementos.idmovimientoActualizar.value = movimiento.idmovimiento || "";
     elementos.numeroMovimientoActualizar.value = movimiento.numero_movimiento || "";
     elementos.cantidad_entradaActualizar.value = movimiento.cantidad_entrada || "";
@@ -1326,7 +1326,7 @@ function mostrarModalEditarMovimiento(movimiento) {
     elementos.observacionesActualizar.value = movimiento.observaciones || "";
     elementos.estatusActualizar.value = movimiento.estatus || "";
 
-    // ✅ ESTABLECER VALORES SELECCIONADOS
+    
     if (movimiento.idproducto) {
       elementos.idproductoActualizar.value = movimiento.idproducto;
     }
@@ -1338,7 +1338,7 @@ function mostrarModalEditarMovimiento(movimiento) {
     
     abrirModal("modalActualizarMovimiento");
     inicializarValidaciones(camposFormularioActualizarMovimiento, "formActualizarMovimiento");
-  }, 1000); // ✅ AUMENTAR TIEMPO DE ESPERA
+  }, 1000); 
 }
 
 /**
@@ -1352,7 +1352,7 @@ function actualizarMovimiento() {
     btnActualizarMovimiento.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...`;
   }
 
-  // ✅ USAR VALIDACIÓN PERSONALIZADA 
+  
   if (!validarFormularioMovimiento(camposFormularioActualizarMovimiento, "formActualizarMovimiento")) {
     if (btnActualizarMovimiento) {
       btnActualizarMovimiento.disabled = false;
@@ -1371,7 +1371,7 @@ function actualizarMovimiento() {
     return;
   }
 
-  // ✅ PREPARAR DATOS CON MAPEO
+  
   const formData = new FormData(form);
   const dataParaEnviar = {};
   
@@ -1395,7 +1395,7 @@ function actualizarMovimiento() {
 
   console.log("📤 Datos a enviar:", dataParaEnviar);
 
-  // ✅ ENVIAR DATOS
+  
   fetch("movimientos/updateMovimiento", {
     method: "POST",
     headers: {
@@ -1538,7 +1538,7 @@ function exportarMovimientos() {
       Swal.close();
       
       if (result.status && result.data) {
-        // Crear y descargar archivo CSV
+        
         const csvContent = generarCSVMovimientos(result.data);
         descargarCSV(csvContent, 'movimientos_export.csv');
         
@@ -1599,6 +1599,6 @@ function descargarCSV(csvContent, filename) {
   }
 }
 
-// ✅ EXPORTAR FUNCIONES PARA USO EXTERNO
+
 window.obtenerTiposMovimientoActivos = obtenerTiposMovimientoActivos;
 window.actualizarContadoresTipos = actualizarContadoresTipos;

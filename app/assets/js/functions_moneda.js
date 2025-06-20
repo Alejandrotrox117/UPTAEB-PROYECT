@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
         title: "Acciones",
         orderable: false,
         render: function (data, type, row) {
-          // Generar botones con íconos de Font Awesome
+          
           return `
                 <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idmoneda="${row.idmoneda}">
                   <i class="fas fa-edit"></i>
@@ -56,26 +56,26 @@ document.addEventListener("DOMContentLoaded", function () {
     order: [[0, "asc"]],
   });
   document.getElementById("monedaForm").addEventListener("submit", function (e) {
-    e.preventDefault(); // Evita que el formulario se envíe de forma tradicional
+    e.preventDefault(); 
 
-    // Convertir los datos del formulario en un objeto
+    
     const formData = new FormData(this);
     const data = {};
     formData.forEach((value, key) => {
         data[key] = value;
     });
 
-    console.log("Datos a enviar:", data); // Depuración
+    console.log("Datos a enviar:", data); 
 
-    // Determinar si es una edición o una creación
+    
     const idmoneda = document.getElementById("idmoneda").value;
     const url = idmoneda ? "moneda/actualizarMoneda" : "moneda/crearMoneda";
     const method = idmoneda ? "PUT" : "POST";
 
     fetch(url, {
         method: method,
-        headers: { "Content-Type": "application/json" }, // Asegura que los datos sean JSON
-        body: JSON.stringify(data), // Convierte el objeto en una cadena JSON
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(data), 
     })
         .then((response) => {
             if (!response.ok) {
@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const idmoneda = e.target
         .closest(".editar-btn")
         .getAttribute("data-idmoneda");
-      console.log("Botón de edición clicado. ID de moneda:", idmoneda); // Depuración
+      console.log("Botón de edición clicado. ID de moneda:", idmoneda); 
 
       if (!idmoneda || isNaN(idmoneda)) {
         alert("ID de persona no válido.");
@@ -137,18 +137,18 @@ function cerrarModalMoneda() {
 }
 
 function abrirModalMonedaParaEdicion(idmoneda) {
-  console.log("ID de moneda recibido:", idmoneda); // Depuración
+  console.log("ID de moneda recibido:", idmoneda); 
   
   fetch(`moneda/getMonedaById/${idmoneda}`)
     .then((response) => {
-      console.log("Respuesta HTTP:", response); // Depuración
+      console.log("Respuesta HTTP:", response); 
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
       return response.json();
     })
     .then((data) => {
-      console.log("Datos recibidos del backend:", data); // Depuración
+      console.log("Datos recibidos del backend:", data); 
 
       if (!data.status) {
         throw new Error(data.message || "Error al cargar los datos.");
@@ -156,24 +156,24 @@ function abrirModalMonedaParaEdicion(idmoneda) {
 
       const moneda = data.data;
 
-      // Asigna los valores a los campos del modal formulario
+      
       document.getElementById("idmoneda").value = moneda.idmoneda || "";
       document.getElementById("nombre").value = moneda.nombre_moneda || "";
       document.getElementById("valor").value = moneda.valor || "";
       
       document.getElementById("estatus").value = moneda.estatus || "";
      
-      // Abre el modal
+      
       abrirModalMoneda();
     })
     .catch((error) => {
-      console.error("Error capturado:", error.message); // Depuración
+      console.error("Error capturado:", error.message); 
       alert(
         "Ocurrió un error al cargar los datos. Por favor, intenta nuevamente."
       );
     });
 }
-// Manejar el envío del formulario (crear o actualizar)
+
 
 function eliminarMoneda(idmoneda) {
   if (!confirm("¿Estás seguro de que deseas eliminar esta moneda?")) {
@@ -186,10 +186,10 @@ function eliminarMoneda(idmoneda) {
     .then((response) => response.json())
     .then((result) => {
       if (result.status) {
-        alert(result.message); // Muestra mensaje de éxito
-        $("#TablaMoneda").DataTable().ajax.reload(); // Recarga la tabla
+        alert(result.message); 
+        $("#TablaMoneda").DataTable().ajax.reload(); 
       } else {
-        alert(result.message); // Muestra mensaje de error
+        alert(result.message); 
       }
     })
     .catch((error) => {
