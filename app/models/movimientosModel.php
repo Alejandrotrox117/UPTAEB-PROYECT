@@ -4,7 +4,7 @@ require_once("app/core/mysql.php");
 
 class MovimientosModel extends Mysql
 {
-    // ✅ PROPIEDADES PRIVADAS ENCAPSULADAS (mantener igual)
+    //  PROPIEDADES PRIVADAS ENCAPSULADAS (mantener igual)
     private $query;
     private $array;
     private $data;
@@ -13,7 +13,7 @@ class MovimientosModel extends Mysql
     private $message;
     private $status;
 
-    // ✅ PROPIEDADES ESPECÍFICAS DE MOVIMIENTO (mantener igual)
+    //  PROPIEDADES ESPECÍFICAS DE MOVIMIENTO (mantener igual)
     private $idmovimiento;
     private $numero_movimiento;
     private $idproducto;
@@ -38,7 +38,7 @@ class MovimientosModel extends Mysql
         // Constructor vacío
     }
 
-    // ✅ MANTENER TODOS LOS GETTERS Y SETTERS IGUAL...
+    //  MANTENER TODOS LOS GETTERS Y SETTERS IGUAL...
     public function getQuery(){
         return $this->query;
     }
@@ -95,7 +95,7 @@ class MovimientosModel extends Mysql
         $this->status = $status;
     }
 
-    // ✅ GETTERS Y SETTERS ESPECÍFICOS (mantener igual)
+    //  GETTERS Y SETTERS ESPECÍFICOS (mantener igual)
     public function getIdmovimiento() { return $this->idmovimiento; }
     public function setIdmovimiento($idmovimiento) { 
         $this->idmovimiento = filter_var($idmovimiento, FILTER_VALIDATE_INT);
@@ -175,7 +175,7 @@ class MovimientosModel extends Mysql
         return $this;
     }
 
-    // ✅ FUNCIONES PRIVADAS CORREGIDAS
+    //  FUNCIONES PRIVADAS CORREGIDAS
 
     /**
      * Función privada para obtener todos los movimientos
@@ -325,30 +325,33 @@ class MovimientosModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // ✅ GENERAR NÚMERO DE MOVIMIENTO
+            //  GENERAR NÚMERO DE MOVIMIENTO
             $numeroMovimiento = $this->generarNumeroMovimiento($db);
 
-            // ✅ VERIFICAR QUE COLUMNAS EXISTEN EN TU TABLA
+            //  INSERCIÓN CON ESTRUCTURA OPTIMIZADA
             $this->setQuery(
                 "INSERT INTO movimientos_existencia 
-                (idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
-                 entrada, salida, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
+                 cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, observaciones, estatus)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
             );
             
-            // ✅ MAPEAR A ESTRUCTURA EXISTENTE
+            //  DATOS OPTIMIZADOS
             $cantidadEntrada = floatval($data['cantidad_entrada'] ?? 0);
             $cantidadSalida = floatval($data['cantidad_salida'] ?? 0);
+            $stockAnterior = floatval($data['stock_anterior'] ?? 0);
             $stockResultante = floatval($data['stock_resultante'] ?? 0);
             
             $this->setArray([
+                $numeroMovimiento,
                 $data['idproducto'],
                 $data['idtipomovimiento'],
                 $data['idcompra'] ?? null,
                 $data['idventa'] ?? null,
                 $data['idproduccion'] ?? null,
-                $cantidadEntrada > 0 ? $cantidadEntrada : 0,
-                $cantidadSalida > 0 ? $cantidadSalida : 0,
+                $cantidadEntrada,
+                $cantidadSalida,
+                $stockAnterior,
                 $stockResultante,
                 $data['observaciones'] ?? ''
             ]);
@@ -358,16 +361,6 @@ class MovimientosModel extends Mysql
             $this->setMovimientoId($db->lastInsertId());
             
             if ($this->getMovimientoId()) {
-                // ✅ ACTUALIZAR CON NÚMERO DE MOVIMIENTO SI LA COLUMNA EXISTE
-                try {
-                    $updateQuery = "UPDATE movimientos_existencia SET numero_movimiento = ? WHERE idmovimiento = ?";
-                    $updateStmt = $db->prepare($updateQuery);
-                    $updateStmt->execute([$numeroMovimiento, $this->getMovimientoId()]);
-                } catch (Exception $e) {
-                    // Si no existe la columna numero_movimiento, continuar sin error
-                    error_log("Columna numero_movimiento no existe: " . $e->getMessage());
-                }
-                
                 $db->commit();
                 $this->setStatus(true);
                 $this->setMessage('Movimiento registrado correctamente.');
@@ -417,16 +410,18 @@ class MovimientosModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // ✅ ACTUALIZAR SOLO CAMPOS QUE EXISTEN
+            //  ACTUALIZACIÓN CON ESTRUCTURA OPTIMIZADA
             $this->setQuery(
                 "UPDATE movimientos_existencia 
                 SET idproducto = ?, idtipomovimiento = ?, idcompra = ?, idventa = ?, idproduccion = ?,
-                    entrada = ?, salida = ?, total = ?, observaciones = ?, estatus = ?
+                    cantidad_entrada = ?, cantidad_salida = ?, stock_anterior = ?, stock_resultante = ?, 
+                    observaciones = ?, estatus = ?, fecha_modificacion = NOW()
                 WHERE idmovimiento = ?"
             );
             
             $cantidadEntrada = floatval($data['cantidad_entrada'] ?? 0);
             $cantidadSalida = floatval($data['cantidad_salida'] ?? 0);
+            $stockAnterior = floatval($data['stock_anterior'] ?? 0);
             $stockResultante = floatval($data['stock_resultante'] ?? 0);
             
             $this->setArray([
@@ -435,8 +430,9 @@ class MovimientosModel extends Mysql
                 $data['idcompra'] ?? null,
                 $data['idventa'] ?? null,
                 $data['idproduccion'] ?? null,
-                $cantidadEntrada > 0 ? $cantidadEntrada : 0,
-                $cantidadSalida > 0 ? $cantidadSalida : 0,
+                $cantidadEntrada,
+                $cantidadSalida,
+                $stockAnterior,
                 $stockResultante,
                 $data['observaciones'] ?? '',
                 $data['estatus'] ?? 'activo',
@@ -528,7 +524,7 @@ class MovimientosModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            // ✅ CONSULTA SIMPLIFICADA SIN COLUMNAS QUE NO EXISTEN
+            //  CONSULTA SIMPLIFICADA SIN COLUMNAS QUE NO EXISTEN
             $this->setQuery("SELECT idproducto, nombre, COALESCE(stock_actual, 0) as stock_actual FROM producto WHERE estatus = 'activo' ORDER BY nombre ASC");
             $this->setArray([]);
             
@@ -669,7 +665,7 @@ class MovimientosModel extends Mysql
      * Función privada para validar datos de movimiento
      */
     private function validarDatosMovimiento(array $data){
-        // ✅ CAMPOS OBLIGATORIOS
+        //  CAMPOS OBLIGATORIOS
         if (empty($data['idproducto'])) {
             return ['valido' => false, 'mensaje' => 'El producto es obligatorio.'];
         }
@@ -678,7 +674,7 @@ class MovimientosModel extends Mysql
             return ['valido' => false, 'mensaje' => 'El tipo de movimiento es obligatorio.'];
         }
 
-        // ✅ VALIDAR QUE TENGA AL MENOS UNA CANTIDAD
+        //  VALIDAR QUE TENGA AL MENOS UNA CANTIDAD
         $cantidadEntrada = floatval($data['cantidad_entrada'] ?? 0);
         $cantidadSalida = floatval($data['cantidad_salida'] ?? 0);
         
@@ -686,7 +682,7 @@ class MovimientosModel extends Mysql
             return ['valido' => false, 'mensaje' => 'Debe especificar al menos una cantidad (entrada o salida).'];
         }
 
-        // ✅ VALIDAR QUE NO TENGA AMBAS CANTIDADES
+        //  VALIDAR QUE NO TENGA AMBAS CANTIDADES
         if ($cantidadEntrada > 0 && $cantidadSalida > 0) {
             return ['valido' => false, 'mensaje' => 'No puede tener cantidad de entrada y salida al mismo tiempo.'];
         }
@@ -725,7 +721,7 @@ class MovimientosModel extends Mysql
         }
     }
 
-    // ✅ MÉTODOS PÚBLICOS (mantener igual)
+    //  MÉTODOS PÚBLICOS (mantener igual)
 
     /**
      * Insertar nuevo movimiento
@@ -733,7 +729,7 @@ class MovimientosModel extends Mysql
     public function insertMovimiento(array $data){
         $this->setData($data);
         
-        // ✅ VALIDAR DATOS USANDO FUNCIÓN PRIVADA
+        //  VALIDAR DATOS USANDO FUNCIÓN PRIVADA
         $validacion = $this->validarDatosMovimiento($this->getData());
         if (!$validacion['valido']) {
             return [
@@ -753,7 +749,7 @@ class MovimientosModel extends Mysql
         $this->setData($data);
         $this->setMovimientoId($idmovimiento);
         
-        // ✅ VALIDAR DATOS USANDO FUNCIÓN PRIVADA
+        //  VALIDAR DATOS USANDO FUNCIÓN PRIVADA
         $validacion = $this->validarDatosMovimiento($this->getData());
         if (!$validacion['valido']) {
             return [
@@ -847,7 +843,7 @@ class MovimientosModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            // ✅ OBTENER TIPOS CON CONTEO DE MOVIMIENTOS
+            //  OBTENER TIPOS CON CONTEO DE MOVIMIENTOS
             $this->setQuery(
                 "SELECT 
                     tm.idtipomovimiento,
