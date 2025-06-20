@@ -259,7 +259,7 @@ class NotificacionesModel extends Mysql
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectSeguridad();
-        $dbGeneral = $conexion->getDatabaseGeneral(); // Obtener nombre de BD general
+        $dbGeneral = $conexion->getDatabaseGeneral(); 
 
         try {
             // Limpiar notificaciones anteriores de stock
@@ -311,7 +311,7 @@ class NotificacionesModel extends Mysql
             $stmt->execute();
             $productosSinStock = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Preparar statement para insertar notificaciones
+         
             $this->setQuery(
                 "INSERT INTO notificaciones (
                     tipo, titulo, mensaje, modulo, referencia_id, 
@@ -320,7 +320,7 @@ class NotificacionesModel extends Mysql
             );
             $stmtInsert = $db->prepare($this->getQuery());
 
-            // Procesar productos con stock bajo
+          
             foreach ($productosStockBajo as $producto) {
                 $titulo = "Stock Bajo - " . $producto['nombre'];
                 $mensaje = "El producto '{$producto['nombre']}' tiene solo {$producto['existencia']} unidades en stock.";

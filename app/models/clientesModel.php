@@ -354,7 +354,7 @@ class ClientesModel extends Mysql
                 $this->setStatus(true);
                 $this->setMessage('Cliente actualizado exitosamente.');
             } else {
-                $db->commit(); // Confirmar transacción aunque no haya cambios
+                $db->commit();
                 $this->setStatus(true);
                 $this->setMessage('No se realizaron cambios en el cliente (datos idénticos).');
             }
@@ -371,7 +371,7 @@ class ClientesModel extends Mysql
             $conexion->disconnect();
             error_log("Error al actualizar cliente: " . $e->getMessage());
             
-            // Manejar errores específicos de duplicación
+            
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                 if (strpos($e->getMessage(), 'cedula') !== false) {
                     $mensaje = 'La cédula ya está registrada por otro cliente.';
@@ -612,7 +612,7 @@ class ClientesModel extends Mysql
         $dataArray = $this->getData();
         $cedula = $dataArray['cedula'];
 
-        // Verificar si ya existe la cédula
+
         if ($this->ejecutarVerificacionClientePorCedula($cedula)) {
             return [
                 'status' => false,
@@ -633,7 +633,7 @@ class ClientesModel extends Mysql
         $dataArray = $this->getData();
         $cedula = $dataArray['cedula'];
 
-        // Verificar si ya existe la cédula en otro cliente
+  
         if ($this->ejecutarVerificacionClientePorCedula($cedula, $this->getClienteId())) {
             return [
                 'status' => false,

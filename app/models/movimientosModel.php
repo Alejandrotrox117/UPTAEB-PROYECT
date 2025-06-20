@@ -4,7 +4,7 @@ require_once("app/core/mysql.php");
 
 class MovimientosModel extends Mysql
 {
-    //  PROPIEDADES PRIVADAS ENCAPSULADAS (mantener igual)
+  
     private $query;
     private $array;
     private $data;
@@ -13,7 +13,6 @@ class MovimientosModel extends Mysql
     private $message;
     private $status;
 
-    //  PROPIEDADES ESPECÍFICAS DE MOVIMIENTO (mantener igual)
     private $idmovimiento;
     private $numero_movimiento;
     private $idproducto;
@@ -35,10 +34,10 @@ class MovimientosModel extends Mysql
 
     public function __construct()
     {
-        // Constructor vacío
+       
     }
 
-    //  MANTENER TODOS LOS GETTERS Y SETTERS IGUAL...
+   
     public function getQuery(){
         return $this->query;
     }
@@ -195,8 +194,8 @@ class MovimientosModel extends Mysql
                     m.idcompra,
                     m.idventa,
                     m.idproduccion,
-                    COALESCE(m.cantidad_entrada, m.entrada, 0) as cantidad_entrada,
-                    COALESCE(m.cantidad_salida, m.salida, 0) as cantidad_salida,
+                    COALESCE(m.cantidad_entrada, 0) as cantidad_entrada,
+                    COALESCE(m.cantidad_salida, 0) as cantidad_salida,
                     COALESCE(m.stock_anterior, 0) as stock_anterior,
                     COALESCE(m.stock_resultante, m.total, 0) as stock_resultante,
                     m.observaciones,
@@ -266,8 +265,8 @@ class MovimientosModel extends Mysql
                     m.idcompra,
                     m.idventa,
                     m.idproduccion,
-                    COALESCE(m.cantidad_entrada, m.entrada, 0) as cantidad_entrada,
-                    COALESCE(m.cantidad_salida, m.salida, 0) as cantidad_salida,
+                    COALESCE(m.cantidad_entrada, 0) as cantidad_entrada,
+                    COALESCE(m.cantidad_salida, 0) as cantidad_salida,
                     COALESCE(m.stock_anterior, 0) as stock_anterior,
                     COALESCE(m.stock_resultante, m.total, 0) as stock_resultante,
                     m.observaciones,
@@ -328,7 +327,6 @@ class MovimientosModel extends Mysql
             //  GENERAR NÚMERO DE MOVIMIENTO
             $numeroMovimiento = $this->generarNumeroMovimiento($db);
 
-            //  INSERCIÓN CON ESTRUCTURA OPTIMIZADA
             $this->setQuery(
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
@@ -336,7 +334,7 @@ class MovimientosModel extends Mysql
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
             );
             
-            //  DATOS OPTIMIZADOS
+        
             $cantidadEntrada = floatval($data['cantidad_entrada'] ?? 0);
             $cantidadSalida = floatval($data['cantidad_salida'] ?? 0);
             $stockAnterior = floatval($data['stock_anterior'] ?? 0);
@@ -410,7 +408,7 @@ class MovimientosModel extends Mysql
         try {
             $db->beginTransaction();
 
-            //  ACTUALIZACIÓN CON ESTRUCTURA OPTIMIZADA
+           
             $this->setQuery(
                 "UPDATE movimientos_existencia 
                 SET idproducto = ?, idtipomovimiento = ?, idcompra = ?, idventa = ?, idproduccion = ?,
@@ -524,7 +522,7 @@ class MovimientosModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            //  CONSULTA SIMPLIFICADA SIN COLUMNAS QUE NO EXISTEN
+          
             $this->setQuery("SELECT idproducto, nombre, COALESCE(stock_actual, 0) as stock_actual FROM producto WHERE estatus = 'activo' ORDER BY nombre ASC");
             $this->setArray([]);
             
@@ -606,8 +604,8 @@ class MovimientosModel extends Mysql
                     m.idcompra,
                     m.idventa,
                     m.idproduccion,
-                    COALESCE(m.cantidad_entrada, m.entrada, 0) as cantidad_entrada,
-                    COALESCE(m.cantidad_salida, m.salida, 0) as cantidad_salida,
+                    COALESCE(m.cantidad_entrada, 0) as cantidad_entrada,
+                    COALESCE(m.cantidad_salida, 0) as cantidad_salida,
                     COALESCE(m.stock_anterior, 0) as stock_anterior,
                     COALESCE(m.stock_resultante, m.total, 0) as stock_resultante,
                     m.observaciones,
@@ -665,7 +663,7 @@ class MovimientosModel extends Mysql
      * Función privada para validar datos de movimiento
      */
     private function validarDatosMovimiento(array $data){
-        //  CAMPOS OBLIGATORIOS
+      
         if (empty($data['idproducto'])) {
             return ['valido' => false, 'mensaje' => 'El producto es obligatorio.'];
         }
@@ -674,7 +672,7 @@ class MovimientosModel extends Mysql
             return ['valido' => false, 'mensaje' => 'El tipo de movimiento es obligatorio.'];
         }
 
-        //  VALIDAR QUE TENGA AL MENOS UNA CANTIDAD
+      
         $cantidadEntrada = floatval($data['cantidad_entrada'] ?? 0);
         $cantidadSalida = floatval($data['cantidad_salida'] ?? 0);
         
@@ -682,7 +680,7 @@ class MovimientosModel extends Mysql
             return ['valido' => false, 'mensaje' => 'Debe especificar al menos una cantidad (entrada o salida).'];
         }
 
-        //  VALIDAR QUE NO TENGA AMBAS CANTIDADES
+  
         if ($cantidadEntrada > 0 && $cantidadSalida > 0) {
             return ['valido' => false, 'mensaje' => 'No puede tener cantidad de entrada y salida al mismo tiempo.'];
         }
@@ -716,7 +714,7 @@ class MovimientosModel extends Mysql
             
             return $prefijo . $fecha . '-' . str_pad($consecutivo, 4, '0', STR_PAD_LEFT);
         } catch (Exception $e) {
-            // Si hay error, generar número simple
+         
             return $prefijo . $fecha . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         }
     }
@@ -729,7 +727,7 @@ class MovimientosModel extends Mysql
     public function insertMovimiento(array $data){
         $this->setData($data);
         
-        //  VALIDAR DATOS USANDO FUNCIÓN PRIVADA
+      
         $validacion = $this->validarDatosMovimiento($this->getData());
         if (!$validacion['valido']) {
             return [
@@ -749,7 +747,7 @@ class MovimientosModel extends Mysql
         $this->setData($data);
         $this->setMovimientoId($idmovimiento);
         
-        //  VALIDAR DATOS USANDO FUNCIÓN PRIVADA
+       
         $validacion = $this->validarDatosMovimiento($this->getData());
         if (!$validacion['valido']) {
             return [
@@ -843,7 +841,7 @@ class MovimientosModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            //  OBTENER TIPOS CON CONTEO DE MOVIMIENTOS
+         
             $this->setQuery(
                 "SELECT 
                     tm.idtipomovimiento,
@@ -851,8 +849,8 @@ class MovimientosModel extends Mysql
                     COALESCE(tm.descripcion, '') as descripcion,
                     tm.estatus,
                     COUNT(m.idmovimiento) as total_movimientos,
-                    SUM(CASE WHEN m.entrada > 0 OR m.cantidad_entrada > 0 THEN 1 ELSE 0 END) as total_entradas,
-                    SUM(CASE WHEN m.salida > 0 OR m.cantidad_salida > 0 THEN 1 ELSE 0 END) as total_salidas
+                    SUM(CASE WHEN  m.cantidad_entrada > 0 THEN 1 ELSE 0 END) as total_entradas,
+                    SUM(CASE WHEN m.cantidad_salida > 0 THEN 1 ELSE 0 END) as total_salidas
                 FROM tipo_movimiento tm
                 LEFT JOIN movimientos_existencia m ON tm.idtipomovimiento = m.idtipomovimiento 
                     AND m.estatus != 'eliminado'

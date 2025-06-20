@@ -64,7 +64,7 @@ class PagosModel extends Mysql
     public function updatePago(int $idpago, array $data)
     {
         try {
-            // Verificar si idpersona es válido antes de actualizar
+        
             if ($data['idpersona'] !== null) {
                 if (!$this->verificarPersonaExiste($data['idpersona'])) {
                     error_log("Persona con ID {$data['idpersona']} no existe");
@@ -119,7 +119,7 @@ class PagosModel extends Mysql
         }
     }
 
-    // Método para verificar si una persona existe
+ 
     private function verificarPersonaExiste($idpersona)
     {
         try {
@@ -132,11 +132,11 @@ class PagosModel extends Mysql
         }
     }
 
-    // Métodos para obtener información de destinatarios - CORREGIDOS
+ 
     public function getInfoCompra($idcompra)
     {
         try {
-            // Primero verificamos si el proveedor tiene una persona asociada
+     
             $query = "SELECT p.idproveedor, per.idpersona
                      FROM compra c 
                      INNER JOIN proveedor p ON c.idproveedor = p.idproveedor
@@ -149,7 +149,7 @@ class PagosModel extends Mysql
                 if ($result['idpersona']) {
                     return ['idpersona' => $result['idpersona']];
                 } else {
-                    // Crear persona para el proveedor si no existe
+                 
                     return $this->crearPersonaParaProveedor($result['idproveedor']);
                 }
             }
@@ -164,7 +164,7 @@ class PagosModel extends Mysql
     public function getInfoVenta($idventa)
     {
         try {
-            // Similar para clientes
+         
             $query = "SELECT c.idcliente, per.idpersona
                      FROM venta v 
                      INNER JOIN cliente c ON v.idcliente = c.idcliente
@@ -250,7 +250,7 @@ class PagosModel extends Mysql
     public function getInfoSueldo($idsueldotemp)
     {
         try {
-            // Como no tienes tabla empleados, retornamos null
+          
             return ['idpersona' => null];
         } catch (Exception $e) {
             error_log("Error en getInfoSueldo: " . $e->getMessage());
@@ -549,7 +549,7 @@ class PagosModel extends Mysql
     public function conciliarPago(int $idpago, int $idusuario)
     {
         try {
-            // Verificar que el pago existe y está activo
+         
             $pagoExistente = $this->selectPagoById($idpago);
             if (!$pagoExistente['status'] || !$pagoExistente['data']) {
                 return [
