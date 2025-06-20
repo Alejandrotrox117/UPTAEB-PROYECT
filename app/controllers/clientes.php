@@ -1,275 +1,470 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
+require_once "helpers/PermisosModuloVerificar.php";
+require_once "app/models/bitacoraModel.php";
+require_once "helpers/bitacora_helper.php";
+require_once "helpers/expresiones_regulares.php";
 
-class clientes extends Controllers
+class Clientes extends Controllers
 {
-
-
-
-    public function set_model($model)
-    {
-        $this->model = $model;
-    }
+    private $bitacoraModel;
+    private $BitacoraHelper;
 
     public function get_model()
     {
         return $this->model;
     }
 
+    public function set_model($model)
+    {
+        $this->model = $model;
+    }
+
     public function __construct()
     {
         parent::__construct();
+        
+        $this->bitacoraModel = new BitacoraModel();
+        $this->BitacoraHelper = new BitacoraHelper();
+
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+            header('Location: ' . base_url() . '/login');
+            die();
+        }
+
+        if (!PermisosModuloVerificar::verificarAccesoModulo('clientes')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
     }
 
     public function index()
     {
-        $data['page_title'] = "Listado de  clientes";
-        $data['page_name'] = "Clientes";
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
+
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        BitacoraHelper::registrarAccesoModulo('clientes', $idusuario, $this->bitacoraModel);
+
+    
+        $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
+
+        $data['page_tag'] = "Clientes";
+        $data['page_title'] = "Administración de Clientes";
+        $data['page_name'] = "clientes";
+        $data['page_content'] = "Gestión integral de clientes del sistema";
         $data['page_functions_js'] = "functions_clientes.js";
+        $data['permisos'] = $permisos; 
+        
         $this->views->getView($this, "clientes", $data);
     }
 
+    public function createCliente()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'crear')) {
+                    $arrResponse = array('status' => false, 'message' => 'No tienes permisos para crear clientes');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $datosLimpios = [
+                    'nombre' => strClean($request['nombre'] ?? ''),
+                    'apellido' => strClean($request['apellido'] ?? ''),
+                    'cedula' => strClean($request['cedula'] ?? ''),
+                    'telefono_principal' => strClean($request['telefono_principal'] ?? ''),
+                    
+                    'direccion' => strClean($request['direccion'] ?? ''),
+                    'observaciones' => strClean($request['observaciones'] ?? '')
+                ];
+
+                $camposObligatorios = ['nombre', 'apellido', 'cedula', 'telefono_principal'];
+                foreach ($camposObligatorios as $campo) {
+                    if (empty($datosLimpios[$campo])) {
+                        $arrResponse = array('status' => false, 'message' => 'Todos los campos obligatorios deben ser completados');
+                        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+                }
+
+                // Validaciones específicas
+                if (strlen($datosLimpios['nombre']) < 2 || strlen($datosLimpios['nombre']) > 50) {
+                    $arrResponse = array('status' => false, 'message' => 'El nombre debe tener entre 2 y 50 caracteres');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                if (strlen($datosLimpios['cedula']) < 6 || strlen($datosLimpios['cedula']) > 20) {
+                    $arrResponse = array('status' => false, 'message' => 'La cédula debe tener entre 6 y 20 caracteres');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+               
+
+                $arrData = array(
+                    'nombre' => $datosLimpios['nombre'],
+                    'apellido' => $datosLimpios['apellido'],
+                    'cedula' => $datosLimpios['cedula'],
+                    'telefono_principal' => $datosLimpios['telefono_principal'],
+              
+                    'direccion' => $datosLimpios['direccion'],
+                    'observaciones' => $datosLimpios['observaciones']
+                );
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+
+                if (!$idusuario) {
+                    error_log("ERROR: No se encontró ID de usuario en la sesión durante createCliente()");
+                    $arrResponse = array('status' => false, 'message' => 'Error: Usuario no autenticado');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $arrResponse = $this->model->insertCliente($arrData);
+
+                if ($arrResponse['status'] === true) {
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('clientes', 'CREAR_CLIENTE', $idusuario);
+
+                    if (!$resultadoBitacora) {
+                        error_log("Warning: No se pudo registrar en bitácora la creación del cliente ID: " .
+                            ($arrResponse['cliente_id'] ?? 'desconocido'));
+                    }
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en createCliente: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
 
     public function getClientesData()
     {
-        // Obtener los datos del modelo
-        $arrData = $this->get_model()->SelectAllclientes();
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')) {
+                    $response = array('status' => false, 'message' => 'No tienes permisos para ver clientes', 'data' => []);
+                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
 
-        // Formatear los datos en un arreglo asociativo
-        $data = [];
-        foreach ($arrData as $cliente) {
-            $data[] = [
-                'idcliente' => $cliente->getIdcliente(),
-                'cedula' => $cliente->getCedula(),
-                'nombre' => $cliente->getNombre(),
-                'apellido' => $cliente->getApellido(),
-                'direccion' => $cliente->getDireccion(),
-                'estatus' => $cliente->getEstatus(),
-                'telefono_principal' => $cliente->getTelefonoPrincipal(),
-                'observaciones' => $cliente->getObservaciones(),
-            ];
+                $arrResponse = $this->model->selectAllClientesActivos();
+
+                if ($arrResponse['status']) {
+                    $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                    $this->bitacoraModel->registrarAccion('clientes', 'CONSULTA_LISTADO', $idusuario);
+                }
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getClientesData: " . $e->getMessage());
+                $response = array('status' => false, 'message' => 'Error interno del servidor', 'data' => []);
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            }
+            die();
         }
-
-        // Preparar la respuesta para el DataTable
-        $response = [
-            "draw" => intval($_GET['draw'] ?? 1),
-            "recordsTotal" => count($data),
-            "recordsFiltered" => count($data),
-            "data" => $data
-        ];
-
-        // Enviar la respuesta como JSON
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
     }
 
-
-
-    public function createCliente()
+    public function getClienteById($idcliente)
     {
-        try {
-            // Leer los datos JSON enviados por el frontend
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
-
-            // Depuración: Verifica los datos recibidos
-            error_log("Datos recibidos en createcliente:");
-            error_log(print_r($data, true));
-
-            // Validar que los datos no sean nulos
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-                exit();
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')) {
+                $arrResponse = array('status' => false, 'message' => 'No tienes permisos para ver clientes');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                die();
             }
 
-            // Validar campos obligatorios
-            if (empty($data['cedula'])) {
-                echo json_encode(["status" => false, "message" => "El campo 'cedula' es obligatorio."]);
-                exit();
+            if (empty($idcliente) || !is_numeric($idcliente)) {
+                $arrResponse = array('status' => false, 'message' => 'ID de cliente inválido');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                die();
             }
 
-            // Usar los métodos set del modelo para establecer los valores
-            $model = $this->get_model();
-            $model->setNombre(trim($data['nombre'] ?? ''));
-            $model->setApellido(trim($data['apellido'] ?? ''));
-            $model->setCedula(trim($data['cedula'] ?? ''));
-            $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-            $model->setDireccion(trim($data['direccion'] ?? ''));
-            $model->setEstatus(trim($data['estatus'] ?? ''));
-            $model->setObservaciones(trim($data['observaciones'] ?? ''));
-
-            // Insertar los datos usando el modelo
-            $insertData = $model->insertCliente();
-
-            // Respuesta al cliente
-            if ($insertData) {
-                echo json_encode(["status" => true, "message" => "Cliente registrado correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al registrar el cliente. Intenta nuevamente."]);
+            try {
+                $arrData = $this->model->selectClienteById(intval($idcliente));
+                if (!empty($arrData)) {
+                    $idUsuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
+                    $this->bitacoraModel->registrarAccion('clientes', 'VER_CLIENTE', $idUsuarioSesion);
+                    
+                    $arrResponse = array('status' => true, 'data' => $arrData);
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'Cliente no encontrado');
+                }
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getClienteById: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+            die();
         }
-        exit();
-    }
-
-
-
-
-    public function deletecliente()
-    {
-        try {
-            // Leer los datos JSON enviados por el frontend
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
-
-            // Validar que los datos sean válidos
-            if (!$data || !isset($data['idcliente'])) {
-                echo json_encode([
-                    "status" => false,
-                    "message" => "ID de cliente no proporcionado o datos inválidos."
-                ], JSON_UNESCAPED_UNICODE);
-                return;
-            }
-
-            // Extraer el ID del cliente
-            $idcliente = trim($data['idcliente']);
-
-            // Validar que el ID no esté vacío
-            if (empty($idcliente)) {
-                echo json_encode([
-                    "status" => false,
-                    "message" => "El ID del cliente no puede estar vacío."
-                ], JSON_UNESCAPED_UNICODE);
-                return;
-            }
-
-            // Desactivar el cliente usando el modelo
-            $deleteData = $this->get_model()->deleteCliente($idcliente);
-
-            // Respuesta al cliente
-            if ($deleteData) {
-                echo json_encode([
-                    "status" => true,
-                    "message" => "Cliente eliminado correctamente."
-                ], JSON_UNESCAPED_UNICODE);
-            } else {
-                echo json_encode([
-                    "status" => false,
-                    "message" => "Error al eliminar el cliente. Intenta nuevamente."
-                ], JSON_UNESCAPED_UNICODE);
-            }
-        } catch (Exception $e) {
-            // Manejo de errores inesperados
-            echo json_encode([
-                "status" => false,
-                "message" => "Error inesperado: " . $e->getMessage()
-            ], JSON_UNESCAPED_UNICODE);
-        }
-
-        exit();
     }
 
     public function updateCliente()
     {
-        try {
-            // Leer los datos JSON enviados por el frontend
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'editar')) {
+                    $arrResponse = array('status' => false, 'message' => 'No tienes permisos para editar clientes');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
 
-            // Validar que los datos sean válidos
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
-                return;
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $intIdCliente = intval($request['idcliente'] ?? 0);
+                if ($intIdCliente <= 0) {
+                    $arrResponse = array('status' => false, 'message' => 'ID de cliente inválido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $datosLimpios = [
+                    'nombre' => strClean($request['nombre'] ?? ''),
+                    'apellido' => strClean($request['apellido'] ?? ''),
+                    'cedula' => strClean($request['cedula'] ?? ''),
+                    'telefono_principal' => strClean($request['telefono_principal'] ?? ''),
+                
+                    'direccion' => strClean($request['direccion'] ?? ''),
+                    'estatus' => strClean($request['estatus'] ?? 'ACTIVO'),
+                    'observaciones' => strClean($request['observaciones'] ?? '')
+                ];
+
+                $camposObligatorios = ['nombre', 'apellido', 'cedula', 'telefono_principal'];
+                foreach ($camposObligatorios as $campo) {
+                    if (empty($datosLimpios[$campo])) {
+                        $arrResponse = array('status' => false, 'message' => 'Todos los campos obligatorios deben ser completados');
+                        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+                }
+
+                // Validaciones similares al create
+                if (strlen($datosLimpios['nombre']) < 2 || strlen($datosLimpios['nombre']) > 50) {
+                    $arrResponse = array('status' => false, 'message' => 'El nombre debe tener entre 2 y 50 caracteres');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+
+                if (!$idusuario) {
+                    error_log("ERROR: No se encontró ID de usuario en la sesión durante updateCliente()");
+                    $arrResponse = array('status' => false, 'message' => 'Error: Usuario no autenticado');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $arrResponse = $this->model->updateCliente($intIdCliente, $datosLimpios);
+
+                if ($arrResponse['status'] === true) {
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('clientes', 'ACTUALIZAR_CLIENTE', $idusuario);
+
+                    if (!$resultadoBitacora) {
+                        error_log("Warning: No se pudo registrar en bitácora la actualización del cliente ID: " . $intIdCliente);
+                    }
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en updateCliente: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
-
-            // Validar campos obligatorios
-            if (empty($data['idcliente']) || empty($data['nombre']) || empty($data['apellido']) || empty($data['cedula'])) {
-                echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-                return;
-            }
-
-
-
-            // Usar los métodos set del modelo para establecer los valores
-            $model = $this->get_model();
-            $model->setIdcliente(trim($data['idcliente']));
-            $model->setNombre(trim($data['nombre']));
-            $model->setApellido(trim($data['apellido']));
-            $model->setCedula(trim($data['cedula']));
-            $model->setFechaNacimiento(trim($data['fecha_nacimiento'] ?? ''));
-            $model->setTelefonoPrincipal(trim($data['telefono_principal'] ?? ''));
-
-            $model->setDireccion(trim($data['direccion'] ?? ''));
-
-            $model->setEstatus(trim($data['estatus'] ?? ''));
-
-            // Actualizar los datos usando el modelo
-            $updateData = $model->updateCliente();
-
-            // Respuesta al cliente
-            if ($updateData) {
-                echo json_encode(["status" => true, "message" => "Cliente actualizado correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al actualizar el cliente. Intenta nuevamente."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+            die();
         }
-        exit();
     }
 
-
-    public function getclienteById($idcliente)
+    public function deleteCliente()
     {
-        try {
-            // Validar que el ID del cliente sea válido
-            if (empty($idcliente) || !is_numeric($idcliente)) {
-                echo json_encode(["status" => false, "message" => "ID de cliente no válido."]);
-                return;
-            }
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'eliminar')) {
+                    $arrResponse = array('status' => false, 'message' => 'No tienes permisos para eliminar clientes');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
 
-            // Obtener los datos del cliente desde el modelo
-            $cliente = $this->get_model()->getClienteById($idcliente);
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
 
-            // Validar si se encontró el cliente
-            if ($cliente) {
-                echo json_encode(["status" => true, "data" => $cliente], JSON_UNESCAPED_UNICODE);
-            } else {
-                echo json_encode(["status" => false, "message" => "Cliente no encontrado."], JSON_UNESCAPED_UNICODE);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $intIdCliente = intval($request['idcliente'] ?? 0);
+                if ($intIdCliente <= 0) {
+                    $arrResponse = array('status' => false, 'message' => 'ID de cliente inválido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+
+                $requestDelete = $this->model->deleteClienteById($intIdCliente);
+                if ($requestDelete) {
+                    $arrResponse = array('status' => true, 'message' => 'Cliente desactivado correctamente');
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'Error al desactivar el cliente');
+                }
+
+                if ($arrResponse['status'] === true) {
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('clientes', 'ELIMINAR_CLIENTE', $idusuario);
+
+                    if (!$resultadoBitacora) {
+                        error_log("Warning: No se pudo registrar en bitácora la eliminación del cliente ID: " . $intIdCliente);
+                    }
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en deleteCliente: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+            die();
         }
-        exit();
     }
 
-   
-    
+    public function buscarClientes()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')) {
+                    $arrResponse = array('status' => false, 'message' => 'No tienes permisos para buscar clientes');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
 
-public function buscar()
-{
-    header('Content-Type: application/json');
-    if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['criterio'])) {
-        $criterio = trim($_GET['criterio']);
-        $modelo = $this->get_model();
-        $clientes = $modelo->buscarClientes($criterio);
+                $postdata = file_get_contents("php://input");
+                $request = json_decode($postdata, true);
 
-        // Adaptar el resultado para el JS
-        $data = [];
-        foreach ($clientes as $cliente) {
-            $data[] = [
-                'id' => $cliente['idcliente'],
-                'nombre' => $cliente['nombre'],
-                'apellido' => $cliente['apellido'],
-                'cedula' => $cliente['cedula'],
-            ];
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $strTermino = strClean($request['criterio'] ?? '');
+                if (empty($strTermino)) {
+                    $arrResponse = array('status' => false, 'message' => 'Término de búsqueda requerido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $arrData = $this->model->buscarClientes($strTermino);
+                if ($arrData['status']) {
+                    $arrResponse = array('status' => true, 'data' => $arrData['data']);
+                } else {
+                    $arrResponse = array('status' => false, 'message' => 'No se encontraron resultados');
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en buscarClientes: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
         }
-        echo json_encode($data, JSON_UNESCAPED_UNICODE);
-    } else {
-        echo json_encode([]);
     }
-    exit();
+
+    public function exportarClientes()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'exportar')) {
+                $arr = array(
+                    "status" => false,
+                    "message" => "No tienes permisos para exportar clientes.",
+                    "data" => null
+                );
+                echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
+            try {
+               
+                $clientesResponse = $this->model->selectAllClientes();
+                
+                if ($clientesResponse['status'] && !empty($clientesResponse['data'])) {
+              
+                    $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                    $this->bitacoraModel->registrarAccion('clientes', 'EXPORTAR_CLIENTES', $idusuario);
+                    
+                    $arr = array(
+                        "status" => true,
+                        "message" => "Datos de clientes obtenidos correctamente.",
+                        "data" => $clientesResponse['data']
+                    );
+                } else {
+                    $arr = array(
+                        "status" => false,
+                        "message" => "No hay clientes para exportar.",
+                        "data" => []
+                    );
+                }
+            } catch (Exception $e) {
+                error_log("Error en exportarClientes: " . $e->getMessage());
+                $arr = array(
+                    "status" => false,
+                    "message" => "Error al obtener datos: " . $e->getMessage(),
+                    "data" => null
+                );
+            }
+
+            echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+            die();
+        }
+    }
+
+    public function getEstadisticas()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')) {
+                    $response = array('status' => false, 'message' => 'No tienes permisos para ver estadísticas', 'data' => []);
+                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $estadisticas = $this->model->getEstadisticasClientes();
+                $arrResponse = array('status' => true, 'data' => $estadisticas);
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getEstadisticas: " . $e->getMessage());
+                $response = array('status' => false, 'message' => 'Error interno del servidor', 'data' => []);
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
 }
-}
+?>

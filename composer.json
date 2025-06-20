@@ -1,17 +1,21 @@
 {
-    
     "name": "user/package",
     "description": "Instalacion inicial de proyecto",
     "type": "project",
     "autoload": {
         "psr-4": {
             "app\\": "app/"
-        }
+        },
+        "files": [
+            "helpers/helpers.php",
+            "helpers/PermisosModuloVerificar.php",
+            "helpers/bitacora_helper.php"
+        ]
     },
     "require": {
         "datatables.net/datatables.net-datetime": "^1.5",
         "datatables.net/datatables.net-fixedcolumns-dt": "^5.0",
         "google/recaptcha": "^1.3",
-        "setasign/fpdf": "^1.8"
+        "setasign/fpdf": "*"
     }
 }

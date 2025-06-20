@@ -1,6 +1,6 @@
 // Expresiones regulares para validación
 const expresiones = {
-  nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/,
+  nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,50}$/,
   apellido: /^[a-zA-Z\s]{3,20}$/,
   telefono_principal: /^(0414|0424|0426|0416|0412)\d{7}$/,
   direccion: /^.{5,100}$/,

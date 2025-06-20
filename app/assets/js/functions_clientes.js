@@ -1,324 +1,1005 @@
 import { abrirModal, cerrarModal } from "./exporthelpers.js";
-import { expresiones, inicializarValidaciones } from "./validaciones.js";
-import { validarCampo } from "./validaciones.js";
-document.addEventListener("DOMContentLoaded", function () {
-  // Inicializar DataTable
-  inicializarDataTable();
+import {
+  expresiones,
+  inicializarValidaciones,
+  validarCamposVacios,
+  validarCampo,
+  validarSelect,
+  limpiarValidaciones,
+} from "./validaciones.js";
 
-  // Definir campos y validaciones
-  const campos = [
-    { id: "cedula", regex: expresiones.cedula, mensaje: " La Cédula debe contener la estructura V-XXXXX No debe contener espacios y solo números." },
-    { id: "nombre", regex: expresiones.nombre, mensaje: "El nombre debe tener entre 10 y 20 caracteres alfabéticos." },
-    { id: "apellido", regex: expresiones.apellido, mensaje: "El apellido debe tener entre 10 y 20 caracteres alfabéticos." },
-    { id: "telefono_principal", regex: expresiones.telefono_principal, mensaje: "El teléfono debe tener exactamente 11 dígitos. No debe contener letras." },
-    { id: "direccion", regex: expresiones.direccion, mensaje: "La dirección debe tener entre 20 y 50 caracteres." },
-    { id: "estatus", regex: expresiones.estatus, mensaje: "El estatus debe ser 'Activo' o 'Inactivo'." },
-    { id: "observaciones", regex: expresiones.observaciones, mensaje: "Las observaciones no deben exceder los 200 caracteres." },
-  ];
+let tablaClientes;
 
-  inicializarValidaciones(campos);
-
-  // Evento para el botón "Registrar"
-  document.getElementById("registrarClienteBtn").addEventListener("click", function () {
-    manejarRegistro(campos);
-  });
-
-  // Botón para abrir el modal de registro
-  document.getElementById("abrirModalBtn").addEventListener("click", function () {
-    abrirModal("clienteModal");
-  });
-
-  // Botón para cerrar el modal
-  document.getElementById("cerrarModalBtn").addEventListener("click", function () {
-    cerrarModal("clienteModal");
-  });
-
-  // Evento para manejar el clic en el botón de eliminar
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".eliminar-btn")) {
-      const idcliente = e.target.closest(".eliminar-btn").getAttribute("data-idcliente");
-      confirmarEliminacion(idcliente);
-    }
-  });
-
-  // Evento para manejar el clic en el botón de editar
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".editar-btn")) {
-      const idcliente = e.target.closest(".editar-btn").getAttribute("data-idcliente");
-      if (!idcliente || isNaN(idcliente)) {
-        Swal.fire({
-          title: "¡Error!",
-          text: "ID de cliente no válido.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
-        return;
-      }
-      abrirModalclienteParaEdicion(idcliente);
-    }
-  });
-});
-
-// Función para inicializar DataTable
-function inicializarDataTable() {
-  $("#Tablaclientes").DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: {
-      url: "clientes/getclientesData",
-      type: "GET",
-      dataSrc: "data",
+const camposFormularioCliente = [
+  {
+    id: "cedula",
+    tipo: "input",
+    regex: expresiones.cedula,
+    mensajes: {
+      vacio: "La cédula es obligatoria.",
+      formato: "La Cédula debe contener la estructura V-/J-/E- No debe contener espacios y solo números.",
     },
-    columns: [
-      { data: "idcliente", title: "Nro" },
-      { data: "cedula", title: "Cédula" },
-      { data: "nombre", title: "Nombre" },
-      { data: "apellido", title: "Apellido" },
-      { data: "telefono_principal", title: "Teléfono" },
-      { data: "direccion", title: "Dirección" },
-      { data: "estatus", title: "Estatus" },
-      { data: "observaciones", title: "Observaciones" },
-      {
-        data: null,
-        title: "Acciones",
-        orderable: false,
-        render: function (data, type, row) {
-          return `
-            <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idcliente="${row.idcliente}">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" data-idcliente="${row.idcliente}">
-              <i class="fas fa-trash"></i>
-            </button>
-          `;
-        },
-      },
-    ],
-    language: {
-      decimal: "",
-      emptyTable: "No hay información",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
-      infoEmpty: "Mostrando 0 a 0 de 0 Entradas",
-      infoFiltered: "(Filtrado de _MAX_ total entradas)",
-      lengthMenu: "Mostrar _MENU_ Entradas",
-      loadingRecords: "Cargando...",
-      processing: "Procesando...",
-      search: "Buscar:",
-      zeroRecords: "Sin resultados encontrados",
-      paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior",
-      },
+  },
+  {
+    id: "nombre",
+    tipo: "input",
+    regex: expresiones.nombre,
+    mensajes: {
+      vacio: "El nombre es obligatorio.",
+      formato: "El nombre debe tener entre 3 y 50 caracteres alfabéticos.",
     },
-    destroy: true,
-    responsive: true,
-    pageLength: 10,
-    order: [[0, "asc"]],
-  });
+  },
+  {
+    id: "apellido",
+    tipo: "input",
+    regex: expresiones.apellido,
+    mensajes: {
+      vacio: "El apellido es obligatorio.",
+      formato: "El apellido debe tener entre 3 y 50 caracteres alfabéticos.",
+    },
+  },
+  {
+    id: "telefono_principal",
+    tipo: "input",
+    regex: expresiones.telefono_principal,
+    mensajes: {
+      vacio: "El teléfono es obligatorio.",
+      formato: "El teléfono debe tener exactamente 11 dígitos. No debe contener letras. Debe comenzar con 0412, 0414, 0424 o 0416.",
+    },
+  },
+  {
+    id: "direccion",
+    tipo: "input",
+    regex: expresiones.direccion,
+    mensajes: {
+      formato: "La dirección debe tener entre 5 y 100 caracteres.",
+    },
+  },
+  {
+    id: "observaciones",
+    tipo: "input",
+    regex: expresiones.observaciones,
+    mensajes: {
+      formato: "Las observaciones no deben exceder los 200 caracteres.",
+    },
+  },
+];
+
+const camposFormularioActualizarCliente = [
+  {
+    id: "cedulaActualizar",
+    tipo: "input",
+    regex: expresiones.cedula,
+    mensajes: {
+      vacio: "La cédula es obligatoria.",
+      formato: "La Cédula debe contener la estructura V-XXXXX No debe contener espacios y solo números.",
+    },
+  },
+  {
+    id: "nombreActualizar",
+    tipo: "input",
+    regex: expresiones.nombre,
+    mensajes: {
+      vacio: "El nombre es obligatorio.",
+      formato: "El nombre debe tener entre 2 y 50 caracteres alfabéticos.",
+    },
+  },
+  {
+    id: "apellidoActualizar",
+    tipo: "input",
+    regex: expresiones.apellido,
+    mensajes: {
+      vacio: "El apellido es obligatorio.",
+      formato: "El apellido debe tener entre 2 y 50 caracteres alfabéticos.",
+    },
+  },
+  {
+    id: "telefono_principalActualizar",
+    tipo: "input",
+    regex: expresiones.telefono_principal,
+    mensajes: {
+      vacio: "El teléfono es obligatorio.",
+      formato: "El teléfono debe tener exactamente 11 dígitos. No debe contener letras.",
+    },
+  },
+  {
+    id: "direccionActualizar",
+    tipo: "input",
+    regex: expresiones.direccion,
+    mensajes: {
+      formato: "La dirección debe tener entre 5 y 100 caracteres.",
+    },
+  },
+  {
+    id: "estatusActualizar",
+    tipo: "select",
+    mensajes: { vacio: "Seleccione un estatus." },
+  },
+  {
+    id: "observacionesActualizar",
+    tipo: "input",
+    regex: expresiones.observaciones,
+    mensajes: {
+      formato: "Las observaciones no deben exceder los 200 caracteres.",
+    },
+  },
+];
+
+
+function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realizar esta acción.") {
+  const modal = document.getElementById('modalPermisosDenegados');
+  const mensajeElement = document.getElementById('mensajePermisosDenegados');
+  
+  if (modal && mensajeElement) {
+    mensajeElement.textContent = mensaje;
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+  } else {
+    // Fallback con SweetAlert si no existe el modal
+    Swal.fire({
+      icon: 'warning',
+      title: 'Acceso Denegado',
+      text: mensaje,
+      confirmButtonColor: '#d33'
+    });
+  }
 }
 
-// Función para manejar el registro de clientes
- function manejarRegistro(campos) {
-  // Validar si hay campos vacíos
-  const formularioValido = validarCamposVacios(campos);
-  if (!formularioValido) {
-    return; // Detener el proceso si hay campos vacíos
+
+function cerrarModalPermisosDenegados() {
+  const modal = document.getElementById('modalPermisosDenegados');
+  if (modal) {
+    modal.classList.add('opacity-0', 'pointer-events-none');
+  }
+}
+
+
+function tienePermiso(accion) {
+  return window.permisosClientes && window.permisosClientes[accion] === true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  
+  const btnCerrarModalPermisos = document.getElementById('btnCerrarModalPermisos');
+  
+  if (btnCerrarModalPermisos) {
+    btnCerrarModalPermisos.addEventListener('click', cerrarModalPermisosDenegados);
   }
 
-  // Validar el formato de los campos
-  let formatoValido = true;
-  campos.forEach((campo) => {
-    const input = document.getElementById(campo.id);
-    if (input) {
-      const valido = validarCampo(input, campo.regex, campo.mensaje);
-      if (!valido) formatoValido = false;
+  $(document).ready(function () {
+    //  VERIFICAR PERMISOS ANTES DE CARGAR LA TABLA
+    if (!tienePermiso('ver')) {
+      console.warn('Sin permisos para ver clientes');
+      return;
     }
+
+    //  NOMBRE CORRECTO DE LA TABLA
+    if ($.fn.DataTable.isDataTable("#Tablaclientes")) {
+      $("#Tablaclientes").DataTable().destroy();
+    }
+
+    tablaClientes = $("#Tablaclientes").DataTable({
+      processing: true,
+      ajax: {
+        url: "clientes/getClientesData",
+        type: "GET",
+        dataSrc: function (json) {
+          if (json && json.data) {
+            return json.data;
+          } else {
+            console.error(
+              "La respuesta del servidor no tiene la estructura esperada (falta 'data'):",
+              json
+            );
+            $("#Tablaclientes_processing").css("display", "none"); 
+            
+            //  VERIFICAR SI ES ERROR DE PERMISOS
+            if (json && json.message && json.message.includes('permisos')) {
+              mostrarModalPermisosDenegados(json.message);
+            } else {
+              alert("Error: No se pudieron cargar los datos de clientes correctamente.");
+            }
+            return [];
+          }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          console.error(
+            "Error AJAX al cargar datos para Tablaclientes: ",
+            textStatus,
+            errorThrown,
+            jqXHR.responseText
+          );
+          $("#Tablaclientes_processing").css("display", "none"); 
+          
+          //  VERIFICAR SI ES ERROR DE PERMISOS
+          try {
+            const response = JSON.parse(jqXHR.responseText);
+            if (response && response.message && response.message.includes('permisos')) {
+              mostrarModalPermisosDenegados(response.message);
+              return;
+            }
+          } catch (e) {
+            // No es JSON válido, continuar con error genérico
+          }
+          
+          alert("Error de comunicación al cargar los datos de clientes. Por favor, intente más tarde.");
+        },
+      },
+      columns: [
+        {
+          data: null,
+          title: "Nro",
+          className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background break-all",
+          render: function (data, type, row, meta) {
+            return meta.row + 1; // Numeración automática
+          }
+        },
+        {
+          data: "cedula",
+          title: "Cédula",
+          className: "desktop whitespace-nowrap py-2 px-3 text-gray-700 break-all",
+        },
+        {
+          data: "nombre",
+          title: "Nombre",
+          className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+        },
+        {
+          data: "apellido",
+          title: "Apellido",
+          className: "tablet-l whitespace-nowrap py-2 px-3 text-gray-700",
+        },
+        {
+          data: "telefono_principal",
+          title: "Teléfono",
+          className: "tablet-l whitespace-nowrap py-2 px-3 text-gray-700",
+        },
+        {
+          data: "direccion",
+          title: "Dirección",
+          className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+          render: function (data, type, row) {
+            if (data && data.length > 30) {
+              return data.substring(0, 30) + '...';
+            }
+            return data || '';
+          },
+        },
+        {
+          data: "estatus",
+          title: "Estatus",
+          className: "min-tablet-p text-center py-2 px-3",
+          render: function (data, type, row) {
+            if (data) {
+              const estatusLower = String(data).toLowerCase();
+              if (estatusLower === "activo") {
+                return `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
+              } else {
+                return `<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
+              }
+            }
+            return '<span class="text-xs italic text-gray-500">N/A</span>';
+          },
+        },
+        {
+          data: "observaciones",
+          title: "Observaciones",
+          className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+          render: function (data, type, row) {
+            if (data && data.length > 30) {
+              return data.substring(0, 30) + '...';
+            }
+            return data || '';
+          },
+        },
+        {
+          data: null,
+          title: "Acciones",
+          orderable: false,
+          searchable: false,
+          className: "all text-center actions-column py-1 px-2",
+          width: "auto",
+          render: function (data, type, row) {
+            const nombreClienteParaEliminar = `${row.nombre} ${row.apellido}` || row.cedula;
+            let acciones = '<div class="inline-flex items-center space-x-1">';
+            
+            //  VER - Solo si tiene permisos
+            if (tienePermiso('ver')) {
+              acciones += `
+                <button class="ver-cliente-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                        data-idcliente="${row.idcliente}" 
+                        title="Ver detalles">
+                    <i class="fas fa-eye fa-fw text-base"></i>
+                </button>`;
+            }
+            
+            //  EDITAR - Solo si tiene permisos
+            if (tienePermiso('editar')) {
+              acciones += `
+                <button class="editar-cliente-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                        data-idcliente="${row.idcliente}" 
+                        title="Editar">
+                    <i class="fas fa-edit fa-fw text-base"></i>
+                </button>`;
+            }
+            
+            //  ELIMINAR - Solo si tiene permisos
+            if (tienePermiso('eliminar')) {
+              acciones += `
+                <button class="eliminar-cliente-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                        data-idcliente="${row.idcliente}" 
+                        data-nombre="${nombreClienteParaEliminar}" 
+                        title="Desactivar">
+                    <i class="fas fa-trash-alt fa-fw text-base"></i>
+                </button>`;
+            }
+            
+            // Si no tiene permisos para ninguna acción, mostrar mensaje
+            if (!tienePermiso('ver') && !tienePermiso('editar') && !tienePermiso('eliminar')) {
+              acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
+            }
+            
+            acciones += '</div>';
+            return acciones;
+          },
+        },
+      ],
+      language: {
+        processing: `
+          <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]" style="margin-left:0;">
+              <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+                  <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+                  <span class="text-lg font-medium text-gray-700">Procesando...</span>
+              </div>
+          </div>`,
+        emptyTable:
+          '<div class="text-center py-4"><i class="fas fa-users-slash fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No hay clientes disponibles.</p></div>',
+        info: "Mostrando _START_ a _END_ de _TOTAL_ clientes",
+        infoEmpty: "Mostrando 0 clientes",
+        infoFiltered: "(filtrado de _MAX_ clientes totales)",
+        lengthMenu: "Mostrar _MENU_ clientes",
+        search: "_INPUT_",
+        searchPlaceholder: "Buscar cliente...",
+        zeroRecords:
+          '<div class="text-center py-4"><i class="fas fa-user-times fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No se encontraron coincidencias.</p></div>',
+        paginate: {
+          first: '<i class="fas fa-angle-double-left"></i>',
+          last: '<i class="fas fa-angle-double-right"></i>',
+          next: '<i class="fas fa-angle-right"></i>',
+          previous: '<i class="fas fa-angle-left"></i>',
+        },
+      },
+      destroy: true,
+      responsive: {
+        details: {
+          type: "column",
+          target: -1, 
+          renderer: function (api, rowIdx, columns) {
+            var data = $.map(columns, function (col, i) {
+              return col.hidden && col.title
+                ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
+                                    <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                                    <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                                </tr>`
+                : "";
+            }).join("");
+            return data
+              ? $(
+                  '<table class="w-full table-fixed details-table border-t border-gray-200"/>'
+                ).append(data)
+              : false;
+          },
+        },
+      },
+      autoWidth: false,
+      pageLength: 10,
+      lengthMenu: [
+        [10, 25, 50, -1],
+        [10, 25, 50, "Todos"],
+      ],
+      order: [[0, "asc"]], 
+      scrollX: true,
+      fixedColumns: {
+        left: 1, 
+      },
+      className: "compact",
+      initComplete: function (settings, json) {
+        window.tablaClientes = this.api();
+      },
+      drawCallback: function (settings) {
+        $(settings.nTableWrapper)
+          .find('.dataTables_filter input[type="search"]')
+          .addClass(
+            "py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+          )
+          .removeClass("form-control-sm");
+
+        var api = new $.fn.dataTable.Api(settings);
+        if (
+          api.fixedColumns &&
+          typeof api.fixedColumns === "function" &&
+          api.fixedColumns().relayout
+        ) {
+          api.fixedColumns().relayout();
+        }
+      },
+    });
+
+    //  EVENT LISTENERS CON VERIFICACIÓN DE PERMISOS - TABLA CORRECTA
+    $("#Tablaclientes tbody").on("click", ".ver-cliente-btn", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('ver')) {
+        mostrarModalPermisosDenegados("No tienes permisos para ver detalles de clientes.");
+        return;
+      }
+      
+      const idCliente = $(this).data("idcliente");
+      if (idCliente) {
+        verCliente(idCliente);
+      } else {
+        console.error("ID de cliente no encontrado.");
+        Swal.fire("Error", "No se pudo obtener el ID del cliente.", "error");
+      }
+    });
+
+    $("#Tablaclientes tbody").on("click", ".editar-cliente-btn", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('editar')) {
+        mostrarModalPermisosDenegados("No tienes permisos para editar clientes.");
+        return;
+      }
+      
+      const idCliente = $(this).data("idcliente");
+      if (idCliente) {
+        editarCliente(idCliente);
+      } else {
+        console.error("ID de cliente no encontrado.");
+        Swal.fire("Error", "No se pudo obtener el ID del cliente.", "error");
+      }
+    });
+
+    $("#Tablaclientes tbody").on("click", ".eliminar-cliente-btn", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('eliminar')) {
+        mostrarModalPermisosDenegados("No tienes permisos para eliminar clientes.");
+        return;
+      }
+      
+      const idCliente = $(this).data("idcliente");
+      const nombreCliente = $(this).data("nombre"); 
+      if (idCliente) {
+        eliminarCliente(idCliente, nombreCliente);
+      } else {
+        console.error("ID de cliente no encontrado.");
+        Swal.fire("Error", "No se pudo obtener el ID del cliente.", "error");
+      }
+    });
   });
 
-  // Si el formato no es válido, mostrar alerta y detener el proceso
-  if (!formatoValido) {
-    Swal.fire({
-      title: "¡Error!",
-      text: "Por favor, corrige los errores en el formulario.",
-      icon: "error",
-      confirmButtonText: "Aceptar",
+  //  BOTÓN REGISTRAR CON VERIFICACIÓN DE PERMISOS
+  const btnAbrirModalRegistro = document.getElementById("abrirModalBtn");
+  if (btnAbrirModalRegistro) {
+    btnAbrirModalRegistro.addEventListener("click", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('crear')) {
+        mostrarModalPermisosDenegados("No tienes permisos para crear clientes.");
+        return;
+      }
+      
+      const formRegistrar = document.getElementById("clienteForm");
+      abrirModal("clienteModal");
+      if (formRegistrar) formRegistrar.reset();
+      limpiarValidaciones(camposFormularioCliente, "clienteForm");
+      inicializarValidaciones(camposFormularioCliente, "clienteForm");
     });
+  }
+
+ 
+  const btnExportarClientes = document.getElementById("btnExportarClientes");
+  if (btnExportarClientes) {
+    btnExportarClientes.addEventListener("click", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('exportar')) {
+        mostrarModalPermisosDenegados("No tienes permisos para exportar clientes.");
+        return;
+      }
+      
+      exportarClientes();
+    });
+  }
+
+  //  Event listeners para modales CON IDS CORRECTOS
+  const formRegistrar = document.getElementById("clienteForm");
+  const btnCerrarModalRegistro = document.getElementById("cerrarModalBtn");
+  const btnCerrarModalRegistroX = document.getElementById("cerrarModalBtnX");
+
+  if (btnCerrarModalRegistro) {
+    btnCerrarModalRegistro.addEventListener("click", () => cerrarModal("clienteModal"));
+  }
+  
+  if (btnCerrarModalRegistroX) {
+    btnCerrarModalRegistroX.addEventListener("click", () => cerrarModal("clienteModal"));
+  }
+
+  //  CORREGIR - EL FORMULARIO DEBE MANEJAR EL SUBMIT, NO EL BOTÓN
+  if (formRegistrar) {
+    formRegistrar.addEventListener("submit", (e) => { 
+      e.preventDefault(); 
+      registrarCliente(); 
+    });
+  }
+
+  //  TAMBIÉN AGREGAR EVENT LISTENER AL BOTÓN DIRECTAMENTE COMO RESPALDO
+  const btnRegistrarCliente = document.getElementById("registrarClienteBtn");
+  if (btnRegistrarCliente) {
+    btnRegistrarCliente.addEventListener("click", (e) => {
+      e.preventDefault();
+      registrarCliente();
+    });
+  }
+
+  const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
+  const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
+  const formActualizar = document.getElementById("formActualizarCliente");
+
+  if (btnCerrarModalActualizar) btnCerrarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarCliente"));
+  if (btnCancelarModalActualizar) btnCancelarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarCliente"));
+  if (formActualizar) formActualizar.addEventListener("submit", (e) => { e.preventDefault(); actualizarCliente(); });
+
+  const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
+  const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
+  
+  if (btnCerrarModalVer) btnCerrarModalVer.addEventListener("click", () => cerrarModal("modalVerCliente"));
+  if (btnCerrarModalVer2) btnCerrarModalVer2.addEventListener("click", () => cerrarModal("modalVerCliente"));
+});
+
+function registrarCliente() {
+ 
+  if (!tienePermiso('crear')) {
+    mostrarModalPermisosDenegados("No tienes permisos para crear clientes.");
     return;
   }
 
-  // Si el formulario es válido, enviar los datos
-  const formData = new FormData(document.getElementById("clienteForm"));
-  const data = {};
-  formData.forEach((value, key) => {
-    data[key] = value;
-  });
+  const formRegistrar = document.getElementById("clienteForm");
+  const btnGuardarCliente = document.getElementById("registrarClienteBtn");
 
-  const idcliente = document.getElementById("idcliente").value;
-  const url = idcliente ? "clientes/updateCliente" : "clientes/createCliente";
-  const method = idcliente ? "PUT" : "POST";
+  const camposObligatoriosRegistrar = camposFormularioCliente.filter(c => c.mensajes && c.mensajes.vacio);
+  if (!validarCamposVacios(camposObligatoriosRegistrar, "clienteForm")) return;
 
-  fetch(url, {
-    method: method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        Swal.fire({
-          title: "¡Éxito!",
-          text: result.message || "Cliente registrado correctamente.",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        }).then(() => {
-          $("#Tablaclientes").DataTable().ajax.reload();
-          cerrarModal("clienteModal");
-        });
-      } else {
-        Swal.fire({
-          title: "¡Error!",
-          text: result.message || "No se pudo registrar el cliente.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
+  let formularioConErroresEspecificos = false;
+  for (const campo of camposFormularioCliente) {
+    const inputElement = formRegistrar.querySelector(`#${campo.id}`);
+    if (!inputElement) continue;
+    let esValidoEsteCampo = true;
+    if (campo.tipo === "select") {
+      if (campo.mensajes && campo.mensajes.vacio) { 
+        esValidoEsteCampo = validarSelect(campo.id, campo.mensajes, "clienteForm");
       }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire({
-        title: "¡Error!",
-        text: "Ocurrió un error al procesar la solicitud.",
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
-    });
-}
-// Función para confirmar la eliminación de un cliente
-function confirmarEliminacion(idcliente) {
-  Swal.fire({
-    title: "¿Estás seguro?",
-    text: "Esta acción desactivará al cliente.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Sí, eliminar",
-    cancelButtonText: "Cancelar",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      eliminarcliente(idcliente);
+    } else if (["input", "email", "password", "text"].includes(campo.tipo)) {
+      esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
     }
-  });
-}
+    if (!esValidoEsteCampo) formularioConErroresEspecificos = true;
+  }
 
-// Función para eliminar un cliente
-function eliminarcliente(idcliente) {
-  fetch(`clientes/deleteCliente`, {
+  if (formularioConErroresEspecificos) {
+    Swal.fire("Atención", "Por favor, corrija los campos marcados.", "warning");
+    return;
+  }
+
+  const formData = new FormData(formRegistrar);
+  const dataParaEnviar = {
+    cedula: formData.get("cedula") || "",
+    nombre: formData.get("nombre") || "",
+    apellido: formData.get("apellido") || "",
+    telefono_principal: formData.get("telefono_principal") || "",
+    direccion: formData.get("direccion") || "",
+    observaciones: formData.get("observaciones") || "",
+  };
+
+  btnGuardarCliente.disabled = true;
+  btnGuardarCliente.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+
+  fetch("clientes/createCliente", { 
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idcliente }),
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+    body: JSON.stringify(dataParaEnviar) 
   })
-    .then((response) => response.json())
-    .then((result) => {
+    .then(response => response.ok ? response.json() : response.json().then(err => { throw err; }))
+    .then(result => {
       if (result.status) {
-        Swal.fire({
-          title: "¡Éxito!",
-          text: result.message || "Cliente eliminado correctamente.",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        }).then(() => {
-          $("#Tablaclientes").DataTable().ajax.reload();
-        });
+        Swal.fire("¡Éxito!", result.message, "success");
+        cerrarModal("clienteModal");
+        if (tablaClientes && tablaClientes.ajax) tablaClientes.ajax.reload(null, false);
       } else {
-        Swal.fire({
-          title: "¡Error!",
-          text: result.message || "No se pudo eliminar el cliente.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
+        //  VERIFICAR SI ES ERROR DE PERMISOS
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: result.message || "No se pudo registrar el cliente.",
+            confirmButtonColor: "#3085d6"
+          });
+        }
       }
     })
-    .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire({
-        title: "¡Error!",
-        text: "Ocurrió un error al intentar eliminar el cliente.",
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", error.message || "Error de conexión.", "error");
+      }
+    })
+    .finally(() => {
+      btnGuardarCliente.disabled = false;
+      btnGuardarCliente.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Cliente`;
     });
 }
 
-// Función para abrir el modal de edición de cliente
-function abrirModalclienteParaEdicion(idcliente) {
-  fetch(`clientes/getclienteById/${idcliente}`)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
+function editarCliente(idCliente) {
+  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('editar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para editar clientes.");
+    return;
+  }
+
+  fetch(`clientes/getClienteById/${idCliente}`, { 
+    method: "GET",
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+   })
+    .then(response => response.json())
+    .then(result => {
+      if (result.status && result.data) {
+        mostrarModalEditarCliente(result.data);
+      } else {
+        //  VERIFICAR SI ES ERROR DE PERMISOS
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
+        }
       }
-      return response.json();
     })
-    .then((data) => {
-      if (!data.status) {
-        throw new Error(data.message || "Error al cargar los datos del cliente.");
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", "Error de conexión.", "error");
       }
-
-      const cliente = data.data;
-
-      // Asignar los valores a los campos del formulario
-      document.getElementById("idcliente").value = cliente.idcliente || "";
-      document.getElementById("nombre").value = cliente.nombre || "";
-      document.getElementById("apellido").value = cliente.apellido || "";
-      document.getElementById("cedula").value = cliente.cedula || "";
-      document.getElementById("telefono_principal").value = cliente.telefono_principal || "";
-      document.getElementById("direccion").value = cliente.direccion || "";
-      document.getElementById("observaciones").value = cliente.observaciones || "";
-      document.getElementById("estatus").value = cliente.estatus || "";
-
-      abrirModal("clienteModal");
-    })
-    .catch((error) => {
-      console.error("Error capturado al cargar los datos:", error.message);
-      Swal.fire({
-        title: "¡Error!",
-        text: "Ocurrió un error al cargar los datos del cliente. Por favor, intenta nuevamente.",
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
     });
 }
 
+function mostrarModalEditarCliente(cliente) {
+  console.log("📋 Datos del cliente recibidos:", cliente); //  DEBUG
+  
+  const formActualizar = document.getElementById("formActualizarCliente");
+  if (formActualizar) formActualizar.reset();
+  limpiarValidaciones(camposFormularioActualizarCliente, "formActualizarCliente");
 
-function validarCamposVacios(campos) {
-  let formularioValido = true; // Variable para rastrear si el formulario es válido
+  //  VERIFICAR QUE EXISTAN LOS ELEMENTOS ANTES DE ASIGNAR
+  const elementos = {
+    idclienteActualizar: document.getElementById("idclienteActualizar"),
+    cedulaActualizar: document.getElementById("cedulaActualizar"),
+    nombreActualizar: document.getElementById("nombreActualizar"),
+    apellidoActualizar: document.getElementById("apellidoActualizar"),
+    telefono_principalActualizar: document.getElementById("telefono_principalActualizar"),
+    direccionActualizar: document.getElementById("direccionActualizar"),
+    observacionesActualizar: document.getElementById("observacionesActualizar"),
+    estatusActualizar: document.getElementById("estatusActualizar")
+  };
 
-  // Validar campos vacíos
-  for (let campo of campos) {
-    // Omitir la validación del campo idcliente
-    if (campo.id === "idcliente") {
-      continue;
-    }
-
-    // Obtener el valor del campo
-    const input = document.getElementById(campo.id);
-    if (!input) {
-      console.warn(`El campo con ID "${campo.id}" no existe en el DOM.`);
-      continue;
-    }
-
-    let valor = input.value.trim();
-    if (valor === "") {
-      Swal.fire({
-        title: "¡Error!",
-        text: `El campo "${campo.id}" no puede estar vacío.`,
-        icon: "error",
-        confirmButtonText: "Aceptar",
-      });
-      formularioValido = false; // Marcar el formulario como no válido
+  //  VERIFICAR ELEMENTOS FALTANTES
+  const elementosFaltantes = [];
+  for (const [nombre, elemento] of Object.entries(elementos)) {
+    if (!elemento) {
+      elementosFaltantes.push(nombre);
     }
   }
 
-  return formularioValido; // Retornar true si todos los campos son válidos, false si no
+  if (elementosFaltantes.length > 0) {
+    console.error("❌ Elementos faltantes en el DOM:", elementosFaltantes);
+    Swal.fire("Error", "Error en el formulario: elementos faltantes", "error");
+    return;
+  }
+
+  //  ASIGNAR VALORES SOLO SI LOS ELEMENTOS EXISTEN
+  try {
+    elementos.idclienteActualizar.value = cliente.idcliente || "";
+    elementos.cedulaActualizar.value = cliente.cedula || "";
+    elementos.nombreActualizar.value = cliente.nombre || "";
+    elementos.apellidoActualizar.value = cliente.apellido || "";
+    elementos.telefono_principalActualizar.value = cliente.telefono_principal || "";
+    elementos.direccionActualizar.value = cliente.direccion || "";
+    elementos.observacionesActualizar.value = cliente.observaciones || "";
+    elementos.estatusActualizar.value = cliente.estatus || "activo";
+    
+    console.log(" Valores asignados correctamente");
+    
+    inicializarValidaciones(camposFormularioActualizarCliente, "formActualizarCliente");
+    abrirModal("modalActualizarCliente");
+    
+  } catch (error) {
+    console.error("❌ Error al asignar valores:", error);
+    Swal.fire("Error", "Error al cargar datos en el formulario", "error");
+  }
+}
+
+function actualizarCliente() {
+  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('editar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para editar clientes.");
+    return;
+  }
+
+  const formActualizar = document.getElementById("formActualizarCliente");
+  const btnActualizarCliente = document.getElementById("btnActualizarCliente");
+  const idCliente = document.getElementById("idclienteActualizar").value;
+
+  const camposObligatoriosActualizar = camposFormularioActualizarCliente.filter(c => c.mensajes && c.mensajes.vacio);
+  if (!validarCamposVacios(camposObligatoriosActualizar, "formActualizarCliente")) return;
+
+  let formularioConErroresEspecificos = false;
+  for (const campo of camposFormularioActualizarCliente) { 
+    const inputElement = formActualizar.querySelector(`#${campo.id}`);
+    if (!inputElement) continue;
+    let esValidoEsteCampo = true;
+    if (campo.tipo === "select") {
+      if (campo.mensajes && campo.mensajes.vacio) {
+        esValidoEsteCampo = validarSelect(campo.id, campo.mensajes, "formActualizarCliente");
+      }
+    } else if (["input", "email", "password", "text"].includes(campo.tipo)) {
+      esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
+    }
+    if (!esValidoEsteCampo) formularioConErroresEspecificos = true;
+  }
+
+  if (formularioConErroresEspecificos) {
+    Swal.fire("Atención", "Por favor, corrija los campos marcados.", "warning");
+    return;
+  }
+
+  const formData = new FormData(formActualizar);
+  const dataParaEnviar = {
+    idcliente: idCliente,
+    cedula: formData.get("cedula") || "",
+    nombre: formData.get("nombre") || "",
+    apellido: formData.get("apellido") || "",
+    telefono_principal: formData.get("telefono_principal") || "",
+    direccion: formData.get("direccion") || "",
+    estatus: formData.get("estatus") || "",
+    observaciones: formData.get("observaciones") || "",
+  };
+
+  btnActualizarCliente.disabled = true;
+  btnActualizarCliente.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...`;
+
+  fetch("clientes/updateCliente", { 
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+    body: JSON.stringify(dataParaEnviar) 
+  })
+    .then(response => response.ok ? response.json() : response.json().then(err => { throw err; }))
+    .then(result => {
+      if (result.status) {
+        Swal.fire("¡Éxito!", result.message, "success");
+        cerrarModal("modalActualizarCliente");
+        if (tablaClientes && tablaClientes.ajax) tablaClientes.ajax.reload(null, false);
+      } else {
+        //  VERIFICAR SI ES ERROR DE PERMISOS
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: result.message || "No se pudo actualizar el cliente.",
+            confirmButtonColor: "#3085d6"
+          });
+        }
+      }
+    })
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", error.message || "Error de conexión.", "error");
+      }
+    })
+    .finally(() => {
+      btnActualizarCliente.disabled = false;
+      btnActualizarCliente.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Cliente`;
+    });
+}
+
+function verCliente(idCliente) {
+  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('ver')) {
+    mostrarModalPermisosDenegados("No tienes permisos para ver detalles de clientes.");
+    return;
+  }
+
+  fetch(`clientes/getClienteById/${idCliente}`, { 
+    method: "GET",
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+   })
+    .then(response => response.json())
+    .then(result => {
+      if (result.status && result.data) {
+        const cliente = result.data;
+        document.getElementById("verClienteCedula").textContent = cliente.cedula || "N/A";
+        document.getElementById("verClienteNombre").textContent = cliente.nombre || "N/A";
+        document.getElementById("verClienteApellido").textContent = cliente.apellido || "N/A";
+        document.getElementById("verClienteTelefono").textContent = cliente.telefono_principal || "N/A";
+        document.getElementById("verClienteDireccion").textContent = cliente.direccion || "N/A";
+        document.getElementById("verClienteEstatus").textContent = cliente.estatus || "N/A";
+        document.getElementById("verClienteObservaciones").textContent = cliente.observaciones || "Sin observaciones";
+        
+        abrirModal("modalVerCliente");
+      } else {
+        //  VERIFICAR SI ES ERROR DE PERMISOS
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
+        }
+      }
+    })
+    .catch(error => {
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", "Error de conexión.", "error");
+      }
+    });
+}
+
+function eliminarCliente(idCliente, nombreCliente) {
+  //  VERIFICAR PERMISOS ANTES DE PROCESAR
+  if (!tienePermiso('eliminar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para eliminar clientes.");
+    return;
+  }
+
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: `¿Deseas desactivar al cliente ${nombreCliente}? Esta acción cambiará su estatus a INACTIVO.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, desactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("clientes/deleteCliente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ idcliente: idCliente }),
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.status) {
+            Swal.fire("¡Desactivado!", result.message, "success");
+            if (tablaClientes && tablaClientes.ajax) tablaClientes.ajax.reload(null, false);
+          } else {
+            //  VERIFICAR SI ES ERROR DE PERMISOS
+            if (result.message && result.message.includes('permisos')) {
+              mostrarModalPermisosDenegados(result.message);
+            } else {
+              Swal.fire("Error", result.message || "No se pudo desactivar.", "error");
+            }
+          }
+        })
+        .catch(error => {
+          if (error.message && error.message.includes('permisos')) {
+            mostrarModalPermisosDenegados(error.message);
+          } else {
+            Swal.fire("Error", "Error de conexión.", "error");
+          }
+        });
+    }
+  });
+}
+
+
+function exportarClientes() {
+  console.log("🔄 Iniciando exportación de clientes..."); // DEBUG
+  
+  if (!tienePermiso('exportar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para exportar clientes.");
+    return;
+  }
+
+  
+  Swal.fire({
+    title: 'Exportando...',
+    text: 'Preparando datos de clientes',
+    icon: 'info',
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    willOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  fetch("clientes/exportarClientes", {
+    method: "GET",
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+  })
+    .then(response => {
+      console.log("📥 Respuesta del servidor:", response); // DEBUG
+      return response.json();
+    })
+    .then(result => {
+      console.log("📋 Resultado procesado:", result); // DEBUG
+      Swal.close(); 
+      
+      if (result.status && result.data) {
+     
+        console.log("📊 Datos para exportar:", result.data);
+        
+        // Crear y descargar archivo CSV
+        const csvContent = generarCSV(result.data);
+        descargarCSV(csvContent, 'clientes_export.csv');
+        
+        Swal.fire("¡Éxito!", "Clientes exportados correctamente.", "success");
+      } else {
+        if (result.message && result.message.includes('permisos')) {
+          mostrarModalPermisosDenegados(result.message);
+        } else {
+          Swal.fire("Error", result.message || "Error al exportar clientes.", "error");
+        }
+      }
+    })
+    .catch(error => {
+      console.error("❌ Error en exportación:", error); // DEBUG
+      Swal.close(); 
+      
+      if (error.message && error.message.includes('permisos')) {
+        mostrarModalPermisosDenegados(error.message);
+      } else {
+        Swal.fire("Error", "Error de conexión al exportar.", "error");
+      }
+    });
+}
+
+//  FUNCIÓN PARA GENERAR CSV
+function generarCSV(datos) {
+  const headers = ['ID', 'Cédula', 'Nombre', 'Apellido', 'Teléfono', 'Dirección', 'Estatus', 'Observaciones'];
+  const csvContent = [
+    headers.join(','),
+    ...datos.map(cliente => [
+      cliente.idcliente || '',
+      `"${cliente.cedula || ''}"`,
+      `"${cliente.nombre || ''}"`,
+      `"${cliente.apellido || ''}"`,
+      cliente.telefono_principal || '',
+      `"${cliente.direccion || ''}"`,
+      cliente.estatus || '',
+      `"${cliente.observaciones || ''}"`,
+    ].join(','))
+  ].join('\n');
+  
+  return csvContent;
+}
+
+//  FUNCIÓN PARA DESCARGAR CSV
+function descargarCSV(csvContent, filename) {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 }
