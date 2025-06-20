@@ -83,16 +83,6 @@ $permisos = $data['permisos'] ?? []; ?>
       </div>
     </div>
 
-    <!-- Loading Spinner
-    <div id="loadingSpinner" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 bg-gray-600 backdrop-blur-[2px]">
-      <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm mx-auto">
-        <div class="text-center">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <h3 class="text-lg font-medium text-gray-900 mt-4">Cargando...</h3>
-          <p class="text-sm text-gray-500 mt-2">Por favor espere mientras procesamos la información</p>
-        </div>
-      </div>
-    </div> -->
 
     <!-- Contenedor de Asignaciones -->
     <div id="asignacionesContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
