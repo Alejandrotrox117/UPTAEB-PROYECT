@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function initializeBitacora() {
-    // Destruir tabla existente si existe
+    
     if ($.fn.DataTable.isDataTable("#TablaBitacora")) {
         $("#TablaBitacora").DataTable().destroy();
     }
@@ -173,14 +173,14 @@ function initializeBitacora() {
 }
 
 function setupEventListeners() {
-    // Event listener para ver detalles
+    
     $(document).on('click', '.btn-ver-detalle', function() {
         const idbitacora = $(this).data('id');
         console.log("Ver detalle ID:", idbitacora);
         verDetalleBitacora(idbitacora);
     });
 
-    // Event listeners para filtros
+    
     $('#filtroModulo').on('change', function() {
         aplicarFiltros();
     });
@@ -197,32 +197,32 @@ function setupEventListeners() {
         actualizarBitacora();
     });
 
-    //  NUEVOS EVENT LISTENERS PARA MODALES
+    
     $('#btnEstadisticas').on('click', function() {
         mostrarEstadisticas();
     });
 
-    // Event listeners para limpiar bitácora (solo administradores)
+    
     $('#btnLimpiarBitacora').on('click', function() {
         abrirModalLimpieza();
     });
 
-    // Cerrar modales - Detalle
+    
     $('#btnCerrarModalDetalle, #btnCerrarModalDetalle2').on('click', function() {
         cerrarModal('modalDetalleBitacora');
     });
 
-    // Cerrar modales - Estadísticas
+    
     $('#btnCerrarModalEstadisticas, #btnCerrarModalEstadisticas2').on('click', function() {
         cerrarModal('modalEstadisticas');
     });
 
-    // Exportar detalle
+    
     $('#btnExportarDetalle').on('click', function() {
         exportarDetalle();
     });
 
-    // Cerrar modales al hacer clic fuera
+    
     $(document).on('click', '#modalDetalleBitacora', function(e) {
         if (e.target === this) {
             cerrarModal('modalDetalleBitacora');
@@ -235,7 +235,7 @@ function setupEventListeners() {
         }
     });
 
-    // Cerrar modales con ESC
+    
     $(document).on('keydown', function(e) {
         if (e.key === 'Escape') {
             cerrarModal('modalDetalleBitacora');
@@ -244,7 +244,7 @@ function setupEventListeners() {
     });
 }
 
-//  CARGAR FILTROS DINÁMICAMENTE
+
 async function cargarFiltros() {
     try {
         const response = await fetch('bitacora/getModulosDisponibles');
@@ -301,7 +301,7 @@ function actualizarBitacora() {
     }
 }
 
-//  FUNCIÓN MEJORADA PARA VER DETALLE
+
 async function verDetalleBitacora(idbitacora) {
     try {
         showLoading();
@@ -314,20 +314,20 @@ async function verDetalleBitacora(idbitacora) {
         if (result.status && result.data) {
             const data = result.data;
             
-            // Llenar campos del modal
+            
             document.getElementById('detalleId').textContent = data.id || 'N/A';
             document.getElementById('detalleModulo').textContent = data.modulo || 'N/A';
             document.getElementById('detalleAccion').innerHTML = formatearAccionDetalle(data.accion);
             document.getElementById('detalleUsuario').querySelector('span').textContent = data.usuario || 'Usuario desconocido';
             document.getElementById('detalleFecha').querySelector('span').textContent = data.fecha || 'N/A';
             
-            // Calcular tiempo transcurrido
+            
             if (data.fecha_raw) {
                 const tiempoTranscurrido = calcularTiempoTranscurrido(data.fecha_raw);
                 document.getElementById('detalleTiempoTranscurrido').querySelector('span').textContent = tiempoTranscurrido;
             }
             
-            // Guardar datos para exportar
+            
             window.detalleActual = data;
             
             abrirModal('modalDetalleBitacora');
@@ -342,12 +342,12 @@ async function verDetalleBitacora(idbitacora) {
     }
 }
 
-//  FUNCIÓN PARA MOSTRAR ESTADÍSTICAS
+
 async function mostrarEstadisticas() {
     try {
         abrirModal('modalEstadisticas');
         
-        // Simular carga de estadísticas
+        
         setTimeout(() => {
             const totalRegistros = TablaBitacora ? TablaBitacora.data().length : 0;
             const contenido = document.getElementById('contenidoEstadisticas');
@@ -417,7 +417,7 @@ async function mostrarEstadisticas() {
     }
 }
 
-//  FUNCIÓN PARA LIMPIAR BITÁCORA
+
 async function abrirModalLimpieza() {
     const { value: dias } = await Swal.fire({
         title: '¿Limpiar Bitácora?',
@@ -496,7 +496,7 @@ async function ejecutarLimpieza(dias) {
     }
 }
 
-//  FUNCIONES AUXILIARES PARA ESTADÍSTICAS
+
 function calcularRegistrosHoy() {
     if (!TablaBitacora) return 0;
     
@@ -513,7 +513,7 @@ function calcularPromedioDiario() {
     if (!TablaBitacora) return 0;
     
     const total = TablaBitacora.data().length;
-    const diasAproximados = 30; // Asumiendo 30 días de historial
+    const diasAproximados = 30; 
     
     return Math.round(total / diasAproximados);
 }
@@ -524,13 +524,13 @@ function generarEstadisticasAcciones() {
     const datos = TablaBitacora.data().toArray();
     const contadorAcciones = {};
     
-    // Contar acciones
+    
     datos.forEach(registro => {
         const accion = registro.accion;
         contadorAcciones[accion] = (contadorAcciones[accion] || 0) + 1;
     });
     
-    // Ordenar por cantidad
+    
     const accionesOrdenadas = Object.entries(contadorAcciones)
         .sort(([,a], [,b]) => b - a)
         .slice(0, 5);
@@ -579,7 +579,7 @@ function obtenerUltimoRegistro() {
     }
     
     const datos = TablaBitacora.data().toArray();
-    const ultimo = datos[0]; // Ya están ordenados por fecha DESC
+    const ultimo = datos[0]; 
     return ultimo.fecha;
 }
 
@@ -591,7 +591,7 @@ function obtenerModulosActivos() {
     return modulos.size;
 }
 
-//  FUNCIONES AUXILIARES PARA MODAL DETALLE
+
 function formatearAccionDetalle(accion) {
     const acciones = {
         'ACCESO_MODULO': '<span class="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full flex items-center w-fit"><i class="fas fa-sign-in-alt mr-2"></i>ACCESO A MÓDULO</span>',
@@ -658,7 +658,7 @@ function exportarDetalle() {
         Generado el: ${new Date().toLocaleString()}
     `;
     
-    // Crear y descargar archivo
+    
     const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -672,7 +672,7 @@ function exportarDetalle() {
     showNotification('Detalle exportado exitosamente', 'success');
 }
 
-//  FUNCIONES DE UTILIDAD
+
 function showNotification(message, type = 'info') {
     const colors = {
         success: 'bg-green-500',
@@ -733,7 +733,7 @@ function hideLoading() {
 
 
 
-// Exponer funciones necesarias al scope global
+
 window.verDetalleBitacora = verDetalleBitacora;
 window.actualizarBitacora = actualizarBitacora;
 window.mostrarEstadisticas = mostrarEstadisticas;

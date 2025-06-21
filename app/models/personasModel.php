@@ -290,7 +290,7 @@ class PersonasModel extends mysql
                     $stmtInsert->execute($valoresInsert);
                 }
             } else {
-                // Si existe, actualizar
+              
                 $sqlUpdate = "UPDATE usuario SET idrol = ?, usuario = ?, correo = ?";
                 $valoresUpdate = [
                     $dataUsuario['idrol_usuario'],
@@ -298,7 +298,7 @@ class PersonasModel extends mysql
                     $dataUsuario['correo_electronico_usuario']
                 ];
 
-                // Solo actualizar clave si se proporciona
+              
                 if (!empty($dataUsuario['clave_usuario'])) {
                     $claveHasheada = hash("SHA256", $dataUsuario['clave_usuario']);
                     $sqlUpdate .= ", clave = ?";
@@ -452,7 +452,6 @@ class PersonasModel extends mysql
 
     public function selectAllPersonasActivas()
     {
-        // Consulta para obtener todas las personas activas y su información de usuario/rol
         $sql = "SELECT p.idpersona as idpersona_pk, p.nombre as persona_nombre, p.apellido as persona_apellido,
                     p.identificacion as persona_cedula, p.genero as persona_genero,
                     u.correo as correo_usuario_login, p.telefono_principal, p.estatus as persona_estatus,
@@ -461,10 +460,10 @@ class PersonasModel extends mysql
                 LEFT JOIN {$this->conexion->getDatabaseSeguridad()}.usuario u ON p.identificacion = u.personaId
                 LEFT JOIN {$this->conexion->getDatabaseSeguridad()}.roles r ON u.idrol = r.idrol
                 WHERE p.estatus = 'ACTIVO'
-                ORDER BY p.nombre ASC, p.apellido ASC"; // Un orden por defecto
+                ORDER BY p.nombre ASC, p.apellido ASC"; 
 
         try {
-            $stmt = $this->dbPrincipal->query($sql); // Usamos query() ya que no hay placeholders aquí
+            $stmt = $this->dbPrincipal->query($sql); 
             $personas = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return ["status" => true, "message" => "Personas obtenidas.", "data" => $personas];
         } catch (PDOException $e) {

@@ -81,7 +81,7 @@ class categoriasModel extends Mysql
         return $stmt->execute($arrValues);
     }
 
-    // Método para eliminar lógicamente un categoria
+    
     public function deleteCategoria($idcategoria) {
         $sql = "UPDATE categoria SET estatus = 'INACTIVO' WHERE idcategoria = ?";
         $stmt = $this->db->prepare($sql); 

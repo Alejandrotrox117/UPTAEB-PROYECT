@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Autocompletar para buscar proveedor
+  
   $("#buscar_proveedor").autocomplete({
     source: function (request, response) {
       $.ajax({
-        url: "/Compras/buscarProveedores", // Ajusta la URL base si es necesario
+        url: "/Compras/buscarProveedores", 
         dataType: "json",
         data: {
           term: request.term,
@@ -30,20 +30,20 @@ document.addEventListener("DOMContentLoaded", function () {
           `Proveedor: <strong>${ui.item.nombre}</strong> (ID: ${ui.item.identificacion})`,
         )
         .removeClass("hidden");
-      $("#buscar_proveedor").val(ui.item.label); // Muestra el label en el input
-      return false; // Previene que se ponga el value (ID) en el input
+      $("#buscar_proveedor").val(ui.item.label); 
+      return false; 
     },
     change: function (event, ui) {
-      // Si se borra el input o no se selecciona nada, limpiar
+      
       if (!ui.item) {
         $("#idproveedor_seleccionado").val("");
         $("#proveedor_seleccionado_info").html("").addClass("hidden");
-        // Opcional: $("#buscar_proveedor").val("");
+        
       }
     },
   });
 
-  // Modal Nuevo Proveedor
+  
   const modalNuevoProveedor = document.getElementById("modalNuevoProveedor");
   const btnAbrirModalNuevoProveedor = document.getElementById(
     "btnAbrirModalNuevoProveedor",
@@ -70,14 +70,14 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btnCancelarModalNuevoProveedor)
     btnCancelarModalNuevoProveedor.addEventListener("click", cerrarModalProv);
 
-  // Registrar Nuevo Proveedor (AJAX)
+  
   const formNuevoProveedor = document.getElementById("formNuevoProveedor");
   if (formNuevoProveedor) {
     formNuevoProveedor.addEventListener("submit", function (e) {
       e.preventDefault();
       const formData = new FormData(formNuevoProveedor);
       fetch("/Compras/registrarNuevoProveedor", {
-        // Ajusta la URL base
+        
         method: "POST",
         body: formData,
       })
@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Lógica para agregar productos al detalle
+  
   const btnAgregarProductoDetalle = document.getElementById(
     "btnAgregarProductoDetalle",
   );
@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const cuerpoTablaDetalleCompra = document.getElementById(
     "cuerpoTablaDetalleCompra",
   );
-  let detalleCompraItems = []; // Array para guardar los items del detalle
+  let detalleCompraItems = []; 
 
   if (btnAgregarProductoDetalle && selectProductoAgregar) {
     btnAgregarProductoDetalle.addEventListener("click", function () {
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const idproducto = selectedOption.value;
-      // Evitar duplicados (simple check por idproducto)
+      
       if (detalleCompraItems.find((item) => item.idproducto === idproducto)) {
         alert("Este producto ya ha sido agregado.");
         return;
@@ -155,24 +155,24 @@ document.addEventListener("DOMContentLoaded", function () {
         idmoneda_item:
           idMonedaProducto || $("#idmoneda_general_compra").val(),
         simbolo_moneda_item: simboloMonedaProducto,
-        // Campos específicos se llenarán en la tabla
+        
       };
       detalleCompraItems.push(item);
       renderizarTablaDetalle();
-      selectProductoAgregar.value = ""; // Reset select
+      selectProductoAgregar.value = ""; 
     });
   }
 
   function renderizarTablaDetalle() {
-    cuerpoTablaDetalleCompra.innerHTML = ""; // Limpiar tabla
+    cuerpoTablaDetalleCompra.innerHTML = ""; 
     detalleCompraItems.forEach((item, index) => {
       const tr = document.createElement("tr");
       tr.classList.add("border-b");
-      tr.dataset.index = index; // Para identificar la fila
+      tr.dataset.index = index; 
 
       let infoEspecificaHtml = "";
       if (item.idcategoria === 1) {
-        // Materiales por Peso
+        
         infoEspecificaHtml = `
           <div class="space-y-1 text-xs">
             <div>
@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
             P. Neto Calc: <strong class="peso_neto_calculado_display">${calcularPesoNetoItem(item).toFixed(2)}</strong>
           </div>`;
       } else {
-        // Productos por Unidad
+        
         infoEspecificaHtml = `
           <div class="text-xs">
             Cantidad: <input type="number" step="0.01" class="input-xs cantidad_unidad" value="${item.cantidad_unidad || "1"}" placeholder="1">
@@ -208,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
       `;
       cuerpoTablaDetalleCompra.appendChild(tr);
     });
-    // Añadir listeners a los nuevos inputs y botones
+    
     addEventListenersToDetalleInputs();
     calcularTotalesGenerales();
   }
@@ -218,12 +218,12 @@ document.addEventListener("DOMContentLoaded", function () {
       const index = parseInt(row.dataset.index);
       const item = detalleCompraItems[index];
 
-      // Checkbox no_usa_vehiculo
+      
       const cbNoUsaVehiculo = row.querySelector(".no_usa_vehiculo_cb");
       if (cbNoUsaVehiculo) {
         cbNoUsaVehiculo.addEventListener("change", function (e) {
           item.no_usa_vehiculo = e.target.checked;
-          // Mostrar/ocultar campos correspondientes
+          
           const camposPesoVehiculo = row.querySelector(".campos_peso_vehiculo");
           const campoPesoNetoDirecto = row.querySelector(
             ".campo_peso_neto_directo",
@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
           if (e.target.checked) {
             camposPesoVehiculo.classList.add("hidden");
             campoPesoNetoDirecto.classList.remove("hidden");
-            item.peso_vehiculo = 0; // Resetear si se ocultan
+            item.peso_vehiculo = 0; 
             item.peso_bruto = 0;
           } else {
             camposPesoVehiculo.classList.remove("hidden");
@@ -242,7 +242,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
 
-      // Inputs de peso y cantidad
+      
       row.querySelectorAll(".peso_vehiculo, .peso_bruto, .peso_neto_directo, .cantidad_unidad, .precio_unitario_item").forEach((input) => {
         input.addEventListener("input", function (e) {
           const fieldName = e.target.classList.contains("peso_vehiculo")
@@ -259,10 +259,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       });
 
-      // Botón eliminar
+      
       row.querySelector(".btnEliminarItemDetalle").addEventListener("click", function () {
           detalleCompraItems.splice(index, 1);
-          renderizarTablaDetalle(); // Re-renderizar para actualizar índices y todo
+          renderizarTablaDetalle(); 
         });
     });
   }
@@ -280,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function calcularPesoNetoItem(item) {
     if (item.idcategoria === 1) {
-      // Materiales por Peso
+      
       if (item.no_usa_vehiculo) {
         return parseFloat(item.peso_neto_directo) || 0;
       } else {
@@ -289,20 +289,20 @@ document.addEventListener("DOMContentLoaded", function () {
         return Math.max(0, bruto - vehiculo);
       }
     }
-    return 0; // No aplica para otras categorías
+    return 0; 
   }
 
   function calcularSubtotalLineaItem(item) {
     const precioUnitario = parseFloat(item.precio_unitario) || 0;
     let cantidadBase = 0;
     if (item.idcategoria === 1) {
-      // Materiales por Peso
+      
       cantidadBase = calcularPesoNetoItem(item);
     } else {
-      // Productos por Unidad
+      
       cantidadBase = parseFloat(item.cantidad_unidad) || 0;
     }
-    item.subtotal_linea = cantidadBase * precioUnitario; // Guardar en el item
+    item.subtotal_linea = cantidadBase * precioUnitario; 
     return item.subtotal_linea;
   }
 
@@ -312,10 +312,10 @@ document.addEventListener("DOMContentLoaded", function () {
       $("#idmoneda_general_compra option:selected").data("simbolo") || "$";
 
     detalleCompraItems.forEach((item) => {
-      // Aquí necesitarías conversión de moneda si los items tienen monedas diferentes a la general
-      // Por simplicidad, asumimos que todos los subtotales de línea ya están en la moneda general o se convierten antes.
-      // Para este ejemplo, sumamos directamente. Si hay diferentes monedas, esto es incorrecto.
-      // Deberías tener un campo idmoneda_detalle en cada item y convertir a idmoneda_general.
+      
+      
+      
+      
       subtotalGeneral += parseFloat(item.subtotal_linea) || 0;
     });
 
@@ -339,13 +339,13 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#total_general_input").val(totalGeneral.toFixed(2));
   }
 
-  // Recalcular totales si cambia el descuento
+  
   $("#descuento_porcentaje_input, #idmoneda_general_compra").on(
     "input change",
     calcularTotalesGenerales,
   );
 
-  // Guardar Compra
+  
   const formNuevaCompra = document.getElementById("formNuevaCompra");
   if (formNuevaCompra) {
     formNuevaCompra.addEventListener("submit", function (e) {
@@ -364,13 +364,13 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      // Validar que todos los items tengan datos necesarios (ej. precio > 0, cantidad/peso > 0)
+      
       for (const item of detalleCompraItems) {
         const precio = parseFloat(item.precio_unitario) || 0;
         let cantidadValida = false;
-        if (item.idcategoria === 1) { // Peso
+        if (item.idcategoria === 1) { 
             cantidadValida = calcularPesoNetoItem(item) > 0;
-        } else { // Unidad
+        } else { 
             cantidadValida = (parseFloat(item.cantidad_unidad) || 0) > 0;
         }
         if (precio <= 0 || !cantidadValida) {
@@ -381,16 +381,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
       const formData = new FormData(formNuevaCompra);
-      // Agregar el detalle de compra como JSON string
+      
       formData.append("productos_detalle", JSON.stringify(detalleCompraItems));
 
-      // Deshabilitar botón para evitar doble envío
+      
       const btnGuardar = document.getElementById("btnGuardarCompra");
       btnGuardar.disabled = true;
       btnGuardar.textContent = "Guardando...";
 
       fetch("/Compras/setCompra", {
-        // Ajusta la URL base
+        
         method: "POST",
         body: formData,
       })
@@ -398,14 +398,14 @@ document.addEventListener("DOMContentLoaded", function () {
         .then((data) => {
           alert(data.message);
           if (data.status) {
-            // Limpiar formulario o redirigir
+            
             formNuevaCompra.reset();
             detalleCompraItems = [];
             renderizarTablaDetalle();
             $("#proveedor_seleccionado_info").html("").addClass("hidden");
             $("#buscar_proveedor").val("");
-            // Opcional: redirigir a la lista de compras o a ver la compra creada
-            // window.location.href = "/Compras";
+            
+            
           }
         })
         .catch((error) => {
@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Botón Cancelar
+  
   const btnCancelarCompra = document.getElementById("btnCancelarCompra");
   if (btnCancelarCompra) {
     btnCancelarCompra.addEventListener("click", () => {
@@ -429,14 +429,14 @@ document.addEventListener("DOMContentLoaded", function () {
         renderizarTablaDetalle();
         $("#proveedor_seleccionado_info").html("").addClass("hidden");
         $("#buscar_proveedor").val("");
-        // Opcional: redirigir
-        // window.location.href = "/Compras";
+        
+        
       }
     });
   }
 });
 
-// Helper para inputs con clases específicas (ej. Tailwind)
-// $(".input-xs").addClass("border border-gray-300 rounded px-1 py-0.5 text-xs w-20");
-// $(".input-sm").addClass("border border-gray-300 rounded px-2 py-1 text-sm w-24");
-// Asegúrate de tener estilos para estas clases o ajústalas.
+
+
+
+

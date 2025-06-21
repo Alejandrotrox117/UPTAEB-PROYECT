@@ -30,7 +30,7 @@ class Compras extends Controllers
         $this->views->getView($this, "compras", $data);
     }
 
-    //DATATABLE DE COMPRAS
+    
     public function getComprasDataTable(){
         header('Content-Type: application/json');
         $arrData = $this->get_model()->selectAllCompras();
@@ -38,7 +38,7 @@ class Compras extends Controllers
         exit();
     }
 
-    //BUSCAR MONEDAS
+    
     public function getListaMonedasParaFormulario() {
         header('Content-Type: application/json');
         $modelo = $this->get_model();
@@ -47,7 +47,7 @@ class Compras extends Controllers
         exit();
     }
 
-    //BUSCAR TASAS DE MONEDAS POR FECHA
+    
     public function getTasasMonedasPorFecha(){
         header('Content-Type: application/json');
         if (!isset($_GET['fecha'])) {
@@ -60,7 +60,7 @@ class Compras extends Controllers
         exit();
     }
 
-    //BUSCAR PRODUCTOS
+    
     public function getListaProductosParaFormulario() {
         header('Content-Type: application/json');
         $modelo = $this->get_model();
@@ -69,7 +69,7 @@ class Compras extends Controllers
         exit();
     }
 
-    //BUSCAR PROVEEDORES
+    
     public function buscarProveedores() {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['term'])) {
@@ -83,7 +83,7 @@ class Compras extends Controllers
         exit();
     }
 
-    //BUSCAR ULTIMO PESO DE ROMANA
+    
     public function getUltimoPesoRomana() {
         $filePath = 'C:\com_data\peso_mysql.json';
         
@@ -113,7 +113,7 @@ class Compras extends Controllers
         ]);
     }
 
-    //GUARDAR COMPRA
+    
     public function setCompra(){
         header('Content-Type: application/json');
 
@@ -238,7 +238,7 @@ class Compras extends Controllers
         exit();
     }
 
-    //VER DETALLE DE COMPRA
+    
     public function getCompraById(int $idcompra)
     {
         if ($idcompra > 0) {
@@ -261,7 +261,7 @@ class Compras extends Controllers
         die();
     }
 
-    //ELIMINAR COMPRA
+    
     public function deleteCompra(){
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
@@ -292,7 +292,7 @@ class Compras extends Controllers
         exit;
     }
 
-    //CAMBIAR ESTADO DE COMPRA
+    
     public function cambiarEstadoCompra(){
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $json = file_get_contents('php://input');
@@ -312,7 +312,7 @@ class Compras extends Controllers
         die();
     }
 
-    //REGISTRAR NUEVO PROVEEDOR EN COMPRAS
+    
     public function createProveedorinCompras(){
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
@@ -333,7 +333,7 @@ class Compras extends Controllers
         die();
     }
 
-    //OBTENER PROVEEDOR POR ID
+    
     public function getProveedorById($idproveedor){
         if ($idproveedor > 0) {
             $proveedor = $this->get_model()->getProveedorById($idproveedor);
@@ -347,7 +347,7 @@ class Compras extends Controllers
         die();
     }
 
-    //OBTENER COMPRA PARA EDITAR
+    
     public function getCompraParaEditar(int $idcompra) {
         header('Content-Type: application/json');
         
@@ -376,7 +376,7 @@ class Compras extends Controllers
         exit();
     }
 
-    //ACTUALIZAR COMPRA
+    
     public function updateCompra() {
         header('Content-Type: application/json');
 
@@ -487,7 +487,7 @@ class Compras extends Controllers
         exit();
     }
 
-    // GENERAR NOTA DE ENTREGA/FACTURA
+    
     public function factura($idcompra){
     $data['page_tag'] = "Compra - Sistema de Compras";
     $data['page_title'] = "Factura de Compra <small>Sistema de Compras</small>";

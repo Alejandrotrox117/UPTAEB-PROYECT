@@ -43,13 +43,13 @@ private $query;
     $this->result = $result;
   }
 
-    // --- MÉTODO CORREGIDO ---
+   
     public function getResumen(){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-            // CORREGIDO: Se añaden los campos para las tarjetas de resumen mejoradas
+    
             $stmt = $db->prepare("SELECT 
                 (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus = 'activo') as ventas_hoy,
                 (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus = 'activo') as ventas_ayer,
@@ -77,7 +77,7 @@ private $query;
         try {
             $response = [];
 
-            // Stock crítico
+           
             $stmt_critico = $db->prepare("SELECT 
                 (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia <= stock_minimo) as critico,
                 (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia > stock_minimo) as normal");
@@ -86,7 +86,7 @@ private $query;
             $total_productos = $stock_data['critico'] + $stock_data['normal'];
             $response['stock_critico'] = ($total_productos > 0) ? ($stock_data['critico'] / $total_productos * 100) : 0;
 
-            // Valor por categoría
+           
             $stmt_valor = $db->prepare("SELECT c.nombre, SUM(p.existencia * p.precio) as valor
                 FROM producto p
                 JOIN categoria c ON p.idcategoria = c.idcategoria
@@ -96,7 +96,7 @@ private $query;
             $stmt_valor->execute();
             $response['valor_por_categoria'] = $stmt_valor->fetchAll(PDO::FETCH_ASSOC);
 
-            // Movimientos del mes
+          
             $stmt_mov = $db->prepare("SELECT 
                 SUM(CASE WHEN tipo_movimiento = 'Entrada' THEN 1 ELSE 0 END) as entradas,
                 SUM(CASE WHEN tipo_movimiento = 'Salida' THEN 1 ELSE 0 END) as salidas
@@ -105,7 +105,7 @@ private $query;
             $stmt_mov->execute();
             $response['movimientos_mes'] = $stmt_mov->fetch(PDO::FETCH_ASSOC);
 
-            // Productos más vendidos
+      
             $stmt_vendidos = $db->prepare("SELECT p.nombre, SUM(dv.cantidad) as cantidad
                 FROM detalle_venta dv
                 JOIN producto p ON dv.idproducto = p.idproducto
@@ -132,8 +132,7 @@ private $query;
         }
     }
     
-    // El resto de los métodos del modelo se mantienen igual que los proporcionaste.
-    // ... (pega aquí el resto de tus métodos del modelo sin cambios)
+ 
     public function getUltimasVentas()
     {
         $conexion = new Conexion();
@@ -422,16 +421,14 @@ private $query;
         }
     }
 
-    // --- MÉTODOS AVANZADOS SIMPLIFICADOS ---
-
+   
     public function getKPIsEjecutivos()
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-            // CORRECIÓN: Usamos CAST(... AS DECIMAL(10,2)) para asegurar que MySQL
-            // devuelva un número con punto decimal, no una cadena con coma.
+
             $stmt = $db->prepare("SELECT 
                 CAST(COALESCE(
                     (SELECT (SUM(v.total_general) - (SELECT COALESCE(SUM(c.total_general), 0) FROM compra c WHERE MONTH(c.fecha) = MONTH(CURDATE()))) / NULLIF(SUM(v.total_general), 0) * 100

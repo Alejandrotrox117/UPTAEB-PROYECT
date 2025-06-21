@@ -17,7 +17,7 @@ class UsuariosModel extends Mysql
         // Constructor vacío como en ProveedoresModel
     }
 
-    // ✅ GETTERS Y SETTERS (igual que ProveedoresModel)
+    //  GETTERS Y SETTERS (igual que ProveedoresModel)
     public function getQuery(){
         return $this->query;
     }
@@ -74,7 +74,7 @@ class UsuariosModel extends Mysql
         $this->status = $status;
     }
 
-    // ✅ FUNCIONES PRIVADAS ENCAPSULADAS
+    //  FUNCIONES PRIVADAS ENCAPSULADAS
 
     /**
      * Verificar si existe usuario por correo
@@ -637,7 +637,7 @@ class UsuariosModel extends Mysql
         return $resultado;
     }
 
-    // ✅ MÉTODOS PÚBLICOS QUE USAN LAS FUNCIONES PRIVADAS (igual que ProveedoresModel)
+    //  MÉTODOS PÚBLICOS QUE USAN LAS FUNCIONES PRIVADAS (igual que ProveedoresModel)
 
     /**
      * Insertar nuevo usuario

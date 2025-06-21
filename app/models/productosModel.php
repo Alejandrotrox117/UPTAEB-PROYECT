@@ -131,7 +131,7 @@ class ProductosModel extends Mysql
                 $data['idcategoria'],
                 $data['moneda'],
                 'ACTIVO',
-                0 // existencia inicial en 0
+                0 
             ]);
             
             $stmt = $db->prepare($this->getQuery());

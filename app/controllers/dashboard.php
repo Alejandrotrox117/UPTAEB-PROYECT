@@ -3,7 +3,7 @@ require_once "app/core/Controllers.php";
 require_once "helpers/PermisosModuloVerificar.php";
 require_once "helpers/helpers.php";
 require_once "app/Models/DashboardModel.php";
-
+// require_once "vendor/pdf/fpdf.php";
 class PDF extends FPDF
 {
     function Header()
@@ -41,12 +41,12 @@ class Dashboard extends Controllers
             "page_title" => "Dashboard Ejecutivo",
             "page_name" => "Dashboard",
             "page_functions_js" => "functions_dashboard.js",
-            // Mantener los datos originales para los filtros existentes
+            
             "tipos_pago" => $this->model->getTiposDePago(),
             "tipos_egreso" => ["Compras", "Sueldos", "Otros Egresos"],
             "proveedores" => $this->model->getProveedoresActivos(),
             "productos" => $this->model->getProductos(),
-            // Nuevos datos para filtros avanzados
+            
             "empleados" => $this->model->getEmpleadosActivos(),
         ];
         $this->views->getView($this, "dashboard", $data);
@@ -68,15 +68,15 @@ class Dashboard extends Controllers
         return $desde <= $hasta;
     }
 
-    // MANTENER EXACTAMENTE IGUAL EL MÉTODO ORIGINAL getDashboardData
+    
     public function getDashboardData()
     {
-        // Filtros de ingresos
+        
         $fecha_desde_ingresos = $this->validarYFormatearFecha($_GET["fecha_desde_ingresos"] ?? null, "inicio");
         $fecha_hasta_ingresos = $this->validarYFormatearFecha($_GET["fecha_hasta_ingresos"] ?? null, "fin");
         $idtipo_pago_ingresos = filter_var($_GET["idtipo_pago_ingresos"] ?? null, FILTER_VALIDATE_INT) ?: null;
 
-        // Filtros de egresos
+        
         $fecha_desde_egresos = $this->validarYFormatearFecha($_GET["fecha_desde_egresos"] ?? null, "inicio");
         $fecha_hasta_egresos = $this->validarYFormatearFecha($_GET["fecha_hasta_egresos"] ?? null, "fin");
         $idtipo_pago_egresos = filter_var($_GET["idtipo_pago_egresos"] ?? null, FILTER_VALIDATE_INT) ?: null;
@@ -102,10 +102,10 @@ class Dashboard extends Controllers
         exit();
     }
 
-    // NUEVO MÉTODO PARA DATOS AVANZADOS
+    
     public function getDashboardAvanzado()
     {
-        // Filtros para análisis de producción
+        
         $prod_fecha_desde = $this->validarYFormatearFecha($_GET["prod_fecha_desde"] ?? null, "inicio");
         $prod_fecha_hasta = $this->validarYFormatearFecha($_GET["prod_fecha_hasta"] ?? null, "fin");
         $prod_empleado = filter_var($_GET["prod_empleado"] ?? null, FILTER_VALIDATE_INT) ?: null;
@@ -119,26 +119,26 @@ class Dashboard extends Controllers
 
         try {
             $response = [
-                // Panel ejecutivo
+                
                 "kpisEjecutivos" => $this->model->getKPIsEjecutivos(),
                 
-                // Análisis de tendencias
+                
                 "tendenciasVentas" => $this->model->getTendenciasVentas(),
                 "rentabilidadProductos" => $this->model->getRentabilidadProductos(),
                 
-                // Análisis de producción
+                
                 "eficienciaEmpleados" => $this->model->getEficienciaEmpleados($prod_fecha_desde, $prod_fecha_hasta, $prod_empleado, $prod_estado),
                 "estadosProduccion" => $this->model->getEstadosProduccion($prod_fecha_desde, $prod_fecha_hasta),
                 "cumplimientoTareas" => $this->model->getCumplimientoTareas($prod_fecha_desde, $prod_fecha_hasta),
                 
-                // Top clientes y proveedores
+                
                 "topClientes" => $this->model->getTopClientes(10),
                 "topProveedores" => $this->model->getTopProveedores(10),
                 
-                // Análisis de inventario
+                
                 "analisisInventario" => $this->model->getAnalisisInventario(),
                 
-                // KPIs en tiempo real
+                
                 "kpisTiempoReal" => $this->model->getKPIsTiempoReal(),
             ];
 
@@ -152,7 +152,7 @@ class Dashboard extends Controllers
         exit();
     }
 
-    // MANTENER TODOS LOS MÉTODOS DE PDF ORIGINALES SIN CAMBIOS
+    
     public function descargarIngresosPDF()
     {
         $fecha_desde = $this->validarYFormatearFecha($_GET["fecha_desde"] ?? null, "inicio");
@@ -370,7 +370,7 @@ class Dashboard extends Controllers
         $pdf->Output("D", "Reporte_Compras_" . date("Y-m-d") . ".pdf");
     }
 
-    // CORREGIDO: Método completado para generar un PDF útil
+    
     public function descargarReporteEjecutivoPDF()
     {
         $kpis = $this->model->getKPIsEjecutivos();
@@ -387,7 +387,7 @@ class Dashboard extends Controllers
         $pdf->Cell(0, 10, "Generado el: " . date("d/m/Y H:i:s"), 0, 1, "C");
         $pdf->Ln(10);
 
-        // KPIs Ejecutivos
+        
         $pdf->SetFont("Arial", "B", 14);
         $pdf->Cell(0, 10, "Indicadores Clave de Rendimiento (Mes Actual)", 0, 1, "L");
         $pdf->SetFont("Arial", "", 10);
@@ -397,7 +397,7 @@ class Dashboard extends Controllers
         $pdf->Cell(95, 8, "Productividad General: " . number_format($kpis['productividad_general'] ?? 0, 2) . " kg/dia", 1, 1, 'L');
         $pdf->Ln(10);
 
-        // Top Clientes
+        
         $pdf->SetFont("Arial", "B", 14);
         $pdf->Cell(0, 10, "Top 5 Clientes (Historico)", 0, 1, "L");
         $pdf->SetFont("Arial", "B", 9);
@@ -416,7 +416,7 @@ class Dashboard extends Controllers
         }
         $pdf->Ln(10);
 
-        // Top Proveedores
+        
         $pdf->SetFont("Arial", "B", 14);
         $pdf->Cell(0, 10, "Top 5 Proveedores (Historico)", 0, 1, "L");
         $pdf->SetFont("Arial", "B", 9);

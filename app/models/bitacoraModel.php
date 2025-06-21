@@ -14,9 +14,7 @@ class BitacoraModel
         $this->dbSeguridad = $this->conexion->get_conectSeguridad();
     }
 
-    /**
-     * ✅ CORREGIR: Usar fecha_accion en lugar de fecha
-     */
+
     public function SelectAllBitacora()
     {
         $sql = "SELECT 
@@ -39,9 +37,7 @@ class BitacoraModel
         }
     }
 
-    /**
-     * ✅ CORREGIR: Usar fecha_accion
-     */
+   
     public function obtenerRegistroPorId($idbitacora)
     {
         $sql = "SELECT 
@@ -65,9 +61,7 @@ class BitacoraModel
         }
     }
 
-    /**
-     * ✅ CORREGIR: Usar fecha_accion
-     */
+    
     public function obtenerHistorial($filtros = [])
     {
         $sql = "SELECT 
@@ -94,7 +88,7 @@ class BitacoraModel
             $stmt->execute($parametros);
             $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            error_log("✅ BitacoraModel: Consulta exitosa - " . count($resultado) . " registros encontrados");
+            error_log(" BitacoraModel: Consulta exitosa - " . count($resultado) . " registros encontrados");
             return $resultado;
         } catch (PDOException $e) {
             error_log("❌ BitacoraModel: Error en consulta - " . $e->getMessage());
@@ -104,9 +98,7 @@ class BitacoraModel
         }
     }
 
-    /**
-     * ✅ CORREGIR: Usar fecha_accion para filtros
-     */
+   
     private function construirFiltros($filtros, &$parametros)
     {
         $condiciones = [];
@@ -136,9 +128,7 @@ class BitacoraModel
         return implode(' AND ', $condiciones);
     }
 
-    /**
-     * ✅ CORREGIR: Usar fecha_accion para limpieza
-     */
+   
     public function limpiarRegistrosAntiguos($dias = 30)
     {
         $sql = "DELETE FROM bitacora WHERE fecha_accion < DATE_SUB(NOW(), INTERVAL ? DAY)";
@@ -153,17 +143,15 @@ class BitacoraModel
         }
     }
 
-    /**
-     * ✅ CORREGIR: Insertar en fecha_accion
-     */
+   
     public function registrarAccion($tabla, $accion, $idusuario, $detalle = null, $idRegistro = null)
     {
-        // Validación
+      
         if (!$this->validarParametros($tabla, $accion, $idusuario)) {
             return false;
         }
 
-        // Preparar datos
+       
         $datos = [
             'tabla' => trim(strtolower($tabla)),
             'accion' => trim(strtoupper($accion)),
@@ -171,7 +159,7 @@ class BitacoraModel
             'fecha_accion' => date('Y-m-d H:i:s')
         ];
 
-        // ✅ INSERTAR EN AMBOS CAMPOS PARA COMPATIBILIDAD
+     
         $sql = "INSERT INTO bitacora (tabla, accion, idusuario, fecha_accion, fecha) 
                 VALUES (:tabla, :accion, :idusuario, :fecha_accion, :fecha_accion)";
 
@@ -181,7 +169,7 @@ class BitacoraModel
             
             if ($resultado) {
                 $idInsertado = $this->dbSeguridad->lastInsertId();
-                error_log("✅ BitacoraModel: Registro exitoso - ID: {$idInsertado}, Tabla: {$datos['tabla']}, Acción: {$datos['accion']}, Usuario: {$datos['idusuario']}");
+                error_log(" BitacoraModel: Registro exitoso - ID: {$idInsertado}, Tabla: {$datos['tabla']}, Acción: {$datos['accion']}, Usuario: {$datos['idusuario']}");
                 return $idInsertado;
             } else {
                 error_log("❌ BitacoraModel: Error - No se pudo ejecutar la inserción");

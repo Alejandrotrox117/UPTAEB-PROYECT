@@ -46,7 +46,7 @@ class Notificaciones extends Controllers
                     die();
                 }
 
-                // Obtener el rol desde el modelo
+                
                 $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
                 
                 if (!$rolId) {
@@ -59,7 +59,7 @@ class Notificaciones extends Controllers
                     die();
                 }
 
-                // Obtener parámetros opcionales
+                
                 $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 50;
                 $soloNoLeidas = isset($_GET['no_leidas']) ? (bool)$_GET['no_leidas'] : false;
 
@@ -84,7 +84,7 @@ class Notificaciones extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
                 $usuarioId = $this->obtenerUsuarioSesion();
-                // Obtener el rol desde el modelo
+                
                 $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
                 
                 if (!$rolId) {
@@ -116,7 +116,7 @@ class Notificaciones extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -157,7 +157,7 @@ class Notificaciones extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 $usuarioId = $this->obtenerUsuarioSesion();
-                // Obtener el rol desde el modelo
+                
                 $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
                 
                 if (!$rolId) {

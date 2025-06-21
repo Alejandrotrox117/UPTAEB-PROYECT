@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- LÓGICA DEL SIDEBAR Y MENÚ MÓVIL ---
+  
   const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebar-overlay");
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- LÓGICA PARA MARCAR EL ENLACE ACTIVO EN EL SIDEBAR ---
+  
   const currentPath = window.location.pathname;
   const navLinksQuery = "#sidebar nav a.nav-link";
   const allNavLinks = document.querySelectorAll(navLinksQuery);
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- LÓGICA DEL SISTEMA DE NOTIFICACIONES ---
+  
   if (document.getElementById("notifications-dropdown")) {
     initNotificationSystem();
   }

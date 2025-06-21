@@ -14,18 +14,18 @@ class Produccion extends Controllers
     public function __construct()
     {
         parent::__construct();
-        // Asegurar que la sesión esté iniciada
+        
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         
-        // Verificar si el usuario está logueado antes de verificar permisos
+        
         if (!$this->verificarUsuarioLogueado()) {
             $this->redirigirLogin();
             return;
         }
         PermisosModuloVerificar::verificarAccesoModulo('Produccion');
-        // Solo verificar permisos si está logueado
+        
         
         $this->model = new produccionModel();
         $this->tarea_model = new TareaProduccionModel();
@@ -33,7 +33,7 @@ class Produccion extends Controllers
 
  private function verificarUsuarioLogueado(): bool
     {
-        // Verificar múltiples formas de identificar al usuario logueado
+        
         $tieneLogin = isset($_SESSION['login']) && $_SESSION['login'] === true;
         $tieneIdUser = isset($_SESSION['idUser']) && !empty($_SESSION['idUser']);
         $tieneUsuarioId = isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id']);
@@ -66,13 +66,13 @@ private function redirigirLogin()
     }
     public function index()
     {
-         // Doble verificación de seguridad
+         
         if (!$this->verificarUsuarioLogueado()) {
             $this->redirigirLogin();
             return;
         }
 
-        // Obtener ID del usuario
+        
         $idUsuario = $this->obtenerIdUsuario();
         
         if (!$idUsuario) {
@@ -89,7 +89,7 @@ private function redirigirLogin()
         $this->views->getView($this, "produccion", $data);
     }
 
-    // Obtener listado de producciones para DataTables
+    
     public function getProduccionData()
     {
         try {
@@ -110,7 +110,7 @@ private function redirigirLogin()
         exit();
     }
 
-    // Obtener detalle de una producción
+    
     public function getDetalleProduccionData($idproduccion)
     {
         try {
@@ -133,7 +133,7 @@ private function redirigirLogin()
         exit();
     }
 
-    // Obtener producción por ID
+    
     public function getProduccionById($idproduccion)
     {
         try {
@@ -160,7 +160,7 @@ private function redirigirLogin()
         exit();
     }
 
-    // Registrar nueva producción
+    
     public function createProduccion()
     {
 
@@ -172,7 +172,7 @@ private function redirigirLogin()
                 throw new Exception("Datos inválidos.");
             }
 
-            // Campos obligatorios
+            
             $requiredFields = ['idproducto', 'cantidad_a_realizar', 'fecha_inicio'];
             foreach ($requiredFields as $field) {
                 if (!isset($data[$field]) || empty(trim($data[$field]))) {
@@ -220,7 +220,7 @@ private function redirigirLogin()
         exit();
     }
 
-    // Actualizar producción
+    
     public function updateProduccion()
     {
         try {
@@ -308,7 +308,7 @@ private function redirigirLogin()
         exit();
     }
 
-    // Buscar empleados
+    
     public function getEmpleado()
     {
         try {
@@ -331,7 +331,7 @@ private function redirigirLogin()
         exit();
     }
 
-    // Buscar productos
+    
     public function getProductos()
     {
         try {

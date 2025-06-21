@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const PERMISOS_USUARIO = obtenerPermisosUsuario();
   window.PERMISOS_USUARIO = PERMISOS_USUARIO;
   
-  // Configurar columnas basándose en permisos
+  
   let columns = [
     { data: "peso", title: "Peso", width: "15%" },
     { data: "fecha", title: "Fecha y Hora", width: "25%" },
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { data: "estatus", title: "Estado", width: "15%" }
   ];
 
-  // Agregar columna de acciones si tiene permisos
+  
   if (PERMISOS_USUARIO.puede_editar || PERMISOS_USUARIO.puede_eliminar) {
     columns.push({
       data: null,
@@ -39,11 +39,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   $("#TablaRomana").DataTable({
     processing: true,
-    serverSide: false, // Cambiado a false ya que no manejas paginación del servidor
+    serverSide: false, 
     ajax: {
       url: "romana/getRomanaData",
       type: "GET",
-      dataSrc: "data", // Accede a la propiedad 'data' de la respuesta
+      dataSrc: "data", 
       error: function(xhr, error, thrown) {
         console.error('Error al cargar datos:', error);
         Swal.fire('Error', 'No se pudieron cargar los datos de la romana', 'error');
@@ -73,10 +73,10 @@ document.addEventListener("DOMContentLoaded", function () {
     destroy: true,
     responsive: true,
     pageLength: 10,
-    order: [[2, "desc"]], // Ordenar por fecha de creación descendente
+    order: [[2, "desc"]], 
   });
 
-  // Event listeners para botones de acción
+  
   $('#TablaRomana').on('click', '.btn-editar', function() {
     const idromana = $(this).data('id');
     editarRomana(idromana);
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-// Función para obtener permisos del usuario
+
 function obtenerPermisosUsuario() {
   const permisosElement = document.getElementById('permisosUsuario');
   if (permisosElement) {
@@ -102,10 +102,10 @@ function obtenerPermisosUsuario() {
   return {};
 }
 
-// Funciones para acciones (implementar según necesites)
+
 function editarRomana(id) {
   console.log('Editar romana ID:', id);
-  // Implementar lógica de edición
+  
 }
 
 function eliminarRomana(id) {
@@ -120,7 +120,7 @@ function eliminarRomana(id) {
     cancelButtonText: 'Cancelar'
   }).then((result) => {
     if (result.isConfirmed) {
-      // Aquí iría la lógica para eliminar
+      
       console.log('Eliminar romana ID:', id);
     }
   });

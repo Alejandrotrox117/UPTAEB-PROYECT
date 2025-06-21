@@ -1,14 +1,14 @@
 <?php 
 headerAdmin($data);
 
-// ✅ OBTENER PERMISOS DEL USUARIO PARA EL MÓDULO
+//  OBTENER PERMISOS DEL USUARIO PARA EL MÓDULO
 $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Usuarios');
 ?>
 
 <input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
 <input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
 
-<!-- ✅ PASAR PERMISOS AL JAVASCRIPT -->
+<!--  PASAR PERMISOS AL JAVASCRIPT -->
 <script>
 window.permisosUsuarios = <?php echo json_encode($permisos); ?>;
 </script>
@@ -23,7 +23,7 @@ window.permisosUsuarios = <?php echo json_encode($permisos); ?>;
         <p class="text-green-600 text-base md:text-lg">Listado de usuarios registrados en el sistema</p>
     </div>
 
-    <!-- ✅ MOSTRAR MENSAJE SI NO TIENE PERMISOS PARA VER -->
+    <!--  MOSTRAR MENSAJE SI NO TIENE PERMISOS PARA VER -->
     <?php if (!$permisos['ver']): ?>
     <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 mt-6 rounded-r-lg">
         <div class="flex">
@@ -44,7 +44,7 @@ window.permisosUsuarios = <?php echo json_encode($permisos); ?>;
 
     <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
         <div class="flex justify-between items-center mb-6">
-            <!-- ✅ BOTÓN CREAR SOLO SI TIENE PERMISOS -->
+            <!--  BOTÓN CREAR SOLO SI TIENE PERMISOS -->
             <?php if ($permisos['crear']): ?>
             <button id="btnAbrirModalRegistrarUsuario"
                 class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
@@ -56,7 +56,7 @@ window.permisosUsuarios = <?php echo json_encode($permisos); ?>;
             </div>
             <?php endif; ?>
 
-            <!-- ✅ BOTÓN EXPORTAR SOLO SI TIENE PERMISOS -->
+            <!--  BOTÓN EXPORTAR SOLO SI TIENE PERMISOS -->
             <?php if ($permisos['exportar']): ?>
             <button id="btnExportarUsuarios"
                 class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base ml-2">
@@ -83,7 +83,7 @@ window.permisosUsuarios = <?php echo json_encode($permisos); ?>;
     <?php endif; ?>
 </main>
 
-<!-- ✅ MODALES SOLO SI TIENE PERMISOS CORRESPONDIENTES -->
+<!--  MODALES SOLO SI TIENE PERMISOS CORRESPONDIENTES -->
 
 <?php if ($permisos['crear']): ?>
 <!-- Modal Registrar Usuario -->
@@ -288,7 +288,7 @@ window.permisosUsuarios = <?php echo json_encode($permisos); ?>;
 </div>
 <?php endif; ?>
 
-<!-- ✅ MODAL DE MENSAJE PARA PERMISOS DENEGADOS -->
+<!--  MODAL DE MENSAJE PARA PERMISOS DENEGADOS -->
 <div id="modalPermisosDenegados" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-96 max-w-md">
         <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-red-50">

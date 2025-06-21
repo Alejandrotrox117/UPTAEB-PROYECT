@@ -2,7 +2,7 @@
 
 class Home extends Controllers 
 {
-    // Método setter para establecer el valor de $model
+    
     public function set_model($model)
     {
         $this->model = $model;
@@ -25,7 +25,7 @@ class Home extends Controllers
         $data["tag_page"] = "La pradera de pavia";
         $data["page_name"] = "Home";
         
-        // Verifica si hay parámetros
+        
         if ($params) {
             echo "Parámetros recibidos: " . $params;
         }

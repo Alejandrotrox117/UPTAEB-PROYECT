@@ -194,11 +194,11 @@ const camposFormularioActualizarPersona = [
 ];
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Cargar roles al inicio
+  
   cargarRoles();
 
   $(document).ready(function () {
-    // DATATABLE PERSONAS
+    
     tablaPersonas = $("#TablaPersonas").DataTable({
       processing: true,
       ajax: {
@@ -315,19 +315,19 @@ document.addEventListener("DOMContentLoaded", function () {
       order: [[1, "asc"]],
     });
 
-    // Click para ver persona
+    
     $("#TablaPersonas tbody").on("click", ".ver-persona-btn", function () {
       const idPersona = $(this).data("idpersona-pk");
       verPersona(idPersona);
     });
 
-    // Click para editar persona
+    
     $("#TablaPersonas tbody").on("click", ".editar-persona-btn", function () {
       const idPersona = $(this).data("idpersona-pk");
       editarPersona(idPersona);
     });
 
-    // Click para eliminar persona
+    
     $("#TablaPersonas tbody").on(
       "click",
       ".eliminar-persona-btn",
@@ -339,7 +339,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   });
 
-  // MODAL REGISTRAR PERSONA
+  
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarPersona"
   );
@@ -394,7 +394,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  // SUBMIT FORM REGISTRAR
+  
   if (formRegistrar && checkboxCrearUsuario) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL ACTUALIZAR PERSONA
+  
   const btnCerrarModalActualizar = document.getElementById(
     "btnCerrarModalActualizar"
   );
@@ -431,7 +431,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER PERSONA
+  
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   if (btnCerrarModalVer) {
     btnCerrarModalVer.addEventListener("click", function () {
@@ -464,7 +464,7 @@ function editarPersona(idPersona) {
 }
 
 function mostrarModalEditarPersona(persona) {
-  // Llenar los campos del formulario con los datos existentes
+  
   document.getElementById("idPersonaActualizar").value =
     persona.idpersona_pk || "";
   document.getElementById("nombreActualizar").value =
@@ -486,15 +486,15 @@ function mostrarModalEditarPersona(persona) {
   document.getElementById("observacionesActualizar").value =
     persona.persona_observaciones || "";
 
-  // Llenar campos de usuario si existen
+  
   if (persona.idusuario) {
     document.getElementById("correoUsuarioActualizar").value =
       persona.correo_usuario_login || "";
     document.getElementById("rolActualizar").value = persona.idrol || "";
-    // No llenamos la clave por seguridad
+    
   }
 
-  // Inicializar validaciones para el formulario de actualizar
+  
   inicializarValidaciones(
     camposFormularioActualizarPersona,
     "formActualizarPersona"
@@ -508,7 +508,7 @@ function actualizarPersona() {
   const btnActualizarPersona = document.getElementById("btnActualizarPersona");
   const idPersona = document.getElementById("idPersonaActualizar").value;
 
-  // Validar campos vacíos obligatorios
+  
   const camposObligatorios = camposFormularioActualizarPersona.filter((c) => {
     return c.mensajes && c.mensajes.vacio;
   });
@@ -517,7 +517,7 @@ function actualizarPersona() {
     return;
   }
 
-  // Validar formatos específicos
+  
   let formularioConErroresEspecificos = false;
   for (const campo of camposFormularioActualizarPersona) {
     const inputElement = formActualizar.querySelector(`#${campo.id}`);
@@ -525,7 +525,7 @@ function actualizarPersona() {
 
     let esValidoEsteCampo = true;
     if (campo.tipo === "select") {
-      // Solo validar selects obligatorios
+      
       if (campo.mensajes && campo.mensajes.vacio) {
         esValidoEsteCampo = validarSelect(
           campo.id,
@@ -538,7 +538,7 @@ function actualizarPersona() {
         campo.tipo
       )
     ) {
-      // Solo validar formato si el campo tiene contenido o es obligatorio
+      
       if (inputElement.value.trim() !== "" || (campo.mensajes && campo.mensajes.vacio)) {
         esValidoEsteCampo = validarCampo(
           inputElement,
@@ -564,7 +564,7 @@ function actualizarPersona() {
     usuario: null,
   };
 
-  // Datos de persona
+  
   dataParaEnviar.persona.nombre = formData.get("nombre") || "";
   dataParaEnviar.persona.apellido = formData.get("apellido") || "";
   dataParaEnviar.persona.identificacion = formData.get("identificacion") || "";
@@ -578,7 +578,7 @@ function actualizarPersona() {
   dataParaEnviar.persona.telefono_principal =
     formData.get("telefono_principal") || "";
 
-  // Datos de usuario si se proporcionan
+  
   const correoUsuario = formData.get("correo_electronico_usuario") || "";
   const rolUsuario = formData.get("idrol_usuario") || "";
   
@@ -645,7 +645,7 @@ function actualizarPersona() {
 }
 
 
-// FUNCIONES
+
 function cargarRoles() {
   fetch("Personas/getRoles", {
     method: "GET",
@@ -848,7 +848,7 @@ function verPersona(idPersona) {
 }
 
 function mostrarModalVerPersona(persona) {
-  // Llenar los campos del modal de ver
+  
   document.getElementById("verNombre").textContent = persona.persona_nombre || "N/A";
   document.getElementById("verApellido").textContent = persona.persona_apellido || "N/A";
   document.getElementById("verCedula").textContent = persona.persona_cedula || "N/A";
@@ -861,7 +861,7 @@ function mostrarModalVerPersona(persona) {
   document.getElementById("verObser").textContent= persona.persona_observaciones || "N/A";
 
 
-  // Información de usuario
+  
   const tieneUsuario = persona.idusuario ? "Sí" : "No";
   document.getElementById("verTieneUsuario").textContent = tieneUsuario;
   document.getElementById("verUsuarioCorreo").textContent = persona.correo_usuario_login || "N/A";

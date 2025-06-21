@@ -17,11 +17,11 @@ class monedaModel extends Mysql
         $this->conexion = new Conexion();
         $this->conexion->connect();
         $this->db = $this->conexion->get_conectGeneral();
-        // Obtener el ID del usuario desde la sesión
+   
         $idUsuario = $this->obtenerIdUsuarioSesion();
 
         if ($idUsuario) {
-            // Establecer la variable de sesión SQL
+   
             $this->setUsuarioActual($idUsuario);
         }
     }
@@ -35,7 +35,7 @@ class monedaModel extends Mysql
         return null;
     }
 
-    // Método para establecer @usuario_actual en MySQL
+
     private function setUsuarioActual(int $idUsuario)
     {
         $sql = "SET @usuario_actual = $idUsuario";
@@ -104,10 +104,9 @@ class monedaModel extends Mysql
     }
  public function getMonedas()
     {
-        // Asumiendo que tu tabla monedas tiene un campo 'estatus'
+     
         $sql = "SELECT idmoneda, codigo_moneda, valor FROM monedas WHERE estado = 'activo'";
-        // Si no tiene estatus, simplemente:
-        // $sql = "SELECT idmoneda, nombre_moneda, simbolo, codigo_iso FROM monedas";
+     
         try {
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
@@ -127,14 +126,14 @@ class monedaModel extends Mysql
         return $row;
     }
 
-    // Método para eliminar lógicamente un categoria
+   
     public function deleteMoneda($idmoneda) {
         $sql = "UPDATE monedas SET estatus = 'INACTIVO' WHERE idmoneda = ?";
         $stmt = $this->db->prepare($sql); 
         return $stmt->execute([$idmoneda]); 
     }
 
-    // Método para actualizar un categoria
+   
     public function updateMoneda($data)
     {
         $sql = "UPDATE monedas SET 
@@ -154,7 +153,7 @@ class monedaModel extends Mysql
         return $stmt->execute($arrValues);
     }
 
-    // Método para obtener un categoria por ID
+   
     public function getMonedaById($idmoneda) {
         $sql = "SELECT * FROM monedas WHERE idmoneda = ?";
         $stmt = $this->db->prepare($sql);
@@ -162,7 +161,7 @@ class monedaModel extends Mysql
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($data) {
-            // Asignar los valores a las propiedades del objeto
+        
             $this->setIdmoneda($data['idmoneda']);
             $this->setNombre($data['nombre_moneda']);
             $this->setValor($data['valor']);

@@ -20,7 +20,7 @@ class categorias extends Controllers
         parent::__construct();
     }
 
-    // Vista principal para gestionar categorias
+    
     public function index()
     {
         $data['page_title'] = "Gestión de categorias";
@@ -29,7 +29,7 @@ class categorias extends Controllers
         $this->views->getView($this, "categorias", $data);
     }
 
-    // Obtener datos de categorias para DataTables
+    
     public function getCategoriasData()
     {
         $arrData = $this->get_model()->SelectAllCategorias();
@@ -45,38 +45,38 @@ class categorias extends Controllers
         exit();
     }
 
-    // Crear un nuevo categoria
+    
     public function crearCategoria()
     {
         try {
-            $json = file_get_contents('php://input');
+            $json = file_get_contents('php://input');//input');//input');
             $data = json_decode($json, true);
 
-            // Validar que los datos no sean nulos
+            
             if (!$data || !is_array($data)) {
                 echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
                 exit();
             }
 
-            // Extraer los datos del JSON
+            
             $nombre = trim($data['nombre'] ?? '');
             $descripcion = trim($data['descripcion'] ?? '');
             $estatus = trim($data['estatus'] ?? 'ACTIVO');
 
-            // Validar campos obligatorios
+            
             if (empty($nombre)) {
                 echo json_encode(["status" => false, "message" => "El nombre de la categoría es obligatorio."]);
                 exit();
             }
 
-            // Insertar los datos usando el modelo
+            
             $insertData = $this->model->insertCategoria([
                 "nombre" => $nombre,
                 "descripcion" => $descripcion,
                 "estatus" => $estatus,
             ]);
 
-            // Respuesta al cliente
+            
             if ($insertData) {
                 echo json_encode(["status" => true, "message" => "Categoría registrada correctamente."]);
             } else {
@@ -88,32 +88,32 @@ class categorias extends Controllers
         exit();
     }
 
-    // Actualizar una categoría existente
+    
     public function actualizarCategoria()
     {
         try {
-            $json = file_get_contents('php://input');
+            $json = file_get_contents('php://input');//input');
             $data = json_decode($json, true);
 
-            // Validar que los datos no sean nulos
+            
             if (!$data || !is_array($data)) {
                 echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
                 exit();
             }
 
-            // Extraer los datos del JSON
+            
             $idcategoria = trim($data['idcategoria'] ?? null);
             $nombre = trim($data['nombre'] ?? '');
             $descripcion = trim($data['descripcion'] ?? '');
             $estatus = trim($data['estatus'] ?? '');
 
-            // Validar campos obligatorios
+            
             if (empty($idcategoria) || empty($nombre)) {
                 echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
                 exit();
             }
 
-            // Actualizar los datos usando el modelo
+            
             $updateData = $this->model->updateCategoria([
                 "idcategoria" => $idcategoria,
                 "nombre" => $nombre,
@@ -121,7 +121,7 @@ class categorias extends Controllers
                 "estatus" => $estatus,
             ]);
 
-            // Respuesta al cliente
+            
             if ($updateData) {
                 echo json_encode(["status" => true, "message" => "Categoría actualizada correctamente."]);
             } else {
@@ -133,20 +133,20 @@ class categorias extends Controllers
         exit();
     }
 
-    // Eliminar una categoría (lógico)
+    
     public function deleteCategoria($idcategoria)
     {
         try {
-            // Validar que el ID no esté vacío
+            
             if (empty($idcategoria)) {
                 echo json_encode(["status" => false, "message" => "ID de categoría no proporcionado."]);
                 return;
             }
 
-            // Desactivar la categoría usando el modelo
+            
             $deleteData = $this->model->deleteCategoria($idcategoria);
 
-            // Respuesta al cliente
+            
             if ($deleteData) {
                 echo json_encode(["status" => true, "message" => "Categoría desactivada correctamente."]);
             } else {
@@ -158,7 +158,7 @@ class categorias extends Controllers
         exit();
     }
 
-    // Obtener una categoría por ID
+    
     public function getCategoriaById($idcategoria)
     {
         try {

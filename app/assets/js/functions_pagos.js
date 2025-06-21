@@ -11,7 +11,7 @@ import {
 
 let tablaPagos;
 let tiposPago = [];
-let pagoEditando = null; // Variable para rastrear si estamos editando
+let pagoEditando = null; 
 
 function mostrarModalPermisosDenegados(
   mensaje = "No tienes permisos para realizar esta acción."
@@ -28,9 +28,9 @@ function tienePermiso(accion) {
   return window.permisosPagos && window.permisosPagos[accion] === true;
 }
 
-// --- FIN: SECCIÓN DE PERMISOS ---
 
-// Configuración de campos para validación
+
+
 const camposFormularioPago = [
   {
     id: "tipoPago",
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
 function inicializarModulo() {
   if (!tienePermiso("ver")) {
     mostrarModalPermisosDenegados("No tienes permisos para ver los pagos.");
-    // Ocultar el contenedor principal si es necesario
+    
     const mainContainer = document.querySelector(".container-fluid");
     if (mainContainer) mainContainer.innerHTML = "";
     return;
@@ -294,7 +294,7 @@ function inicializarTablaPagos() {
               `;
             }
           } else if (row.estatus === "conciliado" && tienePermiso("ver")) {
-            // No se añade nada extra, el botón de ver ya está
+            
           }
           if (buttons === "") {
             return '<span class="text-gray-400 text-xs">Sin permisos</span>';
@@ -1313,7 +1313,7 @@ function llenarFormularioEdicion(pago) {
             select.dispatchEvent(new Event("change"));
           });
         } else if (tipoPago === "otro") {
-          // No hay acción específica para 'otro' en la carga
+          
         }
       }, 500);
     }, 200);

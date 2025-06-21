@@ -1,12 +1,16 @@
 {
-    
     "name": "user/package",
     "description": "Instalacion inicial de proyecto",
     "type": "project",
     "autoload": {
         "psr-4": {
             "app\\": "app/"
-        }
+        },
+        "files": [
+            "helpers/helpers.php",
+            "helpers/PermisosModuloVerificar.php",
+            "helpers/bitacora_helper.php"
+        ]
     },
     "require": {
         "datatables.net/datatables.net-datetime": "^1.5",

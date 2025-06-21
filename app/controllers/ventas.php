@@ -1,7 +1,7 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "app/models/ventasModel.php";
-require_once "helpers/permisosVerificar.php";
+require_once "helpers/PermisosModuloVerificar.php";
 require_once "helpers/PermisosHelper.php";
 require_once "helpers/helpers.php";
 require_once "app/models/bitacoraModel.php";
@@ -30,32 +30,41 @@ class Ventas extends Controllers
         $this->bitacoraModel = new BitacoraModel();
         $this->BitacoraHelper = new BitacoraHelper();
 
-        // Asegurar que la sesión esté iniciada
+        
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        // Verificar si el usuario está logueado antes de verificar permisos
+        
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
         }
 
-        // Solo verificar permisos si está logueado
-        permisosVerificar::verificarAccesoModulo('Ventas');
+        
+        if (!PermisosModuloVerificar::verificarAccesoModulo('ventas')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
     }
 
     public function index()
     {
-        // Doble verificación de seguridad
+        
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
             die();
         }
 
-        // Obtener ID del usuario
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
+
+        
         $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-    BitacoraHelper::registrarAccesoModulo('Ventas', $idUsuario, $this->bitacoraModel);
+        BitacoraHelper::registrarAccesoModulo('Ventas', $idUsuario, $this->bitacoraModel);
 
         if (!$idUsuario) {
             error_log("Ventas::index - No se pudo obtener ID de usuario");
@@ -63,16 +72,25 @@ class Ventas extends Controllers
             die();
         }
 
+        
         try {
-            $permisos = PermisosHelper::getPermisosDetalle($idUsuario, 'Ventas');
+            $permisos = [
+                'puede_ver' => PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver'),
+                'puede_crear' => PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'crear'),
+                'puede_editar' => PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'editar'),
+                'puede_eliminar' => PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'eliminar'),
+                'puede_exportar' => PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'exportar'),
+                'acceso_total' => PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'total')
+            ];
         } catch (Exception $e) {
             error_log("Error al obtener permisos: " . $e->getMessage());
-            // Permisos por defecto (sin acceso)
+            
             $permisos = [
                 'puede_ver' => false,
                 'puede_crear' => false,
                 'puede_editar' => false,
                 'puede_eliminar' => false,
+                'puede_exportar' => false,
                 'acceso_total' => false
             ];
         }
@@ -83,7 +101,7 @@ class Ventas extends Controllers
         $data['page_name'] = "ventas";
         $data['page_functions_js'] = "functions_ventas.js";
 
-        // Pasar permisos a la vista
+        
         $data['permisos'] = $permisos;
 
         $this->views->getView($this, "ventas", $data);
@@ -101,7 +119,8 @@ class Ventas extends Controllers
             exit();
         }
 
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
             header('Content-Type: application/json');
             echo json_encode([
                 "status" => false,
@@ -114,6 +133,12 @@ class Ventas extends Controllers
         try {
             $arrData = $this->model->getVentasDatatable();
 
+            
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_DATOS', $idUsuario);
+            }
+
             $response = [
                 "draw" => intval($_GET['draw'] ?? 0) + 1,
                 "recordsTotal" => count($arrData),
@@ -124,6 +149,7 @@ class Ventas extends Controllers
             header('Content-Type: application/json');
             echo json_encode($response, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
+            error_log("Error en getventasData: " . $e->getMessage());
             header('Content-Type: application/json');
             echo json_encode([
                 "status" => false,
@@ -144,7 +170,8 @@ class Ventas extends Controllers
             return;
         }
 
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'crear')) {
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'crear')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para crear ventas.'
@@ -152,8 +179,8 @@ class Ventas extends Controllers
             return;
         }
 
-        // Leer datos JSON
-        $json = file_get_contents('php://input');
+        
+        $json = file_get_contents('php://input');//input');
         $data = json_decode($json, true);
 
         if (!$data) {
@@ -162,15 +189,15 @@ class Ventas extends Controllers
         }
 
         try {
-            // Separar datos del cliente nuevo y detalles
+            
             $datosClienteNuevo = $data['cliente_nuevo'] ?? null;
             $detalles = $data['detalles'] ?? [];
 
-            // Remover datos que no van a la tabla venta
+            
             unset($data['cliente_nuevo']);
             unset($data['detalles']);
 
-            // Validar que los campos principales estén presentes
+            
             $camposObligatorios = [
                 'fecha_venta',
                 'idmoneda_general',
@@ -188,7 +215,7 @@ class Ventas extends Controllers
                 }
             }
 
-            // Validar campos numéricos de la venta
+            
             $validacionesNumericas = [
                 'subtotal_general' => 'subtotal',
                 'descuento_porcentaje_general' => 'descuentoPorcentaje',
@@ -201,7 +228,7 @@ class Ventas extends Controllers
             foreach ($validacionesNumericas as $campo => $tipoValidacion) {
                 if (isset($data[$campo])) {
                     try {
-                        // Usar el método validarConDetalle que devuelve array
+                        
                         $resultado = ExpresionesRegulares::validarConDetalle(
                             strval($data[$campo]), 
                             $tipoValidacion
@@ -224,7 +251,7 @@ class Ventas extends Controllers
                 return;
             }
 
-            // Validar que hay un cliente seleccionado O datos de cliente nuevo
+            
             if (empty($data['idcliente']) && !$datosClienteNuevo) {
                 echo json_encode([
                     'status' => false,
@@ -233,7 +260,7 @@ class Ventas extends Controllers
                 return;
             }
 
-            // Validar datos del cliente nuevo si se proporcionan
+            
             if ($datosClienteNuevo) {
                 $validacionesCliente = [
                     'cedula' => 'cedula',
@@ -270,7 +297,7 @@ class Ventas extends Controllers
                 }
             }
 
-            // Validar que hay detalles
+            
             if (empty($detalles)) {
                 echo json_encode([
                     'status' => false,
@@ -279,7 +306,7 @@ class Ventas extends Controllers
                 return;
             }
 
-            // Validar cada detalle
+            
             foreach ($detalles as $index => $detalle) {
                 if (empty($detalle['idproducto']) || empty($detalle['cantidad']) || empty($detalle['precio_unitario_venta'])) {
                     echo json_encode([
@@ -289,7 +316,7 @@ class Ventas extends Controllers
                     return;
                 }
 
-                // Validar cantidad usando validarConDetalle
+                
                 try {
                     $validacionCantidad = ExpresionesRegulares::validarConDetalle(
                         strval($detalle['cantidad']), 
@@ -311,7 +338,7 @@ class Ventas extends Controllers
                     return;
                 }
 
-                // Validar precio usando validarConDetalle
+                
                 try {
                     $validacionPrecio = ExpresionesRegulares::validarConDetalle(
                         strval($detalle['precio_unitario_venta']), 
@@ -333,7 +360,7 @@ class Ventas extends Controllers
                     return;
                 }
 
-                // Validar subtotal del detalle si está presente
+                
                 if (isset($detalle['subtotal']) && !empty($detalle['subtotal'])) {
                     try {
                         $validacionSubtotal = ExpresionesRegulares::validarConDetalle(
@@ -358,16 +385,16 @@ class Ventas extends Controllers
                 }
             }
 
-            // Obtener ID de usuario para bitácora
+            
             $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
-            // Crear la venta con cliente (nuevo o existente)
+            
             $resultado = $this->model->insertVenta($data, $detalles, $datosClienteNuevo);
 
             if ($resultado['success']) {
-                // Registrar en bitácora si la inserción fue exitosa
+                
                 if ($idusuario) {
-                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('venta', 'INSERTAR', $idusuario);
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('ventas', 'CREAR', $idusuario);
                     if (!$resultadoBitacora) {
                         error_log("Warning: No se pudo registrar en bitácora la creación de la venta ID: " . $resultado['idventa']);
                     }
@@ -411,8 +438,25 @@ class Ventas extends Controllers
             return;
         }
 
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para ver productos',
+                'data' => []
+            ]);
+            return;
+        }
+
         try {
             $productos = $this->model->obtenerProductos();
+            
+            
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_PRODUCTOS', $idUsuario);
+            }
+
             echo json_encode([
                 'status' => true,
                 'data' => $productos
@@ -436,8 +480,24 @@ class Ventas extends Controllers
             return;
         }
 
+    
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para ver monedas'
+            ]);
+            return;
+        }
+
         try {
             $monedas = $this->model->getMonedasActivas();
+            
+            
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_MONEDAS', $idUsuario);
+            }
+
             echo json_encode(["status" => true, "data" => $monedas]);
         } catch (Exception $e) {
             echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
@@ -455,7 +515,8 @@ class Ventas extends Controllers
             return;
         }
 
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para buscar clientes'
@@ -469,6 +530,13 @@ class Ventas extends Controllers
             if (strlen($criterio) >= 2) {
                 try {
                     $clientes = $this->model->buscarClientes($criterio);
+                    
+                    
+                    $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                    if ($idUsuario) {
+                        $this->bitacoraModel->registrarAccion('ventas', 'BUSCAR_CLIENTES', $idUsuario);
+                    }
+
                     echo json_encode([
                         'status' => true,
                         'data' => $clientes
@@ -499,7 +567,8 @@ class Ventas extends Controllers
             return;
         }
 
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para ver productos'
@@ -508,7 +577,15 @@ class Ventas extends Controllers
         }
 
         try {
-            $productos = $this->model->getListaProductosParaFormulario();
+            
+            $productos = $this->model->obtenerProductos(); 
+            
+            
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_PRODUCTOS_DISPONIBLES', $idUsuario);
+            }
+
             echo json_encode([
                 'status' => true,
                 'data' => $productos
@@ -529,6 +606,12 @@ class Ventas extends Controllers
             exit;
         }
 
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
+            echo json_encode(['tasa' => 1]);
+            exit;
+        }
+
         $codigo = $_GET['codigo_moneda'] ?? '';
         $fecha = $_GET['fecha'] ?? date('Y-m-d');
         if (!$codigo) {
@@ -536,8 +619,15 @@ class Ventas extends Controllers
             exit;
         }
 
-        // Llama al modelo para obtener la tasa
+        
         $tasa = $this->model->getTasaPorCodigoYFecha($codigo, $fecha);
+        
+        
+        $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        if ($idUsuario) {
+            $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_TASA', $idUsuario);
+        }
+
         echo json_encode(['tasa' => $tasa]);
         exit;
     }
@@ -552,7 +642,9 @@ class Ventas extends Controllers
             exit();
         }
         
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver') && 
+            !PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'crear')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para ver detalles de ventas'
@@ -570,7 +662,7 @@ class Ventas extends Controllers
         }
         
         try {
-            // Obtener datos de la venta
+            
             $venta = $this->model->obtenerVentaPorId($idventa);
             
             if (!$venta) {
@@ -581,13 +673,14 @@ class Ventas extends Controllers
                 exit();
             }
             
-            // Obtener detalles de la venta con información de productos
+            
             $detalle = $this->model->obtenerDetalleVenta($idventa);
             
-            // Log temporal para debugging
-            error_log("Venta ID: $idventa - Detalles encontrados: " . count($detalle));
-            error_log("Detalles: " . json_encode($detalle));
             
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'VER_DETALLE', $idUsuario);
+            }
             echo json_encode([
                 'status' => true,
                 'data' => [
@@ -615,7 +708,8 @@ class Ventas extends Controllers
             return;
         }
 
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'ver')) {
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
             echo json_encode([
                 'status' => false,
                 'message' => 'No tiene permisos para ver monedas'
@@ -625,6 +719,13 @@ class Ventas extends Controllers
 
         try {
             $monedas = $this->model->getMonedasActivas();
+            
+            
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_MONEDAS_DISPONIBLES', $idUsuario);
+            }
+
             echo json_encode([
                 'status' => true,
                 'data' => $monedas
@@ -648,7 +749,8 @@ class Ventas extends Controllers
             return;
         }
 
-        if (!permisosVerificar::verificarPermisoAccion('Ventas', 'eliminar')) {
+        
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'eliminar')) {
             echo json_encode([
                 'status' => false, 
                 'message' => 'No tiene permisos para eliminar ventas.'
@@ -678,7 +780,7 @@ class Ventas extends Controllers
         }
 
         try {
-            // Verificar que la venta existe y no está ya eliminada
+            
             $venta = $this->model->obtenerVentaPorId($idventa);
             
             if (!$venta) {
@@ -697,16 +799,16 @@ class Ventas extends Controllers
                 return;
             }
 
-            // Obtener ID de usuario para bitácora
+            
             $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
-            // Eliminar (desactivar) la venta
+            
             $resultado = $this->model->eliminarVenta($idventa);
 
             if ($resultado['success']) {
-                // Registrar en bitácora si la eliminación fue exitosa
+                
                 if ($idusuario) {
-                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('venta', 'ELIMINAR', $idusuario);
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('ventas', 'ELIMINAR', $idusuario);
                     if (!$resultadoBitacora) {
                         error_log("Warning: No se pudo registrar en bitácora la eliminación de la venta ID: " . $idventa);
                     }
@@ -728,6 +830,131 @@ class Ventas extends Controllers
             echo json_encode([
                 'status' => false,
                 'message' => 'Error al procesar la eliminación: ' . $e->getMessage()
+            ]);
+        }
+        exit();
+    }
+
+    
+    public function updateVenta()
+    {
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Usuario no autenticado'
+            ]);
+            return;
+        }
+
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'editar')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para editar ventas.'
+            ]);
+            return;
+        }
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (!$data) {
+            echo json_encode(['status' => false, 'message' => 'Datos no válidos.']);
+            return;
+        }
+
+        try {
+            $idventa = intval($data['idventa'] ?? 0);
+            if ($idventa <= 0) {
+                echo json_encode(['status' => false, 'message' => 'ID de venta no válido.']);
+                return;
+            }
+
+            
+            $ventaExistente = $this->model->obtenerVentaPorId($idventa);
+            if (!$ventaExistente) {
+                echo json_encode(['status' => false, 'message' => 'Venta no encontrada.']);
+                return;
+            }
+
+            
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+
+            
+            $resultado = $this->model->updateVenta($idventa, $data);
+
+            if ($resultado['success']) {
+                
+                if ($idusuario) {
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('ventas', 'ACTUALIZAR', $idusuario);
+                    if (!$resultadoBitacora) {
+                        error_log("Warning: No se pudo registrar en bitácora la actualización de la venta ID: " . $idventa);
+                    }
+                }
+
+                echo json_encode([
+                    'status' => true,
+                    'message' => $resultado['message'] ?? 'Venta actualizada correctamente'
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => false,
+                    'message' => $resultado['message'] ?? 'Error al actualizar la venta'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en updateVenta: " . $e->getMessage());
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al procesar la actualización: ' . $e->getMessage()
+            ]);
+        }
+        exit();
+    }
+
+    
+    public function exportarVentas()
+    {
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Usuario no autenticado'
+            ]);
+            return;
+        }
+
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'exportar')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para exportar ventas.'
+            ]);
+            return;
+        }
+
+        try {
+            $ventasData = $this->model->getVentasDatatable();
+            
+            
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            
+            if ($idusuario) {
+                $resultadoBitacora = $this->bitacoraModel->registrarAccion('ventas', 'EXPORTAR', $idusuario);
+                if (!$resultadoBitacora) {
+                    error_log("Warning: No se pudo registrar en bitácora la exportación de ventas");
+                }
+            }
+
+            echo json_encode([
+                'status' => true,
+                'data' => $ventasData,
+                'message' => 'Datos preparados para exportación'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en exportarVentas: " . $e->getMessage());
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al exportar ventas: ' . $e->getMessage()
             ]);
         }
         exit();

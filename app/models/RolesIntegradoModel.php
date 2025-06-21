@@ -105,11 +105,11 @@ class RolesIntegradoModel extends mysql
                 $permisosEspecificos = $asignacion['permisos_especificos'] ?? [];
 
                 if ($idmodulo > 0 && !empty($permisosEspecificos)) {
-                    // Insertar relación rol-módulo
+                  
                     $this->insertarRolModulo($idrol, $idmodulo);
                     $totalModulos++;
 
-                    // Insertar permisos específicos para este módulo
+           
                     foreach ($permisosEspecificos as $idpermiso) {
                         $idpermiso = intval($idpermiso);
                         if ($idpermiso > 0) {
@@ -180,7 +180,7 @@ class RolesIntegradoModel extends mysql
      */
     public function selectAllRoles()
     {
-        // CAMBIAR 'activo' por 'ACTIVO' para coincidir con tu BD
+        
         $sql = "SELECT idrol, nombre, descripcion FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC";
         
         try {
@@ -198,7 +198,7 @@ class RolesIntegradoModel extends mysql
      */
     public function selectAllModulosActivos()
     {
-        // CAMBIAR 'activo' por 'activo' (verificar en tu BD cuál es el valor correcto)
+       
         $sql = "SELECT idmodulo, titulo, descripcion FROM modulos WHERE estatus = 'activo' ORDER BY titulo ASC";
         
         try {

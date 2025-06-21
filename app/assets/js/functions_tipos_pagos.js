@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // MODAL REGISTRAR TIPO DE PAGO
+  
   const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarTipoPago");
   const formRegistrar = document.getElementById("formRegistrarTipoPago");
   const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // SUBMIT FORM REGISTRAR
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL ACTUALIZAR TIPO DE PAGO
+  
   const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
   const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
   const formActualizar = document.getElementById("formActualizarTipoPago");
@@ -315,7 +315,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // MODAL VER TIPO DE PAGO
+  
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
 
@@ -332,7 +332,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// FUNCIONES
+
 function registrarTipoPago() {
   const btnGuardarTipoPago = document.getElementById("btnGuardarTipoPago");
 
@@ -527,7 +527,7 @@ function eliminarTipoPago(idTipoPago, nombreTipoPago) {
   });
 }
 
-// Hacer las funciones globales para que puedan ser llamadas desde los event listeners de DataTable
+
 window.verTipoPago = verTipoPago;
 window.editarTipoPago = editarTipoPago;
 window.eliminarTipoPago = eliminarTipoPago;

@@ -32,11 +32,11 @@ class empleadosModel extends Mysql
         $this->conexion = new Conexion();
         $this->conexion->connect();
         $this->db = $this->conexion->get_conectGeneral();
-        // Obtener el ID del usuario desde la sesión
+     
         $idUsuario = $this->obtenerIdUsuarioSesion();
 
         if ($idUsuario) {
-            // Establecer la variable de sesión SQL
+           
             $this->setUsuarioActual($idUsuario);
         }
     }
@@ -50,7 +50,7 @@ class empleadosModel extends Mysql
         return null;
     }
 
-    // Método para establecer @usuario_actual en MySQL
+ 
     private function setUsuarioActual(int $idUsuario)
     {
         $sql = "SET @usuario_actual = $idUsuario";

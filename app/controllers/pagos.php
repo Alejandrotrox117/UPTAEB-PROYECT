@@ -23,9 +23,9 @@ class Pagos extends Controllers
             die();
         }
 
-        // Verificar acceso general al módulo
+        
         if (!PermisosModuloVerificar::verificarAccesoModulo('pagos')) {
-            // Redirigir a una vista de permisos denegados
+            
             $this->views->getView($this, "permisos");
             exit();
         }
@@ -74,7 +74,7 @@ class Pagos extends Controllers
                 die();
             }
 
-            $postdata = file_get_contents("php://input");
+            $postdata = file_get_contents('php://input');
             $request = json_decode($postdata, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -135,7 +135,7 @@ class Pagos extends Controllers
                 die();
             }
 
-            $postdata = file_get_contents("php://input");
+            $postdata = file_get_contents('php://input');
             $request = json_decode($postdata, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -218,7 +218,7 @@ class Pagos extends Controllers
                 die();
             }
 
-            $postdata = file_get_contents("php://input");
+            $postdata = file_get_contents('php://input');
             $request = json_decode($postdata, true);
 
             if (
@@ -264,7 +264,7 @@ class Pagos extends Controllers
                     die();
                 }
 
-                $postdata = file_get_contents("php://input");
+                $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
                 if (
