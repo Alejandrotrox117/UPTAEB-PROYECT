@@ -39,31 +39,33 @@ class Login extends Controllers
             }
 
             $strUsuario = strtolower(($_POST['txtEmail'] ?? ''));
-            $strPassword = ($_POST['txtPass'] ?? '');
-
-            if (empty($strUsuario) || empty($strPassword)) {
+            $strPassword = ($_POST['txtPass'] ?? '');            if (empty($strUsuario) || empty($strPassword)) {
                 echo json_encode(['status' => false, 'msg' => 'Usuario y contraseña son obligatorios']);
+                exit();
+            }            // Primero verificar si el email existe
+            $emailExists = $this->model->getUsuarioEmail($strUsuario);
+            
+            if (!$emailExists) {
+                echo json_encode(['status' => false, 'msg' => 'El correo electrónico ingresado no existe en el sistema']);
                 exit();
             }
 
+            // Verificar si el usuario está activo
+            if ($emailExists['estatus'] != 'activo') {
+                echo json_encode(['status' => false, 'msg' => 'Su cuenta se encuentra inactiva. Contacte al administrador del sistema']);
+                exit();
+            }
             
+            // Si el email existe y está activo, verificar la contraseña
             $strPassword = hash("SHA256", $strPassword);
-
-            
             $requestUser = $this->model->login($strUsuario, $strPassword);
 
             if (!$requestUser) {
-                echo json_encode(['status' => false, 'msg' => 'Usuario o contraseña incorrectos']);
+                echo json_encode(['status' => false, 'msg' => 'La contraseña ingresada es incorrecta. Por favor, verifique e intente nuevamente']);
                 exit();
             }
 
-            
-            if ($requestUser['estatus'] != 'activo') {
-                echo json_encode(['status' => false, 'msg' => 'Usuario inactivo']);
-                exit();
-            }
-
-            
+            // Cargar datos completos del usuario para la sesión
             $userData = $this->model->sessionLogin($requestUser['idusuario']);
 
             if (!$userData) {
