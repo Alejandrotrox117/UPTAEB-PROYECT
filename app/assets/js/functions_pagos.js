@@ -686,10 +686,10 @@ function cargarComprasPendientes() {
         result.data.forEach((compra) => {
           const option = document.createElement("option");
           option.value = compra.idcompra;
-          option.textContent = `#${compra.nro_compra} - ${compra.proveedor} - $${compra.total}`;
+          option.textContent = `#${compra.nro_compra} - ${compra.proveedor} - Bs.${compra.balance}`;
           option.dataset.proveedor = compra.proveedor;
           option.dataset.identificacion = compra.proveedor_identificacion;
-          option.dataset.total = compra.total;
+          option.dataset.balance = compra.balance;
           select.appendChild(option);
         });
 
@@ -699,10 +699,10 @@ function cargarComprasPendientes() {
             mostrarInformacionDestinatario(
               option.dataset.proveedor,
               option.dataset.identificacion,
-              option.dataset.total
+              option.dataset.balance
             );
             if (!pagoEditando) {
-              document.getElementById("pagoMonto").value = option.dataset.total;
+              document.getElementById("pagoMonto").value = option.dataset.balance;
             }
           } else {
             ocultarInformacionDestinatario();
@@ -814,7 +814,7 @@ function cargarSueldosPendientes() {
     });
 }
 
-function mostrarInformacionDestinatario(nombre, identificacion, total) {
+function mostrarInformacionDestinatario(nombre, identificacion, monto) {
   const nombreEl = document.getElementById("destinatarioNombre");
   const identificacionEl = document.getElementById(
     "destinatarioIdentificacion"
@@ -824,7 +824,7 @@ function mostrarInformacionDestinatario(nombre, identificacion, total) {
 
   if (nombreEl) nombreEl.textContent = nombre;
   if (identificacionEl) identificacionEl.textContent = identificacion;
-  if (totalEl) totalEl.textContent = `$${parseFloat(total).toFixed(2)}`;
+  if (totalEl) totalEl.textContent = `Bs.${parseFloat(monto).toFixed(2)}`;
   if (containerEl) containerEl.classList.remove("hidden");
 }
 

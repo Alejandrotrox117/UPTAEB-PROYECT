@@ -115,129 +115,158 @@ class Compras extends Controllers
 
     
     public function setCompra(){
-        header('Content-Type: application/json');
+    header('Content-Type: application/json');
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $modelo = $this->get_model();
-            $response = ["status" => false, "message" => "Error desconocido."];
-
-            $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
-            date_default_timezone_set('America/Caracas');
-            $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
-            $idmoneda_general = intval($_POST['idmoneda_general_compra'] ?? 0);
-            $observaciones_compra = $_POST['observaciones_compra'] ?? '';
-            $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
-
-            if (empty($idproveedor) || empty($fecha_compra) || empty($idmoneda_general) || !isset($_POST['productos_detalle'])) {
-                $response['message'] = "Faltan datos obligatorios para la compra.";
-                echo json_encode($response);
-                exit();
-            }
-
-            $nro_compra = $modelo->generarNumeroCompra();
-            if (strpos($nro_compra, "ERROR") !== false) { 
-                $response['message'] = "Error al generar el número de compra.";
-                echo json_encode($response);
-                exit();
-            }
-
-            $subtotal_general_compra = $total_general_compra;
-            $descuento_porcentaje_general = 0;
-            $monto_descuento_general = 0;
-
-            $datosCompra = [
-                "nro_compra" => $nro_compra,
-                "fecha_compra" => $fecha_compra,
-                "idproveedor" => $idproveedor,
-                "idmoneda_general" => $idmoneda_general,
-                "subtotal_general_compra" => $subtotal_general_compra,
-                "descuento_porcentaje_compra" => $descuento_porcentaje_general,
-                "monto_descuento_compra" => $monto_descuento_general,
-                "total_general_compra" => $total_general_compra,
-                "observaciones_compra" => $observaciones_compra
-            ];
-
-            $detallesCompraInput = json_decode($_POST['productos_detalle'], true);
-            if (json_last_error() !== JSON_ERROR_NONE || empty($detallesCompraInput)) {
-                 $response['message'] = "No hay productos en el detalle o el formato es incorrecto.";
-                 echo json_encode($response);
-                 exit();
-            }
-
-            $detallesParaGuardar = [];
-            foreach ($detallesCompraInput as $item) {
-                $idProductoItem = intval($item['idproducto'] ?? 0);
-                if ($idProductoItem <= 0) {
-                    $response['message'] = "ID de producto inválido en el detalle.";
-                    echo json_encode($response);
-                    exit();
-                }
-
-                $productoInfo = $modelo->getProductoById($idProductoItem);
-                if (!$productoInfo) {
-                    $response['message'] = "Producto no encontrado: ID " . $idProductoItem;
-                    echo json_encode($response);
-                    exit();
-                }
-
-                $cantidad_final = floatval($item['cantidad'] ?? 0);
-                $peso_vehiculo = isset($item['peso_vehiculo']) ? floatval($item['peso_vehiculo']) : null;
-                $peso_bruto = isset($item['peso_bruto']) ? floatval($item['peso_bruto']) : null;
-                $peso_neto = isset($item['peso_neto']) ? floatval($item['peso_neto']) : null;
-
-                if ($cantidad_final <= 0) {
-                    $response['message'] = "Cantidad debe ser mayor a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
-                    echo json_encode($response);
-                    exit();
-                }
-
-                if (floatval($item['precio_unitario_compra'] ?? 0) <= 0) {
-                    $response['message'] = "Precio debe ser mayor a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
-                    echo json_encode($response);
-                    exit();
-                }
-
-                $detallesParaGuardar[] = [
-                    "idproducto" => $productoInfo['idproducto'],
-                    "descripcion_temporal_producto" => $item['nombre_producto'] ?? $productoInfo['nombre'],
-                    "cantidad" => $cantidad_final,
-                    "descuento" => floatval($item['descuento'] ?? 0),
-                    "precio_unitario_compra" => floatval($item['precio_unitario_compra'] ?? 0),
-                    "idmoneda_detalle" => $item['moneda'],
-                    "subtotal_linea" => floatval($item['subtotal_linea'] ?? 0),
-                    "subtotal_original_linea" => floatval($item['subtotal_original_linea'] ?? 0),
-                    "monto_descuento_linea" => floatval($item['monto_descuento_linea'] ?? 0),
-                    "peso_vehiculo" => $peso_vehiculo,
-                    "peso_bruto" => $peso_bruto,
-                    "peso_neto" => $peso_neto,
-                ];
-            }
-
-            if (empty($detallesParaGuardar)) {
-                $response['message'] = "No se procesaron productos válidos.";
-                echo json_encode($response);
-                exit();
-            }
-
-            $idCompraInsertada = $modelo->insertarCompra($datosCompra, $detallesParaGuardar);
-
-            if ($idCompraInsertada) {
-                $response = [
-                    "status" => true, 
-                    "message" => "Compra registrada correctamente con Nro: " . htmlspecialchars($nro_compra, ENT_QUOTES, 'UTF-8'), 
-                    "idcompra" => $idCompraInsertada
-                ];
-            } else {
-                $response = ["status" => false, "message" => "Error al registrar la compra."];
-            }
-
-            echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        } else {
-            echo json_encode(["status" => false, "message" => "Método no permitido."], JSON_UNESCAPED_UNICODE);
-        }
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(
+        ['status' => false, 'message' => 'Método no permitido.'],
+        JSON_UNESCAPED_UNICODE
+        );
         exit();
     }
 
+    $modelo = $this->get_model();
+    $response = ['status' => false, 'message' => 'Error desconocido.'];
+
+    $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
+    date_default_timezone_set('America/Caracas');
+    $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
+    $idmoneda_general = 3;
+    $observaciones_compra = $_POST['observaciones_compra'] ?? '';
+    $total_general_compra = floatval(
+        $_POST['total_general_input'] ?? 0
+    );
+
+    if (empty($idproveedor)) {
+        $response['message'] = 'Falta seleccionar proveedor.';
+        echo json_encode($response);
+        exit();
+    }
+    if (empty($fecha_compra)) {
+        $response['message'] = 'Falta fecha de compra.';
+        echo json_encode($response);
+        exit();
+    }
+    if (!isset($_POST['productos_detalle'])) {
+        $response['message'] = 'Faltan productos en el detalle.';
+        echo json_encode($response);
+        exit();
+    }
+
+    $nro_compra = $modelo->generarNumeroCompra();
+    if (strpos($nro_compra, 'ERROR') !== false) {
+        $response['message'] = 'Error al generar el número de compra.';
+        echo json_encode($response);
+        exit();
+    }
+
+    $subtotal_general_compra = $total_general_compra;
+    $descuento_porcentaje_general = 0;
+    $monto_descuento_general = 0;
+
+    $datosCompra = [
+        'nro_compra' => $nro_compra,
+        'fecha_compra' => $fecha_compra,
+        'idproveedor' => $idproveedor,
+        'idmoneda_general' => $idmoneda_general,
+        'subtotal_general_compra' => $subtotal_general_compra,
+        'descuento_porcentaje_compra' => $descuento_porcentaje_general,
+        'monto_descuento_compra' => $monto_descuento_general,
+        'total_general_compra' => $total_general_compra,
+        'observaciones_compra' => $observaciones_compra,
+    ];
+
+    $detallesCompraInput = json_decode(
+        $_POST['productos_detalle'], true
+    );
+    if (
+        json_last_error() !== JSON_ERROR_NONE ||
+        empty($detallesCompraInput)
+    ) {
+        $response['message'] =
+        'No hay productos en el detalle o el formato es ' .
+        'incorrecto.';
+        echo json_encode($response);
+        exit();
+    }
+
+    $detallesParaGuardar = [];
+    foreach ($detallesCompraInput as $item) {
+        $idProductoItem = intval($item['idproducto'] ?? 0);
+        if ($idProductoItem <= 0) {
+        $response['message'] =
+            'ID de producto inválido en el detalle.';
+        echo json_encode($response);
+        exit();
+        }
+
+        $productoInfo = $modelo->getProductoById($idProductoItem);
+        if (!$productoInfo) {
+        $response['message'] = 'Producto no encontrado: ID ' . $idProductoItem;
+        echo json_encode($response);
+        exit();
+        }
+
+        $cantidad_final = floatval($item['cantidad'] ?? 0);
+        $peso_vehiculo = isset($item['peso_vehiculo']) ? floatval($item['peso_vehiculo']) : null;
+        $peso_bruto = isset($item['peso_bruto']) ? floatval($item['peso_bruto']) : null;
+        $peso_neto = isset($item['peso_neto']) ? floatval($item['peso_neto']) : null;
+
+        if ($cantidad_final <= 0) {
+        $response['message'] = 'Cantidad debe ser mayor a cero para: ' .htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
+        echo json_encode($response);
+        exit();
+        }
+        if (floatval($item['precio_unitario_compra'] ?? 0) <= 0) {
+        $response['message'] = 'Precio debe ser mayor a cero para: ' .htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
+        echo json_encode($response);
+        exit();
+        }
+
+        $moneda_detalle = !empty($item['moneda']) ? intval($item['moneda']) : 3;
+        if ($moneda_detalle <= 0) {
+        $moneda_detalle = 3;
+        }
+
+        $detallesParaGuardar[] = [
+            'idproducto' => $productoInfo['idproducto'],
+            'descripcion_temporal_producto' => $item['nombre_producto'] ?? $productoInfo['nombre'],
+            'cantidad' => $cantidad_final,
+            'descuento' => floatval($item['descuento'] ?? 0),
+            'precio_unitario_compra' => floatval($item['precio_unitario_compra'] ?? 0),
+            'idmoneda_detalle' => $moneda_detalle,
+            'subtotal_linea' => floatval($item['subtotal_linea'] ?? 0),
+            'subtotal_original_linea' => floatval($item['subtotal_original_linea'] ?? 0),
+            'monto_descuento_linea' => floatval($item['monto_descuento_linea'] ?? 0),
+            'peso_vehiculo' => $peso_vehiculo,
+            'peso_bruto' => $peso_bruto,
+            'peso_neto' => $peso_neto,
+        ];
+    }
+
+    if (empty($detallesParaGuardar)) {
+        $response['message'] = 'No se procesaron productos válidos.';
+        echo json_encode($response);
+        exit();
+    }
+
+    try {
+        $idCompraInsertada = $modelo->insertarCompra($datosCompra, $detallesParaGuardar);
+    } catch (Exception $e) {
+        $response = ['status'  => false,'message' => 'Error técnico: ' . $e->getMessage()];
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    if ($idCompraInsertada) {
+        $response = ['status'  => true,'message' =>'Compra registrada correctamente con Nro: ' .htmlspecialchars($nro_compra, ENT_QUOTES, 'UTF-8'),'idcompra' => $idCompraInsertada,];
+    } else {
+        $response = ['status'  => false,'message' => 'Error al registrar la compra.'];
+    }
+
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    exit();
+    }
     
     public function getCompraById(int $idcompra)
     {

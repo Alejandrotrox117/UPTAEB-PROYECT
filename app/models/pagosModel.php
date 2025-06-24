@@ -457,7 +457,7 @@ class PagosModel extends Mysql
                         INNER JOIN
                             proveedor p ON c.idproveedor = p.idproveedor
                         WHERE
-                            c.estatus_compra = 'POR_PAGAR'
+                            (c.estatus_compra = 'POR_PAGAR' OR c.estatus_compra = 'PAGO_FRACCIONADO')
                             AND c.balance > 0
                         ORDER BY
                             c.fecha DESC;";
@@ -546,25 +546,9 @@ class PagosModel extends Mysql
         }
     }
 
-    public function conciliarPago(int $idpago, int $idusuario)
+    public function conciliarPago(int $idpago)
     {
         try {
-         
-            $pagoExistente = $this->selectPagoById($idpago);
-            if (!$pagoExistente['status'] || !$pagoExistente['data']) {
-                return [
-                    'status' => false,
-                    'message' => 'El pago no existe'
-                ];
-            }
-
-            if (strtolower($pagoExistente['data']['estatus']) !== 'activo') {
-                return [
-                    'status' => false,
-                    'message' => 'Solo se pueden conciliar pagos con estatus activo'
-                ];
-            }
-
             $query = "UPDATE pagos SET 
                      estatus = 'conciliado'
                      WHERE idpago = ? AND estatus = 'activo'";
@@ -574,19 +558,22 @@ class PagosModel extends Mysql
             if ($result) {
                 return [
                     'status' => true,
-                    'message' => 'Pago conciliado exitosamente'
+                    'message' => 'Pago conciliado exitosamente',
+                    'idpago' => $idpago
                 ];
             } else {
                 return [
                     'status' => false,
-                    'message' => 'No se pudo conciliar el pago'
+                    'message' => 'No se pudo conciliar el pago',
+                    'idpago' => $idpago
                 ];
             }
         } catch (Exception $e) {
             error_log("Error en conciliarPago: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error interno del servidor'
+                'message' => $e->getMessage(),
+                'idpago' => $idpago
             ];
         }
     }
