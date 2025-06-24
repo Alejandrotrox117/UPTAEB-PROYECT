@@ -91,9 +91,9 @@ class BitacoraModel
             error_log(" BitacoraModel: Consulta exitosa - " . count($resultado) . " registros encontrados");
             return $resultado;
         } catch (PDOException $e) {
-            error_log("❌ BitacoraModel: Error en consulta - " . $e->getMessage());
-            error_log("❌ SQL: " . $sql);
-            error_log("❌ Parámetros: " . json_encode($parametros));
+            error_log(" BitacoraModel: Error en consulta - " . $e->getMessage());
+            error_log(" SQL: " . $sql);
+            error_log(" Parámetros: " . json_encode($parametros));
             return [];
         }
     }
@@ -172,13 +172,13 @@ class BitacoraModel
                 error_log(" BitacoraModel: Registro exitoso - ID: {$idInsertado}, Tabla: {$datos['tabla']}, Acción: {$datos['accion']}, Usuario: {$datos['idusuario']}");
                 return $idInsertado;
             } else {
-                error_log("❌ BitacoraModel: Error - No se pudo ejecutar la inserción");
+                error_log(" BitacoraModel: Error - No se pudo ejecutar la inserción");
                 return false;
             }
             
         } catch (PDOException $e) {
-            error_log("❌ BitacoraModel: Error al insertar en bitácora - " . $e->getMessage());
-            error_log("❌ BitacoraModel: Datos que causaron el error - " . json_encode($datos));
+            error_log(" BitacoraModel: Error al insertar en bitácora - " . $e->getMessage());
+            error_log(" BitacoraModel: Datos que causaron el error - " . json_encode($datos));
             return false;
         }
     }
