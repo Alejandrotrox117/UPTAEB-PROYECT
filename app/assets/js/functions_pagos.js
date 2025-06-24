@@ -178,7 +178,7 @@ function inicializarTablaPagos() {
       type: "GET",
       dataSrc: function (json) {
         if (json.status === true && Array.isArray(json.data)) {
-          return json.data;
+          return json.data.slice().reverse();
         }
         if (json.message && json.message.includes("permiso")) {
           mostrarModalPermisosDenegados(json.message);
@@ -212,7 +212,8 @@ function inicializarTablaPagos() {
               '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Venta</span>',
             Sueldo:
               '<span class="px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-800 rounded-full">Sueldo</span>',
-            Otro: '<span class="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded-full">Otro</span>',
+            Otro:
+              '<span class="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-800 rounded-full">Otro</span>',
           };
           return badges[data] || data;
         },
@@ -312,9 +313,9 @@ function inicializarTablaPagos() {
           var data = $.map(columns, function (col, i) {
             return col.hidden && col.title
               ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
-                                   <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
-                                   <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
-                               </tr>`
+                   <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                   <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                 </tr>`
               : "";
           }).join("");
           return data

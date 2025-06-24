@@ -235,6 +235,9 @@ function initializeDataTable() {
             case "POR_PAGAR":
               badgeClass = "bg-orange-100 text-orange-800";
               break;
+            case "PAGO_FRACCIONADO":
+              badgeClass = "bg-cyan-100 text-cyan-800";
+              break;
             case "PAGADA":
               badgeClass = "bg-purple-100 text-purple-800";
               break;
@@ -273,7 +276,7 @@ function initializeDataTable() {
                   class="cambiar-estado-btn text-green-500 hover:text-green-700 p-1 transition-colors duration-150"
                   data-idcompra="${idCompra}"
                   data-nuevo-estado="AUTORIZADA"
-                  title="Autorizar"
+                  title="Autorizar Compra"
                 >
                   <i class="fas fa-check fa-fw text-base"></i>
                 </button>
@@ -289,10 +292,9 @@ function initializeDataTable() {
             case "AUTORIZADA":
               botonesEstado = `
                 <button
-                  class="cambiar-estado-btn text-orange-500 hover:text-orange-700 p-1 transition-colors duration-150"
+                  class="ir-pagos-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
                   data-idcompra="${idCompra}"
-                  data-nuevo-estado="POR_PAGAR"
-                  title="Marcar para Pago"
+                  title="Ir a Pagos"
                 >
                   <i class="fas fa-credit-card fa-fw text-base"></i>
                 </button>`;
@@ -300,20 +302,21 @@ function initializeDataTable() {
             case "POR_PAGAR":
               botonesEstado = `
                 <button
-                  class="cambiar-estado-btn text-purple-500 hover:text-purple-700 p-1 transition-colors duration-150"
+                  class="ir-pagos-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
                   data-idcompra="${idCompra}"
-                  data-nuevo-estado="PAGADA"
-                  title="Marcar como Pagada"
+                  title="Ir a Pagos"
                 >
-                  <i class="fas fa-money-check-alt fa-fw text-base"></i>
-                </button>
+                  <i class="fas fa-credit-card fa-fw text-base"></i>
+                </button>`;
+              break;
+            case "PAGO_FRACCIONADO":
+              botonesEstado = `
                 <button
-                  class="cambiar-estado-btn text-orange-500 hover:text-orange-700 p-1 transition-colors duration-150"
+                  class="ir-pagos-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
                   data-idcompra="${idCompra}"
-                  data-nuevo-estado="AUTORIZADA"
-                  title="Devolver a Autorizada"
+                  title="Ir a Pagos"
                 >
-                  <i class="fas fa-undo fa-fw text-base"></i>
+                  <i class="fas fa-credit-card fa-fw text-base"></i>
                 </button>`;
               break;
             case "PAGADA":
@@ -332,13 +335,14 @@ function initializeDataTable() {
               break;
           }
 
+          // ✅ BOTONES DE EDICIÓN/ELIMINACIÓN - SOLO EN BORRADOR
           let botonesPrincipales = "";
           if (estadoActual.toUpperCase() === "BORRADOR") {
             botonesPrincipales = `
               <button
                 class="editar-compra-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
                 data-idcompra="${idCompra}"
-                title="Editar"
+                title="Editar Compra"
               >
                 <i class="fas fa-edit fa-fw text-base"></i>
               </button>
@@ -346,7 +350,7 @@ function initializeDataTable() {
                 class="eliminar-compra-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
                 data-idcompra="${idCompra}"
                 data-nro-compra="${nroCompra}"
-                title="Eliminar"
+                title="Eliminar Compra"
               >
                 <i class="fas fa-trash-alt fa-fw text-base"></i>
               </button>`;
@@ -355,11 +359,11 @@ function initializeDataTable() {
           return `
             <div class="inline-flex items-center space-x-1">
               <button
-                class="ver-compra-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
+                class="ver-compra-btn text-gray-600 hover:text-gray-800 p-1 transition-colors duration-150"
                 data-idcompra="${idCompra}"
                 title="Ver Detalle"
               >
-                <i class="fas fa-eye fa-fw text-base"></i>
+                <i class="fas fa-eye fa-fw text-green-600"></i>
               </button>
               ${botonesPrincipales}
               ${botonesEstado}
@@ -505,6 +509,10 @@ function bindTableEvents() {
       );
       alert("Error: No se pudo cambiar el estado de la compra.");
     }
+  });
+
+  $("#TablaCompras tbody").on("click", ".ir-pagos-btn", function () {
+      window.location.href = `Pagos`;
   });
 }
 
