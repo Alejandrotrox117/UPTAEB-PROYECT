@@ -239,7 +239,7 @@ class ComprasModel extends Mysql
             $this->setQuery("SELECT idproveedor, nombre, apellido, identificacion
                         FROM proveedor
                         WHERE (nombre LIKE ? OR apellido LIKE ? OR identificacion LIKE ?)
-                        AND estatus = 'ACTIVO'
+                        AND estatus = 'activo'
                         LIMIT 10");
             
             $param = "%{$this->getTermino()}%";
@@ -311,7 +311,7 @@ class ComprasModel extends Mysql
                            cp.nombre as nombre_categoria
                     FROM producto p
                     JOIN categoria cp ON p.idcategoria = cp.idcategoria
-                    LEFT JOIN monedas m ON p.moneda = m.idmoneda
+                    LEFT JOIN monedas m ON p.moneda = m.codigo_moneda
                     WHERE p.idproducto = ? AND p.estatus = 'activo'");
             
             $this->setArray([$this->getIdProducto()]);
@@ -421,8 +421,8 @@ class ComprasModel extends Mysql
         try {
             $db->beginTransaction();
 
-            $this->setQuery("INSERT INTO compra (nro_compra, fecha, idproveedor, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, total_general, observaciones_compra, estatus_compra)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'BORRADOR')");
+            $this->setQuery("INSERT INTO compra (nro_compra, fecha, idproveedor, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, total_general, balance, observaciones_compra, estatus_compra)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'BORRADOR')");
             
             $this->setArray([
                 $datosCompra['nro_compra'],
@@ -432,6 +432,7 @@ class ComprasModel extends Mysql
                 $datosCompra['subtotal_general_compra'] ?? 0,
                 $datosCompra['descuento_porcentaje_compra'] ?? 0,
                 $datosCompra['monto_descuento_compra'] ?? 0,
+                $datosCompra['total_general_compra'],
                 $datosCompra['total_general_compra'],
                 $datosCompra['observaciones_compra']
             ]);
@@ -795,8 +796,8 @@ class ComprasModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            $this->setQuery("INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_creacion, fecha_modificacion) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVO', NOW(), NOW())");
+            $this->setQuery("INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_cracion, fecha_modificacion) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', NOW(), NOW())");
             
             $this->setArray([
                 $data['nombre'],
@@ -818,7 +819,7 @@ class ComprasModel extends Mysql
                 return [
                     'status' => true,
                     'message' => 'Proveedor registrado exitosamente.',
-                    'idproveedor' => $idProveedor
+                    'proveedor_id' => $idProveedor
                 ];
             } else {
                 return [
@@ -898,6 +899,51 @@ class ComprasModel extends Mysql
         }
     }
     
+    // MÉTODO PRIVADO
+    private function ejecutarGuardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("INSERT INTO historial_romana 
+            (peso, fecha, estatus, fecha_creacion) 
+            VALUES (?, ?, ?, NOW())");
+
+            $this->setArray([
+                $peso,
+                $fecha ?? date('Y-m-d H:i:s'),
+                $estatus
+            ]);
+
+            $stmt = $db->prepare($this->getQuery());
+            $insertExitoso = $stmt->execute($this->getArray());
+
+            if ($insertExitoso) {
+                $idRomana = $db->lastInsertId();
+                return [
+                    'status' => true,
+                    'message' => 'Peso registrado exitosamente.',
+                    'idromana' => $idRomana
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'Error al registrar el peso.'
+                ];
+            }
+
+        } catch (PDOException $e) {
+            error_log("ComprasModel::ejecutarGuardarPesoRomana - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error de base de datos al registrar peso: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
 
     // MÉTODOS PÚBLICOS QUE SE LLAMAN EN EL CONTROLADOR
     public function selectAllCompras()
@@ -988,6 +1034,12 @@ class ComprasModel extends Mysql
         return $this->ejecutarBusquedaProveedorPorId($idproveedor);
     }
 
+    // MÉTODO PÚBLICO
+    public function guardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
+    {
+        return $this->ejecutarGuardarPesoRomana($peso, $fecha, $estatus);
+    }
+
     public function selectCompra($idcompra){
         $conexion = new Conexion();
         $conexion->connect();
@@ -1049,58 +1101,6 @@ class ComprasModel extends Mysql
         } finally {
             $conexion->disconnect();
         }
-    }
-
-    // MÉTODO PRIVADO
-    private function ejecutarGuardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $this->setQuery("INSERT INTO historial_romana 
-            (peso, fecha, estatus, fecha_creacion) 
-            VALUES (?, ?, ?, NOW())");
-
-            $this->setArray([
-                $peso,
-                $fecha ?? date('Y-m-d H:i:s'),
-                $estatus
-            ]);
-
-            $stmt = $db->prepare($this->getQuery());
-            $insertExitoso = $stmt->execute($this->getArray());
-
-            if ($insertExitoso) {
-                $idRomana = $db->lastInsertId();
-                return [
-                    'status' => true,
-                    'message' => 'Peso registrado exitosamente.',
-                    'idromana' => $idRomana
-                ];
-            } else {
-                return [
-                    'status' => false,
-                    'message' => 'Error al registrar el peso.'
-                ];
-            }
-
-        } catch (PDOException $e) {
-            error_log("ComprasModel::ejecutarGuardarPesoRomana - Error: " . $e->getMessage());
-            return [
-                'status' => false,
-                'message' => 'Error de base de datos al registrar peso: ' . $e->getMessage()
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    // MÉTODO PÚBLICO
-    public function guardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
-    {
-        return $this->ejecutarGuardarPesoRomana($peso, $fecha, $estatus);
     }
 }
 ?>
