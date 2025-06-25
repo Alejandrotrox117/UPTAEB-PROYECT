@@ -323,24 +323,98 @@ class Compras extends Controllers
 
     
     public function cambiarEstadoCompra(){
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
-            $idcompra = isset($data['idcompra']) ? intval($data['idcompra']) : 0;
-            $nuevoEstado = isset($data['nuevo_estado']) ? trim($data['nuevo_estado']) : '';
-
-            if ($idcompra > 0 && !empty($nuevoEstado)) {
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                // Leer datos JSON del cuerpo de la petición
+                $json = file_get_contents('php://input');
+                $data = json_decode($json, true);
+                
+                // Extraer los datos (usar las claves que envía el JavaScript)
+                $idcompra = isset($data['idcompra']) ? intval($data['idcompra']) : 0;
+                $nuevoEstado = isset($data['nuevo_estado']) ? trim($data['nuevo_estado']) : '';
+                
+                // Validar datos
+                if ($idcompra <= 0) {
+                    $response = [
+                        "status" => false, 
+                        "message" => "ID de compra no válido."
+                    ];
+                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+                
+                if (empty($nuevoEstado)) {
+                    $response = [
+                        "status" => false, 
+                        "message" => "Estado no proporcionado."
+                    ];
+                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+                
+                // Cambiar el estado
                 $resultado = $this->get_model()->cambiarEstadoCompra($idcompra, $nuevoEstado);
-                echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
-                $this->notificacionesModel->generarNotificacionesProductos();
-            } else {
-                $response = ["status" => false, "message" => "Datos incompletos para cambiar estado."];
+                
+                if ($resultado['status']) {
+                    // Si la compra cambió a PAGADA desde otro estado, regenerar notificaciones
+                    if ($nuevoEstado === 'PAGADA') {
+                        $this->regenerarNotificacionesStock();
+                    }
+                    
+                    $response = [
+                        "status" => true, 
+                        "message" => $resultado['message'] ?: "Estado cambiado correctamente."
+                    ];
+                } else {
+                    $response = [
+                        "status" => false, 
+                        "message" => $resultado['message'] ?: "Error al cambiar el estado."
+                    ];
+                }
+                
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                
+            } catch (Exception $e) {
+                error_log("Error en cambiarEstadoCompra: " . $e->getMessage());
+                $response = [
+                    "status" => false, 
+                    "message" => "Error interno del servidor: " . $e->getMessage()
+                ];
                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
             }
+        } else {
+            $response = [
+                "status" => false, 
+                "message" => "Método no permitido."
+            ];
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
         }
         die();
     }
 
+    private function regenerarNotificacionesStock()
+    {
+        try {
+            // Si no existe el modelo de notificaciones, crearlo
+            if (!isset($this->notificacionesModel)) {
+                require_once 'app/models/NotificacionesModel.php';
+                $this->notificacionesModel = new NotificacionesModel();
+            }
+            
+            $resultado = $this->notificacionesModel->generarNotificacionesProductos();
+            
+            if ($resultado) {
+                error_log("Notificaciones regeneradas correctamente después del cambio de estado de compra");
+            } else {
+                error_log("Error al regenerar notificaciones después del cambio de estado");
+            }
+            
+            return $resultado;
+        } catch (Exception $e) {
+            error_log("Error en regenerarNotificacionesStock: " . $e->getMessage());
+            return false;
+        }
+    }
     
     public function createProveedorinCompras(){
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
