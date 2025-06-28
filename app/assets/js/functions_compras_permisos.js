@@ -72,9 +72,11 @@ function generarBotonesAccionConPermisos(data, type, row) {
         `);
     }
 
-    if (permisosUsuario.eliminar || permisosUsuario.acceso_total) {
-        switch (estadoActual.toUpperCase()) {
-            case "BORRADOR":
+    // Botones de cambio de estado
+    switch (estadoActual.toUpperCase()) {
+        case "BORRADOR":
+            // Quien puede crear o eliminar puede enviar a autorización
+            if (permisosUsuario.crear || permisosUsuario.eliminar || permisosUsuario.acceso_total) {
                 botones.push(`
                     <button
                         class="cambiar-estado-btn text-blue-500 hover:text-blue-700 p-1 transition-colors duration-150"
@@ -85,8 +87,11 @@ function generarBotonesAccionConPermisos(data, type, row) {
                         <i class="fas fa-paper-plane fa-fw text-base"></i>
                     </button>
                 `);
-                break;
-            case "POR_AUTORIZAR":
+            }
+            break;
+        case "POR_AUTORIZAR":
+            // Solo quien puede eliminar puede autorizar o devolver a borrador
+            if (permisosUsuario.eliminar || permisosUsuario.acceso_total) {
                 botones.push(`
                     <button
                         class="cambiar-estado-btn text-green-500 hover:text-green-700 p-1 transition-colors duration-150"
@@ -105,8 +110,8 @@ function generarBotonesAccionConPermisos(data, type, row) {
                         <i class="fas fa-undo fa-fw text-base"></i>
                     </button>
                 `);
-                break;
-        }
+            }
+            break;
     }
 
     if (permisosUsuario.editar || permisosUsuario.acceso_total) {
@@ -176,7 +181,7 @@ function verificarPermiso(accion) {
             }
             break;
         case 'cambiarEstado':
-            if (!permisosUsuario.eliminar && !permisosUsuario.acceso_total) {
+            if (!permisosUsuario.crear && !permisosUsuario.eliminar && !permisosUsuario.acceso_total) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Acceso Denegado',
