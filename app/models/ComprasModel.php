@@ -1102,5 +1102,28 @@ class ComprasModel extends Mysql
             $conexion->disconnect();
         }
     }
+
+    public function obtenerEstadoCompra($idcompra) {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("SELECT estatus_compra FROM compra WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $result ? $result['estatus_compra'] : null;
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener estado de compra: " . $e->getMessage());
+            return null;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
 }
 ?>

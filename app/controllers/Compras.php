@@ -396,16 +396,9 @@ class Compras extends Controllers
     public function cambiarEstadoCompra(){
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                // Verificar permisos - solo quien puede eliminar puede autorizar/devolver a borrador
+                // Verificar permisos según el tipo de cambio de estado
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')) {
-                    echo json_encode([
-                        'status' => false, 
-                        'message' => 'No tiene permisos para cambiar el estado de las compras.'
-                    ], JSON_UNESCAPED_UNICODE);
-                    exit();
-                }
-
+                
                 // Leer datos JSON del cuerpo de la petición
                 $json = file_get_contents('php://input');
                 $data = json_decode($json, true);
@@ -414,7 +407,7 @@ class Compras extends Controllers
                 $idcompra = isset($data['idcompra']) ? intval($data['idcompra']) : 0;
                 $nuevoEstado = isset($data['nuevo_estado']) ? trim($data['nuevo_estado']) : '';
                 
-                // Validar datos
+                // Validar datos básicos primero
                 if ($idcompra <= 0) {
                     $response = [
                         "status" => false, 
@@ -433,16 +426,27 @@ class Compras extends Controllers
                     die();
                 }
                 
+                // Verificar permisos específicos según la acción
+                $estadoAnterior = $this->get_model()->obtenerEstadoCompra($idcompra);
+                
+                if (!$this->verificarPermisosCambioEstado($estadoAnterior, $nuevoEstado)) {
+                    echo json_encode([
+                        'status' => false, 
+                        'message' => 'No tiene permisos para realizar esta acción.'
+                    ], JSON_UNESCAPED_UNICODE);
+                    exit();
+                }
+                
                 // Cambiar el estado
                 $resultado = $this->get_model()->cambiarEstadoCompra($idcompra, $nuevoEstado);
                 
                 if ($resultado['status']) {
                     // Registrar en bitácora el cambio de estado
-                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('compras', 'CAMBIO_ESTADO', $idusuario);
-                    
-                    if (!$resultadoBitacora) {
-                        error_log("Warning: No se pudo registrar en bitácora el cambio de estado de la compra ID: $idcompra");
-                    }
+                    $detalle = "Cambio de estado de compra ID: $idcompra de '$estadoAnterior' a '$nuevoEstado'";
+                    BitacoraHelper::registrarAccion('compras', 'CAMBIO_ESTADO', $idusuario, $this->bitacoraModel, $detalle, $idcompra);
+
+                    // Procesar notificaciones según el nuevo estado
+                    $this->procesarNotificacionesCambioEstado($idcompra, $estadoAnterior, $nuevoEstado);
 
                     // Si la compra cambió a PAGADA desde otro estado, regenerar notificaciones
                     if ($nuevoEstado === 'PAGADA') {
@@ -480,6 +484,24 @@ class Compras extends Controllers
         die();
     }
 
+    private function verificarPermisosCambioEstado($estadoAnterior, $nuevoEstado)
+    {
+        // Enviar a autorización: pueden hacerlo usuarios con permisos de crear o eliminar
+        if ($estadoAnterior === 'BORRADOR' && $nuevoEstado === 'POR_AUTORIZAR') {
+            return (PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'crear') ||
+                    PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar'));
+        }
+        
+        // Autorizar o devolver a borrador: solo usuarios con permisos de eliminar
+        if ($estadoAnterior === 'POR_AUTORIZAR' && 
+            ($nuevoEstado === 'AUTORIZADA' || $nuevoEstado === 'BORRADOR')) {
+            return PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar');
+        }
+        
+        // Cualquier otro cambio de estado: requiere permisos de eliminar
+        return PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar');
+    }
+
     private function regenerarNotificacionesStock()
     {
         try {
@@ -503,205 +525,154 @@ class Compras extends Controllers
             return false;
         }
     }
-    
-    public function createProveedorinCompras(){
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = [
-                'nombre' => trim($_POST['nombre'] ?? ''),
-                'apellido' => trim($_POST['apellido'] ?? ''),
-                'identificacion' => trim($_POST['identificacion'] ?? ''),
-                'telefono_principal' => trim($_POST['telefono_principal'] ?? ''),
-                'correo_electronico' => trim($_POST['correo_electronico'] ?? ''),
-                'direccion' => trim($_POST['direccion'] ?? ''),
-                'fecha_nacimiento' => $_POST['fecha_nacimiento'] ?: null,
-                'genero' => $_POST['genero'] ?? null,
-                'observaciones' => trim($_POST['observaciones'] ?? ''),
-            ];
 
-            $request = $this->get_model()->insertProveedor($data);
-            echo json_encode($request, JSON_UNESCAPED_UNICODE);
-        }
-        die();
-    }
-
-    
-    public function getProveedorById($idproveedor){
-        if ($idproveedor > 0) {
-            $proveedor = $this->get_model()->getProveedorById($idproveedor);
-            if (empty($proveedor)) {
-                $response = ["status" => false, "message" => "Proveedor no encontrado."];
-            } else {
-                $response = ["status" => true, "data" => $proveedor];
-            }
-            echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        }
-        die();
-    }
-
-    
-    public function getCompraParaEditar(int $idcompra) {
-        header('Content-Type: application/json');
-        
-        if ($idcompra > 0) {
-            $datosCompletos = $this->get_model()->getCompraCompletaParaEditar($idcompra);
-            
-            if ($datosCompletos) {
-                $response = [
-                    "status" => true,
-                    "data" => $datosCompletos
-                ];
-            } else {
-                $response = [
-                    "status" => false,
-                    "message" => "Compra no encontrada para editar."
-                ];
+    private function procesarNotificacionesCambioEstado($idcompra, $estadoAnterior, $nuevoEstado)
+    {
+        try {
+            switch ($nuevoEstado) {
+                case 'POR_AUTORIZAR':
+                    $this->generarNotificacionAutorizacion($idcompra);
+                    break;
+                    
+                case 'AUTORIZADA':
+                    // Eliminar notificaciones de autorización pendientes
+                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
+                        'COMPRA_POR_AUTORIZAR', 
+                        'compras', 
+                        $idcompra
+                    );
+                    
+                    // Generar notificación para registrar pago
+                    $this->generarNotificacionPago($idcompra);
+                    break;
+                    
+                case 'PAGADA':
+                    // Eliminar todas las notificaciones pendientes de esta compra
+                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
+                        'COMPRA_POR_AUTORIZAR', 
+                        'compras', 
+                        $idcompra
+                    );
+                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
+                        'COMPRA_AUTORIZADA_PAGO', 
+                        'compras', 
+                        $idcompra
+                    );
+                    break;
+                    
+                case 'BORRADOR':
+                    // Si se devuelve a borrador, eliminar notificaciones de autorización
+                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
+                        'COMPRA_POR_AUTORIZAR', 
+                        'compras', 
+                        $idcompra
+                    );
+                    break;
             }
             
-            echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        } else {
-            echo json_encode([
-                "status" => false,
-                "message" => "ID de compra inválido."
-            ], JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error al procesar notificaciones de cambio de estado: " . $e->getMessage());
         }
-        exit();
     }
 
-    
-    public function updateCompra() {
-        header('Content-Type: application/json');
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Verificar permisos de edición
-            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'editar')) {
-                echo json_encode([
-                    'status' => false, 
-                    'message' => 'No tiene permisos para editar compras.'
-                ], JSON_UNESCAPED_UNICODE);
-                exit();
+    private function generarNotificacionAutorizacion($idcompra)
+    {
+        try {
+            // Obtener información de la compra
+            $compraData = $this->get_model()->selectCompra($idcompra);
+            if (!$compraData || !isset($compraData['solicitud'])) {
+                throw new Exception("No se pudo obtener información de la compra");
             }
-
-            $modelo = $this->get_model();
-            $response = ["status" => false, "message" => "Error desconocido."];
-
-            $idcompra = intval($_POST['idcompra'] ?? 0);
-            $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
-            $fecha_compra = $_POST['fechaActualizar'] ?? '';
-            $idmoneda_general = intval($_POST['idmoneda_general_compra'] ?? 0);
-            $observaciones_compra = $_POST['observacionesActualizar'] ?? '';
-            $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
-
-            $subtotal_general_compra = $total_general_compra;
-            $descuento_porcentaje_compra = 0;
-            $monto_descuento_compra = 0;
-
-            if (empty($idcompra) || empty($idproveedor) || empty($fecha_compra) || empty($idmoneda_general) || !isset($_POST['productos_detalle'])) {
-                $response['message'] = "Faltan datos obligatorios para actualizar la compra.";
-                echo json_encode($response);
-                exit();
+            
+            $compraInfo = $compraData['solicitud'];
+            
+            // Verificar si ya existe una notificación de autorización para esta compra
+            if ($this->notificacionesModel->verificarNotificacionExistente(
+                'COMPRA_POR_AUTORIZAR', 
+                'compras', 
+                $idcompra
+            )) {
+                return; // Ya existe una notificación
             }
-
-            $datosCompra = [
-                "fecha_compra" => $fecha_compra,
-                "idproveedor" => $idproveedor,
-                "idmoneda_general" => $idmoneda_general,
-                "subtotal_general_compra" => $subtotal_general_compra,
-                "descuento_porcentaje_compra" => $descuento_porcentaje_compra,
-                "monto_descuento_compra" => $monto_descuento_compra,
-                "total_general_compra" => $total_general_compra,
-                "observaciones_compra" => $observaciones_compra
-            ];
-
-            $detallesCompraInput = json_decode($_POST['productos_detalle'], true);
-            if (json_last_error() !== JSON_ERROR_NONE || empty($detallesCompraInput)) {
-                $response['message'] = "No hay productos en el detalle o el formato es incorrecto.";
-                echo json_encode($response);
-                exit();
+            
+            // Obtener roles que pueden autorizar (eliminar)
+            $rolesAutorizadores = $this->notificacionesModel->obtenerUsuariosConPermiso('compras', 'eliminar');
+            
+            if (empty($rolesAutorizadores)) {
+                error_log("No se encontraron roles con permisos para autorizar compras");
+                return;
             }
-
-            $detallesParaGuardar = [];
-            foreach ($detallesCompraInput as $item) {
-                $idProductoItem = intval($item['idproducto'] ?? 0);
-                if ($idProductoItem <= 0) {
-                    $response['message'] = "ID de producto inválido en el detalle.";
-                    echo json_encode($response);
-                    exit();
-                }
-
-                $productoInfo = $modelo->getProductoById($idProductoItem);
-                if (!$productoInfo) {
-                    $response['message'] = "Producto no encontrado: ID " . $idProductoItem;
-                    echo json_encode($response);
-                    exit();
-                }
-
-                $cantidad_final = floatval($item['cantidad'] ?? 0);
-                $peso_vehiculo = isset($item['peso_vehiculo']) ? floatval($item['peso_vehiculo']) : null;
-                $peso_bruto = isset($item['peso_bruto']) ? floatval($item['peso_bruto']) : null;
-                $peso_neto = isset($item['peso_neto']) ? floatval($item['peso_neto']) : null;
-
-                if ($cantidad_final <= 0) {
-                    $response['message'] = "Cantidad debe ser mayor a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
-                    echo json_encode($response);
-                    exit();
-                }
-
-                if (floatval($item['precio_unitario_compra'] ?? 0) <= 0) {
-                    $response['message'] = "Precio debe ser mayor a cero para: " . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
-                    echo json_encode($response);
-                    exit();
-                }
-
-                $detallesParaGuardar[] = [
-                    "idproducto" => $productoInfo['idproducto'],
-                    "descripcion_temporal_producto" => $item['nombre_producto'] ?? $productoInfo['nombre'],
-                    "cantidad" => $cantidad_final,
-                    "descuento" => floatval($item['descuento'] ?? 0),
-                    "precio_unitario_compra" => floatval($item['precio_unitario_compra'] ?? 0),
-                    "idmoneda_detalle" => $item['moneda'],
-                    "subtotal_linea" => floatval($item['subtotal_linea'] ?? 0),
-                    "peso_vehiculo" => $peso_vehiculo,
-                    "peso_bruto" => $peso_bruto,
-                    "peso_neto" => $peso_neto,
+            
+            // Crear notificación para cada rol autorizador
+            foreach ($rolesAutorizadores as $rol) {
+                $notificacionData = [
+                    'tipo' => 'COMPRA_POR_AUTORIZAR',
+                    'titulo' => 'Compra Pendiente de Autorización',
+                    'mensaje' => "La compra #{$compraInfo['nro_compra']} por un total de " . 
+                               number_format($compraInfo['total_general'], 2) . 
+                               " está pendiente de autorización.",
+                    'modulo' => 'compras',
+                    'referencia_id' => $idcompra,
+                    'rol_destinatario' => $rol['idrol'],
+                    'prioridad' => 'ALTA'
                 ];
-            }
-
-            if (empty($detallesParaGuardar)) {
-                $response['message'] = "No se procesaron productos válidos.";
-                echo json_encode($response);
-                exit();
-            }
-
-            $actualizacionExitosa = $modelo->actualizarCompra($idcompra, $datosCompra, $detallesParaGuardar);
-
-            if ($actualizacionExitosa) {
-                // Registrar en bitácora la actualización de la compra
-                $resultadoBitacora = $this->bitacoraModel->registrarAccion('compras', 'ACTUALIZAR', $idusuario);
                 
-                if (!$resultadoBitacora) {
-                    error_log("Warning: No se pudo registrar en bitácora la actualización de la compra ID: $idcompra");
-                }
-
-                $response = ["status" => true, "message" => "Compra actualizada correctamente."];
-            } else {
-                $response = ["status" => false, "message" => "Error al actualizar la compra en la base de datos."];
+                $this->notificacionesModel->crearNotificacion($notificacionData);
             }
-
-            echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        } else {
-            echo json_encode(["status" => false, "message" => "Método no permitido."], JSON_UNESCAPED_UNICODE);
+            
+        } catch (Exception $e) {
+            error_log("Error al generar notificación de autorización: " . $e->getMessage());
         }
-        exit();
     }
 
-    
-    public function factura($idcompra){
-    $data['page_tag'] = "Compra - Sistema de Compras";
-    $data['page_title'] = "Factura de Compra <small>Sistema de Compras</small>";
-    $data['page_name'] = "Factura de Compra";
-    $data['arrCompra'] = $this->get_model()->selectCompra($idcompra);
-    $this->views->getView($this,"factura_compra",$data);
+    private function generarNotificacionPago($idcompra)
+    {
+        try {
+            // Obtener información de la compra
+            $compraData = $this->get_model()->selectCompra($idcompra);
+            if (!$compraData || !isset($compraData['solicitud'])) {
+                throw new Exception("No se pudo obtener información de la compra");
+            }
+            
+            $compraInfo = $compraData['solicitud'];
+            
+            // Verificar si ya existe una notificación de pago para esta compra
+            if ($this->notificacionesModel->verificarNotificacionExistente(
+                'COMPRA_AUTORIZADA_PAGO', 
+                'compras', 
+                $idcompra
+            )) {
+                return; // Ya existe una notificación
+            }
+            
+            // Obtener roles que pueden registrar pagos (crear)
+            $rolesRegistradores = $this->notificacionesModel->obtenerUsuariosConPermiso('compras', 'crear');
+            
+            if (empty($rolesRegistradores)) {
+                error_log("No se encontraron roles con permisos para crear/registrar en compras");
+                return;
+            }
+            
+            // Crear notificación para cada rol registrador
+            foreach ($rolesRegistradores as $rol) {
+                $notificacionData = [
+                    'tipo' => 'COMPRA_AUTORIZADA_PAGO',
+                    'titulo' => 'Compra Autorizada - Registrar Pago',
+                    'mensaje' => "La compra #{$compraInfo['nro_compra']} por un total de " . 
+                               number_format($compraInfo['total_general'], 2) . 
+                               " ha sido autorizada y requiere registrar un pago.",
+                    'modulo' => 'compras',
+                    'referencia_id' => $idcompra,
+                    'rol_destinatario' => $rol['idrol'],
+                    'prioridad' => 'MEDIA'
+                ];
+                
+                $this->notificacionesModel->crearNotificacion($notificacionData);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al generar notificación de pago: " . $e->getMessage());
+        }
     }
 
     // Método para obtener permisos del usuario autenticado
@@ -815,4 +786,3 @@ class Compras extends Controllers
         exit();
     }
 }
-?>
