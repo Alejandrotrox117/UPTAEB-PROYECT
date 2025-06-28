@@ -9,6 +9,31 @@ import {
   registrarEntidad,
 } from "./validaciones.js";
 
+// Variables globales para permisos
+let permisosUsuario = {
+    puedeVer: false,
+    puedeCrear: false,
+    puedeEditar: false,
+    puedeEliminar: false
+};
+
+// Función para obtener permisos del usuario
+function obtenerPermisos() {
+    const permisoVer = document.getElementById('permisoVer');
+    const permisoCrear = document.getElementById('permisoCrear');
+    const permisoEditar = document.getElementById('permisoEditar');
+    const permisoEliminar = document.getElementById('permisoEliminar');
+
+    permisosUsuario = {
+        puedeVer: permisoVer ? permisoVer.value === '1' : false,
+        puedeCrear: permisoCrear ? permisoCrear.value === '1' : false,
+        puedeEditar: permisoEditar ? permisoEditar.value === '1' : false,
+        puedeEliminar: permisoEliminar ? permisoEliminar.value === '1' : false
+    };
+
+    console.log('Permisos cargados:', permisosUsuario);
+}
+
 let tablaCompras;
 let detalleCompraItemsModal = [];
 let detalleCompraItemsActualizar = [];
@@ -253,122 +278,13 @@ function initializeDataTable() {
         className: "all text-center actions-column py-1 px-2",
         width: "auto",
         render: function (data, type, row) {
-          var idCompra = row.idcompra || "";
-          var nroCompra = row.nro_compra || "Sin número";
-          var estadoActual = row.estatus_compra || "";
-          var botonesEstado = "";
-
-          switch (estadoActual.toUpperCase()) {
-            case "BORRADOR":
-              botonesEstado = `
-                <button
-                  class="cambiar-estado-btn text-blue-500 hover:text-blue-700 p-1 transition-colors duration-150"
-                  data-idcompra="${idCompra}"
-                  data-nuevo-estado="POR_AUTORIZAR"
-                  title="Enviar a Autorización"
-                >
-                  <i class="fas fa-paper-plane fa-fw text-base"></i>
-                </button>`;
-              break;
-            case "POR_AUTORIZAR":
-              botonesEstado = `
-                <button
-                  class="cambiar-estado-btn text-green-500 hover:text-green-700 p-1 transition-colors duration-150"
-                  data-idcompra="${idCompra}"
-                  data-nuevo-estado="AUTORIZADA"
-                  title="Autorizar Compra"
-                >
-                  <i class="fas fa-check fa-fw text-base"></i>
-                </button>
-                <button
-                  class="cambiar-estado-btn text-yellow-500 hover:text-yellow-700 p-1 transition-colors duration-150"
-                  data-idcompra="${idCompra}"
-                  data-nuevo-estado="BORRADOR"
-                  title="Devolver a Borrador"
-                >
-                  <i class="fas fa-undo fa-fw text-base"></i>
-                </button>`;
-              break;
-            case "AUTORIZADA":
-              botonesEstado = `
-                <button
-                  class="ir-pagos-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
-                  data-idcompra="${idCompra}"
-                  title="Ir a Pagos"
-                >
-                  <i class="fas fa-credit-card fa-fw text-base"></i>
-                </button>`;
-              break;
-            case "POR_PAGAR":
-              botonesEstado = `
-                <button
-                  class="ir-pagos-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
-                  data-idcompra="${idCompra}"
-                  title="Ir a Pagos"
-                >
-                  <i class="fas fa-credit-card fa-fw text-base"></i>
-                </button>`;
-              break;
-            case "PAGO_FRACCIONADO":
-              botonesEstado = `
-                <button
-                  class="ir-pagos-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
-                  data-idcompra="${idCompra}"
-                  title="Ir a Pagos"
-                >
-                  <i class="fas fa-credit-card fa-fw text-base"></i>
-                </button>`;
-              break;
-            case "PAGADA":
-              botonesEstado = `
-                <a
-                  href="./compras/factura/${idCompra}"
-                  target="_blank"
-                  class="text-blue-600 hover:text-blue-800 p-1 transition-colors duration-150"
-                  title="Ver Factura"
-                >
-                  <i class="fas fa-file-alt fa-fw text-base"></i>
-                </a>
-                <span class="text-green-600 font-semibold text-xs px-1.5 py-0.5">
-                  FINALIZADA
-                </span>`;
-              break;
+          // Usar la función del archivo de permisos
+          if (window.permisosCompras && window.permisosCompras.generarBotonesAccionConPermisos) {
+            return window.permisosCompras.generarBotonesAccionConPermisos(data, type, row);
           }
-
-          // ✅ BOTONES DE EDICIÓN/ELIMINACIÓN - SOLO EN BORRADOR
-          let botonesPrincipales = "";
-          if (estadoActual.toUpperCase() === "BORRADOR") {
-            botonesPrincipales = `
-              <button
-                class="editar-compra-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
-                data-idcompra="${idCompra}"
-                title="Editar Compra"
-              >
-                <i class="fas fa-edit fa-fw text-base"></i>
-              </button>
-              <button
-                class="eliminar-compra-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
-                data-idcompra="${idCompra}"
-                data-nro-compra="${nroCompra}"
-                title="Eliminar Compra"
-              >
-                <i class="fas fa-trash-alt fa-fw text-base"></i>
-              </button>`;
-          }
-
-          return `
-            <div class="inline-flex items-center space-x-1">
-              <button
-                class="ver-compra-btn text-gray-600 hover:text-gray-800 p-1 transition-colors duration-150"
-                data-idcompra="${idCompra}"
-                title="Ver Detalle"
-              >
-                <i class="fas fa-eye fa-fw text-green-600"></i>
-              </button>
-              ${botonesPrincipales}
-              ${botonesEstado}
-            </div>
-          `;
+          
+          // Fallback si no está disponible
+          return `<div class="text-gray-500 text-xs">Sin permisos</div>`;
         },
       },
     ],
@@ -470,6 +386,10 @@ function bindTableEvents() {
   });
 
   $("#TablaCompras tbody").on("click", ".editar-compra-btn", function () {
+    if ((window.permisosCompras && !window.permisosCompras.verificarPermiso('editar')) || 
+        (window.verificarPermiso && !window.verificarPermiso('editar'))) {
+      return;
+    }
     const idCompra = $(this).data("idcompra");
     if (idCompra && typeof editarCompra === "function") {
       editarCompra(idCompra);
@@ -482,6 +402,10 @@ function bindTableEvents() {
   });
 
   $("#TablaCompras tbody").on("click", ".eliminar-compra-btn", function () {
+    if ((window.permisosCompras && !window.permisosCompras.verificarPermiso('eliminar')) || 
+        (window.verificarPermiso && !window.verificarPermiso('eliminar'))) {
+      return;
+    }
     const idCompra = $(this).data("idcompra");
     const nroCompra = $(this).data("nro-compra");
     if (idCompra && typeof eliminarCompra === "function") {
@@ -495,6 +419,10 @@ function bindTableEvents() {
   });
 
   $("#TablaCompras tbody").on("click", ".cambiar-estado-btn", function () {
+    if ((window.permisosCompras && !window.permisosCompras.verificarPermiso('cambiarEstado')) || 
+        (window.verificarPermiso && !window.verificarPermiso('cambiarEstado'))) {
+      return;
+    }
     const idCompra = $(this).data("idcompra");
     const nuevoEstado = $(this).data("nuevo-estado");
     if (
@@ -541,6 +469,11 @@ function bindModalEvents() {
 
   if (elements.btnAbrirModalNuevaCompra) {
     elements.btnAbrirModalNuevaCompra.addEventListener("click", function () {
+      // Usar la función global o la del objeto permisosCompras
+      if ((window.permisosCompras && !window.permisosCompras.verificarPermiso('crear')) || 
+          (window.verificarPermiso && !window.verificarPermiso('crear'))) {
+        return;
+      }
       abrirModalNuevaCompra();
       inicializarValidaciones(camposCompras, "formNuevaCompraModal");
     });
@@ -2159,6 +2092,7 @@ function cambiarEstadoCompra(idCompra, nuevoEstado) {
 
 document.addEventListener("DOMContentLoaded", function () {
   $(document).ready(function () {
+    obtenerPermisos();
     initializeDataTable();
     bindModalEvents();
   });

@@ -2,15 +2,35 @@
 require_once "app/core/Controllers.php";
 require_once "app/models/ComprasModel.php";
 require_once "helpers/helpers.php";
+require_once "helpers/PermisosModuloVerificar.php";
+require_once "app/models/bitacoraModel.php";
+require_once "helpers/bitacora_helper.php";
 require_once "app/models/notificacionesModel.php";
 
 class Compras extends Controllers
 {
     private $notificacionesModel;
+    private $bitacoraModel;
+    private $BitacoraHelper;
 
     public function __construct() {
         parent::__construct();
+        
+        $this->bitacoraModel = new BitacoraModel();
+        $this->BitacoraHelper = new BitacoraHelper();
         $this->notificacionesModel = new NotificacionesModel();
+
+        // Verificar sesión de usuario
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+            header('Location: ' . base_url() . '/login');
+            die();
+        }
+
+        // Verificar acceso al módulo de compras
+        if (!PermisosModuloVerificar::verificarAccesoModulo('compras')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
     }
 
     public function set_model($model)
@@ -24,9 +44,28 @@ class Compras extends Controllers
     }
 
     public function index(){
+        // Verificar permiso específico para ver
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
+
+        // Registrar acceso al módulo en bitácora
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        BitacoraHelper::registrarAccesoModulo('compras', $idusuario, $this->bitacoraModel);
+
+        // Obtener permisos del usuario para el módulo
+        $permisos = [
+            'puedeVer' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver'),
+            'puedeCrear' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'crear'),
+            'puedeEditar' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'editar'),
+            'puedeEliminar' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')
+        ];
+
         $data['page_title'] = "Gestión de Compras";
         $data['page_name'] = "Listado de Compras";
         $data['page_functions_js'] = "functions_compras.js";
+        $data['permisos'] = $permisos;
         $this->views->getView($this, "compras", $data);
     }
 
@@ -123,7 +162,15 @@ class Compras extends Controllers
         JSON_UNESCAPED_UNICODE
         );
         exit();
-    }
+    }        // Verificar permisos de creación
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'crear')) {
+            echo json_encode([
+                'status' => false, 
+                'message' => 'No tiene permisos para registrar compras.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
 
     $modelo = $this->get_model();
     $response = ['status' => false, 'message' => 'Error desconocido.'];
@@ -259,6 +306,13 @@ class Compras extends Controllers
     }
 
     if ($idCompraInsertada) {
+        // Registrar en bitácora la creación de la compra
+        $resultadoBitacora = $this->bitacoraModel->registrarAccion('compras', 'INSERTAR', $idusuario);
+        
+        if (!$resultadoBitacora) {
+            error_log("Warning: No se pudo registrar en bitácora la creación de la compra ID: $idCompraInsertada");
+        }
+
         $response = ['status'  => true,'message' =>'Compra registrada correctamente con Nro: ' .htmlspecialchars($nro_compra, ENT_QUOTES, 'UTF-8'),'idcompra' => $idCompraInsertada,];
     } else {
         $response = ['status'  => false,'message' => 'Error al registrar la compra.'];
@@ -299,6 +353,16 @@ class Compras extends Controllers
             exit;
         }
 
+        // Verificar permisos de eliminación
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')) {
+            echo json_encode([
+                'status' => false, 
+                'message' => 'No tiene permisos para eliminar compras.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
         $idcompra = isset($data['idcompra']) ? intval($data['idcompra']) : 0;
@@ -312,6 +376,13 @@ class Compras extends Controllers
         $requestDelete = $this->get_model()->deleteCompraById($idcompra);
 
         if ($requestDelete) {
+            // Registrar en bitácora la eliminación de la compra
+            $resultadoBitacora = $this->bitacoraModel->registrarAccion('compras', 'ELIMINAR', $idusuario);
+            
+            if (!$resultadoBitacora) {
+                error_log("Warning: No se pudo registrar en bitácora la eliminación de la compra ID: $idcompra");
+            }
+
             $response = ["status"  => true,"message" => "Compra marcada como inactiva correctamente."];
         } else {
             $response = ["status"  => false,"message" => "Error al marcar la compra como inactiva."];
@@ -325,6 +396,16 @@ class Compras extends Controllers
     public function cambiarEstadoCompra(){
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
+                // Verificar permisos - solo quien puede eliminar puede autorizar/devolver a borrador
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')) {
+                    echo json_encode([
+                        'status' => false, 
+                        'message' => 'No tiene permisos para cambiar el estado de las compras.'
+                    ], JSON_UNESCAPED_UNICODE);
+                    exit();
+                }
+
                 // Leer datos JSON del cuerpo de la petición
                 $json = file_get_contents('php://input');
                 $data = json_decode($json, true);
@@ -356,6 +437,13 @@ class Compras extends Controllers
                 $resultado = $this->get_model()->cambiarEstadoCompra($idcompra, $nuevoEstado);
                 
                 if ($resultado['status']) {
+                    // Registrar en bitácora el cambio de estado
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('compras', 'CAMBIO_ESTADO', $idusuario);
+                    
+                    if (!$resultadoBitacora) {
+                        error_log("Warning: No se pudo registrar en bitácora el cambio de estado de la compra ID: $idcompra");
+                    }
+
                     // Si la compra cambió a PAGADA desde otro estado, regenerar notificaciones
                     if ($nuevoEstado === 'PAGADA') {
                         $this->regenerarNotificacionesStock();
@@ -484,6 +572,16 @@ class Compras extends Controllers
         header('Content-Type: application/json');
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Verificar permisos de edición
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'editar')) {
+                echo json_encode([
+                    'status' => false, 
+                    'message' => 'No tiene permisos para editar compras.'
+                ], JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+
             $modelo = $this->get_model();
             $response = ["status" => false, "message" => "Error desconocido."];
 
@@ -578,6 +676,13 @@ class Compras extends Controllers
             $actualizacionExitosa = $modelo->actualizarCompra($idcompra, $datosCompra, $detallesParaGuardar);
 
             if ($actualizacionExitosa) {
+                // Registrar en bitácora la actualización de la compra
+                $resultadoBitacora = $this->bitacoraModel->registrarAccion('compras', 'ACTUALIZAR', $idusuario);
+                
+                if (!$resultadoBitacora) {
+                    error_log("Warning: No se pudo registrar en bitácora la actualización de la compra ID: $idcompra");
+                }
+
                 $response = ["status" => true, "message" => "Compra actualizada correctamente."];
             } else {
                 $response = ["status" => false, "message" => "Error al actualizar la compra en la base de datos."];
@@ -597,6 +702,117 @@ class Compras extends Controllers
     $data['page_name'] = "Factura de Compra";
     $data['arrCompra'] = $this->get_model()->selectCompra($idcompra);
     $this->views->getView($this,"factura_compra",$data);
+    }
+
+    // Método para obtener permisos del usuario autenticado
+    public function getPermisosUsuario(){
+        header('Content-Type: application/json');
+        
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        
+        if (!$idusuario) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Usuario no autenticado'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        $permisos = [
+            'puedeVer' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver'),
+            'puedeCrear' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'crear'),
+            'puedeEditar' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'editar'),
+            'puedeEliminar' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')
+        ];
+        
+        echo json_encode([
+            'status' => true,
+            'permisos' => $permisos
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    // Método para debug de permisos de compras
+    public function debugPermisos()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $debug = [
+            'session_completa' => $_SESSION,
+            'session_login' => $_SESSION['login'] ?? 'no definido',
+            'session_usuario_id' => $_SESSION['usuario_id'] ?? 'no definido', 
+            'session_idrol' => $_SESSION['idrol'] ?? 'no definido',
+            'session_usuario_nombre' => $_SESSION['usuario_nombre'] ?? 'no definido',
+        ];
+
+        // Obtener permisos usando el helper
+        $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('compras');
+        
+        $debug['permisos_obtenidos'] = $permisos;
+        $debug['verificacion_ver'] = PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver');
+        $debug['verificacion_crear'] = PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'crear');
+        $debug['verificacion_editar'] = PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'editar');
+        $debug['verificacion_eliminar'] = PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar');
+
+        // Consulta directa a la base de datos
+        try {
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectSeguridad();
+
+            $query = "
+                SELECT 
+                    u.idusuario,
+                    u.usuario,
+                    u.idrol,
+                    r.nombre as rol_nombre,
+                    m.titulo as modulo_nombre,
+                    p.idpermiso,
+                    p.nombre_permiso,
+                    rmp.activo,
+                    m.estatus as modulo_estatus
+                FROM usuario u
+                INNER JOIN roles r ON u.idrol = r.idrol
+                INNER JOIN rol_modulo_permisos rmp ON r.idrol = rmp.idrol
+                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
+                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
+                WHERE u.idusuario = ? 
+                AND LOWER(m.titulo) = LOWER('compras')
+                AND rmp.activo = 1
+            ";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([$debug['session_usuario_id']]);
+            $debug['consulta_directa'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $query2 = "
+                SELECT 
+                    m.titulo as modulo,
+                    p.nombre_permiso as permiso,
+                    rmp.activo
+                FROM rol_modulo_permisos rmp
+                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
+                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
+                WHERE rmp.idrol = ?
+                AND rmp.activo = 1
+                ORDER BY m.titulo, p.idpermiso
+            ";
+
+            $stmt2 = $db->prepare($query2);
+            $stmt2->execute([$debug['session_idrol']]);
+            $debug['todos_permisos_rol'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+
+            $conexion->disconnect();
+
+        } catch (Exception $e) {
+            $debug['error_consulta'] = $e->getMessage();
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit();
     }
 }
 ?>
