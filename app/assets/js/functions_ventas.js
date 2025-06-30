@@ -16,14 +16,12 @@ import {
 } from "./validaciones.js";
 
 document.addEventListener("DOMContentLoaded", function () {
-  
   const PERMISOS_USUARIO = obtenerPermisosUsuario();
   window.PERMISOS_USUARIO = PERMISOS_USUARIO;
 
   inicializarDataTable();
   const ventaForm = document.getElementById("ventaForm");
 
-  
   const camposCabeceraVenta = [
     {
       id: "fecha_venta_modal",
@@ -73,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
       regex: expresiones.nombre,
       mensajes: {
         vacio: "El nombre es obligatorio.",
-        formato: "El nombre debe tener entre 2 y 50 caracteres.", 
+        formato: "El nombre debe tener entre 2 y 50 caracteres.",
       },
     },
     {
@@ -132,7 +130,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let listaProductosCargadosSelect = [];
 
-  
   const btnToggleNuevoCliente = document.getElementById(
     "btnToggleNuevoCliente"
   );
@@ -145,7 +142,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const detalleVentaBody = document.getElementById("detalleVentaBody");
   const noDetallesMsg = document.getElementById("noDetallesMensaje");
 
-  
   function setCamposEmbebidosHabilitados(habilitar) {
     if (!nuevoClienteContainer) return;
     camposNuevoClienteEmbebido.forEach((campo) => {
@@ -186,7 +182,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (detalleVentaBody) detalleVentaBody.innerHTML = "";
     if (noDetallesMsg) noDetallesMsg.classList.remove("hidden");
 
-    
     [
       "subtotal_general_display_modal",
       "subtotal_general",
@@ -234,7 +229,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (msgErrorForm) msgErrorForm.classList.add("hidden");
   }
 
-  
   if (nuevoClienteContainer) resetYDeshabilitarFormClienteEmbebido();
 
   if (btnToggleNuevoCliente && nuevoClienteContainer) {
@@ -261,18 +255,18 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  
   function validarClienteNuevo() {
-    if (!nuevoClienteContainer || nuevoClienteContainer.classList.contains("hidden")) {
+    if (
+      !nuevoClienteContainer ||
+      nuevoClienteContainer.classList.contains("hidden")
+    ) {
       return { esValido: true, datos: null };
     }
 
-    
     if (!validarCamposVacios(camposNuevoClienteEmbebido, "ventaForm")) {
       return { esValido: false, datos: null };
     }
 
-    
     let formClienteValido = true;
     camposNuevoClienteEmbebido.forEach((campo) => {
       const inputElement = ventaForm.querySelector(`#${campo.id}`);
@@ -295,7 +289,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return { esValido: false, datos: null };
     }
 
-    
     const datosCliente = {};
     camposNuevoClienteEmbebido.forEach((c) => {
       const input = ventaForm.querySelector(`#${c.id}`);
@@ -305,25 +298,14 @@ document.addEventListener("DOMContentLoaded", function () {
     return { esValido: true, datos: datosCliente };
   }
 
-  
   function inicializarBuscadorCliente() {
     const inputCriterio = document.getElementById("inputCriterioClienteModal");
     const btnBuscar = document.getElementById("btnBuscarClienteModal");
-    const listaResultados = document.getElementById(
-      "listaResultadosClienteModal"
-    );
+    const listaResultados = document.getElementById("listaResultadosClienteModal");
     const inputIdCliente = document.getElementById("idcliente");
-    const divInfoCliente = document.getElementById(
-      "cliente_seleccionado_info_modal"
-    );
+    const divInfoCliente = document.getElementById("cliente_seleccionado_info_modal");
 
-    if (
-      !btnBuscar ||
-      !inputCriterio ||
-      !listaResultados ||
-      !inputIdCliente ||
-      !divInfoCliente
-    )
+    if (!btnBuscar || !inputCriterio || !listaResultados || !inputIdCliente || !divInfoCliente)
       return;
     if (btnBuscar.dataset.listenerAttached === "true") return;
 
@@ -343,22 +325,36 @@ document.addEventListener("DOMContentLoaded", function () {
       listaResultados.classList.remove("hidden");
 
       try {
-        const response = await fetch(
-          `clientes/buscar?criterio=${encodeURIComponent(criterio)}`
-        );
+        // Usar FormData para enviar como POST
+        const formData = new FormData();
+        formData.append('criterio', criterio);
+
+        const response = await fetch('ventas/buscarClientes', {
+          method: 'POST',
+          body: formData
+        });
+
         if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
-        const clientes = await response.json();
+        const result = await response.json();
         listaResultados.innerHTML = "";
+
+        // Verificar si la respuesta tiene la estructura esperada
+        let clientes = [];
+        if (result.status && result.data) {
+          clientes = result.data;
+        } else if (Array.isArray(result)) {
+          clientes = result;
+        }
 
         if (clientes && clientes.length > 0) {
           clientes.forEach((cli) => {
             const itemDiv = document.createElement("div");
             itemDiv.className = "p-2 text-xs hover:bg-gray-100 cursor-pointer";
-            itemDiv.textContent = `${cli.nombre || ""} ${
-              cli.apellido || ""
-            } (C.I.: ${cli.cedula || ""})`.trim();
-            itemDiv.dataset.idcliente = cli.id;
+            itemDiv.textContent = `${cli.nombre || ""} ${cli.apellido || ""} (C.I.: ${cli.cedula || ""})`.trim();
+            
+            // Usar los nombres de campos correctos del modelo
+            itemDiv.dataset.idcliente = cli.idcliente || cli.id;
             itemDiv.dataset.nombre = cli.nombre || "";
             itemDiv.dataset.apellido = cli.apellido || "";
             itemDiv.dataset.cedula = cli.cedula || "";
@@ -375,7 +371,7 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         } else {
           listaResultados.innerHTML =
-            '<div class="p-2 text-xs text-gray-500">No se encontraron.</div>';
+            '<div class="p-2 text-xs text-gray-500">No se encontraron clientes.</div>';
         }
       } catch (error) {
         console.error("Error al buscar clientes:", error);
@@ -406,7 +402,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  
   document
     .getElementById("agregarDetalleBtn")
     .addEventListener("click", function () {
@@ -434,7 +429,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      
       const productoData = listaProductosCargadosSelect.find(
         (p) => String(p.idproducto || p.id) === String(idProductoSel)
       );
@@ -444,7 +438,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      
       const yaAgregado = Array.from(
         detalleVentaBody.querySelectorAll("input[name='detalle_idproducto[]']")
       ).some(
@@ -457,7 +450,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      
       const idProd = productoData.idproducto || productoData.id;
       const nombreProd = `${productoData.nombre_producto} (${
         productoData.nombre_categoria || "N/A"
@@ -466,7 +458,6 @@ document.addEventListener("DOMContentLoaded", function () {
         2
       );
 
-      
       if (!idProd || idProd === "" || idProd === "0") {
         Swal.fire("Error", "ID de producto no válido.", "error");
         return;
@@ -509,7 +500,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
   function actualizarEventosDetalle() {
-    
     detalleVentaBody.querySelectorAll(".cantidad-input").forEach((input) => {
       input.oninput = function () {
         const fila = this.closest("tr");
@@ -517,7 +507,6 @@ document.addEventListener("DOMContentLoaded", function () {
           parseFloat(fila.querySelector(".precio-input").value) || 0;
         let cantidad = parseFloat(this.value) || 0;
 
-        
         if (cantidad < 1 && this.value !== "") {
           cantidad = 1;
           this.value = 1;
@@ -529,7 +518,6 @@ document.addEventListener("DOMContentLoaded", function () {
       };
     });
 
-    
     detalleVentaBody
       .querySelectorAll(".eliminar-detalle-btn")
       .forEach((btn) => {
@@ -547,23 +535,19 @@ document.addEventListener("DOMContentLoaded", function () {
   function calcularTotalesGenerales() {
     let subtotalGeneral = 0;
 
-    
     detalleVentaBody.querySelectorAll(".subtotal-input").forEach((input) => {
       subtotalGeneral += parseFloat(input.value) || 0;
     });
 
-    
     const descuentoP = parseFloat(descuentoPorcentajeGeneralInput?.value) || 0;
     const montoDesc = (subtotalGeneral * descuentoP) / 100;
     const totalGen = subtotalGeneral - montoDesc;
 
-    
     ["subtotal_general_display_modal", "subtotal_general"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.value = subtotalGeneral.toFixed(2);
     });
 
-    
     ["monto_descuento_general_display", "monto_descuento_general"].forEach(
       (id) => {
         const el = document.getElementById(id);
@@ -571,7 +555,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     );
 
-    
     ["total_general_display_modal", "total_general"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.value = totalGen.toFixed(2);
@@ -585,14 +568,12 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  
   document
     .getElementById("abrirModalBtn")
     .addEventListener("click", function () {
       abrirModal("ventaModal");
       limpiarFormularioVentaCompleto();
 
-      
       const fechaInput = document.getElementById("fecha_venta_modal");
       if (fechaInput) {
         fechaInput.value = new Date().toISOString().split("T")[0];
@@ -607,7 +588,7 @@ document.addEventListener("DOMContentLoaded", function () {
         onLoaded: (monedas) => {
           const select = document.getElementById("idmoneda_general");
           monedas.forEach((m, i) => {
-            const option = select.options[i + 1]; 
+            const option = select.options[i + 1];
             if (option) option.dataset.codigo = m.codigo_moneda;
           });
         },
@@ -645,7 +626,6 @@ document.addEventListener("DOMContentLoaded", function () {
       limpiarFormularioVentaCompleto();
     });
 
-  
   document
     .getElementById("registrarVentaBtn")
     .addEventListener("click", async function () {
@@ -654,7 +634,6 @@ document.addEventListener("DOMContentLoaded", function () {
         nuevoClienteContainer &&
         !nuevoClienteContainer.classList.contains("hidden");
 
-      
       if (!idClienteSeleccionado && !nuevoClienteFormActivo) {
         Swal.fire(
           "Atención",
@@ -665,7 +644,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      
       let datosClienteNuevo = null;
       if (nuevoClienteFormActivo) {
         const validacionCliente = validarClienteNuevo();
@@ -680,7 +658,6 @@ document.addEventListener("DOMContentLoaded", function () {
         datosClienteNuevo = validacionCliente.datos;
       }
 
-      
       if (!validarCamposVacios(camposCabeceraVenta, "ventaForm")) return;
 
       let cabeceraValida = true;
@@ -704,10 +681,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!cabeceraValida) return;
 
-      
       if (!validarDetalleVenta()) return;
 
-      
       const filas = detalleVentaBody.querySelectorAll("tr");
       if (filas.length === 0) {
         Swal.fire(
@@ -718,11 +693,11 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      
       const datosVentaFinal = {
-        
-        idcliente: idClienteSeleccionado ? parseInt(idClienteSeleccionado) : null,
-        cliente_nuevo: datosClienteNuevo, 
+        idcliente: idClienteSeleccionado
+          ? parseInt(idClienteSeleccionado)
+          : null,
+        cliente_nuevo: datosClienteNuevo,
         fecha_venta: document.getElementById("fecha_venta_modal").value,
         idmoneda_general: parseInt(
           document.getElementById("idmoneda_general").value
@@ -739,12 +714,11 @@ document.addEventListener("DOMContentLoaded", function () {
         total_general: parseFloat(
           document.getElementById("total_general").value || 0
         ),
-        estatus: "activo",
+        estatus: "BORRADOR",
         observaciones: document.getElementById("observaciones")?.value || "",
         detalles: [],
       };
 
-      
       try {
         datosVentaFinal.tasa_usada = await obtenerTasaActualSeleccionada(
           datosVentaFinal.idmoneda_general,
@@ -755,7 +729,6 @@ document.addEventListener("DOMContentLoaded", function () {
         datosVentaFinal.tasa_usada = 1;
       }
 
-      
       filas.forEach((fila) => {
         const idProducto = fila.querySelector(
           "input[name='detalle_idproducto[]']"
@@ -771,7 +744,6 @@ document.addEventListener("DOMContentLoaded", function () {
         ).value;
         const tasa = datosVentaFinal.tasa_usada || 1;
 
-        
         if (!idProducto || !cantidad || !precio || !subtotal) {
           console.warn("Detalle con datos incompletos encontrado:", {
             idProducto,
@@ -796,7 +768,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       });
 
-      
       if (datosVentaFinal.detalles.length === 0) {
         Swal.fire(
           "Error",
@@ -806,13 +777,12 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      
       const btnRegistrar = document.getElementById("registrarVentaBtn");
       const textoOriginal = btnRegistrar.innerHTML;
       btnRegistrar.disabled = true;
-      btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+      btnRegistrar.innerHTML =
+        '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
 
-      
       try {
         const response = await fetch("ventas/setVenta", {
           method: "POST",
@@ -822,77 +792,69 @@ document.addEventListener("DOMContentLoaded", function () {
           body: JSON.stringify(datosVentaFinal),
         });
 
-        
         if (!response.ok) {
-          throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+          throw new Error(
+            `Error HTTP: ${response.status} - ${response.statusText}`
+          );
         }
 
         const result = await response.json();
 
-        
         if (result.status === true) {
-          
           const mensaje = result.message || "Venta registrada correctamente.";
           let mensajeCompleto = mensaje;
-          
-          
-          if (result.data && typeof result.data === 'object') {
+
+          if (result.data && typeof result.data === "object") {
             const { nro_venta, idventa, idcliente } = result.data;
-            
+
             if (nro_venta) {
               mensajeCompleto = `Venta ${nro_venta} registrada correctamente.`;
             }
-            
-            
+
             console.log("Venta creada exitosamente:", {
-              idventa: idventa || 'No disponible',
-              nro_venta: nro_venta || 'No disponible',
-              idcliente: idcliente || 'No disponible'
+              idventa: idventa || "No disponible",
+              nro_venta: nro_venta || "No disponible",
+              idcliente: idcliente || "No disponible",
             });
           } else {
-            console.warn("Datos de respuesta no disponibles o estructura incorrecta:", result);
+            console.warn(
+              "Datos de respuesta no disponibles o estructura incorrecta:",
+              result
+            );
           }
 
           await Swal.fire("¡Éxito!", mensajeCompleto, "success");
-          
-          
+
           if (typeof $ !== "undefined" && $("#Tablaventas").length) {
             $("#Tablaventas").DataTable().ajax.reload();
           }
-          
-          
+
           cerrarModal("ventaModal");
           limpiarFormularioVentaCompleto();
-
         } else {
-          
-          const mensajeError = result.message || "No se pudo registrar la venta.";
+          const mensajeError =
+            result.message || "No se pudo registrar la venta.";
           await Swal.fire("¡Error!", mensajeError, "error");
         }
-
       } catch (error) {
         console.error("Error al registrar venta:", error);
-        
-        
+
         let mensajeError = "Error de comunicación con el servidor.";
         if (error.message.includes("HTTP:")) {
           mensajeError = `Error del servidor: ${error.message}`;
         } else if (error.name === "SyntaxError") {
           mensajeError = "Error al procesar la respuesta del servidor.";
         }
-        
+
         await Swal.fire("¡Error!", mensajeError, "error");
       } finally {
-        
         btnRegistrar.disabled = false;
         btnRegistrar.innerHTML = textoOriginal;
       }
     });
 
-  
   async function obtenerTasaActualSeleccionada(idmoneda, fechaVenta) {
     try {
-      
       const selectMoneda = document.getElementById("idmoneda_general");
       if (!selectMoneda || selectMoneda.selectedIndex === -1) {
         console.warn("Select de moneda no encontrado o sin selección");
@@ -907,9 +869,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return 1;
       }
 
-      
       const response = await fetch(
-        `ventas/getTasa?codigo_moneda=${encodeURIComponent(codigoMoneda)}&fecha=${encodeURIComponent(fechaVenta)}`
+        `ventas/getTasa?codigo_moneda=${encodeURIComponent(
+          codigoMoneda
+        )}&fecha=${encodeURIComponent(fechaVenta)}`
       );
 
       if (!response.ok) {
@@ -918,14 +881,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const data = await response.json();
       return parseFloat(data.tasa) || 1;
-
     } catch (error) {
       console.error("Error al obtener tasa:", error);
-      return 1; 
+      return 1;
     }
   }
 
-  
   function confirmarEliminacion(idventa) {
     Swal.fire({
       title: "¿Estás seguro?",
@@ -939,33 +900,33 @@ document.addEventListener("DOMContentLoaded", function () {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          
           const loadingSwal = Swal.fire({
-            title: 'Procesando...',
-            text: 'Desactivando venta',
+            title: "Procesando...",
+            text: "Desactivando venta",
             allowOutsideClick: false,
             showConfirmButton: false,
             willOpen: () => {
               Swal.showLoading();
-            }
+            },
           });
 
           const response = await fetch("ventas/deleteVenta", {
             method: "POST",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              "X-Requested-With": "XMLHttpRequest"
+              "X-Requested-With": "XMLHttpRequest",
             },
             body: JSON.stringify({
               id: parseInt(idventa),
             }),
           });
 
-          
           loadingSwal.close();
 
           if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+            throw new Error(
+              `Error HTTP: ${response.status} - ${response.statusText}`
+            );
           }
 
           const data = await response.json();
@@ -975,10 +936,9 @@ document.addEventListener("DOMContentLoaded", function () {
               title: "¡Desactivada!",
               text: data.message || "Venta desactivada correctamente.",
               icon: "success",
-              confirmButtonText: "Aceptar"
+              confirmButtonText: "Aceptar",
             });
-            
-            
+
             if (typeof $ !== "undefined" && $("#Tablaventas").length) {
               $("#Tablaventas").DataTable().ajax.reload(null, false);
             }
@@ -987,52 +947,70 @@ document.addEventListener("DOMContentLoaded", function () {
               title: "Error",
               text: data.message || "No se pudo desactivar la venta.",
               icon: "error",
-              confirmButtonText: "Aceptar"
+              confirmButtonText: "Aceptar",
             });
           }
-
         } catch (error) {
           console.error("Error al desactivar venta:", error);
-          
+
           let mensajeError = "Error de comunicación con el servidor.";
           if (error.message.includes("HTTP:")) {
             mensajeError = `Error del servidor: ${error.message}`;
           } else if (error.name === "SyntaxError") {
             mensajeError = "Error al procesar la respuesta del servidor.";
           }
-          
+
           await Swal.fire({
-            title: "Error", 
+            title: "Error",
             text: mensajeError,
             icon: "error",
-            confirmButtonText: "Aceptar"
+            confirmButtonText: "Aceptar",
           });
         }
       }
     });
   }
 
-  
   document.addEventListener("click", function (e) {
     const eliminarBtn = e.target.closest(".eliminar-btn");
     if (eliminarBtn) {
       const idventa = eliminarBtn.getAttribute("data-idventa");
-      
+
       if (!idventa || isNaN(parseInt(idventa))) {
         Swal.fire({
           title: "Error",
           text: "ID de venta no válido.",
           icon: "error",
-          confirmButtonText: "Aceptar"
+          confirmButtonText: "Aceptar",
         });
         return;
       }
 
       confirmarEliminacion(idventa);
     }
+
+    // Cambiar estado de venta
+    const cambiarEstadoBtn = e.target.closest(".cambiar-estado-venta-btn");
+    if (cambiarEstadoBtn) {
+      const idVenta = cambiarEstadoBtn.getAttribute("data-idventa");
+      const nuevoEstado = cambiarEstadoBtn.getAttribute("data-nuevo-estado");
+      
+      if (idVenta && nuevoEstado) {
+        cambiarEstadoVenta(idVenta, nuevoEstado);
+      }
+    }
+
+    // Ir a pagos
+    const irPagosBtn = e.target.closest(".ir-pagos-venta-btn");
+    if (irPagosBtn) {
+      const idVenta = irPagosBtn.getAttribute("data-idventa");
+      if (idVenta) {
+        // Redirigir al módulo de pagos con filtro de venta
+        window.location.href = `pagos?venta=${idVenta}`;
+      }
+    }
   });
 
-  
   document.addEventListener("click", async function (e) {
     const verDetalleBtn = e.target.closest(".ver-detalle-btn");
     if (verDetalleBtn) {
@@ -1042,7 +1020,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      
       const modal = document.getElementById("modalDetalleVenta");
       if (!modal) {
         console.error("Modal de detalle no encontrado");
@@ -1052,26 +1029,27 @@ document.addEventListener("DOMContentLoaded", function () {
       modal.classList.remove("opacity-0", "pointer-events-none", "transparent");
       modal.classList.add("opacity-100");
 
-      
       const contenido = document.getElementById("detalleVentaContenido");
       if (contenido) {
-        contenido.innerHTML = '<div class="flex justify-center items-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando...</div>';
+        contenido.innerHTML =
+          '<div class="flex justify-center items-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando...</div>';
       }
 
       try {
-        const response = await fetch(`ventas/getVentaDetalle?idventa=${encodeURIComponent(idventa)}`);
-        
+        const response = await fetch(
+          `ventas/getVentaDetalle?idventa=${encodeURIComponent(idventa)}`
+        );
+
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status}`);
         }
 
         const data = await response.json();
-        
+
         if (!data.status) {
           throw new Error(data.message || "No se pudo obtener el detalle.");
         }
 
-        
         if (!data.data || !data.data.venta || !data.data.detalle) {
           throw new Error("Estructura de datos incompleta.");
         }
@@ -1079,19 +1057,22 @@ document.addEventListener("DOMContentLoaded", function () {
         const venta = data.data.venta;
         const detalle = data.data.detalle;
 
-        
         if (contenido) {
           contenido.innerHTML = `
             <div class="mb-4">
               <h4 class="font-semibold text-gray-700 mb-2">Datos Generales</h4>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div><b>Nro Venta:</b> ${venta.nro_venta || 'N/A'}</div>
-                <div><b>Fecha:</b> ${venta.fecha_venta || 'N/A'}</div>
-                <div><b>Cliente:</b> ${(venta.cliente_nombre || '') + ' ' + (venta.cliente_apellido || '')}</div>
-                <div><b>Cédula:</b> ${venta.cliente_cedula || 'N/A'}</div>
-                <div><b>Tasa usada:</b> ${venta.tasa_usada || '-'}</div>
-                <div><b>Estatus:</b> ${venta.estatus || 'N/A'}</div>
-                <div><b>Observaciones:</b> ${venta.observaciones || '-'}</div>
+                <div><b>Nro Venta:</b> ${venta.nro_venta || "N/A"}</div>
+                <div><b>Fecha:</b> ${venta.fecha_venta || "N/A"}</div>
+                <div><b>Cliente:</b> ${
+                  (venta.cliente_nombre || "") +
+                  " " +
+                  (venta.cliente_apellido || "")
+                }</div>
+                <div><b>Cédula:</b> ${venta.cliente_cedula || "N/A"}</div>
+                <div><b>Tasa usada:</b> ${venta.tasa_usada || "-"}</div>
+                <div><b>Estatus:</b> ${venta.estatus || "N/A"}</div>
+                <div><b>Observaciones:</b> ${venta.observaciones || "-"}</div>
               </div>
             </div>
             <div class="mb-4">
@@ -1107,27 +1088,46 @@ document.addEventListener("DOMContentLoaded", function () {
                   </tr>
                 </thead>
                 <tbody>
-                  ${Array.isArray(detalle) ? detalle.map(d => `
+                  ${
+                    Array.isArray(detalle)
+                      ? detalle
+                          .map(
+                            (d) => `
                     <tr>
-                      <td class="px-2 py-1 border">${d.producto_nombre || 'N/A'}</td>
-                      <td class="px-2 py-1 border">${d.cantidad || '0'}</td>
-                      <td class="px-2 py-1 border">${d.precio_unitario_venta || '0.00'}</td>
-                      <td class="px-2 py-1 border">${d.subtotal_general || d.subtotal || '0.00'}</td>
-                      <td class="px-2 py-1 border">${d.codigo_moneda || 'N/A'}</td>
+                      <td class="px-2 py-1 border">${
+                        d.producto_nombre || "N/A"
+                      }</td>
+                      <td class="px-2 py-1 border">${d.cantidad || "0"}</td>
+                      <td class="px-2 py-1 border">${
+                        d.precio_unitario_venta || "0.00"
+                      }</td>
+                      <td class="px-2 py-1 border">${
+                        d.subtotal_general || d.subtotal || "0.00"
+                      }</td>
+                      <td class="px-2 py-1 border">${
+                        d.codigo_moneda || "N/A"
+                      }</td>
                     </tr>
-                  `).join("") : '<tr><td colspan="5" class="px-2 py-1 border text-center">No hay detalles</td></tr>'}
+                  `
+                          )
+                          .join("")
+                      : '<tr><td colspan="5" class="px-2 py-1 border text-center">No hay detalles</td></tr>'
+                  }
                 </tbody>
               </table>
             </div>
             <div class="mb-2">
-              <b>Subtotal:</b> ${venta.subtotal_general || '0.00'} <br>
-              <b>Descuento:</b> ${venta.descuento_porcentaje_general || '0'}% <br>
-              <b>Monto Descuento:</b> ${venta.monto_descuento_general || '0.00'} <br>
-              <b>Total General:</b> ${venta.total_general || '0.00'}
+              <b>Subtotal:</b> ${venta.subtotal_general || "0.00"} <br>
+              <b>Descuento:</b> ${
+                venta.descuento_porcentaje_general || "0"
+              }% <br>
+              <b>Monto Descuento:</b> ${
+                venta.monto_descuento_general || "0.00"
+              } <br>
+              <b>Total General:</b> ${venta.total_general || "0.00"}
             </div>
           `;
         }
-
       } catch (error) {
         console.error("Error al cargar detalle de venta:", error);
         if (contenido) {
@@ -1137,7 +1137,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  
   ["cerrarModalDetalleVentaBtn", "cerrarModalDetalleVentaBtn2"].forEach(
     (id) => {
       document.getElementById(id).addEventListener("click", function () {
@@ -1149,6 +1148,180 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   );
 
+  // Función para cambiar estado de venta
+  function cambiarEstadoVenta(idVenta, nuevoEstado) {
+    const mensajesEstado = {
+      POR_PAGAR: "marcar para pago",
+      PAGADA: "marcar como pagada",
+      BORRADOR: "devolver a borrador",
+    };
+
+    const mensaje = mensajesEstado[nuevoEstado] || "cambiar estado de";
+
+    Swal.fire({
+      title: "¿Confirmar acción?",
+      text: `¿Deseas ${mensaje} esta venta?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, confirmar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const dataParaEnviar = {
+          idventa: idVenta,
+          nuevo_estado: nuevoEstado,
+        };
+
+        fetch("ventas/cambiarEstadoVenta", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify(dataParaEnviar),
+        })
+          .then((response) => response.json())
+          .then((result) => {
+            if (result.status) {
+              Swal.fire("¡Éxito!", result.message, "success");
+              // Recargar la tabla de ventas
+              if (typeof $ !== "undefined" && $("#Tablaventas").length) {
+                $("#Tablaventas").DataTable().ajax.reload();
+              }
+            } else {
+              Swal.fire(
+                "Error",
+                result.message || "No se pudo cambiar el estado de la venta.",
+                "error"
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            Swal.fire("Error", "Error de conexión.", "error");
+          });
+      }
+    });
+  }
+
+  // Event listeners para los nuevos botones
+  // Función para generar botones de acción con estados
+  function generarBotonesAccionVentas(data, type, row) {
+    var idVenta = row.idventa || "";
+    var nroVenta = row.nro_venta || "Sin número";
+    var estadoActual = row.estatus || "";
+    var botones = [];
+
+    // Debug log para verificar los datos que llegan
+    console.log("Generando botones para:", {
+      idVenta: idVenta,
+      nroVenta: nroVenta,
+      estadoActual: estadoActual,
+      estadoUpper: estadoActual.toUpperCase()
+    });
+
+    // Botón Ver (siempre disponible si tiene permisos)
+    if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver) {
+      botones.push(`
+        <button
+          class="ver-detalle-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
+          data-idventa="${idVenta}"
+          title="Ver detalles"
+        >
+          <i class="fas fa-eye fa-fw text-base"></i>
+        </button>
+      `);
+    }
+
+    // Botón Editar (solo en estado BORRADOR)
+    if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_editar) && 
+        estadoActual.toUpperCase() === "BORRADOR") {
+      botones.push(`
+        <button
+          class="editar-venta-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
+          data-idventa="${idVenta}"
+          title="Editar"
+        >
+          <i class="fas fa-edit fa-fw text-base"></i>
+        </button>
+      `);
+    }
+
+    // Botones de cambio de estado
+    if (window.PERMISOS_USUARIO && (window.PERMISOS_USUARIO.puede_editar || window.PERMISOS_USUARIO.puede_eliminar)) {
+      switch (estadoActual.toUpperCase()) {
+        case "BORRADOR":
+          // Enviar a pago
+          botones.push(`
+            <button
+              class="cambiar-estado-venta-btn text-blue-500 hover:text-blue-700 p-1 transition-colors duration-150"
+              data-idventa="${idVenta}"
+              data-nuevo-estado="POR_PAGAR"
+              title="Enviar a Pago"
+            >
+              <i class="fas fa-paper-plane fa-fw text-base"></i>
+            </button>
+          `);
+          break;
+
+        case "POR_PAGAR":
+          // Marcar como pagada o devolver a borrador
+          botones.push(`
+            <button
+              class="cambiar-estado-venta-btn text-green-500 hover:text-green-700 p-1 transition-colors duration-150"
+              data-idventa="${idVenta}"
+              data-nuevo-estado="PAGADA"
+              title="Marcar como Pagada"
+            >
+              <i class="fas fa-check fa-fw text-base"></i>
+            </button>
+            <button
+              class="cambiar-estado-venta-btn text-yellow-500 hover:text-yellow-700 p-1 transition-colors duration-150"
+              data-idventa="${idVenta}"
+              data-nuevo-estado="BORRADOR"
+              title="Devolver a Borrador"
+            >
+              <i class="fas fa-undo fa-fw text-base"></i>
+            </button>
+          `);
+          break;
+
+        case "PAGADA":
+          // Opción para ir a módulo de pagos
+          botones.push(`
+            <button
+              class="ir-pagos-venta-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
+              data-idventa="${idVenta}"
+              title="Ver Pagos"
+            >
+              <i class="fas fa-credit-card fa-fw text-base"></i>
+            </button>
+          `);
+          break;
+      }
+    }
+
+    // Botón Eliminar (solo en estado BORRADOR)
+    if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_eliminar) && 
+        estadoActual.toUpperCase() === "BORRADOR") {
+      botones.push(`
+        <button
+          class="eliminar-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
+          data-idventa="${idVenta}"
+          data-nro="${nroVenta}"
+          title="Eliminar"
+        >
+          <i class="fas fa-trash-alt fa-fw text-base"></i>
+        </button>
+      `);
+    }
+
+    return `<div class="inline-flex items-center space-x-1">${botones.join('')}</div>`;
+  }
+
+  // Actualizar la función inicializarDataTable para usar los nuevos botones
   function inicializarDataTable() {
     let columnsConfig = [
       { data: "nro_venta", title: "Nro. Venta" },
@@ -1158,68 +1331,35 @@ document.addEventListener("DOMContentLoaded", function () {
         data: "estatus",
         title: "Estatus",
         render: function (data, type, row) {
-          if (data === "Activo" || data === "Pagada") {
+          const estadoUpper = data.toUpperCase();
+          if (estadoUpper === "ACTIVO" || estadoUpper === "PAGADA") {
             return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${data}</span>`;
-          } else if (data === "Inactivo" || data === "Anulada") {
+          } else if (estadoUpper === "INACTIVO" || estadoUpper === "ANULADA") {
             return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">${data}</span>`;
-          } else {
+          } else if (estadoUpper === "BORRADOR") {
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">${data}</span>`;
+          } else if (estadoUpper === "POR_PAGAR") {
             return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">${data}</span>`;
+          } else {
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">${data}</span>`;
           }
         },
       },
     ];
 
-    const tienePermisoEditar =
-      typeof window.PERMISOS_USUARIO !== "undefined" &&
-      window.PERMISOS_USUARIO.puede_editar;
-    const tienePermisoEliminar =
-      typeof window.PERMISOS_USUARIO !== "undefined" &&
-      window.PERMISOS_USUARIO.puede_eliminar;
-
-    if (tienePermisoEditar || tienePermisoEliminar) {
+    // Agregar columna de acciones si tiene permisos
+    if (
+      window.PERMISOS_USUARIO &&
+      (window.PERMISOS_USUARIO.puede_editar ||
+        window.PERMISOS_USUARIO.puede_eliminar ||
+        window.PERMISOS_USUARIO.puede_ver)
+    ) {
       columnsConfig.push({
         data: null,
         title: "Acciones",
         orderable: false,
         searchable: false,
-        render: function (data, type, row) {
-          let botonesHtml =
-            '<div class="flex justify-center items-center gap-x-2">';
-
-          if (tienePermisoEditar) {
-            botonesHtml += `
-              <button 
-      type="button"
-      class="ver-detalle-btn text-green-500 hover:text-indigo-700 p-1 rounded-full focus:outline-none" 
-      data-idventa="${row.idventa}" 
-      title="Ver Detalle">
-      <i class="fas fa-eye"></i>
-    </button>
-              <button 
-                type="button"
-                class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full focus:outline-none" 
-                data-idventa="${row.idventa}" 
-                title="Editar Venta">
-                <i class="fas fa-edit"></i>
-              </button>
-             
-            `;
-          }
-
-          if (tienePermisoEliminar) {
-            botonesHtml += `
-              <button 
-                type="button"
-                class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full focus:outline-none" 
-                data-idventa="${row.idventa}" 
-                title="Eliminar Venta">
-                <i class="fas fa-trash"></i>
-              </button>
-            `;
-          }
-          botonesHtml += "</div>";
-          return botonesHtml;
-        },
+        render: generarBotonesAccionVentas,
       });
     }
 
@@ -1229,7 +1369,13 @@ document.addEventListener("DOMContentLoaded", function () {
       ajax: {
         url: "ventas/getventasData",
         type: "GET",
-        dataSrc: "data",
+        dataSrc: function(json) {
+          console.log("Datos recibidos del servidor:", json);
+          if (json.data && json.data.length > 0) {
+            console.log("Primer registro:", json.data[0]);
+          }
+          return json.data || [];
+        },
         error: function (xhr, status, error) {
           console.error(
             "Error al cargar datos para DataTable:",

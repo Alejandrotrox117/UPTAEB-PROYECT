@@ -164,13 +164,17 @@ class VentasModel extends Mysql
                     DATE_FORMAT(v.fecha_venta, '%d/%m/%Y') as fecha_formato,
                     DATE_FORMAT(v.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
                     CASE 
+                        WHEN v.estatus = 'BORRADOR' THEN 'Borrador'
+                        WHEN v.estatus = 'POR_PAGAR' THEN 'Por Pagar'
+                        WHEN v.estatus = 'PAGADA' THEN 'Pagada'
+                        WHEN v.estatus = 'ANULADA' THEN 'Anulada'
                         WHEN v.estatus = 'activo' THEN 'Activo'
-                      
-                     
+                        WHEN v.estatus = 'inactivo' THEN 'Inactivo'
+                        ELSE v.estatus
                     END as estatus_formato
                 FROM venta v
                 LEFT JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.estatus IN ('activo')
+                WHERE v.estatus NOT IN ('inactivo', 'eliminado')
                 ORDER BY v.fecha_venta DESC, v.nro_venta DESC"
             );
             
@@ -705,6 +709,103 @@ class VentasModel extends Mysql
             error_log("Error al obtener tasa: " . $e->getMessage());
             return 1;
         }
+    }
+
+    public function obtenerEstadoVenta($idventa)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("SELECT estatus FROM venta WHERE idventa = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $result ? $result['estatus'] : null;
+            
+        } catch (PDOException $e) {
+            error_log("VentasModel::obtenerEstadoVenta - Error: " . $e->getMessage());
+            return null;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    public function cambiarEstadoVenta(int $idventa, string $nuevoEstado)
+    {
+        return $this->ejecutarCambioEstadoVenta($idventa, $nuevoEstado);
+    }
+
+    private function ejecutarCambioEstadoVenta(int $idventa, string $nuevoEstado)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $estadosValidos = ['BORRADOR', 'POR_PAGAR', 'PAGADA', 'ANULADA'];
+            
+            if (!in_array($nuevoEstado, $estadosValidos)) {
+                return [
+                    'status' => false,
+                    'message' => 'Estado no válido.'
+                ];
+            }
+
+            $this->setQuery("SELECT estatus FROM venta WHERE idventa = ?");
+            $stmtGet = $db->prepare($this->getQuery());
+            $stmtGet->execute([$idventa]);
+            $venta = $stmtGet->fetch(PDO::FETCH_ASSOC);
+
+            if (!$venta) {
+                return [
+                    'status' => false,
+                    'message' => 'Venta no encontrada.'
+                ];
+            }
+
+            $estadoActual = $venta['estatus'];
+
+            if (!$this->validarTransicionEstadoVenta($estadoActual, $nuevoEstado)) {
+                return [
+                    'status' => false,
+                    'message' => 'Transición de estado no válida.'
+                ];
+            }
+
+            $this->setQuery("UPDATE venta SET estatus = ?, fecha_modificacion = NOW() WHERE idventa = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$nuevoEstado, $idventa]);
+
+            return [
+                'status' => true,
+                'message' => 'Estado de venta actualizado exitosamente.'
+            ];
+
+        } catch (PDOException $e) {
+            error_log("VentasModel::ejecutarCambioEstadoVenta - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error de base de datos al cambiar estado: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function validarTransicionEstadoVenta($estadoActual, $nuevoEstado): bool
+    {
+        $transicionesValidas = [
+            'BORRADOR' => ['POR_PAGAR'],
+            'POR_PAGAR' => ['PAGADA', 'BORRADOR'],
+            'PAGADA' => [], // Una vez pagada, no se puede cambiar
+            'ANULADA' => [] // Una vez anulada, no se puede cambiar
+        ];
+
+        return isset($transicionesValidas[$estadoActual]) && 
+               in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
     }
 }
 ?>
