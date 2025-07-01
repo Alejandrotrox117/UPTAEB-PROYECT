@@ -9,6 +9,8 @@ import {
 } from "./validaciones.js";
 
 let tablaUsuarios;
+let esSuperUsuarioActual = false;
+let idUsuarioActual = 0;
 
 const camposFormularioUsuario = [
   {
@@ -89,7 +91,6 @@ const camposFormularioActualizarUsuario = [
   },
 ];
 
-
 function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realizar esta acción.") {
   const modal = document.getElementById('modalPermisosDenegados');
   const mensajeElement = document.getElementById('mensajePermisosDenegados');
@@ -98,7 +99,6 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
     mensajeElement.textContent = mensaje;
     modal.classList.remove('opacity-0', 'pointer-events-none');
   } else {
-    
     Swal.fire({
       icon: 'warning',
       title: 'Acceso Denegado',
@@ -108,7 +108,6 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
   }
 }
 
-
 function cerrarModalPermisosDenegados() {
   const modal = document.getElementById('modalPermisosDenegados');
   if (modal) {
@@ -117,31 +116,130 @@ function cerrarModalPermisosDenegados() {
 }
 
 function tienePermiso(accion) {
+  // Si es super usuario, siempre tiene permisos
+  if (esSuperUsuarioActual) {
+    return true;
+  }
+  
   return window.permisosUsuarios && window.permisosUsuarios[accion] === true;
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+/**
+ * Verificar si el usuario actual es super usuario
+ */
+function verificarSuperUsuario() {
+  return fetch("Usuarios/verificarSuperUsuario", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (result.status) {
+        esSuperUsuarioActual = result.es_super_usuario;
+        idUsuarioActual = result.usuario_id;
+        return result;
+      } else {
+        console.error('Error al verificar super usuario:', result.message);
+        return { es_super_usuario: false, usuario_id: 0 };
+      }
+    })
+    .catch(error => {
+      console.error("Error en verificarSuperUsuario:", error);
+      return { es_super_usuario: false, usuario_id: 0 };
+    });
+}
 
-  const btnCerrarModalPermisos = document.getElementById('btnCerrarModalPermisos');
-  const btnCerrarModalPermisos2 = document.getElementById('btnCerrarModalPermisos2');
-  
-  if (btnCerrarModalPermisos) {
-    btnCerrarModalPermisos.addEventListener('click', cerrarModalPermisosDenegados);
+/**
+ * Verificar si un usuario es super usuario y si se puede eliminar
+ */
+function puedeEliminarUsuario(idUsuario, rolId) {
+  // No puede eliminarse a sí mismo
+  if (idUsuario === idUsuarioActual) {
+    return {
+      puede_eliminar: false,
+      razon: 'No puedes eliminarte a ti mismo.'
+    };
   }
-  
-  if (btnCerrarModalPermisos2) {
-    btnCerrarModalPermisos2.addEventListener('click', cerrarModalPermisosDenegados);
+
+  // NUNCA se puede eliminar un super usuario
+  if (rolId === 1) {
+    return {
+      puede_eliminar: false,
+      razon: 'Los super usuarios no pueden ser eliminados.'
+    };
   }
 
-  cargarRoles();
-  cargarPersonas(); 
+  return {
+    puede_eliminar: true,
+    razon: ''
+  };
+}
 
-  $(document).ready(function () {
-  
-    if (!tienePermiso('ver')) {
-      console.warn('Sin permisos para ver usuarios');
-      return;
+/**
+ * Verificar si un usuario es super usuario y si se puede editar
+ */
+function puedeEditarUsuario(idUsuario, rolId) {
+  // Si es super usuario
+  if (rolId === 1) {
+    // Solo puede editarse a sí mismo
+    if (idUsuario === idUsuarioActual && esSuperUsuarioActual) {
+      return {
+        puede_editar: true,
+        solo_password: true,
+        razon: ''
+      };
+    } else {
+      return {
+        puede_editar: false,
+        solo_password: false,
+        razon: 'Los super usuarios solo pueden editar su propia información.'
+      };
     }
+  }
+
+  // Usuario normal, puede ser editado normalmente
+  return {
+    puede_editar: true,
+    solo_password: false,
+    razon: ''
+  };
+}
+
+/**
+ * Verificar si un usuario es super usuario y si se puede ver
+ */
+function puedeVerUsuario(idUsuario, rolId) {
+  // Si es super usuario
+  if (rolId === 1) {
+    // Solo puede verse a sí mismo
+    if (idUsuario === idUsuarioActual && esSuperUsuarioActual) {
+      return {
+        puede_ver: true,
+        razon: ''
+      };
+    } else {
+      return {
+        puede_ver: false,
+        razon: 'Los super usuarios solo pueden ver su propia información.'
+      };
+    }
+  }
+
+  // Usuario normal, puede ser visto normalmente
+  return {
+    puede_ver: true,
+    razon: ''
+  };
+}
+
+function inicializarTablaUsuarios() {
+  if (!tienePermiso('ver')) {
+    console.warn('Sin permisos para ver usuarios');
+    return;
+  }
 
     if ($.fn.DataTable.isDataTable("#TablaUsuarios")) {
       $("#TablaUsuarios").DataTable().destroy();
@@ -162,7 +260,6 @@ document.addEventListener("DOMContentLoaded", function () {
             );
             $("#TablaUsuarios_processing").css("display", "none"); 
             
-            
             if (json && json.message && json.message.includes('permisos')) {
               mostrarModalPermisosDenegados(json.message);
             } else {
@@ -180,7 +277,6 @@ document.addEventListener("DOMContentLoaded", function () {
           );
           $("#TablaUsuarios_processing").css("display", "none"); 
           
-          
           try {
             const response = JSON.parse(jqXHR.responseText);
             if (response && response.message && response.message.includes('permisos')) {
@@ -188,7 +284,7 @@ document.addEventListener("DOMContentLoaded", function () {
               return;
             }
           } catch (e) {
-            
+            // JSON no válido, continuar con manejo de error general
           }
           
           alert("Error de comunicación al cargar los datos de usuarios. Por favor, intente más tarde.");
@@ -247,10 +343,18 @@ document.addEventListener("DOMContentLoaded", function () {
           width: "auto",
           render: function (data, type, row) {
             const nombreUsuarioParaEliminar = row.usuario || row.correo;
+            const idUsuario = parseInt(row.idusuario);
+            const rolId = parseInt(row.idrol);
+            
+            // Verificar permisos específicos para este usuario
+            const puedeVer = puedeVerUsuario(idUsuario, rolId);
+            const puedeEditar = puedeEditarUsuario(idUsuario, rolId);
+            const puedeEliminar = puedeEliminarUsuario(idUsuario, rolId);
+            
             let acciones = '<div class="inline-flex items-center space-x-1">';
             
-            
-            if (tienePermiso('ver')) {
+            // Botón Ver - solo si tiene permisos generales y específicos
+            if (tienePermiso('ver') && puedeVer.puede_ver) {
               acciones += `
                 <button class="ver-usuario-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
                         data-idusuario="${row.idusuario}" 
@@ -259,8 +363,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            
-            if (tienePermiso('editar')) {
+            // Botón Editar - solo si tiene permisos generales y específicos
+            if (tienePermiso('editar') && puedeEditar.puede_editar) {
               acciones += `
                 <button class="editar-usuario-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
                         data-idusuario="${row.idusuario}" 
@@ -269,8 +373,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            
-            if (tienePermiso('eliminar')) {
+            // Botón Eliminar - solo si tiene permisos generales y específicos
+            if (tienePermiso('eliminar') && puedeEliminar.puede_eliminar) {
               acciones += `
                 <button class="eliminar-usuario-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
                         data-idusuario="${row.idusuario}" 
@@ -280,8 +384,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
+            // Si no tiene ningún permiso, mostrar mensaje
+            const tieneAlgunPermiso = (tienePermiso('ver') && puedeVer.puede_ver) || 
+                                     (tienePermiso('editar') && puedeEditar.puede_editar) || 
+                                     (tienePermiso('eliminar') && puedeEliminar.puede_eliminar);
             
-            if (!tienePermiso('ver') && !tienePermiso('editar') && !tienePermiso('eliminar')) {
+            if (!tieneAlgunPermiso) {
               acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
             }
             
@@ -371,7 +479,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-    
+    // Event handlers para los botones de acciones
     $("#TablaUsuarios tbody").on("click", ".ver-usuario-btn", function (e) {
       e.preventDefault();
       
@@ -404,9 +512,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("ID de usuario no encontrado.");
         Swal.fire("Error", "No se pudo obtener el ID del usuario.", "error");
       }
-    });
-
-    $("#TablaUsuarios tbody").on("click", ".eliminar-usuario-btn", function (e) {
+    });    $("#TablaUsuarios tbody").on("click", ".eliminar-usuario-btn", function (e) {
       e.preventDefault();
       
       if (!tienePermiso('eliminar')) {
@@ -415,7 +521,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       
       const idUsuario = $(this).data("idusuario");
-      const nombreUsuario = $(this).data("nombre"); 
+      const nombreUsuario = $(this).data("nombre");
       if (idUsuario) {
         eliminarUsuario(idUsuario, nombreUsuario);
       } else {
@@ -423,66 +529,7 @@ document.addEventListener("DOMContentLoaded", function () {
         Swal.fire("Error", "No se pudo obtener el ID del usuario.", "error");
       }
     });
-  });
-
-  
-  const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarUsuario");
-  if (btnAbrirModalRegistro) {
-    btnAbrirModalRegistro.addEventListener("click", function (e) {
-      e.preventDefault();
-      
-      if (!tienePermiso('crear')) {
-        mostrarModalPermisosDenegados("No tienes permisos para crear usuarios.");
-        return;
-      }
-      
-      const formRegistrar = document.getElementById("formRegistrarUsuario");
-      abrirModal("modalRegistrarUsuario");
-      if (formRegistrar) formRegistrar.reset();
-      limpiarValidaciones(camposFormularioUsuario, "formRegistrarUsuario");
-      inicializarValidaciones(camposFormularioUsuario, "formRegistrarUsuario");
-      cargarPersonas(0, "usuarioPersona"); 
-    });
-  }
-
-  
-  const btnExportarUsuarios = document.getElementById("btnExportarUsuarios");
-  if (btnExportarUsuarios) {
-    btnExportarUsuarios.addEventListener("click", function (e) {
-      e.preventDefault();
-      
-      if (!tienePermiso('exportar')) {
-        mostrarModalPermisosDenegados("No tienes permisos para exportar usuarios.");
-        return;
-      }
-      
-      exportarUsuarios();
-    });
-  }
-
-  
-  const formRegistrar = document.getElementById("formRegistrarUsuario");
-  const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
-  const btnCancelarModalRegistro = document.getElementById("btnCancelarModalRegistrar");
-
-  if (btnCerrarModalRegistro) btnCerrarModalRegistro.addEventListener("click", () => cerrarModal("modalRegistrarUsuario"));
-  if (btnCancelarModalRegistro) btnCancelarModalRegistro.addEventListener("click", () => cerrarModal("modalRegistrarUsuario"));
-  if (formRegistrar) formRegistrar.addEventListener("submit", (e) => { e.preventDefault(); registrarUsuario(); });
-
-  const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
-  const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
-  const formActualizar = document.getElementById("formActualizarUsuario");
-
-  if (btnCerrarModalActualizar) btnCerrarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarUsuario"));
-  if (btnCancelarModalActualizar) btnCancelarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarUsuario"));
-  if (formActualizar) formActualizar.addEventListener("submit", (e) => { e.preventDefault(); actualizarUsuario(); });
-
-  const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
-  const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
-  
-  if (btnCerrarModalVer) btnCerrarModalVer.addEventListener("click", () => cerrarModal("modalVerUsuario"));
-  if (btnCerrarModalVer2) btnCerrarModalVer2.addEventListener("click", () => cerrarModal("modalVerUsuario"));
-});
+}
 
 function cargarRoles() {
   fetch("Usuarios/getRoles", { 
@@ -506,7 +553,6 @@ function cargarRoles() {
           }
         });
       } else {
-        
         if (result && result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         }
@@ -559,7 +605,6 @@ function cargarPersonas(idPersonaActual = 0, targetSelectId = null) {
         }
 
       } else {
-        
         if (result && result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -573,7 +618,6 @@ function cargarPersonas(idPersonaActual = 0, targetSelectId = null) {
 }
 
 function registrarUsuario() {
-  
   if (!tienePermiso('crear')) {
     mostrarModalPermisosDenegados("No tienes permisos para crear usuarios.");
     return;
@@ -629,7 +673,6 @@ function registrarUsuario() {
         cerrarModal("modalRegistrarUsuario");
         if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
       } else {
-        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -656,7 +699,6 @@ function registrarUsuario() {
 }
 
 function editarUsuario(idUsuario) {
-  
   if (!tienePermiso('editar')) {
     mostrarModalPermisosDenegados("No tienes permisos para editar usuarios.");
     return;
@@ -671,9 +713,10 @@ function editarUsuario(idUsuario) {
       if (result.status && result.data) {
         mostrarModalEditarUsuario(result.data);
       } else {
-        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
+        } else if (result.message && result.message.includes('no tienes permisos para verlo')) {
+          mostrarModalPermisosDenegados("No tienes permisos para editar este usuario.");
         } else {
           Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
         }
@@ -690,17 +733,207 @@ function editarUsuario(idUsuario) {
 
 function mostrarModalEditarUsuario(usuario) {
   const formActualizar = document.getElementById("formActualizarUsuario");
-  if (formActualizar) formActualizar.reset();
+  if (!formActualizar) {
+    console.error("Formulario de actualizar no encontrado");
+    return;
+  }
+  
+  formActualizar.reset();
   limpiarValidaciones(camposFormularioActualizarUsuario, "formActualizarUsuario");
 
-  document.getElementById("idUsuarioActualizar").value = usuario.idusuario || "";
-  document.getElementById("usuarioNombreActualizar").value = usuario.usuario || "";
-  document.getElementById("usuarioCorreoActualizar").value = usuario.correo || "";
-  document.getElementById("usuarioRolActualizar").value = usuario.idrol || "";
-  document.getElementById("usuarioClaveActualizar").value = ""; 
+  const esSuperUsuarioEditandose = (usuario.idrol === 1 && usuario.idusuario === idUsuarioActual && esSuperUsuarioActual);
 
-  cargarPersonas(usuario.personaId || 0, "usuarioPersonaActualizar");
+  // Verificar que todos los elementos existen antes de usarlos
+  const elementos = {
+    id: document.getElementById("idUsuarioActualizar"),
+    nombre: document.getElementById("usuarioNombreActualizar"),
+    correo: document.getElementById("usuarioCorreoActualizar"),
+    rol: document.getElementById("usuarioRolActualizar"),
+    clave: document.getElementById("usuarioClaveActualizar"),
+    persona: document.getElementById("usuarioPersonaActualizar"),
+    titulo: document.getElementById("tituloModalActualizar"),
+    btnActualizar: document.getElementById("btnActualizarUsuario")
+  };
+
+  // Verificar que los elementos críticos existen
+  if (!elementos.id || !elementos.clave) {
+    console.error("Elementos críticos del formulario no encontrados");
+    return;
+  }
+
+  elementos.id.value = usuario.idusuario || "";
   
+  if (esSuperUsuarioEditandose) {
+    // Para super usuario editándose: guardar valores originales en campos ocultos
+    if (elementos.nombre) {
+      elementos.nombre.value = usuario.usuario || "";
+      elementos.nombre.name = "usuario"; // Asegurar que el name esté correcto
+      elementos.nombre.required = false; // Remover required de campos ocultos
+    }
+    if (elementos.correo) {
+      elementos.correo.value = usuario.correo || "";
+      elementos.correo.name = "correo"; // Asegurar que el name esté correcto
+      elementos.correo.required = false; // Remover required de campos ocultos
+    }
+    if (elementos.rol) {
+      elementos.rol.value = usuario.idrol || "";
+      elementos.rol.name = "idrol"; // Asegurar que el name esté correcto
+      elementos.rol.required = false; // Remover required de campos ocultos
+    }
+    if (elementos.persona) {
+      elementos.persona.value = usuario.personaId || "";
+      elementos.persona.name = "personaId"; // Asegurar que el name esté correcto
+      elementos.persona.required = false; // Remover required de campos ocultos
+    }
+    elementos.clave.value = "";
+    elementos.clave.name = "clave"; // Asegurar que el name esté correcto
+    
+    // Ocultar TODOS los contenedores de campos excepto contraseña
+    const todosLosCampos = formActualizar.querySelectorAll('.mb-4, .grid > div');
+    todosLosCampos.forEach(campo => {
+      const inputDentro = campo.querySelector('input, select');
+      if (inputDentro && inputDentro.id !== 'usuarioClaveActualizar') {
+        campo.style.display = 'none';
+        // Remover required de cualquier input oculto
+        if (inputDentro.hasAttribute('required')) {
+          inputDentro.required = false;
+        }
+      }
+    });
+    
+    // Ocultar grids completos si no contienen el campo de contraseña
+    const gridsContenedores = formActualizar.querySelectorAll('.grid');
+    gridsContenedores.forEach(grid => {
+      const tieneClaveInput = grid.querySelector('#usuarioClaveActualizar');
+      if (!tieneClaveInput) {
+        grid.style.display = 'none';
+        // Remover required de todos los inputs dentro del grid oculto
+        const inputsEnGrid = grid.querySelectorAll('input[required], select[required]');
+        inputsEnGrid.forEach(input => {
+          input.required = false;
+        });
+      }
+    });
+    
+    // Asegurar que SOLO la contraseña sea visible y requerida
+    const claveContainer = elementos.clave.closest('.mb-4') || elementos.clave.closest('div') || elementos.clave.parentNode;
+    if (claveContainer) {
+      claveContainer.style.display = 'block';
+      claveContainer.style.width = '100%';
+      if (!claveContainer.className.includes('mb-4')) {
+        claveContainer.className += ' mb-4';
+      }
+    }
+    
+    elementos.clave.required = true;
+    elementos.clave.placeholder = "Nueva contraseña (requerida)";
+    elementos.clave.style.display = 'block';
+    elementos.clave.style.width = '100%';
+    
+    // Cambiar el título del modal
+    if (elementos.titulo) {
+      elementos.titulo.textContent = "Cambiar Contraseña";
+    }
+    
+    // Agregar mensaje informativo
+    const existingMessage = document.querySelector('.super-user-edit-message');
+    if (!existingMessage) {
+      const message = document.createElement('div');
+      message.className = 'super-user-edit-message bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6';
+      message.innerHTML = `
+        <div class="flex items-center">
+          <i class="fas fa-shield-alt text-blue-600 mr-3 text-lg"></i>
+          <div>
+            <div class="text-blue-800 text-sm font-semibold">Modo Super Usuario</div>
+            <div class="text-blue-700 text-xs mt-1">Como super usuario, solo puedes cambiar tu contraseña por seguridad.</div>
+          </div>
+        </div>
+      `;
+      formActualizar.insertBefore(message, formActualizar.firstChild);
+    }
+    
+    // Cambiar el texto del botón
+    if (elementos.btnActualizar) {
+      elementos.btnActualizar.innerHTML = '<i class="fas fa-key mr-1 md:mr-2"></i> Cambiar Contraseña';
+    }
+    
+  } else {
+    // Usuario normal: mostrar todos los campos normalmente
+    if (elementos.nombre) {
+      elementos.nombre.value = usuario.usuario || "";
+      elementos.nombre.required = true; // Restaurar required para usuarios normales
+    }
+    if (elementos.correo) {
+      elementos.correo.value = usuario.correo || "";
+      elementos.correo.required = true; // Restaurar required para usuarios normales
+    }
+    if (elementos.rol) {
+      elementos.rol.value = usuario.idrol || "";
+      elementos.rol.required = true; // Restaurar required para usuarios normales
+    }
+    elementos.clave.value = "";
+    
+    // Mostrar TODOS los campos y contenedores
+    const todosLosCampos = formActualizar.querySelectorAll('[style*="display: none"]');
+    todosLosCampos.forEach(campo => {
+      campo.style.display = '';
+    });
+    
+    // Restaurar grids
+    const gridsContenedores = formActualizar.querySelectorAll('.grid');
+    gridsContenedores.forEach(grid => {
+      if (grid) {
+        grid.style.display = '';
+      }
+    });
+    
+    // También restaurar por clase
+    const camposPorClase = formActualizar.querySelectorAll('.mb-4, [class*="grid"] > div');
+    camposPorClase.forEach(campo => {
+      if (campo && campo.style.display === 'none') {
+        campo.style.display = '';
+      }
+    });
+    
+    // Restaurar atributos required según la configuración original
+    const camposQueDerianSerRequired = formActualizar.querySelectorAll('#usuarioNombreActualizar, #usuarioCorreoActualizar, #usuarioRolActualizar');
+    camposQueDerianSerRequired.forEach(campo => {
+      if (campo) {
+        campo.required = true;
+      }
+    });
+    
+    // Rehabilitar el campo rol para usuarios normales
+    if (elementos.rol) {
+      elementos.rol.disabled = false;
+      elementos.rol.style.pointerEvents = '';
+      elementos.rol.style.opacity = '';
+    }
+    
+    // Contraseña opcional para usuarios normales
+    elementos.clave.required = false;
+    elementos.clave.placeholder = "";
+    
+    // Título normal
+    if (elementos.titulo) {
+      elementos.titulo.textContent = "Actualizar Usuario";
+    }
+    
+    // Remover mensaje si existe
+    const existingMessage = document.querySelector('.super-user-edit-message');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+    
+    // Restaurar texto del botón
+    if (elementos.btnActualizar) {
+      elementos.btnActualizar.innerHTML = '<i class="fas fa-save mr-1 md:mr-2"></i> Actualizar Usuario';
+    }
+    
+    // Cargar personas solo para usuarios normales
+    cargarPersonas(usuario.personaId || 0, "usuarioPersonaActualizar");
+  }
+
   inicializarValidaciones(camposFormularioActualizarUsuario, "formActualizarUsuario");
   abrirModal("modalActualizarUsuario");
 }
@@ -714,48 +947,149 @@ function actualizarUsuario() {
 
   const formActualizar = document.getElementById("formActualizarUsuario");
   const btnActualizarUsuario = document.getElementById("btnActualizarUsuario");
-  const idUsuario = document.getElementById("idUsuarioActualizar").value;
+  const idUsuarioElement = document.getElementById("idUsuarioActualizar");
+  const rolUsuarioElement = document.getElementById("usuarioRolActualizar");
 
-  const camposObligatoriosActualizar = camposFormularioActualizarUsuario.filter(c => c.mensajes && c.mensajes.vacio);
-  if (!validarCamposVacios(camposObligatoriosActualizar, "formActualizarUsuario")) return;
-
-  let formularioConErroresEspecificos = false;
-  for (const campo of camposFormularioActualizarUsuario) { 
-    const inputElement = formActualizar.querySelector(`#${campo.id}`);
-    if (!inputElement) continue;
-    let esValidoEsteCampo = true;
-    if (campo.tipo === "select") {
-      if (campo.mensajes && campo.mensajes.vacio) {
-        esValidoEsteCampo = validarSelect(campo.id, campo.mensajes, "formActualizarUsuario");
-      }
-    } else if (["input", "email", "password", "text"].includes(campo.tipo)) {
-      if (inputElement.value.trim() !== "" || (campo.mensajes && campo.mensajes.vacio && campo.id !== "usuarioClaveActualizar")) {
-        if (campo.id === "usuarioClaveActualizar" && inputElement.value.trim() === "") {
-            esValidoEsteCampo = true; 
-        } else {
-            esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
-        }
-      }
-    }
-    if (!esValidoEsteCampo) formularioConErroresEspecificos = true;
-  }
-
-  if (formularioConErroresEspecificos) {
-    Swal.fire("Atención", "Por favor, corrija los campos marcados.", "warning");
+  if (!formActualizar || !btnActualizarUsuario || !idUsuarioElement) {
+    console.error("Elementos críticos del formulario no encontrados");
+    Swal.fire("Error", "Error en el formulario. Por favor, recarga la página.", "error");
     return;
   }
 
+  const idUsuario = idUsuarioElement.value;
+  
+  // Obtener el rol del campo oculto o del elemento visible
+  let rolUsuario = 0;
+  if (rolUsuarioElement) {
+    rolUsuario = parseInt(rolUsuarioElement.value) || 0;
+  }
+  
+  // Si no se pudo obtener el rol, intentar desde los campos ocultos
+  if (rolUsuario === 0) {
+    const nombreElement = document.getElementById("usuarioNombreActualizar");
+    const correoElement = document.getElementById("usuarioCorreoActualizar");
+    // Si los campos están ocultos, asumir que es super usuario editándose
+    if (nombreElement && nombreElement.style.display === 'none') {
+      rolUsuario = 1;
+    }
+  }
+  
+  // Si aún no tenemos el rol pero sabemos que es super usuario editándose, forzar rol 1
+  if (rolUsuario === 0 && esSuperUsuarioActual && parseInt(idUsuario) === idUsuarioActual) {
+    rolUsuario = 1;
+  }
+
+  // Verificar si es super usuario editándose a sí mismo
+  const esSuperUsuarioEditandose = (rolUsuario === 1 && parseInt(idUsuario) === idUsuarioActual && esSuperUsuarioActual);
+
+
+  if (esSuperUsuarioEditandose) {
+    // Para super usuario: solo validar contraseña
+    const claveElement = document.getElementById("usuarioClaveActualizar");
+    if (!claveElement) {
+      console.error('Campo de contraseña no encontrado');
+      Swal.fire("Error", "Campo de contraseña no encontrado.", "error");
+      return;
+    }
+    
+    const clave = claveElement.value;
+    
+    if (!clave || clave.trim() === "") {
+      Swal.fire("Atención", "Debe proporcionar una nueva contraseña.", "warning");
+      return;
+    }
+    
+    if (clave.length < 6) {
+      Swal.fire("Atención", "La contraseña debe tener al menos 6 caracteres.", "warning");
+      return;
+    }
+    
+  } else {
+    // Para usuario normal: validaciones normales pero solo campos visibles
+    const camposObligatoriosActualizar = camposFormularioActualizarUsuario.filter(c => {
+      const elemento = document.getElementById(c.id);
+      const container = elemento?.closest('.mb-4') || elemento?.parentNode;
+      const estaVisible = elemento && container && container.style.display !== 'none' && !elemento.disabled;
+      return c.mensajes && c.mensajes.vacio && estaVisible;
+    });
+    
+    if (!validarCamposVaciosCondicional(camposObligatoriosActualizar, "formActualizarUsuario")) return;
+
+    let formularioConErroresEspecificos = false;
+    for (const campo of camposFormularioActualizarUsuario) { 
+      const inputElement = formActualizar.querySelector(`#${campo.id}`);
+      if (!inputElement) continue;
+      
+      // Verificar si el campo está visible y habilitado
+      const container = inputElement.closest('.mb-4') || inputElement.parentNode;
+      const estaVisible = container && container.style.display !== 'none' && !inputElement.disabled;
+      
+      if (!estaVisible) continue; // Saltar campos ocultos o deshabilitados
+      
+      let esValidoEsteCampo = true;
+      if (campo.tipo === "select") {
+        if (campo.mensajes && campo.mensajes.vacio) {
+          esValidoEsteCampo = validarSelect(campo.id, campo.mensajes, "formActualizarUsuario");
+        }
+      } else if (["input", "email", "password", "text"].includes(campo.tipo)) {
+        if (inputElement.value.trim() !== "" || (campo.mensajes && campo.mensajes.vacio && campo.id !== "usuarioClaveActualizar")) {
+          if (campo.id === "usuarioClaveActualizar" && inputElement.value.trim() === "") {
+              esValidoEsteCampo = true; 
+          } else {
+              esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
+          }
+        }
+      }
+      if (!esValidoEsteCampo) formularioConErroresEspecificos = true;
+    }
+
+    if (formularioConErroresEspecificos) {
+      Swal.fire("Atención", "Por favor, corrija los campos marcados.", "warning");
+      return;
+    }
+  }
+
   const formData = new FormData(formActualizar);
-  const dataParaEnviar = {
-    idusuario: idUsuario,
-    usuario: formData.get("usuario") || "",
-    correo: formData.get("correo") || "",
-    idrol: formData.get("idrol") || "",
-    personaId: formData.get("personaId") || null, 
-    clave: formData.get("clave") || "", 
-  };
+  let dataParaEnviar;
+
+  if (esSuperUsuarioEditandose) {
+    
+    // Para super usuario: obtener valores directamente de los elementos ocultos
+    const usuarioElement = document.getElementById("usuarioNombreActualizar");
+    const correoElement = document.getElementById("usuarioCorreoActualizar");
+    const rolElement = document.getElementById("usuarioRolActualizar");
+    const personaElement = document.getElementById("usuarioPersonaActualizar");
+    const claveElement = document.getElementById("usuarioClaveActualizar");
+    
+    dataParaEnviar = {
+      idusuario: idUsuario,
+      usuario: usuarioElement ? usuarioElement.value : "", // Valor directo del elemento
+      correo: correoElement ? correoElement.value : "", // Valor directo del elemento
+      idrol: rolElement ? rolElement.value : rolUsuario, // Si el elemento está vacío, usar rolUsuario calculado
+      personaId: personaElement ? personaElement.value || null : null, // Valor directo del elemento
+      clave: claveElement ? claveElement.value : "", // Solo la contraseña nueva
+      solo_password: true // Indicador para el backend
+    };
+    
+    // Si idrol aún está vacío, forzar valor 1 para super usuario
+    if (!dataParaEnviar.idrol || dataParaEnviar.idrol === "") {
+      dataParaEnviar.idrol = "1";
+    }
+
+  } else {
+    // Para usuario normal: enviar todos los datos
+    dataParaEnviar = {
+      idusuario: idUsuario,
+      usuario: formData.get("usuario") || "",
+      correo: formData.get("correo") || "",
+      idrol: formData.get("idrol") || "",
+      personaId: formData.get("personaId") || null, 
+      clave: formData.get("clave") || "", 
+    };
+  }
 
   btnActualizarUsuario.disabled = true;
+  const textoOriginalBoton = btnActualizarUsuario.innerHTML;
   btnActualizarUsuario.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...`;
 
   fetch("Usuarios/updateUsuario", { 
@@ -765,12 +1099,15 @@ function actualizarUsuario() {
   })
     .then(response => response.ok ? response.json() : response.json().then(err => { throw err; }))
     .then(result => {
+
       if (result.status) {
-        Swal.fire("¡Éxito!", result.message, "success");
+        const mensaje = esSuperUsuarioEditandose ? "Contraseña actualizada exitosamente." : result.message;
+
+        Swal.fire("¡Éxito!", mensaje, "success");
         cerrarModal("modalActualizarUsuario");
         if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
       } else {
-        
+        console.error('Error del servidor:', result.message);
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
         } else {
@@ -784,6 +1121,9 @@ function actualizarUsuario() {
       }
     })
     .catch(error => {
+      console.error('=== ERROR EN PETICIÓN ===');
+      console.error('Error:', error);
+      
       if (error.message && error.message.includes('permisos')) {
         mostrarModalPermisosDenegados(error.message);
       } else {
@@ -792,12 +1132,64 @@ function actualizarUsuario() {
     })
     .finally(() => {
       btnActualizarUsuario.disabled = false;
-      btnActualizarUsuario.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Usuario`;
+      btnActualizarUsuario.innerHTML = textoOriginalBoton;
     });
 }
 
-function verUsuario(idUsuario) {
+// Función auxiliar para validar campos vacíos pero solo los visibles
+function validarCamposVaciosCondicional(campos, formId) {
+  let todosValidos = true;
   
+  campos.forEach(campo => {
+    const elemento = document.getElementById(campo.id);
+    if (!elemento) return;
+    
+    // Verificar si el campo está visible
+    const container = elemento.closest('.mb-4') || elemento.parentNode;
+    const estaVisible = container && container.style.display !== 'none' && !elemento.disabled;
+    
+    if (!estaVisible) return; // Saltar campos ocultos
+    
+    if (campo.tipo === "select") {
+      if (!elemento.value || elemento.value.trim() === "") {
+        todosValidos = false;
+        mostrarError(elemento, campo.mensajes.vacio);
+      } else {
+        limpiarError(elemento);
+      }
+    } else {
+      if (!elemento.value || elemento.value.trim() === "") {
+        todosValidos = false;
+        mostrarError(elemento, campo.mensajes.vacio);
+      } else {
+        limpiarError(elemento);
+      }
+    }
+  });
+  
+  return todosValidos;
+}
+
+// Funciones auxiliares para mostrar/limpiar errores
+function mostrarError(elemento, mensaje) {
+  const errorDiv = elemento.parentNode.querySelector('.error-message');
+  if (errorDiv) {
+    errorDiv.textContent = mensaje;
+    errorDiv.style.display = 'block';
+  }
+  elemento.classList.add('border-red-500');
+}
+
+function limpiarError(elemento) {
+  const errorDiv = elemento.parentNode.querySelector('.error-message');
+  if (errorDiv) {
+    errorDiv.textContent = '';
+    errorDiv.style.display = 'none';
+  }
+  elemento.classList.remove('border-red-500');
+}
+
+function verUsuario(idUsuario) {
   if (!tienePermiso('ver')) {
     mostrarModalPermisosDenegados("No tienes permisos para ver detalles de usuarios.");
     return;
@@ -819,9 +1211,10 @@ function verUsuario(idUsuario) {
         document.getElementById("verPersonaCedula").textContent = usuario.persona_cedula || "N/A";
         abrirModal("modalVerUsuario");
       } else {
-        
         if (result.message && result.message.includes('permisos')) {
           mostrarModalPermisosDenegados(result.message);
+        } else if (result.message && result.message.includes('no tienes permisos para verlo')) {
+          mostrarModalPermisosDenegados("No tienes permisos para ver este usuario.");
         } else {
           Swal.fire("Error", result.message || "No se pudieron cargar los datos.", "error");
         }
@@ -837,7 +1230,6 @@ function verUsuario(idUsuario) {
 }
 
 function eliminarUsuario(idUsuario, nombreUsuario) {
-  
   if (!tienePermiso('eliminar')) {
     mostrarModalPermisosDenegados("No tienes permisos para eliminar usuarios.");
     return;
@@ -865,7 +1257,6 @@ function eliminarUsuario(idUsuario, nombreUsuario) {
             Swal.fire("¡Desactivado!", result.message, "success");
             if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
           } else {
-            
             if (result.message && result.message.includes('permisos')) {
               mostrarModalPermisosDenegados(result.message);
             } else {
@@ -884,7 +1275,6 @@ function eliminarUsuario(idUsuario, nombreUsuario) {
   });
 }
 
-
 function exportarUsuarios() {
   if (!tienePermiso('exportar')) {
     mostrarModalPermisosDenegados("No tienes permisos para exportar usuarios.");
@@ -898,9 +1288,6 @@ function exportarUsuarios() {
     .then(response => response.json())
     .then(result => {
       if (result.status && result.data) {
-        
-        
-        console.log("Datos para exportar:", result.data);
         Swal.fire("¡Éxito!", "Datos preparados para exportación.", "success");
       } else {
         if (result.message && result.message.includes('permisos')) {
@@ -918,3 +1305,108 @@ function exportarUsuarios() {
       }
     });
 }
+
+// Inicialización del módulo de usuarios
+$(document).ready(function() {
+  
+  // Verificar el estado de super usuario antes de inicializar la tabla
+  verificarSuperUsuario().then((result) => {
+    if (result && result.status) {
+      esSuperUsuarioActual = result.es_super_usuario;
+      idUsuarioActual = result.usuario_id;
+      
+      // Inicializar la tabla después de verificar el estado de super usuario
+      inicializarTablaUsuarios();
+    } else {
+      console.error('Error al verificar super usuario:', result ? result.message : 'Sin respuesta');
+      // Aún así intentar inicializar la tabla en caso de error
+      inicializarTablaUsuarios();
+    }
+  }).catch(error => {
+    console.error('Error en verificación de super usuario:', error);
+    // Aún así intentar inicializar la tabla en caso de error
+    inicializarTablaUsuarios();
+  });
+  
+  // Cargar datos iniciales
+  cargarRoles();
+  cargarPersonas();
+  
+  // Event handlers para modales de permisos
+  const btnCerrarModalPermisos = document.getElementById('btnCerrarModalPermisos');
+  const btnCerrarModalPermisos2 = document.getElementById('btnCerrarModalPermisos2');
+  
+  if (btnCerrarModalPermisos) {
+    btnCerrarModalPermisos.addEventListener('click', cerrarModalPermisosDenegados);
+  }
+  
+  if (btnCerrarModalPermisos2) {
+    btnCerrarModalPermisos2.addEventListener('click', cerrarModalPermisosDenegados);
+  }
+
+  // Event handlers para botones principales
+  const btnAbrirModalRegistro = document.getElementById("btnAbrirModalRegistrarUsuario");
+  if (btnAbrirModalRegistro) {
+    btnAbrirModalRegistro.addEventListener("click", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('crear')) {
+        mostrarModalPermisosDenegados("No tienes permisos para crear usuarios.");
+        return;
+      }
+      
+      const formRegistrar = document.getElementById("formRegistrarUsuario");
+      abrirModal("modalRegistrarUsuario");
+      if (formRegistrar) formRegistrar.reset();
+      limpiarValidaciones(camposFormularioUsuario, "formRegistrarUsuario");
+      inicializarValidaciones(camposFormularioUsuario, "formRegistrarUsuario");
+      cargarPersonas(0, "usuarioPersona"); 
+    });
+  }
+
+  const btnExportarUsuarios = document.getElementById("btnExportarUsuarios");
+  if (btnExportarUsuarios) {
+    btnExportarUsuarios.addEventListener("click", function (e) {
+      e.preventDefault();
+      
+      if (!tienePermiso('exportar')) {
+        mostrarModalPermisosDenegados("No tienes permisos para exportar usuarios.");
+        return;
+      }
+      
+      exportarUsuarios();
+    });
+  }
+
+  // Event handlers para formularios
+  const formRegistrar = document.getElementById("formRegistrarUsuario");
+  const btnCerrarModalRegistro = document.getElementById("btnCerrarModalRegistrar");
+  const btnCancelarModalRegistro = document.getElementById("btnCancelarModalRegistrar");
+
+  if (btnCerrarModalRegistro) btnCerrarModalRegistro.addEventListener("click", () => cerrarModal("modalRegistrarUsuario"));
+  if (btnCancelarModalRegistro) btnCancelarModalRegistro.addEventListener("click", () => cerrarModal("modalRegistrarUsuario"));
+  if (formRegistrar) formRegistrar.addEventListener("submit", (e) => { e.preventDefault(); registrarUsuario(); });
+
+  const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
+  const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
+  const formActualizar = document.getElementById("formActualizarUsuario");
+  const btnActualizarUsuario = document.getElementById("btnActualizarUsuario");
+
+  if (btnCerrarModalActualizar) btnCerrarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarUsuario"));
+  if (btnCancelarModalActualizar) btnCancelarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarUsuario"));
+  if (formActualizar) formActualizar.addEventListener("submit", (e) => { e.preventDefault(); actualizarUsuario(); });
+  
+  // Event handler directo para el botón de actualizar (por si no hace submit del formulario)
+  if (btnActualizarUsuario) {
+    btnActualizarUsuario.addEventListener("click", function(e) {
+      e.preventDefault();
+      actualizarUsuario();
+    });
+  }
+
+  const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
+  const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
+  
+  if (btnCerrarModalVer) btnCerrarModalVer.addEventListener("click", () => cerrarModal("modalVerUsuario"));
+  if (btnCerrarModalVer2) btnCerrarModalVer2.addEventListener("click", () => cerrarModal("modalVerUsuario"));
+});
