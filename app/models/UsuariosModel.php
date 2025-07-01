@@ -560,11 +560,13 @@ class UsuariosModel extends Mysql
                 FROM usuario u
                 LEFT JOIN roles r ON u.idrol = r.idrol";
             
-            // Si el usuario actual NO es super usuario, excluir super usuarios de los resultados
+            // Si el usuario actual NO es super usuario, excluir super usuarios de los resultados y solo mostrar activos
             if (!$esSuperUsuarioActual) {
-                $queryBase .= " WHERE u.idrol != ?";
+                $queryBase .= " WHERE u.idrol != ? AND u.estatus = 'ACTIVO'";
                 $this->setArray([self::SUPER_USUARIO_ROL_ID]);
             } else {
+                // Si es super usuario, mostrar TODOS los usuarios (activos e inactivos)
+                $queryBase .= " WHERE 1=1";
                 $this->setArray([]);
             }
             
@@ -976,6 +978,179 @@ class UsuariosModel extends Mysql
             'solo_password' => false,
             'razon' => ''
         ];
+    }
+
+    /**
+     * Obtener usuarios eliminados lógicamente (solo para super usuarios)
+     */
+    public function selectAllUsuariosEliminados(int $idUsuarioSesion = 0){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
+        try {
+            // Verificar si el usuario actual es super usuario
+            $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+            
+            if (!$esSuperUsuarioActual) {
+                return [
+                    'status' => false,
+                    'message' => 'Solo los super usuarios pueden ver usuarios eliminados',
+                    'data' => []
+                ];
+            }
+            
+            // Query para obtener solo usuarios con estatus INACTIVO
+            $queryBase = "SELECT 
+                    u.idusuario,
+                    u.usuario,
+                    u.correo,
+                    u.estatus,
+                    u.idrol,
+                    u.personaId,
+                    u.fecha_creacion,
+                    u.fecha_modificacion,
+                    r.nombre as rol_nombre,
+                    DATE_FORMAT(u.fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato,
+                    DATE_FORMAT(u.fecha_modificacion, '%d/%m/%Y') as fecha_modificacion_formato
+                FROM usuario u
+                LEFT JOIN roles r ON u.idrol = r.idrol
+                WHERE u.estatus = 'INACTIVO'
+                ORDER BY u.fecha_modificacion DESC";
+            
+            // Debug: Log de la query ejecutada
+            error_log("DEBUG: selectAllUsuariosEliminados - Query: " . $queryBase);
+            
+            $this->setQuery($queryBase);
+            $this->setArray([]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Debug: Log de la cantidad de usuarios encontrados
+            error_log("DEBUG: selectAllUsuariosEliminados - Usuarios encontrados: " . count($usuarios));
+            
+            // Obtener datos de personas para usuarios que las tengan desde BD principal
+            $dbPrincipal = $conexion->get_conectGeneral();
+            
+            foreach ($usuarios as &$usuario) {
+                if (!empty($usuario['personaId'])) {
+                    $this->setQuery(
+                        "SELECT 
+                            nombre, 
+                            apellido, 
+                            identificacion as cedula,
+                            CONCAT(nombre, ' ', COALESCE(apellido, '')) as nombre_completo
+                        FROM personas 
+                        WHERE idpersona = ?"
+                    );
+                    
+                    $this->setArray([$usuario['personaId']]);
+                    $stmt = $dbPrincipal->prepare($this->getQuery());
+                    $stmt->execute($this->getArray());
+                    $persona = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($persona) {
+                        $usuario['persona_nombre_completo'] = $persona['nombre_completo'];
+                        $usuario['persona_cedula'] = $persona['cedula'];
+                    } else {
+                        $usuario['persona_nombre_completo'] = null;
+                        $usuario['persona_cedula'] = null;
+                    }
+                } else {
+                    $usuario['persona_nombre_completo'] = null;
+                    $usuario['persona_cedula'] = null;
+                }
+            }
+            
+            $resultado = [
+                'status' => true,
+                'message' => 'Usuarios eliminados obtenidos.',
+                'data' => $usuarios
+            ];
+            
+        } catch (Exception $e) {
+            error_log("UsuariosModel::selectAllUsuariosEliminados - Error: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error al obtener usuarios eliminados: ' . $e->getMessage(),
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Reactivar un usuario (cambiar estatus a ACTIVO)
+     */
+    public function reactivarUsuario(int $idusuario){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
+        try {
+            // Debug: Log del ID recibido
+            error_log("DEBUG: reactivarUsuario - ID recibido: " . $idusuario);
+            
+            // Verificar que el usuario existe
+            $this->setQuery("SELECT idusuario, estatus FROM usuario WHERE idusuario = ?");
+            $this->setArray([$idusuario]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Debug: Log del resultado de la consulta
+            error_log("DEBUG: reactivarUsuario - Usuario encontrado: " . json_encode($usuario));
+            
+            if (!$usuario) {
+                return [
+                    'status' => false,
+                    'message' => 'Usuario no encontrado'
+                ];
+            }
+            
+            if ($usuario['estatus'] === 'ACTIVO') {
+                return [
+                    'status' => false,
+                    'message' => 'El usuario ya está activo'
+                ];
+            }
+            
+            // Reactivar usuario
+            $this->setQuery("UPDATE usuario SET estatus = 'ACTIVO', fecha_modificacion = NOW() WHERE idusuario = ?");
+            $this->setArray([$idusuario]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $resultado = $stmt->execute($this->getArray());
+            
+            if ($resultado && $stmt->rowCount() > 0) {
+                $resultado = [
+                    'status' => true,
+                    'message' => 'Usuario reactivado exitosamente'
+                ];
+            } else {
+                $resultado = [
+                    'status' => false,
+                    'message' => 'No se pudo reactivar el usuario'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("UsuariosModel::reactivarUsuario - Error: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error al reactivar usuario: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 }
 ?>

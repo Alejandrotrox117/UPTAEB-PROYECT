@@ -345,6 +345,8 @@ function inicializarTablaUsuarios() {
             const nombreUsuarioParaEliminar = row.usuario || row.correo;
             const idUsuario = parseInt(row.idusuario);
             const rolId = parseInt(row.idrol);
+            const estatusUsuario = (row.estatus || '').toUpperCase();
+            const esUsuarioInactivo = estatusUsuario === 'INACTIVO';
             
             // Verificar permisos específicos para este usuario
             const puedeVer = puedeVerUsuario(idUsuario, rolId);
@@ -363,8 +365,8 @@ function inicializarTablaUsuarios() {
                 </button>`;
             }
             
-            // Botón Editar - solo si tiene permisos generales y específicos
-            if (tienePermiso('editar') && puedeEditar.puede_editar) {
+            // Botón Editar - solo si tiene permisos generales y específicos y el usuario está activo
+            if (tienePermiso('editar') && puedeEditar.puede_editar && !esUsuarioInactivo) {
               acciones += `
                 <button class="editar-usuario-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
                         data-idusuario="${row.idusuario}" 
@@ -373,21 +375,34 @@ function inicializarTablaUsuarios() {
                 </button>`;
             }
             
-            // Botón Eliminar - solo si tiene permisos generales y específicos
-            if (tienePermiso('eliminar') && puedeEliminar.puede_eliminar) {
-              acciones += `
-                <button class="eliminar-usuario-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
-                        data-idusuario="${row.idusuario}" 
-                        data-nombre="${nombreUsuarioParaEliminar}" 
-                        title="Desactivar">
-                    <i class="fas fa-trash-alt fa-fw text-base"></i>
-                </button>`;
+            if (esUsuarioInactivo) {
+              // Para usuarios inactivos, mostrar botón de reactivar (solo super usuarios)
+              if (esSuperUsuarioActual && tienePermiso('editar')) {
+                acciones += `
+                  <button class="reactivar-usuario-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                          data-idusuario="${row.idusuario}" 
+                          data-nombre="${nombreUsuarioParaEliminar}" 
+                          title="Reactivar usuario">
+                      <i class="fas fa-undo fa-fw text-base"></i>
+                  </button>`;
+              }
+            } else {
+              // Para usuarios activos, mostrar botón de eliminar
+              if (tienePermiso('eliminar') && puedeEliminar.puede_eliminar) {
+                acciones += `
+                  <button class="eliminar-usuario-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                          data-idusuario="${row.idusuario}" 
+                          data-nombre="${nombreUsuarioParaEliminar}" 
+                          title="Desactivar">
+                      <i class="fas fa-trash-alt fa-fw text-base"></i>
+                  </button>`;
+              }
             }
             
             // Si no tiene ningún permiso, mostrar mensaje
             const tieneAlgunPermiso = (tienePermiso('ver') && puedeVer.puede_ver) || 
-                                     (tienePermiso('editar') && puedeEditar.puede_editar) || 
-                                     (tienePermiso('eliminar') && puedeEliminar.puede_eliminar);
+                                     (tienePermiso('editar') && puedeEditar.puede_editar && (!esUsuarioInactivo || esSuperUsuarioActual)) || 
+                                     (tienePermiso('eliminar') && puedeEliminar.puede_eliminar && !esUsuarioInactivo);
             
             if (!tieneAlgunPermiso) {
               acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
@@ -524,6 +539,30 @@ function inicializarTablaUsuarios() {
       const nombreUsuario = $(this).data("nombre");
       if (idUsuario) {
         eliminarUsuario(idUsuario, nombreUsuario);
+      } else {
+        console.error("ID de usuario no encontrado.");
+        Swal.fire("Error", "No se pudo obtener el ID del usuario.", "error");
+      }
+    });
+
+    // Event handler para reactivar usuarios (solo super usuarios)
+    $("#TablaUsuarios tbody").on("click", ".reactivar-usuario-btn", function (e) {
+      e.preventDefault();
+      
+      if (!esSuperUsuarioActual) {
+        mostrarModalPermisosDenegados("Solo los super usuarios pueden reactivar usuarios.");
+        return;
+      }
+      
+      if (!tienePermiso('editar')) {
+        mostrarModalPermisosDenegados("No tienes permisos para reactivar usuarios.");
+        return;
+      }
+      
+      const idUsuario = $(this).data("idusuario");
+      const nombreUsuario = $(this).data("nombre");
+      if (idUsuario) {
+        reactivarUsuario(idUsuario, nombreUsuario);
       } else {
         console.error("ID de usuario no encontrado.");
         Swal.fire("Error", "No se pudo obtener el ID del usuario.", "error");
@@ -1261,6 +1300,57 @@ function eliminarUsuario(idUsuario, nombreUsuario) {
               mostrarModalPermisosDenegados(result.message);
             } else {
               Swal.fire("Error", result.message || "No se pudo desactivar.", "error");
+            }
+          }
+        })
+        .catch(error => {
+          if (error.message && error.message.includes('permisos')) {
+            mostrarModalPermisosDenegados(error.message);
+          } else {
+            Swal.fire("Error", "Error de conexión.", "error");
+          }
+        });
+    }
+  });
+}
+
+function reactivarUsuario(idUsuario, nombreUsuario) {
+  if (!esSuperUsuarioActual) {
+    mostrarModalPermisosDenegados("Solo los super usuarios pueden reactivar usuarios.");
+    return;
+  }
+
+  if (!tienePermiso('editar')) {
+    mostrarModalPermisosDenegados("No tienes permisos para reactivar usuarios.");
+    return;
+  }
+
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: `¿Deseas reactivar al usuario ${nombreUsuario}? Esta acción cambiará su estatus a ACTIVO.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#28a745",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Sí, reactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Usuarios/reactivarUsuario", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ idusuario: idUsuario }),
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.status) {
+            Swal.fire("¡Reactivado!", result.message, "success");
+            if (tablaUsuarios && tablaUsuarios.ajax) tablaUsuarios.ajax.reload(null, false);
+          } else {
+            if (result.message && result.message.includes('permisos')) {
+              mostrarModalPermisosDenegados(result.message);
+            } else {
+              Swal.fire("Error", result.message || "No se pudo reactivar.", "error");
             }
           }
         })

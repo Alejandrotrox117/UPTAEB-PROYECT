@@ -168,7 +168,7 @@ class Usuarios extends Controllers
                 // Obtener ID del usuario actual para filtrar correctamente
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                 
-                // Pasar el ID del usuario actual al modelo para que filtre correctamente
+                // Obtener usuarios (activos para usuarios normales, todos para super usuarios)
                 $arrResponse = $this->model->selectAllUsuariosActivos($idusuario);
 
                 if ($arrResponse['status']) {
@@ -664,6 +664,57 @@ class Usuarios extends Controllers
                 echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
             }
             exit();
+        }
+    }
+
+    /**
+     * Reactivar un usuario (solo super usuarios)
+     */
+    public function reactivarUsuario()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $idusuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
+                
+                // Solo super usuarios pueden reactivar usuarios
+                $esSuperUsuario = $this->model->verificarEsSuperUsuario($idusuarioSesion);
+                if (!$esSuperUsuario) {
+                    $arrResponse = array('status' => false, 'message' => 'Solo los super usuarios pueden reactivar usuarios');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+                
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'editar')) {
+                    $arrResponse = array('status' => false, 'message' => 'No tienes permisos para reactivar usuarios');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $json = file_get_contents('php://input');
+                $data = json_decode($json, true);
+
+                if (empty($data['idusuario']) || !is_numeric($data['idusuario'])) {
+                    $arrResponse = array('status' => false, 'message' => 'ID de usuario inválido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idusuario = intval($data['idusuario']);
+                
+                // Reactivar usuario directamente (el modelo se encarga de las validaciones)
+                $arrResponse = $this->model->reactivarUsuario($idusuario);
+                
+                if ($arrResponse['status']) {
+                    $this->bitacoraModel->registrarAccion('Usuarios', 'REACTIVAR', $idusuarioSesion, "Usuario ID: $idusuario reactivado");
+                }
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en reactivarUsuario: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
         }
     }
 }
