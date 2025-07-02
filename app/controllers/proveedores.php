@@ -246,7 +246,22 @@ class Proveedores extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                $arrResponse = $this->model->selectAllProveedores();
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Proveedores', 'ver')) {
+                    $response = array('status' => false, 'message' => 'No tienes permisos para ver proveedores', 'data' => []);
+                    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Obtener ID del usuario actual
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                
+                // Obtener proveedores (activos para usuarios normales, todos para super usuarios)
+                $arrResponse = $this->model->selectAllProveedores($idusuario);
+                
+                if ($arrResponse['status']) {
+                    $this->bitacoraModel->registrarAccion('Proveedores', 'CONSULTA_LISTADO', $idusuario);
+                }
+                
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
                 error_log("Error en getProveedoresData: " . $e->getMessage());
@@ -636,6 +651,127 @@ class Proveedores extends Controllers
                 error_log("Error en buscarProveedor: " . $e->getMessage());
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Reactivar un proveedor (solo super usuarios)
+     */
+    public function reactivarProveedor()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                error_log("=== Iniciando reactivarProveedor ===");
+                
+                $idusuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
+                error_log("Usuario de sesión: " . ($idusuarioSesion ?: 'NULL'));
+                
+                // Solo super usuarios pueden reactivar proveedores
+                $esSuperUsuario = $this->model->verificarEsSuperUsuario($idusuarioSesion);
+                error_log("Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
+                
+                if (!$esSuperUsuario) {
+                    error_log("Acceso denegado - no es super usuario");
+                    $arrResponse = array('status' => false, 'message' => 'Solo los super usuarios pueden reactivar proveedores');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+                
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Proveedores', 'editar')) {
+                    error_log("Acceso denegado - sin permisos de editar");
+                    $arrResponse = array('status' => false, 'message' => 'No tienes permisos para reactivar proveedores');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $json = file_get_contents('php://input');
+                $data = json_decode($json, true);
+                error_log("Datos recibidos: " . print_r($data, true));
+
+                if (empty($data['idproveedor']) || !is_numeric($data['idproveedor'])) {
+                    error_log("ID de proveedor inválido: " . print_r($data['idproveedor'] ?? 'NULL', true));
+                    $arrResponse = array('status' => false, 'message' => 'ID de proveedor inválido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idproveedor = intval($data['idproveedor']);
+                error_log("Intentando reactivar proveedor ID: $idproveedor");
+                
+                $arrResponse = $this->model->reactivarProveedor($idproveedor);
+                error_log("Resultado del modelo: " . print_r($arrResponse, true));
+                
+                if ($arrResponse['status']) {
+                    $this->bitacoraModel->registrarAccion('Proveedores', 'REACTIVAR', $idusuarioSesion, "Proveedor ID: $idproveedor reactivado");
+                    error_log("Acción registrada en bitácora");
+                }
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en reactivarProveedor: " . $e->getMessage());
+                error_log("Stack trace: " . $e->getTraceAsString());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage());
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function verificarSuperUsuario()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                error_log("=== Iniciando verificarSuperUsuario en Proveedores controller ===");
+                
+                // Debug: verificar si la sesión está iniciada
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                    error_log("Sesión iniciada en verificarSuperUsuario");
+                } else {
+                    error_log("Sesión ya estaba iniciada");
+                }
+                
+                // Debug: mostrar contenido de $_SESSION
+                error_log("Contenido de _SESSION: " . print_r($_SESSION, true));
+                
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                error_log("BitacoraHelper devolvió usuario ID: " . ($idusuario ?: 'NULL'));
+                
+                if (!$idusuario) {
+                    error_log("Usuario no autenticado - BitacoraHelper no devolvió usuario");
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'Usuario no autenticado',
+                        'es_super_usuario' => false,
+                        'usuario_id' => 0,
+                        'debug_session' => $_SESSION
+                    ]);
+                    die();
+                }
+                
+                error_log("Verificando usuario ID: $idusuario con esSuperAdmin");
+                
+                $esSuperAdmin = $this->model->verificarEsSuperUsuario($idusuario);
+                
+                error_log("Resultado esSuperAdmin: " . ($esSuperAdmin ? 'SÍ' : 'NO'));
+                
+                echo json_encode([
+                    'status' => true,
+                    'es_super_usuario' => $esSuperAdmin,
+                    'usuario_id' => $idusuario,
+                    'message' => 'Verificación completada'
+                ]);
+            } catch (Exception $e) {
+                error_log("Error en verificarSuperUsuario: " . $e->getMessage());
+                error_log("Stack trace: " . $e->getTraceAsString());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor: ' . $e->getMessage(),
+                    'es_super_usuario' => false,
+                    'usuario_id' => 0
+                ]);
             }
             die();
         }
