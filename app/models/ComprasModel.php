@@ -4,6 +4,8 @@ require_once "app/core/Mysql.php";
 
 class ComprasModel extends Mysql
 {
+    const SUPER_USUARIO_ROL_ID = 1; // IMPORTANTE: Ajustar según el ID real del rol de super usuario en tu BD
+    
     private $query;
     private $array;
     private $data;
@@ -166,13 +168,15 @@ class ComprasModel extends Mysql
     }
 
     // MÉTODOS PRIVADOS 
-    private function ejecutarConsultaTodasCompras()
+    private function ejecutarConsultaTodasCompras(int $idUsuarioSesion = 0)
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Por ahora, mostrar todas las compras (incluyendo inactivas)
+            // La lógica de permisos se maneja en el frontend
             $this->setQuery("SELECT 
                         c.idcompra, 
                         c.nro_compra, 
@@ -946,9 +950,9 @@ class ComprasModel extends Mysql
     }
 
     // MÉTODOS PÚBLICOS QUE SE LLAMAN EN EL CONTROLADOR
-    public function selectAllCompras()
+    public function selectAllCompras(int $idUsuarioSesion = 0)
     {
-        return $this->ejecutarConsultaTodasCompras();
+        return $this->ejecutarConsultaTodasCompras($idUsuarioSesion);
     }
 
     public function generarNumeroCompra()
@@ -1124,6 +1128,121 @@ class ComprasModel extends Mysql
         } finally {
             $conexion->disconnect();
         }
+    }
+
+    /**
+     * Verificar si un usuario es super usuario
+     */
+    private function esSuperUsuario(int $idusuario){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
+        try {
+            error_log("ComprasModel::esSuperUsuario - Verificando usuario ID: $idusuario");
+            error_log("ComprasModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
+            
+            $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
+            $this->setArray([$idusuario]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($usuario) {
+                $rolUsuario = intval($usuario['idrol']);
+                error_log("ComprasModel::esSuperUsuario - Rol del usuario: $rolUsuario");
+                $esSuperUsuario = $rolUsuario === self::SUPER_USUARIO_ROL_ID;
+                error_log("ComprasModel::esSuperUsuario - Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
+                return $esSuperUsuario;
+            } else {
+                error_log("ComprasModel::esSuperUsuario - Usuario no encontrado o inactivo");
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log("ComprasModel::esSuperUsuario - Error: " . $e->getMessage());
+            return false;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Verificar si el usuario actual es super usuario
+     */
+    private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
+        return $this->esSuperUsuario($idUsuarioSesion);
+    }
+
+    /**
+     * Verificar si un usuario es super usuario (método público)
+     */
+    public function verificarEsSuperUsuario(int $idusuario){
+        return $this->esSuperUsuario($idusuario);
+    }
+
+    /**
+     * Reactivar una compra (cambiar estatus a BORRADOR)
+     */
+    public function reactivarCompra(int $idcompra){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Verificar que la compra existe
+            $this->setQuery("SELECT idcompra, estatus_compra FROM compra WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $compra = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$compra) {
+                return [
+                    'status' => false,
+                    'message' => 'Compra no encontrada'
+                ];
+            }
+            
+            // Verificar si la compra está inactiva (el estado debe ser exactamente "inactivo")
+            if ($compra['estatus_compra'] !== 'inactivo') {
+                return [
+                    'status' => false,
+                    'message' => 'La compra no está inactiva'
+                ];
+            }
+            
+            // Reactivar compra (cambiar a BORRADOR)
+            $this->setQuery("UPDATE compra SET estatus_compra = 'BORRADOR', fecha_modificacion = NOW() WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute($this->getArray());
+            
+            if ($resultado && $stmt->rowCount() > 0) {
+                $resultado = [
+                    'status' => true,
+                    'message' => 'Compra reactivada exitosamente'
+                ];
+            } else {
+                $resultado = [
+                    'status' => false,
+                    'message' => 'No se pudo reactivar la compra'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("ComprasModel::reactivarCompra - Error: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error al reactivar compra: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 }
 ?>

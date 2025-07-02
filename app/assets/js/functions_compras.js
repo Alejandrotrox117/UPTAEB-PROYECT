@@ -172,11 +172,25 @@ function initializeDataTable() {
     var api = new $.fn.dataTable.Api(settings);
     var rowData = api.row(dataIndex).data();
 
-    return (
-      rowData &&
+    // Obtener el rol del usuario
+    var rolIdElement = document.getElementById('usuarioAuthRolId');
+    var rolId = rolIdElement ? parseInt(rolIdElement.value) : 0;
+    
+    console.log("FILTRO DATATABLE - Rol ID del usuario:", rolId);
+
+    // Solo los superusuarios (rol ID = 1) pueden ver compras inactivas
+    if (rolId === 1) {
+      console.log("FILTRO DATATABLE - Usuario superusuario: mostrando TODAS las compras");
+      return true;
+    }
+
+    // Para usuarios no superusuarios, ocultar compras inactivas
+    var esActiva = rowData &&
       rowData.estatus_compra &&
-      rowData.estatus_compra.toLowerCase() !== "inactivo"
-    );
+      rowData.estatus_compra.toLowerCase() !== "inactivo";
+    
+    console.log(`FILTRO DATATABLE - Compra ${rowData ? rowData.nro_compra : 'N/A'} - Estado: ${rowData ? rowData.estatus_compra : 'N/A'} - Es activa: ${esActiva} - Mostrar: ${esActiva}`);
+    return esActiva;
   });
 
   if ($.fn.DataTable.isDataTable("#TablaCompras")) {
@@ -415,6 +429,24 @@ function bindTableEvents() {
         "Función eliminarCompra no definida o idCompra no encontrado."
       );
       alert("Error: No se pudo obtener el ID de la compra para eliminarla.");
+    }
+  });
+
+  // Event handler para reactivar compras
+  $("#TablaCompras tbody").on("click", ".reactivar-compra-btn", function () {
+    if ((window.permisosCompras && !window.permisosCompras.verificarPermiso('reactivar')) || 
+        (window.verificarPermiso && !window.verificarPermiso('reactivar'))) {
+      return;
+    }
+    const idCompra = $(this).data("idcompra");
+    const nroCompra = $(this).data("nro");
+    if (idCompra && typeof reactivarCompra === "function") {
+      reactivarCompra(idCompra, nroCompra);
+    } else {
+      console.error(
+        "Función reactivarCompra no definida o idCompra no encontrado."
+      );
+      alert("Error: No se pudo obtener el ID de la compra para reactivarla.");
     }
   });
 
@@ -1640,231 +1672,61 @@ async function actualizarCompra(elements) {
   }
 }
 
-function calcularPesoNetoItemActualizar(item) {
-  if (item.idcategoria === 2) {
-    if (item.no_usa_vehiculo) {
-      return parseFloat(item.peso_neto_directo) || 0;
-    } else {
-      const bruto = parseFloat(item.peso_bruto) || 0;
-      const vehiculo = parseFloat(item.peso_vehiculo) || 0;
-      return Math.max(0, bruto - vehiculo);
-    }
-  }
-  return 0;
-}
+/**
+ * Reactivar una compra (cambiar estatus de INACTIVO a BORRADOR)
+ */
+function reactivarCompra(idCompra, nroCompra) {
+  console.log(`Intentando reactivar compra ID: ${idCompra}, Número: ${nroCompra}`);
 
-function calcularSubtotalLineaItemActualizar(item) {
-  const precioUnitario = parseFloat(item.precio_unitario) || 0;
-  let cantidadBase = 0;
-  if (item.idcategoria === 2) {
-    cantidadBase = calcularPesoNetoItemActualizar(item) || 0;
-  } else {
-    cantidadBase = parseFloat(item.cantidad_unidad) || 0;
-  }
-  const subtotalAntesDescuento = cantidadBase * precioUnitario;
-  const porcentajeDescuento = parseFloat(item.descuento) || 0;
-  let montoDescuento = 0;
-  let subtotalConDescuento = subtotalAntesDescuento;
-  if (porcentajeDescuento > 0 && porcentajeDescuento <= 100) {
-    montoDescuento = subtotalAntesDescuento * (porcentajeDescuento / 100);
-    subtotalConDescuento = subtotalAntesDescuento - montoDescuento;
-  }
-  item.subtotal_original_linea = subtotalAntesDescuento;
-  item.monto_descuento_linea = montoDescuento;
-  item.subtotal_linea = subtotalConDescuento;
-  item.subtotal_linea_bs = convertirAMonedaBaseActualizar(subtotalConDescuento, item.idmoneda_item);
-  return item.subtotal_linea;
-}
-
-function convertirAMonedaBaseActualizar(monto, idmoneda) {
-  if (idmoneda == 3) return monto;
-  const tasa = tasasMonedasActualizar[idmoneda] || 1;
-  return monto * tasa;
-}
-
-function calcularTotalesGeneralesActualizar() {
-  let subtotalGeneralBs = 0;
-  detalleCompraItemsActualizar.forEach((item) => {
-    subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
-  });
-  const totalGeneral = subtotalGeneralBs;
-  const totalGeneralDisplayActualizar = document.getElementById("total_general_display_actualizar");
-  const totalGeneralInputActualizar = document.getElementById("total_general_input_actualizar");
-  totalGeneralDisplayActualizar.value = `Bs. ${totalGeneral.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  totalGeneralInputActualizar.value = totalGeneral.toFixed(2);
-}
-
-function renderizarTablaDetalleActualizar() {
-  const cuerpoTablaDetalleCompraActualizar = document.getElementById("cuerpoTablaDetalleCompraActualizar");
-  cuerpoTablaDetalleCompraActualizar.innerHTML = "";
-  detalleCompraItemsActualizar.forEach((item, index) => {
-    const tr = document.createElement("tr");
-    tr.classList.add("border-b", "hover:bg-gray-50");
-    tr.dataset.index = index;
-
-    let infoEspecificaHtml = "";
-    if (item.idcategoria === 2) {
-      infoEspecificaHtml = `
-      <div class="space-y-1">
-        <div>
-          <label class="flex items-center text-xs">
-            <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_actualizar" ${item.no_usa_vehiculo ? "checked" : ""}> No usa vehículo
-          </label>
-        </div>
-        <div class="campos_peso_vehiculo_actualizar ${item.no_usa_vehiculo ? "hidden" : ""}">
-          P.Bru: 
-          <input type="number" step="0.01" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_bruto_actualizar" value="${item.peso_bruto || ""}" placeholder="0.00">
-          <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
-          P.Veh: 
-          <input type="number" step="0.01" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_vehiculo_actualizar" value="${item.peso_vehiculo || ""}" placeholder="0.00">
-          <button type="button" class="btnUltimoPesoRomanaVehiculoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
-          Descuento %: 
-          <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 descuento_actualizar" value="${item.descuento || ""}" placeholder="0.00">
-        </div>
-        <div class="campo_peso_neto_directo_actualizar ${!item.no_usa_vehiculo ? "hidden" : ""}">
-          P.Neto: <input type="number" step="0.01" class="w-20 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 peso_neto_directo_actualizar" value="${item.peso_neto_directo || ""}" placeholder="0.00">
-          <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
-          Descuento %: 
-          <input type="number" step="0.01" min="0" max="100" class="w-20 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 descuento_actualizar" value="${item.descuento || ""}" placeholder="0.00">
-        </div>
-        Neto Calc: <strong class="peso_neto_calculado_display_actualizar">${calcularPesoNetoItemActualizar(item).toFixed(2)}</strong>
-      </div>`;
-    } else {
-      infoEspecificaHtml = `
-        <div>
-          Cant: <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 cantidad_unidad_actualizar" value="${item.cantidad_unidad || "1"}" placeholder="1">
-        </div>`;
-    }
-
-    tr.innerHTML = `
-      <td class="py-1 px-1 text-xs">${item.nombre}</td>
-      <td class="py-1 px-1 text-xs">${infoEspecificaHtml}</td>
-      <td class="py-1 px-1 text-xs">
-          ${item.idmoneda_item} <input type="number" step="0.01" class="w-20 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-blue-500 precio_unitario_item_actualizar" value="${item.precio_unitario.toFixed(2)}" placeholder="0.00">
-      </td>
-      <td class="py-1 px-1 text-xs subtotal_linea_display_actualizar">${item.idmoneda_item} ${calcularSubtotalLineaItemActualizar(item).toFixed(2)}</td>
-      <td class="py-1 px-1 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleActualizar text-xs"></button></td>
-    `;
-    cuerpoTablaDetalleCompraActualizar.appendChild(tr);
-  });
-  addEventListenersToDetalleInputsActualizar();
-  calcularTotalesGeneralesActualizar();
-}
-
-function addEventListenersToDetalleInputsActualizar() {
-  document.querySelectorAll("#cuerpoTablaDetalleCompraActualizar tr").forEach((row) => {
-    const index = parseInt(row.dataset.index);
-    if (isNaN(index) || index >= detalleCompraItemsActualizar.length) return;
-    const item = detalleCompraItemsActualizar[index];
-
-    const btnUltimoPesoBruto = row.querySelector(".btnUltimoPesoRomanaBrutoActualizar");
-    if (btnUltimoPesoBruto) {
-      btnUltimoPesoBruto.addEventListener("click", async function () {
-        await manejarPesoRomanaActualizar(row, item, "bruto");
-      });
-    }
-
-    const btnUltimoPesoVehiculo = row.querySelector(".btnUltimoPesoRomanaVehiculoActualizar");
-    if (btnUltimoPesoVehiculo) {
-      btnUltimoPesoVehiculo.addEventListener("click", async function () {
-        await manejarPesoRomanaActualizar(row, item, "vehiculo");
-      });
-    }
-
-    const cbNoUsaVehiculo = row.querySelector(".no_usa_vehiculo_cb_actualizar");
-    if (cbNoUsaVehiculo) {
-      cbNoUsaVehiculo.addEventListener("change", function (e) {
-        item.no_usa_vehiculo = e.target.checked;
-        const camposPesoVehiculo = row.querySelector(".campos_peso_vehiculo_actualizar");
-        const campoPesoNetoDirecto = row.querySelector(".campo_peso_neto_directo_actualizar");
-        if (e.target.checked) {
-          camposPesoVehiculo.classList.add("hidden");
-          campoPesoNetoDirecto.classList.remove("hidden");
-          item.peso_vehiculo = 0;
-          item.peso_bruto = 0;
-        } else {
-          camposPesoVehiculo.classList.remove("hidden");
-          campoPesoNetoDirecto.classList.add("hidden");
-          item.peso_neto_directo = 0;
-        }
-        actualizarCalculosFilaActualizar(row, item);
-      });
-    }
-
-    row.querySelectorAll(".peso_vehiculo_actualizar, .peso_bruto_actualizar, .peso_neto_directo_actualizar, .cantidad_unidad_actualizar, .precio_unitario_item_actualizar, .descuento_actualizar").forEach((input) => {
-      input.addEventListener("input", function (e) {
-        const fieldName = e.target.classList.contains("peso_vehiculo_actualizar") ? "peso_vehiculo"
-          : e.target.classList.contains("peso_bruto_actualizar") ? "peso_bruto"
-          : e.target.classList.contains("peso_neto_directo_actualizar") ? "peso_neto_directo"
-          : e.target.classList.contains("cantidad_unidad_actualizar") ? "cantidad_unidad"
-          : e.target.classList.contains("descuento_actualizar") ? "descuento"
-          : "precio_unitario";
-
-        let valor = parseFloat(e.target.value) || 0;
-
-        if (fieldName === "descuento" && valor > 100) {
-          valor = 100;
-          e.target.value = 100;
-          Swal.fire("Atención", "El descuento no puede ser mayor al 100%", "warning");
-        }
-
-        item[fieldName] = valor;
-        actualizarCalculosFilaActualizar(row, item);
-      });
-    });
-
-    row.querySelector(".btnEliminarItemDetalleActualizar").addEventListener("click", function () {
-      detalleCompraItemsActualizar.splice(index, 1);
-      renderizarTablaDetalleActualizar();
-    });
-  });
-}
-
-async function manejarPesoRomanaActualizar(row, item, tipo) {
-  try {
-    console.log("Consultando romana...");
-    const response = await fetch("Compras/getUltimoPesoRomana");
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json();
-    if (data.status) {
-      if (tipo === "bruto") {
-        if (item.no_usa_vehiculo) {
-          item.peso_neto_directo = data.peso;
-          row.querySelector(".peso_neto_directo_actualizar").value = data.peso;
-        } else {
-          item.peso_bruto = data.peso;
-          row.querySelector(".peso_bruto_actualizar").value = data.peso;
-        }
-      } else {
-        item.peso_vehiculo = data.peso;
-        row.querySelector(".peso_vehiculo_actualizar").value = data.peso;
-      }
-      actualizarCalculosFilaActualizar(row, item);
-
-      await fetch("Compras/guardarPesoRomana", {
+  Swal.fire({
+    title: "¿Confirmar Reactivación?",
+    text: `¿Deseas reactivar la compra ${nroCompra}? Esta acción cambiará su estatus a BORRADOR.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#10B981",
+    cancelButtonColor: "#6B7280",
+    confirmButtonText: "Sí, Reactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      console.log(`Enviando petición de reactivación para compra ID: ${idCompra}`);
+      
+      fetch("Compras/reactivarCompra", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          peso: data.peso,
-          fecha: new Date().toISOString().slice(0, 19).replace("T", " "),
-        }),
-      });
-    } else {
-      Swal.fire("Atención", data.message || "No se pudo obtener el peso.", "warning");
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idcompra: idCompra }),
+      })
+        .then((response) => {
+          console.log(`Respuesta recibida del servidor:`, response);
+          return response.json();
+        })
+        .then((result) => {
+          console.log(`Resultado de reactivación:`, result);
+          if (result.status) {
+            Swal.fire(
+              "¡Reactivada!",
+              result.message || "La compra ha sido reactivada correctamente.",
+              "success"
+            ).then(() => {
+              recargarTablaCompras();
+            });
+          } else {
+            Swal.fire(
+              "Error",
+              result.message || "No se pudo reactivar la compra.",
+              "error"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error al reactivar compra:", error);
+          Swal.fire("Error", "Error de conexión al reactivar compra.", "error");
+        });
     }
-  } catch (e) {
-    console.error("Error completo:", e);
-    Swal.fire("Error", "Error al consultar la romana: " + e.message, "error");
-  }
-}
-
-function actualizarCalculosFilaActualizar(rowElement, item) {
-  const pesoNetoDisplay = rowElement.querySelector(".peso_neto_calculado_display_actualizar");
-  if (pesoNetoDisplay) {
-    pesoNetoDisplay.textContent = calcularPesoNetoItemActualizar(item).toFixed(2);
-  }
-  rowElement.querySelector(".subtotal_linea_display_actualizar").textContent = `${item.idmoneda_item} ${calcularSubtotalLineaItemActualizar(item).toFixed(2)}`;
-  calcularTotalesGeneralesActualizar();
+  });
 }
 
 function verCompra(idCompra) {
@@ -2092,8 +1954,48 @@ function cambiarEstadoCompra(idCompra, nuevoEstado) {
 
 document.addEventListener("DOMContentLoaded", function () {
   $(document).ready(function () {
+    console.log("MAIN - DOMContentLoaded ejecutándose");
+    
+    // Primero obtener permisos del archivo local
     obtenerPermisos();
-    initializeDataTable();
-    bindModalEvents();
+    
+    // Función para inicializar después de que los permisos estén listos
+    function inicializarConPermisos() {
+      console.log("MAIN - Inicializando con permisos cargados");
+      console.log("MAIN - window.permisosCompras:", window.permisosCompras);
+      
+      initializeDataTable();
+      bindModalEvents();
+    }
+    
+    // Si los permisos ya están disponibles, inicializar inmediatamente
+    if (window.permisosCompras && window.permisosCompras.permisosUsuario) {
+      console.log("MAIN - Permisos ya disponibles, inicializando inmediatamente");
+      inicializarConPermisos();
+    } else {
+      // Si no, esperar al evento de permisos cargados
+      console.log("MAIN - Esperando a que se carguen los permisos");
+      let permisosTimeout = setTimeout(() => {
+        console.warn("MAIN - Timeout esperando permisos, inicializando de todas formas");
+        inicializarConPermisos();
+      }, 1000);
+      
+      document.addEventListener('permisosComprasCargados', function() {
+        console.log("MAIN - Evento permisosComprasCargados recibido");
+        clearTimeout(permisosTimeout);
+        inicializarConPermisos();
+      }, { once: true });
+    }
   });
+});
+
+// Agregar listener para cambios en permisos
+document.addEventListener('permisosComprasCargados', function() {
+  console.log("EVENT - Permisos de compras cargados, redibujando tabla");
+  setTimeout(() => {
+    if (window.tablaCompras && typeof window.tablaCompras.draw === 'function') {
+      console.log("EVENT - Forzando redraw de tabla por cambio de permisos");
+      window.tablaCompras.draw();
+    }
+  }, 100);
 });

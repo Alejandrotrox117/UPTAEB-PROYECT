@@ -9,6 +9,9 @@ let permisosUsuario = {
 
 
 function obtenerPermisos() {
+    console.log("PERMISOS - Iniciando obtenerPermisos()");
+    console.log("PERMISOS - window.permisosCompras:", window.permisosCompras);
+    
     if (window.permisosCompras && typeof window.permisosCompras === 'object' && window.permisosCompras.ver !== undefined) {
         permisosUsuario = {
             ver: window.permisosCompras.ver || false,
@@ -18,6 +21,7 @@ function obtenerPermisos() {
             exportar: window.permisosCompras.exportar || false,
             acceso_total: window.permisosCompras.acceso_total || false
         };
+        console.log("PERMISOS - Permisos obtenidos desde window.permisosCompras:", permisosUsuario);
     } else {
         console.warn('No se encontraron permisos de compras en window.permisosCompras');
         try {
@@ -35,11 +39,35 @@ function obtenerPermisos() {
                     exportar: false,
                     acceso_total: false
                 };
+                console.log("PERMISOS - Permisos obtenidos desde inputs hidden:", permisosUsuario);
             }
         } catch (e) {
             console.error('Error al obtener permisos:', e);
         }
     }
+    
+    console.log("PERMISOS - Permisos finales obtenidos:", permisosUsuario);
+    
+    // Asignar también a window.permisosCompras.permisosUsuario para que sea accesible desde functions_compras.js
+    if (!window.permisosCompras) {
+        window.permisosCompras = {};
+    }
+    window.permisosCompras.permisosUsuario = permisosUsuario;
+    console.log("PERMISOS - Asignado a window.permisosCompras.permisosUsuario:", window.permisosCompras.permisosUsuario);
+    
+    // Disparar evento personalizado para informar que los permisos están cargados
+    const evento = new CustomEvent('permisosComprasCargados', { 
+        detail: permisosUsuario 
+    });
+    document.dispatchEvent(evento);
+    
+    // Después de obtener permisos, forzar redraw de la tabla si existe
+    setTimeout(() => {
+        if (window.tablaCompras && typeof window.tablaCompras.draw === 'function') {
+            console.log("PERMISOS - Forzando redraw de tabla después de cargar permisos");
+            window.tablaCompras.draw();
+        }
+    }, 100);
 }
 
 function generarBotonesAccionConPermisos(data, type, row) {
@@ -47,6 +75,19 @@ function generarBotonesAccionConPermisos(data, type, row) {
     var nroCompra = row.nro_compra || "Sin número";
     var estadoActual = row.estatus_compra || "";
     var botones = [];
+
+    // Obtener el rol del usuario
+    var rolId = document.getElementById('usuarioAuthRolId') ? 
+      parseInt(document.getElementById('usuarioAuthRolId').value) : 0;
+    
+    // Verificar si es superusuario
+    var esSuperusuario = rolId === 1;
+
+    // Verificar si la compra está inactiva
+    var esCompraInactiva = estadoActual.toLowerCase() === "inactivo";
+    
+    // Debug log
+    console.log(`Generando botones para compra ${nroCompra}: Estado=${estadoActual}, EsInactiva=${esCompraInactiva}, RolId=${rolId}, EsSuperusuario=${esSuperusuario}`);
 
     if (permisosUsuario.ver || permisosUsuario.acceso_total) {
         botones.push(`
@@ -60,6 +101,28 @@ function generarBotonesAccionConPermisos(data, type, row) {
         `);
     }
 
+    // Si la compra está inactiva, solo mostrar botón de reactivar para superusuarios
+    if (esCompraInactiva) {
+        console.log(`Compra ${nroCompra} está INACTIVA`);
+        if (esSuperusuario) {
+            console.log(`Agregando botón de reactivar para compra ${nroCompra} (usuario superusuario)`);
+            botones.push(`
+                <button
+                    class="reactivar-compra-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
+                    data-idcompra="${idCompra}"
+                    data-nro="${nroCompra}"
+                    title="Reactivar Compra"
+                >
+                    <i class="fas fa-undo fa-fw text-base"></i>
+                </button>
+            `);
+        } else {
+            console.log(`No se agrega botón de reactivar para compra ${nroCompra} (usuario no es superusuario)`);
+        }
+        return `<div class="flex space-x-1 justify-center">${botones.join('')}</div>`;
+    }
+
+    // Para compras activas, mostrar botones normales
     if ((permisosUsuario.editar || permisosUsuario.acceso_total) && estadoActual.toUpperCase() === "BORRADOR") {
         botones.push(`
             <button
@@ -191,6 +254,17 @@ function verificarPermiso(accion) {
                 return false;
             }
             break;
+        case 'reactivar':
+            if (!permisosUsuario.eliminar && !permisosUsuario.acceso_total) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso Denegado',
+                    text: 'No tiene permisos para reactivar compras.',
+                    confirmButtonColor: '#3085d6'
+                });
+                return false;
+            }
+            break;
         case 'ver':
             if (!permisosUsuario.ver && !permisosUsuario.acceso_total) {
                 Swal.fire({
@@ -227,6 +301,9 @@ document.addEventListener("DOMContentLoaded", function () {
             obtenerPermisos();
         }, 100);
     }
+    
+    // Debug: Log de permisos obtenidos
+    console.log("Permisos de compras cargados:", permisosUsuario);
 });
 
 window.permisosCompras = window.permisosCompras || {};

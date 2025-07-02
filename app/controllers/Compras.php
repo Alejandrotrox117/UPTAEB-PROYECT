@@ -66,13 +66,29 @@ class Compras extends Controllers
         $data['page_name'] = "Listado de Compras";
         $data['page_functions_js'] = "functions_compras.js";
         $data['permisos'] = $permisos;
+        
+        // Agregar información del usuario autenticado para JavaScript
+        $data['idRolUsuarioAutenticado'] = $_SESSION['rol_id'] ?? 0;
+        $data['rolUsuarioAutenticado'] = $_SESSION['rol_nombre'] ?? '';
+        
         $this->views->getView($this, "compras", $data);
     }
 
     
     public function getComprasDataTable(){
         header('Content-Type: application/json');
-        $arrData = $this->get_model()->selectAllCompras();
+        
+        // Verificar permiso específico para ver
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver')) {
+            echo json_encode(['data' => []], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        // Obtener ID del usuario actual
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        
+        // Obtener compras (activas para usuarios normales, todas para super usuarios)
+        $arrData = $this->get_model()->selectAllCompras($idusuario);
         echo json_encode(['data' => $arrData], JSON_UNESCAPED_UNICODE);
         exit();
     }
@@ -386,6 +402,55 @@ class Compras extends Controllers
             $response = ["status"  => true,"message" => "Compra marcada como inactiva correctamente."];
         } else {
             $response = ["status"  => false,"message" => "Error al marcar la compra como inactiva."];
+        }
+
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public function reactivarCompra(){
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(
+                ["status"  => false,"message" => "Método no permitido."],JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // Verificar que solo superusuarios (rol ID = 1) pueden reactivar compras
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        $rolId = $_SESSION['rol_id'] ?? 0;
+        
+        if ($rolId != 1) {
+            echo json_encode([
+                'status' => false, 
+                'message' => 'Solo los superusuarios pueden reactivar compras.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        $idcompra = isset($data['idcompra']) ? intval($data['idcompra']) : 0;
+
+        if ($idcompra <= 0) {
+            echo json_encode(
+                ["status"  => false,"message" => "ID de compra no válido."],JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $requestReactivar = $this->get_model()->reactivarCompra($idcompra);
+
+        if ($requestReactivar['status']) {
+            // Registrar en bitácora la reactivación de la compra
+            $resultadoBitacora = $this->bitacoraModel->registrarAccion('compras', 'REACTIVAR', $idusuario);
+            
+            if (!$resultadoBitacora) {
+                error_log("Warning: No se pudo registrar en bitácora la reactivación de la compra ID: $idcompra");
+            }
+
+            $response = ["status"  => true,"message" => "Compra reactivada correctamente."];
+        } else {
+            $response = ["status"  => false,"message" => $requestReactivar['message'] ?? "Error al reactivar la compra."];
         }
 
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
