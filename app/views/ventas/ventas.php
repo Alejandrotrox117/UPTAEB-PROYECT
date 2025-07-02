@@ -78,15 +78,24 @@ $permisos = $data['permisos'] ?? []; ?>
           <!-- Sección Datos Generales -->
           <div class="mb-4">
             <h4 class="pb-2 mb-3 text-base font-semibold text-gray-700 border-b">Datos Generales</h4>
-            <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-1">
               <div>
                 <label for="fecha_venta_modal" class="block text-sm font-medium text-gray-700">Fecha de Venta <span class="text-red-500">*</span></label>
                 <input type="date" id="fecha_venta_modal" name="fecha_venta" class="w-full px-4 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" />
                 <div id="error-fecha_venta_modal-vacio" class="mt-1 hidden text-xs text-red-500"></div>
                 <div id="error-fecha_venta_modal-fechaPosterior" class="mt-1 hidden text-xs text-red-500"></div>
               </div>
-              <div>
-                <label for="idmoneda_general" class="block text-sm font-medium text-gray-700">Moneda <span class="text-red-500">*</span></label>
+              <!-- Información de moneda fija -->
+              <div class="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <div class="flex items-center">
+                  <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                  <span class="text-sm text-blue-700">
+                    <strong>Moneda:</strong> VES (Bolívares) - Seleccionada automáticamente
+                  </span>
+                </div>
+              </div>
+              <!-- Campo de moneda oculto con valor fijo VES -->
+              <div style="display: none;">
                 <select id="idmoneda_general" data-codigo name="idmoneda_general" class="w-full px-4 py-2 text-sm bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
                   <option value="">Seleccione...</option>
                 </select>
@@ -180,7 +189,7 @@ $permisos = $data['permisos'] ?? []; ?>
                 </select>
                 <!-- <div id="error-select_producto_agregar_modal-vacio" class="mt-1 hidden text-xs text-red-500"></div> -->
               </div>
-              <button type="button" id="agregarDetalleBtn" class="w-full px-4 py-2 text-sm font-medium text-black bg-indigo-500 rounded-lg hover:bg-indigo-600 sm:w-auto transition">
+              <button type="button" id="agregarDetalleBtn" class="w-full px-4 py-2 text-sm text-white font-medium bg-green-500 rounded-lg  sm:w-auto transition">
                 <i class="mr-2 fas fa-plus"></i>Agregar al Detalle
               </button>
             </div>
