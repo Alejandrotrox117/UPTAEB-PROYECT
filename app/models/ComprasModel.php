@@ -4,7 +4,7 @@ require_once "app/core/Mysql.php";
 
 class ComprasModel extends Mysql
 {
-    const SUPER_USUARIO_ROL_ID = 1; // IMPORTANTE: Ajustar según el ID real del rol de super usuario en tu BD
+    const SUPER_USUARIO_ROL_ID = 1; // ID del rol de super usuario
     
     private $query;
     private $array;
@@ -175,8 +175,6 @@ class ComprasModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            // Por ahora, mostrar todas las compras (incluyendo inactivas)
-            // La lógica de permisos se maneja en el frontend
             $this->setQuery("SELECT 
                         c.idcompra, 
                         c.nro_compra, 
@@ -903,7 +901,6 @@ class ComprasModel extends Mysql
         }
     }
     
-    // MÉTODO PRIVADO
     private function ejecutarGuardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
     {
         $conexion = new Conexion();
@@ -948,6 +945,233 @@ class ComprasModel extends Mysql
             $conexion->disconnect();
         }
     }
+    private function ejecutarBusquedaPermisosUsuarioModulo($idusuario, $modulo)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            $this->setQuery("
+                SELECT 
+                    u.idusuario,
+                    u.usuario,
+                    u.idrol,
+                    r.nombre as rol_nombre,
+                    m.titulo as modulo_nombre,
+                    p.idpermiso,
+                    p.nombre_permiso,
+                    rmp.activo,
+                    m.estatus as modulo_estatus
+                FROM usuario u
+                INNER JOIN roles r ON u.idrol = r.idrol
+                INNER JOIN rol_modulo_permisos rmp ON r.idrol = rmp.idrol
+                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
+                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
+                WHERE u.idusuario = ? 
+                AND LOWER(m.titulo) = LOWER(?)
+                AND rmp.activo = 1
+            ");
+            
+            $this->setArray([$idusuario, $modulo]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            return $this->getResult();
+            
+        } catch (Exception $e) {
+            error_log("ComprasModel::ejecutarBusquedaPermisosUsuarioModulo - Error: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarBusquedaTodosPermisosRol($idrol)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            $this->setQuery("
+                SELECT 
+                    m.titulo as modulo,
+                    p.nombre_permiso as permiso,
+                    rmp.activo
+                FROM rol_modulo_permisos rmp
+                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
+                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
+                WHERE rmp.idrol = ?
+                AND rmp.activo = 1
+                ORDER BY m.titulo, p.idpermiso
+            ");
+            
+            $this->setArray([$idrol]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            
+            return $this->getResult();
+            
+        } catch (Exception $e) {
+            error_log("ComprasModel::ejecutarBusquedaTodosPermisosRol - Error: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarBusquedaEstadoCompra($idcompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("SELECT estatus_compra FROM compra WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $result ? $result['estatus_compra'] : null;
+            
+        } catch (Exception $e) {
+            error_log("ComprasModel::ejecutarBusquedaEstadoCompra - Error: " . $e->getMessage());
+            return null;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarBusquedaCompraCompleta($idcompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("SELECT 
+                        c.idcompra,
+                        c.nro_compra,
+                        c.fecha,
+                        c.total_general,
+                        c.observaciones_compra,
+                        c.estatus_compra,
+                        p.nombre as nombrePersona,
+                        p.apellido as apellidoPersona,
+                        p.identificacion as personaId,
+                        p.direccion,
+                        p.telefono_principal as telefono,
+                        p.correo_electronico as email
+                    FROM compra c
+                    LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor  
+                    WHERE c.idcompra = ?");
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idcompra]);
+            $compra = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$compra) {
+                return [];
+            }
+
+            $this->setQuery("SELECT 
+                        dc.cantidad,
+                        dc.precio_unitario_compra as precio,
+                        dc.subtotal_linea,
+                        dc.idproducto as productoId,
+                        COALESCE(p.nombre, dc.descripcion_temporal_producto) as nombreProducto,
+                        p.descripcion as modelo,
+                        '' as color,
+                        '' as capacidad
+                    FROM detalle_compra dc
+                    LEFT JOIN producto p ON dc.idproducto = p.idproducto
+                    WHERE dc.idcompra = ?");
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idcompra]);
+            $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'solicitud' => $compra,
+                'detalles' => $detalles,
+                'pago' => [] 
+            ];
+
+        } catch (PDOException $e) {
+            error_log("ComprasModel::ejecutarBusquedaCompraCompleta - Error: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarReactivacionCompra(int $idcompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Verificar que la compra existe
+            $this->setQuery("SELECT idcompra, estatus_compra FROM compra WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $compra = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$compra) {
+                return [
+                    'status' => false,
+                    'message' => 'Compra no encontrada'
+                ];
+            }
+            
+            // Verificar si la compra está inactiva (el estado debe ser exactamente "inactivo")
+            if ($compra['estatus_compra'] !== 'inactivo') {
+                return [
+                    'status' => false,
+                    'message' => 'La compra no está inactiva'
+                ];
+            }
+            
+            // Reactivar compra (cambiar a BORRADOR)
+            $this->setQuery("UPDATE compra SET estatus_compra = 'BORRADOR', fecha_modificacion = NOW() WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute($this->getArray());
+            
+            if ($resultado && $stmt->rowCount() > 0) {
+                return [
+                    'status' => true,
+                    'message' => 'Compra reactivada exitosamente'
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'No se pudo reactivar la compra'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("ComprasModel::ejecutarReactivacionCompra - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al reactivar compra: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
 
     // MÉTODOS PÚBLICOS QUE SE LLAMAN EN EL CONTROLADOR
     public function selectAllCompras(int $idUsuarioSesion = 0)
@@ -1038,211 +1262,34 @@ class ComprasModel extends Mysql
         return $this->ejecutarBusquedaProveedorPorId($idproveedor);
     }
 
-    // MÉTODO PÚBLICO
     public function guardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
     {
         return $this->ejecutarGuardarPesoRomana($peso, $fecha, $estatus);
     }
 
-    public function selectCompra($idcompra){
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-
-            $this->setQuery("SELECT 
-                        c.idcompra,
-                        c.nro_compra,
-                        c.fecha,
-                        c.total_general,
-                        c.observaciones_compra,
-                        c.estatus_compra,
-                        p.nombre as nombrePersona,
-                        p.apellido as apellidoPersona,
-                        p.identificacion as personaId,
-                        p.direccion,
-                        p.telefono_principal as telefono,
-                        p.correo_electronico as email
-                    FROM compra c
-                    LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor  
-                    WHERE c.idcompra = ?");
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$idcompra]);
-            $compra = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$compra) {
-                return [];
-            }
-
-            $this->setQuery("SELECT 
-                        dc.cantidad,
-                        dc.precio_unitario_compra as precio,
-                        dc.subtotal_linea,
-                        dc.idproducto as productoId,
-                        COALESCE(p.nombre, dc.descripcion_temporal_producto) as nombreProducto,
-                        p.descripcion as modelo,
-                        '' as color,
-                        '' as capacidad
-                    FROM detalle_compra dc
-                    LEFT JOIN producto p ON dc.idproducto = p.idproducto
-                    WHERE dc.idcompra = ?");
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$idcompra]);
-            $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return [
-                'solicitud' => $compra,
-                'detalles' => $detalles,
-                'pago' => [] 
-            ];
-
-        } catch (PDOException $e) {
-            error_log("ComprasModel::selectCompra - Error: " . $e->getMessage());
-            return [];
-        } finally {
-            $conexion->disconnect();
-        }
+    public function obtenerPermisosUsuarioModulo($idusuario, $modulo)
+    {
+        return $this->ejecutarBusquedaPermisosUsuarioModulo($idusuario, $modulo);
     }
 
-    public function obtenerEstadoCompra($idcompra) {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $this->setQuery("SELECT estatus_compra FROM compra WHERE idcompra = ?");
-            $this->setArray([$idcompra]);
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            return $result ? $result['estatus_compra'] : null;
-            
-        } catch (Exception $e) {
-            error_log("Error al obtener estado de compra: " . $e->getMessage());
-            return null;
-        } finally {
-            $conexion->disconnect();
-        }
+    public function obtenerTodosPermisosRol($idrol)
+    {
+        return $this->ejecutarBusquedaTodosPermisosRol($idrol);
     }
 
-    /**
-     * Verificar si un usuario es super usuario
-     */
-    private function esSuperUsuario(int $idusuario){
-        $conexion = new Conexion();
-        $conexion->connect();
-        $dbSeguridad = $conexion->get_conectSeguridad();
-
-        try {
-            error_log("ComprasModel::esSuperUsuario - Verificando usuario ID: $idusuario");
-            error_log("ComprasModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
-            
-            $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
-            $this->setArray([$idusuario]);
-            
-            $stmt = $dbSeguridad->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($usuario) {
-                $rolUsuario = intval($usuario['idrol']);
-                error_log("ComprasModel::esSuperUsuario - Rol del usuario: $rolUsuario");
-                $esSuperUsuario = $rolUsuario === self::SUPER_USUARIO_ROL_ID;
-                error_log("ComprasModel::esSuperUsuario - Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
-                return $esSuperUsuario;
-            } else {
-                error_log("ComprasModel::esSuperUsuario - Usuario no encontrado o inactivo");
-                return false;
-            }
-        } catch (Exception $e) {
-            error_log("ComprasModel::esSuperUsuario - Error: " . $e->getMessage());
-            return false;
-        } finally {
-            $conexion->disconnect();
-        }
+    public function selectCompra($idcompra)
+    {
+        return $this->ejecutarBusquedaCompraCompleta($idcompra);
     }
 
-    /**
-     * Verificar si el usuario actual es super usuario
-     */
-    private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
-        return $this->esSuperUsuario($idUsuarioSesion);
+    public function obtenerEstadoCompra($idcompra)
+    {
+        return $this->ejecutarBusquedaEstadoCompra($idcompra);
     }
 
-    /**
-     * Verificar si un usuario es super usuario (método público)
-     */
-    public function verificarEsSuperUsuario(int $idusuario){
-        return $this->esSuperUsuario($idusuario);
-    }
-
-    /**
-     * Reactivar una compra (cambiar estatus a BORRADOR)
-     */
-    public function reactivarCompra(int $idcompra){
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            // Verificar que la compra existe
-            $this->setQuery("SELECT idcompra, estatus_compra FROM compra WHERE idcompra = ?");
-            $this->setArray([$idcompra]);
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $compra = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$compra) {
-                return [
-                    'status' => false,
-                    'message' => 'Compra no encontrada'
-                ];
-            }
-            
-            // Verificar si la compra está inactiva (el estado debe ser exactamente "inactivo")
-            if ($compra['estatus_compra'] !== 'inactivo') {
-                return [
-                    'status' => false,
-                    'message' => 'La compra no está inactiva'
-                ];
-            }
-            
-            // Reactivar compra (cambiar a BORRADOR)
-            $this->setQuery("UPDATE compra SET estatus_compra = 'BORRADOR', fecha_modificacion = NOW() WHERE idcompra = ?");
-            $this->setArray([$idcompra]);
-            
-            $stmt = $db->prepare($this->getQuery());
-            $resultado = $stmt->execute($this->getArray());
-            
-            if ($resultado && $stmt->rowCount() > 0) {
-                $resultado = [
-                    'status' => true,
-                    'message' => 'Compra reactivada exitosamente'
-                ];
-            } else {
-                $resultado = [
-                    'status' => false,
-                    'message' => 'No se pudo reactivar la compra'
-                ];
-            }
-            
-        } catch (Exception $e) {
-            error_log("ComprasModel::reactivarCompra - Error: " . $e->getMessage());
-            $resultado = [
-                'status' => false,
-                'message' => 'Error al reactivar compra: ' . $e->getMessage()
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-
-        return $resultado;
+    public function reactivarCompra(int $idcompra)
+    {
+        return $this->ejecutarReactivacionCompra($idcompra);
     }
 }
 ?>

@@ -44,17 +44,13 @@ class Compras extends Controllers
     }
 
     public function index(){
-        // Verificar permiso específico para ver
         if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver')) {
             $this->views->getView($this, "permisos");
             exit();
         }
-
-        // Registrar acceso al módulo en bitácora
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
         BitacoraHelper::registrarAccesoModulo('compras', $idusuario, $this->bitacoraModel);
 
-        // Obtener permisos del usuario para el módulo
         $permisos = [
             'puedeVer' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver'),
             'puedeCrear' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'crear'),
@@ -792,56 +788,10 @@ class Compras extends Controllers
         $debug['verificacion_editar'] = PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'editar');
         $debug['verificacion_eliminar'] = PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar');
 
-        // Consulta directa a la base de datos
+        // Obtener información de permisos usando el modelo
         try {
-            $conexion = new Conexion();
-            $conexion->connect();
-            $db = $conexion->get_conectSeguridad();
-
-            $query = "
-                SELECT 
-                    u.idusuario,
-                    u.usuario,
-                    u.idrol,
-                    r.nombre as rol_nombre,
-                    m.titulo as modulo_nombre,
-                    p.idpermiso,
-                    p.nombre_permiso,
-                    rmp.activo,
-                    m.estatus as modulo_estatus
-                FROM usuario u
-                INNER JOIN roles r ON u.idrol = r.idrol
-                INNER JOIN rol_modulo_permisos rmp ON r.idrol = rmp.idrol
-                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
-                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
-                WHERE u.idusuario = ? 
-                AND LOWER(m.titulo) = LOWER('compras')
-                AND rmp.activo = 1
-            ";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$debug['session_usuario_id']]);
-            $debug['consulta_directa'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $query2 = "
-                SELECT 
-                    m.titulo as modulo,
-                    p.nombre_permiso as permiso,
-                    rmp.activo
-                FROM rol_modulo_permisos rmp
-                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
-                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
-                WHERE rmp.idrol = ?
-                AND rmp.activo = 1
-                ORDER BY m.titulo, p.idpermiso
-            ";
-
-            $stmt2 = $db->prepare($query2);
-            $stmt2->execute([$debug['session_idrol']]);
-            $debug['todos_permisos_rol'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
-
-            $conexion->disconnect();
-
+            $debug['consulta_directa'] = $this->get_model()->obtenerPermisosUsuarioModulo($debug['session_usuario_id'], 'compras');
+            $debug['todos_permisos_rol'] = $this->get_model()->obtenerTodosPermisosRol($debug['session_idrol']);
         } catch (Exception $e) {
             $debug['error_consulta'] = $e->getMessage();
         }
