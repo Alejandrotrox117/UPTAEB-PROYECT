@@ -416,7 +416,7 @@ class Compras extends Controllers
             exit;
         }
 
-        // Verificar que solo superusuarios (rol ID = 1) pueden reactivar compras
+        // Verificar que solo superusuarios pueden reactivar compras
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
         $rolId = $_SESSION['rol_id'] ?? 0;
         
@@ -848,6 +848,187 @@ class Compras extends Controllers
 
         header('Content-Type: application/json');
         echo json_encode($debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    public function updateCompra(){
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(
+                ['status' => false, 'message' => 'Método no permitido.'],
+                JSON_UNESCAPED_UNICODE
+            );
+            exit();
+        }
+
+        // Verificar permisos de edición
+        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'editar')) {
+            echo json_encode([
+                'status' => false, 
+                'message' => 'No tiene permisos para editar compras.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        $modelo = $this->get_model();
+        $response = ['status' => false, 'message' => 'Error desconocido.'];
+
+        // Obtener ID de compra a actualizar
+        $idcompra = intval($_POST['idcompra'] ?? 0);
+        if ($idcompra <= 0) {
+            $response['message'] = 'ID de compra no válido.';
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        // Verificar que la compra existe y se puede editar
+        $compraExistente = $modelo->getCompraById($idcompra);
+        if (!$compraExistente) {
+            $response['message'] = 'Compra no encontrada.';
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        // Solo se pueden editar compras en estado BORRADOR
+        if ($compraExistente['estatus_compra'] !== 'BORRADOR') {
+            $response['message'] = 'Solo se pueden editar compras en estado BORRADOR.';
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
+        date_default_timezone_set('America/Caracas');
+        $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
+        $observaciones_compra = $_POST['observaciones_compra'] ?? '';
+        $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
+
+        if (empty($idproveedor)) {
+            $response['message'] = 'Falta seleccionar proveedor.';
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        if (empty($fecha_compra)) {
+            $response['message'] = 'Falta fecha de compra.';
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        if (!isset($_POST['productos_detalle'])) {
+            $response['message'] = 'Faltan productos en el detalle.';
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        $idmoneda_general = 3;
+        $subtotal_general_compra = $total_general_compra;
+        $descuento_porcentaje_general = 0;
+        $monto_descuento_general = 0;
+
+        $datosCompra = [
+            'idcompra' => $idcompra,
+            'fecha_compra' => $fecha_compra,
+            'idproveedor' => $idproveedor,
+            'idmoneda_general' => $idmoneda_general,
+            'subtotal_general_compra' => $subtotal_general_compra,
+            'descuento_porcentaje_compra' => $descuento_porcentaje_general,
+            'monto_descuento_compra' => $monto_descuento_general,
+            'total_general_compra' => $total_general_compra,
+            'observaciones_compra' => $observaciones_compra,
+        ];
+
+        $detallesCompraInput = json_decode($_POST['productos_detalle'], true);
+        if (json_last_error() !== JSON_ERROR_NONE || empty($detallesCompraInput)) {
+            $response['message'] = 'No hay productos en el detalle o el formato es incorrecto.';
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        $detallesParaActualizar = [];
+        foreach ($detallesCompraInput as $item) {
+            $idProductoItem = intval($item['idproducto'] ?? 0);
+            if ($idProductoItem <= 0) {
+                $response['message'] = 'ID de producto inválido en el detalle.';
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+
+            $productoInfo = $modelo->getProductoById($idProductoItem);
+            if (!$productoInfo) {
+                $response['message'] = 'Producto no encontrado: ID ' . $idProductoItem;
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+
+            $cantidad_final = floatval($item['cantidad'] ?? 0);
+            $peso_vehiculo = isset($item['peso_vehiculo']) ? floatval($item['peso_vehiculo']) : null;
+            $peso_bruto = isset($item['peso_bruto']) ? floatval($item['peso_bruto']) : null;
+            $peso_neto = isset($item['peso_neto']) ? floatval($item['peso_neto']) : null;
+
+            if ($cantidad_final <= 0) {
+                $response['message'] = 'Cantidad debe ser mayor a cero para: ' . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+            if (floatval($item['precio_unitario_compra'] ?? 0) <= 0) {
+                $response['message'] = 'Precio debe ser mayor a cero para: ' . htmlspecialchars($productoInfo['nombre'], ENT_QUOTES, 'UTF-8');
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+
+            $moneda_detalle = !empty($item['moneda']) ? intval($item['moneda']) : 3;
+            if ($moneda_detalle <= 0) {
+                $moneda_detalle = 3;
+            }
+
+            $detallesParaActualizar[] = [
+                'idproducto' => $productoInfo['idproducto'],
+                'descripcion_temporal_producto' => $item['nombre_producto'] ?? $productoInfo['nombre'],
+                'cantidad' => $cantidad_final,
+                'descuento' => floatval($item['descuento'] ?? 0),
+                'precio_unitario_compra' => floatval($item['precio_unitario_compra'] ?? 0),
+                'idmoneda_detalle' => $moneda_detalle,
+                'subtotal_linea' => floatval($item['subtotal_linea'] ?? 0),
+                'subtotal_original_linea' => floatval($item['subtotal_original_linea'] ?? 0),
+                'monto_descuento_linea' => floatval($item['monto_descuento_linea'] ?? 0),
+                'peso_vehiculo' => $peso_vehiculo,
+                'peso_bruto' => $peso_bruto,
+                'peso_neto' => $peso_neto,
+            ];
+        }
+
+        if (empty($detallesParaActualizar)) {
+            $response['message'] = 'No se procesaron productos válidos.';
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        try {
+            $resultadoActualizacion = $modelo->actualizarCompra($idcompra, $datosCompra, $detallesParaActualizar);
+        } catch (Exception $e) {
+            $response = ['status' => false, 'message' => 'Error técnico: ' . $e->getMessage()];
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        if ($resultadoActualizacion) {
+            // Registrar en bitácora la actualización de la compra
+            $resultadoBitacora = $this->bitacoraModel->registrarAccion('compras', 'ACTUALIZAR', $idusuario);
+            
+            if (!$resultadoBitacora) {
+                error_log("Warning: No se pudo registrar en bitácora la actualización de la compra ID: $idcompra");
+            }
+
+            $response = [
+                'status' => true,
+                'message' => 'Compra actualizada correctamente.',
+                'idcompra' => $idcompra,
+            ];
+        } else {
+            $response = ['status' => false, 'message' => 'Error al actualizar la compra.'];
+        }
+
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
 }
