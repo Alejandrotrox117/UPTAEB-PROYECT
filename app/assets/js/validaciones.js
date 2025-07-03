@@ -12,7 +12,7 @@ const expresiones = {
   password: /^.{6,16}$/,
   textoGeneral: /^.{2,100}$/,
   genero: /^(MASCULINO|FEMENINO|OTRO)$/,
-  
+  usuario: /^[a-zA-Z0-9_.-]{3,15}$/,
   
   precio: /^\d+(\.\d{1,4})?$/,                    
   cantidad: /^\d+(\.\d{1,3})?$/,                  

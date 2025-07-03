@@ -81,7 +81,7 @@
         
         <div class="text-center">
             <a 
-                href="resetpass.php" 
+                href="<?= base_url() ?>/login/resetPassword" 
                 class="text-blue-600 hover:text-purple-600 text-xs hover:underline transition-colors"
             >
                 ¿Olvidaste tu contraseña?

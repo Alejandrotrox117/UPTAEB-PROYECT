@@ -2,9 +2,9 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require 'helpers\phpmailer\Exception.php';
-require 'helpers\phpmailer\PHPMailer.php';
-require 'helpers\phpmailer\SMTP.php';
+require 'app/libs/phpmailer/src/Exception.php';
+require 'app/libs/phpmailer/src/PHPMailer.php';
+require 'app/libs/phpmailer/src/SMTP.php';
 date_default_timezone_set('America/Caracas');
 const BASE_URL = "http://localhost/project";
 function base_url()
@@ -45,13 +45,13 @@ function sessionUser(int $usuarioId)
     return $request;
 }
 
-function sessionPersona($usuarioId)
-{
-    require_once("models/loginModel.php");
-    $objLogin = new LoginModel();
-    $request = $objLogin->getInfoPerson($usuarioId);
-    return $request;
-}
+// function sessionPersona($usuarioId)
+// {
+//     require_once("models/loginModel.php");
+//     $objLogin = new LoginModel();
+//     $request = $objLogin->getInfoPerson($usuarioId);
+//     return $request;
+// }
 function sendEmail($data, $template)
 {
    $asunto = "reinicio de contraseña";

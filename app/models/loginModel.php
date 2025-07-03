@@ -224,7 +224,8 @@ class LoginModel extends Mysql
         $db = $conexion->get_conectSeguridad();
 
         try {
-            $this->setQuery("UPDATE usuario SET token = ? WHERE idusuario = ?");
+            // Actualizar token con fecha de expiración (1 hora desde ahora)
+            $this->setQuery("UPDATE usuario SET token = ?, token_exp = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE idusuario = ?");
             $this->setArray([$token, $idUsuario]);
             
             $stmt = $db->prepare($this->getQuery());
@@ -248,7 +249,8 @@ class LoginModel extends Mysql
         $db = $conexion->get_conectSeguridad();
 
         try {
-            $this->setQuery("SELECT * FROM usuario WHERE correo = ? AND token = ? AND estatus = 'activo'");
+            // Verificar token válido y no expirado
+            $this->setQuery("SELECT * FROM usuario WHERE correo = ? AND token = ? AND token_exp > NOW() AND estatus = 'activo'");
             $this->setArray([$email, $token]);
             
             $stmt = $db->prepare($this->getQuery());
@@ -333,5 +335,23 @@ class LoginModel extends Mysql
         $this->setPass($pass);
         return $this->ejecutarActualizacionPassword($this->getIdUser(), $this->getPass());
     }
+
+    public function updatePassword($userId, $passwordHash)
+    {
+        $sql = "UPDATE usuarios SET password = ? WHERE idusuario = ?";
+        $arrData = array($passwordHash, $userId);
+        $request = $this->update($sql, $arrData);
+        return $request;
+    }
+
+    public function deleteToken($token)
+    {
+        $sql = "UPDATE usuarios SET token = NULL, token_exp = NULL WHERE token = ?";
+        $arrData = array($token);
+        $request = $this->update($sql, $arrData);
+        return $request;
+    }
+
+    
 }
 ?>
