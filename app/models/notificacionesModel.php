@@ -514,5 +514,214 @@ class NotificacionesModel extends Mysql
     public function generarNotificacionesProductos(){
         return $this->ejecutarGenerarNotificacionesProductos();
     }
+
+    public function limpiarNotificacionesCompra($idCompra, $accion)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            switch ($accion) {
+                case 'autorizar':
+                    // Eliminar notificaciones de autorización pendientes
+                    $this->setQuery(
+                        "DELETE FROM notificaciones 
+                         WHERE referencia_id = ? 
+                         AND tipo = 'COMPRA_POR_AUTORIZAR'
+                         AND modulo = 'compras'"
+                    );
+                    $stmt = $db->prepare($this->getQuery());
+                    $resultado = $stmt->execute([$idCompra]);
+                    
+                    if ($resultado && $stmt->rowCount() > 0) {
+                        error_log("Eliminadas {$stmt->rowCount()} notificaciones de autorización de compra ID: {$idCompra}");
+                    }
+                    break;
+                    
+                case 'pagar':
+                    // Eliminar notificaciones de pago pendientes
+                    $this->setQuery(
+                        "DELETE FROM notificaciones 
+                         WHERE referencia_id = ? 
+                         AND tipo = 'COMPRA_AUTORIZADA_PAGO'
+                         AND modulo = 'compras'"
+                    );
+                    $stmt = $db->prepare($this->getQuery());
+                    $resultado = $stmt->execute([$idCompra]);
+                    
+                    if ($resultado && $stmt->rowCount() > 0) {
+                        error_log("Eliminadas {$stmt->rowCount()} notificaciones de pago de compra ID: {$idCompra}");
+                    }
+                    break;
+                    
+                case 'completar':
+                    // Eliminar todas las notificaciones de esta compra (más robusta)
+                    $this->setQuery(
+                        "DELETE FROM notificaciones 
+                         WHERE referencia_id = ?
+                         AND modulo = 'compras'
+                         AND tipo IN ('COMPRA_POR_AUTORIZAR', 'COMPRA_AUTORIZADA_PAGO')"
+                    );
+                    $stmt = $db->prepare($this->getQuery());
+                    $resultado = $stmt->execute([$idCompra]);
+                    
+                    // Log para verificar que se eliminaron las notificaciones
+                    if ($resultado && $stmt->rowCount() > 0) {
+                        error_log("Se eliminaron {$stmt->rowCount()} notificaciones de la compra ID: {$idCompra}");
+                    }
+                    break;
+                    
+                default:
+                    $resultado = false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al limpiar notificaciones de compra: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+        
+        return $resultado;
+    }
+
+    public function limpiarNotificacionesProcesadas()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            // Limpiar notificaciones de compras ya completadas
+            $this->setQuery(
+                "DELETE n FROM notificaciones n
+                 INNER JOIN compras c ON n.referencia_id = c.idcompra
+                 WHERE n.tipo IN ('COMPRA_POR_AUTORIZAR', 'COMPRA_AUTORIZADA_PAGO')
+                 AND n.modulo = 'compras'
+                 AND c.estatus IN ('AUTORIZADA', 'PAGADA')"
+            );
+            
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute();
+            
+        } catch (Exception $e) {
+            error_log("Error al limpiar notificaciones procesadas: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+        
+        return $resultado;
+    }
+
+    public function verificarNotificacionesCompra($idCompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            $this->setQuery(
+                "SELECT COUNT(*) as total, tipo
+                 FROM notificaciones 
+                 WHERE referencia_id = ? 
+                 AND modulo = 'compras' 
+                 AND activa = 1
+                 GROUP BY tipo"
+            );
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idCompra]);
+            $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error al verificar notificaciones de compra: " . $e->getMessage());
+            $resultado = [];
+        } finally {
+            $conexion->disconnect();
+        }
+        
+        return $resultado;
+    }
+
+    public function limpiarNotificacionesCompraPagada($idCompra)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            // Eliminar todas las notificaciones de compra cuando se marca como pagada
+            $this->setQuery(
+                "DELETE FROM notificaciones 
+                 WHERE referencia_id = ?
+                 AND modulo = 'compras'
+                 AND tipo IN ('COMPRA_POR_AUTORIZAR', 'COMPRA_AUTORIZADA_PAGO')"
+            );
+            
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute([$idCompra]);
+            
+            // Log para verificar que se eliminaron las notificaciones
+            if ($resultado && $stmt->rowCount() > 0) {
+                error_log("TRIGGER: Se eliminaron {$stmt->rowCount()} notificaciones de la compra pagada ID: {$idCompra}");
+            } else {
+                error_log("TRIGGER: No se encontraron notificaciones para eliminar de la compra ID: {$idCompra}");
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en trigger al limpiar notificaciones de compra pagada: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+        
+        return $resultado;
+    }
+
+    public function crearProcedimientoLimpiarNotificacionesCompra()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            // Primero eliminar el procedimiento si existe
+            $this->setQuery("DROP PROCEDURE IF EXISTS limpiar_notificaciones_compra_pagada");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute();
+
+            // Crear el nuevo procedimiento
+            $procedimiento = "
+            CREATE PROCEDURE limpiar_notificaciones_compra_pagada(IN p_idcompra INT)
+            BEGIN
+                DELETE FROM notificaciones 
+                WHERE referencia_id = p_idcompra
+                AND modulo = 'compras'
+                AND tipo IN ('COMPRA_POR_AUTORIZAR', 'COMPRA_AUTORIZADA_PAGO');
+                
+                -- Log del resultado
+                SELECT ROW_COUNT() as notificaciones_eliminadas;
+            END
+            ";
+            
+            $this->setQuery($procedimiento);
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute();
+            
+            if ($resultado) {
+                error_log("Procedimiento limpiar_notificaciones_compra_pagada creado exitosamente");
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al crear procedimiento de limpieza de notificaciones: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+        
+        return $resultado;
+    }
 }
 ?>

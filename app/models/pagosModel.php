@@ -809,21 +809,74 @@ class PagosModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            $this->setQuery("UPDATE pagos SET estatus = 'conciliado' WHERE idpago = ? AND estatus = 'activo'");
-            $this->setArray([$idpago]);
-            
+            // Primero obtener información del pago
+            $this->setQuery("SELECT idcompra FROM pagos WHERE idpago = ?");
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $resultado = $stmt->rowCount() > 0;
+            $stmt->execute([$idpago]);
+            $pagoInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$pagoInfo) {
+                error_log("PagosModel::ejecutarConciliacionPago -> Pago no encontrado: " . $idpago);
+                return false;
+            }
+            
+            // Actualizar el estado del pago a conciliado
+            $this->setQuery("UPDATE pagos SET estatus = 'conciliado' WHERE idpago = ? AND estatus = 'activo'");
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute([$idpago]);
+            
+            if (!$resultado || $stmt->rowCount() == 0) {
+                error_log("PagosModel::ejecutarConciliacionPago -> No se pudo actualizar el pago: " . $idpago);
+                return false;
+            }
+            
+            // Si el pago está asociado a una compra, verificar si todos los pagos están conciliados
+            if ($pagoInfo['idcompra']) {
+                $idcompra = $pagoInfo['idcompra'];
+                
+                // Verificar si todos los pagos de esta compra están conciliados
+                $this->setQuery("
+                    SELECT COUNT(*) as total_pagos, 
+                           SUM(CASE WHEN estatus = 'conciliado' THEN 1 ELSE 0 END) as pagos_conciliados
+                    FROM pagos 
+                    WHERE idcompra = ? AND estatus IN ('activo', 'conciliado')
+                ");
+                $stmt = $db->prepare($this->getQuery());
+                $stmt->execute([$idcompra]);
+                $estatusPagos = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                // Si todos los pagos están conciliados, actualizar el estado de la compra a PAGADA
+                if ($estatusPagos['total_pagos'] > 0 && 
+                    $estatusPagos['total_pagos'] == $estatusPagos['pagos_conciliados']) {
+                    
+                    $this->setQuery("UPDATE compra SET estatus_compra = 'PAGADA' WHERE idcompra = ? AND estatus_compra != 'PAGADA'");
+                    $stmt = $db->prepare($this->getQuery());
+                    $resultadoCompra = $stmt->execute([$idcompra]);
+                    
+                    if ($resultadoCompra && $stmt->rowCount() > 0) {
+                        error_log("PagosModel::ejecutarConciliacionPago -> Compra marcada como PAGADA: " . $idcompra);
+                        
+                        // Limpiar notificaciones de compra cuando se marca como pagada
+                        try {
+                            require_once "app/models/notificacionesModel.php";
+                            $notificacionesModel = new NotificacionesModel();
+                            $notificacionesModel->limpiarNotificacionesCompraPagada($idcompra);
+                            error_log("PagosModel: Notificaciones limpiadas para compra pagada ID: {$idcompra}");
+                        } catch (Exception $e) {
+                            error_log("PagosModel: Error al limpiar notificaciones de compra pagada ID {$idcompra}: " . $e->getMessage());
+                        }
+                    }
+                }
+            }
+            
+            return true;
             
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarConciliacionPago -> " . $e->getMessage());
-            $resultado = false;
+            return false;
         } finally {
             $conexion->disconnect();
         }
-
-        return $resultado;
     }
 
     // Métodos públicos que usan las funciones privadas

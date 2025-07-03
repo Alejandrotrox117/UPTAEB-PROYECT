@@ -44,17 +44,13 @@ class Compras extends Controllers
     }
 
     public function index(){
-        // Verificar permiso específico para ver
         if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver')) {
             $this->views->getView($this, "permisos");
             exit();
         }
-
-        // Registrar acceso al módulo en bitácora
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
         BitacoraHelper::registrarAccesoModulo('compras', $idusuario, $this->bitacoraModel);
 
-        // Obtener permisos del usuario para el módulo
         $permisos = [
             'puedeVer' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver'),
             'puedeCrear' => PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'crear'),
@@ -600,38 +596,21 @@ class Compras extends Controllers
                     break;
                     
                 case 'AUTORIZADA':
-                    // Eliminar notificaciones de autorización pendientes
-                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
-                        'COMPRA_POR_AUTORIZAR', 
-                        'compras', 
-                        $idcompra
-                    );
+                    // Limpiar notificaciones de autorización pendientes
+                    $this->notificacionesModel->limpiarNotificacionesCompra($idcompra, 'autorizar');
                     
                     // Generar notificación para registrar pago
                     $this->generarNotificacionPago($idcompra);
                     break;
                     
                 case 'PAGADA':
-                    // Eliminar todas las notificaciones pendientes de esta compra
-                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
-                        'COMPRA_POR_AUTORIZAR', 
-                        'compras', 
-                        $idcompra
-                    );
-                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
-                        'COMPRA_AUTORIZADA_PAGO', 
-                        'compras', 
-                        $idcompra
-                    );
+                    // Limpiar todas las notificaciones de esta compra
+                    $this->notificacionesModel->limpiarNotificacionesCompra($idcompra, 'completar');
                     break;
                     
                 case 'BORRADOR':
-                    // Si se devuelve a borrador, eliminar notificaciones de autorización
-                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
-                        'COMPRA_POR_AUTORIZAR', 
-                        'compras', 
-                        $idcompra
-                    );
+                    // Si se devuelve a borrador, limpiar notificaciones de autorización
+                    $this->notificacionesModel->limpiarNotificacionesCompra($idcompra, 'autorizar');
                     break;
             }
             
@@ -792,56 +771,10 @@ class Compras extends Controllers
         $debug['verificacion_editar'] = PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'editar');
         $debug['verificacion_eliminar'] = PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar');
 
-        // Consulta directa a la base de datos
+        // Obtener información de permisos usando el modelo
         try {
-            $conexion = new Conexion();
-            $conexion->connect();
-            $db = $conexion->get_conectSeguridad();
-
-            $query = "
-                SELECT 
-                    u.idusuario,
-                    u.usuario,
-                    u.idrol,
-                    r.nombre as rol_nombre,
-                    m.titulo as modulo_nombre,
-                    p.idpermiso,
-                    p.nombre_permiso,
-                    rmp.activo,
-                    m.estatus as modulo_estatus
-                FROM usuario u
-                INNER JOIN roles r ON u.idrol = r.idrol
-                INNER JOIN rol_modulo_permisos rmp ON r.idrol = rmp.idrol
-                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
-                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
-                WHERE u.idusuario = ? 
-                AND LOWER(m.titulo) = LOWER('compras')
-                AND rmp.activo = 1
-            ";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$debug['session_usuario_id']]);
-            $debug['consulta_directa'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $query2 = "
-                SELECT 
-                    m.titulo as modulo,
-                    p.nombre_permiso as permiso,
-                    rmp.activo
-                FROM rol_modulo_permisos rmp
-                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
-                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
-                WHERE rmp.idrol = ?
-                AND rmp.activo = 1
-                ORDER BY m.titulo, p.idpermiso
-            ";
-
-            $stmt2 = $db->prepare($query2);
-            $stmt2->execute([$debug['session_idrol']]);
-            $debug['todos_permisos_rol'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
-
-            $conexion->disconnect();
-
+            $debug['consulta_directa'] = $this->get_model()->obtenerPermisosUsuarioModulo($debug['session_usuario_id'], 'compras');
+            $debug['todos_permisos_rol'] = $this->get_model()->obtenerTodosPermisosRol($debug['session_idrol']);
         } catch (Exception $e) {
             $debug['error_consulta'] = $e->getMessage();
         }
@@ -1029,6 +962,105 @@ class Compras extends Controllers
         }
 
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    public function limpiarNotificacionesProcesadas(){
+        header('Content-Type: application/json');
+        
+        // Verificar permisos (solo usuarios con permiso de eliminar pueden hacer limpieza)
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para realizar esta acción.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        try {
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            
+            // Limpiar notificaciones de compras ya procesadas
+            $resultado = $this->notificacionesModel->limpiarNotificacionesProcesadas();
+            
+            if ($resultado) {
+                // Registrar en bitácora
+                BitacoraHelper::registrarAccion(
+                    'compras', 
+                    'LIMPIEZA_NOTIFICACIONES', 
+                    $idusuario, 
+                    $this->bitacoraModel, 
+                    'Limpieza manual de notificaciones procesadas de compras'
+                );
+                
+                echo json_encode([
+                    'status' => true,
+                    'message' => 'Notificaciones procesadas limpiadas exitosamente.'
+                ], JSON_UNESCAPED_UNICODE);
+            } else {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error al limpiar notificaciones o no había notificaciones para limpiar.'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+        } catch (Exception $e) {
+            error_log("Error en limpiarNotificacionesProcesadas: " . $e->getMessage());
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        
+        exit();
+    }
+
+    public function inicializarProcedimientoNotificaciones(){
+        header('Content-Type: application/json');
+        
+        // Verificar permisos (solo usuarios con permiso de eliminar pueden inicializar)
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para realizar esta acción.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        try {
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            
+            // Crear el procedimiento almacenado para limpiar notificaciones
+            $resultado = $this->notificacionesModel->crearProcedimientoLimpiarNotificacionesCompra();
+            
+            if ($resultado) {
+                // Registrar en bitácora
+                BitacoraHelper::registrarAccion(
+                    'compras', 
+                    'INIT_PROCEDIMIENTO_NOTIFICACIONES', 
+                    $idusuario, 
+                    $this->bitacoraModel, 
+                    'Inicialización del procedimiento de limpieza de notificaciones de compras'
+                );
+                
+                echo json_encode([
+                    'status' => true,
+                    'message' => 'Procedimiento de limpieza de notificaciones inicializado exitosamente.',
+                    'note' => 'Ahora ejecute el archivo sql/trigger_compra_pagada_actualizado.sql en su base de datos.'
+                ], JSON_UNESCAPED_UNICODE);
+            } else {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error al inicializar el procedimiento de limpieza.'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+        } catch (Exception $e) {
+            error_log("Error en inicializarProcedimientoNotificaciones: " . $e->getMessage());
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        
         exit();
     }
 }
