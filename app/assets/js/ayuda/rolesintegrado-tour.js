@@ -546,6 +546,7 @@ function iniciarTourRolesIntegrado() {
 
     // Paso 10: Consejos de uso
     tour.addStep({
+        id: 'consejos-uso',
         title: 'Consejos para la Gestión de Permisos 💡',
         text: '<ul class="list-disc pl-5 text-left">' +
               '<li class="mb-2">Usa la opción "Acceso Completo" solo para roles que necesiten control total sobre un módulo.</li>' +
@@ -553,6 +554,18 @@ function iniciarTourRolesIntegrado() {
               '<li class="mb-2">Recuerda guardar los cambios antes de cambiar de rol o salir del módulo.</li>' +
               '<li>Revisa periódicamente los permisos para mantener la seguridad del sistema.</li>' +
               '</ul>',
+        attachTo: {
+            element: '#listaModulosPermisos',
+            on: 'top'
+        },
+        popperOptions: {
+            modifiers: [{
+                name: 'offset',
+                options: {
+                    offset: [0, 20]
+                }
+            }]
+        },
         buttons: [
             {
                 text: 'Anterior',
@@ -569,8 +582,21 @@ function iniciarTourRolesIntegrado() {
 
     // Paso 11: Finalización
     tour.addStep({
+        id: 'finalizacion',
         title: '¡Configuración Completa! 🚀',
         text: 'Ya conoces las principales funcionalidades de la Gestión Integral de Permisos. Recuerda que una buena configuración de permisos es fundamental para la seguridad del sistema. Puedes volver a ejecutar este tour desde el botón de ayuda cuando lo necesites.',
+        attachTo: {
+            element: '#btnGuardarAsignaciones',
+            on: 'top-end'
+        },
+        popperOptions: {
+            modifiers: [{
+                name: 'offset',
+                options: {
+                    offset: [20, 20]
+                }
+            }]
+        },
         buttons: [
             {
                 text: 'Anterior',
