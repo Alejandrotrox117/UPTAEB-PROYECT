@@ -481,6 +481,25 @@ function bindTableEvents() {
   $("#TablaCompras tbody").on("click", ".ir-pagos-btn", function () {
     window.location.href = `Pagos`;
   });
+
+  $("#TablaCompras tbody").on("click", ".ver-factura-btn", function () {
+    if (
+      (window.permisosCompras &&
+        !window.permisosCompras.verificarPermiso("ver_factura")) ||
+      (window.verificarPermiso && !window.verificarPermiso("ver_factura"))
+    ) {
+      return;
+    }
+    const idCompra = $(this).data("idcompra");
+    if (idCompra && typeof verFactura === "function") {
+      verFactura(idCompra);
+    } else {
+      console.error(
+        "Función verFactura no definida o idCompra no encontrado."
+      );
+      alert("Error: No se pudo obtener el ID de la compra para ver la factura.");
+    }
+  });
 }
 
 function bindModalEvents() {
@@ -2676,6 +2695,26 @@ function mostrarModalVerCompra(
   abrirModal("modalVerCompra");
 }
 window.verCompra = verCompra;
+
+/**
+ * Ver factura de una compra
+ */
+function verFactura(idCompra) {
+  if (!idCompra) {
+    console.error("ID de compra no proporcionado");
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se pudo obtener el ID de la compra.",
+    });
+    return;
+  }
+
+  // Abrir la factura en una nueva ventana/pestaña
+  const url = `Compras/verFactura/${idCompra}`;
+  window.open(url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+}
+window.verFactura = verFactura;
 
 function eliminarCompra(idCompra, nroCompra) {
   Swal.fire({
