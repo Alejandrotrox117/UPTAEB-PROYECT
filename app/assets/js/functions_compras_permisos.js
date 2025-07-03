@@ -88,14 +88,18 @@ function generarBotonesAccionConPermisos(data, type, row) {
         // Botón para ver factura (solo si la compra está pagada)
         if (estadoActual.toUpperCase() === "PAGADA" && (permisosUsuario.ver_factura || permisosUsuario.acceso_total)) {
             botones.push(`
-                <button
-                    class="ver-factura-btn text-purple-600 hover:text-purple-700 p-1 transition-colors duration-150"
-                    data-idcompra="${idCompra}"
-                    title="Ver Factura"
+                <a
+                  href="./compras/factura/${idCompra}"
+                  target="_blank"
+                  class="text-blue-600 hover:text-blue-800 p-1 transition-colors duration-150"
+                  title="Ver Factura"
                 >
-                    <i class="fas fa-file-invoice fa-fw text-base"></i>
-                </button>
-            `);
+                  <i class="fas fa-file-alt fa-fw text-base"></i>
+                </a>
+                <span class="text-green-600 font-semibold text-xs px-1.5 py-0.5">
+                  FINALIZADA
+                </span>`
+            );
         }
     }
 

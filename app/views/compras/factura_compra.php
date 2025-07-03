@@ -214,17 +214,17 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm print:grid-cols-3 print:gap-4 print:text-sm">
             <div class="flex items-center print:block">
               <i class="fas fa-cube text-blue-600 mr-2 print:hidden"></i>
-              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold">📦 Total de Productos: </span>
+              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Total de Productos: </span>
               <span class="text-gray-900 ml-2 print:text-black print:ml-1"><?= ($contador - 1) ?> items</span>
             </div>
             <div class="flex items-center print:block">
               <i class="fas fa-calendar text-blue-600 mr-2 print:hidden"></i>
-              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold">📅 Fecha de Emisión: </span>
+              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Fecha de Emisión: </span>
               <span class="text-gray-900 ml-2 print:text-black print:ml-1"><?= date('d/m/Y H:i:s') ?></span>
             </div>
             <div class="flex items-center print:block">
               <i class="fas fa-user text-blue-600 mr-2 print:hidden"></i>
-              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold">👤 Usuario: </span>
+              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Usuario: </span>
               <span class="text-gray-900 ml-2 print:text-black print:ml-1"><?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Sistema') ?></span>
             </div>
           </div>
