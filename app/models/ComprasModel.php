@@ -1,6 +1,7 @@
 <?php
 require_once "app/core/Conexion.php";
 require_once "app/core/Mysql.php";
+require_once "app/models/notificacionesModel.php";
 
 class ComprasModel extends Mysql
 {
@@ -773,6 +774,15 @@ class ComprasModel extends Mysql
 
             if ($nuevoEstado === 'PAGADA') {
                 $this->ejecutarGeneracionNotaEntrega($idcompra, $db);
+                
+                // Limpiar notificaciones de compras cuando se marca como pagada
+                try {
+                    $notificacionesModel = new NotificacionesModel();
+                    $notificacionesModel->limpiarNotificacionesCompraPagada($idcompra);
+                    error_log("ComprasModel: Notificaciones de compra limpiadas para compra ID: {$idcompra}");
+                } catch (Exception $e) {
+                    error_log("ComprasModel: Error al limpiar notificaciones de compra ID {$idcompra}: " . $e->getMessage());
+                }
             }
 
             return [

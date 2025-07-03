@@ -596,38 +596,21 @@ class Compras extends Controllers
                     break;
                     
                 case 'AUTORIZADA':
-                    // Eliminar notificaciones de autorización pendientes
-                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
-                        'COMPRA_POR_AUTORIZAR', 
-                        'compras', 
-                        $idcompra
-                    );
+                    // Limpiar notificaciones de autorización pendientes
+                    $this->notificacionesModel->limpiarNotificacionesCompra($idcompra, 'autorizar');
                     
                     // Generar notificación para registrar pago
                     $this->generarNotificacionPago($idcompra);
                     break;
                     
                 case 'PAGADA':
-                    // Eliminar todas las notificaciones pendientes de esta compra
-                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
-                        'COMPRA_POR_AUTORIZAR', 
-                        'compras', 
-                        $idcompra
-                    );
-                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
-                        'COMPRA_AUTORIZADA_PAGO', 
-                        'compras', 
-                        $idcompra
-                    );
+                    // Limpiar todas las notificaciones de esta compra
+                    $this->notificacionesModel->limpiarNotificacionesCompra($idcompra, 'completar');
                     break;
                     
                 case 'BORRADOR':
-                    // Si se devuelve a borrador, eliminar notificaciones de autorización
-                    $this->notificacionesModel->eliminarNotificacionesPorReferencia(
-                        'COMPRA_POR_AUTORIZAR', 
-                        'compras', 
-                        $idcompra
-                    );
+                    // Si se devuelve a borrador, limpiar notificaciones de autorización
+                    $this->notificacionesModel->limpiarNotificacionesCompra($idcompra, 'autorizar');
                     break;
             }
             
@@ -979,6 +962,105 @@ class Compras extends Controllers
         }
 
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    public function limpiarNotificacionesProcesadas(){
+        header('Content-Type: application/json');
+        
+        // Verificar permisos (solo usuarios con permiso de eliminar pueden hacer limpieza)
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para realizar esta acción.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        try {
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            
+            // Limpiar notificaciones de compras ya procesadas
+            $resultado = $this->notificacionesModel->limpiarNotificacionesProcesadas();
+            
+            if ($resultado) {
+                // Registrar en bitácora
+                BitacoraHelper::registrarAccion(
+                    'compras', 
+                    'LIMPIEZA_NOTIFICACIONES', 
+                    $idusuario, 
+                    $this->bitacoraModel, 
+                    'Limpieza manual de notificaciones procesadas de compras'
+                );
+                
+                echo json_encode([
+                    'status' => true,
+                    'message' => 'Notificaciones procesadas limpiadas exitosamente.'
+                ], JSON_UNESCAPED_UNICODE);
+            } else {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error al limpiar notificaciones o no había notificaciones para limpiar.'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+        } catch (Exception $e) {
+            error_log("Error en limpiarNotificacionesProcesadas: " . $e->getMessage());
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        
+        exit();
+    }
+
+    public function inicializarProcedimientoNotificaciones(){
+        header('Content-Type: application/json');
+        
+        // Verificar permisos (solo usuarios con permiso de eliminar pueden inicializar)
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para realizar esta acción.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        try {
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            
+            // Crear el procedimiento almacenado para limpiar notificaciones
+            $resultado = $this->notificacionesModel->crearProcedimientoLimpiarNotificacionesCompra();
+            
+            if ($resultado) {
+                // Registrar en bitácora
+                BitacoraHelper::registrarAccion(
+                    'compras', 
+                    'INIT_PROCEDIMIENTO_NOTIFICACIONES', 
+                    $idusuario, 
+                    $this->bitacoraModel, 
+                    'Inicialización del procedimiento de limpieza de notificaciones de compras'
+                );
+                
+                echo json_encode([
+                    'status' => true,
+                    'message' => 'Procedimiento de limpieza de notificaciones inicializado exitosamente.',
+                    'note' => 'Ahora ejecute el archivo sql/trigger_compra_pagada_actualizado.sql en su base de datos.'
+                ], JSON_UNESCAPED_UNICODE);
+            } else {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error al inicializar el procedimiento de limpieza.'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+        } catch (Exception $e) {
+            error_log("Error en inicializarProcedimientoNotificaciones: " . $e->getMessage());
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        
         exit();
     }
 }
