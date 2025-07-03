@@ -11,6 +11,8 @@
 
 <!-- sweetAlerts -->
 <script type="text/javascript" src="/project/app/assets/sweetAlert/sweetalert2.all.min.js"></script>
+<!-- Shepherd.js JavaScript Local -->
+<script src="/project/app/assets/shepherd.js/shepherd-simple.js"></script>
 <!-- Chart.js para gráficos del dashboard -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Archivo dinámico de validaciones -->

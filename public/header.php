@@ -28,21 +28,10 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
   <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
   <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet">
   <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
-  <style>
-    body { overflow-x: hidden; }
-    #sidebar nav::-webkit-scrollbar { width: 6px; }
-    #sidebar nav::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
-    #sidebar nav::-webkit-scrollbar-track { background-color: #f7fafc; }
-    .notification-badge { position: absolute; top: -8px; right: -8px; background-color: #ef4444; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-    .notification-item { transition: all 0.3s ease; }
-    .notification-item:hover { background-color: #f3f4f6; transform: translateX(4px); }
-    .notification-item.unread { background-color: #fef3c7; border-left: 4px solid #f59e0b; }
-    .notification-dropdown { max-height: 400px; overflow-y: auto; }
-    .notification-dropdown::-webkit-scrollbar { width: 6px; }
-    .notification-dropdown::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
-    .notification-dropdown::-webkit-scrollbar-track { background-color: #f7fafc; }
-  </style>
+  <!-- Shepherd.js CSS Local -->
+  <link rel="stylesheet" href="/project/app/assets/shepherd.js/shepherd-simple.css">
+  <!-- Estilos del sistema -->
+  <link rel="stylesheet" href="/project/app/assets/css/system-styles.css">
 </head>
 
 <body class="bg-gray-100 min-h-screen">
