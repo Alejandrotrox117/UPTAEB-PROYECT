@@ -56,7 +56,7 @@
                     <i class="fas fa-times mr-2"></i>Limpiar
                 </button>
                 <button id="btnActualizarBitacora" 
-                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center" 
+                        class="px-2 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center" 
                         title="Actualizar datos">
                     <i class="fas fa-sync-alt mr-2"></i>Actualizar
                 </button>
