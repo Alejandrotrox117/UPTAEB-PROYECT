@@ -1,10 +1,10 @@
 /**
- * Tour específico para el módulo de Usuarios
- * Se carga automáticamente cuando el usuario visita el módulo de usuarios
+ * Tour específico para el módulo de Roles
+ * Se carga automáticamente cuando el usuario visita el módulo de roles
  */
 
-// Función para iniciar el tour del módulo de usuarios
-function iniciarTourUsuarios() {
+// Función para iniciar el tour del módulo de roles
+function iniciarTourRoles() {
     const tour = new Shepherd.Tour({
         useModalOverlay: true,
         defaultStepOptions: {
@@ -14,23 +14,23 @@ function iniciarTourUsuarios() {
             }
         },
         onComplete: function() {
-            localStorage.setItem('usuarios-tour-completed', 'true');
+            localStorage.setItem('roles-tour-completed', 'true');
             Swal.fire({
                 title: '¡Tour Completado!',
-                text: 'Ya conoces las principales funcionalidades del módulo de usuarios.',
+                text: 'Ya conoces las principales funcionalidades del módulo de roles.',
                 icon: 'success',
                 confirmButtonText: 'Excelente'
             });
         },
         onCancel: function() {
-            console.log('Tour del módulo de usuarios cancelado');
+            console.log('Tour del módulo de roles cancelado');
         }
     });
 
-    // Paso 1: Bienvenida al módulo de usuarios
+    // Paso 1: Bienvenida al módulo de roles
     tour.addStep({
-        title: '¡Bienvenido al Módulo de Usuarios! 👥',
-        text: 'Te guiaremos por las principales funcionalidades del módulo de usuarios. Aquí puedes gestionar todos los usuarios del sistema, crear nuevos usuarios, editar información y asignar roles.',
+        title: '¡Bienvenido al Módulo de Roles! 🛡️',
+        text: 'Te guiaremos por las principales funcionalidades del módulo de roles. Aquí puedes gestionar todos los roles del sistema, crear nuevos roles y definir permisos básicos.',
         buttons: [
             {
                 text: 'Omitir Tour',
@@ -48,7 +48,7 @@ function iniciarTourUsuarios() {
     // Paso 2: Título y descripción
     tour.addStep({
         title: 'Área de Información 📋',
-        text: 'Aquí puedes ver el título del módulo y una descripción de lo que puedes hacer. Siempre encontrarás información útil sobre la sección actual.',
+        text: 'Aquí puedes ver el título del módulo y una descripción de lo que puedes hacer. Los roles son fundamentales para controlar el acceso a las diferentes funcionalidades del sistema.',
         attachTo: {
             element: 'h1',
             on: 'bottom'
@@ -67,14 +67,14 @@ function iniciarTourUsuarios() {
         ]
     });
 
-    // Paso 3: Botón crear usuario (solo si existe)
-    const btnCrear = document.querySelector('#btnAbrirModalRegistrarUsuario');
+    // Paso 3: Botón crear rol (solo si existe)
+    const btnCrear = document.querySelector('#btnAbrirModalRegistrarRol');
     if (btnCrear) {
         tour.addStep({
-            title: 'Crear Nuevo Usuario ➕',
-            text: 'Con este botón puedes agregar nuevos usuarios al sistema. Al hacer clic se abrirá un formulario donde podrás ingresar toda la información necesaria.',
+            title: 'Crear Nuevo Rol ➕',
+            text: 'Con este botón puedes agregar nuevos roles al sistema. Al hacer clic se abrirá un formulario donde podrás definir el nombre, descripción y estado del rol.',
             attachTo: {
-                element: '#btnAbrirModalRegistrarUsuario',
+                element: '#btnAbrirModalRegistrarRol',
                 on: 'bottom'
             },
             buttons: [
@@ -92,37 +92,12 @@ function iniciarTourUsuarios() {
         });
     }
 
-    // Paso 3.5: Botón exportar usuarios (solo si existe)
-    const btnExportar = document.querySelector('#btnExportarUsuarios');
-    if (btnExportar) {
-        tour.addStep({
-            title: 'Exportar Datos 📄',
-            text: 'Con este botón puedes exportar la lista de usuarios a diferentes formatos como PDF o Excel para reportes o respaldos.',
-            attachTo: {
-                element: '#btnExportarUsuarios',
-                on: 'bottom'
-            },
-            buttons: [
-                {
-                    text: 'Anterior',
-                    action: tour.back,
-                    classes: 'shepherd-button-secondary'
-                },
-                {
-                    text: 'Siguiente',
-                    action: tour.next,
-                    classes: 'shepherd-button-primary'
-                }
-            ]
-        });
-    }
-
-    // Paso 4: Tabla de usuarios
+    // Paso 4: Tabla de roles
     tour.addStep({
-        title: 'Lista de Usuarios 📊',
-        text: 'Esta tabla muestra todos los usuarios registrados en el sistema. Puedes ver información como nombre, email, rol, estado y fecha de registro. También puedes buscar, filtrar y ordenar los usuarios.',
+        title: 'Lista de Roles 📊',
+        text: 'Esta tabla muestra todos los roles registrados en el sistema. Puedes ver información como nombre del rol, descripción, estado (activo/inactivo) y fecha de creación.',
         attachTo: {
-            element: '#TablaUsuarios',
+            element: '#TablaRoles',
             on: 'top'
         },
         buttons: [
@@ -142,9 +117,9 @@ function iniciarTourUsuarios() {
     // Paso 5: Funciones de la tabla
     tour.addStep({
         title: 'Funciones de la Tabla 🔧',
-        text: 'En cada fila de la tabla encontrarás botones de acción: Ver detalles, Editar información, Cambiar estado (activar/desactivar) y Eliminar usuario. Estas opciones aparecen según tus permisos.',
+        text: 'En cada fila de la tabla encontrarás botones de acción: Ver detalles, Editar información, Cambiar estado (activar/desactivar) y Eliminar rol. Estas opciones aparecen según tus permisos.',
         attachTo: {
-            element: '#TablaUsuarios tbody',
+            element: '#TablaRoles tbody',
             on: 'top'
         },
         buttons: [
@@ -162,13 +137,13 @@ function iniciarTourUsuarios() {
     });
 
     // Paso 6: Búsqueda y filtros
-    const searchInput = document.querySelector('#TablaUsuarios_filter input');
+    const searchInput = document.querySelector('#TablaRoles_filter input');
     if (searchInput) {
         tour.addStep({
             title: 'Búsqueda y Filtros 🔍',
-            text: 'Utiliza el campo de búsqueda para encontrar usuarios específicos. Puedes buscar por nombre, email, rol o cualquier información visible en la tabla.',
+            text: 'Utiliza el campo de búsqueda para encontrar roles específicos. Puedes buscar por nombre, descripción o estado del rol.',
             attachTo: {
-                element: '#TablaUsuarios_filter',
+                element: '#TablaRoles_filter',
                 on: 'bottom'
             },
             buttons: [
@@ -186,10 +161,10 @@ function iniciarTourUsuarios() {
         });
     }
 
-    // Paso 6.5: Explicar formularios
+    // Paso 7: Explicar formularios
     tour.addStep({
-        title: 'Formularios de Usuario 📝',
-        text: 'Cuando crees o edites un usuario, se abrirá un formulario modal donde podrás ingresar datos como: nombre de usuario, correo electrónico, contraseña, rol asignado y persona asociada (opcional).',
+        title: 'Formularios de Rol 📝',
+        text: 'Cuando crees o edites un rol, se abrirá un formulario modal donde podrás ingresar: nombre del rol, descripción detallada y establecer si está activo o inactivo.',
         buttons: [
             {
                 text: 'Anterior',
@@ -204,9 +179,27 @@ function iniciarTourUsuarios() {
         ]
     });
 
-    // Paso 6.8: Explicar permisos
+    // Paso 8: Explicar roles y permisos
     tour.addStep({
-        title: 'Sistema de Permisos 🔐',
+        title: 'Roles y Permisos 🔐',
+        text: 'Los roles son la base del sistema de seguridad. Cada rol define qué puede hacer un usuario. Para asignar permisos específicos a cada rol, utiliza el módulo "Gestión Integral de Permisos".',
+        buttons: [
+            {
+                text: 'Anterior',
+                action: tour.back,
+                classes: 'shepherd-button-secondary'
+            },
+            {
+                text: 'Siguiente',
+                action: tour.next,
+                classes: 'shepherd-button-primary'
+            }
+        ]
+    });
+
+    // Paso 9: Explicar permisos del usuario
+    tour.addStep({
+        title: 'Tus Permisos 👤',
         text: 'Las funciones disponibles (crear, editar, eliminar) dependen de tus permisos de usuario. Si no ves ciertos botones o opciones, es porque tu rol no tiene acceso a esas funcionalidades.',
         buttons: [
             {
@@ -222,10 +215,10 @@ function iniciarTourUsuarios() {
         ]
     });
 
-    // Paso 7: Menú lateral
+    // Paso 10: Menú lateral
     tour.addStep({
         title: 'Navegación del Sistema 🧭',
-        text: 'Desde el menú lateral puedes acceder a otros módulos del sistema. El módulo de usuarios está dentro de la sección "Seguridad" junto con roles, permisos y bitácora.',
+        text: 'Desde el menú lateral puedes acceder a otros módulos de seguridad: usuarios, gestión integral de permisos, módulos y bitácora. Todos estos trabajan en conjunto para la seguridad del sistema.',
         attachTo: {
             element: '#sidebar',
             on: 'right'
@@ -244,12 +237,12 @@ function iniciarTourUsuarios() {
         ]
     });
 
-    // Paso 8: Notificaciones (solo si existen)
+    // Paso 11: Notificaciones (solo si existen)
     const notificationBtn = document.querySelector('#desktop-notifications-toggle');
     if (notificationBtn) {
         tour.addStep({
             title: 'Centro de Notificaciones 🔔',
-            text: 'Aquí recibirás notificaciones importantes del sistema, incluyendo alertas sobre actividades de usuarios, intentos de acceso y otros eventos de seguridad.',
+            text: 'Aquí recibirás notificaciones importantes del sistema, incluyendo alertas sobre cambios en roles, permisos y otros eventos de seguridad.',
             attachTo: {
                 element: '#desktop-notifications-toggle',
                 on: 'bottom'
@@ -269,10 +262,10 @@ function iniciarTourUsuarios() {
         });
     }
 
-    // Paso 9: Finalización
+    // Paso 12: Finalización
     tour.addStep({
-        title: '¡Listo para Gestionar Usuarios! 🚀',
-        text: 'Ya conoces las principales funcionalidades del módulo de usuarios. Recuerda que puedes crear, editar y gestionar usuarios según tus permisos. Puedes volver a ejecutar este tour desde el botón de ayuda cuando lo necesites.',
+        title: '¡Listo para Gestionar Roles! 🚀',
+        text: 'Ya conoces las principales funcionalidades del módulo de roles. Recuerda que los roles son la base del sistema de permisos. Puedes volver a ejecutar este tour desde el botón de ayuda cuando lo necesites.',
         buttons: [
             {
                 text: 'Anterior',
@@ -292,17 +285,17 @@ function iniciarTourUsuarios() {
 }
 
 // Función para mostrar el botón de ayuda
-function agregarBotonAyudaUsuarios() {
+function agregarBotonAyudaRoles() {
     // Verificar si ya existe el botón
-    if (document.querySelector('#usuarios-help-btn')) {
+    if (document.querySelector('#roles-help-btn')) {
         return;
     }
 
     // Crear botón de ayuda flotante
     const helpButton = document.createElement('button');
-    helpButton.id = 'usuarios-help-btn';
+    helpButton.id = 'roles-help-btn';
     helpButton.innerHTML = '<i class="fas fa-question-circle"></i>';
-    helpButton.className = 'fixed bottom-6 right-6 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-lg z-50 transition-all duration-300 hover:scale-110';
+    helpButton.className = 'fixed bottom-6 right-6 bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg z-50 transition-all duration-300 hover:scale-110';
     helpButton.style.cssText = `
         position: fixed !important;
         bottom: 24px !important;
@@ -323,8 +316,8 @@ function agregarBotonAyudaUsuarios() {
         font-size: 20px !important;
     `;
     
-    helpButton.setAttribute('title', 'Iniciar tour del módulo de usuarios');
-    helpButton.addEventListener('click', iniciarTourUsuarios);
+    helpButton.setAttribute('title', 'Iniciar tour del módulo de roles');
+    helpButton.addEventListener('click', iniciarTourRoles);
     helpButton.addEventListener('mouseenter', function() {
         this.style.transform = 'scale(1.1)';
         this.style.backgroundColor = '#15803d';
@@ -339,33 +332,33 @@ function agregarBotonAyudaUsuarios() {
 
 // Auto-inicializar cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', function() {
-    // Verificar si estamos en el módulo de usuarios
-    if (window.location.pathname.includes('usuarios')) {
+    // Verificar si estamos en el módulo de roles
+    if (window.location.pathname.includes('roles') && !window.location.pathname.includes('RolesIntegrado')) {
         
         // Esperar a que todos los elementos se carguen completamente
         setTimeout(function() {
             // Agregar botón de ayuda
-            agregarBotonAyudaUsuarios();
+            agregarBotonAyudaRoles();
             
             // Auto-iniciar tour solo la primera vez
-            if (!localStorage.getItem('usuarios-tour-completed')) {
+            if (!localStorage.getItem('roles-tour-completed')) {
                 setTimeout(function() {
                     // Preguntar si quiere hacer el tour
                     Swal.fire({
                         title: '¿Quieres hacer un tour del módulo?',
-                        text: 'Te mostramos las principales funcionalidades del módulo de usuarios',
+                        text: 'Te mostramos las principales funcionalidades del módulo de roles',
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonText: 'Sí, empezar tour',
                         cancelButtonText: 'Ahora no',
-                        confirmButtonColor: '#2563eb',
+                        confirmButtonColor: '#16a34a',
                         cancelButtonColor: '#6b7280'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            iniciarTourUsuarios();
+                            iniciarTourRoles();
                         } else {
                             // Si dice que no, marcar como completado para no molestarlo más
-                            localStorage.setItem('usuarios-tour-completed', 'true');
+                            localStorage.setItem('roles-tour-completed', 'true');
                         }
                     });
                 }, 1000);
@@ -375,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // También agregar función global para reiniciar el tour
-window.reiniciarTourUsuarios = function() {
-    localStorage.removeItem('usuarios-tour-completed');
-    iniciarTourUsuarios();
+window.reiniciarTourRoles = function() {
+    localStorage.removeItem('roles-tour-completed');
+    iniciarTourRoles();
 };
