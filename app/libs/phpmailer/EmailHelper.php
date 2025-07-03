@@ -28,11 +28,7 @@ class EmailHelper
             $mail->Port = SMTP_PORT;
             $mail->CharSet = 'UTF-8';
             
-            // Para desarrollo/debugging (comentar en producción)
-            // $mail->SMTPDebug = 2;
-            // $mail->Debugoutput = 'html';
-            
-            // Configurar remitente y destinatario
+         
             $mail->setFrom(FROM_EMAIL, FROM_NAME);
             $mail->addAddress($email, $nombreUsuario);
             $mail->addReplyTo(FROM_EMAIL, FROM_NAME);

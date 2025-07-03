@@ -518,9 +518,6 @@ class Usuarios extends Controllers
         }
     }
 
-    /**
-     * Nuevo método para verificar si un usuario es super usuario
-     */
     public function verificarSuperUsuario()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -544,132 +541,7 @@ class Usuarios extends Controllers
         }
     }
 
-    public function debugPermisos()
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $debug = [
-            'session_completa' => $_SESSION,
-            'session_login' => $_SESSION['login'] ?? 'no definido',
-            'session_usuario_id' => $_SESSION['usuario_id'] ?? 'no definido', 
-            'session_idrol' => $_SESSION['idrol'] ?? 'no definido',
-            'session_usuario_nombre' => $_SESSION['usuario_nombre'] ?? 'no definido',
-        ];
-
-        $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('usuarios');
-        
-        $debug['permisos_obtenidos'] = $permisos;
-        $debug['verificacion_ver'] = PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver');
-        $debug['verificacion_crear'] = PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'crear');
-
-        try {
-            $conexion = new Conexion();
-            $conexion->connect();
-            $db = $conexion->get_conectSeguridad();
-
-            $query = "
-                SELECT 
-                    u.idusuario,
-                    u.usuario,
-                    u.idrol,
-                    r.nombre as rol_nombre,
-                    m.titulo as modulo_nombre,
-                    p.idpermiso,
-                    p.nombre_permiso,
-                    rmp.activo,
-                    m.estatus as modulo_estatus
-                FROM usuario u
-                INNER JOIN roles r ON u.idrol = r.idrol
-                INNER JOIN rol_modulo_permisos rmp ON r.idrol = rmp.idrol
-                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
-                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
-                WHERE u.idusuario = ? 
-                AND LOWER(m.titulo) = LOWER('usuarios')
-                AND rmp.activo = 1
-            ";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$debug['session_usuario_id']]);
-            $debug['consulta_directa'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $query2 = "
-                SELECT 
-                    m.titulo as modulo,
-                    p.nombre_permiso as permiso,
-                    rmp.activo
-                FROM rol_modulo_permisos rmp
-                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
-                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
-                WHERE rmp.idrol = ?
-                AND rmp.activo = 1
-                ORDER BY m.titulo, p.idpermiso
-            ";
-
-            $stmt2 = $db->prepare($query2);
-            $stmt2->execute([$debug['session_idrol']]);
-            $debug['todos_permisos_rol'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
-
-            $conexion->disconnect();
-
-        } catch (Exception $e) {
-            $debug['error_consulta'] = $e->getMessage();
-        }
-
-        header('Content-Type: application/json');
-        echo json_encode($debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-        exit();
-    }
-
-    /**
-     * Método para debug - verificar usuarios y roles en BD
-     */
-    public function debugUsuarios()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            try {
-                $conexion = new Conexion();
-                $conexion->connect();
-                $db = $conexion->get_conectSeguridad();
-
-                // Obtener todos los usuarios sin filtros
-                $query = "SELECT u.idusuario, u.usuario, u.idrol, r.nombre as rol_nombre 
-                         FROM usuario u 
-                         LEFT JOIN roles r ON u.idrol = r.idrol 
-                         ORDER BY u.idusuario";
-                $stmt = $db->prepare($query);
-                $stmt->execute();
-                $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                // Obtener todos los roles
-                $query2 = "SELECT idrol, nombre FROM roles ORDER BY idrol";
-                $stmt2 = $db->prepare($query2);
-                $stmt2->execute();
-                $roles = $stmt2->fetchAll(PDO::FETCH_ASSOC);
-
-                $conexion->disconnect();
-
-                $debug = [
-                    'super_usuario_rol_id_configurado' => 1, // Valor de la constante
-                    'usuarios_en_bd' => $usuarios,
-                    'roles_en_bd' => $roles,
-                    'usuario_sesion' => $this->BitacoraHelper->obtenerUsuarioSesion()
-                ];
-
-                header('Content-Type: application/json');
-                echo json_encode($debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                header('Content-Type: application/json');
-                echo json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-            }
-            exit();
-        }
-    }
-
-    /**
-     * Reactivar un usuario (solo super usuarios)
-     */
+  
     public function reactivarUsuario()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {

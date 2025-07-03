@@ -126,41 +126,6 @@
           Total Ingresos: <span id="totalIngresos">$0.00</span>
         </p>
 
-  <div id="dashboard-reports" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <!-- Columna de Ingresos - SIN CAMBIOS -->
-    <div class="bg-white p-6 rounded-xl shadow-sm">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold text-gray-800">Reporte de Ingresos (Conciliados)</h2>
-        <button id="btnDescargarIngresos" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
-          <i class="fas fa-download"></i>
-          <span>Descargar PDF</span>
-        </button>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div>
-          <label for="fecha_desde_ingresos" class="text-sm font-medium text-gray-700">Desde:</label>
-          <input type="date" id="fecha_desde_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"/>
-        </div>
-        <div>
-          <label for="fecha_hasta_ingresos" class="text-sm font-medium text-gray-700">Hasta:</label>
-          <input type="date" id="fecha_hasta_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"/>
-        </div>
-        <div>
-          <label for="filtro_tipo_pago_ingresos" class="text-sm font-medium text-gray-700">Tipo de Pago:</label>
-          <select id="filtro_tipo_pago_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            <option value="">Todos</option>
-            <?php foreach ($data['tipos_pago'] as $tipo): ?>
-            <option value="<?php echo $tipo['idtipo_pago']; ?>"><?php echo $tipo['nombre']; ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-      </div>
-      <div id="error-ingresos" class="text-red-600 text-sm mb-2 h-4"></div>
-      <div class="h-64 w-full"><canvas id="graficoIngresos"></canvas></div>
-      <p class="text-right mt-4 font-bold text-lg text-gray-700">
-        Total Ingresos: <span id="totalIngresos">$0.00</span>
-      </p>
-    </div>
 
         <!-- Columna de Egresos - SIN CAMBIOS -->
 
@@ -406,27 +371,6 @@
       </div>
     </div>
   </div>
-  <div id="dashboard-kpis" class="bg-white p-6 rounded-xl shadow-sm">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">KPIs</h2>
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="p-3 text-left">Métrica</th>
-            <th class="p-3 text-right">Hoy</th>
-            <th class="p-3 text-right">Ayer</th>
-            <th class="p-3 text-right">Esta Semana</th>
-            <th class="p-3 text-right">Mes Pasado</th>
-            <th class="p-3 text-center">Tendencia</th>
-          </tr>
-        </thead>
-        <tbody id="tablaKPIs">
-          <!-- Datos generados por JavaScript -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-
 </main>
 
 <!-- Scripts específicos del dashboard -->
