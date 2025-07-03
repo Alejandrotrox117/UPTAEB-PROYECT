@@ -14,18 +14,22 @@ function initializeBitacora() {
         $("#TablaBitacora").DataTable().destroy();
     }
 
+    // Mostrar el loader personalizado antes de inicializar
+    document.getElementById('loaderTableBitacora').classList.remove('hidden');
+
     TablaBitacora = $("#TablaBitacora").DataTable({
-        processing: true,
+        processing: false, // Desactivamos el procesamiento nativo de DataTables
         serverSide: false,
         ajax: {
             url: "bitacora/getBitacoraData",
             type: "POST",
             dataSrc: function(json) {
-                console.log("Datos recibidos:", json);
+                // Ocultar el loader cuando los datos se reciben
+                document.getElementById('loaderTableBitacora').classList.add('hidden');
+                
                 if (json && json.data) {
                     return json.data;
                 } else {
-                    console.error("Estructura de datos incorrecta:", json);
                     return [];
                 }
             },
@@ -38,6 +42,9 @@ function initializeBitacora() {
                 };
             },
             error: function (xhr, error, thrown) {
+                // Ocultar el loader en caso de error
+                document.getElementById('loaderTableBitacora').classList.add('hidden');
+                
                 console.error("Error AJAX completo:", {
                     xhr: xhr,
                     error: error,
@@ -135,11 +142,7 @@ function initializeBitacora() {
             }
         ],
         language: {
-            processing: `
-                <div class="flex items-center justify-center py-4">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mr-3"></div>
-                    <span class="text-lg font-medium text-gray-700">Cargando registros...</span>
-                </div>`,
+            // Eliminamos el mensaje de processing para usar nuestro loader personalizado
             emptyTable: '<div class="text-center py-8"><i class="fas fa-history fa-3x text-gray-300 mb-4"></i><p class="text-gray-500 text-lg">No hay registros en la bitácora</p></div>',
             info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
             infoEmpty: "Mostrando 0 registros",
@@ -161,8 +164,11 @@ function initializeBitacora() {
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
         order: [[0, "desc"]],
         initComplete: function () {
-            console.log(" DataTable Bitacora inicializado correctamente");
+            console.log("DataTable Bitacora inicializado correctamente");
             window.TablaBitacora = this.api();
+            
+            // Ocultar el loader después de la inicialización completa
+            document.getElementById('loaderTableBitacora').classList.add('hidden');
         },
         drawCallback: function () {
             $('.dataTables_filter input[type="search"]').addClass(
@@ -281,8 +287,14 @@ function obtenerFiltrosActivos() {
 
 function aplicarFiltros() {
     if (TablaBitacora) {
-        TablaBitacora.ajax.reload();
-        showNotification('Filtros aplicados', 'success');
+        // Mostrar el loader antes de aplicar filtros
+        document.getElementById('loaderTableBitacora').classList.remove('hidden');
+        
+        TablaBitacora.ajax.reload(function() {
+            // Ocultar el loader después de completar la recarga
+            document.getElementById('loaderTableBitacora').classList.add('hidden');
+            showNotification('Filtros aplicados', 'success');
+        });
     }
 }
 
@@ -290,14 +302,29 @@ function limpiarFiltros() {
     document.getElementById('filtroModulo').value = '';
     document.getElementById('filtroFechaDesde').value = '';
     document.getElementById('filtroFechaHasta').value = '';
-    aplicarFiltros();
-    showNotification('Filtros limpiados', 'info');
+    
+    // Mostrar el loader antes de limpiar filtros
+    document.getElementById('loaderTableBitacora').classList.remove('hidden');
+    
+    if (TablaBitacora) {
+        TablaBitacora.ajax.reload(function() {
+            // Ocultar el loader después de completar la recarga
+            document.getElementById('loaderTableBitacora').classList.add('hidden');
+            showNotification('Filtros limpiados', 'info');
+        });
+    }
 }
 
 function actualizarBitacora() {
     if (TablaBitacora) {
-        TablaBitacora.ajax.reload(null, false);
-        showNotification('Bitácora actualizada', 'success');
+        // Mostrar el loader antes de recargar
+        document.getElementById('loaderTableBitacora').classList.remove('hidden');
+        
+        TablaBitacora.ajax.reload(function() {
+            // Ocultar el loader después de completar la recarga
+            document.getElementById('loaderTableBitacora').classList.add('hidden');
+            showNotification('Bitácora actualizada', 'success');
+        }, false);
     }
 }
 
