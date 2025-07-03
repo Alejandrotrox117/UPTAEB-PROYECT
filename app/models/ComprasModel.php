@@ -4,6 +4,8 @@ require_once "app/core/Mysql.php";
 
 class ComprasModel extends Mysql
 {
+    const SUPER_USUARIO_ROL_ID = 1; // IMPORTANTE: Ajustar según el ID real del rol de super usuario en tu BD
+    
     private $query;
     private $array;
     private $data;
@@ -166,13 +168,15 @@ class ComprasModel extends Mysql
     }
 
     // MÉTODOS PRIVADOS 
-    private function ejecutarConsultaTodasCompras()
+    private function ejecutarConsultaTodasCompras(int $idUsuarioSesion = 0)
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Por ahora, mostrar todas las compras (incluyendo inactivas)
+            // La lógica de permisos se maneja en el frontend
             $this->setQuery("SELECT 
                         c.idcompra, 
                         c.nro_compra, 
@@ -239,7 +243,7 @@ class ComprasModel extends Mysql
             $this->setQuery("SELECT idproveedor, nombre, apellido, identificacion
                         FROM proveedor
                         WHERE (nombre LIKE ? OR apellido LIKE ? OR identificacion LIKE ?)
-                        AND estatus = 'ACTIVO'
+                        AND estatus = 'activo'
                         LIMIT 10");
             
             $param = "%{$this->getTermino()}%";
@@ -311,7 +315,7 @@ class ComprasModel extends Mysql
                            cp.nombre as nombre_categoria
                     FROM producto p
                     JOIN categoria cp ON p.idcategoria = cp.idcategoria
-                    LEFT JOIN monedas m ON p.moneda = m.idmoneda
+                    LEFT JOIN monedas m ON p.moneda = m.codigo_moneda
                     WHERE p.idproducto = ? AND p.estatus = 'activo'");
             
             $this->setArray([$this->getIdProducto()]);
@@ -421,8 +425,8 @@ class ComprasModel extends Mysql
         try {
             $db->beginTransaction();
 
-            $this->setQuery("INSERT INTO compra (nro_compra, fecha, idproveedor, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, total_general, observaciones_compra, estatus_compra)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'BORRADOR')");
+            $this->setQuery("INSERT INTO compra (nro_compra, fecha, idproveedor, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, total_general, balance, observaciones_compra, estatus_compra)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'BORRADOR')");
             
             $this->setArray([
                 $datosCompra['nro_compra'],
@@ -432,6 +436,7 @@ class ComprasModel extends Mysql
                 $datosCompra['subtotal_general_compra'] ?? 0,
                 $datosCompra['descuento_porcentaje_compra'] ?? 0,
                 $datosCompra['monto_descuento_compra'] ?? 0,
+                $datosCompra['total_general_compra'],
                 $datosCompra['total_general_compra'],
                 $datosCompra['observaciones_compra']
             ]);
@@ -795,8 +800,8 @@ class ComprasModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            $this->setQuery("INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_creacion, fecha_modificacion) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVO', NOW(), NOW())");
+            $this->setQuery("INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_cracion, fecha_modificacion) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', NOW(), NOW())");
             
             $this->setArray([
                 $data['nombre'],
@@ -818,7 +823,7 @@ class ComprasModel extends Mysql
                 return [
                     'status' => true,
                     'message' => 'Proveedor registrado exitosamente.',
-                    'idproveedor' => $idProveedor
+                    'proveedor_id' => $idProveedor
                 ];
             } else {
                 return [
@@ -898,11 +903,56 @@ class ComprasModel extends Mysql
         }
     }
     
+    // MÉTODO PRIVADO
+    private function ejecutarGuardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery("INSERT INTO historial_romana 
+            (peso, fecha, estatus, fecha_creacion) 
+            VALUES (?, ?, ?, NOW())");
+
+            $this->setArray([
+                $peso,
+                $fecha ?? date('Y-m-d H:i:s'),
+                $estatus
+            ]);
+
+            $stmt = $db->prepare($this->getQuery());
+            $insertExitoso = $stmt->execute($this->getArray());
+
+            if ($insertExitoso) {
+                $idRomana = $db->lastInsertId();
+                return [
+                    'status' => true,
+                    'message' => 'Peso registrado exitosamente.',
+                    'idromana' => $idRomana
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'Error al registrar el peso.'
+                ];
+            }
+
+        } catch (PDOException $e) {
+            error_log("ComprasModel::ejecutarGuardarPesoRomana - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error de base de datos al registrar peso: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
 
     // MÉTODOS PÚBLICOS QUE SE LLAMAN EN EL CONTROLADOR
-    public function selectAllCompras()
+    public function selectAllCompras(int $idUsuarioSesion = 0)
     {
-        return $this->ejecutarConsultaTodasCompras();
+        return $this->ejecutarConsultaTodasCompras($idUsuarioSesion);
     }
 
     public function generarNumeroCompra()
@@ -988,6 +1038,12 @@ class ComprasModel extends Mysql
         return $this->ejecutarBusquedaProveedorPorId($idproveedor);
     }
 
+    // MÉTODO PÚBLICO
+    public function guardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
+    {
+        return $this->ejecutarGuardarPesoRomana($peso, $fecha, $estatus);
+    }
+
     public function selectCompra($idcompra){
         $conexion = new Conexion();
         $conexion->connect();
@@ -1051,56 +1107,142 @@ class ComprasModel extends Mysql
         }
     }
 
-    // MÉTODO PRIVADO
-    private function ejecutarGuardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
-    {
+    public function obtenerEstadoCompra($idcompra) {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
-            $this->setQuery("INSERT INTO historial_romana 
-            (peso, fecha, estatus, fecha_creacion) 
-            VALUES (?, ?, ?, NOW())");
-
-            $this->setArray([
-                $peso,
-                $fecha ?? date('Y-m-d H:i:s'),
-                $estatus
-            ]);
-
+            $this->setQuery("SELECT estatus_compra FROM compra WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
             $stmt = $db->prepare($this->getQuery());
-            $insertExitoso = $stmt->execute($this->getArray());
-
-            if ($insertExitoso) {
-                $idRomana = $db->lastInsertId();
-                return [
-                    'status' => true,
-                    'message' => 'Peso registrado exitosamente.',
-                    'idromana' => $idRomana
-                ];
-            } else {
-                return [
-                    'status' => false,
-                    'message' => 'Error al registrar el peso.'
-                ];
-            }
-
-        } catch (PDOException $e) {
-            error_log("ComprasModel::ejecutarGuardarPesoRomana - Error: " . $e->getMessage());
-            return [
-                'status' => false,
-                'message' => 'Error de base de datos al registrar peso: ' . $e->getMessage()
-            ];
+            $stmt->execute($this->getArray());
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $result ? $result['estatus_compra'] : null;
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener estado de compra: " . $e->getMessage());
+            return null;
         } finally {
             $conexion->disconnect();
         }
     }
 
-    // MÉTODO PÚBLICO
-    public function guardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
-    {
-        return $this->ejecutarGuardarPesoRomana($peso, $fecha, $estatus);
+    /**
+     * Verificar si un usuario es super usuario
+     */
+    private function esSuperUsuario(int $idusuario){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
+        try {
+            error_log("ComprasModel::esSuperUsuario - Verificando usuario ID: $idusuario");
+            error_log("ComprasModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
+            
+            $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
+            $this->setArray([$idusuario]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($usuario) {
+                $rolUsuario = intval($usuario['idrol']);
+                error_log("ComprasModel::esSuperUsuario - Rol del usuario: $rolUsuario");
+                $esSuperUsuario = $rolUsuario === self::SUPER_USUARIO_ROL_ID;
+                error_log("ComprasModel::esSuperUsuario - Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
+                return $esSuperUsuario;
+            } else {
+                error_log("ComprasModel::esSuperUsuario - Usuario no encontrado o inactivo");
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log("ComprasModel::esSuperUsuario - Error: " . $e->getMessage());
+            return false;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Verificar si el usuario actual es super usuario
+     */
+    private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
+        return $this->esSuperUsuario($idUsuarioSesion);
+    }
+
+    /**
+     * Verificar si un usuario es super usuario (método público)
+     */
+    public function verificarEsSuperUsuario(int $idusuario){
+        return $this->esSuperUsuario($idusuario);
+    }
+
+    /**
+     * Reactivar una compra (cambiar estatus a BORRADOR)
+     */
+    public function reactivarCompra(int $idcompra){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Verificar que la compra existe
+            $this->setQuery("SELECT idcompra, estatus_compra FROM compra WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $compra = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$compra) {
+                return [
+                    'status' => false,
+                    'message' => 'Compra no encontrada'
+                ];
+            }
+            
+            // Verificar si la compra está inactiva (el estado debe ser exactamente "inactivo")
+            if ($compra['estatus_compra'] !== 'inactivo') {
+                return [
+                    'status' => false,
+                    'message' => 'La compra no está inactiva'
+                ];
+            }
+            
+            // Reactivar compra (cambiar a BORRADOR)
+            $this->setQuery("UPDATE compra SET estatus_compra = 'BORRADOR', fecha_modificacion = NOW() WHERE idcompra = ?");
+            $this->setArray([$idcompra]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute($this->getArray());
+            
+            if ($resultado && $stmt->rowCount() > 0) {
+                $resultado = [
+                    'status' => true,
+                    'message' => 'Compra reactivada exitosamente'
+                ];
+            } else {
+                $resultado = [
+                    'status' => false,
+                    'message' => 'No se pudo reactivar la compra'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("ComprasModel::reactivarCompra - Error: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error al reactivar compra: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 }
 ?>

@@ -191,16 +191,14 @@ class LoginModel extends Mysql
         return $resultado;
     }
 
-   
-
-    private function ejecutarBusquedaPorEmail(string $email)
+       private function ejecutarBusquedaPorEmail(string $email)
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectSeguridad();
 
         try {
-            $this->setQuery("SELECT idusuario, usuario, correo FROM usuario WHERE correo = ? AND estatus = 'activo'");
+            $this->setQuery("SELECT idusuario, usuario, correo, estatus FROM usuario WHERE correo = ?");
             $this->setArray([$email]);
             
             $stmt = $db->prepare($this->getQuery());

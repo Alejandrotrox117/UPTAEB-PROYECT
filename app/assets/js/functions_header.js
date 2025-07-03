@@ -173,12 +173,15 @@ function closeNotifications() {
 function loadNotifications() {
   const notificationsList = document.getElementById("notifications-list");
   if (!notificationsList) return;
-  notificationsList.innerHTML = `<div class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Cargando...</p></div>`;
+  
+  notificationsList.innerHTML = `<div class="text-center py-4 text-blue-500"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Cargando...</p></div>`;
+  
   fetch("./Notificaciones/getNotificaciones")
     .then((response) => response.json())
     .then((result) => {
       if (result.status && result.data) {
         displayNotifications(result.data);
+        actualizarContadorNotificaciones(); // Actualizar contador también
       } else {
         notificationsList.innerHTML = `<div class="text-center py-4 text-gray-500"><i class="fas fa-bell-slash fa-2x mb-2"></i><p>No hay notificaciones</p></div>`;
       }
@@ -188,6 +191,99 @@ function loadNotifications() {
       notificationsList.innerHTML = `<div class="text-center py-4 text-red-500"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Error al cargar</p></div>`;
     });
 }
+
+function regenerarNotificacionesStock() {
+  return fetch("./Compras/regenerarNotificaciones", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.status) {
+      console.log("Notificaciones regeneradas exitosamente");
+      // Recargar notificaciones después de regenerar
+      setTimeout(() => {
+        cargarNotificaciones();
+      }, 1000);
+    } else {
+      console.error("Error al regenerar notificaciones:", result.message);
+    }
+    return result;
+  })
+  .catch(error => {
+    console.error("Error en regeneración:", error);
+    return { status: false, message: error.message };
+  });
+}
+
+// Función para manejar cambios de estado de compra
+function cambiarEstadoCompra(idcompra, nuevoEstado, estadoAnterior) {
+  const formData = new FormData();
+  formData.append('idcompra', idcompra);
+  formData.append('estado', nuevoEstado);
+  formData.append('estado_anterior', estadoAnterior);
+  
+  return fetch("./Compras/cambiarEstado", {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.status) {
+      // Si la compra cambió a PAGADA, esperar un momento y recargar notificaciones
+      if (nuevoEstado === 'PAGADA' && estadoAnterior !== 'PAGADA') {
+        setTimeout(() => {
+          cargarNotificaciones();
+          actualizarContadorNotificaciones();
+        }, 2000); // Esperar 2 segundos para que se procese todo
+      }
+    }
+    return result;
+  });
+}
+
+// Agregar auto-actualización de notificaciones cada 30 segundos
+let intervaloNotificaciones;
+
+function iniciarAutoActualizacion() {
+  // Limpiar intervalo existente si hay uno
+  if (intervaloNotificaciones) {
+    clearInterval(intervaloNotificaciones);
+  }
+  
+  // Configurar nueva auto-actualización cada 30 segundos
+  intervaloNotificaciones = setInterval(() => {
+    actualizarContadorNotificaciones();
+    
+    // Solo recargar lista si está abierta
+    const dropdown = document.getElementById('notifications-dropdown');
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+      cargarNotificaciones();
+    }
+  }, 30000);
+}
+
+// Llamar la función cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+  iniciarAutoActualizacion();
+  
+  // Agregar evento al botón de refrescar notificaciones
+  const refreshBtn = document.getElementById('refresh-notifications-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function() {
+      cargarNotificaciones();
+    });
+  }
+});
+
+// Detener auto-actualización cuando se cierra la página
+window.addEventListener('beforeunload', function() {
+  if (intervaloNotificaciones) {
+    clearInterval(intervaloNotificaciones);
+  }
+});
 
 function displayNotifications(notifications) {
   const notificationsList = document.getElementById("notifications-list");

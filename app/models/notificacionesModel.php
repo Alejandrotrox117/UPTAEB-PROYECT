@@ -372,9 +372,127 @@ class NotificacionesModel extends Mysql
         return $resultado;
     }
 
+    private function ejecutarVerificarNotificacionExistente($tipo, $modulo, $referenciaId, $rolDestinatario = null){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            if ($rolDestinatario) {
+                $this->setQuery(
+                    "SELECT COUNT(*) as total FROM notificaciones 
+                    WHERE tipo = ? AND modulo = ? AND referencia_id = ? 
+                    AND rol_destinatario = ? AND activa = 1"
+                );
+                $this->setArray([$tipo, $modulo, $referenciaId, $rolDestinatario]);
+            } else {
+                $this->setQuery(
+                    "SELECT COUNT(*) as total FROM notificaciones 
+                    WHERE tipo = ? AND modulo = ? AND referencia_id = ? AND activa = 1"
+                );
+                $this->setArray([$tipo, $modulo, $referenciaId]);
+            }
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $resultado = $result['total'] > 0;
+            
+        } catch (Exception $e) {
+            error_log("Error al verificar notificación existente: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
+    private function ejecutarEliminarNotificacionesPorReferencia($tipo, $modulo, $referenciaId){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            $this->setQuery(
+                "UPDATE notificaciones 
+                SET activa = 0, fecha_eliminacion = NOW() 
+                WHERE tipo = ? AND modulo = ? AND referencia_id = ? AND activa = 1"
+            );
+            
+            $this->setArray([$tipo, $modulo, $referenciaId]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $resultado = $stmt->rowCount();
+            
+        } catch (Exception $e) {
+            error_log("Error al eliminar notificaciones por referencia: " . $e->getMessage());
+            $resultado = 0;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
+    private function ejecutarObtenerUsuariosConPermiso($modulo, $accion){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            // Mapear acciones a permisos específicos
+            $permisoMap = [
+                'eliminar' => 'eliminar', // para autorizar compras
+                'crear' => 'crear'        // para registrar pagos
+            ];
+            
+            $permisoRequerido = $permisoMap[$accion] ?? $accion;
+            
+            $this->setQuery(
+                "SELECT DISTINCT r.idrol, r.nombre as rol_nombre
+                FROM roles r
+                INNER JOIN rol_modulo_permisos rmp ON r.idrol = rmp.idrol
+                INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
+                INNER JOIN permisos p ON rmp.idpermiso = p.idpermiso
+                WHERE LOWER(m.titulo) = LOWER(?)
+                AND (LOWER(p.nombre_permiso) = 'acceso total' OR LOWER(p.nombre_permiso) = LOWER(?))
+                AND r.estatus = 'activo'
+                AND rmp.activo = 1"
+            );
+            
+            $this->setArray([$modulo, $permisoRequerido]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (Exception $e) {
+            error_log("Error al obtener usuarios con permiso: " . $e->getMessage());
+            $resultado = [];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
     // Métodos públicos
     public function crearNotificacion(array $data){
         return $this->ejecutarCreacionNotificacion($data);
+    }
+
+    public function verificarNotificacionExistente($tipo, $modulo, $referenciaId, $rolDestinatario = null){
+        return $this->ejecutarVerificarNotificacionExistente($tipo, $modulo, $referenciaId, $rolDestinatario);
+    }
+
+    public function eliminarNotificacionesPorReferencia($tipo, $modulo, $referenciaId){
+        return $this->ejecutarEliminarNotificacionesPorReferencia($tipo, $modulo, $referenciaId);
+    }
+
+    public function obtenerUsuariosConPermiso($modulo, $accion){
+        return $this->ejecutarObtenerUsuariosConPermiso($modulo, $accion);
     }
 
     public function obtenerNotificacionesPorUsuario(int $usuarioId, int $rolId){

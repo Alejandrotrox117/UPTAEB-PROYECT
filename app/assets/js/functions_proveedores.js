@@ -7,6 +7,8 @@ import {
 } from "./validaciones.js";
 
 let tablaProveedores;
+let esSuperUsuarioActual = false;
+let idUsuarioActual = 0;
 
 const camposFormularioProveedor = [
   {id: "proveedorNombre",tipo: "input",regex: expresiones.nombre,
@@ -125,45 +127,95 @@ const camposFormularioActualizarProveedor = [
 function recargarTablaProveedores() {
   try {
     if (tablaProveedores && tablaProveedores.ajax && typeof tablaProveedores.ajax.reload === 'function') {
-      console.log("Recargando tabla con variable global");
       tablaProveedores.ajax.reload(null, false);
       return true;
     }
 
     if ($.fn.DataTable.isDataTable('#TablaProveedores')) {
-      console.log("Recargando tabla con selector ID");
       const tabla = $('#TablaProveedores').DataTable();
       tabla.ajax.reload(null, false);
       return true;
     }
 
-    
-    console.log("Recargando página completa");
+  
     window.location.reload();
     return true;
 
   } catch (error) {
-    console.error("Error al recargar tabla:", error);
     window.location.reload();
     return false;
   }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-    if (settings.nTable.id !== "TablaProveedores") {
-      return true;
-    }
-    var api = new $.fn.dataTable.Api(settings);
-    var rowData = api.row(dataIndex).data();
-    return rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
-  });
-
   $(document).ready(function () {
-    if ($.fn.DataTable.isDataTable('#TablaProveedores')) {
-      $('#TablaProveedores').DataTable().destroy();
-    }
-    tablaProveedores = $("#TablaProveedores").DataTable({
+    // Verificar el estado de super usuario antes de inicializar la tabla
+    verificarSuperUsuario().then((result) => {
+      if (result && result.status) {
+        esSuperUsuarioActual = result.es_super_usuario;
+        idUsuarioActual = result.usuario_id;
+      } else {
+        console.error('Error al verificar super usuario:', result ? result.message : 'Sin respuesta');
+        esSuperUsuarioActual = false;
+        idUsuarioActual = 0;
+      }
+      
+      // AHORA agregar el filtro basado en el rol del usuario
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        if (settings.nTable.id !== "TablaProveedores") {
+          return true;
+        }
+        
+        // Si es super usuario, mostrar todos los proveedores (activos e inactivos)
+        if (esSuperUsuarioActual) {
+          return true;
+        }
+        
+        // Para usuarios normales, solo mostrar proveedores activos
+        var api = new $.fn.dataTable.Api(settings);
+        var rowData = api.row(dataIndex).data();
+        var esActivo = rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
+        return esActivo;
+      });
+      
+      // Inicializar la tabla después de verificar el estado de super usuario
+      inicializarTablaProveedores();
+      
+      // Forzar actualización después de inicializar
+      setTimeout(() => {
+        if (tablaProveedores && typeof tablaProveedores.draw === 'function') {
+          tablaProveedores.draw(false);
+        }
+      }, 500);
+    }).catch((error) => {
+      console.error("Error en verificación de super usuario:", error);
+      esSuperUsuarioActual = false;
+      idUsuarioActual = 0;
+      
+      // Si falla la verificación, asumir usuario normal y agregar filtro
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        if (settings.nTable.id !== "TablaProveedores") {
+          return true;
+        }
+        
+        // Para usuarios normales, solo mostrar proveedores activos
+        var api = new $.fn.dataTable.Api(settings);
+        var rowData = api.row(dataIndex).data();
+        return rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
+      });
+      
+      // Aún así intentar inicializar la tabla en caso de error
+      inicializarTablaProveedores();
+    });
+  });
+});
+
+function inicializarTablaProveedores() {
+  if ($.fn.DataTable.isDataTable('#TablaProveedores')) {
+    $('#TablaProveedores').DataTable().destroy();
+  }
+  
+  tablaProveedores = $("#TablaProveedores").DataTable({
       processing: true,
       serverSide: false,
       ajax: {
@@ -189,12 +241,12 @@ document.addEventListener("DOMContentLoaded", function () {
           Swal.fire({
             icon: "error",
             title: "Error de Comunicación",
-            text: "Fallo al cargar datos. Intente más tarde.",
-            footer: `Detalle: ${textStatus} - ${errorThrown}`,
+            text: "Error al cargar los datos. Por favor, intenta de nuevo.",
           });
         },
       },
       columns: [
+        { data: "idproveedor", title: "ID", className: "none" },
         { data: "nombre", title: "Nombre", className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background" },
         { data: "apellido", title: "Apellido", className: "all whitespace-nowrap py-2 px-3 text-gray-700" },
         { data: "identificacion", title: "Identificación", className: "desktop whitespace-nowrap py-2 px-3 text-gray-700" },
@@ -222,22 +274,55 @@ document.addEventListener("DOMContentLoaded", function () {
           title: "Acciones",
           orderable: false,
           searchable: false,
-          className: "all text-center actions-column py-1 px-2",
+          className: "all text-center py-2 px-3 w-32",
           render: function (data, type, row) {
+            if (!row) return "";
+            
             const idProveedor = row.idproveedor || "";
-            const nombreCompleto = `${row.nombre || ""} ${row.apellido || ""}`.trim();
-            return `
-              <div class="inline-flex items-center space-x-1">
-                <button class="ver-proveedor-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" data-idproveedor="${idProveedor}" title="Ver detalles">
-                    <i class="fas fa-eye fa-fw text-base"></i>
+            const nombreProveedor = row.nombre || "";
+            const apellidoProveedor = row.apellido || "";
+            const estatusProveedor = row.estatus || "";
+            
+            // Verificar si el proveedor está inactivo
+            const esProveedorInactivo = estatusProveedor.toUpperCase() === 'INACTIVO';
+            
+            let acciones = '<div class="flex justify-center items-center space-x-1">';
+            
+            // Botón Ver - siempre visible
+            acciones += `
+              <button class="ver-proveedor-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                      data-idproveedor="${idProveedor}" 
+                      title="Ver detalles">
+                  <i class="fas fa-eye text-sm"></i>
+              </button>`;
+            
+            if (esProveedorInactivo) {
+              // Para proveedores inactivos, mostrar solo el botón de reactivar
+              acciones += `
+                <button class="reactivar-proveedor-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                        data-idproveedor="${idProveedor}" 
+                        data-nombre="${nombreProveedor} ${apellidoProveedor}" 
+                        title="Reactivar proveedor">
+                    <i class="fas fa-undo text-sm"></i>
+                </button>`;
+            } else {
+              // Para proveedores activos, mostrar botones de editar y eliminar
+              acciones += `
+                <button class="editar-proveedor-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                        data-idproveedor="${idProveedor}" 
+                        title="Editar proveedor">
+                    <i class="fas fa-edit text-sm"></i>
                 </button>
-                <button class="editar-proveedor-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" data-idproveedor="${idProveedor}" title="Editar">
-                    <i class="fas fa-edit fa-fw text-base"></i>
-                </button>
-                <button class="eliminar-proveedor-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" data-idproveedor="${idProveedor}" data-nombre="${nombreCompleto}" title="Desactivar">
-                    <i class="fas fa-trash-alt fa-fw text-base"></i>
-                </button>
-              </div>`;
+                <button class="eliminar-proveedor-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                        data-idproveedor="${idProveedor}" 
+                        data-nombre="${nombreProveedor} ${apellidoProveedor}" 
+                        title="Eliminar proveedor">
+                    <i class="fas fa-trash text-sm"></i>
+                </button>`;
+            }
+            
+            acciones += '</div>';
+            return acciones;
           },
         },
       ],
@@ -288,8 +373,12 @@ document.addEventListener("DOMContentLoaded", function () {
           left: 1
       },
       initComplete: function (settings, json) {
-        console.log("DataTable inicializado correctamente");te
         window.tablaProveedores = this.api();
+        
+        // Forzar redraw para asegurar que los botones se rendericen correctamente
+        setTimeout(() => {
+          this.api().draw(false);
+        }, 100);
       },
       drawCallback: function (settings) {
         $(settings.nTableWrapper).find('.dataTables_filter input[type="search"]')
@@ -304,6 +393,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
+    // Event handlers
     $("#TablaProveedores tbody").on("click", ".ver-proveedor-btn", function () {
       const idProveedor = $(this).data("idproveedor");
       if (idProveedor && typeof verProveedor === "function") {
@@ -338,9 +428,28 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
     );
-  });
 
-  
+    // Event handler para reactivar proveedores
+    $("#TablaProveedores tbody").on(
+      "click",
+      ".reactivar-proveedor-btn",
+      function () {
+        const idProveedor = $(this).data("idproveedor");
+        const nombreProveedor = $(this).data("nombre");
+        if (idProveedor && typeof reactivarProveedor === "function") {
+          reactivarProveedor(idProveedor, nombreProveedor);
+        } else {
+          console.error("Función reactivarProveedor no definida o idProveedor no encontrado.", idProveedor);
+          Swal.fire("Error", "No se pudo obtener el ID del proveedor.", "error");
+        }
+      }
+    );
+
+    // Configurar event listeners de modales
+    setupModalEventListeners();
+}
+
+function setupModalEventListeners() {
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarProveedor"
   );
@@ -426,8 +535,7 @@ document.addEventListener("DOMContentLoaded", function () {
       cerrarModal("modalVerProveedor");
     });
   }
-});
-
+}
 
 function registrarProveedor() {
   const btnGuardarProveedor = document.getElementById("btnGuardarProveedor");
@@ -677,4 +785,132 @@ function eliminarProveedor(idProveedor, nombreProveedor) {
         });
     }
   });
+}
+
+/**
+ * Reactivar un proveedor (cambiar estatus de INACTIVO a ACTIVO)
+ */
+function reactivarProveedor(idProveedor, nombreProveedor) {
+
+  Swal.fire({
+    title: "¿Confirmar Reactivación?",
+    text: `¿Deseas reactivar al proveedor "${nombreProveedor}"? Esta acción cambiará su estatus a ACTIVO.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#10B981",
+    cancelButtonColor: "#6B7280",
+    confirmButtonText: "Sí, Reactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      
+      fetch("Proveedores/reactivarProveedor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idproveedor: idProveedor }),
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then((result) => {
+          if (result.status) {
+            Swal.fire(
+              "¡Reactivado!",
+              result.message || "El proveedor ha sido reactivado correctamente.",
+              "success"
+            ).then(() => {
+              recargarTablaProveedores();
+            });
+          } else {
+            Swal.fire(
+              "Error",
+              result.message || "No se pudo reactivar al proveedor.",
+              "error"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error al reactivar proveedor:", error);
+          Swal.fire("Error", "Error de conexión al reactivar proveedor.", "error");
+        });
+    }
+  });
+}
+
+/**
+ * Verificar si el usuario actual es super usuario
+ */
+function verificarSuperUsuario() {
+  return fetch("Proveedores/verificarSuperUsuario", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then(response => {
+      return response.json();
+    })
+    .then(result => {
+      if (result.status) {
+        esSuperUsuarioActual = result.es_super_usuario;
+        idUsuarioActual = result.usuario_id;
+        return result;
+      } else {
+        console.error('Error al verificar super usuario:', result.message);
+        esSuperUsuarioActual = false;
+        idUsuarioActual = 0;
+        return { es_super_usuario: false, usuario_id: 0 };
+      }
+    })
+    .catch(error => {
+      console.error("Error en verificarSuperUsuario:", error);
+      esSuperUsuarioActual = false;
+      idUsuarioActual = 0;
+      return { es_super_usuario: false, usuario_id: 0 };
+    });
+}
+
+/**
+ * Forzar redraw de la tabla de proveedores para actualizar botones
+ */
+function forzarRedrawTablaProveedores() {
+  
+  if (tablaProveedores && typeof tablaProveedores.draw === 'function') {
+    tablaProveedores.draw();
+  } else if ($.fn.DataTable.isDataTable('#TablaProveedores')) {
+    $('#TablaProveedores').DataTable().draw();
+  } else {
+    console.log("[REDRAW] No se pudo encontrar la tabla");
+  }
+}
+
+/**
+ * Función de debug para verificar el estado actual
+ */
+function debugEstadoProveedores() {
+  return {
+    esSuperUsuarioActual,
+    idUsuarioActual,
+    tablaProveedores: !!tablaProveedores,
+    dataTableExists: $.fn.DataTable.isDataTable('#TablaProveedores')
+  };
+}
+
+// Exponer función globalmente para debug
+window.debugEstadoProveedores = debugEstadoProveedores;
+window.forzarRedrawTablaProveedores = forzarRedrawTablaProveedores;
+
+/**
+ * Actualizar los botones de acción para reflejar el estado actual del superusuario
+ */
+function actualizarBotonesAccion() {
+  if (tablaProveedores && typeof tablaProveedores.draw === 'function') {
+    tablaProveedores.draw(false); // false para no resetear la paginación
+  } else if ($.fn.DataTable.isDataTable('#TablaProveedores')) {
+    $('#TablaProveedores').DataTable().draw(false);
+  }
 }

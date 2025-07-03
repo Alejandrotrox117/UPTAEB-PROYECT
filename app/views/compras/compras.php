@@ -1,6 +1,17 @@
-<?php headerAdmin($data); ?>
-<input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
-<input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
+<?php 
+headerAdmin($data);
+
+// OBTENER PERMISOS DEL USUARIO PARA EL MÓDULO
+$permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Compras');
+?>
+
+<input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars($data['rolUsuarioAutenticado'] ?? ''); ?>">
+<input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($data['idRolUsuarioAutenticado'] ?? 0); ?>">
+
+<!-- PASAR PERMISOS AL JAVASCRIPT -->
+<script>
+window.permisosCompras = <?php echo json_encode($permisos); ?>;
+</script>
 
 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
   <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -12,12 +23,37 @@
     <p class="text-green-600 text-base md:text-lg">Registro y consulta de compras de materiales</p>
   </div>
 
+  <!-- MOSTRAR MENSAJE SI NO TIENE PERMISOS PARA VER -->
+  <?php if (!$permisos['ver']): ?>
+  <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 mt-6 rounded-r-lg">
+      <div class="flex">
+          <div class="flex-shrink-0">
+              <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+          </div>
+          <div class="ml-3">
+              <p class="text-sm text-yellow-700 font-medium">
+                  <strong>Acceso Restringido:</strong> No tienes permisos para ver la lista de compras.
+              </p>
+              <p class="text-xs text-yellow-600 mt-1">
+                  Contacta al administrador del sistema si necesitas acceso a este módulo.
+              </p>
+          </div>
+      </div>
+  </div>
+  <?php else: ?>
+
   <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
     <div class="flex justify-between items-center mb-6">
-
+      <!-- BOTÓN CREAR SOLO SI TIENE PERMISOS -->
+      <?php if ($permisos['crear']): ?>
       <button id="btnAbrirModalNuevaCompra" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
         <i class="mr-1 md:mr-2"></i>Registrar Nueva Compra
       </button>
+      <?php else: ?>
+      <div class="bg-gray-100 px-4 py-2 md:px-6 rounded-lg text-gray-500 text-sm md:text-base">
+          <i class="fas fa-lock mr-1 md:mr-2"></i> Sin permisos para crear compras
+      </div>
+      <?php endif; ?>
     </div>
 
     <div class="overflow-x-auto w-full relative">
@@ -38,8 +74,13 @@
       </table>
     </div>
   </div>
+
+  <?php endif; ?>
 </main>
 
+<!-- MODALES SOLO SI TIENE PERMISOS CORRESPONDIENTES -->
+
+<?php if ($permisos['crear']): ?>
 <!-- Modal para Registrar Nueva Compra-->
 <div id="modalNuevaCompra" class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
   <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-4xl max-h-[95vh]">
@@ -148,6 +189,7 @@
     </div>
   </div>
 </div>
+<?php endif; ?>
 
 <!-- Modal para Registrar Nuevo Proveedor (desde Compras) -->
 <div id="modalRegistrarProveedor"
@@ -429,5 +471,19 @@
   </div>
 </div>
 
+<!-- Cargar archivo de permisos antes que el archivo principal -->
+<script src="/project/app/assets/js/functions_compras_permisos.js"></script>
+<script>
+// Ejecutar obtenerPermisos inmediatamente cuando se carga el archivo de permisos
+document.addEventListener("DOMContentLoaded", function() {
+    // Llamar a obtenerPermisos desde el archivo de permisos
+    if (typeof window.permisosCompras !== 'undefined' && typeof window.permisosCompras.obtenerPermisos === 'function') {
+        console.log("MAIN - Llamando a obtenerPermisos desde la vista");
+        window.permisosCompras.obtenerPermisos();
+    } else {
+        console.warn("MAIN - No se encontró la función obtenerPermisos en window.permisosCompras");
+    }
+});
+</script>
 
 <?php footerAdmin($data); ?>

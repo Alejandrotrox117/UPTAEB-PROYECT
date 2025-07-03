@@ -11,6 +11,9 @@ class ProveedoresModel extends Mysql
     private $proveedorId;
     private $message;
     private $status;
+    
+    // Definir constante para el rol de super usuario
+    const SUPER_USUARIO_ROL_ID = 1; // IMPORTANTE: Ajustar según el ID real del rol de super usuario en tu BD
  
     public function __construct()
     {
@@ -290,12 +293,22 @@ class ProveedoresModel extends Mysql
         return $resultado;
     }
 
-    private function ejecutarBusquedaTodosProveedores(){
+    private function ejecutarBusquedaTodosProveedores(int $idUsuarioSesion = 0){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Verificar si el usuario actual es super usuario
+            $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+            
+            $whereClause = "";
+            if (!$esSuperUsuarioActual) {
+                // Si no es super usuario, solo mostrar proveedores activos
+                $whereClause = " WHERE estatus = 'ACTIVO'";
+            }
+            // Si es super usuario, mostrar TODOS los proveedores (activos e inactivos)
+            
             $this->setQuery(
                 "SELECT 
                     idproveedor, nombre, apellido, identificacion, fecha_nacimiento,
@@ -304,8 +317,8 @@ class ProveedoresModel extends Mysql
                     DATE_FORMAT(fecha_nacimiento, ?) as fecha_nacimiento_formato,
                     DATE_FORMAT(fecha_cracion, ?) as fecha_creacion_formato,
                     DATE_FORMAT(fecha_modificacion, ?) as fecha_modificacion_formato
-                FROM proveedor 
-                ORDER BY nombre ASC, apellido ASC"
+                FROM proveedor" . $whereClause . " 
+                ORDER BY estatus DESC, nombre ASC, apellido ASC"
             );
             
             $this->setArray(['%d/%m/%Y', '%d/%m/%Y', '%d/%m/%Y']);
@@ -376,6 +389,57 @@ class ProveedoresModel extends Mysql
         return $resultado;
     }
 
+    /**
+     * Verificar si un usuario es super usuario
+     */
+    private function esSuperUsuario(int $idusuario){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
+        try {
+            error_log("ProveedoresModel::esSuperUsuario - Verificando usuario ID: $idusuario");
+            error_log("ProveedoresModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
+            
+            $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
+            $this->setArray([$idusuario]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($usuario) {
+                $rolUsuario = intval($usuario['idrol']);
+                error_log("ProveedoresModel::esSuperUsuario - Rol del usuario: $rolUsuario");
+                $esSuperUsuario = $rolUsuario === self::SUPER_USUARIO_ROL_ID;
+                error_log("ProveedoresModel::esSuperUsuario - Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
+                return $esSuperUsuario;
+            } else {
+                error_log("ProveedoresModel::esSuperUsuario - Usuario no encontrado o inactivo");
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log("ProveedoresModel::esSuperUsuario - Error: " . $e->getMessage());
+            return false;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Verificar si el usuario actual es super usuario
+     */
+    private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
+        return $this->esSuperUsuario($idUsuarioSesion);
+    }
+
+    /**
+     * Verificar si un usuario es super usuario (método público)
+     */
+    public function verificarEsSuperUsuario(int $idusuario){
+        return $this->esSuperUsuario($idusuario);
+    }
+
     // Métodos públicos que usan las funciones privadas
     public function insertProveedor(array $data){
         $this->setData($data);
@@ -417,12 +481,76 @@ class ProveedoresModel extends Mysql
         return $this->ejecutarEliminacionProveedor($this->getProveedorId());
     }
 
-    public function selectAllProveedores(){
-        return $this->ejecutarBusquedaTodosProveedores();
+    public function selectAllProveedores(int $idUsuarioSesion = 0){
+        return $this->ejecutarBusquedaTodosProveedores($idUsuarioSesion);
     }
 
     public function selectProveedoresActivos(){
         return $this->ejecutarBusquedaProveedoresActivos();
     }
+
+    /**
+     * Reactivar un proveedor (cambiar estatus a ACTIVO)
+     */
+    public function reactivarProveedor(int $idproveedor){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Verificar que el proveedor existe
+            $this->setQuery("SELECT idproveedor, estatus FROM proveedor WHERE idproveedor = ?");
+            $this->setArray([$idproveedor]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $proveedor = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$proveedor) {
+                return [
+                    'status' => false,
+                    'message' => 'Proveedor no encontrado'
+                ];
+            }
+            
+            if ($proveedor['estatus'] === 'ACTIVO') {
+                return [
+                    'status' => false,
+                    'message' => 'El proveedor ya está activo'
+                ];
+            }
+            
+            // Reactivar proveedor
+            $this->setQuery("UPDATE proveedor SET estatus = 'ACTIVO', fecha_modificacion = NOW() WHERE idproveedor = ?");
+            $this->setArray([$idproveedor]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute($this->getArray());
+            
+            if ($resultado && $stmt->rowCount() > 0) {
+                $resultado = [
+                    'status' => true,
+                    'message' => 'Proveedor reactivado exitosamente'
+                ];
+            } else {
+                $resultado = [
+                    'status' => false,
+                    'message' => 'No se pudo reactivar el proveedor'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("ProveedoresModel::reactivarProveedor - Error: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error al reactivar proveedor: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
 }
 ?>
