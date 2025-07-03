@@ -4,6 +4,7 @@ let permisosUsuario = {
     editar: false,
     eliminar: false,
     exportar: false,
+    ver_factura: false,
     acceso_total: false
 };
 
@@ -17,6 +18,7 @@ function obtenerPermisos() {
             editar: window.permisosCompras.editar || false,
             eliminar: window.permisosCompras.eliminar || false,
             exportar: window.permisosCompras.exportar || false,
+            ver_factura: window.permisosCompras.ver_factura || false,
             acceso_total: window.permisosCompras.acceso_total || false
         };
     } else {
@@ -34,6 +36,7 @@ function obtenerPermisos() {
                     editar: permisoEditar ? permisoEditar.value === '1' : false,
                     eliminar: permisoEliminar ? permisoEliminar.value === '1' : false,
                     exportar: false,
+                    ver_factura: false,
                     acceso_total: false
                 };
             }
@@ -81,6 +84,19 @@ function generarBotonesAccionConPermisos(data, type, row) {
                 <i class="fas fa-eye fa-fw text-base"></i>
             </button>
         `);
+        
+        // Botón para ver factura (solo si la compra está pagada)
+        if (estadoActual.toUpperCase() === "PAGADA" && (permisosUsuario.ver_factura || permisosUsuario.acceso_total)) {
+            botones.push(`
+                <button
+                    class="ver-factura-btn text-purple-600 hover:text-purple-700 p-1 transition-colors duration-150"
+                    data-idcompra="${idCompra}"
+                    title="Ver Factura"
+                >
+                    <i class="fas fa-file-invoice fa-fw text-base"></i>
+                </button>
+            `);
+        }
     }
 
     if (esCompraInactiva) {
@@ -255,6 +271,17 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para exportar compras.',
+                    confirmButtonColor: '#3085d6'
+                });
+                return false;
+            }
+            break;
+        case 'ver_factura':
+            if (!permisosUsuario.ver_factura && !permisosUsuario.acceso_total) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso Denegado',
+                    text: 'No tiene permisos para ver facturas.',
                     confirmButtonColor: '#3085d6'
                 });
                 return false;
