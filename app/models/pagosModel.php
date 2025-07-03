@@ -394,7 +394,7 @@ class PagosModel extends Mysql
                 LEFT JOIN proveedor prov ON c.idproveedor = prov.idproveedor
                 LEFT JOIN venta v ON p.idventa = v.idventa  
                 LEFT JOIN cliente cli ON v.idcliente = cli.idcliente
-                LEFT JOIN sueldos_temporales st ON p.idsueldotemp = st.idsueldotemp
+             
                 ORDER BY p.fecha_pago DESC, p.idpago DESC"
             );
             
