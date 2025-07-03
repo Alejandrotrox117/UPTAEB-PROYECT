@@ -94,7 +94,9 @@ private $query;
                 GROUP BY c.idcategoria, c.nombre
                 ORDER BY valor DESC");
             $stmt_valor->execute();
-            $response['valor_por_categoria'] = $stmt_valor->fetchAll(PDO::FETCH_ASSOC);
+            $categorias = $stmt_valor->fetchAll(PDO::FETCH_ASSOC);
+            // Estructurar datos para JavaScript con formato esperado
+            $response['valor_por_categoria'] = json_encode(['categorias' => $categorias]);
 
           
             $stmt_mov = $db->prepare("SELECT 
@@ -115,7 +117,9 @@ private $query;
                 ORDER BY cantidad DESC
                 LIMIT 5");
             $stmt_vendidos->execute();
-            $response['productos_mas_vendidos'] = $stmt_vendidos->fetchAll(PDO::FETCH_ASSOC);
+            $productos = $stmt_vendidos->fetchAll(PDO::FETCH_ASSOC);
+            // Estructurar datos para JavaScript con formato esperado
+            $response['productos_mas_vendidos'] = json_encode(['productos' => $productos]);
 
             return $response;
 
@@ -123,9 +127,9 @@ private $query;
             error_log("Error en getAnalisisInventario: " . $e->getMessage());
             return [
                 'stock_critico' => 0, 
-                'valor_por_categoria' => [], 
+                'valor_por_categoria' => json_encode(['categorias' => []]), 
                 'movimientos_mes' => ['entradas' => 0, 'salidas' => 0],
-                'productos_mas_vendidos' => []
+                'productos_mas_vendidos' => json_encode(['productos' => []])
             ];
         } finally {
             $conexion->disconnect();

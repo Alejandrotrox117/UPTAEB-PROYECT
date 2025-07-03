@@ -1,0 +1,153 @@
+/* Shepherd.js - CSS Básico */
+
+.shepherd-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    z-index: 9998 !important;
+    transition: opacity 0.3s ease !important;
+}
+
+.shepherd-tooltip {
+    position: fixed !important;
+    background: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    padding: 0 !important;
+    z-index: 9999 !important;
+    max-width: 400px !important;
+    min-width: 250px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    transform: none !important;
+}
+
+.shepherd-header {
+    padding: 16px 20px 0 20px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+}
+
+.shepherd-title {
+    margin: 0 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    line-height: 1.4 !important;
+}
+
+.shepherd-cancel-icon {
+    background: none !important;
+    border: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    color: #999 !important;
+    padding: 0 !important;
+    margin-left: 10px !important;
+    transition: color 0.2s ease !important;
+}
+
+.shepherd-cancel-icon:hover {
+    color: #666 !important;
+}
+
+.shepherd-text {
+    padding: 12px 20px 16px 20px !important;
+    color: #666 !important;
+    line-height: 1.5 !important;
+    font-size: 14px !important;
+}
+
+.shepherd-footer {
+    padding: 0 20px 16px 20px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+}
+
+.shepherd-footer button {
+    padding: 8px 16px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    background: white !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    font-family: inherit !important;
+}
+
+.shepherd-footer button:hover {
+    background: #f8f9fa !important;
+    border-color: #adb5bd !important;
+}
+
+.shepherd-footer button.shepherd-button-primary {
+    background: #28a745 !important;
+    color: white !important;
+    border-color: #28a745 !important;
+}
+
+.shepherd-footer button.shepherd-button-primary:hover {
+    background: #218838 !important;
+    border-color: #1e7e34 !important;
+}
+
+.shepherd-footer button.shepherd-button-secondary {
+    background: #6c757d !important;
+    color: white !important;
+    border-color: #6c757d !important;
+}
+
+.shepherd-footer button.shepherd-button-secondary:hover {
+    background: #5a6268 !important;
+    border-color: #545b62 !important;
+}
+
+/* Animaciones suaves */
+.shepherd-tooltip {
+    animation: shepherdFadeIn 0.3s ease !important;
+}
+
+@keyframes shepherdFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .shepherd-tooltip {
+        max-width: calc(100vw - 40px) !important;
+        min-width: 280px !important;
+    }
+    
+    .shepherd-header {
+        padding: 12px 16px 0 16px !important;
+    }
+    
+    .shepherd-text {
+        padding: 8px 16px 12px 16px !important;
+    }
+    
+    .shepherd-footer {
+        padding: 0 16px 12px 16px !important;
+        flex-direction: column !important;
+    }
+    
+    .shepherd-footer button {
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .shepherd-footer button:last-child {
+        margin-bottom: 0 !important;
+    }
+}

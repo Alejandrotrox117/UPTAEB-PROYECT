@@ -223,4 +223,73 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
 </div>
 <?php endif; ?>
 
+<!-- ✅ MODAL CONFIRMAR ELIMINAR - SOLO SI TIENE PERMISOS -->
+<?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar')): ?>
+<div id="modalConfirmarEliminar" class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-[60] p-4">
+  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-md max-h-[95vh]">
+    <div class="px-4 md:px-6 py-4 border-b border-gray-200">
+      <h3 class="text-xl md:text-2xl font-bold text-gray-800">Confirmar Desactivación</h3>
+    </div>
+    <div class="px-4 md:px-8 py-6">
+      <p class="text-gray-700 text-base md:text-lg">
+        ¿Estás seguro de que deseas desactivar el rol <strong id="nombreRolEliminar" class="font-semibold"></strong>? Esta acción cambiará su estatus a INACTIVO.
+      </p>
+    </div>
+    <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+      <button type="button" id="btnCancelarEliminacion" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
+        Cancelar
+      </button>
+      <button type="button" id="btnConfirmarAccionEliminar" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm md:text-base font-medium">
+        Desactivar
+      </button>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
+<!-- ✅ MENSAJE DE PERMISOS INSUFICIENTES -->
+<?php if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
+<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800">
+                Permisos Limitados
+            </h3>
+            <div class="mt-2 text-sm text-yellow-700">
+                <p>Su nivel de acceso actual no permite ver el contenido de este módulo. Contacte al administrador si necesita acceso adicional.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- ✅ AGREGAR REQUIRE PARA USAR EL HELPER EN LA VISTA -->
+<?php
+require_once "helpers/PermisosModuloVerificar.php";
+?>
+
+<script>
+// ✅ VARIABLES GLOBALES DE PERMISOS PARA JAVASCRIPT
+window.PERMISOS_ROLES = {
+    crear: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear') ? 'true' : 'false'; ?>,
+    editar: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar') ? 'true' : 'false'; ?>,
+    eliminar: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar') ? 'true' : 'false'; ?>,
+    ver: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') ? 'true' : 'false'; ?>
+};
+
+// ✅ FUNCIÓN PARA VERIFICAR PERMISOS EN JAVASCRIPT
+window.tienePermiso = function(accion) {
+    return window.PERMISOS_ROLES[accion] || false;
+};
+
+// ✅ LOG DE PERMISOS PARA DEBUG
+console.log('🔐 Permisos del usuario para módulo Roles:', window.PERMISOS_ROLES);
+</script>
+
+<!-- Scripts específicos del módulo de roles -->
+<script src="/project/app/assets/js/ayuda/roles-tour.js"></script>
+
 <?php footerAdmin($data); ?>

@@ -3,7 +3,7 @@
 <!-- Contenedor principal con fondo gris claro y espaciado -->
 <main class="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
   <!-- Saludo y Título de la Página -->
-  <div class="mb-8">
+  <div id="dashboard-header" class="mb-8">
     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
       Hola, <?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Usuario') ?> 👋
     </h1>
@@ -13,7 +13,7 @@
   </div>
 
   <!-- Tarjetas de Métricas Principales MEJORADAS -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div id="dashboard-metrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 flex items-center gap-4 border-l-4 border-blue-500">
       <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
         <i class="fas fa-dollar-sign text-xl"></i>
@@ -62,7 +62,7 @@
   </div>
 
   <!-- MANTENER TODA LA SECCIÓN ORIGINAL DE REPORTES FINANCIEROS -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div id="dashboard-reports" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <!-- Columna de Ingresos - SIN CAMBIOS -->
     <div class="bg-white p-6 rounded-xl shadow-sm">
       <div class="flex justify-between items-center mb-6">
@@ -307,7 +307,7 @@
   </div>
 
   <!-- Tabla de KPIs en Tiempo Real -->
-  <div class="bg-white p-6 rounded-xl shadow-sm">
+  <div id="dashboard-kpis" class="bg-white p-6 rounded-xl shadow-sm">
     <h2 class="text-xl font-semibold text-gray-800 mb-4">KPIs</h2>
     <div class="overflow-x-auto">
       <table class="min-w-full text-sm">
@@ -329,5 +329,8 @@
   </div>
 
 </main>
+
+<!-- Scripts específicos del dashboard -->
+<script src="/project/app/assets/js/ayuda/dashboard-tour.js"></script>
 
 <?php footerAdmin($data); ?>

@@ -1,7 +1,3 @@
-
-
-
-
 let graficoIngresos,
   graficoEgresos,
   graficoVentas,
@@ -254,6 +250,13 @@ function cargarReporteCompras() {
 
 
 function renderizarGraficoIngresos(datos) {
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de ingresos disponibles");
+    document.getElementById("totalIngresos").textContent = "0.00";
+    return;
+  }
+
   const labels = datos.map(d => d.categoria);
   const valores = datos.map(d => d.total);
   const totalIngresos = valores.reduce((sum, val) => sum + parseFloat(val), 0);
@@ -294,6 +297,13 @@ function renderizarGraficoIngresos(datos) {
 }
 
 function renderizarGraficoEgresos(datos) {
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de egresos disponibles");
+    document.getElementById("totalEgresos").textContent = "0.00";
+    return;
+  }
+
   const labels = datos.map(d => d.categoria);
   const valores = datos.map(d => d.total);
   const totalEgresos = valores.reduce((sum, val) => sum + parseFloat(val), 0);
@@ -411,6 +421,12 @@ function renderizarTablaCompras(data) {
 }
 
 function actualizarResumen(resumen) {
+  // Validar que los datos del resumen existen
+  if (!resumen || typeof resumen !== 'object') {
+    console.error("Datos de resumen no válidos recibidos.");
+    return;
+  }
+
   const formatMoney = value =>
     parseFloat(value || 0).toLocaleString("es-VE", {
       style: "currency",
@@ -464,9 +480,14 @@ function actualizarResumen(resumen) {
 
 
 function actualizarKPIsEjecutivos(kpis) {
- console.log("Actualizando KPIs Ejecutivos:", kpis);
-  if (!kpis) {
+  console.log("Actualizando KPIs Ejecutivos:", kpis);
+  if (!kpis || typeof kpis !== 'object') {
     console.error("Datos de KPIs no válidos recibidos.");
+    // Establecer valores por defecto si no hay datos
+    document.getElementById("margenGanancia").textContent = "0.0%";
+    document.getElementById("roiMes").textContent = "0.0%";
+    document.getElementById("rotacionInventario").textContent = "0 días";
+    document.getElementById("productividadGeneral").textContent = "0.0 kg/día";
     return;
   }
   document.getElementById("margenGanancia").textContent = `${parseFloat(
@@ -484,6 +505,12 @@ function actualizarKPIsEjecutivos(kpis) {
 }
 
 function renderizarGraficoTendenciasVentas(datos) {
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de tendencias de ventas disponibles");
+    return;
+  }
+
   const ctx = document
     .getElementById("graficoTendenciasVentas")
     .getContext("2d");
@@ -525,6 +552,12 @@ function renderizarGraficoTendenciasVentas(datos) {
 }
 
 function renderizarGraficoRentabilidadProductos(datos) {
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de rentabilidad de productos disponibles");
+    return;
+  }
+
   const ctx = document
     .getElementById("graficoRentabilidadProductos")
     .getContext("2d");
@@ -562,6 +595,12 @@ function renderizarGraficoRentabilidadProductos(datos) {
 }
 
 function renderizarGraficoEficienciaEmpleados(datos) {
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de eficiencia de empleados disponibles");
+    return;
+  }
+
   const ctx = document
     .getElementById("graficoEficienciaEmpleados")
     .getContext("2d");
@@ -594,6 +633,12 @@ function renderizarGraficoEficienciaEmpleados(datos) {
 }
 
 function renderizarGraficoEstadosProduccion(datos) {
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de estados de producción disponibles");
+    return;
+  }
+
   const ctx = document
     .getElementById("graficoEstadosProduccion")
     .getContext("2d");
@@ -625,6 +670,12 @@ function renderizarGraficoEstadosProduccion(datos) {
 }
 
 function renderizarGraficoCumplimientoTareas(datos) {
+  // Validar que los datos existen y tienen las propiedades necesarias
+  if (!datos || typeof datos !== 'object' || datos.total_tareas === undefined) {
+    console.warn("No hay datos de cumplimiento de tareas disponibles");
+    return;
+  }
+
   const ctx = document
     .getElementById("graficoCumplimientoTareas")
     .getContext("2d");
@@ -664,6 +715,12 @@ function renderizarGraficoCumplimientoTareas(datos) {
 }
 
 function renderizarGraficoTopClientes(datos) {
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de top clientes disponibles");
+    return;
+  }
+
   const ctx = document.getElementById("graficoTopClientes").getContext("2d");
   if (graficoTopClientes) graficoTopClientes.destroy();
 
@@ -690,6 +747,12 @@ function renderizarGraficoTopClientes(datos) {
 }
 
 function renderizarGraficoTopProveedores(datos) {
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de top proveedores disponibles");
+    return;
+  }
+
   const ctx = document.getElementById("graficoTopProveedores").getContext("2d");
   if (graficoTopProveedores) graficoTopProveedores.destroy();
 
@@ -745,6 +808,12 @@ function renderizarAnalisisInventario(datos) {
         ? JSON.parse(datos.valor_por_categoria || '{"categorias":[]}')
         : datos.valor_por_categoria || { categorias: [] };
 
+    // Verificar que categorias existe y es un array
+    if (!valorCategoria.categorias || !Array.isArray(valorCategoria.categorias) || valorCategoria.categorias.length === 0) {
+      console.warn("No hay datos de categorías disponibles para el gráfico");
+      return;
+    }
+
     const ctxValor = document
       .getElementById("graficoValorCategoria")
       .getContext("2d");
@@ -777,12 +846,18 @@ function renderizarAnalisisInventario(datos) {
     console.error("Error renderizando valor por categoría:", e);
   }
 
-  
+  // Gráfico de productos más vendidos
   try {
     const productosMasVendidos =
       typeof datos.productos_mas_vendidos === "string"
         ? JSON.parse(datos.productos_mas_vendidos || '{"productos":[]}')
         : datos.productos_mas_vendidos || { productos: [] };
+
+    // Verificar que productos existe y es un array
+    if (!productosMasVendidos.productos || !Array.isArray(productosMasVendidos.productos) || productosMasVendidos.productos.length === 0) {
+      console.warn("No hay datos de productos más vendidos disponibles para el gráfico");
+      return;
+    }
 
     const ctxProductos = document
       .getElementById("graficoProductosMasVendidos")
@@ -815,7 +890,19 @@ function renderizarAnalisisInventario(datos) {
 
 function renderizarTablaKPIs(datos) {
   const tbody = document.getElementById("tablaKPIs");
+  if (!tbody) {
+    console.warn("Elemento tablaKPIs no encontrado");
+    return;
+  }
+  
   tbody.innerHTML = "";
+
+  // Validar que los datos existen y no están vacíos
+  if (!datos || !Array.isArray(datos) || datos.length === 0) {
+    console.warn("No hay datos de KPIs en tiempo real disponibles");
+    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">No hay datos disponibles</td></tr>';
+    return;
+  }
 
   datos.forEach(kpi => {
     const tendencia =

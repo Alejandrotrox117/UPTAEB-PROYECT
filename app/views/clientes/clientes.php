@@ -251,33 +251,73 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
     </div>
 <?php endif; ?>
 
-<!--  AGREGAR MODAL DE PERMISOS DENEGADOS -->
-<div id="modalPermisosDenegados" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-[60]">
-    <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-md transform transition-transform duration-300">
-        <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+<!-- Modal Ver Cliente -->
+<div id="modalVerCliente" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center  bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-md">
+        <!-- Encabezado -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold text-green-800">
+                    <i class="fas fa-eye mr-2"></i>Detalles del Cliente
+                </h3>
+                <button type="button" id="btnCerrarModalVerCliente" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="px-6 py-4">
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Cédula:</label>
+                        <p id="verClienteCedula" class="text-gray-900 font-medium">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Estatus:</label>
+                        <p id="verClienteEstatus" class="text-gray-900 font-medium">-</p>
+                    </div>
                 </div>
-                <div class="ml-3">
-                    <h3 class="text-lg font-semibold text-red-800">Acceso Denegado</h3>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Nombre:</label>
+                        <p id="verClienteNombre" class="text-gray-900 font-medium">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Apellido:</label>
+                        <p id="verClienteApellido" class="text-gray-900 font-medium">-</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Teléfono Principal:</label>
+                    <p id="verClienteTelefono" class="text-gray-900 font-medium">-</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Dirección:</label>
+                    <p id="verClienteDireccion" class="text-gray-900 font-medium">-</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Observaciones:</label>
+                    <p id="verClienteObservaciones" class="text-gray-900 font-medium">-</p>
                 </div>
             </div>
         </div>
 
-        <div class="px-6 py-4">
-            <p id="mensajePermisosDenegados" class="text-gray-700 text-base">
-                No tienes permisos para realizar esta acción.
-            </p>
-        </div>
-
-        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
-            <button type="button" id="btnCerrarModalPermisos"
-                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 font-medium">
-                Entendido
+        <!-- Pie del modal -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+            <button type="button" id="btnCerrarModalVerCliente2"
+                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 font-medium">
+                <i class="fas fa-times mr-2"></i>Cerrar
             </button>
         </div>
     </div>
 </div>
+
+
 
 <?php footerAdmin($data); ?>

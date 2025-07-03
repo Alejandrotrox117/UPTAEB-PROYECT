@@ -1,4 +1,3 @@
-
 <?php headerAdmin($data); ?>
 
 <!-- Main Content -->
@@ -6,6 +5,29 @@
   <div class="flex justify-between items-center">
     <h2 class="text-xl font-semibold">Hola, <?= $_SESSION['usuario_nombre'] ?? 'Usuario' ?> 👋</h2>
   </div>
+
+  <!-- Estilos para el indicador de arrastrar en el tour -->
+  <style>
+    .drag-indicator {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      color: #888;
+      cursor: move;
+    }
+    .shepherd-draggable {
+      cursor: grab;
+    }
+    .shepherd-draggable:active {
+      cursor: grabbing;
+    }
+    .shepherd-has-title .shepherd-content .shepherd-header {
+      display: flex;
+      align-items: center;
+      padding: 0.75em 0.75em 0;
+    }
+  </style>
 
   <div class="min-h-screen mt-4">
     <h1 class="text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
@@ -123,5 +145,8 @@
     </div>
   </div>
 </div>
+
+<!-- Scripts específicos para el tour de ayuda -->
+<script src="/project/app/assets/js/ayuda/rolesintegrado-tour.js"></script>
 
 <?php footerAdmin($data); ?>

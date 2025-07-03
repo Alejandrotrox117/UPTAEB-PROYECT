@@ -56,7 +56,7 @@
                     <i class="fas fa-times mr-2"></i>Limpiar
                 </button>
                 <button id="btnActualizarBitacora" 
-                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center" 
+                        class="px-2 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 flex items-center" 
                         title="Actualizar datos">
                     <i class="fas fa-sync-alt mr-2"></i>Actualizar
                 </button>
@@ -93,7 +93,7 @@
             </div>
         </div>
         
-        <div class="overflow-x-auto w-full relative">
+        <div class="overflow-x-auto w-full relative" style="position: relative; min-height: 300px;">
             <table id="TablaBitacora" class="display stripe hover responsive nowrap fuente-tabla-pequena w-full min-w-full">
                 <thead>
                     <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
@@ -106,8 +106,13 @@
             </table>
             
             <!-- Loader -->
-            <div id="loaderTableBitacora" class=" justify-center items-center my-4 hidden">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+            <div id="loaderTableBitacora" class="hidden absolute inset-0 bg-white bg-opacity-80 z-10">
+                <div class="flex justify-center items-center h-full">
+                    <div class="bg-white p-5 rounded-lg shadow-md flex items-center">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500 mr-3"></div>
+                        <span class="text-lg font-medium text-gray-700">Cargando registros...</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -284,5 +289,8 @@
     </div>
 </div>
 <?php endif; ?>
+
+<!-- Scripts específicos para el tour de ayuda -->
+<script src="/project/app/assets/js/ayuda/bitacora-tour.js"></script>
 
 <?php footerAdmin($data); ?>
