@@ -19,7 +19,7 @@ const camposFormularioUsuario = [
     regex: expresiones.usuario,
     mensajes: {
       vacio: "El nombre de usuario es obligatorio.",
-      formato: "Nombre de usuario inválido.",
+      formato: "Nombre de usuario inválido. No debe exceder los 15 caracteres ",
     },
   },
   {

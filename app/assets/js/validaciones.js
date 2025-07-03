@@ -1,4 +1,3 @@
-
 const expresiones = {
   nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,50}$/,
   apellido: /^[a-zA-Z\s]{3,20}$/,
@@ -13,7 +12,7 @@ const expresiones = {
   password: /^.{6,16}$/,
   textoGeneral: /^.{2,100}$/,
   genero: /^(MASCULINO|FEMENINO|OTRO)$/,
-  
+  usuario: /^[a-zA-Z0-9_.-]{3,15}$/,
   
   precio: /^\d+(\.\d{1,4})?$/,                    
   cantidad: /^\d+(\.\d{1,3})?$/,                  
@@ -204,8 +203,8 @@ function validarRango(input, min, max, mensajes) {
 }
 
 
-function validarCampo(input, regex, mensajes) {
-  
+function validarCampo(input, regex, mensajes, esOpcional = false) {
+  // Si no hay input o no está visible, retornar verdadero
   if (!input || input.offsetParent === null) {
     return true; 
   }
@@ -213,7 +212,7 @@ function validarCampo(input, regex, mensajes) {
   const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
-  
+  // Limpiar estados de error previos
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -221,8 +220,13 @@ function validarCampo(input, regex, mensajes) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  
+  // Si el valor está vacío
   if (valor === "") {
+    // Si es opcional y está vacío, es válido
+    if (esOpcional) {
+      return true;
+    }
+    
     if (mensajes.vacio) {
       if (errorDiv) {
         errorDiv.textContent = mensajes.vacio;
@@ -234,8 +238,8 @@ function validarCampo(input, regex, mensajes) {
     }
   }
 
-  
-  if (regex && !regex.test(valor)) {
+  // Validar formato solo si hay valor
+  if (valor !== "" && regex && !regex.test(valor)) {
     if (mensajes.formato) {
       if (errorDiv) {
         errorDiv.textContent = mensajes.formato;
@@ -247,7 +251,7 @@ function validarCampo(input, regex, mensajes) {
     }
   }
 
-  
+  // Campo válido
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -546,6 +550,11 @@ export function validarCamposVacios(campos, formId = null) {
   let formularioValido = true;
 
   for (let campo of campos) {
+    // Saltar validación si el campo es opcional
+    if (campo.opcional) {
+      continue;
+    }
+
     let input;
     if (formId) {
       const form = document.getElementById(formId);
@@ -554,7 +563,7 @@ export function validarCamposVacios(campos, formId = null) {
       input = document.getElementById(campo.id);
     }
 
-    
+    // Si el input no existe o no está visible, continuar
     if (!input || input.offsetParent === null) {
       continue; 
     }
