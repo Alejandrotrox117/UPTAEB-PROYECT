@@ -26,11 +26,8 @@ let graficoStockCritico,
 
 document.addEventListener("DOMContentLoaded", inicializarDashboard);
 
-/**
- * Función principal que orquesta toda la inicialización del dashboard.
- * Está envuelta en un try...catch para capturar cualquier error y evitar
- * que el script falle silenciosamente.
- */
+
+
 function inicializarDashboard() {
   try {
     
@@ -906,3 +903,24 @@ function descargarReporteCompras() {
 function descargarReporteEjecutivo() {
   window.open(`dashboard/descargarReporteEjecutivoPDF`, "_blank");
 }
+document.addEventListener('DOMContentLoaded', function () {
+    const selector = document.getElementById('selectorReporte');
+    const secciones = document.querySelectorAll('.report-section');
+
+    // Ocultar todas las secciones al cargar
+    secciones.forEach(sec => sec.style.display = 'none');
+
+    selector.addEventListener('change', function () {
+      const valorSeleccionado = this.value;
+
+      secciones.forEach(sec => {
+        if (valorSeleccionado === '') {
+          sec.style.display = 'none';
+        } else if (sec.id === valorSeleccionado) {
+          sec.style.display = 'block';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+    });
+  });

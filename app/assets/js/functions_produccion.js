@@ -1,3 +1,6 @@
+// ========================================
+// IMPORTACIONES
+// ========================================
 import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import {
   expresiones,
@@ -6,146 +9,36 @@ import {
   registrarEntidad,
 } from "./validaciones.js";
 
-// Variables globales
+// ========================================
+// VARIABLES GLOBALES
+// ========================================
 let tablaLotes, tablaProcesos, tablaNomina;
 let operariosAsignados = [];
 let configuracionActual = {};
-
-// Configuración de campos de validación
-const camposFormularioLote = [
-  {
-    id: "lote_fecha_jornada",
-    tipo: "fecha",
-    mensajes: {
-      vacio: "La fecha de jornada es obligatoria.",
-      fechaAnterior: "La fecha no puede ser anterior a hoy.",
-    },
-  },
-  {
-    id: "lote_volumen_estimado",
-    tipo: "numero",
-    mensajes: {
-      vacio: "El volumen estimado es obligatorio.",
-      formato: "Debe ser un número válido mayor a 0.",
-    },
-  },
-  {
-    id: "lote_supervisor",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar un supervisor.",
-    },
-  },
-];
-
-const camposFormularioClasificacion = [
-  {
-    id: "clas_lote",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar un lote.",
-    },
-  },
-  {
-    id: "clas_operario",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar un operario.",
-    },
-  },
-  {
-    id: "clas_producto_origen",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar el producto origen.",
-    },
-  },
-  {
-    id: "clas_producto_clasificado",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar el producto clasificado.",
-    },
-  },
-  {
-    id: "clas_kg_procesados",
-    tipo: "numero",
-    mensajes: {
-      vacio: "Los kg procesados son obligatorios.",
-      formato: "Debe ser un número válido mayor a 0.",
-    },
-  },
-  {
-    id: "clas_kg_limpios",
-    tipo: "numero",
-    mensajes: {
-      vacio: "Los kg limpios son obligatorios.",
-      formato: "Debe ser un número válido mayor o igual a 0.",
-    },
-  },
-  {
-    id: "clas_kg_contaminantes",
-    tipo: "numero",
-    mensajes: {
-      vacio: "Los kg contaminantes son obligatorios.",
-      formato: "Debe ser un número válido mayor o igual a 0.",
-    },
-  },
-];
-
-const camposFormularioEmpaque = [
-  {
-    id: "emp_lote",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar un lote.",
-    },
-  },
-  {
-    id: "emp_operario",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar un operario.",
-    },
-  },
-  {
-    id: "emp_producto_clasificado",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar el material clasificado.",
-    },
-  },
-  {
-    id: "emp_peso_paca",
-    tipo: "numero",
-    mensajes: {
-      vacio: "El peso de la paca es obligatorio.",
-      formato: "Debe ser un número válido mayor a 0.",
-    },
-  },
-  {
-    id: "emp_calidad",
-    tipo: "select",
-    mensajes: {
-      vacio: "Debe seleccionar la calidad.",
-    },
-  },
-];
+let operariosDisponibles = [];
+let loteActual = null;
 
 // ========================================
-// FUNCIONES DE INICIALIZACIÓN
+// CONFIGURACIÓN DE CAMPOS DE FORMULARIO
 // ========================================
+const camposFormularioLote = [ /* ... */ ];
+const camposFormularioClasificacion = [ /* ... */ ];
+const camposFormularioEmpaque = [ /* ... */ ];
 
+// ========================================
+// INICIALIZACIÓN GENERAL
+// ========================================
 document.addEventListener("DOMContentLoaded", function () {
   inicializarPestañas();
   inicializarTablas();
   inicializarEventos();
   cargarConfiguracionInicial();
-  actualizarEstadisticas();
 });
 
-function inicializarPestañas() {
-  const botonesPestaña = document.querySelectorAll(".tab-button");
+// ========================================
+// INICIALIZACIÓN DE COMPONENTES
+// ========================================
+function inicializarPestañas() { const botonesPestaña = document.querySelectorAll(".tab-button");
   const contenidoPestañas = document.querySelectorAll(".tab-content");
 
   botonesPestaña.forEach((boton) => {
@@ -169,6 +62,8 @@ function inicializarPestañas() {
         setTimeout(() => tablaLotes.columns.adjust().draw(), 100);
       } else if (pestañaId === "content-nomina" && tablaNomina) {
         setTimeout(() => tablaNomina.columns.adjust().draw(), 100);
+      } else if (pestañaId === "content-procesos" && tablaProcesos) {
+        setTimeout(() => tablaProcesos.ajax.reload(null, false), 100);
       }
     });
   });
@@ -179,7 +74,6 @@ function inicializarTablas() {
   inicializarTablaProcesos();
   inicializarTablaNomina();
 }
-
 function inicializarTablaLotes() {
   if ($.fn.DataTable.isDataTable("#TablaLotes")) {
     $("#TablaLotes").DataTable().destroy();
@@ -372,87 +266,88 @@ function inicializarTablaLotes() {
 }
 
 function inicializarTablaProcesos() {
-  // Implementar tabla de procesos recientes
   if ($.fn.DataTable.isDataTable("#TablaProcesos")) {
     $("#TablaProcesos").DataTable().destroy();
   }
 
   tablaProcesos = $("#TablaProcesos").DataTable({
     processing: true,
-    serverSide: false,
-    data: [], // Se cargará dinámicamente
+    ajax: {
+      url: "./Produccion/getProcesosRecientes",
+      type: "GET",
+      dataSrc: function (json) {
+        if (json && json.status && Array.isArray(json.data)) {
+          return json.data;
+        }
+        return [];
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error cargando procesos:", textStatus, errorThrown);
+      }
+    },
     columns: [
       { data: "fecha", title: "Fecha", className: "all" },
       { data: "operario", title: "Operario", className: "all" },
       { data: "proceso", title: "Proceso", className: "desktop" },
       { data: "cantidad", title: "Cantidad", className: "tablet-l" },
-      { data: "observaciones", title: "Observaciones", className: "desktop" },
+      { data: "observaciones", title: "Observaciones", className: "desktop" }
     ],
     language: {
-      emptyTable: "No hay procesos registrados recientemente.",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ procesos",
-      infoEmpty: "Mostrando 0 procesos",
-      lengthMenu: "Mostrar _MENU_ procesos",
-      search: "_INPUT_",
-      searchPlaceholder: "Buscar proceso...",
-      zeroRecords: "No se encontraron coincidencias.",
+      emptyTable: "No hay procesos registrados.",
+      processing: "Cargando procesos..."
     },
-    destroy: true,
-    responsive: true,
     pageLength: 5,
-    lengthMenu: [[5, 10, 25], [5, 10, 25]],
-    order: [[0, "desc"]],
+    order: [[0, "desc"]]
   });
 }
 
 function inicializarTablaNomina() {
-  // Implementar tabla de nómina
   if ($.fn.DataTable.isDataTable("#TablaNomina")) {
     $("#TablaNomina").DataTable().destroy();
   }
 
   tablaNomina = $("#TablaNomina").DataTable({
     processing: true,
-    serverSide: false,
-    data: [], // Se cargará dinámicamente
+    ajax: {
+      url: "./Produccion/getRegistrosNomina",
+      type: "GET",
+      dataSrc: function (json) {
+        if (json && json.status && Array.isArray(json.data)) {
+          return json.data;
+        }
+        return [];
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error cargando nómina:", textStatus, errorThrown);
+      }
+    },
     columns: [
       { data: "fecha", title: "Fecha", className: "all" },
       { data: "operario", title: "Operario", className: "all" },
       { data: "kg_clasificados", title: "Kg Clasificados", className: "desktop" },
       { data: "pacas_armadas", title: "Pacas", className: "tablet-l" },
       { data: "salario_total", title: "Salario", className: "all" },
-      { data: "estatus", title: "Estado", className: "desktop" },
+      { data: "estatus", title: "Estado", className: "desktop" }
     ],
     language: {
       emptyTable: "No hay registros de nómina.",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-      infoEmpty: "Mostrando 0 registros",
-      lengthMenu: "Mostrar _MENU_ registros",
-      search: "_INPUT_",
-      searchPlaceholder: "Buscar registro...",
-      zeroRecords: "No se encontraron coincidencias.",
+      processing: "Cargando nómina..."
     },
-    destroy: true,
-    responsive: true,
     pageLength: 10,
-    order: [[0, "desc"]],
+    order: [[0, "desc"]]
   });
 }
 
 // ========================================
-// FUNCIONES DE EVENTOS
+// INICIALIZACIÓN DE EVENTOS
 // ========================================
-
 function inicializarEventos() {
-  // Eventos de modales
   inicializarEventosLotes();
   inicializarEventosAsignacion();
   inicializarEventosProcesos();
   inicializarEventosNomina();
   inicializarEventosConfiguracion();
-  inicializarEventosReportes();
 }
-
 function inicializarEventosLotes() {
   // Modal registrar lote
   const btnAbrirModalLote = document.getElementById("btnAbrirModalRegistrarLote");
@@ -464,7 +359,7 @@ function inicializarEventosLotes() {
     btnAbrirModalLote.addEventListener("click", function () {
       abrirModal("modalRegistrarLote");
       if (formLote) formLote.reset();
-      cargarSupervisores();
+      cargarEmpleadosActivos();
       document.getElementById("lote_fecha_jornada").value = new Date().toISOString().split('T')[0];
       inicializarValidaciones(camposFormularioLote, "formRegistrarLote");
     });
@@ -688,39 +583,9 @@ function inicializarEventosConfiguracion() {
   }
 }
 
-function inicializarEventosReportes() {
-  const btnGenerarReporte = document.getElementById("btnGenerarReporte");
-  const btnExportarReporte = document.getElementById("btnExportarReporte");
-
-  if (btnGenerarReporte) {
-    btnGenerarReporte.addEventListener("click", function () {
-      generarReporte();
-    });
-  }
-
-  if (btnExportarReporte) {
-    btnExportarReporte.addEventListener("click", function () {
-      exportarReporte();
-    });
-  }
-
-  // Inicializar fechas por defecto
-  const fechaInicio = document.getElementById("filtroFechaInicio");
-  const fechaFin = document.getElementById("filtroFechaFin");
-
-  if (fechaInicio && fechaFin) {
-    const hoy = new Date();
-    const primerDiaDelMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    
-    fechaInicio.value = primerDiaDelMes.toISOString().split('T')[0];
-    fechaFin.value = hoy.toISOString().split('T')[0];
-  }
-}
-
 // ========================================
 // FUNCIONES DE LOTES
 // ========================================
-
 function calcularOperariosRequeridos() {
   const volumen = parseFloat(document.getElementById("lote_volumen_estimado").value || 0);
   const infoCalculada = document.getElementById("infoCalculada");
@@ -793,6 +658,7 @@ function registrarLote() {
     }
   });
 }
+
 function verDetallesLote(idlote) {
   fetch(`Produccion/getLoteById/${idlote}`, {
     method: "GET",
@@ -826,10 +692,6 @@ function mostrarDetallesLote(lote) {
         <div><strong>Operarios Requeridos:</strong> ${lote.operarios_requeridos}</div>
         <div><strong>Operarios Asignados:</strong> ${lote.operarios_asignados}</div>
         <div><strong>Estado:</strong> <span class="font-semibold">${lote.estatus_lote}</span></div>
-        <div><strong>Total Clasificado:</strong> ${parseFloat(lote.total_kg_clasificados || 0).toLocaleString()} kg</div>
-        <div><strong>Total Pacas:</strong> ${lote.total_pacas_armadas || 0}</div>
-        <div><strong>Tasa Error Promedio:</strong> ${parseFloat(lote.promedio_tasa_error || 0).toFixed(2)}%</div>
-        <div><strong>Total Nómina:</strong> ${parseFloat(lote.total_nomina || 0).toLocaleString()}</div>
       </div>
       ${lote.observaciones ? `<div class="mt-4"><strong>Observaciones:</strong> ${lote.observaciones}</div>` : ''}
     </div>
@@ -882,7 +744,6 @@ function iniciarLote(idlote) {
     }
   });
 }
-
 function cerrarLote(idlote, numeroLote) {
   Swal.fire({
     title: "¿Cerrar lote de producción?",
@@ -924,267 +785,486 @@ function cerrarLote(idlote, numeroLote) {
 // ========================================
 // FUNCIONES DE ASIGNACIÓN DE OPERARIOS
 // ========================================
-
 function abrirModalAsignarOperarios(idlote) {
-  // Cargar información del lote
-  fetch(`Produccion/getLoteById/${idlote}`)
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        const lote = result.data;
-        document.getElementById("idLoteAsignar").value = idlote;
-        document.getElementById("infoNumeroLote").textContent = lote.numero_lote;
-        document.getElementById("infoOperariosRequeridos").textContent = lote.operarios_requeridos;
-        document.getElementById("infoFechaJornada").textContent = lote.fecha_jornada_formato;
-        
-        cargarOperariosDisponibles(lote.fecha_jornada);
-        cargarAsignacionesExistentes(idlote);
-        abrirModal("modalAsignarOperarios");
-      } else {
-        mostrarError("No se pudo cargar la información del lote.");
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      mostrarError("Error de conexión.");
-    });
+    console.log("🚀 Iniciando asignación para lote:", idlote);
+    
+    // Limpiar estado anterior
+    operariosAsignados = [];
+    operariosDisponibles = [];
+    loteActual = null;
+    
+    // Mostrar estado de carga
+    mostrarEstadoCarga();
+    
+    // Cargar información del lote
+    cargarInformacionLote(idlote)
+        .then(lote => {
+            loteActual = lote;
+            console.log("✅ Lote cargado:", lote);
+            return cargarOperariosDisponibles(lote.fecha_jornada);
+        })
+        .then(operarios => {
+            operariosDisponibles = operarios;
+            console.log("✅ Operarios disponibles cargados:", operarios.length);
+            return cargarAsignacionesExistentes(idlote);
+        })
+        .then(asignaciones => {
+            console.log("✅ Asignaciones existentes cargadas:", asignaciones.length);
+            abrirModal("modalAsignarOperarios");
+            actualizarContadores();
+        })
+        .catch(error => {
+            console.error("❌ Error en el proceso:", error);
+            mostrarError("Error al cargar la información: " + error.message);
+        });
 }
-
+function mostrarEstadoCarga() {
+    const tbody = document.getElementById("bodyOperariosDisponibles");
+    const lista = document.getElementById("listaOperariosAsignados");
+    
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="3" class="text-center py-8 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>Cargando operarios...</p>
+            </td>
+        </tr>
+    `;
+    
+    lista.innerHTML = `
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Cargando asignaciones...</p>
+        </div>
+    `;
+}
+function cargarInformacionLote(idlote) {
+    return fetch(`Produccion/getLoteById/${idlote}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result.status || !result.data) {
+                throw new Error(result.message || "No se pudo obtener la información del lote");
+            }
+            
+            const lote = result.data;
+            
+            // Actualizar la información en el modal
+            document.getElementById("idLoteAsignar").value = idlote;
+            document.getElementById("infoNumeroLote").textContent = lote.numero_lote;
+            document.getElementById("infoOperariosRequeridos").textContent = lote.operarios_requeridos;
+            document.getElementById("infoFechaJornada").textContent = lote.fecha_jornada_formato;
+            document.getElementById("progresoRequeridos").textContent = lote.operarios_requeridos;
+            
+            return lote;
+        });
+}
 function cargarOperariosDisponibles(fecha) {
-  fetch(`Produccion/getOperariosDisponibles?fecha=${fecha}`)
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        mostrarOperariosDisponibles(result.data);
-      } else {
-        document.getElementById("bodyOperariosDisponibles").innerHTML = 
-          '<tr><td colspan="3" class="text-center py-4 text-gray-500">No hay operarios disponibles</td></tr>';
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      mostrarError("Error al cargar operarios disponibles.");
-    });
+    return fetch(`Produccion/getOperariosDisponibles?fecha=${fecha}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result.status) {
+                throw new Error(result.message || "Error al cargar operarios disponibles");
+            }
+            
+            const operarios = result.data || [];
+            mostrarOperariosDisponibles(operarios);
+            return operarios;
+        });
 }
 
 function mostrarOperariosDisponibles(operarios) {
-  const tbody = document.getElementById("bodyOperariosDisponibles");
-  let html = "";
+    console.log("🎯 Mostrando operarios disponibles:", operarios);
+    
+    const tbody = document.getElementById("bodyOperariosDisponibles");
+    
+    if (!operarios || operarios.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-user-slash text-2xl mb-2"></i>
+                    <p>No hay operarios disponibles</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
-  operarios.forEach((operario) => {
-    const disponible = operario.estatus_disponibilidad === "DISPONIBLE";
-    const claseEstado = disponible ? "text-green-600" : "text-orange-600";
-    const textoEstado = disponible ? "Disponible" : `Asignado (${operario.lote_asignado})`;
+    let html = "";
+    operarios.forEach((operario) => {
+        const disponible = operario.estatus_disponibilidad === "DISPONIBLE";
+        const badgeClass = disponible ? "badge-disponible" : "badge-asignado";
+        const textoEstado = disponible ? "Disponible" : `Asignado (${operario.lote_asignado || 'N/A'})`;
 
-    html += `
-      <tr class="${disponible ? 'hover:bg-gray-50' : 'bg-gray-100'}">
-        <td class="px-3 py-2">
-          <input type="checkbox" class="operario-checkbox" 
-                 data-idempleado="${operario.idempleado}"
-                 data-nombre="${operario.nombre_completo}"
-                 ${disponible ? '' : 'disabled'}
-                 onchange="toggleOperarioAsignado(this)">
-        </td>
-        <td class="px-3 py-2">
-          <div>
-            <div class="font-medium">${operario.nombre_completo}</div>
-            <div class="text-xs text-gray-500">${operario.puesto || 'Operario'}</div>
-          </div>
-        </td>
-        <td class="px-3 py-2">
-          <span class="${claseEstado} text-sm font-medium">${textoEstado}</span>
-        </td>
-      </tr>
-    `;
-  });
+        html += `
+            <tr class="${disponible ? 'hover:bg-blue-50 cursor-pointer' : 'bg-gray-50 opacity-75'}" 
+                data-operario-id="${operario.idempleado}">
+                <td class="px-3 py-3 text-center">
+                    <input type="checkbox" 
+                           class="operario-checkbox" 
+                           data-idempleado="${operario.idempleado}"
+                           data-nombre="${operario.nombre_completo}"
+                           ${disponible ? '' : 'disabled'}
+                           onchange="toggleOperarioAsignado(this)">
+                </td>
+                <td class="px-3 py-3">
+                    <div>
+                        <div class="font-medium text-gray-900">${operario.nombre_completo}</div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-briefcase mr-1"></i>${operario.puesto || 'Operario'}
+                            ${operario.telefono_principal ? `<i class="fas fa-phone ml-2 mr-1"></i>${operario.telefono_principal}` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td class="px-3 py-3">
+                    <span class="${badgeClass}">${textoEstado}</span>
+                </td>
+            </tr>
+        `;
+    });
 
-  tbody.innerHTML = html;
+    tbody.innerHTML = html;
 }
 
 function toggleOperarioAsignado(checkbox) {
-  const idempleado = checkbox.dataset.idempleado;
-  const nombre = checkbox.dataset.nombre;
+    const idempleado = checkbox.dataset.idempleado;
+    const nombre = checkbox.dataset.nombre;
+    
+    console.log("🔄 Toggle operario:", { idempleado, nombre, checked: checkbox.checked });
 
-  if (checkbox.checked) {
-    // Agregar a la lista de asignados
-    const operarioAsignado = {
-      idempleado: idempleado,
-      nombre: nombre,
-      tipo_tarea: 'CLASIFICACION',
-      turno: 'MAÑANA',
-      observaciones: ''
-    };
+    if (checkbox.checked) {
+        // Verificar si ya está asignado
+        const yaAsignado = operariosAsignados.find(op => op.idempleado === idempleado);
+        if (yaAsignado) {
+            console.log("⚠️ Operario ya asignado:", nombre);
+            return;
+        }
 
-    operariosAsignados.push(operarioAsignado);
-  } else {
-    // Remover de la lista de asignados
-    operariosAsignados = operariosAsignados.filter(op => op.idempleado != idempleado);
-  }
+        // Agregar a la lista de asignados
+        const operarioAsignado = {
+            idempleado: idempleado,
+            nombre: nombre,
+            tipo_tarea: 'CLASIFICACION',
+            turno: 'MAÑANA',
+            observaciones: ''
+        };
 
-  actualizarListaOperariosAsignados();
+        operariosAsignados.push(operarioAsignado);
+        console.log("➕ Operario agregado:", operarioAsignado);
+    } else {
+        // Remover de la lista de asignados
+        const index = operariosAsignados.findIndex(op => op.idempleado === idempleado);
+        if (index !== -1) {
+            const removido = operariosAsignados.splice(index, 1)[0];
+            console.log("➖ Operario removido:", removido);
+        }
+    }
+
+    actualizarListaOperariosAsignados();
+    actualizarContadores();
 }
 
 function actualizarListaOperariosAsignados() {
-  const lista = document.getElementById("listaOperariosAsignados");
-  
-  if (operariosAsignados.length === 0) {
-    lista.innerHTML = '<p class="text-gray-500 text-center">No hay operarios asignados</p>';
-    return;
-  }
+    console.log("🔄 Actualizando lista de asignados:", operariosAsignados);
+    
+    const lista = document.getElementById("listaOperariosAsignados");
+    
+    if (!operariosAsignados || operariosAsignados.length === 0) {
+        lista.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-gray-500 py-8">
+                <i class="fas fa-user-plus text-3xl mb-3 text-gray-300"></i>
+                <p class="text-center">No hay operarios asignados</p>
+                <p class="text-xs text-center mt-1">Selecciona operarios de la lista de la izquierda</p>
+            </div>
+        `;
+        return;
+    }
 
-  let html = "";
-  operariosAsignados.forEach((operario, index) => {
-    html += `
-      <div class="operario-asignado">
-        <div class="info">
-          <div class="font-medium">${operario.nombre}</div>
-          <div class="flex gap-4 mt-2">
-            <select class="text-xs border rounded px-2 py-1" 
-                    onchange="actualizarTareaOperario(${index}, 'tipo_tarea', this.value)">
-              <option value="CLASIFICACION" ${operario.tipo_tarea === 'CLASIFICACION' ? 'selected' : ''}>Clasificación</option>
-              <option value="EMPAQUE" ${operario.tipo_tarea === 'EMPAQUE' ? 'selected' : ''}>Empaque</option>
-            </select>
-            <select class="text-xs border rounded px-2 py-1"
-                    onchange="actualizarTareaOperario(${index}, 'turno', this.value)">
-              <option value="MAÑANA" ${operario.turno === 'MAÑANA' ? 'selected' : ''}>Mañana</option>
-              <option value="TARDE" ${operario.turno === 'TARDE' ? 'selected' : ''}>Tarde</option>
-              <option value="NOCHE" ${operario.turno === 'NOCHE' ? 'selected' : ''}>Noche</option>
-            </select>
-          </div>
-        </div>
-        <div class="acciones">
-          <button type="button" class="text-red-600 hover:text-red-700 p-1"
-                  onclick="removerOperarioAsignado(${index})" title="Remover">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
-    `;
-  });
+    let html = "";
+    operariosAsignados.forEach((operario, index) => {
+        html += `
+            <div class="operario-asignado" data-index="${index}">
+                <div class="info">
+                    <div class="font-medium">${operario.nombre}</div>
+                    <div class="flex gap-2 mt-3">
+                        <select class="operario-select" 
+                                onchange="actualizarTareaOperario(${index}, 'tipo_tarea', this.value)"
+                                title="Tipo de tarea">
+                            <option value="CLASIFICACION" ${operario.tipo_tarea === 'CLASIFICACION' ? 'selected' : ''}>
+                                <i class="fas fa-filter"></i> Clasificación
+                            </option>
+                            <option value="EMPAQUE" ${operario.tipo_tarea === 'EMPAQUE' ? 'selected' : ''}>
+                                <i class="fas fa-box"></i> Empaque
+                            </option>
+                        </select>
+                        <select class="operario-select"
+                                onchange="actualizarTareaOperario(${index}, 'turno', this.value)"
+                                title="Turno de trabajo">
+                            <option value="MAÑANA" ${operario.turno === 'MAÑANA' ? 'selected' : ''}>🌅 Mañana</option>
+                            <option value="TARDE" ${operario.turno === 'TARDE' ? 'selected' : ''}>☀️ Tarde</option>
+                            <option value="NOCHE" ${operario.turno === 'NOCHE' ? 'selected' : ''}>🌙 Noche</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="acciones">
+                    <button type="button" 
+                            class="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-all duration-200"
+                            onclick="removerOperarioAsignado(${index})" 
+                            title="Remover operario">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
 
-  lista.innerHTML = html;
+    lista.innerHTML = html;
 }
 
 function actualizarTareaOperario(index, campo, valor) {
-  if (operariosAsignados[index]) {
-    operariosAsignados[index][campo] = valor;
-  }
+    console.log("🔧 Actualizando tarea:", { index, campo, valor });
+    
+    if (index >= 0 && index < operariosAsignados.length) {
+        operariosAsignados[index][campo] = valor;
+        console.log("✅ Operario actualizado:", operariosAsignados[index]);
+    }
 }
 
 function removerOperarioAsignado(index) {
-  const operario = operariosAsignados[index];
-  
-  // Desmarcar checkbox
-  const checkbox = document.querySelector(`input[data-idempleado="${operario.idempleado}"]`);
-  if (checkbox) {
-    checkbox.checked = false;
-  }
+    console.log("🗑️ Removiendo operario en índice:", index);
+    
+    if (index >= 0 && index < operariosAsignados.length) {
+        const operario = operariosAsignados[index];
+        
+        // Desmarcar checkbox
+        const checkbox = document.querySelector(`input[data-idempleado="${operario.idempleado}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+        }
 
-  // Remover de la lista
-  operariosAsignados.splice(index, 1);
-  actualizarListaOperariosAsignados();
+        // Remover de la lista
+        operariosAsignados.splice(index, 1);
+        
+        // Actualizar interfaz
+        actualizarListaOperariosAsignados();
+        actualizarContadores();
+        
+        console.log("✅ Operario removido. Lista actual:", operariosAsignados);
+    }
 }
 
+function actualizarContadores() {
+    const asignados = operariosAsignados.length;
+    const requeridos = loteActual ? loteActual.operarios_requeridos : 0;
+    
+    document.getElementById("contadorAsignados").textContent = asignados;
+    document.getElementById("progresoAsignados").textContent = asignados;
+    
+    // Actualizar estado del botón de guardar
+    const btnGuardar = document.getElementById("btnGuardarAsignaciones");
+    if (btnGuardar) {
+        btnGuardar.disabled = asignados === 0;
+        btnGuardar.classList.toggle("opacity-50", asignados === 0);
+        btnGuardar.classList.toggle("cursor-not-allowed", asignados === 0);
+    }
+    
+    console.log(`📊 Contadores actualizados: ${asignados}/${requeridos}`);
+}
 function cargarAsignacionesExistentes(idlote) {
-  fetch(`Produccion/getAsignacionesLote/${idlote}`)
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        // Pre-cargar asignaciones existentes
-        operariosAsignados = result.data.map(asignacion => ({
-          idempleado: asignacion.idempleado,
-          nombre: asignacion.operario,
-          tipo_tarea: asignacion.tipo_tarea,
-          turno: asignacion.turno,
-          observaciones: asignacion.observaciones || ''
-        }));
-
-        actualizarListaOperariosAsignados();
-
-        // Marcar checkboxes correspondientes
-        operariosAsignados.forEach(operario => {
-          const checkbox = document.querySelector(`input[data-idempleado="${operario.idempleado}"]`);
-          if (checkbox) {
-            checkbox.checked = true;
-          }
+    return fetch(`Produccion/getAsignacionesLote/${idlote}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result.status) {
+                console.log("⚠️ No hay asignaciones existentes o error:", result.message);
+                return [];
+            }
+            
+            const asignaciones = result.data || [];
+            
+            if (asignaciones.length > 0) {
+                // Convertir asignaciones al formato interno
+                operariosAsignados = asignaciones.map(asignacion => ({
+                    idempleado: String(asignacion.idempleado),
+                    nombre: asignacion.operario,
+                    tipo_tarea: asignacion.tipo_tarea || 'CLASIFICACION',
+                    turno: asignacion.turno || 'MAÑANA',
+                    observaciones: asignacion.observaciones || ''
+                }));
+                
+                console.log("📋 Asignaciones convertidas:", operariosAsignados);
+                
+                // Actualizar la interfaz
+                setTimeout(() => {
+                    actualizarListaOperariosAsignados();
+                    marcarCheckboxesAsignados();
+                }, 100);
+            }
+            
+            return asignaciones;
         });
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
+}
+function marcarCheckboxesAsignados() {
+    console.log("☑️ Marcando checkboxes para operarios asignados:", operariosAsignados);
+    
+    operariosAsignados.forEach(operario => {
+        const checkbox = document.querySelector(`input[data-idempleado="${operario.idempleado}"]`);
+        if (checkbox) {
+            checkbox.checked = true;
+            console.log("✅ Checkbox marcado para:", operario.nombre);
+        } else {
+            console.warn("⚠️ No se encontró checkbox para operario:", operario.nombre, operario.idempleado);
+        }
     });
 }
-
 function guardarAsignacionesOperarios() {
-  const idlote = document.getElementById("idLoteAsignar").value;
-  
-  if (!idlote) {
-    mostrarError("ID de lote no válido.");
-    return;
-  }
+    console.log("💾 Iniciando guardado de asignaciones");
+    
+    const idlote = document.getElementById("idLoteAsignar").value;
+    
+    // Validaciones
+    if (!idlote || idlote <= 0) {
+        mostrarError("ID de lote no válido.");
+        return;
+    }
 
-  if (operariosAsignados.length === 0) {
-    mostrarError("Debe asignar al menos un operario.");
-    return;
-  }
+    if (!operariosAsignados || operariosAsignados.length === 0) {
+        mostrarError("Debe asignar al menos un operario.");
+        return;
+    }
 
-  const btnGuardar = document.getElementById("btnGuardarAsignaciones");
-  if (btnGuardar) {
-    btnGuardar.disabled = true;
-    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
-  }
+    // Validar datos de cada operario
+    for (let i = 0; i < operariosAsignados.length; i++) {
+        const operario = operariosAsignados[i];
+        if (!operario.idempleado || !operario.tipo_tarea || !operario.turno) {
+            mostrarError(`Datos incompletos para el operario: ${operario.nombre}`);
+            return;
+        }
+    }
 
-  fetch("Produccion/asignarOperarios", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-    body: JSON.stringify({
-      idlote: idlote,
-      operarios: operariosAsignados
-    }),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        Swal.fire("¡Éxito!", result.message, "success").then(() => {
-          cerrarModal("modalAsignarOperarios");
-          recargarTablaLotes();
-          operariosAsignados = [];
-        });
-      } else {
-        Swal.fire("Error", result.message || "No se pudieron asignar los operarios.", "error");
-      }
+    const btnGuardar = document.getElementById("btnGuardarAsignaciones");
+    if (btnGuardar) {
+        btnGuardar.disabled = true;
+        btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+    }
+
+    const payload = {
+        idlote: parseInt(idlote),
+        operarios: operariosAsignados.map(op => ({
+            idempleado: parseInt(op.idempleado),
+            tipo_tarea: op.tipo_tarea,
+            turno: op.turno,
+            observaciones: op.observaciones || ''
+        }))
+    };
+
+    console.log("📤 Payload a enviar:", payload);
+
+    fetch("Produccion/asignarOperarios", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify(payload),
     })
-    .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire("Error", "Error de conexión.", "error");
+    .then(response => {
+        console.log("📥 Respuesta recibida:", response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response.json();
+    })
+    .then(result => {
+        console.log("📋 Resultado del guardado:", result);
+        
+        if (result.status) {
+            Swal.fire({
+                icon: "success",
+                title: "¡Éxito!",
+                text: result.message,
+                confirmButtonColor: "#059669"
+            }).then(() => {
+                cerrarModal("modalAsignarOperarios");
+                recargarTablaLotes();
+                // Limpiar estado
+                operariosAsignados = [];
+                operariosDisponibles = [];
+                loteActual = null;
+            });
+        } else {
+            throw new Error(result.message || "Error desconocido del servidor");
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error en guardado:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Error al guardar asignaciones: " + error.message,
+            confirmButtonColor: "#dc2626"
+        });
     })
     .finally(() => {
-      if (btnGuardar) {
-        btnGuardar.disabled = false;
-        btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Asignaciones`;
-      }
+        if (btnGuardar) {
+            btnGuardar.disabled = false;
+            btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i>Guardar Asignaciones`;
+        }
     });
 }
+function debugAsignaciones() {
+    const debugInfo = {
+        loteActual: loteActual,
+        operariosAsignados: operariosAsignados,
+        operariosDisponibles: operariosDisponibles.length,
+        idLote: document.getElementById("idLoteAsignar").value,
+        checkboxes: document.querySelectorAll('.operario-checkbox').length,
+        checkboxesMarcados: document.querySelectorAll('.operario-checkbox:checked').length
+    };
 
-// ========================================
-// FUNCIONES DE PROCESOS
-// ========================================
+    console.log("🐛 DEBUG - Estado actual:", debugInfo);
 
+    const debugContent = document.getElementById("debugContent");
+    if (debugContent) {
+        debugContent.innerHTML = `<pre>${JSON.stringify(debugInfo, null, 2)}</pre>`;
+    }
+
+    // Mostrar panel de debug
+    const debugPanel = document.getElementById("debugPanel");
+    if (debugPanel) {
+        debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    return debugInfo;
+}
+// ========================================
+// FUNCIONES DE CLASIFICACIÓN Y EMPAQUE
+// ========================================
 function cargarDatosParaClasificacion() {
   cargarLotesEnProceso("clas_lote");
-  cargarOperarios("clas_operario");
-  cargarProductosPorClasificar("clas_producto_origen");
-  cargarProductosClasificados("clas_producto_clasificado");
+  cargarEmpleadosActivos("clas_operario");
+  cargarProductosClasificados("clas_producto_origen");
 }
 
 function cargarDatosParaEmpaque() {
   cargarLotesEnProceso("emp_lote");
-  cargarOperarios("emp_operario");
+  cargarEmpleadosActivos("emp_operario");
   cargarProductosClasificados("emp_producto_clasificado");
-  cargarConfiguracionPesos();
 }
 
 function validarSumaClasificacion() {
@@ -1209,30 +1289,13 @@ function validarSumaClasificacion() {
 
 function validarPesoPaca() {
   const peso = parseFloat(document.getElementById("emp_peso_paca").value || 0);
-  const infoValidacion = document.getElementById("infoPesoValidacion");
-  const alertaPeso = document.getElementById("alertaPeso");
   
   if (peso > 0 && configuracionActual.peso_minimo_paca && configuracionActual.peso_maximo_paca) {
-    infoValidacion.classList.remove("hidden");
-    
-    document.getElementById("pesoMinimo").textContent = `${configuracionActual.peso_minimo_paca} kg`;
-    document.getElementById("pesoMaximo").textContent = `${configuracionActual.peso_maximo_paca} kg`;
-    
     if (peso < configuracionActual.peso_minimo_paca) {
-      alertaPeso.textContent = "⚠️ Peso por debajo del mínimo permitido";
-      alertaPeso.className = "text-xs mt-2 text-orange-600 font-medium";
-      alertaPeso.classList.remove("hidden");
+      mostrarAdvertencia("Peso por debajo del mínimo permitido");
     } else if (peso > configuracionActual.peso_maximo_paca) {
-      alertaPeso.textContent = "⚠️ Peso por encima del máximo permitido";
-      alertaPeso.className = "text-xs mt-2 text-red-600 font-medium";
-      alertaPeso.classList.remove("hidden");
-    } else {
-      alertaPeso.textContent = "✓ Peso dentro del rango permitido";
-      alertaPeso.className = "text-xs mt-2 text-green-600 font-medium";
-      alertaPeso.classList.remove("hidden");
+      mostrarAdvertencia("Peso por encima del máximo permitido");
     }
-  } else {
-    infoValidacion.classList.add("hidden");
   }
 }
 
@@ -1252,7 +1315,6 @@ function registrarClasificacion() {
       "clas_lote": "idlote",
       "clas_operario": "idempleado",
       "clas_producto_origen": "idproducto_origen",
-      "clas_producto_clasificado": "idproducto_clasificado",
       "clas_kg_procesados": "kg_procesados",
       "clas_kg_limpios": "kg_limpios",
       "clas_kg_contaminantes": "kg_contaminantes",
@@ -1276,12 +1338,16 @@ function registrarClasificacion() {
     onSuccess: (result) => {
       Swal.fire("¡Éxito!", result.message, "success").then(() => {
         cerrarModal("modalRegistrarClasificacion");
-        actualizarEstadisticas();
         
         const form = document.getElementById("formRegistrarClasificacion");
         if (form) {
           form.reset();
           limpiarValidaciones(camposFormularioClasificacion, "formRegistrarClasificacion");
+        }
+        
+        // Recargar tabla de procesos
+        if (tablaProcesos) {
+          tablaProcesos.ajax.reload(null, false);
         }
       });
     },
@@ -1319,12 +1385,16 @@ function registrarEmpaque() {
     onSuccess: (result) => {
       Swal.fire("¡Éxito!", result.message, "success").then(() => {
         cerrarModal("modalRegistrarEmpaque");
-        actualizarEstadisticas();
         
         const form = document.getElementById("formRegistrarEmpaque");
         if (form) {
           form.reset();
           limpiarValidaciones(camposFormularioEmpaque, "formRegistrarEmpaque");
+        }
+        
+        // Recargar tabla de procesos
+        if (tablaProcesos) {
+          tablaProcesos.ajax.reload(null, false);
         }
       });
     },
@@ -1342,7 +1412,6 @@ function registrarEmpaque() {
 // ========================================
 // FUNCIONES DE NÓMINA
 // ========================================
-
 function cargarLotesParaProduccionDiaria() {
   fetch("Produccion/getLotesData")
     .then((response) => response.json())
@@ -1373,7 +1442,7 @@ function cargarOperariosProduccionDiaria() {
   const tbody = document.getElementById("bodyProduccionDiaria");
   
   if (!idlote) {
-    tbody.innerHTML = '<tr><td colspan="6" class="border border-gray-300 px-3 py-4 text-center text-gray-500">Seleccione un lote para cargar los operarios</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-gray-500">Seleccione un lote para cargar los operarios</td></tr>';
     return;
   }
 
@@ -1392,12 +1461,12 @@ function cargarOperariosProduccionDiaria() {
       if (result.status && result.data) {
         mostrarOperariosProduccionDiaria(result.data);
       } else {
-        tbody.innerHTML = '<tr><td colspan="6" class="border border-gray-300 px-3 py-4 text-center text-gray-500">No hay operarios asignados a este lote</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-gray-500">No hay operarios asignados a este lote</td></tr>';
       }
     })
     .catch((error) => {
       console.error("Error:", error);
-      tbody.innerHTML = '<tr><td colspan="6" class="border border-gray-300 px-3 py-4 text-center text-red-500">Error al cargar operarios</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-red-500">Error al cargar operarios</td></tr>';
     });
 }
 
@@ -1417,24 +1486,19 @@ function mostrarOperariosProduccionDiaria(operarios) {
           <input type="number" step="0.01" min="0" 
                  name="operarios[${index}][kg_clasificados]"
                  class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
-                 placeholder="0.00"
-                 onchange="calcularTasaError(${index})">
+                 placeholder="0.00">
         </td>
         <td class="border border-gray-300 px-3 py-2">
           <input type="number" step="0.01" min="0" 
                  name="operarios[${index}][kg_contaminantes]"
                  class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
-                 placeholder="0.00"
-                 onchange="calcularTasaError(${index})">
+                 placeholder="0.00">
         </td>
         <td class="border border-gray-300 px-3 py-2">
           <input type="number" min="0" 
                  name="operarios[${index}][pacas_armadas]"
                  class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
                  placeholder="0">
-        </td>
-        <td class="border border-gray-300 px-3 py-2">
-          <span id="tasaError_${index}" class="font-medium">0.00%</span>
         </td>
         <td class="border border-gray-300 px-3 py-2">
           <input type="text" 
@@ -1447,31 +1511,6 @@ function mostrarOperariosProduccionDiaria(operarios) {
   });
 
   tbody.innerHTML = html;
-}
-
-function calcularTasaError(index) {
-  const kgClasificados = parseFloat(document.querySelector(`input[name="operarios[${index}][kg_clasificados]"]`).value || 0);
-  const kgContaminantes = parseFloat(document.querySelector(`input[name="operarios[${index}][kg_contaminantes]"]`).value || 0);
-  
-  let tasaError = 0;
-  if (kgClasificados > 0) {
-    tasaError = (kgContaminantes / kgClasificados) * 100;
-  }
-
-  const spanTasa = document.getElementById(`tasaError_${index}`);
-  if (spanTasa) {
-    spanTasa.textContent = `${tasaError.toFixed(2)}%`;
-    
-    // Colorear según la tasa de error
-     spanTasa.className = "font-medium";
-    if (tasaError > (configuracionActual.umbral_error_maximo || 5)) {
-      spanTasa.classList.add("text-red-600");
-    } else if (tasaError > (configuracionActual.umbral_error_maximo || 5) * 0.8) {
-      spanTasa.classList.add("text-orange-600");
-    } else {
-      spanTasa.classList.add("text-green-600");
-    }
-  }
 }
 
 function guardarProduccionDiaria() {
@@ -1532,9 +1571,8 @@ function guardarProduccionDiaria() {
       if (result.status) {
         Swal.fire("¡Éxito!", result.message, "success").then(() => {
           cerrarModal("modalRegistrarProduccionDiaria");
-          actualizarEstadisticas();
           if (tablaNomina) {
-            cargarDatosNomina();
+            tablaNomina.ajax.reload(null, false);
           }
         });
       } else {
@@ -1630,26 +1668,15 @@ function calcularNomina(fechaInicio, fechaFin) {
       Swal.close();
       
       if (result.status) {
-        const mensaje = `
-          <div class="text-left space-y-3">
-            <p class="text-green-600 font-medium">${result.message}</p>
-            <div class="bg-gray-50 p-3 rounded text-sm">
-              <div><strong>Registros actualizados:</strong> ${result.registros_actualizados}</div>
-              <div><strong>Tasa de error general:</strong> ${result.tasa_error_general}%</div>
-              <div><strong>Beta efectivo:</strong> ${result.beta_efectivo}</div>
-              ${result.penalizacion_aplicada ? '<div class="text-orange-600"><strong>⚠️ Penalización aplicada por alta tasa de error</strong></div>' : ''}
-            </div>
-          </div>
-        `;
-
         Swal.fire({
           title: "¡Nómina Calculada!",
-          html: mensaje,
+          text: result.message,
           icon: "success",
           confirmButtonColor: "#059669"
         }).then(() => {
-          cargarDatosNomina();
-          actualizarEstadisticas();
+          if (tablaNomina) {
+            tablaNomina.ajax.reload(null, false);
+          }
         });
       } else {
         Swal.fire("Error", result.message || "No se pudo calcular la nómina.", "error");
@@ -1661,38 +1688,9 @@ function calcularNomina(fechaInicio, fechaFin) {
       Swal.fire("Error", "Error de conexión.", "error");
     });
 }
-
-function cargarDatosNomina() {
-  // Implementar carga de datos para la tabla de nómina
-  fetch("Produccion/getProductividadOperarios")
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && tablaNomina) {
-        tablaNomina.clear();
-        
-        result.data.forEach(registro => {
-          tablaNomina.row.add({
-            fecha: registro.ultima_jornada || '',
-            operario: registro.operario,
-            kg_clasificados: parseFloat(registro.total_kg_clasificados || 0).toFixed(2),
-            pacas_armadas: registro.total_pacas_armadas || 0,
-            salario_total: `${parseFloat(registro.total_salarios || 0).toLocaleString()}`,
-            estatus: 'CALCULADO'
-          });
-        });
-        
-        tablaNomina.draw();
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-}
-
 // ========================================
 // FUNCIONES DE CONFIGURACIÓN
 // ========================================
-
 function cargarConfiguracionInicial() {
   fetch("Produccion/getConfiguracionProduccion")
     .then((response) => response.json())
@@ -1718,7 +1716,6 @@ function mostrarConfiguracion(config) {
     'beta_clasificacion',
     'gamma_empaque',
     'umbral_error_maximo',
-    'penalizacion_beta',
     'peso_minimo_paca',
     'peso_maximo_paca'
   ];
@@ -1773,255 +1770,9 @@ function guardarConfiguracion() {
       }
     });
 }
-
-// ========================================
-// FUNCIONES DE REPORTES
-// ========================================
-
-function generarReporte() {
-  const fechaInicio = document.getElementById("filtroFechaInicio").value;
-  const fechaFin = document.getElementById("filtroFechaFin").value;
-  const tipoReporte = document.getElementById("filtroTipoReporte").value;
-
-  if (!fechaInicio || !fechaFin) {
-    mostrarError("Debe seleccionar el rango de fechas.");
-    return;
-  }
-
-  const btnGenerar = document.getElementById("btnGenerarReporte");
-  if (btnGenerar) {
-    btnGenerar.disabled = true;
-    btnGenerar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Generando...`;
-  }
-
-  fetch(`Produccion/exportarReporteProduccion?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&tipo=${tipoReporte}`)
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        mostrarReporte(result.data, tipoReporte);
-      } else {
-        mostrarError("No se pudo generar el reporte.");
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      mostrarError("Error al generar reporte.");
-    })
-    .finally(() => {
-      if (btnGenerar) {
-        btnGenerar.disabled = false;
-        btnGenerar.innerHTML = `<i class="fas fa-file-pdf mr-2"></i> Generar Reporte`;
-      }
-    });
-}
-
-function mostrarReporte(data, tipo) {
-  const areaReporte = document.getElementById("areaReporte");
-  const contenidoReporte = document.getElementById("contenidoReporte");
-  
-  let html = "";
-
-  switch (tipo) {
-    case 'general':
-      html = generarReporteGeneral(data);
-      break;
-    case 'nomina':
-      html = generarReporteNomina(data);
-      break;
-    case 'pacas':
-      html = generarReportePacas(data);
-      break;
-  }
-
-  contenidoReporte.innerHTML = html;
-  areaReporte.classList.remove("hidden");
-}
-
-function generarReporteGeneral(data) {
-  const resumen = data.resumen || {};
-  const topOperarios = data.top_operarios || [];
-
-  return `
-    <div class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-blue-50 p-4 rounded-lg text-center">
-          <div class="text-2xl font-bold text-blue-600">${resumen.total_lotes || 0}</div>
-          <div class="text-sm text-blue-800">Total Lotes</div>
-        </div>
-        <div class="bg-green-50 p-4 rounded-lg text-center">
-          <div class="text-2xl font-bold text-green-600">${parseFloat(resumen.total_kg_clasificados || 0).toLocaleString()}</div>
-          <div class="text-sm text-green-800">Kg Clasificados</div>
-        </div>
-        <div class="bg-purple-50 p-4 rounded-lg text-center">
-          <div class="text-2xl font-bold text-purple-600">${resumen.total_pacas_armadas || 0}</div>
-          <div class="text-sm text-purple-800">Pacas Armadas</div>
-        </div>
-        <div class="bg-orange-50 p-4 rounded-lg text-center">
-          <div class="text-2xl font-bold text-orange-600">${parseFloat(resumen.total_nomina || 0).toLocaleString()}</div>
-          <div class="text-sm text-orange-800">Total Nómina</div>
-        </div>
-      </div>
-      
-      <div>
-        <h4 class="text-lg font-semibold mb-3">Top 10 Operarios por Productividad</h4>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm border-collapse border border-gray-300">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="border border-gray-300 px-3 py-2 text-left">Operario</th>
-                <th class="border border-gray-300 px-3 py-2 text-right">Kg Clasificados</th>
-                <th class="border border-gray-300 px-3 py-2 text-right">Pacas</th>
-                <th class="border border-gray-300 px-3 py-2 text-right">Tasa Error</th>
-                <th class="border border-gray-300 px-3 py-2 text-right">Total Salario</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${topOperarios.map(operario => `
-                <tr>
-                  <td class="border border-gray-300 px-3 py-2">${operario.operario}</td>
-                  <td class="border border-gray-300 px-3 py-2 text-right">${parseFloat(operario.total_kg).toLocaleString()}</td>
-                  <td class="border border-gray-300 px-3 py-2 text-right">${operario.total_pacas}</td>
-                  <td class="border border-gray-300 px-3 py-2 text-right">${parseFloat(operario.promedio_error).toFixed(2)}%</td>
-                  <td class="border border-gray-300 px-3 py-2 text-right">${parseFloat(operario.total_salario).toLocaleString()}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function generarReporteNomina(data) {
-  const detalleNomina = data.detalle_nomina || [];
-
-  return `
-    <div class="space-y-4">
-      <h4 class="text-lg font-semibold">Detalle de Nómina</h4>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm border-collapse border border-gray-300">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="border border-gray-300 px-3 py-2 text-left">Operario</th>
-              <th class="border border-gray-300 px-3 py-2 text-left">Fecha</th>
-              <th class="border border-gray-300 px-3 py-2 text-right">Kg Clasificados</th>
-              <th class="border border-gray-300 px-3 py-2 text-right">Pacas</th>
-              <th class="border border-gray-300 px-3 py-2 text-right">Salario Base</th>
-              <th class="border border-gray-300 px-3 py-2 text-right">Bono Clasificación</th>
-              <th class="border border-gray-300 px-3 py-2 text-right">Bono Empaque</th>
-              <th class="border border-gray-300 px-3 py-2 text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${detalleNomina.map(registro => `
-              <tr>
-                <td class="border border-gray-300 px-3 py-2">${registro.operario}</td>
-                <td class="border border-gray-300 px-3 py-2">${registro.fecha_jornada}</td>
-                <td class="border border-gray-300 px-3 py-2 text-right">${parseFloat(registro.kg_clasificados).toFixed(2)}</td>
-                <td class="border border-gray-300 px-3 py-2 text-right">${registro.pacas_armadas}</td>
-                <td class="border border-gray-300 px-3 py-2 text-right">${parseFloat(registro.salario_base_dia).toFixed(2)}</td>
-                <td class="border border-gray-300 px-3 py-2 text-right">${parseFloat(registro.bono_clasificacion).toFixed(2)}</td>
-                <td class="border border-gray-300 px-3 py-2 text-right">${parseFloat(registro.bono_empaque).toFixed(2)}</td>
-                <td class="border border-gray-300 px-3 py-2 text-right font-bold">${parseFloat(registro.salario_total).toFixed(2)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function generarReportePacas(data) {
-  const pacasProducidas = data.pacas_producidas || [];
-
-  return `
-    <div class="space-y-4">
-      <h4 class="text-lg font-semibold">Pacas Producidas</h4>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm border-collapse border border-gray-300">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="border border-gray-300 px-3 py-2 text-left">Código Paca</th>
-              <th class="border border-gray-300 px-3 py-2 text-left">Operario</th>
-              <th class="border border-gray-300 px-3 py-2 text-left">Lote</th>
-              <th class="border border-gray-300 px-3 py-2 text-right">Peso (kg)</th>
-              <th class="border border-gray-300 px-3 py-2 text-left">Calidad</th>
-              <th class="border border-gray-300 px-3 py-2 text-left">Fecha Empaque</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${pacasProducidas.map(paca => `
-              <tr>
-                <td class="border border-gray-300 px-3 py-2">${paca.codigo_paca}</td>
-                <td class="border border-gray-300 px-3 py-2">${paca.operario_empacador}</td>
-                <td class="border border-gray-300 px-3 py-2">${paca.numero_lote}</td>
-                <td class="border border-gray-300 px-3 py-2 text-right">${parseFloat(paca.peso_paca).toFixed(2)}</td>
-                <td class="border border-gray-300 px-3 py-2">${paca.calidad}</td>
-                <td class="border border-gray-300 px-3 py-2">${paca.fecha_empaque_formato}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function exportarReporte() {
-  // Implementar exportación del reporte actual
-  const contenido = document.getElementById("contenidoReporte").innerHTML;
-  
-  if (!contenido) {
-    mostrarError("No hay reporte para exportar. Genere un reporte primero.");
-    return;
-  }
-
-  // Crear ventana de impresión
-  const ventanaImpresion = window.open('', '_blank');
-  ventanaImpresion.document.write(`
-    <html>
-      <head>
-        <title>Reporte de Producción</title>
-        <style>
-          body { font-family: Arial, sans-serif; margin: 20px; }
-          table { border-collapse: collapse; width: 100%; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; }
-          .text-right { text-align: right; }
-          .text-center { text-align: center; }
-          .font-bold { font-weight: bold; }
-          .bg-blue-50 { background-color: #eff6ff; }
-          .bg-green-50 { background-color: #f0fdf4; }
-          .bg-purple-50 { background-color: #faf5ff; }
-          .bg-orange-50 { background-color: #fff7ed; }
-          @media print {
-            body { margin: 0; }
-            .no-print { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h1>Reporte de Producción</h1>
-          <p>Generado el: ${new Date().toLocaleString()}</p>
-        </div>
-        ${contenido}
-        <div class="no-print" style="margin-top: 20px; text-align: center;">
-          <button onclick="window.print()">Imprimir</button>
-          <button onclick="window.close()">Cerrar</button>
-        </div>
-      </body>
-    </html>
-  `);
-  ventanaImpresion.document.close();
-}
-
 // ========================================
 // FUNCIONES AUXILIARES
 // ========================================
-
 function recargarTablaLotes() {
   if (tablaLotes && tablaLotes.ajax && typeof tablaLotes.ajax.reload === 'function') {
     tablaLotes.ajax.reload(null, false);
@@ -2030,20 +1781,21 @@ function recargarTablaLotes() {
   }
 }
 
-function cargarSupervisores() {
-  fetch("Produccion/getOperariosDisponibles")
+function cargarEmpleadosActivos(selectId = "lote_supervisor") {
+  fetch("Produccion/getEmpleadosActivos")
     .then((response) => response.json())
     .then((result) => {
       if (result.status && result.data) {
-        const select = document.getElementById("lote_supervisor");
-        let options = '<option value="">Seleccionar supervisor...</option>';
-        
-        result.data.forEach(operario => {
-        options += `<option value="${operario.idempleado}">${operario.nombre_completo}</option>`;
-        });
-
-        
-        select.innerHTML = options;
+        const select = document.getElementById(selectId);
+        if (select) {
+          let options = '<option value="">Seleccionar empleado...</option>';
+          
+          result.data.forEach(empleado => {
+            options += `<option value="${empleado.idempleado}">${empleado.nombre_completo}</option>`;
+          });
+          
+          select.innerHTML = options;
+        }
       }
     })
     .catch((error) => {
@@ -2057,15 +1809,17 @@ function cargarLotesEnProceso(selectId) {
     .then((result) => {
       if (result.status && result.data) {
         const select = document.getElementById(selectId);
-        let options = '<option value="">Seleccionar lote...</option>';
-        
-        result.data.forEach(lote => {
-          if (lote.estatus_lote === 'EN_PROCESO') {
-            options += `<option value="${lote.idlote}">${lote.numero_lote} - ${lote.fecha_jornada_formato}</option>`;
-          }
-        });
-        
-        select.innerHTML = options;
+        if (select) {
+          let options = '<option value="">Seleccionar lote...</option>';
+          
+          result.data.forEach(lote => {
+            if (lote.estatus_lote === 'EN_PROCESO') {
+              options += `<option value="${lote.idlote}">${lote.numero_lote} - ${lote.fecha_jornada_formato}</option>`;
+            }
+          });
+          
+          select.innerHTML = options;
+        }
       }
     })
     .catch((error) => {
@@ -2073,88 +1827,32 @@ function cargarLotesEnProceso(selectId) {
     });
 }
 
-function cargarOperarios(selectId) {
-  fetch("Produccion/getOperariosDisponibles")
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        const select = document.getElementById(selectId);
-        let options = '<option value="">Seleccionar operario...</option>';
-        
-        result.data.forEach(operario => {
-          options += `<option value="${operario.idempleado}">${operario.nombre_completo}</option>`;
-        });
-        
-        select.innerHTML = options;
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-}
-
-function cargarProductosPorClasificar(selectId) {
-  // Implementar carga de productos por clasificar desde el endpoint de productos
-  const select = document.getElementById(selectId);
-  select.innerHTML = '<option value="">Cargando productos...</option>';
-  
-  // Simular carga - reemplazar por llamada real
-  setTimeout(() => {
-    select.innerHTML = `
-      <option value="">Seleccionar producto...</option>
-      <option value="7">Cartón por Clasificar</option>
-      <option value="8">Archivo por Clasificar</option>
-    `;
-  }, 500);
-}
-
+// CAMBIAR esta función:
 function cargarProductosClasificados(selectId) {
-  // Implementar carga de productos clasificados
-  const select = document.getElementById(selectId);
-  select.innerHTML = '<option value="">Cargando productos...</option>';
-  
-  // Simular carga - reemplazar por llamada real
-  setTimeout(() => {
-    select.innerHTML = `
-      <option value="">Seleccionar producto...</option>
-      <option value="1">Archivo</option>
-      <option value="4">Cartón</option>
-    `;
-  }, 500);
+    // Implementar carga de productos clasificados
+    const select = document.getElementById(selectId);
+    select.innerHTML = '<option value="">Cargando productos...</option>';
+    
+    // REEMPLAZAR con:
+    fetch(`Produccion/getProductos?tipo=clasificados`)
+        .then((response) => response.json())
+        .then((result) => {
+            if (result.status && result.data) {
+                const select = document.getElementById(selectId);
+                let options = '<option value="">Seleccionar material...</option>';
+                
+                result.data.forEach(producto => {
+                    options += `<option value="${producto.idproducto}">${producto.nombre} (${producto.existencia} ${producto.unidad_medida})</option>`;
+                });
+                
+                select.innerHTML = options;
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+        });
 }
 
-function cargarConfiguracionPesos() {
-  if (configuracionActual.peso_minimo_paca && configuracionActual.peso_maximo_paca) {
-    document.getElementById("pesoMinimo").textContent = `${configuracionActual.peso_minimo_paca} kg`;
-    document.getElementById("pesoMaximo").textContent = `${configuracionActual.peso_maximo_paca} kg`;
-  }
-}
-
-function actualizarEstadisticas() {
-  const fechaHoy = new Date().toISOString().split('T')[0];
-  
-  // Cargar estadísticas del día
-  fetch(`Produccion/getProduccionDiaria?fecha=${fechaHoy}`)
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data && result.data.length > 0) {
-        const datos = result.data[0];
-        document.getElementById("stat-produccion-hoy").textContent = 
-          `${parseFloat(datos.total_kg_clasificados || 0).toLocaleString()} kg`;
-        document.getElementById("stat-pacas-hoy").textContent = 
-          datos.total_pacas_armadas || 0;
-        document.getElementById("stat-operarios-activos").textContent = 
-          datos.operarios_registrados || 0;
-      } else {
-        document.getElementById("stat-produccion-hoy").textContent = "0 kg";
-        document.getElementById("stat-pacas-hoy").textContent = "0";
-        document.getElementById("stat-operarios-activos").textContent = "0";
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-}
 function mostrarError(mensaje) {
   Swal.fire({
     icon: "error",
@@ -2181,16 +1879,10 @@ function mostrarAdvertencia(mensaje) {
     confirmButtonColor: "#f59e0b"
   });
 }
-
+// ========================================
+// EXPOSICIÓN GLOBAL
+// ========================================
 window.toggleOperarioAsignado = toggleOperarioAsignado;
 window.actualizarTareaOperario = actualizarTareaOperario;
 window.removerOperarioAsignado = removerOperarioAsignado;
-window.calcularTasaError = calcularTasaError;
-
-ocument.addEventListener("DOMContentLoaded", function() {
-  // Cargar configuración cada 5 minutos para mantener sincronización
-  setInterval(cargarConfiguracionInicial, 300000);
-  
-  // Actualizar estadísticas cada 2 minutos
-  setInterval(actualizarEstadisticas, 120000);
-});
+window.debugAsignaciones = debugAsignaciones;
