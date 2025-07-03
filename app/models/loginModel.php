@@ -142,13 +142,12 @@ class LoginModel extends Mysql
         try {
             $this->setQuery("SELECT idusuario, estatus, correo FROM usuario WHERE correo = ? AND clave = ? AND estatus = 'activo'");
             $this->setArray([$email, $password]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $resultado = $this->getResult();
-            
         } catch (Exception $e) {
             error_log("LoginModel::ejecutarAutenticacion - Error: " . $e->getMessage());
             $resultado = false;
@@ -174,13 +173,12 @@ class LoginModel extends Mysql
                  WHERE u.idusuario = ? AND u.estatus = 'activo'"
             );
             $this->setArray([$id]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $resultado = $this->getResult();
-            
         } catch (Exception $e) {
             error_log("LoginModel::ejecutarBusquedaSesion - Error: " . $e->getMessage());
             $resultado = false;
@@ -191,7 +189,7 @@ class LoginModel extends Mysql
         return $resultado;
     }
 
-       private function ejecutarBusquedaPorEmail(string $email)
+    private function ejecutarBusquedaPorEmail(string $email)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -200,13 +198,12 @@ class LoginModel extends Mysql
         try {
             $this->setQuery("SELECT idusuario, usuario, correo, estatus FROM usuario WHERE correo = ?");
             $this->setArray([$email]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $resultado = $this->getResult();
-            
         } catch (Exception $e) {
             error_log("LoginModel::ejecutarBusquedaPorEmail - Error: " . $e->getMessage());
             $resultado = false;
@@ -227,11 +224,10 @@ class LoginModel extends Mysql
             // Actualizar token con fecha de expiración (1 hora desde ahora)
             $this->setQuery("UPDATE usuario SET token = ?, token_exp = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE idusuario = ?");
             $this->setArray([$token, $idUsuario]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount() > 0;
-            
         } catch (Exception $e) {
             error_log("LoginModel::ejecutarActualizacionToken - Error: " . $e->getMessage());
             $resultado = false;
@@ -252,15 +248,40 @@ class LoginModel extends Mysql
             // Verificar token válido y no expirado
             $this->setQuery("SELECT * FROM usuario WHERE correo = ? AND token = ? AND token_exp > NOW() AND estatus = 'activo'");
             $this->setArray([$email, $token]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $resultado = $this->getResult();
-            
         } catch (Exception $e) {
             error_log("LoginModel::ejecutarValidacionToken - Error: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
+    private function ejecutarValidacionTokenOnly(string $token)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            // Verificar token válido y no expirado (solo por token)
+            $this->setQuery("SELECT * FROM usuario WHERE token = ? AND token_exp > NOW() AND estatus = 'activo'");
+            $this->setArray([$token]);
+
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+
+            $resultado = $this->getResult();
+        } catch (Exception $e) {
+            error_log("LoginModel::ejecutarValidacionTokenOnly - Error: " . $e->getMessage());
             $resultado = false;
         } finally {
             $conexion->disconnect();
@@ -278,13 +299,58 @@ class LoginModel extends Mysql
         try {
             $this->setQuery("UPDATE usuario SET clave = ?, token = '' WHERE idusuario = ?");
             $this->setArray([$pass, $idUsuario]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount() > 0;
-            
         } catch (Exception $e) {
             error_log("LoginModel::ejecutarActualizacionPassword - Error: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
+    private function ejecutarActualizacionPasswordRecuperacion(int $idUsuario, string $pass)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            $this->setQuery("UPDATE usuario SET clave = ?, token = NULL, token_exp = NULL WHERE idusuario = ?");
+            $this->setArray([$pass, $idUsuario]);
+
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $resultado = $stmt->rowCount() > 0;
+        } catch (Exception $e) {
+            error_log("LoginModel::ejecutarActualizacionPasswordRecuperacion - Error: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
+    private function ejecutarEliminacionToken(string $token)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            $this->setQuery("UPDATE usuario SET token = NULL, token_exp = NULL WHERE token = ?");
+            $this->setArray([$token]);
+
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $resultado = $stmt->rowCount() > 0;
+        } catch (Exception $e) {
+            error_log("LoginModel::ejecutarEliminacionToken - Error: " . $e->getMessage());
             $resultado = false;
         } finally {
             $conexion->disconnect();
@@ -307,7 +373,7 @@ class LoginModel extends Mysql
         return $this->ejecutarBusquedaSesion($this->getIdUser());
     }
 
-  
+
 
     public function getUsuarioEmail(string $email)
     {
@@ -329,6 +395,12 @@ class LoginModel extends Mysql
         return $this->ejecutarValidacionToken($this->getEmailUser(), $this->getToken());
     }
 
+    public function getTokenUserByToken(string $token)
+    {
+        $this->setToken($token);
+        return $this->ejecutarValidacionTokenOnly($this->getToken());
+    }
+
     public function insertPassword(int $idUsuario, string $pass)
     {
         $this->setIdUser($idUsuario);
@@ -338,20 +410,14 @@ class LoginModel extends Mysql
 
     public function updatePassword($userId, $passwordHash)
     {
-        $sql = "UPDATE usuarios SET password = ? WHERE idusuario = ?";
-        $arrData = array($passwordHash, $userId);
-        $request = $this->update($sql, $arrData);
-        return $request;
+        $this->setIdUser($userId);
+        $this->setPass($passwordHash);
+        return $this->ejecutarActualizacionPasswordRecuperacion($this->getIdUser(), $this->getPass());
     }
 
     public function deleteToken($token)
     {
-        $sql = "UPDATE usuarios SET token = NULL, token_exp = NULL WHERE token = ?";
-        $arrData = array($token);
-        $request = $this->update($sql, $arrData);
-        return $request;
+        $this->setToken($token);
+        return $this->ejecutarEliminacionToken($this->getToken());
     }
-
-    
 }
-?>

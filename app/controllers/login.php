@@ -224,7 +224,7 @@ class Login extends Controllers
         }
 
         // Verificar token válido y no expirado
-        $tokenData = $this->model->getTokenUser($token);
+        $tokenData = $this->model->getTokenUserByToken($token);
         
         if (!$tokenData) {
             $data['page_title'] = "Token Inválido";
@@ -265,14 +265,14 @@ class Login extends Controllers
                 }
 
                 // Verificar token válido
-                $tokenData = $this->model->getTokenUser($token);
+                $tokenData = $this->model->getTokenUserByToken($token);
                 if (!$tokenData) {
                     echo json_encode(['status' => false, 'msg' => 'El enlace de recuperación ha expirado o no es válido. Por favor, solicita un nuevo enlace de recuperación.']);
                     exit();
                 }
 
                 // Actualizar contraseña
-                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                $passwordHash = hash("SHA256", $password);
                 $updated = $this->model->updatePassword($tokenData['idusuario'], $passwordHash);
 
                 if ($updated) {

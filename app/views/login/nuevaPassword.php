@@ -1,5 +1,22 @@
-<?php headerAdmin($data); ?>
+<!DOCTYPE html>
+<html lang="es">
 
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="/project/app/assets/img/favicon.svg" type="image/x-icon">
+    <title>Recuperadora</title>
+    <meta name="description" content="Recuperadora de materiales reciclables">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/project/app/assets/styles/styles.css">
+
+    <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
+    <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
+    <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet">
+    <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
+
+</head>
 <body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-2">
     <div class="w-full max-w-md bg-white rounded-lg shadow-2xl p-6">
         <div class="text-center mb-6">
@@ -62,11 +79,9 @@
         </div>
     </div>
 
-    <script>
-        // Definir base_url para JavaScript
-        const base_url = () => "<?= base_url() ?>";
-    </script>
+
     <script src="<?= base_url() ?>/app/assets/js/functions_resetpass.js"></script>
-    <?php footerAdmin($data); ?>
+    <script type="text/javascript" src="/project/app/assets/sweetAlert/sweetalert2.all.min.js"></script>
+   
 </body>
 </html>
