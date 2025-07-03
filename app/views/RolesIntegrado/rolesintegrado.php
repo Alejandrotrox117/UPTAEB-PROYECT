@@ -124,4 +124,7 @@
   </div>
 </div>
 
+<!-- Scripts específicos para el tour de ayuda -->
+<script src="/project/app/assets/js/ayuda/rolesintegrado-tour.js"></script>
+
 <?php footerAdmin($data); ?>
