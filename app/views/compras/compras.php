@@ -5,8 +5,8 @@ headerAdmin($data);
 $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Compras');
 ?>
 
-<input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
-<input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
+<input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars($data['rolUsuarioAutenticado'] ?? ''); ?>">
+<input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($data['idRolUsuarioAutenticado'] ?? 0); ?>">
 
 <!-- PASAR PERMISOS AL JAVASCRIPT -->
 <script>
@@ -473,5 +473,17 @@ window.permisosCompras = <?php echo json_encode($permisos); ?>;
 
 <!-- Cargar archivo de permisos antes que el archivo principal -->
 <script src="/project/app/assets/js/functions_compras_permisos.js"></script>
+<script>
+// Ejecutar obtenerPermisos inmediatamente cuando se carga el archivo de permisos
+document.addEventListener("DOMContentLoaded", function() {
+    // Llamar a obtenerPermisos desde el archivo de permisos
+    if (typeof window.permisosCompras !== 'undefined' && typeof window.permisosCompras.obtenerPermisos === 'function') {
+        console.log("MAIN - Llamando a obtenerPermisos desde la vista");
+        window.permisosCompras.obtenerPermisos();
+    } else {
+        console.warn("MAIN - No se encontró la función obtenerPermisos en window.permisosCompras");
+    }
+});
+</script>
 
 <?php footerAdmin($data); ?>

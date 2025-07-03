@@ -9,6 +9,7 @@ let permisosUsuario = {
 
 
 function obtenerPermisos() {
+    
     if (window.permisosCompras && typeof window.permisosCompras === 'object' && window.permisosCompras.ver !== undefined) {
         permisosUsuario = {
             ver: window.permisosCompras.ver || false,
@@ -40,6 +41,21 @@ function obtenerPermisos() {
             console.error('Error al obtener permisos:', e);
         }
     }
+    if (!window.permisosCompras) {
+        window.permisosCompras = {};
+    }
+    window.permisosCompras.permisosUsuario = permisosUsuario;
+    
+    const evento = new CustomEvent('permisosComprasCargados', { 
+        detail: permisosUsuario 
+    });
+    document.dispatchEvent(evento);
+    
+    setTimeout(() => {
+        if (window.tablaCompras && typeof window.tablaCompras.draw === 'function') {
+            window.tablaCompras.draw();
+        }
+    }, 100);
 }
 
 function generarBotonesAccionConPermisos(data, type, row) {
@@ -47,6 +63,13 @@ function generarBotonesAccionConPermisos(data, type, row) {
     var nroCompra = row.nro_compra || "Sin número";
     var estadoActual = row.estatus_compra || "";
     var botones = [];
+
+    var rolId = document.getElementById('usuarioAuthRolId') ? 
+      parseInt(document.getElementById('usuarioAuthRolId').value) : 0;
+    
+    var esSuperusuario = rolId === 1;
+
+    var esCompraInactiva = estadoActual.toLowerCase() === "inactivo";
 
     if (permisosUsuario.ver || permisosUsuario.acceso_total) {
         botones.push(`
@@ -58,6 +81,22 @@ function generarBotonesAccionConPermisos(data, type, row) {
                 <i class="fas fa-eye fa-fw text-base"></i>
             </button>
         `);
+    }
+
+    if (esCompraInactiva) {
+        if (esSuperusuario) {
+            botones.push(`
+                <button
+                    class="reactivar-compra-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
+                    data-idcompra="${idCompra}"
+                    data-nro="${nroCompra}"
+                    title="Reactivar Compra"
+                >
+                    <i class="fas fa-undo fa-fw text-base"></i>
+                </button>
+            `);
+        }
+        return `<div class="flex space-x-1 justify-center">${botones.join('')}</div>`;
     }
 
     if ((permisosUsuario.editar || permisosUsuario.acceso_total) && estadoActual.toUpperCase() === "BORRADOR") {
@@ -72,10 +111,8 @@ function generarBotonesAccionConPermisos(data, type, row) {
         `);
     }
 
-    // Botones de cambio de estado
     switch (estadoActual.toUpperCase()) {
         case "BORRADOR":
-            // Quien puede crear o eliminar puede enviar a autorización
             if (permisosUsuario.crear || permisosUsuario.eliminar || permisosUsuario.acceso_total) {
                 botones.push(`
                     <button
@@ -90,7 +127,6 @@ function generarBotonesAccionConPermisos(data, type, row) {
             }
             break;
         case "POR_AUTORIZAR":
-            // Solo quien puede eliminar puede autorizar o devolver a borrador
             if (permisosUsuario.eliminar || permisosUsuario.acceso_total) {
                 botones.push(`
                     <button
@@ -191,6 +227,17 @@ function verificarPermiso(accion) {
                 return false;
             }
             break;
+        case 'reactivar':
+            if (!permisosUsuario.eliminar && !permisosUsuario.acceso_total) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso Denegado',
+                    text: 'No tiene permisos para reactivar compras.',
+                    confirmButtonColor: '#3085d6'
+                });
+                return false;
+            }
+            break;
         case 'ver':
             if (!permisosUsuario.ver && !permisosUsuario.acceso_total) {
                 Swal.fire({
@@ -227,6 +274,7 @@ document.addEventListener("DOMContentLoaded", function () {
             obtenerPermisos();
         }, 100);
     }
+    
 });
 
 window.permisosCompras = window.permisosCompras || {};

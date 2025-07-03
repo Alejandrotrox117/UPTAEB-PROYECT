@@ -11,10 +11,15 @@ class UsuariosModel extends Mysql
     private $usuarioId;
     private $message;
     private $status;
+    
+    // Definir constante para el rol de super usuario
+    const SUPER_USUARIO_ROL_ID = 1; // IMPORTANTE: Ajustar según el ID real del rol de super usuario en tu BD
 
     public function __construct()
     {
         // Constructor vacío como en ProveedoresModel
+        // Debug: Verificar el valor de la constante
+        error_log("SUPER_USUARIO_ROL_ID configurado como: " . self::SUPER_USUARIO_ROL_ID);
     }
 
     //  GETTERS Y SETTERS (igual que ProveedoresModel)
@@ -75,6 +80,43 @@ class UsuariosModel extends Mysql
     }
 
     //  FUNCIONES PRIVADAS ENCAPSULADAS
+
+    /**
+     * Verificar si un usuario es super usuario
+     */
+    private function esSuperUsuario(int $idusuario){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            $this->setQuery("SELECT COUNT(*) as total FROM usuario WHERE idusuario = ? AND idrol = ? AND estatus = 'ACTIVO'");
+            $this->setArray([$idusuario, self::SUPER_USUARIO_ROL_ID]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+
+            $result = $this->getResult();
+            $esSuperUsuario = $result && $result['total'] > 0;
+            
+        } catch (Exception $e) {
+            $conexion->disconnect();
+            error_log("Error al verificar super usuario: " . $e->getMessage());
+            $esSuperUsuario = false;
+        } finally {
+            $conexion->disconnect();
+        }
+        
+        return $esSuperUsuario;
+    }
+
+    /**
+     * Verificar si el usuario actual es super usuario por ID de sesión
+     */
+    private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
+        return $this->esSuperUsuario($idUsuarioSesion);
+    }
 
     /**
      * Verificar si existe usuario por correo
@@ -441,17 +483,69 @@ class UsuariosModel extends Mysql
     }
 
     /**
-     * Función privada para obtener todos los usuarios
+     * Función privada para actualizar solo contraseña de super usuario
      */
-    private function ejecutarBusquedaTodosUsuarios(){
+    private function ejecutarActualizacionSuperUsuario(int $idusuario, array $data){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            $db->beginTransaction();
+
+            // Solo actualizar contraseña y fecha de modificación
+            $this->setQuery("UPDATE usuario SET clave = ?, fecha_modificacion = NOW() WHERE idusuario = ?");
+            
+            $claveHasheada = hash("SHA256", $data['clave']);
+            $this->setArray([$claveHasheada, $idusuario]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $rowCount = $stmt->rowCount();
+            
+            if ($rowCount > 0) {
+                $db->commit();
+                $this->setStatus(true);
+                $this->setMessage('Contraseña actualizada exitosamente.');
+            } else {
+                $db->rollBack();
+                $this->setStatus(false);
+                $this->setMessage('No se pudo actualizar la contraseña.');
+            }
+            
+            $resultado = [
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
+            ];
+            
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            $conexion->disconnect();
+            error_log("Error al actualizar contraseña de super usuario: " . $e->getMessage());
+            
+            $resultado = [
+                'status' => false,
+                'message' => 'Error de base de datos al actualizar contraseña: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+    private function ejecutarBusquedaTodosUsuarios(int $idUsuarioSesion = 0){
         $conexion = new Conexion();
         $conexion->connect();
         $dbSeguridad = $conexion->get_conectSeguridad();
 
         try {
-            // Primera consulta: obtener usuarios con roles desde BD seguridad
-            $this->setQuery(
-                "SELECT 
+            // Verificar si el usuario actual es super usuario
+            $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+            
+            // Construir query base
+            $queryBase = "SELECT 
                     u.idusuario,
                     u.usuario,
                     u.correo,
@@ -464,11 +558,21 @@ class UsuariosModel extends Mysql
                     DATE_FORMAT(u.fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato,
                     DATE_FORMAT(u.fecha_modificacion, '%d/%m/%Y') as fecha_modificacion_formato
                 FROM usuario u
-                LEFT JOIN roles r ON u.idrol = r.idrol
-                ORDER BY u.usuario ASC"
-            );
+                LEFT JOIN roles r ON u.idrol = r.idrol";
             
-            $this->setArray([]);
+            // Si el usuario actual NO es super usuario, excluir super usuarios de los resultados y solo mostrar activos
+            if (!$esSuperUsuarioActual) {
+                $queryBase .= " WHERE u.idrol != ? AND u.estatus = 'ACTIVO'";
+                $this->setArray([self::SUPER_USUARIO_ROL_ID]);
+            } else {
+                // Si es super usuario, mostrar TODOS los usuarios (activos e inactivos)
+                $queryBase .= " WHERE 1=1";
+                $this->setArray([]);
+            }
+            
+            $queryBase .= " ORDER BY u.usuario ASC";
+            $this->setQuery($queryBase);
+            
             $stmt = $dbSeguridad->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -527,16 +631,17 @@ class UsuariosModel extends Mysql
     }
 
     /**
-     * Función privada para obtener todos los roles
+     * Función privada para obtener todos los roles - SIEMPRE filtrar super usuario
      */
-    private function ejecutarBusquedaTodosRoles(){
+    private function ejecutarBusquedaTodosRoles(int $idUsuarioSesion = 0){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectSeguridad();
 
         try {
-            $this->setQuery("SELECT idrol, nombre FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC");
-            $this->setArray([]);
+            // SIEMPRE excluir el rol de super usuario (ningún usuario puede asignarlo)
+            $this->setQuery("SELECT idrol, nombre FROM roles WHERE estatus = 'ACTIVO' AND idrol != ? ORDER BY nombre ASC");
+            $this->setArray([self::SUPER_USUARIO_ROL_ID]);
             
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
@@ -637,7 +742,7 @@ class UsuariosModel extends Mysql
         return $resultado;
     }
 
-    //  MÉTODOS PÚBLICOS QUE USAN LAS FUNCIONES PRIVADAS (igual que ProveedoresModel)
+    //  MÉTODOS PÚBLICOS QUE USAN LAS FUNCIONES PRIVADAS
 
     /**
      * Insertar nuevo usuario
@@ -669,11 +774,51 @@ class UsuariosModel extends Mysql
     }
 
     /**
-     * Actualizar usuario existente
+     * Actualizar usuario existente - MODIFICADA para super usuario solo contraseña
      */
-    public function updateUsuario(int $idusuario, array $data){
+    public function updateUsuario(int $idusuario, array $data, int $idUsuarioSesion = 0){
         $this->setData($data);
         $this->setUsuarioId($idusuario);
+        
+        // Verificar si el usuario a editar es super usuario
+        $esSuperUsuarioAEditar = $this->esSuperUsuario($idusuario);
+        $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+
+        // Si se está editando un super usuario y el usuario actual no es super usuario, denegar
+        if ($esSuperUsuarioAEditar && !$esSuperUsuarioActual) {
+            return [
+                'status' => false,
+                'message' => 'No tienes permisos para editar este usuario.'
+            ];
+        }
+
+        // Si se está editando un super usuario y no es él mismo editándose, denegar
+        if ($esSuperUsuarioAEditar && $idusuario !== $idUsuarioSesion) {
+            return [
+                'status' => false,
+                'message' => 'Los super usuarios solo pueden editar su propia información.'
+            ];
+        }
+
+        // Si es un super usuario editándose a sí mismo, solo permitir cambio de contraseña
+        if ($esSuperUsuarioAEditar && $idusuario === $idUsuarioSesion) {
+            // Solo permitir actualización de contraseña
+            if (empty($this->getData()['clave'])) {
+                return [
+                    'status' => false,
+                    'message' => 'Debe proporcionar una nueva contraseña para actualizar.'
+                ];
+            }
+            
+            // Crear datos solo con la contraseña
+            $datosLimitados = [
+                'clave' => $this->getData()['clave']
+            ];
+            
+            return $this->ejecutarActualizacionSuperUsuario($this->getUsuarioId(), $datosLimitados);
+        }
+
+        // Para usuarios normales, hacer las validaciones normales
         $correo = $this->getData()['correo'];
         $usuario = $this->getData()['usuario'];
 
@@ -697,40 +842,62 @@ class UsuariosModel extends Mysql
     }
 
     /**
-     * Obtener usuario por ID
+     * Obtener usuario por ID - MODIFICADA para super usuarios solo ellos mismos
      */
-    public function selectUsuarioById(int $idusuario){
+    public function selectUsuarioById(int $idusuario, int $idUsuarioSesion = 0){
         $this->setUsuarioId($idusuario);
+        
+        // Verificar si el usuario a consultar es super usuario
+        $esSuperUsuarioAConsultar = $this->esSuperUsuario($idusuario);
+        $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+
+        // Si se está consultando un super usuario
+        if ($esSuperUsuarioAConsultar) {
+            // Solo permitir si es super usuario consultándose a sí mismo
+            if (!$esSuperUsuarioActual || $idusuario !== $idUsuarioSesion) {
+                return false;
+            }
+        }
+
         return $this->ejecutarBusquedaUsuarioPorId($this->getUsuarioId());
     }
 
     /**
-     * Eliminar (desactivar) usuario por ID
+     * Eliminar (desactivar) usuario por ID - MODIFICADA para prevenir eliminación de super usuarios
      */
-    public function deleteUsuarioById(int $idusuario){
+    public function deleteUsuarioById(int $idusuario, int $idUsuarioSesion = 0){
         $this->setUsuarioId($idusuario);
+        
+        // Verificar si el usuario a eliminar es super usuario
+        $esSuperUsuarioAEliminar = $this->esSuperUsuario($idusuario);
+        
+        // No permitir eliminar super usuarios
+        if ($esSuperUsuarioAEliminar) {
+            return false;
+        }
+
         return $this->ejecutarEliminacionUsuario($this->getUsuarioId());
     }
 
     /**
-     * Obtener todos los usuarios
+     * Obtener todos los usuarios - SIEMPRE filtrar super usuarios
      */
-    public function selectAllUsuarios(){
-        return $this->ejecutarBusquedaTodosUsuarios();
+    public function selectAllUsuarios(int $idUsuarioSesion = 0){
+        return $this->ejecutarBusquedaTodosUsuarios($idUsuarioSesion);
     }
 
     /**
-     * Obtener usuarios activos solamente
+     * Obtener usuarios activos solamente - SIEMPRE filtrar super usuarios
      */
-    public function selectAllUsuariosActivos(){
-        return $this->ejecutarBusquedaTodosUsuarios(); // Usa la misma función, el filtro se puede hacer en el frontend
+    public function selectAllUsuariosActivos(int $idUsuarioSesion = 0){
+        return $this->ejecutarBusquedaTodosUsuarios($idUsuarioSesion);
     }
 
     /**
-     * Obtener todos los roles activos
+     * Obtener todos los roles activos - SIEMPRE filtrar super usuario
      */
-    public function selectAllRoles(){
-        return $this->ejecutarBusquedaTodosRoles();
+    public function selectAllRoles(int $idUsuarioSesion = 0){
+        return $this->ejecutarBusquedaTodosRoles($idUsuarioSesion);
     }
 
     /**
@@ -746,6 +913,244 @@ class UsuariosModel extends Mysql
     public function selectUsuarioByEmail(string $email, int $idUsuarioExcluir = 0){
         return $this->ejecutarVerificacionUsuarioPorCorreo($email, $idUsuarioExcluir > 0 ? $idUsuarioExcluir : null) 
                ? ['correo' => $email] : false;
+    }
+
+    /**
+     * Verificar si un usuario es super usuario (método público)
+     */
+    public function verificarEsSuperUsuario(int $idusuario){
+        return $this->esSuperUsuario($idusuario);
+    }
+
+    /**
+     * Obtener información de si el usuario puede ser eliminado
+     */
+    public function puedeEliminarUsuario(int $idusuario, int $idUsuarioSesion = 0){
+        // No puede eliminarse a sí mismo
+        if ($idusuario === $idUsuarioSesion) {
+            return [
+                'puede_eliminar' => false,
+                'razon' => 'No puedes eliminarte a ti mismo.'
+            ];
+        }
+
+        // NUNCA puede eliminar super usuarios (ya no aparecen en la lista)
+        if ($this->esSuperUsuario($idusuario)) {
+            return [
+                'puede_eliminar' => false,
+                'razon' => 'Los super usuarios no pueden ser eliminados.'
+            ];
+        }
+
+        return [
+            'puede_eliminar' => true,
+            'razon' => ''
+        ];
+    }
+
+    /**
+     * Verificar si un usuario puede editar a otro
+     */
+    public function puedeEditarUsuario(int $idusuario, int $idUsuarioSesion = 0){
+        $esSuperUsuarioAEditar = $this->esSuperUsuario($idusuario);
+        $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+        
+        // Si el usuario a editar es super usuario
+        if ($esSuperUsuarioAEditar) {
+            // Solo puede editarse a sí mismo
+            if ($idusuario === $idUsuarioSesion && $esSuperUsuarioActual) {
+                return [
+                    'puede_editar' => true,
+                    'solo_password' => true,
+                    'razon' => ''
+                ];
+            } else {
+                return [
+                    'puede_editar' => false,
+                    'solo_password' => false,
+                    'razon' => 'Los super usuarios solo pueden editar su propia información.'
+                ];
+            }
+        }
+
+        return [
+            'puede_editar' => true,
+            'solo_password' => false,
+            'razon' => ''
+        ];
+    }
+
+    /**
+     * Obtener usuarios eliminados lógicamente (solo para super usuarios)
+     */
+    public function selectAllUsuariosEliminados(int $idUsuarioSesion = 0){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
+        try {
+            // Verificar si el usuario actual es super usuario
+            $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+            
+            if (!$esSuperUsuarioActual) {
+                return [
+                    'status' => false,
+                    'message' => 'Solo los super usuarios pueden ver usuarios eliminados',
+                    'data' => []
+                ];
+            }
+            
+            // Query para obtener solo usuarios con estatus INACTIVO
+            $queryBase = "SELECT 
+                    u.idusuario,
+                    u.usuario,
+                    u.correo,
+                    u.estatus,
+                    u.idrol,
+                    u.personaId,
+                    u.fecha_creacion,
+                    u.fecha_modificacion,
+                    r.nombre as rol_nombre,
+                    DATE_FORMAT(u.fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato,
+                    DATE_FORMAT(u.fecha_modificacion, '%d/%m/%Y') as fecha_modificacion_formato
+                FROM usuario u
+                LEFT JOIN roles r ON u.idrol = r.idrol
+                WHERE u.estatus = 'INACTIVO'
+                ORDER BY u.fecha_modificacion DESC";
+            
+            // Debug: Log de la query ejecutada
+            error_log("DEBUG: selectAllUsuariosEliminados - Query: " . $queryBase);
+            
+            $this->setQuery($queryBase);
+            $this->setArray([]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Debug: Log de la cantidad de usuarios encontrados
+            error_log("DEBUG: selectAllUsuariosEliminados - Usuarios encontrados: " . count($usuarios));
+            
+            // Obtener datos de personas para usuarios que las tengan desde BD principal
+            $dbPrincipal = $conexion->get_conectGeneral();
+            
+            foreach ($usuarios as &$usuario) {
+                if (!empty($usuario['personaId'])) {
+                    $this->setQuery(
+                        "SELECT 
+                            nombre, 
+                            apellido, 
+                            identificacion as cedula,
+                            CONCAT(nombre, ' ', COALESCE(apellido, '')) as nombre_completo
+                        FROM personas 
+                        WHERE idpersona = ?"
+                    );
+                    
+                    $this->setArray([$usuario['personaId']]);
+                    $stmt = $dbPrincipal->prepare($this->getQuery());
+                    $stmt->execute($this->getArray());
+                    $persona = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($persona) {
+                        $usuario['persona_nombre_completo'] = $persona['nombre_completo'];
+                        $usuario['persona_cedula'] = $persona['cedula'];
+                    } else {
+                        $usuario['persona_nombre_completo'] = null;
+                        $usuario['persona_cedula'] = null;
+                    }
+                } else {
+                    $usuario['persona_nombre_completo'] = null;
+                    $usuario['persona_cedula'] = null;
+                }
+            }
+            
+            $resultado = [
+                'status' => true,
+                'message' => 'Usuarios eliminados obtenidos.',
+                'data' => $usuarios
+            ];
+            
+        } catch (Exception $e) {
+            error_log("UsuariosModel::selectAllUsuariosEliminados - Error: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error al obtener usuarios eliminados: ' . $e->getMessage(),
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
+    }
+
+    /**
+     * Reactivar un usuario (cambiar estatus a ACTIVO)
+     */
+    public function reactivarUsuario(int $idusuario){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
+        try {
+            // Debug: Log del ID recibido
+            error_log("DEBUG: reactivarUsuario - ID recibido: " . $idusuario);
+            
+            // Verificar que el usuario existe
+            $this->setQuery("SELECT idusuario, estatus FROM usuario WHERE idusuario = ?");
+            $this->setArray([$idusuario]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Debug: Log del resultado de la consulta
+            error_log("DEBUG: reactivarUsuario - Usuario encontrado: " . json_encode($usuario));
+            
+            if (!$usuario) {
+                return [
+                    'status' => false,
+                    'message' => 'Usuario no encontrado'
+                ];
+            }
+            
+            if ($usuario['estatus'] === 'ACTIVO') {
+                return [
+                    'status' => false,
+                    'message' => 'El usuario ya está activo'
+                ];
+            }
+            
+            // Reactivar usuario
+            $this->setQuery("UPDATE usuario SET estatus = 'ACTIVO', fecha_modificacion = NOW() WHERE idusuario = ?");
+            $this->setArray([$idusuario]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $resultado = $stmt->execute($this->getArray());
+            
+            if ($resultado && $stmt->rowCount() > 0) {
+                $resultado = [
+                    'status' => true,
+                    'message' => 'Usuario reactivado exitosamente'
+                ];
+            } else {
+                $resultado = [
+                    'status' => false,
+                    'message' => 'No se pudo reactivar el usuario'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("UsuariosModel::reactivarUsuario - Error: " . $e->getMessage());
+            $resultado = [
+                'status' => false,
+                'message' => 'Error al reactivar usuario: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 }
 ?>
