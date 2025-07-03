@@ -285,4 +285,7 @@
 </div>
 <?php endif; ?>
 
+<!-- Scripts específicos para el tour de ayuda -->
+<script src="/project/app/assets/js/ayuda/bitacora-tour.js"></script>
+
 <?php footerAdmin($data); ?>
