@@ -1,6 +1,8 @@
 <?php
 require_once "app/models/loginModel.php";
 require_once "helpers/helpers.php";
+require_once "config/config.php"; // Asegurar que la configuración esté disponible
+require_once "app/libs/phpmailer/EmailHelper.php";
 
 class Login extends Controllers
 {
@@ -136,6 +138,160 @@ class Login extends Controllers
         session_destroy();
         
         header('Location: ' . base_url() . 'login');
+        exit();
+    }
+
+    public function resetPassword()
+    {
+        $data['page_title'] = "Recuperar Contraseña";
+        $data['recaptcha_site_key'] = defined('RECAPTCHA_SITE_KEY') ? RECAPTCHA_SITE_KEY : '';
+        $this->views->getView($this, "resetPassword", $data);
+    }
+
+    public function enviarResetPassword()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $email = strtolower(trim($_POST['txtEmailReset'] ?? ''));
+                
+                if (empty($email)) {
+                    echo json_encode(['status' => false, 'msg' => 'El correo electrónico es obligatorio para poder recuperar tu contraseña.']);
+                    exit();
+                }
+
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    echo json_encode(['status' => false, 'msg' => 'El formato del correo electrónico no es válido. Por favor, verifica e intenta nuevamente.']);
+                    exit();
+                }
+
+                // Verificar si el email existe
+                $usuario = $this->model->getUsuarioEmail($email);
+                
+                if (!$usuario) {
+                    echo json_encode(['status' => false, 'msg' => 'No encontramos una cuenta asociada a este correo electrónico. Verifica que sea el correo correcto.']);
+                    exit();
+                }
+
+                if ($usuario['estatus'] != 'activo') {
+                    echo json_encode(['status' => false, 'msg' => 'Tu cuenta se encuentra inactiva. Por favor, contacta al administrador del sistema.']);
+                    exit();
+                }
+
+                // Generar token
+                $token = bin2hex(random_bytes(32));
+                
+                // Guardar token
+                $tokenSaved = $this->model->setTokenUser($usuario['idusuario'], $token);
+                
+                if ($tokenSaved) {
+                    // Enviar email de recuperación
+                    $nombreCompleto = $usuario['usuario'] ?? 'Usuario'; // Usar el campo correcto
+                    
+                    $emailResult = EmailHelper::enviarEmailRecuperacion(
+                        $email, 
+                        $token, 
+                        $nombreCompleto
+                    );
+                    
+                    if ($emailResult['status']) {
+                        echo json_encode([
+                            'status' => true, 
+                            'msg' => 'Se ha enviado un enlace de recuperación a tu correo electrónico. El enlace expira en 1 hora, así que úsalo pronto. Revisa tu bandeja de entrada y la carpeta de spam.'
+                        ]);
+                    } else {
+                        echo json_encode([
+                            'status' => false, 
+                            'msg' => 'No pudimos enviar el correo de recuperación. ' . $emailResult['message'] . ' Por favor, intenta nuevamente en unos minutos.'
+                        ]);
+                    }
+                } else {
+                    echo json_encode(['status' => false, 'msg' => 'Ocurrió un problema al generar el enlace de recuperación. Por favor, intenta nuevamente.']);
+                }
+
+            } catch (Exception $e) {
+                error_log("Error en enviarResetPassword: " . $e->getMessage());
+                echo json_encode(['status' => false, 'msg' => 'Error interno del servidor']);
+            }
+        }
+        exit();
+    }
+
+    public function confirmarReset($token = null)
+    {
+        if (empty($token)) {
+            header("Location: " . base_url() . "/login?error=token_invalido");
+            exit();
+        }
+
+        // Verificar token válido y no expirado
+        $tokenData = $this->model->getTokenUserByToken($token);
+        
+        if (!$tokenData) {
+            $data['page_title'] = "Token Inválido";
+            $data['error'] = "El enlace de recuperación es inválido o ha expirado.";
+            $this->views->getView($this, "tokenError", $data);
+            return;
+        }
+
+        // Mostrar formulario para nueva contraseña
+        $data['page_title'] = "Nueva Contraseña";
+        $data['token'] = $token;
+        $data['usuario'] = $tokenData;
+        $data['page_functions_js'] = "functions_resetpass.js";
+        $this->views->getView($this, "nuevaPassword", $data);
+    }
+
+    public function actualizarPassword()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $token = trim($_POST['token'] ?? '');
+                $password = trim($_POST['txtPassword'] ?? '');
+                $confirmPassword = trim($_POST['txtConfirmPassword'] ?? '');
+
+                if (empty($token) || empty($password) || empty($confirmPassword)) {
+                    echo json_encode(['status' => false, 'msg' => 'Todos los campos son obligatorios. Por favor, completa la información requerida.']);
+                    exit();
+                }
+
+                if ($password !== $confirmPassword) {
+                    echo json_encode(['status' => false, 'msg' => 'Las contraseñas no coinciden. Por favor, verifica que hayas escrito la misma contraseña en ambos campos.']);
+                    exit();
+                }
+
+                if (strlen($password) < 6) {
+                    echo json_encode(['status' => false, 'msg' => 'La contraseña debe tener al menos 6 caracteres. Te recomendamos usar una contraseña más segura.']);
+                    exit();
+                }
+
+                // Verificar token válido
+                $tokenData = $this->model->getTokenUserByToken($token);
+                if (!$tokenData) {
+                    echo json_encode(['status' => false, 'msg' => 'El enlace de recuperación ha expirado o no es válido. Por favor, solicita un nuevo enlace de recuperación.']);
+                    exit();
+                }
+
+                // Actualizar contraseña
+                $passwordHash = hash("SHA256", $password);
+                $updated = $this->model->updatePassword($tokenData['idusuario'], $passwordHash);
+
+                if ($updated) {
+                    // Eliminar token usado
+                    $this->model->deleteToken($token);
+                    
+                    echo json_encode([
+                        'status' => true, 
+                        'msg' => '¡Perfecto! Tu contraseña ha sido actualizada exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña.'
+                    ]);
+                } else {
+                    echo json_encode(['status' => false, 'msg' => 'No pudimos actualizar tu contraseña. Por favor, intenta nuevamente o solicita un nuevo enlace de recuperación.']);
+                }
+
+            } catch (Exception $e) {
+                error_log("Error en actualizarPassword: " . $e->getMessage());
+                echo json_encode(['status' => false, 'msg' => 'Error interno del servidor']);
+            }
+        }
         exit();
     }
 

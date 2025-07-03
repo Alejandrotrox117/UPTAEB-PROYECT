@@ -26,24 +26,17 @@ document.addEventListener("DOMContentLoaded", function () {
     {
       id: "fecha_venta_modal",
       name_attr: "fecha_venta",
-      tipo: "date",
+      tipo: "fecha",
       mensajes: {
         vacio: "La fecha es obligatoria.",
         fechaPosterior: "La fecha no puede ser posterior a hoy.",
       },
     },
     {
-      id: "idmoneda_general",
-      name_attr: "idmoneda_general",
-      tipo: "select",
-      mensajes: {
-        vacio: "Debe seleccionar una moneda.",
-      },
-    },
-    {
       id: "observaciones",
       name_attr: "observaciones",
       tipo: "textarea",
+      opcional: true,
       regex: expresiones.observaciones,
       mensajes: {
         formato: "Las observaciones no deben exceder los 50 caracteres.",
@@ -374,7 +367,6 @@ document.addEventListener("DOMContentLoaded", function () {
             '<div class="p-2 text-xs text-gray-500">No se encontraron clientes.</div>';
         }
       } catch (error) {
-        console.error("Error al buscar clientes:", error);
         listaResultados.innerHTML = `<div class="p-2 text-xs text-red-500">Error: ${error.message}.</div>`;
       }
     });
@@ -402,9 +394,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  document
-    .getElementById("agregarDetalleBtn")
-    .addEventListener("click", function () {
+  const agregarDetalleBtn = document.getElementById("agregarDetalleBtn");
+  if (agregarDetalleBtn) {
+    agregarDetalleBtn.addEventListener("click", async function () {
       const selectProductoEl = document.getElementById(
         "select_producto_agregar_modal"
       );
@@ -454,9 +446,24 @@ document.addEventListener("DOMContentLoaded", function () {
       const nombreProd = `${productoData.nombre_producto} (${
         productoData.nombre_categoria || "N/A"
       })`;
-      const precioUnit = parseFloat(productoData.precio_unitario || 0).toFixed(
-        2
-      );
+      
+      // Mostrar loading mientras se calcula el precio
+      Swal.fire({
+        title: 'Calculando precio...',
+        text: 'Obteniendo tasa de cambio actual',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        willOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Convertir precio según moneda
+      const precioConvertido = await convertirPrecioSegunMoneda(productoData);
+      const precioUnit = precioConvertido.toFixed(2);
+      
+      // Cerrar loading
+      Swal.close();
 
       if (!idProd || idProd === "" || idProd === "0") {
         Swal.fire("Error", "ID de producto no válido.", "error");
@@ -467,7 +474,10 @@ document.addEventListener("DOMContentLoaded", function () {
       <tr>
         <td class="px-3 py-1.5">
           <input type="hidden" name="detalle_idproducto[]" value="${idProd}">
+          <input type="hidden" name="detalle_moneda_original[]" value="${productoData.codigo_moneda_producto || ''}">
+          <input type="hidden" name="detalle_precio_original[]" value="${productoData.precio_unitario || 0}">
           <span>${nombreProd}</span>
+          <br><small class="text-gray-500">Precio original: ${productoData.codigo_moneda_producto || 'N/A'} ${parseFloat(productoData.precio_unitario || 0).toFixed(2)}</small>
         </td>
         <td class="px-3 py-1.5">
           <input type="number" name="detalle_cantidad[]" 
@@ -498,6 +508,7 @@ document.addEventListener("DOMContentLoaded", function () {
       calcularTotalesGenerales();
       selectProductoEl.value = "";
     });
+  }
 
   function actualizarEventosDetalle() {
     detalleVentaBody.querySelectorAll(".cantidad-input").forEach((input) => {
@@ -568,9 +579,9 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  document
-    .getElementById("abrirModalBtn")
-    .addEventListener("click", function () {
+  const abrirModalBtn = document.getElementById("abrirModalBtn");
+  if (abrirModalBtn) {
+    abrirModalBtn.addEventListener("click", function () {
       abrirModal("ventaModal");
       limpiarFormularioVentaCompleto();
 
@@ -591,6 +602,12 @@ document.addEventListener("DOMContentLoaded", function () {
             const option = select.options[i + 1];
             if (option) option.dataset.codigo = m.codigo_moneda;
           });
+          
+          // Buscar y seleccionar automáticamente VES
+          const vesMoneda = monedas.find(m => m.codigo_moneda === 'VES');
+          if (vesMoneda) {
+            select.value = vesMoneda.idmoneda;
+          }
         },
       });
 
@@ -600,35 +617,37 @@ document.addEventListener("DOMContentLoaded", function () {
         selectId: "select_producto_agregar_modal",
         endpoint: "ventas/getProductosDisponibles",
         optionTextFn: (p) =>
-          `${p.nombre_producto} (${p.nombre_categoria || "N/A"})`,
+          `${p.nombre_producto} (${p.nombre_categoria || "N/A"}) - ${p.codigo_moneda_producto || 'N/A'} ${parseFloat(p.precio_unitario || 0).toFixed(2)}`,
         optionValueFn: (p) => p.idproducto || p.id || "",
         placeholder: "Seleccione producto...",
         onLoaded: (prods) => {
           listaProductosCargadosSelect = prods || [];
-          console.log("Productos cargados:", listaProductosCargadosSelect);
         },
       });
 
       inicializarBuscadorCliente();
     });
+  }
 
-  document
-    .getElementById("btnCerrarModalNuevaVenta")
-    .addEventListener("click", function () {
+  const btnCerrarModalNuevaVenta = document.getElementById("btnCerrarModalNuevaVenta");
+  if (btnCerrarModalNuevaVenta) {
+    btnCerrarModalNuevaVenta.addEventListener("click", function () {
       cerrarModal("ventaModal");
       limpiarFormularioVentaCompleto();
     });
+  }
 
-  document
-    .getElementById("cerrarModalBtn")
-    .addEventListener("click", function () {
+  const cerrarModalBtn = document.getElementById("cerrarModalBtn");
+  if (cerrarModalBtn) {
+    cerrarModalBtn.addEventListener("click", function () {
       cerrarModal("ventaModal");
       limpiarFormularioVentaCompleto();
     });
+  }
 
-  document
-    .getElementById("registrarVentaBtn")
-    .addEventListener("click", async function () {
+  const registrarVentaBtn = document.getElementById("registrarVentaBtn");
+  if (registrarVentaBtn) {
+    registrarVentaBtn.addEventListener("click", async function () {
       const idClienteSeleccionado = document.getElementById("idcliente").value;
       const nuevoClienteFormActivo =
         nuevoClienteContainer &&
@@ -660,6 +679,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!validarCamposVacios(camposCabeceraVenta, "ventaForm")) return;
 
+      // Validación específica para asegurar que VES esté seleccionado
+      const selectMoneda = document.getElementById("idmoneda_general");
+      if (!selectMoneda.value) {
+        Swal.fire("Error", "No se pudo seleccionar la moneda VES automáticamente. Contacte al administrador.", "error");
+        return;
+      }
+
       let cabeceraValida = true;
       camposCabeceraVenta.forEach((campo) => {
         const inputEl = ventaForm.querySelector(`#${campo.id}`);
@@ -668,6 +694,12 @@ document.addEventListener("DOMContentLoaded", function () {
           (inputEl.offsetParent !== null || inputEl.type === "hidden")
         ) {
           let esValido = true;
+          
+       
+          if (campo.opcional && (!inputEl.value || inputEl.value.trim() === "")) {
+            return; 
+          }
+          
           if (campo.tipo === "select") {
             esValido = validarSelect(inputEl, campo.mensajes);
           } else if (campo.tipo === "date") {
@@ -725,7 +757,6 @@ document.addEventListener("DOMContentLoaded", function () {
           datosVentaFinal.fecha_venta
         );
       } catch (error) {
-        console.warn("Error al obtener tasa, usando valor por defecto:", error);
         datosVentaFinal.tasa_usada = 1;
       }
 
@@ -745,12 +776,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const tasa = datosVentaFinal.tasa_usada || 1;
 
         if (!idProducto || !cantidad || !precio || !subtotal) {
-          console.warn("Detalle con datos incompletos encontrado:", {
-            idProducto,
-            cantidad,
-            precio,
-            subtotal,
-          });
           return;
         }
 
@@ -810,17 +835,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (nro_venta) {
               mensajeCompleto = `Venta ${nro_venta} registrada correctamente.`;
             }
-
-            console.log("Venta creada exitosamente:", {
-              idventa: idventa || "No disponible",
-              nro_venta: nro_venta || "No disponible",
-              idcliente: idcliente || "No disponible",
-            });
           } else {
-            console.warn(
-              "Datos de respuesta no disponibles o estructura incorrecta:",
-              result
-            );
           }
 
           await Swal.fire("¡Éxito!", mensajeCompleto, "success");
@@ -837,7 +852,6 @@ document.addEventListener("DOMContentLoaded", function () {
           await Swal.fire("¡Error!", mensajeError, "error");
         }
       } catch (error) {
-        console.error("Error al registrar venta:", error);
 
         let mensajeError = "Error de comunicación con el servidor.";
         if (error.message.includes("HTTP:")) {
@@ -852,12 +866,12 @@ document.addEventListener("DOMContentLoaded", function () {
         btnRegistrar.innerHTML = textoOriginal;
       }
     });
+  }
 
   async function obtenerTasaActualSeleccionada(idmoneda, fechaVenta) {
     try {
       const selectMoneda = document.getElementById("idmoneda_general");
       if (!selectMoneda || selectMoneda.selectedIndex === -1) {
-        console.warn("Select de moneda no encontrado o sin selección");
         return 1;
       }
 
@@ -865,7 +879,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const codigoMoneda = option.dataset.codigo || option.text.split(" ")[0];
 
       if (!codigoMoneda) {
-        console.warn("Código de moneda no encontrado");
         return 1;
       }
 
@@ -882,7 +895,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await response.json();
       return parseFloat(data.tasa) || 1;
     } catch (error) {
-      console.error("Error al obtener tasa:", error);
       return 1;
     }
   }
@@ -951,15 +963,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
           }
         } catch (error) {
-          console.error("Error al desactivar venta:", error);
-
-          let mensajeError = "Error de comunicación con el servidor.";
-          if (error.message.includes("HTTP:")) {
-            mensajeError = `Error del servidor: ${error.message}`;
-          } else if (error.name === "SyntaxError") {
-            mensajeError = "Error al procesar la respuesta del servidor.";
-          }
-
+          const mensajeError = "Error de comunicación con el servidor.";
           await Swal.fire({
             title: "Error",
             text: mensajeError,
@@ -1022,7 +1026,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const modal = document.getElementById("modalDetalleVenta");
       if (!modal) {
-        console.error("Modal de detalle no encontrado");
         return;
       }
 
@@ -1095,7 +1098,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             (d) => `
                     <tr>
                       <td class="px-2 py-1 border">${
-                        d.producto_nombre || "N/A"
+                        d.nombre_producto || "N/A"
                       }</td>
                       <td class="px-2 py-1 border">${d.cantidad || "0"}</td>
                       <td class="px-2 py-1 border">${
@@ -1105,7 +1108,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         d.subtotal_general || d.subtotal || "0.00"
                       }</td>
                       <td class="px-2 py-1 border">${
-                        d.codigo_moneda || "N/A"
+                        d.codigo_moneda ||  "N/A"
                       }</td>
                     </tr>
                   `
@@ -1128,8 +1131,13 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
           `;
         }
+        
+        // Debug para ver qué datos llegan
+        console.log('Datos completos recibidos:', data);
+        console.log('Detalle específico:', detalle);
+        
       } catch (error) {
-        console.error("Error al cargar detalle de venta:", error);
+        console.error('Error al cargar detalle:', error);
         if (contenido) {
           contenido.innerHTML = `<div class="text-red-500 text-center py-4">Error: ${error.message}</div>`;
         }
@@ -1139,12 +1147,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
   ["cerrarModalDetalleVentaBtn", "cerrarModalDetalleVentaBtn2"].forEach(
     (id) => {
-      document.getElementById(id).addEventListener("click", function () {
-        const modal = document.getElementById("modalDetalleVenta");
-        modal.classList.add("opacity-0", "pointer-events-none", "transparent");
-        modal.classList.remove("opacity-100");
-        document.getElementById("detalleVentaContenido").innerHTML = "";
-      });
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener("click", function () {
+          const modal = document.getElementById("modalDetalleVenta");
+          if (modal) {
+            modal.classList.add("opacity-0", "pointer-events-none", "transparent");
+            modal.classList.remove("opacity-100");
+          }
+          const contenido = document.getElementById("detalleVentaContenido");
+          if (contenido) {
+            contenido.innerHTML = "";
+          }
+        });
+      }
     }
   );
 
@@ -1199,7 +1215,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           })
           .catch((error) => {
-            console.error("Error:", error);
             Swal.fire("Error", "Error de conexión.", "error");
           });
       }
@@ -1214,16 +1229,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var estadoActual = row.estatus || "";
     var botones = [];
 
-    // Debug log para verificar los datos que llegan
-    console.log("Generando botones para:", {
-      idVenta: idVenta,
-      nroVenta: nroVenta,
-      estadoActual: estadoActual,
-      estadoUpper: estadoActual.toUpperCase()
-    });
-
-    // Botón Ver (siempre disponible si tiene permisos)
-    if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver) {
+    // Botón Ver (disponible si tiene permisos de ver, editar o eliminar)
+    if (window.PERMISOS_USUARIO && 
+        (window.PERMISOS_USUARIO.puede_ver || 
+         window.PERMISOS_USUARIO.puede_editar || 
+         window.PERMISOS_USUARIO.puede_eliminar)) {
       botones.push(`
         <button
           class="ver-detalle-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
@@ -1370,19 +1380,9 @@ document.addEventListener("DOMContentLoaded", function () {
         url: "ventas/getventasData",
         type: "GET",
         dataSrc: function(json) {
-          console.log("Datos recibidos del servidor:", json);
-          if (json.data && json.data.length > 0) {
-            console.log("Primer registro:", json.data[0]);
-          }
           return json.data || [];
         },
         error: function (xhr, status, error) {
-          console.error(
-            "Error al cargar datos para DataTable:",
-            status,
-            error,
-            xhr.responseText
-          );
           $("#Tablaventas_processing").hide();
           var table = $("#Tablaventas").DataTable();
           table.clear().draw();
@@ -1413,4 +1413,137 @@ document.addEventListener("DOMContentLoaded", function () {
       order: [[0, "desc"]],
     });
   }
+
+  /**
+   * Obtiene la tasa de cambio actual de una moneda
+   */
+  async function obtenerTasaMoneda(codigoMoneda) {
+    try {
+      const response = await fetch(`ventas/getTasaMoneda?codigo=${encodeURIComponent(codigoMoneda)}`);
+      const data = await response.json();
+      
+      if (data.status && data.data) {
+        return data.data.tasa_a_bs || 1;
+      }
+      return 1;
+    } catch (error) {
+      console.error('Error al obtener tasa de moneda:', error);
+      return 1;
+    }
+  }
+
+  /**
+   * Convierte precio según la moneda del producto y la moneda general de la venta
+   */
+  async function convertirPrecioSegunMoneda(productoData) {
+    const selectMoneda = document.getElementById("idmoneda_general");
+    if (!selectMoneda || !selectMoneda.selectedOptions[0]) {
+      return parseFloat(productoData.precio_unitario || 0);
+    }
+    
+    const monedaGeneralVenta = selectMoneda.selectedOptions[0].dataset.codigo || '';
+    const monedaProducto = productoData.codigo_moneda_producto;
+    let precioFinal = parseFloat(productoData.precio_unitario || 0);
+
+    // Si las monedas son diferentes, hacer conversión
+    if (monedaProducto && monedaGeneralVenta && monedaProducto !== monedaGeneralVenta) {
+      try {
+        // Si el producto está en moneda extranjera y la venta en VES
+        if (monedaProducto !== 'VES' && monedaGeneralVenta === 'VES') {
+          const tasaProducto = await obtenerTasaMoneda(monedaProducto);
+          precioFinal = precioFinal * tasaProducto;
+        }
+        // Si el producto está en VES y la venta en moneda extranjera  
+        else if (monedaProducto === 'VES' && monedaGeneralVenta !== 'VES') {
+          const tasaVenta = await obtenerTasaMoneda(monedaGeneralVenta);
+          precioFinal = precioFinal / tasaVenta;
+        }
+        // Si ambas son monedas extranjeras diferentes
+        else if (monedaProducto !== 'VES' && monedaGeneralVenta !== 'VES' && monedaProducto !== monedaGeneralVenta) {
+          const tasaProducto = await obtenerTasaMoneda(monedaProducto);
+          const tasaVenta = await obtenerTasaMoneda(monedaGeneralVenta);
+          // Convertir primero a VES, luego a la moneda de venta
+          precioFinal = (precioFinal * tasaProducto) / tasaVenta;
+        }
+      } catch (error) {
+        console.error('Error en conversión de moneda:', error);
+        // En caso de error, usar precio original
+      }
+    }
+
+    return precioFinal;
+  }
+
+  /**
+   * Recalcula todos los precios del detalle cuando cambia la moneda general
+   */
+  async function recalcularPreciosDetalle() {
+    const filas = detalleVentaBody.querySelectorAll("tr");
+    
+    if (filas.length === 0) return;
+
+    // Mostrar loading
+    Swal.fire({
+      title: 'Recalculando precios...',
+      text: 'Actualizando cotizaciones',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    for (const fila of filas) {
+      const idProducto = fila.querySelector("input[name='detalle_idproducto[]']").value;
+      const monedaOriginal = fila.querySelector("input[name='detalle_moneda_original[]']").value;
+      const precioOriginal = parseFloat(fila.querySelector("input[name='detalle_precio_original[]']").value || 0);
+      
+      // Encontrar datos del producto en la lista cargada
+      const productoData = listaProductosCargadosSelect.find(
+        (p) => String(p.idproducto || p.id) === String(idProducto)
+      );
+      
+      if (productoData) {
+        // Crear objeto temporal con los datos originales del producto
+        const datosProductoOriginal = {
+          ...productoData,
+          codigo_moneda_producto: monedaOriginal,
+          precio_unitario: precioOriginal
+        };
+        
+        // Convertir precio según nueva moneda
+        const precioConvertido = await convertirPrecioSegunMoneda(datosProductoOriginal);
+        const nuevoPrecio = precioConvertido.toFixed(2);
+        
+        // Actualizar precio unitario
+        const inputPrecio = fila.querySelector("input[name='detalle_precio_unitario_venta[]']");
+        inputPrecio.value = nuevoPrecio;
+        
+        // Recalcular subtotal
+        const cantidad = parseFloat(fila.querySelector("input[name='detalle_cantidad[]']").value || 1);
+        const nuevoSubtotal = (precioConvertido * cantidad).toFixed(2);
+        const inputSubtotal = fila.querySelector("input[name='detalle_subtotal[]']");
+        inputSubtotal.value = nuevoSubtotal;
+      }
+    }
+    
+    // Cerrar loading y recalcular totales
+    Swal.close();
+    calcularTotalesGenerales();
+  }
+
+  // Agregar evento al cambio de moneda general (ambos selects)
+  ["idmoneda_general", "idmoneda_general_modal"].forEach(selectId => {
+    const selectElement = document.getElementById(selectId);
+    if (selectElement) {
+      selectElement.addEventListener("change", function() {
+        const filasDetalle = detalleVentaBody.querySelectorAll("tr");
+        if (filasDetalle.length > 0) {
+          recalcularPreciosDetalle();
+        }
+      });
+    }
+  });
+
+  // ...existing code...
 });

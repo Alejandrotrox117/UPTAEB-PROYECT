@@ -2,7 +2,6 @@
 require_once "app/core/Controllers.php";
 require_once "app/models/ventasModel.php";
 require_once "helpers/PermisosModuloVerificar.php";
-require_once "helpers/PermisosHelper.php";
 require_once "helpers/helpers.php";
 require_once "app/models/bitacoraModel.php";
 require_once "helpers/bitacora_helper.php";
@@ -1053,5 +1052,59 @@ class Ventas extends Controllers
         
         // Cualquier otro cambio de estado: requiere permisos de editar
         return PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'editar');
+    }
+
+    /**
+     * Obtiene la tasa de cambio actual de una moneda específica
+     */
+    public function getTasaMoneda()
+    {
+        header('Content-Type: application/json');
+
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Usuario no autenticado'
+            ]);
+            return;
+        }
+
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para consultar tasas'
+            ]);
+            return;
+        }
+
+        try {
+            $codigoMoneda = $_GET['codigo'] ?? '';
+            
+            if (empty($codigoMoneda)) {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Código de moneda requerido'
+                ]);
+                return;
+            }
+
+            $tasa = $this->model->obtenerTasaActualMoneda($codigoMoneda);
+
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_TASA_MONEDA', $idUsuario);
+            }
+
+            echo json_encode([
+                'status' => true,
+                'data' => $tasa
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al obtener tasa: ' . $e->getMessage()
+            ]);
+        }
+        exit();
     }
 }

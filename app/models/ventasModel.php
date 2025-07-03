@@ -439,10 +439,23 @@ class VentasModel extends Mysql
                 "SELECT p.idproducto, 
                         p.nombre as nombre_producto,
                         p.precio as precio_unitario,
-                        c.nombre as nombre_categoria
+                        p.moneda as codigo_moneda_producto,
+                        c.nombre as nombre_categoria,
+                        m.idmoneda,
+                        m.codigo_moneda,
+                        m.nombre_moneda,
+                        m.valor as tasa_moneda,
+                        htbc.tasa_a_bs as tasa_bcv_actual
                  FROM producto p
                  LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
-                 WHERE p.estatus = 'ACTIVO'
+                 LEFT JOIN monedas m ON p.moneda = m.codigo_moneda
+                 LEFT JOIN (
+                     SELECT codigo_moneda, tasa_a_bs,
+                            ROW_NUMBER() OVER (PARTITION BY codigo_moneda ORDER BY fecha_publicacion_bcv DESC) as rn
+                     FROM historial_tasas_bcv
+                 ) htbc ON p.moneda = htbc.codigo_moneda AND htbc.rn = 1
+                 WHERE p.estatus = 'ACTIVO' 
+                 AND c.nombre = 'Pacas'
                  ORDER BY p.nombre"
             );
             
@@ -603,21 +616,21 @@ class VentasModel extends Mysql
                 dv.cantidad,
                 dv.precio_unitario_venta,
                 dv.subtotal_general,
-                dv.descuento_porcentaje_general as descuento_detalle,
-                dv.id_moneda_detalle,
+                0 as descuento_porcentaje_general,
                 dv.tasa_usada,
                 dv.peso_vehiculo,
                 dv.peso_bruto,
                 dv.peso_neto,
-                p.nombre as producto_nombre,
+                dv.idmoneda as id_moneda_detalle,
+                p.nombre as nombre_producto,
                 p.codigo as producto_codigo,
-                c.nombre as categoria_nombre,
+                c.nombre as nombre_categoria,
                 m.codigo_moneda,
                 m.nombre_moneda
              FROM detalle_venta dv
-             INNER JOIN producto p ON dv.idproducto = p.idproducto
+             LEFT JOIN producto p ON dv.idproducto = p.idproducto
              LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
-             LEFT JOIN monedas m ON dv.id_moneda_detalle = m.idmoneda
+             LEFT JOIN monedas m ON dv.idmoneda = m.idmoneda
              WHERE dv.idventa = ?
              ORDER BY dv.iddetalle_venta"
             );
@@ -806,6 +819,41 @@ class VentasModel extends Mysql
 
         return isset($transicionesValidas[$estadoActual]) && 
                in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
+    }
+
+    /**
+     * Obtiene la tasa de cambio actual de una moneda específica
+     */
+    public function obtenerTasaActualMoneda($codigoMoneda)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT htbc.tasa_a_bs, htbc.fecha_publicacion_bcv, m.nombre_moneda
+                 FROM historial_tasas_bcv htbc
+                 LEFT JOIN monedas m ON htbc.codigo_moneda = m.codigo_moneda
+                 WHERE htbc.codigo_moneda = ?
+                 ORDER BY htbc.fecha_publicacion_bcv DESC
+                 LIMIT 1"
+            );
+            
+            $this->setArray([$codigoMoneda]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+            
+        } catch (Exception $e) {
+            error_log("VentasModel::obtenerTasaActualMoneda - Error: " . $e->getMessage());
+            $this->setResult(false);
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $this->getResult();
     }
 }
 ?>

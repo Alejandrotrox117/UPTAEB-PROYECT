@@ -27,7 +27,6 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
   <link rel="stylesheet" href="/project/app/assets/styles/styles.css">
   <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
   <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet">
-  <link href="/project/app/assets/DataTables/responsive.dataTables.css" rel="stylesheet">
   <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
   <style>
     body { overflow-x: hidden; }
