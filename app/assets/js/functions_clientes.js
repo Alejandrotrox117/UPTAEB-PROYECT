@@ -550,8 +550,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (btnCancelarModalActualizar) btnCancelarModalActualizar.addEventListener("click", () => cerrarModal("modalActualizarCliente"));
   if (formActualizar) formActualizar.addEventListener("submit", (e) => { e.preventDefault(); actualizarCliente(); });
 
-  const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
-  const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
+  const btnCerrarModalVer = document.getElementById("btnCerrarModalVerCliente");
+  const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVerCliente2");
   
   if (btnCerrarModalVer) btnCerrarModalVer.addEventListener("click", () => cerrarModal("modalVerCliente"));
   if (btnCerrarModalVer2) btnCerrarModalVer2.addEventListener("click", () => cerrarModal("modalVerCliente"));
