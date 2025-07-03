@@ -223,7 +223,7 @@ function inicializarTablaPagos() {
         title: "Monto",
         className: "tablet-l whitespace-nowrap py-2 px-3 text-right",
         render: function (data) {
-          return `<span class="font-semibold text-green-600">$${parseFloat(
+          return `<span class="font-semibold text-green-600">Bs.${parseFloat(
             data
           ).toFixed(2)}</span>`;
         },
@@ -1379,7 +1379,7 @@ function mostrarModalVerPago(pago) {
     verPagoId: pago.idpago || "N/A",
     verPagoTipo: pago.tipo_pago_texto || "N/A",
     verPagoDestinatario: pago.destinatario || "N/A",
-    verPagoMonto: `$${parseFloat(pago.monto || 0).toFixed(2)}`,
+    verPagoMonto: `Bs.${parseFloat(pago.monto || 0).toFixed(2)}`,
     verPagoMetodo: pago.metodo_pago || "N/A",
     verPagoReferencia: pago.referencia || "Sin referencia",
     verPagoFecha: pago.fecha_pago_formato || "N/A",
