@@ -34,6 +34,47 @@ function iniciarTourModulos() {
             },
             cancelIcon: {
                 enabled: true
+            },
+            // Hacer que los tooltips sean arrastrables
+            floatingUIOptions: {
+                middleware: [{
+                    name: 'draggable',
+                    options: {
+                        draggable: true,
+                        getDragContainer: () => document.body
+                    }
+                }]
+            },
+            // Añadir un texto para indicar que se puede arrastrar
+            when: {
+                show: function() {
+                    // Añadir indicador de arrastrable después de mostrar el paso
+                    setTimeout(() => {
+                        const currentStep = tour.currentStep;
+                        if (currentStep && currentStep.el) {
+                            const header = currentStep.el.querySelector('.shepherd-header');
+                            
+                            if (header && !header.querySelector('.drag-indicator')) {
+                                const dragIndicator = document.createElement('div');
+                                dragIndicator.className = 'drag-indicator';
+                                dragIndicator.innerHTML = '<i class="fas fa-arrows-alt"></i>';
+                                dragIndicator.style.cssText = `
+                                    font-size: 12px;
+                                    color: #888;
+                                    margin-left: 10px;
+                                    cursor: move;
+                                `;
+                                dragIndicator.title = "Arrastrar para mover";
+                                
+                                if (header.querySelector('.shepherd-cancel-icon')) {
+                                    header.insertBefore(dragIndicator, header.querySelector('.shepherd-cancel-icon'));
+                                } else {
+                                    header.appendChild(dragIndicator);
+                                }
+                            }
+                        }
+                    }, 100);
+                }
             }
         },
         onComplete: function() {

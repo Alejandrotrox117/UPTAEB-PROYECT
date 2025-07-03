@@ -34,6 +34,47 @@ function iniciarTourBitacora() {
             },
             cancelIcon: {
                 enabled: true
+            },
+            // Hacer que los tooltips sean arrastrables
+            floatingUIOptions: {
+                middleware: [{
+                    name: 'draggable',
+                    options: {
+                        draggable: true,
+                        getDragContainer: () => document.body
+                    }
+                }]
+            },
+            // Añadir un texto para indicar que se puede arrastrar
+            when: {
+                show: function() {
+                    // Añadir indicador de arrastrable después de mostrar el paso
+                    setTimeout(() => {
+                        const currentStep = tour.currentStep;
+                        if (currentStep && currentStep.el) {
+                            const header = currentStep.el.querySelector('.shepherd-header');
+                            
+                            if (header && !header.querySelector('.drag-indicator')) {
+                                const dragIndicator = document.createElement('div');
+                                dragIndicator.className = 'drag-indicator';
+                                dragIndicator.innerHTML = '<i class="fas fa-arrows-alt"></i>';
+                                dragIndicator.style.cssText = `
+                                    font-size: 12px;
+                                    color: #888;
+                                    margin-left: 10px;
+                                    cursor: move;
+                                `;
+                                dragIndicator.title = "Arrastrar para mover";
+                                
+                                if (header.querySelector('.shepherd-cancel-icon')) {
+                                    header.insertBefore(dragIndicator, header.querySelector('.shepherd-cancel-icon'));
+                                } else {
+                                    header.appendChild(dragIndicator);
+                                }
+                            }
+                        }
+                    }, 100);
+                }
             }
         },
         onComplete: function() {
@@ -168,7 +209,15 @@ function iniciarTourBitacora() {
         text: 'Usa "Actualizar" para aplicar los filtros seleccionados y "Limpiar" para restaurar todos los filtros a sus valores predeterminados.',
         attachTo: {
             element: '#btnActualizarBitacora',
-            on: 'bottom'
+            on: 'top-start'
+        },
+        popperOptions: {
+            modifiers: [{
+                name: 'offset',
+                options: {
+                    offset: [0, 10]
+                }
+            }]
         },
         buttons: [
             {
@@ -216,7 +265,15 @@ function iniciarTourBitacora() {
             text: 'Este botón abre un resumen visual de la actividad del sistema. Podrás ver gráficos que muestran las acciones más frecuentes, los módulos más activos y otros datos útiles para el análisis.',
             attachTo: {
                 element: '#btnEstadisticas',
-                on: 'bottom'
+                on: 'left'
+            },
+            popperOptions: {
+                modifiers: [{
+                    name: 'offset',
+                    options: {
+                        offset: [0, 10]
+                    }
+                }]
             },
             buttons: [
                 {
@@ -242,7 +299,15 @@ function iniciarTourBitacora() {
             text: 'Si tienes permisos adecuados, este botón te permite eliminar registros antiguos para mantener la bitácora optimizada. Esta acción no puede deshacerse, así que úsala con precaución.',
             attachTo: {
                 element: '#btnLimpiarBitacora',
-                on: 'bottom'
+                on: 'bottom-end'
+            },
+            popperOptions: {
+                modifiers: [{
+                    name: 'offset',
+                    options: {
+                        offset: [20, 10]
+                    }
+                }]
             },
             buttons: [
                 {
