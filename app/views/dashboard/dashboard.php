@@ -1,8 +1,6 @@
 <?php headerAdmin($data); ?>
 
-<!-- Contenedor principal con fondo gris claro y espaciado -->
 <main class="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
-  <!-- Saludo y Título de la Página -->
   <div id="dashboard-header" class="mb-8">
     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
       Hola, <?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Usuario') ?> 👋
@@ -12,7 +10,7 @@
     </p>
   </div>
 
-  <!-- Tarjetas de Métricas Principales MEJORADAS -->
+
   <div id="dashboard-metrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 flex items-center gap-4 border-l-4 border-blue-500">
       <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
@@ -43,7 +41,6 @@
       <div>
         <h2 class="text-gray-500 text-sm font-medium">Valor Inventario</h2>
         <p id="inventarioTotal" class="text-2xl font-bold text-gray-800">$0.00</p>
-        <!-- CORREGIDO: ID añadido para que JS pueda actualizarlo -->
         <p id="productosRotacion" class="text-xs text-blue-600">0 productos en rotación</p>
       </div>
     </div>
@@ -55,7 +52,6 @@
       <div>
         <h2 class="text-gray-500 text-sm font-medium">Producciones Activas</h2>
         <p id="empleadosActivos" class="text-2xl font-bold text-gray-800">0</p>
-        <!-- CORREGIDO: ID añadido para que JS pueda actualizarlo -->
         <p id="eficienciaPromedio" class="text-xs text-purple-600">0% eficiencia promedio</p>
       </div>
     </div>
@@ -82,24 +78,29 @@
       <option value="kpis"> KPIs</option>
     </select>
 
-    <!-- Ícono de flecha -->
     <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
       <i class="fas fa-chevron-down text-sm"></i>
     </div>
   </div>
 </div>
 
-  <!-- MANTENER TODA LA SECCIÓN ORIGINAL DE REPORTES FINANCIEROS -->
   <div id="reporteIngresosEgresos" class="report-section">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <!-- Columna de Ingresos - SIN CAMBIOS -->
       <div class="bg-white p-6 rounded-xl shadow-sm">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-semibold text-gray-800">Reporte de Ingresos (Conciliados)</h2>
-          <button id="btnDescargarIngresos" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
-            <i class="fas fa-download"></i>
-            <span>Descargar PDF</span>
-          </button>
+          <div class="flex items-center gap-4">
+            <select id="tipoGraficoIngresos" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <option value="pie">Gráfico de Torta</option>
+              <option value="doughnut">Gráfico de Dona</option>
+              <option value="bar">Gráfico de Barras</option>
+              <option value="horizontalBar">Barras Horizontales</option>
+            </select>
+            <button id="btnDescargarIngresos" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
+              <i class="fas fa-download"></i>
+              <span>Descargar PDF</span>
+            </button>
+          </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
@@ -126,16 +127,21 @@
           Total Ingresos: <span id="totalIngresos">$0.00</span>
         </p>
 
-
-        <!-- Columna de Egresos - SIN CAMBIOS -->
-
         <div class="bg-white p-6 rounded-xl shadow-sm">
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-semibold text-gray-800">Reporte de Egresos (Conciliados)</h2>
-            <button id="btnDescargarEgresos" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
-              <i class="fas fa-download"></i>
-              <span>Descargar PDF</span>
-            </button>
+            <div class="flex items-center gap-4">
+              <select id="tipoGraficoEgresos" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="pie">Gráfico de Torta</option>
+                <option value="doughnut">Gráfico de Dona</option>
+                <option value="bar">Gráfico de Barras</option>
+                <option value="horizontalBar">Barras Horizontales</option>
+              </select>
+              <button id="btnDescargarEgresos" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
+                <i class="fas fa-download"></i>
+                <span>Descargar PDF</span>
+              </button>
+            </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <input type="date" id="fecha_desde_egresos" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Desde" />
@@ -162,7 +168,6 @@
       </div>
     </div>
   </div>
-  <!-- MANTENER Reporte de Compras Finalizadas - SIN CAMBIOS -->
 
   <div id="reporteCompras" class="report-section">
     <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
@@ -222,7 +227,6 @@
     </div>
   </div>
 
-  <!-- Panel Ejecutivo Mejorado -->
   <div id="panelEjecutivo" class="report-section">
     <div class="bg-white p-6 rounded-xl shadow-xl mb-8 border border-gray-100">
       <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
@@ -253,25 +257,38 @@
       </div>
     </div>
   </div>
-  <!-- Análisis de Tendencias -->
+
   <div id="tendenciasVentas" class="report-section">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Tendencias de Ventas (6 meses)</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Tendencias de Ventas (6 meses)</h3>
+          <select id="tipoGraficoTendenciasVentas" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="line">Gráfico de Líneas</option>
+            <option value="area">Gráfico de Área</option>
+            <option value="bar">Gráfico de Barras</option>
+          </select>
+        </div>
         <div class="h-80"><canvas id="graficoTendenciasVentas"></canvas></div>
       </div>
       <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Análisis de Rentabilidad por Producto</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Análisis de Rentabilidad por Producto</h3>
+          <select id="tipoGraficoRentabilidadProductos" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="bar">Gráfico de Barras</option>
+            <option value="horizontalBar">Barras Horizontales</option>
+            <option value="radar">Gráfico de Radar</option>
+          </select>
+        </div>
         <div class="h-80"><canvas id="graficoRentabilidadProductos"></canvas></div>
       </div>
     </div>
   </div>
-  <!-- Análisis de Producción Avanzado -->
+
   <div id="produccionAvanzada" class="report-section">
     <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">Centro de Control de Producción</h2>
 
-      <!-- Filtros de Producción -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <input type="date" id="prod_fecha_desde" class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Fecha Desde">
         <input type="date" id="prod_fecha_hasta" class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Fecha Hasta">
@@ -290,15 +307,30 @@
         </select>
       </div>
     </div>
-    <!-- Gráficos de Producción -->
+
     <div id="produccion" class="report-section">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bg-gray-50 p-4 rounded-lg">
-          <h4 class="font-medium text-gray-700 mb-2">Eficiencia por Empleado</h4>
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-medium text-gray-700">Eficiencia por Empleado</h4>
+            <select id="tipoGraficoEficienciaEmpleados" class="px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="horizontalBar">Barras Horizontales</option>
+              <option value="bar">Gráfico de Barras</option>
+              <option value="radar">Gráfico de Radar</option>
+            </select>
+          </div>
           <div class="h-64"><canvas id="graficoEficienciaEmpleados"></canvas></div>
         </div>
         <div class="bg-gray-50 p-4 rounded-lg">
-          <h4 class="font-medium text-gray-700 mb-2">Estados de Producción</h4>
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-medium text-gray-700">Estados de Producción</h4>
+            <select id="tipoGraficoEstadosProduccion" class="px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="doughnut">Gráfico de Dona</option>
+              <option value="pie">Gráfico de Torta</option>
+              <option value="bar">Gráfico de Barras</option>
+              <option value="horizontalBar">Barras Horizontales</option>
+            </select>
+          </div>
           <div class="h-64"><canvas id="graficoEstadosProduccion"></canvas></div>
         </div>
         <div class="bg-gray-50 p-4 rounded-lg">
@@ -308,22 +340,35 @@
       </div>
     </div>
   </div>
-  <!-- Análisis de Clientes y Proveedores -->
+
   <div id="clientesProveedores" class="report-section">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <!-- Top Clientes -->
       <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 10 Clientes por Valor</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Top 10 Clientes por Valor</h3>
+          <select id="tipoGraficoTopClientes" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="horizontalBar">Barras Horizontales</option>
+            <option value="bar">Gráfico de Barras</option>
+            <option value="pie">Gráfico de Torta</option>
+          </select>
+        </div>
         <div class="h-80"><canvas id="graficoTopClientes"></canvas></div>
       </div>
-      <!-- Top Proveedores -->
+
       <div class="bg-white p-6 rounded-xl shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Top 10 Proveedores por Compras</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Top 10 Proveedores por Compras</h3>
+          <select id="tipoGraficoTopProveedores" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="horizontalBar">Barras Horizontales</option>
+            <option value="bar">Gráfico de Barras</option>
+            <option value="pie">Gráfico de Torta</option>
+          </select>
+        </div>
         <div class="h-80"><canvas id="graficoTopProveedores"></canvas></div>
       </div>
     </div>
   </div>
-  <!-- Análisis de Inventario Detallado -->
+
   <div id="inventario" class="report-section">
     <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">Centro de Control de Inventario</h2>
@@ -338,7 +383,6 @@
         </div>
         <div class="bg-green-50 p-4 rounded-lg">
           <h4 class="font-medium text-green-700 mb-2">Movimientos del Mes</h4>
-          <!-- NUEVO: Canvas que faltaba -->
           <div class="h-48"><canvas id="graficoMovimientosInventario"></canvas></div>
         </div>
         <div class="bg-purple-50 p-4 rounded-lg">
@@ -348,7 +392,7 @@
       </div>
     </div>
   </div>
-  <!-- Tabla de KPIs en Tiempo Real -->
+
   <div id="kpis" class="report-section">
     <div class="bg-white p-6 rounded-xl shadow-sm">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">KPIs</h2>
@@ -365,7 +409,6 @@
             </tr>
           </thead>
           <tbody id="tablaKPIs">
-            <!-- Datos generados por JavaScript -->
           </tbody>
         </table>
       </div>
@@ -373,7 +416,6 @@
   </div>
 </main>
 
-<!-- Scripts específicos del dashboard -->
 <script src="/project/app/assets/js/ayuda/dashboard-tour.js"></script>
 
 <?php footerAdmin($data); ?>

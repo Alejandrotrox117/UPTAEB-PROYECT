@@ -53,12 +53,12 @@ private $query;
             $stmt = $db->prepare("SELECT 
                 (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus = 'activo') as ventas_hoy,
                 (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus = 'activo') as ventas_ayer,
-                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra = 'Pendiente') as compras_hoy,
-                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra = 'Pendiente') as compras_ayer,
+                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')) as compras_hoy,
+                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')) as compras_ayer,
                 (SELECT COALESCE(SUM(existencia * precio), 0) FROM producto WHERE estatus = 'activo') as valor_inventario,
-                (SELECT COUNT(*) FROM produccion WHERE estado IN ('borrador', 'en_clasificacion', 'empacando')) as producciones_activas,
+                (SELECT COUNT(*) FROM lotes_produccion WHERE estatus_lote IN ('PLANIFICADO', 'EN_PROCESO')) as producciones_activas,
                 (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia > 0) as productos_en_rotacion,
-                (SELECT COALESCE(AVG(CASE WHEN p.estado = 'realizado' THEN 100 ELSE 50 END), 0) FROM produccion p WHERE p.fecha_inicio >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)) as eficiencia_promedio");
+                (SELECT COALESCE(AVG(CASE WHEN lp.estatus_lote = 'FINALIZADO' THEN 100 ELSE 50 END), 0) FROM lotes_produccion lp WHERE lp.fecha_jornada >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)) as eficiencia_promedio");
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
@@ -79,8 +79,8 @@ private $query;
 
            
             $stmt_critico = $db->prepare("SELECT 
-                (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia <= stock_minimo) as critico,
-                (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia > stock_minimo) as normal");
+                (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia <= 10) as critico,
+                (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia > 10) as normal");
             $stmt_critico->execute();
             $stock_data = $stmt_critico->fetch(PDO::FETCH_ASSOC);
             $total_productos = $stock_data['critico'] + $stock_data['normal'];
@@ -100,10 +100,10 @@ private $query;
 
           
             $stmt_mov = $db->prepare("SELECT 
-                SUM(CASE WHEN tipo_movimiento = 'Entrada' THEN 1 ELSE 0 END) as entradas,
-                SUM(CASE WHEN tipo_movimiento = 'Salida' THEN 1 ELSE 0 END) as salidas
+                SUM(CASE WHEN cantidad_entrada > 0 THEN 1 ELSE 0 END) as entradas,
+                SUM(CASE WHEN cantidad_salida > 0 THEN 1 ELSE 0 END) as salidas
                 FROM movimientos_existencia 
-                WHERE estatus = 'activo' AND MONTH(fecha_movimiento) = MONTH(CURDATE())");
+                WHERE estatus = 'activo' AND MONTH(fecha_creacion) = MONTH(CURDATE())");
             $stmt_mov->execute();
             $response['movimientos_mes'] = $stmt_mov->fetch(PDO::FETCH_ASSOC);
 
@@ -388,17 +388,20 @@ private $query;
             $sql = "SELECT 
                 c.fecha,
                 c.nro_compra,
-                CONCAT(pr.nombre, ' ', pr.apellido) as proveedor,
+                c.estatus_compra,
+                CONCAT(pr.nombre, ' ', COALESCE(pr.apellido, '')) as proveedor,
                 p.nombre as producto,
                 dc.cantidad,
                 dc.precio_unitario_compra,
-                dc.subtotal_linea
+                dc.subtotal_linea,
+                c.total_general,
+                COALESCE(c.balance, 0) as balance
                 FROM compra c
-                JOIN proveedor pr ON c.idproveedor = pr.idproveedor
-                JOIN detalle_compra dc ON c.idcompra = dc.idcompra
-                JOIN producto p ON dc.idproducto = p.idproducto
+                INNER JOIN proveedor pr ON c.idproveedor = pr.idproveedor
+                INNER JOIN detalle_compra dc ON c.idcompra = dc.idcompra
+                INNER JOIN producto p ON dc.idproducto = p.idproducto
                 WHERE c.fecha BETWEEN ? AND ?
-                AND c.estatus_compra = 'Pendiente'";
+                AND c.estatus_compra IN ('BORRADOR', 'POR_AUTORIZAR', 'AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')";
             
             $params = [$fecha_desde, $fecha_hasta];
             
@@ -412,7 +415,7 @@ private $query;
                 $params[] = $idproducto;
             }
             
-            $sql .= " ORDER BY c.fecha DESC";
+            $sql .= " ORDER BY c.fecha DESC, c.nro_compra DESC";
             
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
@@ -450,9 +453,9 @@ private $query;
                 ) AS DECIMAL(10,2)) as rotacion_inventario,
                 
                 CAST(COALESCE(
-                    (SELECT SUM(cantidad_a_realizar) / NULLIF(COUNT(*), 0)
-                    FROM produccion 
-                    WHERE estado = 'realizado' AND MONTH(fecha_inicio) = MONTH(CURDATE())), 0
+                    (SELECT SUM(kg_clasificados) / NULLIF(COUNT(*), 0)
+                    FROM registro_produccion 
+                    WHERE estatus = 'CALCULADO' AND MONTH(fecha_jornada) = MONTH(CURDATE())), 0
                 ) AS DECIMAL(10,2)) as productividad_general");
             
             $stmt->execute();
@@ -499,14 +502,29 @@ private $query;
         try {
             $stmt = $db->prepare("SELECT 
                 p.nombre,
-                COALESCE(SUM(dv.cantidad * dv.precio_unitario_venta), 0) as ingresos,
-                COALESCE(SUM(dc.cantidad * dc.precio_unitario_compra), 0) as costos,
-                COALESCE(SUM(dv.cantidad * dv.precio_unitario_venta) - SUM(dc.cantidad * dc.precio_unitario_compra), 0) as ganancia_neta
+                COALESCE(ventas.ingresos, 0) as ingresos,
+                COALESCE(compras.costos, 0) as costos,
+                COALESCE(ventas.ingresos, 0) - COALESCE(compras.costos, 0) as ganancia_neta
                 FROM producto p
-                LEFT JOIN detalle_venta dv ON p.idproducto = dv.idproducto
-                LEFT JOIN detalle_compra dc ON p.idproducto = dc.idproducto
+                LEFT JOIN (
+                    SELECT 
+                        dv.idproducto,
+                        SUM(dv.cantidad * dv.precio_unitario_venta) as ingresos
+                    FROM detalle_venta dv
+                    INNER JOIN venta v ON dv.idventa = v.idventa
+                    WHERE v.estatus = 'activo'
+                    GROUP BY dv.idproducto
+                ) ventas ON p.idproducto = ventas.idproducto
+                LEFT JOIN (
+                    SELECT 
+                        dc.idproducto,
+                        SUM(dc.cantidad * dc.precio_unitario_compra) as costos
+                    FROM detalle_compra dc
+                    INNER JOIN compra c ON dc.idcompra = c.idcompra
+                    WHERE c.estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')
+                    GROUP BY dc.idproducto
+                ) compras ON p.idproducto = compras.idproducto
                 WHERE p.estatus = 'activo'
-                GROUP BY p.idproducto, p.nombre
                 ORDER BY ganancia_neta DESC
                 LIMIT 10");
             $stmt->execute();
@@ -527,19 +545,18 @@ private $query;
         try {
             $sql = "SELECT 
                 CONCAT(e.nombre, ' ', e.apellido) as empleado_nombre,
-                COUNT(p.idproduccion) as ordenes_asignadas,
-                SUM(CASE WHEN p.estado = 'realizado' THEN 1 ELSE 0 END) as ordenes_completadas,
-                COALESCE(SUM(p.cantidad_a_realizar), 0) as cantidad_total_asignada,
-                COALESCE(SUM(tp.cantidad_realizada), 0) as cantidad_realizada
+                COUNT(rp.idregistro) as ordenes_asignadas,
+                SUM(CASE WHEN rp.estatus = 'CALCULADO' THEN 1 ELSE 0 END) as ordenes_completadas,
+                COALESCE(SUM(rp.kg_clasificados), 0) as cantidad_total_asignada,
+                COALESCE(SUM(rp.pacas_armadas), 0) as cantidad_realizada
                 FROM empleado e
-                LEFT JOIN produccion p ON e.idempleado = p.idempleado
-                LEFT JOIN tarea_produccion tp ON e.idempleado = tp.idempleado
+                LEFT JOIN registro_produccion rp ON e.idempleado = rp.idempleado
                 WHERE e.estatus = 'Activo'";
             
             $params = [];
             
             if ($fecha_desde && $fecha_hasta) {
-                $sql .= " AND p.fecha_inicio BETWEEN ? AND ?";
+                $sql .= " AND rp.fecha_jornada BETWEEN ? AND ?";
                 $params[] = $fecha_desde;
                 $params[] = $fecha_hasta;
             }
@@ -549,7 +566,7 @@ private $query;
                 $params[] = $idempleado;
             }
             if (!empty($estado)) {
-                $sql .= " AND p.estado = ?";
+                $sql .= " AND rp.estatus = ?";
                 $params[] = $estado;
             }
             
@@ -573,19 +590,19 @@ private $query;
         $db = $conexion->get_conectGeneral();
         try {
             $sql = "SELECT 
-                estado,
+                estatus_lote as estado,
                 COUNT(*) as cantidad,
-                SUM(cantidad_a_realizar) as total_kg
-                FROM produccion";
+                SUM(volumen_estimado) as total_kg
+                FROM lotes_produccion";
             
             if ($fecha_desde && $fecha_hasta) {
-                $sql .= " WHERE fecha_inicio BETWEEN ? AND ?";
+                $sql .= " WHERE fecha_jornada BETWEEN ? AND ?";
                 $params = [$fecha_desde, $fecha_hasta];
             } else {
                 $params = [];
             }
             
-            $sql .= " GROUP BY estado ORDER BY cantidad DESC";
+            $sql .= " GROUP BY estatus_lote ORDER BY cantidad DESC";
             
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
@@ -606,14 +623,14 @@ private $query;
         try {
             $sql = "SELECT 
                 COUNT(*) as total_tareas,
-                SUM(CASE WHEN tp.estado = 'completado' THEN 1 ELSE 0 END) as tareas_completadas,
-                SUM(CASE WHEN tp.estado = 'en_progreso' THEN 1 ELSE 0 END) as tareas_en_progreso,
-                SUM(CASE WHEN tp.estado = 'pendiente' THEN 1 ELSE 0 END) as tareas_pendientes
-                FROM tarea_produccion tp
-                JOIN produccion p ON tp.idproduccion = p.idproduccion";
+                SUM(CASE WHEN rp.estatus = 'CALCULADO' THEN 1 ELSE 0 END) as tareas_completadas,
+                SUM(CASE WHEN rp.estatus = 'BORRADOR' THEN 1 ELSE 0 END) as tareas_en_progreso,
+                SUM(CASE WHEN rp.estatus = 'BORRADOR' THEN 1 ELSE 0 END) as tareas_pendientes
+                FROM registro_produccion rp
+                INNER JOIN lotes_produccion lp ON rp.idlote = lp.idlote";
             
             if ($fecha_desde && $fecha_hasta) {
-                $sql .= " WHERE p.fecha_inicio BETWEEN ? AND ?";
+                $sql .= " WHERE rp.fecha_jornada BETWEEN ? AND ?";
                 $params = [$fecha_desde, $fecha_hasta];
             } else {
                 $params = [];
@@ -711,17 +728,17 @@ private $query;
                 COUNT(CASE WHEN fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN 1 END) as ayer,
                 COUNT(CASE WHEN YEARWEEK(fecha, 1) = YEARWEEK(CURDATE(), 1) THEN 1 END) as esta_semana,
                 COUNT(CASE WHEN MONTH(fecha) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) THEN 1 END) as mes_pasado
-                FROM compra WHERE estatus_compra = 'Pendiente'
+                FROM compra WHERE estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')
                 
                 UNION ALL
                 
                 SELECT 
                 'Producciones Completadas' as metrica,
-                COUNT(CASE WHEN fecha_fin = CURDATE() AND estado = 'realizado' THEN 1 END) as hoy,
-                COUNT(CASE WHEN fecha_fin = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estado = 'realizado' THEN 1 END) as ayer,
-                COUNT(CASE WHEN YEARWEEK(fecha_fin, 1) = YEARWEEK(CURDATE(), 1) AND estado = 'realizado' THEN 1 END) as esta_semana,
-                COUNT(CASE WHEN MONTH(fecha_fin) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND estado = 'realizado' THEN 1 END) as mes_pasado
-                FROM produccion");
+                COUNT(CASE WHEN fecha_fin_real = CURDATE() AND estatus_lote = 'FINALIZADO' THEN 1 END) as hoy,
+                COUNT(CASE WHEN fecha_fin_real = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_lote = 'FINALIZADO' THEN 1 END) as ayer,
+                COUNT(CASE WHEN YEARWEEK(fecha_fin_real, 1) = YEARWEEK(CURDATE(), 1) AND estatus_lote = 'FINALIZADO' THEN 1 END) as esta_semana,
+                COUNT(CASE WHEN MONTH(fecha_fin_real) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND estatus_lote = 'FINALIZADO' THEN 1 END) as mes_pasado
+                FROM lotes_produccion");
             
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
