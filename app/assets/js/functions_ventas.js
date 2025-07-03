@@ -394,9 +394,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  document
-    .getElementById("agregarDetalleBtn")
-    .addEventListener("click", async function () {
+  const agregarDetalleBtn = document.getElementById("agregarDetalleBtn");
+  if (agregarDetalleBtn) {
+    agregarDetalleBtn.addEventListener("click", async function () {
       const selectProductoEl = document.getElementById(
         "select_producto_agregar_modal"
       );
@@ -508,6 +508,7 @@ document.addEventListener("DOMContentLoaded", function () {
       calcularTotalesGenerales();
       selectProductoEl.value = "";
     });
+  }
 
   function actualizarEventosDetalle() {
     detalleVentaBody.querySelectorAll(".cantidad-input").forEach((input) => {
@@ -578,9 +579,9 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   }
 
-  document
-    .getElementById("abrirModalBtn")
-    .addEventListener("click", function () {
+  const abrirModalBtn = document.getElementById("abrirModalBtn");
+  if (abrirModalBtn) {
+    abrirModalBtn.addEventListener("click", function () {
       abrirModal("ventaModal");
       limpiarFormularioVentaCompleto();
 
@@ -626,24 +627,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
       inicializarBuscadorCliente();
     });
+  }
 
-  document
-    .getElementById("btnCerrarModalNuevaVenta")
-    .addEventListener("click", function () {
+  const btnCerrarModalNuevaVenta = document.getElementById("btnCerrarModalNuevaVenta");
+  if (btnCerrarModalNuevaVenta) {
+    btnCerrarModalNuevaVenta.addEventListener("click", function () {
       cerrarModal("ventaModal");
       limpiarFormularioVentaCompleto();
     });
+  }
 
-  document
-    .getElementById("cerrarModalBtn")
-    .addEventListener("click", function () {
+  const cerrarModalBtn = document.getElementById("cerrarModalBtn");
+  if (cerrarModalBtn) {
+    cerrarModalBtn.addEventListener("click", function () {
       cerrarModal("ventaModal");
       limpiarFormularioVentaCompleto();
     });
+  }
 
-  document
-    .getElementById("registrarVentaBtn")
-    .addEventListener("click", async function () {
+  const registrarVentaBtn = document.getElementById("registrarVentaBtn");
+  if (registrarVentaBtn) {
+    registrarVentaBtn.addEventListener("click", async function () {
       const idClienteSeleccionado = document.getElementById("idcliente").value;
       const nuevoClienteFormActivo =
         nuevoClienteContainer &&
@@ -862,6 +866,7 @@ document.addEventListener("DOMContentLoaded", function () {
         btnRegistrar.innerHTML = textoOriginal;
       }
     });
+  }
 
   async function obtenerTasaActualSeleccionada(idmoneda, fechaVenta) {
     try {
@@ -1142,12 +1147,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
   ["cerrarModalDetalleVentaBtn", "cerrarModalDetalleVentaBtn2"].forEach(
     (id) => {
-      document.getElementById(id).addEventListener("click", function () {
-        const modal = document.getElementById("modalDetalleVenta");
-        modal.classList.add("opacity-0", "pointer-events-none", "transparent");
-        modal.classList.remove("opacity-100");
-        document.getElementById("detalleVentaContenido").innerHTML = "";
-      });
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener("click", function () {
+          const modal = document.getElementById("modalDetalleVenta");
+          if (modal) {
+            modal.classList.add("opacity-0", "pointer-events-none", "transparent");
+            modal.classList.remove("opacity-100");
+          }
+          const contenido = document.getElementById("detalleVentaContenido");
+          if (contenido) {
+            contenido.innerHTML = "";
+          }
+        });
+      }
     }
   );
 
@@ -1216,8 +1229,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var estadoActual = row.estatus || "";
     var botones = [];
 
-    // Botón Ver (siempre disponible si tiene permisos)
-    if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver) {
+    // Botón Ver (disponible si tiene permisos de ver, editar o eliminar)
+    if (window.PERMISOS_USUARIO && 
+        (window.PERMISOS_USUARIO.puede_ver || 
+         window.PERMISOS_USUARIO.puede_editar || 
+         window.PERMISOS_USUARIO.puede_eliminar)) {
       botones.push(`
         <button
           class="ver-detalle-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150"

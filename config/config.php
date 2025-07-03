@@ -6,10 +6,10 @@
 // OPCIÓN 1: Gmail (Configuración activa para enviar emails reales)
 const SMTP_HOST = 'smtp.gmail.com';
 const SMTP_PORT = 587;
-const SMTP_USER = 'gilalejandro926@gmail.com'; // Tu email
-const SMTP_PASS = 'actu ldpn dhrh jccu'; // Contraseña de aplicación de Gmail
+const SMTP_USER = 'projectpavia2025@gmail.com'; // Tu email
+const SMTP_PASS = 'dhxr nigk pyqh wbmz '; // Contraseña de aplicación de Gmail
 const SMTP_SECURE = 'tls';
-const FROM_EMAIL = 'gilalejandro926@gmail.com';
+const FROM_EMAIL = 'projectpavia2025@gmail.com';
 const FROM_NAME = 'Sistema Recuperadora';
 
 // OPCIÓN 2: MailHog (Para desarrollo - captura emails sin enviar)
