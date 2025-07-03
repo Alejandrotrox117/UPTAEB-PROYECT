@@ -89,12 +89,34 @@ function iniciarTourDashboard() {
         ]
     });
 
-    // Paso 4: Gráficos de reportes
+    // Paso 4: Selector de reportes
+    tour.addStep({
+        title: 'Selector de Reportes 📊',
+        text: 'Este nuevo selector te permite elegir entre diferentes tipos de reportes disponibles. Simplemente selecciona el que necesitas y se mostrará automáticamente.',
+        attachTo: {
+            element: '#selectorReporte',
+            on: 'bottom'
+        },
+        buttons: [
+            {
+                text: 'Anterior',
+                action: tour.back,
+                classes: 'shepherd-button-secondary'
+            },
+            {
+                text: 'Siguiente',
+                action: tour.next,
+                classes: 'shepherd-button-primary'
+            }
+        ]
+    });
+    
+    // Paso 5: Gráficos de reportes
     tour.addStep({
         title: 'Reportes Visuales 📈',
         text: 'Aquí puedes ver gráficos detallados de ingresos y egresos. Puedes filtrar por fechas y tipos de pago para análisis específicos.',
         attachTo: {
-            element: '#dashboard-reports',
+            element: '#reporteIngresosEgresos',
             on: 'top'
         },
         buttons: [
@@ -111,7 +133,7 @@ function iniciarTourDashboard() {
         ]
     });
 
-    // Paso 5: Menú lateral
+    // Paso 6: Menú lateral
     tour.addStep({
         title: 'Menú de Navegación 🧭',
         text: 'Desde este menú puedes acceder a todos los módulos del sistema: compras, ventas, productos, empleados, reportes y más.',
@@ -133,7 +155,7 @@ function iniciarTourDashboard() {
         ]
     });
 
-    // Paso 6: Notificaciones (solo si existen)
+    // Paso 7: Notificaciones (solo si existen)
     const notificationBtn = document.querySelector('#desktop-notifications-toggle');
     if (notificationBtn) {
         tour.addStep({
@@ -158,12 +180,56 @@ function iniciarTourDashboard() {
         });
     }
 
-    // Paso 7: Tabla de KPIs
+    // Paso 8: Panel Ejecutivo
     tour.addStep({
-        title: 'Indicadores Clave (KPIs) 📋',
-        text: 'Esta tabla muestra los indicadores más importantes para el seguimiento del negocio. Se actualiza automáticamente con datos en tiempo real.',
+        title: 'Panel Ejecutivo 📈',
+        text: 'Este nuevo panel muestra indicadores clave para ejecutivos como margen de ganancia, ROI mensual, rotación de inventario y productividad general, todo en un formato claro y conciso.',
         attachTo: {
-            element: '#dashboard-kpis',
+            element: '#panelEjecutivo',
+            on: 'top'
+        },
+        buttons: [
+            {
+                text: 'Anterior',
+                action: tour.back,
+                classes: 'shepherd-button-secondary'
+            },
+            {
+                text: 'Siguiente',
+                action: tour.next,
+                classes: 'shepherd-button-primary'
+            }
+        ]
+    });
+    
+    // Paso 9: Tendencias de Ventas
+    tour.addStep({
+        title: 'Análisis de Tendencias 📊',
+        text: 'Aquí puedes analizar las tendencias de ventas de los últimos 6 meses y la rentabilidad por producto para tomar decisiones informadas sobre tu negocio.',
+        attachTo: {
+            element: '#tendenciasVentas',
+            on: 'top'
+        },
+        buttons: [
+            {
+                text: 'Anterior',
+                action: tour.back,
+                classes: 'shepherd-button-secondary'
+            },
+            {
+                text: 'Siguiente',
+                action: tour.next,
+                classes: 'shepherd-button-primary'
+            }
+        ]
+    });
+    
+    // Paso 10: Sección de Producción
+    tour.addStep({
+        title: 'Control de Producción 🏭',
+        text: 'Esta sección mejorada te permite supervisar el rendimiento de producción, la eficiencia por empleado y gestionar las tareas de producción de manera más efectiva.',
+        attachTo: {
+            element: '#produccion',
             on: 'top'
         },
         buttons: [
@@ -180,10 +246,10 @@ function iniciarTourDashboard() {
         ]
     });
 
-    // Paso 8: Finalización
+    // Paso 11: Finalización
     tour.addStep({
-        title: '¡Listo para Empezar! 🚀',
-        text: 'Ya conoces las principales funcionalidades del dashboard. Puedes volver a ejecutar este tour desde el botón de ayuda cuando lo necesites.',
+        title: '¡Listo para Usar el Dashboard Mejorado! 🚀',
+        text: 'Ya conoces las principales funcionalidades del nuevo dashboard, incluyendo el selector de reportes, el panel ejecutivo y los nuevos análisis de tendencias. Recuerda que puedes volver a ejecutar este tour desde el botón de ayuda cuando lo necesites.',
         buttons: [
             {
                 text: 'Anterior',

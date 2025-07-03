@@ -1,967 +1,1888 @@
-import {
-  abrirModal,
-  cerrarModal,
-  obtenerPermisosUsuario,
-} from "./exporthelpers.js";
+// ========================================
+// IMPORTACIONES
+// ========================================
+import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import {
   expresiones,
   inicializarValidaciones,
-  validarCampo,
-  validarCamposVacios,
-  validarSelect,
-  validarFecha,
   limpiarValidaciones,
-  cargarSelect,
   registrarEntidad,
 } from "./validaciones.js";
-let tablaProduccion = "";
+
+// ========================================
+// VARIABLES GLOBALES
+// ========================================
+let tablaLotes, tablaProcesos, tablaNomina;
+let operariosAsignados = [];
+let configuracionActual = {};
+let operariosDisponibles = [];
+let loteActual = null;
+
+// ========================================
+// CONFIGURACIÓN DE CAMPOS DE FORMULARIO
+// ========================================
+const camposFormularioLote = [ /* ... */ ];
+const camposFormularioClasificacion = [ /* ... */ ];
+const camposFormularioEmpaque = [ /* ... */ ];
+
+// ========================================
+// INICIALIZACIÓN GENERAL
+// ========================================
 document.addEventListener("DOMContentLoaded", function () {
-  const PERMISOS_USUARIO = obtenerPermisosUsuario();
-  window.PERMISOS_USUARIO = PERMISOS_USUARIO;
-  cargarEstadisticas();
-  tablaProduccion = $("#TablaProduccion").DataTable({
+  inicializarPestañas();
+  inicializarTablas();
+  inicializarEventos();
+  cargarConfiguracionInicial();
+});
+
+// ========================================
+// INICIALIZACIÓN DE COMPONENTES
+// ========================================
+function inicializarPestañas() { const botonesPestaña = document.querySelectorAll(".tab-button");
+  const contenidoPestañas = document.querySelectorAll(".tab-content");
+
+  botonesPestaña.forEach((boton) => {
+    boton.addEventListener("click", function () {
+      const pestañaId = this.id.replace("tab-", "content-");
+
+      // Remover clase activa de todos los botones y contenidos
+      botonesPestaña.forEach((b) => {
+        b.classList.remove("active", "border-green-500", "text-green-600");
+        b.classList.add("border-transparent", "text-gray-500");
+      });
+      contenidoPestañas.forEach((c) => c.classList.add("hidden"));
+
+      // Activar pestaña seleccionada
+      this.classList.add("active", "border-green-500", "text-green-600");
+      this.classList.remove("border-transparent", "text-gray-500");
+      document.getElementById(pestañaId).classList.remove("hidden");
+
+      // Recargar tabla específica si es necesario
+      if (pestañaId === "content-lotes" && tablaLotes) {
+        setTimeout(() => tablaLotes.columns.adjust().draw(), 100);
+      } else if (pestañaId === "content-nomina" && tablaNomina) {
+        setTimeout(() => tablaNomina.columns.adjust().draw(), 100);
+      } else if (pestañaId === "content-procesos" && tablaProcesos) {
+        setTimeout(() => tablaProcesos.ajax.reload(null, false), 100);
+      }
+    });
+  });
+}
+
+function inicializarTablas() {
+  inicializarTablaLotes();
+  inicializarTablaProcesos();
+  inicializarTablaNomina();
+}
+function inicializarTablaLotes() {
+  if ($.fn.DataTable.isDataTable("#TablaLotes")) {
+    $("#TablaLotes").DataTable().destroy();
+  }
+
+  tablaLotes = $("#TablaLotes").DataTable({
     processing: true,
-    serverSide: true,
+    serverSide: false,
     ajax: {
-      url: "produccion/getProduccionData",
+      url: "./Produccion/getLotesData",
       type: "GET",
-      dataSrc: "data",
+      dataSrc: function (json) {
+        if (json && Array.isArray(json.data)) {
+          return json.data;
+        } else {
+          console.error("Respuesta del servidor no válida:", json);
+          mostrarError("No se pudieron cargar los datos de lotes.");
+          return [];
+        }
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error AJAX:", textStatus, errorThrown);
+        mostrarError("Error al cargar los lotes. Intente más tarde.");
+      },
     },
     columns: [
-      { data: "idproduccion", title: "ID Producción" },
-      { data: "nombre_producto", title: "Producto" },
-      { data: "nombre_empleado", title: "Empleado" },
-      { data: "cantidad_a_realizar", title: "Cantidad" },
-      { data: "fecha_inicio", title: "Fecha Inicio" },
-      { data: "fecha_fin", title: "Fecha Fin" },
-      { data: "estado", title: "Estado" },
+      {
+        data: "numero_lote",
+        title: "Número Lote",
+        className: "all whitespace-nowrap py-2 px-3 text-gray-700",
+      },
+      {
+        data: "fecha_jornada_formato",
+        title: "Fecha",
+        className: "all whitespace-nowrap py-2 px-3 text-gray-700",
+      },
+      {
+        data: "supervisor",
+        title: "Supervisor",
+        className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+      },
+      {
+        data: "volumen_estimado",
+        title: "Vol. Est. (kg)",
+        className: "tablet-l text-right py-2 px-3 text-gray-700",
+        render: function (data) {
+          return parseFloat(data || 0).toLocaleString("es-ES", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+        },
+      },
+      {
+        data: "operarios_requeridos",
+        title: "Op. Req.",
+        className: "tablet-l text-center py-2 px-3 text-gray-700",
+      },
+      {
+        data: "operarios_asignados",
+        title: "Op. Asig.",
+        className: "tablet-l text-center py-2 px-3 text-gray-700",
+      },
+      {
+        data: "estatus_lote",
+        title: "Estado",
+        className: "min-tablet-p text-center py-2 px-3",
+        render: function (data) {
+          const colores = {
+            PLANIFICADO: "bg-yellow-100 text-yellow-800",
+            EN_PROCESO: "bg-blue-100 text-blue-800",
+            FINALIZADO: "bg-green-100 text-green-800",
+            CANCELADO: "bg-red-100 text-red-800",
+          };
+          const color = colores[data] || "bg-gray-100 text-gray-800";
+          return `<span class="${color} text-xs font-semibold px-2.5 py-1 rounded-full">${data}</span>`;
+        },
+      },
       {
         data: null,
         title: "Acciones",
         orderable: false,
+        searchable: false,
+        className: "all text-center py-1 px-2",
         render: function (data, type, row) {
-          return `
-           <button class="ver-detalle-btn text-green-500 hover:text-green-700 p-1 rounded-full ml-2" data-idproduccion="${row.idproduccion}">
-          <i class="fas fa-eye"></i>
-        </button>
-            <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idproduccion="${row.idproduccion}">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" data-idproduccion="${row.idproduccion}">
-              <i class="fas fa-trash"></i>
-            </button>`;
+          const idlote = row.idlote || "";
+          const numeroLote = row.numero_lote || "";
+          const estatus = row.estatus_lote || "";
+          
+          let acciones = `
+            <div class="inline-flex items-center space-x-1">
+              <button class="ver-lote-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                      data-idlote="${idlote}" title="Ver detalles">
+                <i class="fas fa-eye fa-fw text-base"></i>
+              </button>`;
+
+          if (estatus === "PLANIFICADO") {
+            acciones += `
+              <button class="asignar-operarios-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                      data-idlote="${idlote}" title="Asignar operarios">
+                <i class="fas fa-users fa-fw text-base"></i>
+              </button>
+              <button class="iniciar-lote-btn text-orange-600 hover:text-orange-700 p-1 transition-colors duration-150" 
+                      data-idlote="${idlote}" title="Iniciar lote">
+                <i class="fas fa-play fa-fw text-base"></i>
+              </button>`;
+          }
+
+          if (estatus === "EN_PROCESO") {
+            acciones += `
+              <button class="cerrar-lote-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                      data-idlote="${idlote}" data-numero="${numeroLote}" title="Cerrar lote">
+                <i class="fas fa-stop fa-fw text-base"></i>
+              </button>`;
+          }
+
+          acciones += `</div>`;
+          return acciones;
         },
       },
     ],
     language: {
-      decimal: "",
-      emptyTable: "No hay información",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
-      infoEmpty: "Mostrando 0 to 0 of 0 Entradas",
-      infoFiltered: "(Filtrado de _MAX_ total entradas)",
+      processing: `
+        <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]">
+          <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+            <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+            <span class="text-lg font-medium text-gray-700">Cargando lotes...</span>
+          </div>
+        </div>`,
+      emptyTable: `
+        <div class="text-center py-4">
+          <i class="fas fa-box-open fa-2x text-gray-400 mb-2"></i>
+          <p class="text-gray-600">No hay lotes registrados.</p>
+        </div>`,
+      info: "Mostrando _START_ a _END_ de _TOTAL_ lotes",
+      infoEmpty: "Mostrando 0 lotes",
+      infoFiltered: "(filtrado de _MAX_ lotes totales)",
+      lengthMenu: "Mostrar _MENU_ lotes",
+      search: "_INPUT_",
+      searchPlaceholder: "Buscar lote...",
+      zeroRecords: `
+        <div class="text-center py-4">
+          <i class="fas fa-search fa-2x text-gray-400 mb-2"></i>
+          <p class="text-gray-600">No se encontraron coincidencias.</p>
+        </div>`,
       paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior",
+        first: '<i class="fas fa-angle-double-left"></i>',
+        last: '<i class="fas fa-angle-double-right"></i>',
+        next: '<i class="fas fa-angle-right"></i>',
+        previous: '<i class="fas fa-angle-left"></i>',
       },
-      zeroRecords: "Sin resultados encontrados",
     },
     destroy: true,
     responsive: true,
+    autoWidth: false,
     pageLength: 10,
-    order: [[0, "asc"]],
+    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+    order: [[1, "desc"]],
+    scrollX: true,
+    drawCallback: function (settings) {
+      $(settings.nTableWrapper)
+        .find('.dataTables_filter input[type="search"]')
+        .addClass(
+          "py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+        )
+        .removeClass("form-control-sm");
+    },
   });
-  let detalleProduccionItems = [];
-  
-  const camposProduccion = [
-    {
-      id: "fecha_inicio",
-      tipo: "date",
-      mensajes: {
-        vacio: "La fecha de inicio es obligatoria.",
-        fechaPosterior: "La fecha no puede ser posterior a hoy.",
-      },
-    },
-    {
-      id: "estado",
-      tipo: "select",
-      mensajes: {
-        vacio: "Debe seleccionar un estado.",
-      },
-    },
-    {
-      id: "idempleado_seleccionado",
-      tipo: "hidden",
-      mensajes: {
-        vacio: "Debe seleccionar un empleado.",
-      },
-    },
-    {
-      id: "idproducto",
-      tipo: "hidden",
-      mensajes: {
-        vacio: "Debe seleccionar un producto terminado.",
-      },
-    },
-  ];
-  document
-    .getElementById("abrirModalProduccion")
-    .addEventListener("click", function () {
-      abrirModal("produccionModal");
-      cargarSelect({
-        selectId: "select_producto",
-        endpoint: "productos/getListaProductosParaFormulario",
-        optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
-        optionValueFn: (p) => p.idproducto || "",
-        placeholder: "Seleccione un producto...",
-        onLoaded: (productos) => {
-          listaProductos = productos;
-        },
-      });
-      inicializarBuscadorEmpleado();
-      inicializarBuscadorEmpleadoTarea();
-      inicializarValidaciones(camposProduccion, "formRegistrarProduccion");
-    });
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".ver-detalle-btn")) {
-      const idproduccion = e.target
-        .closest(".ver-detalle-btn")
-        .getAttribute("data-idproduccion");
-      if (!idproduccion || isNaN(idproduccion)) {
-        alert("ID inválido");
-        return;
-      }
-      verDetalleProduccion(idproduccion);
-    }
+
+  // Event listeners para acciones de la tabla
+  $("#TablaLotes tbody").on("click", ".ver-lote-btn", function () {
+    const idlote = $(this).data("idlote");
+    verDetallesLote(idlote);
   });
-  document
-    .getElementById("btnCerrarModalProduccion")
-    .addEventListener("click", function () {
-      cerrarModal("produccionModal");
-      limpiarValidaciones(camposProduccion, "formRegistrarProduccion");
-      limpiarFormularioProduccion();
-    });
-  document
-    .getElementById("btnCancelarProduccion")
-    .addEventListener("click", function () {
-      cerrarModal("produccionModal");
-      limpiarValidaciones(camposProduccion, "formRegistrarProduccion");
-      limpiarFormularioProduccion();
-    });
-  const selectProductoPrincipal = document.getElementById("select_producto");
-  if (selectProductoPrincipal) {
-    selectProductoPrincipal.addEventListener("change", function () {
-      const selectedOption = this.options[this.selectedIndex];
-      const hiddenInput = document.getElementById("idproducto");
-      if (selectedOption.value) {
-        hiddenInput.value = selectedOption.value;
-      } else {
-        hiddenInput.value = "";
+
+  $("#TablaLotes tbody").on("click", ".asignar-operarios-btn", function () {
+    const idlote = $(this).data("idlote");
+    abrirModalAsignarOperarios(idlote);
+  });
+
+  $("#TablaLotes tbody").on("click", ".iniciar-lote-btn", function () {
+    const idlote = $(this).data("idlote");
+    iniciarLote(idlote);
+  });
+
+  $("#TablaLotes tbody").on("click", ".cerrar-lote-btn", function () {
+    const idlote = $(this).data("idlote");
+    const numeroLote = $(this).data("numero");
+    cerrarLote(idlote, numeroLote);
+  });
+}
+
+function inicializarTablaProcesos() {
+  if ($.fn.DataTable.isDataTable("#TablaProcesos")) {
+    $("#TablaProcesos").DataTable().destroy();
+  }
+
+  tablaProcesos = $("#TablaProcesos").DataTable({
+    processing: true,
+    ajax: {
+      url: "./Produccion/getProcesosRecientes",
+      type: "GET",
+      dataSrc: function (json) {
+        if (json && json.status && Array.isArray(json.data)) {
+          return json.data;
+        }
+        return [];
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error cargando procesos:", textStatus, errorThrown);
       }
+    },
+    columns: [
+      { data: "fecha", title: "Fecha", className: "all" },
+      { data: "operario", title: "Operario", className: "all" },
+      { data: "proceso", title: "Proceso", className: "desktop" },
+      { data: "cantidad", title: "Cantidad", className: "tablet-l" },
+      { data: "observaciones", title: "Observaciones", className: "desktop" }
+    ],
+    language: {
+      emptyTable: "No hay procesos registrados.",
+      processing: "Cargando procesos..."
+    },
+    pageLength: 5,
+    order: [[0, "desc"]]
+  });
+}
+
+function inicializarTablaNomina() {
+  if ($.fn.DataTable.isDataTable("#TablaNomina")) {
+    $("#TablaNomina").DataTable().destroy();
+  }
+
+  tablaNomina = $("#TablaNomina").DataTable({
+    processing: true,
+    ajax: {
+      url: "./Produccion/getRegistrosNomina",
+      type: "GET",
+      dataSrc: function (json) {
+        if (json && json.status && Array.isArray(json.data)) {
+          return json.data;
+        }
+        return [];
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        console.error("Error cargando nómina:", textStatus, errorThrown);
+      }
+    },
+    columns: [
+      { data: "fecha", title: "Fecha", className: "all" },
+      { data: "operario", title: "Operario", className: "all" },
+      { data: "kg_clasificados", title: "Kg Clasificados", className: "desktop" },
+      { data: "pacas_armadas", title: "Pacas", className: "tablet-l" },
+      { data: "salario_total", title: "Salario", className: "all" },
+      { data: "estatus", title: "Estado", className: "desktop" }
+    ],
+    language: {
+      emptyTable: "No hay registros de nómina.",
+      processing: "Cargando nómina..."
+    },
+    pageLength: 10,
+    order: [[0, "desc"]]
+  });
+}
+
+// ========================================
+// INICIALIZACIÓN DE EVENTOS
+// ========================================
+function inicializarEventos() {
+  inicializarEventosLotes();
+  inicializarEventosAsignacion();
+  inicializarEventosProcesos();
+  inicializarEventosNomina();
+  inicializarEventosConfiguracion();
+}
+function inicializarEventosLotes() {
+  // Modal registrar lote
+  const btnAbrirModalLote = document.getElementById("btnAbrirModalRegistrarLote");
+  const btnCerrarModalLote = document.getElementById("btnCerrarModalRegistrarLote");
+  const btnCancelarModalLote = document.getElementById("btnCancelarModalRegistrarLote");
+  const formLote = document.getElementById("formRegistrarLote");
+
+  if (btnAbrirModalLote) {
+    btnAbrirModalLote.addEventListener("click", function () {
+      abrirModal("modalRegistrarLote");
+      if (formLote) formLote.reset();
+      cargarEmpleadosActivos();
+      document.getElementById("lote_fecha_jornada").value = new Date().toISOString().split('T')[0];
+      inicializarValidaciones(camposFormularioLote, "formRegistrarLote");
     });
   }
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".editar-btn")) {
-      const idproduccion = e.target
-        .closest(".editar-btn")
-        .getAttribute("data-idproduccion");
-      if (!idproduccion || isNaN(idproduccion)) {
-        Swal.fire("Error", "ID inválido.", "error");
-        return;
-      }
-      editarProduccion(idproduccion);
-      cargarTareas(idproduccion);
-      actualizarProgresoProduccion(idproduccion);
-      inicializarBuscadorEmpleado();
-      inicializarBuscadorEmpleadoTarea();
-      cargarEmpleado();
-      cargarProducto();
-    }
-  });
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".eliminar-btn")) {
-      const idproduccion = e.target
-        .closest(".eliminar-btn")
-        .getAttribute("data-idproduccion");
 
-      if (!idproduccion || isNaN(idproduccion)) {
-        Swal.fire("Error", "ID de producción inválido.", "error");
-        return;
-      }
-
-      Swal.fire({
-        title: "¿Estás seguro?",
-        text: "Esta acción marcará la producción como inactiva.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sí, eliminar",
-        cancelButtonText: "Cancelar",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch("produccion/deleteProduccion", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: `idproduccion=${encodeURIComponent(idproduccion)}`,
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.status) {
-                Swal.fire("Eliminado", data.message, "success");
-                if (tablaProduccion && tablaProduccion.ajax) {
-                  tablaProduccion.ajax.reload();
-                }
-              } else {
-                Swal.fire("Error", data.message, "error");
-              }
-            })
-            .catch((err) => {
-              console.error("Error al eliminar:", err);
-              Swal.fire(
-                "Error",
-                "Hubo un problema al intentar eliminar la producción.",
-                "error"
-              );
-            });
-        }
-      });
-    }
-  });
-
-  document
-    .getElementById("btnAgregarProductoDetalleProduccion")
-    .addEventListener("click", function () {
-      const selectInsumo = document.getElementById(
-        "select_producto_agregar_detalle"
-      );
-      const selectedOption = selectInsumo.options[selectInsumo.selectedIndex];
-      if (!selectedOption.value) {
-        Swal.fire("Atención", "Seleccione un insumo.", "warning");
-        return;
-      }
-      const idproducto = selectedOption.value;
-      const nombreProducto = selectedOption.textContent;
-      if (
-        detalleProduccionItems.some((item) => item.idproducto === idproducto)
-      ) {
-        Swal.fire("Atención", "Este insumo ya fue agregado.", "warning");
-        return;
-      }
-      detalleProduccionItems.push({
-        idproducto: idproducto,
-        nombre: nombreProducto,
-        cantidad: 1,
-        cantidad_consumida: 0,
-        observaciones: "",
-      });
-      renderizarTablaDetalleProduccion();
-      selectInsumo.value = "";
+  if (btnCerrarModalLote) {
+    btnCerrarModalLote.addEventListener("click", function () {
+      cerrarModal("modalRegistrarLote");
     });
-  document
-    .getElementById("btnGuardarProduccion")
-    .addEventListener("click", function () {
-      if (!validarCamposVacios(camposProduccion, "formRegistrarProduccion"))
-        return;
+  }
 
-      camposProduccion.forEach((campo) => {
-        if (campo.tipo === "select") {
-          validarSelect(campo.id, campo.mensajes, "formRegistrarProduccion");
+  if (btnCancelarModalLote) {
+    btnCancelarModalLote.addEventListener("click", function () {
+      cerrarModal("modalRegistrarLote");
+    });
+  }
+
+  if (formLote) {
+    formLote.addEventListener("submit", function (e) {
+      e.preventDefault();
+      registrarLote();
+    });
+  }
+
+  // Calcular operarios requeridos en tiempo real
+  const volumenInput = document.getElementById("lote_volumen_estimado");
+  if (volumenInput) {
+    volumenInput.addEventListener("input", function () {
+      calcularOperariosRequeridos();
+    });
+  }
+}
+
+function inicializarEventosAsignacion() {
+  const btnCerrarModalAsignar = document.getElementById("btnCerrarModalAsignarOperarios");
+  const btnCancelarModalAsignar = document.getElementById("btnCancelarModalAsignarOperarios");
+  const btnGuardarAsignaciones = document.getElementById("btnGuardarAsignaciones");
+
+  if (btnCerrarModalAsignar) {
+    btnCerrarModalAsignar.addEventListener("click", function () {
+      cerrarModal("modalAsignarOperarios");
+    });
+  }
+
+  if (btnCancelarModalAsignar) {
+    btnCancelarModalAsignar.addEventListener("click", function () {
+      cerrarModal("modalAsignarOperarios");
+    });
+  }
+
+  if (btnGuardarAsignaciones) {
+    btnGuardarAsignaciones.addEventListener("click", function () {
+      guardarAsignacionesOperarios();
+    });
+  }
+}
+
+function inicializarEventosProcesos() {
+  // Modal clasificación
+  const btnAbrirModalClasificacion = document.getElementById("btnAbrirModalClasificacion");
+  const btnCerrarModalClasificacion = document.getElementById("btnCerrarModalClasificacion");
+  const btnCancelarModalClasificacion = document.getElementById("btnCancelarModalClasificacion");
+  const formClasificacion = document.getElementById("formRegistrarClasificacion");
+
+  if (btnAbrirModalClasificacion) {
+    btnAbrirModalClasificacion.addEventListener("click", function () {
+      abrirModal("modalRegistrarClasificacion");
+      if (formClasificacion) formClasificacion.reset();
+      cargarDatosParaClasificacion();
+      inicializarValidaciones(camposFormularioClasificacion, "formRegistrarClasificacion");
+    });
+  }
+
+  if (btnCerrarModalClasificacion) {
+    btnCerrarModalClasificacion.addEventListener("click", function () {
+      cerrarModal("modalRegistrarClasificacion");
+    });
+  }
+
+  if (btnCancelarModalClasificacion) {
+    btnCancelarModalClasificacion.addEventListener("click", function () {
+      cerrarModal("modalRegistrarClasificacion");
+    });
+  }
+
+  if (formClasificacion) {
+    formClasificacion.addEventListener("submit", function (e) {
+      e.preventDefault();
+      registrarClasificacion();
+    });
+  }
+
+  // Modal empaque
+  const btnAbrirModalEmpaque = document.getElementById("btnAbrirModalEmpaque");
+  const btnCerrarModalEmpaque = document.getElementById("btnCerrarModalEmpaque");
+  const btnCancelarModalEmpaque = document.getElementById("btnCancelarModalEmpaque");
+  const formEmpaque = document.getElementById("formRegistrarEmpaque");
+
+  if (btnAbrirModalEmpaque) {
+    btnAbrirModalEmpaque.addEventListener("click", function () {
+      abrirModal("modalRegistrarEmpaque");
+      if (formEmpaque) formEmpaque.reset();
+      cargarDatosParaEmpaque();
+      inicializarValidaciones(camposFormularioEmpaque, "formRegistrarEmpaque");
+    });
+  }
+
+  if (btnCerrarModalEmpaque) {
+    btnCerrarModalEmpaque.addEventListener("click", function () {
+      cerrarModal("modalRegistrarEmpaque");
+    });
+  }
+
+  if (btnCancelarModalEmpaque) {
+    btnCancelarModalEmpaque.addEventListener("click", function () {
+      cerrarModal("modalRegistrarEmpaque");
+    });
+  }
+
+  if (formEmpaque) {
+    formEmpaque.addEventListener("submit", function (e) {
+      e.preventDefault();
+      registrarEmpaque();
+    });
+  }
+
+  // Validación en tiempo real para clasificación
+  const kgProcesados = document.getElementById("clas_kg_procesados");
+  const kgLimpios = document.getElementById("clas_kg_limpios");
+  const kgContaminantes = document.getElementById("clas_kg_contaminantes");
+
+  if (kgProcesados && kgLimpios && kgContaminantes) {
+    [kgProcesados, kgLimpios, kgContaminantes].forEach(input => {
+      input.addEventListener("input", validarSumaClasificacion);
+    });
+  }
+
+  // Validación de peso para empaque
+  const pesoPaca = document.getElementById("emp_peso_paca");
+  if (pesoPaca) {
+    pesoPaca.addEventListener("input", validarPesoPaca);
+  }
+}
+
+function inicializarEventosNomina() {
+  const btnCalcularNomina = document.getElementById("btnCalcularNomina");
+  const btnRegistrarProduccionDiaria = document.getElementById("btnRegistrarProduccionDiaria");
+  const btnCerrarModalProduccionDiaria = document.getElementById("btnCerrarModalProduccionDiaria");
+  const btnCancelarModalProduccionDiaria = document.getElementById("btnCancelarModalProduccionDiaria");
+  const btnGuardarProduccionDiaria = document.getElementById("btnGuardarProduccionDiaria");
+  const btnCargarOperarios = document.getElementById("btnCargarOperarios");
+
+  if (btnCalcularNomina) {
+    btnCalcularNomina.addEventListener("click", function () {
+      abrirModalCalcularNomina();
+    });
+  }
+
+  if (btnRegistrarProduccionDiaria) {
+    btnRegistrarProduccionDiaria.addEventListener("click", function () {
+      abrirModal("modalRegistrarProduccionDiaria");
+      cargarLotesParaProduccionDiaria();
+    });
+  }
+
+  if (btnCerrarModalProduccionDiaria) {
+    btnCerrarModalProduccionDiaria.addEventListener("click", function () {
+      cerrarModal("modalRegistrarProduccionDiaria");
+    });
+  }
+
+  if (btnCancelarModalProduccionDiaria) {
+    btnCancelarModalProduccionDiaria.addEventListener("click", function () {
+      cerrarModal("modalRegistrarProduccionDiaria");
+    });
+  }
+
+  if (btnGuardarProduccionDiaria) {
+    btnGuardarProduccionDiaria.addEventListener("click", function () {
+      guardarProduccionDiaria();
+    });
+  }
+
+  if (btnCargarOperarios) {
+    btnCargarOperarios.addEventListener("click", function () {
+      cargarOperariosProduccionDiaria();
+    });
+  }
+
+  // Cambio de lote en producción diaria
+  const selectLote = document.getElementById("selectLoteProduccionDiaria");
+  if (selectLote) {
+    selectLote.addEventListener("change", function () {
+      cargarOperariosProduccionDiaria();
+    });
+  }
+}
+
+function inicializarEventosConfiguracion() {
+  const formConfiguracion = document.getElementById("formConfiguracionProduccion");
+  const btnCargarConfiguracion = document.getElementById("btnCargarConfiguracion");
+  const btnGuardarConfiguracion = document.getElementById("btnGuardarConfiguracion");
+
+  if (formConfiguracion) {
+    formConfiguracion.addEventListener("submit", function (e) {
+      e.preventDefault();
+      guardarConfiguracion();
+    });
+  }
+
+  if (btnCargarConfiguracion) {
+    btnCargarConfiguracion.addEventListener("click", function () {
+      cargarConfiguracionInicial();
+    });
+  }
+
+  if (btnGuardarConfiguracion) {
+    btnGuardarConfiguracion.addEventListener("click", function () {
+      guardarConfiguracion();
+    });
+  }
+}
+
+// ========================================
+// FUNCIONES DE LOTES
+// ========================================
+function calcularOperariosRequeridos() {
+  const volumen = parseFloat(document.getElementById("lote_volumen_estimado").value || 0);
+  const infoCalculada = document.getElementById("infoCalculada");
+  
+  if (volumen > 0 && configuracionActual.productividad_clasificacion) {
+    const operariosRequeridos = Math.ceil(volumen / configuracionActual.productividad_clasificacion);
+    const capacidadMaxima = configuracionActual.capacidad_maxima_planta || 50;
+    
+    document.getElementById("operariosCalculados").textContent = operariosRequeridos;
+    document.getElementById("capacidadMaxima").textContent = capacidadMaxima;
+    
+    infoCalculada.classList.remove("hidden");
+    
+    // Mostrar alerta si excede capacidad
+    if (operariosRequeridos > capacidadMaxima) {
+      infoCalculada.classList.add("bg-red-50", "border-red-200");
+      infoCalculada.classList.remove("bg-blue-50", "border-blue-200");
+      document.getElementById("operariosCalculados").classList.add("text-red-600");
+    } else {
+      infoCalculada.classList.add("bg-blue-50", "border-blue-200");
+      infoCalculada.classList.remove("bg-red-50", "border-red-200");
+      document.getElementById("operariosCalculados").classList.remove("text-red-600");
+    }
+  } else {
+    infoCalculada.classList.add("hidden");
+  }
+}
+
+function registrarLote() {
+  const btnGuardarLote = document.getElementById("btnGuardarLote");
+
+  if (btnGuardarLote) {
+    btnGuardarLote.disabled = true;
+    btnGuardarLote.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Creando...`;
+  }
+
+  registrarEntidad({
+    formId: "formRegistrarLote",
+    endpoint: "Produccion/createLote",
+    campos: camposFormularioLote,
+    mapeoNombres: {
+      "lote_fecha_jornada": "fecha_jornada",
+      "lote_volumen_estimado": "volumen_estimado",
+      "lote_supervisor": "idsupervisor",
+      "lote_observaciones": "observaciones",
+    },
+    onSuccess: (result) => {
+      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+        cerrarModal("modalRegistrarLote");
+        recargarTablaLotes();
+        
+        const formLote = document.getElementById("formRegistrarLote");
+        if (formLote) {
+          formLote.reset();
+          limpiarValidaciones(camposFormularioLote, "formRegistrarLote");
         }
       });
+    },
+    onError: (result) => {
+      Swal.fire(
+        "Error",
+        result.message || "No se pudo crear el lote.",
+        "error"
+      );
+    },
+  }).finally(() => {
+    if (btnGuardarLote) {
+      btnGuardarLote.disabled = false;
+      btnGuardarLote.innerHTML = `<i class="fas fa-save mr-2"></i> Crear Lote`;
+    }
+  });
+}
 
-      const idproduccion = document.getElementById("idproduccion").value.trim();
-      const idproducto = document
-        .getElementById("select_producto")
-        .value.trim();
-      const idempleado_seleccionado = document
-        .getElementById("idempleado_seleccionado")
-        .value.trim();
-      const cantidad_a_realizar = document
-        .getElementById("cantidad_a_realizar")
-        .value.trim();
-      const fecha_inicio = document.getElementById("fecha_inicio").value.trim();
-      const fecha_fin =
-        document.getElementById("fecha_fin").value.trim() || null;
-      const estado = document.getElementById("estado").value.trim();
-
-      if (
-        !idproducto ||
-        !idempleado_seleccionado ||
-        !cantidad_a_realizar ||
-        !fecha_inicio ||
-        !estado
-      ) {
-        Swal.fire("Error", "Faltan campos obligatorios.", "error");
-        return;
+function verDetallesLote(idlote) {
+  fetch(`Produccion/getLoteById/${idlote}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        mostrarDetallesLote(result.data);
+      } else {
+        mostrarError("No se pudieron cargar los datos del lote.");
       }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarError("Error de conexión.");
+    });
+}
 
-      if (parseFloat(cantidad_a_realizar) <= 0) {
-        Swal.fire("Error", "La cantidad debe ser mayor a cero.", "error");
-        return;
-      }
+function mostrarDetallesLote(lote) {
+  const html = `
+    <div class="bg-white p-6 rounded-lg">
+      <h3 class="text-lg font-semibold mb-4">Detalles del Lote ${lote.numero_lote}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div><strong>Fecha Jornada:</strong> ${lote.fecha_jornada_formato}</div>
+        <div><strong>Supervisor:</strong> ${lote.supervisor}</div>
+        <div><strong>Volumen Estimado:</strong> ${parseFloat(lote.volumen_estimado).toLocaleString()} kg</div>
+        <div><strong>Operarios Requeridos:</strong> ${lote.operarios_requeridos}</div>
+        <div><strong>Operarios Asignados:</strong> ${lote.operarios_asignados}</div>
+        <div><strong>Estado:</strong> <span class="font-semibold">${lote.estatus_lote}</span></div>
+      </div>
+      ${lote.observaciones ? `<div class="mt-4"><strong>Observaciones:</strong> ${lote.observaciones}</div>` : ''}
+    </div>
+  `;
 
-      
-      if (!idproduccion && detalleProduccionItems.length === 0) {
-        Swal.fire(
-          "Atención",
-          "Debe agregar al menos un insumo al detalle.",
-          "warning"
-        );
-        return;
-      }
+  Swal.fire({
+    title: "Información del Lote",
+    html: html,
+    width: "800px",
+    showCloseButton: true,
+    confirmButtonText: "Cerrar",
+    confirmButtonColor: "#059669",
+  });
+}
 
-      const data = {
-        idproduccion,
-        idempleado: idempleado_seleccionado,
-        idproducto,
-        cantidad_a_realizar,
-        fecha_inicio,
-        fecha_fin,
-        estado,
-        insumos: detalleProduccionItems,
-      };
-
-      console.log("Datos enviados:", data);
-
-      const url = idproduccion
-        ? "produccion/updateProduccion"
-        : "produccion/createProduccion";
-      const method = idproduccion ? "PUT" : "POST";
-
-      fetch(url, {
-        method: method,
+function iniciarLote(idlote) {
+  Swal.fire({
+    title: "¿Iniciar lote de producción?",
+    text: "Esta acción cambiará el estado del lote a 'EN PROCESO'.",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#059669",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, iniciar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Produccion/iniciarLote", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ idlote: idlote }),
       })
-        .then((res) => res.json())
+        .then((response) => response.json())
         .then((result) => {
           if (result.status) {
-            Swal.fire("Éxito", result.message, "success");
-            cerrarModal("produccionModal");
-            limpiarFormularioProduccion();
-            tablaProduccion.ajax.reload();
-          } else {
-            Swal.fire("Error", result.message, "error");
-          }
-        })
-        .catch((err) => {
-          console.error("Error al enviar:", err);
-          Swal.fire(
-            "Error",
-            "Hubo un problema al procesar la solicitud.",
-            "error"
-          );
-        });
-    });
-
-  document
-    .getElementById("btnAgregarTarea")
-    .addEventListener("click", function () {
-      const idempleado = document.getElementById(
-        "idempleado_seleccionado_tarea"
-      ).value;
-      const idproduccion = document.getElementById("idproduccion").value;
-      if (!idempleado || !idproduccion) {
-        alert("Debe seleccionar un empleado y haber una producción abierta.");
-        return;
-      }
-      const cantidad_asignada = prompt("¿Cuánto se le asigna?", "10");
-      if (
-        !cantidad_asignada ||
-        isNaN(cantidad_asignada) ||
-        cantidad_asignada <= 0
-      ) {
-        alert("Ingrese una cantidad válida.");
-        return;
-      }
-      fetch("produccion/asignarTarea", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idproduccion,
-          idempleado,
-          cantidad_asignada,
-          estado: "pendiente",
-          fecha_inicio: document.getElementById("fecha_inicio").value,
-          observaciones: "",
-        }),
-      })
-        .then((res) => res.json())
-        .then((result) => {
-          if (result.status) {
-            Swal.fire("Éxito", result.message, "success");
-            cargarTareas(idproduccion);
-            actualizarProgresoProduccion(idproduccion);
-          } else {
-            Swal.fire("Error", result.message, "error");
-          }
-        })
-        .catch((err) => {
-          console.error("Error al asignar tarea:", err);
-          alert("Ocurrió un error al asignar la tarea.");
-        });
-    });
-  function inicializarBuscadorEmpleado() {
-    const inputCriterioEmpleado = document.getElementById(
-      "inputCriterioEmpleado"
-    );
-    const btnBuscarEmpleado = document.getElementById("btnBuscarEmpleado");
-    const listaResultadosEmpleado = document.getElementById(
-      "listaResultadosEmpleado"
-    );
-    const inputIdEmpleado = document.getElementById("idempleado_seleccionado");
-    const divInfoEmpleado = document.getElementById(
-      "empleado_seleccionado_info"
-    );
-    if (!btnBuscarEmpleado || !inputCriterioEmpleado) return;
-    btnBuscarEmpleado.addEventListener("click", async function () {
-      const criterio = inputCriterioEmpleado.value.trim();
-      if (criterio.length < 2) {
-        Swal.fire(
-          "Atención",
-          "Ingrese al menos 2 caracteres para buscar.",
-          "warning"
-        );
-        return;
-      }
-      listaResultadosEmpleado.innerHTML =
-        '<div class="p-2 text-xs text-gray-500">Buscando...</div>';
-      listaResultadosEmpleado.classList.remove("hidden");
-      try {
-        const response = await fetch(`produccion/getEmpleado`);
-        const data = await response.json();
-        listaResultadosEmpleado.innerHTML = "";
-        if (data.status && Array.isArray(data.data)) {
-          data.data.forEach((emp) => {
-            const itemDiv = document.createElement("div");
-            itemDiv.textContent = `${emp.nombre} ${emp.apellido} (${emp.identificacion})`;
-            itemDiv.dataset.id = emp.idempleado;
-            itemDiv.dataset.nombre = emp.nombre;
-            itemDiv.dataset.apellido = emp.apellido;
-            itemDiv.dataset.cedula = emp.identificacion;
-            itemDiv.addEventListener("click", function () {
-              inputIdEmpleado.value = this.dataset.id;
-              divInfoEmpleado.innerHTML = `Sel: <strong>${this.dataset.nombre} ${this.dataset.apellido}</strong> (C.I.: ${this.dataset.cedula})`;
-              divInfoEmpleado.classList.remove("hidden");
-              inputCriterioEmpleado.value = this.textContent;
-              listaResultadosEmpleado.classList.add("hidden");
-              listaResultadosEmpleado.innerHTML = "";
+            Swal.fire("¡Iniciado!", result.message, "success").then(() => {
+              recargarTablaLotes();
             });
-            listaResultadosEmpleado.appendChild(itemDiv);
-          });
-        } else {
-          listaResultadosEmpleado.innerHTML =
-            '<div class="p-2 text-xs text-gray-500">No se encontraron empleados.</div>';
-        }
-      } catch (error) {
-        console.error("Error al buscar empleados:", error);
-        listaResultadosEmpleado.innerHTML =
-          '<div class="p-2 text-xs text-red-500">Error al buscar. Intente de nuevo.</div>';
-      }
-    });
-    inputCriterioEmpleado.addEventListener("input", function () {
-      inputIdEmpleado.value = "";
-      divInfoEmpleado.classList.add("hidden");
-      listaResultadosEmpleado.classList.add("hidden");
-    });
-  }
-  function renderizarTablaDetalleProduccion() {
-    const tbody = document.getElementById("cuerpoTablaDetalleProduccion");
-    const noDetallesMensaje = document.getElementById(
-      "noDetallesMensajeProduccion"
-    );
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    if (detalleProduccionItems.length === 0) {
-      noDetallesMensaje.classList.remove("hidden");
-      return;
-    }
-    noDetallesMensaje.classList.add("hidden");
-    detalleProduccionItems.forEach((item, index) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="px-3 py-2">${item.nombre}</td>
-        <td class="px-3 py-2"><input type="number" value="${item.cantidad}" min="1" step="1" class="w-24 border rounded-md px-2 py-1 text-sm cantidad-requerida-input" data-index="${index}"></td>
-        <td class="px-3 py-2"><input type="number" value="${item.cantidad_consumida}" min="0" step="1" class="w-24 border rounded-md px-2 py-1 text-sm cantidad-usada-input" data-index="${index}"></td>
-        <td class="px-3 py-2"><input type="text" value="${item.observaciones}" class="w-full border rounded-md px-2 py-1 text-sm observaciones-input" data-index="${index}"></td>
-        <td class="px-3 py-2 text-center">
-          <button class="eliminar-detalle-btn text-red-500 hover:text-red-700" data-index="${index}">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-    document.querySelectorAll(".cantidad-requerida-input").forEach((input) => {
-      input.addEventListener("input", function () {
-        const index = parseInt(this.getAttribute("data-index"));
-        detalleProduccionItems[index].cantidad = parseFloat(this.value) || 1;
-      });
-    });
-    document.querySelectorAll(".cantidad-usada-input").forEach((input) => {
-      input.addEventListener("input", function () {
-        const index = parseInt(this.getAttribute("data-index"));
-        detalleProduccionItems[index].cantidad_consumida =
-          parseFloat(this.value) || 0;
-      });
-    });
-    document.querySelectorAll(".observaciones-input").forEach((input) => {
-      input.addEventListener("input", function () {
-        const index = parseInt(this.getAttribute("data-index"));
-        detalleProduccionItems[index].observaciones = this.value;
-      });
-    });
-    document.querySelectorAll(".eliminar-detalle-btn").forEach((btn) => {
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        const index = parseInt(this.getAttribute("data-index"));
-        detalleProduccionItems.splice(index, 1);
-        renderizarTablaDetalleProduccion();
-      });
-    });
-  }
-  const selectInsumos = document.getElementById(
-    "select_producto_agregar_detalle"
-  );
-  if (selectInsumos) {
-    cargarSelect({
-      selectId: "select_producto_agregar_detalle",
-      endpoint: "productos/getListaProductosParaFormulario",
-      optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
-      optionValueFn: (p) => p.idproducto || "",
-      placeholder: "Seleccione un insumo...",
-      onLoaded: (productos) => {},
-    });
-  }
-  const selectProductoterminado = document.getElementById("select_producto");
-  if (selectInsumos) {
-    cargarSelect({
-      selectId: "select_producto",
-      endpoint: "productos/getListaProductosParaFormulario",
-      optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
-      optionValueFn: (p) => p.idproducto || "",
-      placeholder: "Seleccione un producto terminado...",
-      onLoaded: (productos) => {},
-    });
-  }
-  function limpiarFormularioProduccion() {
-    const form = document.getElementById("formRegistrarProduccion");
-    if (form) form.reset();
-    detalleProduccionItems = [];
-    renderizarTablaDetalleProduccion();
-  }
-  function verDetalleProduccion(idproduccion) {
-    const modal = document.getElementById("detalleModal");
-    const contenido = document.getElementById("contenidoDetalleProduccion");
-    abrirModalDetalleProduccion();
-    Promise.all([
-      fetch(`produccion/getProduccionById/${idproduccion}`).then((res) =>
-        res.json()
-      ),
-      fetch(`produccion/getDetalleProduccionData/${idproduccion}`).then((res) =>
-        res.json()
-      ),
-    ])
-      .then(([produccionRes, detalleRes]) => {
-        if (!produccionRes.status || !detalleRes.status)
-          throw new Error("Error al cargar datos");
-        const prod = produccionRes.data;
-        const detalle = detalleRes.data;
-        let html = `
-          <div class="space-y-6">
-            <div>
-              <h4 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4"> Datos Generales</h4>
-              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
-                <li><span class="font-medium text-gray-500">ID:</span> ${
-                  prod.idproduccion
-                }</li>
-                <li><span class="font-medium text-gray-500">Producto:</span> ${
-                  prod.nombre_producto
-                }</li>
-                <li><span class="font-medium text-gray-500">Cantidad a realizar:</span> ${
-                  prod.cantidad_a_realizar
-                }</li>
-                <li><span class="font-medium text-gray-500">Empleado:</span> ${
-                  prod.nombre_empleado
-                }</li>
-                <li><span class="font-medium text-gray-500">Fecha inicio:</span> ${
-                  prod.fecha_inicio
-                }</li>
-                <li><span class="font-medium text-gray-500">Fecha fin:</span> ${
-                  prod.fecha_fin
-                }</li>
-                <li><span class="font-medium text-gray-500">Estado:</span>
-                  <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold 
-                    ${
-                      prod.estado === "realizado"
-                        ? "bg-green-100 text-green-700"
-                        : prod.estado === "empacando"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-gray-100 text-gray-700"
-                    }">
-                    ${prod.estado}
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4"> Insumos</h4>
-              <div class="overflow-x-auto rounded-lg shadow-sm">
-                <table class="w-full text-xs">
-                  <thead class="bg-gray-50 text-gray-700 text-left uppercase tracking-wider">
-                    <tr>
-                      <th class="px-4 py-3 border-b">Producto</th>
-                      <th class="px-4 py-3 border-b">Cantidad</th>
-                      <th class="px-4 py-3 border-b">Consumida</th>
-                      <th class="px-4 py-3 border-b">Observaciones</th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-100">
-        `;
-
-        detalle.forEach((insumo) => {
-          html += `
-                    <tr>
-                      <td class="px-4 py-3">${insumo.nombre_producto}</td>
-                      <td class="px-4 py-3">${insumo.cantidad}</td>
-                      <td class="px-4 py-3">${insumo.cantidad_consumida}</td>
-                      <td class="px-4 py-3">${insumo.observaciones || "-"}</td>
-                    </tr>
-          `;
+          } else {
+            Swal.fire("Error", result.message || "No se pudo iniciar el lote.", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
         });
+    }
+  });
+}
+function cerrarLote(idlote, numeroLote) {
+  Swal.fire({
+    title: "¿Cerrar lote de producción?",
+    text: `¿Está seguro de cerrar el lote ${numeroLote}? Esta acción es irreversible.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, cerrar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Produccion/cerrarLote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idlote: idlote }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Cerrado!", result.message, "success").then(() => {
+              recargarTablaLotes();
+            });
+          } else {
+            Swal.fire("Error", result.message || "No se pudo cerrar el lote.", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
+        });
+    }
+  });
+}
+
+// ========================================
+// FUNCIONES DE ASIGNACIÓN DE OPERARIOS
+// ========================================
+function abrirModalAsignarOperarios(idlote) {
+    console.log("🚀 Iniciando asignación para lote:", idlote);
+    
+    // Limpiar estado anterior
+    operariosAsignados = [];
+    operariosDisponibles = [];
+    loteActual = null;
+    
+    // Mostrar estado de carga
+    mostrarEstadoCarga();
+    
+    // Cargar información del lote
+    cargarInformacionLote(idlote)
+        .then(lote => {
+            loteActual = lote;
+            console.log("✅ Lote cargado:", lote);
+            return cargarOperariosDisponibles(lote.fecha_jornada);
+        })
+        .then(operarios => {
+            operariosDisponibles = operarios;
+            console.log("✅ Operarios disponibles cargados:", operarios.length);
+            return cargarAsignacionesExistentes(idlote);
+        })
+        .then(asignaciones => {
+            console.log("✅ Asignaciones existentes cargadas:", asignaciones.length);
+            abrirModal("modalAsignarOperarios");
+            actualizarContadores();
+        })
+        .catch(error => {
+            console.error("❌ Error en el proceso:", error);
+            mostrarError("Error al cargar la información: " + error.message);
+        });
+}
+function mostrarEstadoCarga() {
+    const tbody = document.getElementById("bodyOperariosDisponibles");
+    const lista = document.getElementById("listaOperariosAsignados");
+    
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="3" class="text-center py-8 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>Cargando operarios...</p>
+            </td>
+        </tr>
+    `;
+    
+    lista.innerHTML = `
+        <div class="loading-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Cargando asignaciones...</p>
+        </div>
+    `;
+}
+function cargarInformacionLote(idlote) {
+    return fetch(`Produccion/getLoteById/${idlote}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result.status || !result.data) {
+                throw new Error(result.message || "No se pudo obtener la información del lote");
+            }
+            
+            const lote = result.data;
+            
+            // Actualizar la información en el modal
+            document.getElementById("idLoteAsignar").value = idlote;
+            document.getElementById("infoNumeroLote").textContent = lote.numero_lote;
+            document.getElementById("infoOperariosRequeridos").textContent = lote.operarios_requeridos;
+            document.getElementById("infoFechaJornada").textContent = lote.fecha_jornada_formato;
+            document.getElementById("progresoRequeridos").textContent = lote.operarios_requeridos;
+            
+            return lote;
+        });
+}
+function cargarOperariosDisponibles(fecha) {
+    return fetch(`Produccion/getOperariosDisponibles?fecha=${fecha}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result.status) {
+                throw new Error(result.message || "Error al cargar operarios disponibles");
+            }
+            
+            const operarios = result.data || [];
+            mostrarOperariosDisponibles(operarios);
+            return operarios;
+        });
+}
+
+function mostrarOperariosDisponibles(operarios) {
+    console.log("🎯 Mostrando operarios disponibles:", operarios);
+    
+    const tbody = document.getElementById("bodyOperariosDisponibles");
+    
+    if (!operarios || operarios.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-8 text-gray-500">
+                    <i class="fas fa-user-slash text-2xl mb-2"></i>
+                    <p>No hay operarios disponibles</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    let html = "";
+    operarios.forEach((operario) => {
+        const disponible = operario.estatus_disponibilidad === "DISPONIBLE";
+        const badgeClass = disponible ? "badge-disponible" : "badge-asignado";
+        const textoEstado = disponible ? "Disponible" : `Asignado (${operario.lote_asignado || 'N/A'})`;
 
         html += `
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+            <tr class="${disponible ? 'hover:bg-blue-50 cursor-pointer' : 'bg-gray-50 opacity-75'}" 
+                data-operario-id="${operario.idempleado}">
+                <td class="px-3 py-3 text-center">
+                    <input type="checkbox" 
+                           class="operario-checkbox" 
+                           data-idempleado="${operario.idempleado}"
+                           data-nombre="${operario.nombre_completo}"
+                           ${disponible ? '' : 'disabled'}
+                           onchange="toggleOperarioAsignado(this)">
+                </td>
+                <td class="px-3 py-3">
+                    <div>
+                        <div class="font-medium text-gray-900">${operario.nombre_completo}</div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-briefcase mr-1"></i>${operario.puesto || 'Operario'}
+                            ${operario.telefono_principal ? `<i class="fas fa-phone ml-2 mr-1"></i>${operario.telefono_principal}` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td class="px-3 py-3">
+                    <span class="${badgeClass}">${textoEstado}</span>
+                </td>
+            </tr>
         `;
+    });
 
-        contenido.innerHTML = html;
-      })
-      .catch((err) => {
-        console.error("Error al cargar detalle:", err);
-        contenido.innerHTML = "<p>Error al cargar los detalles.</p>";
-      });
-  }
-  function abrirModalDetalleProduccion() {
-    const modal = document.getElementById("detalleModal");
-    modal.classList.remove("opacity-0", "pointer-events-none");
-    document.body.classList.add("overflow-hidden");
-  }
-  function cerrarModalDetalleProduccion() {
-    const modal = document.getElementById("detalleModal");
-    modal.classList.add("opacity-0", "pointer-events-none");
-    document.body.classList.remove("overflow-hidden");
-  }
-  document
-    .getElementById("cerrarDetalleProduccion")
-    .addEventListener("click", cerrarModalDetalleProduccion);
-  function editarProduccion(idproduccion) {
-    limpiarFormularioProduccion();
+    tbody.innerHTML = html;
+}
+
+function toggleOperarioAsignado(checkbox) {
+    const idempleado = checkbox.dataset.idempleado;
+    const nombre = checkbox.dataset.nombre;
     
-    cargarSelectsProductos().then(() => {
-      fetch(`produccion/getProduccionById/${idproduccion}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.status) {
-            const p = data.data;
-            
-            document.getElementById("idproduccion").value = p.idproduccion;
-            document.getElementById("idempleado_seleccionado").value = p.idempleado;
-            document.getElementById("select_producto").value = p.idproducto;
-            document.getElementById("cantidad_a_realizar").value = p.cantidad_a_realizar;
-            document.getElementById("fecha_inicio").value = p.fecha_inicio;
-            document.getElementById("fecha_fin").value = p.fecha_fin;
-            document.getElementById("estado").value = p.estado;
+    console.log("🔄 Toggle operario:", { idempleado, nombre, checked: checkbox.checked });
 
-            
-            const divInfoEmpleado = document.getElementById("empleado_seleccionado_info");
-            if (divInfoEmpleado) {
-              divInfoEmpleado.innerHTML = `Empleado A Cargo: <strong>${p.nombre_empleado}</strong>`;
-              divInfoEmpleado.classList.remove("hidden");
-            }
+    if (checkbox.checked) {
+        // Verificar si ya está asignado
+        const yaAsignado = operariosAsignados.find(op => op.idempleado === idempleado);
+        if (yaAsignado) {
+            console.log("⚠️ Operario ya asignado:", nombre);
+            return;
+        }
 
-            
-            const inputCriterioEmpleado = document.getElementById("inputCriterioEmpleado");
-            if (inputCriterioEmpleado) inputCriterioEmpleado.classList.add("hidden");
-            const btnBuscarEmpleado = document.getElementById("btnBuscarEmpleado");
-            if (btnBuscarEmpleado) btnBuscarEmpleado.classList.add("hidden");
-            const registrarEmpleado = document.getElementById("registrarEmpleado");
-            if (registrarEmpleado) registrarEmpleado.classList.add("hidden");
+        // Agregar a la lista de asignados
+        const operarioAsignado = {
+            idempleado: idempleado,
+            nombre: nombre,
+            tipo_tarea: 'CLASIFICACION',
+            turno: 'MAÑANA',
+            observaciones: ''
+        };
 
-            abrirModal("produccionModal");
-
-            
-            fetch(`produccion/getDetalleProduccionData/${idproduccion}`)
-              .then((res) => res.json())
-              .then((detalle) => {
-                detalleProduccionItems = [];
-                if (detalle.status && detalle.data.length > 0) {
-                  detalle.data.forEach((insumo) => {
-                    detalleProduccionItems.push({
-                      idproducto: insumo.idproducto,
-                      nombre: insumo.nombre_producto,
-                      cantidad: insumo.cantidad,
-                      cantidad_consumida: insumo.cantidad_consumida,
-                      observaciones: insumo.observaciones || "",
-                    });
-                  });
-                }
-                renderizarTablaDetalleProduccion();
-              })
-              .catch(() => Swal.fire("Error", "Error al cargar los insumos.", "error"));
-          } else {
-            Swal.fire("Error", "Producción no encontrada.", "error");
-          }
-        })
-        .catch(() => Swal.fire("Error", "Error al cargar los datos.", "error"));
-    });
-  }
-
-  let listaProductos = [];
-  let listaEmpleados = [];
-  async function cargarProducto() {
-    try {
-      const res = await fetch("produccion/getProductos");
-      const data = await res.json();
-      if (data.status) {
-        listaProductos = data.data;
-      } else {
-        console.error("No se pudieron cargar los productos.");
-      }
-    } catch (err) {
-      console.error("Error al cargar productos:", err);
+        operariosAsignados.push(operarioAsignado);
+        console.log("➕ Operario agregado:", operarioAsignado);
+    } else {
+        // Remover de la lista de asignados
+        const index = operariosAsignados.findIndex(op => op.idempleado === idempleado);
+        if (index !== -1) {
+            const removido = operariosAsignados.splice(index, 1)[0];
+            console.log("➖ Operario removido:", removido);
+        }
     }
-  }
-  async function cargarEstadisticas() {
-    try {
-      const res = await fetch("produccion/getEstadisticas");
-      const data = await res.json();
-      if (data.status) {
-        document.querySelector("#total-producciones").textContent =
-          data.data.total;
-        document.querySelector("#en-clasificacion").textContent =
-          data.data.clasificacion;
-        document.querySelector("#producidas").textContent =
-          data.data.finalizadas;
-      } else {
-        console.error("Error al cargar estadísticas:", data.message);
-      }
-    } catch (err) {
-      console.error("Error de red:", err);
-    }
-  }
 
-  async function cargarEmpleado() {
-    try {
-      const res = await fetch("produccion/getEmpleado");
-      const data = await res.json();
-      if (data.status) {
-        listaEmpleados = data.data;
-      } else {
-        console.error("No se pudieron cargar los empleados.");
-      }
-    } catch (err) {
-      console.error("Error al cargar empleados:", err);
-    }
-  }
-  function cargarEmpleadosTarea() {
-    fetch("produccion/getEmpleado")
-      .then((res) => res.json())
-      .then((data) => {
-        const select = document.getElementById("idempleado_tarea");
-        select.innerHTML = "<option value=''>Seleccione un empleado</option>";
-        data.data.forEach((emp) => {
-          const option = document.createElement("option");
-          option.value = emp.idempleado;
-          option.textContent = `${emp.nombre} ${emp.apellido}`;
-          select.appendChild(option);
-        });
-      })
-      .catch((err) => console.error("Error al cargar empleados:", err));
-  }
-  function inicializarBuscadorEmpleadoTarea() {
-    const inputCriterio = document.getElementById("inputCriterioEmpleadoTarea");
-    const listaResultados = document.getElementById(
-      "listaResultadosEmpleadoTarea"
-    );
-    const inputIdEmpleado = document.getElementById(
-      "idempleado_seleccionado_tarea"
-    );
-    const divInfo = document.getElementById("empleado_seleccionado_info_tarea");
-    if (!inputCriterio || !listaResultados || !inputIdEmpleado || !divInfo) {
-      console.warn("Campos necesarios no encontrados para buscar empleado");
-      return;
-    }
-    inputCriterio.addEventListener("input", function () {
-      const criterio = this.value.trim();
-      if (criterio.length < 2) {
-        listaResultados.classList.add("hidden");
+    actualizarListaOperariosAsignados();
+    actualizarContadores();
+}
+
+function actualizarListaOperariosAsignados() {
+    console.log("🔄 Actualizando lista de asignados:", operariosAsignados);
+    
+    const lista = document.getElementById("listaOperariosAsignados");
+    
+    if (!operariosAsignados || operariosAsignados.length === 0) {
+        lista.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-gray-500 py-8">
+                <i class="fas fa-user-plus text-3xl mb-3 text-gray-300"></i>
+                <p class="text-center">No hay operarios asignados</p>
+                <p class="text-xs text-center mt-1">Selecciona operarios de la lista de la izquierda</p>
+            </div>
+        `;
         return;
-      }
-      fetch("produccion/getEmpleado")
-        .then((res) => res.json())
-        .then((data) => {
-          listaResultados.innerHTML = "";
-          if (data.status && Array.isArray(data.data)) {
-            data.data.forEach((emp) => {
-              const itemDiv = document.createElement("div");
-              itemDiv.textContent = `${emp.nombre} ${emp.apellido} (${emp.identificacion})`;
-              itemDiv.dataset.id = emp.idempleado;
-              itemDiv.dataset.nombre = emp.nombre;
-              itemDiv.dataset.apellido = emp.apellido;
-              itemDiv.dataset.cedula = emp.identificacion;
-              itemDiv.addEventListener("click", function () {
-                inputIdEmpleado.value = this.dataset.id;
-                divInfo.innerHTML = `Sel: <strong>${this.dataset.nombre} ${this.dataset.apellido}</strong> (C.I.: ${this.dataset.cedula})`;
-                divInfo.classList.remove("hidden");
-                inputCriterio.value = this.textContent;
-                listaResultados.classList.add("hidden");
-              });
-              listaResultados.appendChild(itemDiv);
-            });
-            listaResultados.classList.remove("hidden");
-          } else {
-            listaResultados.innerHTML =
-              '<div class="p-2 text-xs text-gray-500">No se encontraron empleados.</div>';
-          }
-        })
-        .catch((err) => {
-          console.error("Error al buscar empleados:", err);
-          listaResultados.innerHTML =
-            '<div class="p-2 text-xs text-red-500">Error al buscar empleados.</div>';
-        });
+    }
+
+    let html = "";
+    operariosAsignados.forEach((operario, index) => {
+        html += `
+            <div class="operario-asignado" data-index="${index}">
+                <div class="info">
+                    <div class="font-medium">${operario.nombre}</div>
+                    <div class="flex gap-2 mt-3">
+                        <select class="operario-select" 
+                                onchange="actualizarTareaOperario(${index}, 'tipo_tarea', this.value)"
+                                title="Tipo de tarea">
+                            <option value="CLASIFICACION" ${operario.tipo_tarea === 'CLASIFICACION' ? 'selected' : ''}>
+                                <i class="fas fa-filter"></i> Clasificación
+                            </option>
+                            <option value="EMPAQUE" ${operario.tipo_tarea === 'EMPAQUE' ? 'selected' : ''}>
+                                <i class="fas fa-box"></i> Empaque
+                            </option>
+                        </select>
+                        <select class="operario-select"
+                                onchange="actualizarTareaOperario(${index}, 'turno', this.value)"
+                                title="Turno de trabajo">
+                            <option value="MAÑANA" ${operario.turno === 'MAÑANA' ? 'selected' : ''}>🌅 Mañana</option>
+                            <option value="TARDE" ${operario.turno === 'TARDE' ? 'selected' : ''}>☀️ Tarde</option>
+                            <option value="NOCHE" ${operario.turno === 'NOCHE' ? 'selected' : ''}>🌙 Noche</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="acciones">
+                    <button type="button" 
+                            class="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-all duration-200"
+                            onclick="removerOperarioAsignado(${index})" 
+                            title="Remover operario">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
     });
-  }
-  async function actualizarProgresoProduccion(idproduccion) {
-    try {
-      const res = await fetch(`produccion/getProduccionById/${idproduccion}`);
-      const prodRes = await res.json();
-      const resTareas = await fetch(
-        `produccion/getTareasByProduccion/${idproduccion}`
-      );
-      const dataTareas = await resTareas.json();
-      let total_realizado = 0;
-      if (dataTareas.status && dataTareas.data.length > 0) {
-        total_realizado = dataTareas.data.reduce(
-          (acc, curr) => acc + parseFloat(curr.cantidad_realizada),
-          0
-        );
-      }
-      const cantidad_total = parseFloat(prodRes.data.cantidad_a_realizar);
-      const progreso = ((total_realizado / cantidad_total) * 100).toFixed(2);
-      document.getElementById("producido").textContent =
-        total_realizado.toFixed(2);
-      document.getElementById("faltante").textContent = (
-        cantidad_total - total_realizado
-      ).toFixed(2);
-      document.getElementById("porcentaje-progreso").style.width =
-        Math.min(progreso, 100) + "%";
-      document.getElementById("porcentaje-progreso-texto").textContent =
-        progreso + "%";
-    } catch (err) {
-      console.error("Error al actualizar progreso:", err);
+
+    lista.innerHTML = html;
+}
+
+function actualizarTareaOperario(index, campo, valor) {
+    console.log("🔧 Actualizando tarea:", { index, campo, valor });
+    
+    if (index >= 0 && index < operariosAsignados.length) {
+        operariosAsignados[index][campo] = valor;
+        console.log("✅ Operario actualizado:", operariosAsignados[index]);
     }
-  }
-  let detalleTareasItems = [];
-  async function cargarTareas(idproduccion) {
-    const tbody = document.getElementById("detalleTareasBody");
-    if (!tbody) {
-      console.error("No se encontró el tbody para tareas");
-      return;
+}
+
+function removerOperarioAsignado(index) {
+    console.log("🗑️ Removiendo operario en índice:", index);
+    
+    if (index >= 0 && index < operariosAsignados.length) {
+        const operario = operariosAsignados[index];
+        
+        // Desmarcar checkbox
+        const checkbox = document.querySelector(`input[data-idempleado="${operario.idempleado}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+        }
+
+        // Remover de la lista
+        operariosAsignados.splice(index, 1);
+        
+        // Actualizar interfaz
+        actualizarListaOperariosAsignados();
+        actualizarContadores();
+        
+        console.log("✅ Operario removido. Lista actual:", operariosAsignados);
     }
-    tbody.innerHTML = "";
-    try {
-      const res = await fetch(
-        `produccion/getTareasByProduccion/${idproduccion}`
-      );
-      const data = await res.json();
-      if (data.status && data.data.length > 0) {
-        data.data.forEach((tarea) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-                    <td>${tarea.nombre_empleado}</td>
-                    <td>${tarea.cantidad_asignada}</td>
-                    <td><input type="number" class="w-full border rounded p-2 tarea-realizada" data-id="${tarea.idtarea}" value="${tarea.cantidad_realizada}"></td>
-                    <td>${tarea.estado}</td>
-                    <td><button type="button" class="guardar-tarea-btn bg-green-500 text-white px-2 py-1 rounded">Guardar</button></td>
-                `;
-          tbody.appendChild(tr);
+}
+
+function actualizarContadores() {
+    const asignados = operariosAsignados.length;
+    const requeridos = loteActual ? loteActual.operarios_requeridos : 0;
+    
+    document.getElementById("contadorAsignados").textContent = asignados;
+    document.getElementById("progresoAsignados").textContent = asignados;
+    
+    // Actualizar estado del botón de guardar
+    const btnGuardar = document.getElementById("btnGuardarAsignaciones");
+    if (btnGuardar) {
+        btnGuardar.disabled = asignados === 0;
+        btnGuardar.classList.toggle("opacity-50", asignados === 0);
+        btnGuardar.classList.toggle("cursor-not-allowed", asignados === 0);
+    }
+    
+    console.log(`📊 Contadores actualizados: ${asignados}/${requeridos}`);
+}
+function cargarAsignacionesExistentes(idlote) {
+    return fetch(`Produccion/getAsignacionesLote/${idlote}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result.status) {
+                console.log("⚠️ No hay asignaciones existentes o error:", result.message);
+                return [];
+            }
+            
+            const asignaciones = result.data || [];
+            
+            if (asignaciones.length > 0) {
+                // Convertir asignaciones al formato interno
+                operariosAsignados = asignaciones.map(asignacion => ({
+                    idempleado: String(asignacion.idempleado),
+                    nombre: asignacion.operario,
+                    tipo_tarea: asignacion.tipo_tarea || 'CLASIFICACION',
+                    turno: asignacion.turno || 'MAÑANA',
+                    observaciones: asignacion.observaciones || ''
+                }));
+                
+                console.log("📋 Asignaciones convertidas:", operariosAsignados);
+                
+                // Actualizar la interfaz
+                setTimeout(() => {
+                    actualizarListaOperariosAsignados();
+                    marcarCheckboxesAsignados();
+                }, 100);
+            }
+            
+            return asignaciones;
         });
-        document.querySelectorAll(".guardar-tarea-btn").forEach((btn) => {
-          btn.addEventListener("click", async function () {
-            const fila = this.closest("tr");
-            const idtarea = fila
-              .querySelector(".tarea-realizada")
-              .getAttribute("data-id");
-            const cantidad_realizada =
-              fila.querySelector(".tarea-realizada").value;
-            const response = await fetch("produccion/updateTarea", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                idtarea,
-                cantidad_realizada,
-              }),
+}
+function marcarCheckboxesAsignados() {
+    console.log("☑️ Marcando checkboxes para operarios asignados:", operariosAsignados);
+    
+    operariosAsignados.forEach(operario => {
+        const checkbox = document.querySelector(`input[data-idempleado="${operario.idempleado}"]`);
+        if (checkbox) {
+            checkbox.checked = true;
+            console.log("✅ Checkbox marcado para:", operario.nombre);
+        } else {
+            console.warn("⚠️ No se encontró checkbox para operario:", operario.nombre, operario.idempleado);
+        }
+    });
+}
+function guardarAsignacionesOperarios() {
+    console.log("💾 Iniciando guardado de asignaciones");
+    
+    const idlote = document.getElementById("idLoteAsignar").value;
+    
+    // Validaciones
+    if (!idlote || idlote <= 0) {
+        mostrarError("ID de lote no válido.");
+        return;
+    }
+
+    if (!operariosAsignados || operariosAsignados.length === 0) {
+        mostrarError("Debe asignar al menos un operario.");
+        return;
+    }
+
+    // Validar datos de cada operario
+    for (let i = 0; i < operariosAsignados.length; i++) {
+        const operario = operariosAsignados[i];
+        if (!operario.idempleado || !operario.tipo_tarea || !operario.turno) {
+            mostrarError(`Datos incompletos para el operario: ${operario.nombre}`);
+            return;
+        }
+    }
+
+    const btnGuardar = document.getElementById("btnGuardarAsignaciones");
+    if (btnGuardar) {
+        btnGuardar.disabled = true;
+        btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+    }
+
+    const payload = {
+        idlote: parseInt(idlote),
+        operarios: operariosAsignados.map(op => ({
+            idempleado: parseInt(op.idempleado),
+            tipo_tarea: op.tipo_tarea,
+            turno: op.turno,
+            observaciones: op.observaciones || ''
+        }))
+    };
+
+    console.log("📤 Payload a enviar:", payload);
+
+    fetch("Produccion/asignarOperarios", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify(payload),
+    })
+    .then(response => {
+        console.log("📥 Respuesta recibida:", response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response.json();
+    })
+    .then(result => {
+        console.log("📋 Resultado del guardado:", result);
+        
+        if (result.status) {
+            Swal.fire({
+                icon: "success",
+                title: "¡Éxito!",
+                text: result.message,
+                confirmButtonColor: "#059669"
+            }).then(() => {
+                cerrarModal("modalAsignarOperarios");
+                recargarTablaLotes();
+                // Limpiar estado
+                operariosAsignados = [];
+                operariosDisponibles = [];
+                loteActual = null;
             });
-            const result = await response.json();
-            if (result.status) {
-              Swal.fire("Éxito", result.message, "success");
-              cargarTareas(idproduccion);
-              actualizarProgresoProduccion(idproduccion);
-            } else {
-              Swal.fire("Error", result.message, "error");
+        } else {
+            throw new Error(result.message || "Error desconocido del servidor");
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error en guardado:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Error al guardar asignaciones: " + error.message,
+            confirmButtonColor: "#dc2626"
+        });
+    })
+    .finally(() => {
+        if (btnGuardar) {
+            btnGuardar.disabled = false;
+            btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i>Guardar Asignaciones`;
+        }
+    });
+}
+function debugAsignaciones() {
+    const debugInfo = {
+        loteActual: loteActual,
+        operariosAsignados: operariosAsignados,
+        operariosDisponibles: operariosDisponibles.length,
+        idLote: document.getElementById("idLoteAsignar").value,
+        checkboxes: document.querySelectorAll('.operario-checkbox').length,
+        checkboxesMarcados: document.querySelectorAll('.operario-checkbox:checked').length
+    };
+
+    console.log("🐛 DEBUG - Estado actual:", debugInfo);
+
+    const debugContent = document.getElementById("debugContent");
+    if (debugContent) {
+        debugContent.innerHTML = `<pre>${JSON.stringify(debugInfo, null, 2)}</pre>`;
+    }
+
+    // Mostrar panel de debug
+    const debugPanel = document.getElementById("debugPanel");
+    if (debugPanel) {
+        debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    return debugInfo;
+}
+// ========================================
+// FUNCIONES DE CLASIFICACIÓN Y EMPAQUE
+// ========================================
+function cargarDatosParaClasificacion() {
+  cargarLotesEnProceso("clas_lote");
+  cargarEmpleadosActivos("clas_operario");
+  cargarProductosClasificados("clas_producto_origen");
+}
+
+function cargarDatosParaEmpaque() {
+  cargarLotesEnProceso("emp_lote");
+  cargarEmpleadosActivos("emp_operario");
+  cargarProductosClasificados("emp_producto_clasificado");
+}
+
+function validarSumaClasificacion() {
+  const procesados = parseFloat(document.getElementById("clas_kg_procesados").value || 0);
+  const limpios = parseFloat(document.getElementById("clas_kg_limpios").value || 0);
+  const contaminantes = parseFloat(document.getElementById("clas_kg_contaminantes").value || 0);
+  
+  const suma = limpios + contaminantes;
+  const diferencia = Math.abs(suma - procesados);
+  
+  const validacion = document.getElementById("validacionClasificacion");
+  if (validacion) {
+    if (diferencia < 0.01) {
+      validacion.textContent = "✓ Validación correcta";
+      validacion.className = "text-xs mt-1 font-semibold text-green-600";
+    } else {
+      validacion.textContent = `Diferencia: ${diferencia.toFixed(2)} kg`;
+      validacion.className = "text-xs mt-1 font-semibold text-red-600";
+    }
+  }
+}
+
+function validarPesoPaca() {
+  const peso = parseFloat(document.getElementById("emp_peso_paca").value || 0);
+  
+  if (peso > 0 && configuracionActual.peso_minimo_paca && configuracionActual.peso_maximo_paca) {
+    if (peso < configuracionActual.peso_minimo_paca) {
+      mostrarAdvertencia("Peso por debajo del mínimo permitido");
+    } else if (peso > configuracionActual.peso_maximo_paca) {
+      mostrarAdvertencia("Peso por encima del máximo permitido");
+    }
+  }
+}
+
+function registrarClasificacion() {
+  const btnGuardar = document.getElementById("btnGuardarClasificacion");
+
+  if (btnGuardar) {
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...`;
+  }
+
+  registrarEntidad({
+    formId: "formRegistrarClasificacion",
+    endpoint: "Produccion/registrarClasificacion",
+    campos: camposFormularioClasificacion,
+    mapeoNombres: {
+      "clas_lote": "idlote",
+      "clas_operario": "idempleado",
+      "clas_producto_origen": "idproducto_origen",
+      "clas_kg_procesados": "kg_procesados",
+      "clas_kg_limpios": "kg_limpios",
+      "clas_kg_contaminantes": "kg_contaminantes",
+      "clas_observaciones": "observaciones",
+    },
+    validacionCustom: () => {
+      const procesados = parseFloat(document.getElementById("clas_kg_procesados").value || 0);
+      const limpios = parseFloat(document.getElementById("clas_kg_limpios").value || 0);
+      const contaminantes = parseFloat(document.getElementById("clas_kg_contaminantes").value || 0);
+      
+      const diferencia = Math.abs((limpios + contaminantes) - procesados);
+      if (diferencia > 0.01) {
+        return {
+          valido: false,
+          mensaje: "La suma de material limpio y contaminantes debe ser igual al total procesado."
+        };
+      }
+      
+      return { valido: true };
+    },
+    onSuccess: (result) => {
+      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+        cerrarModal("modalRegistrarClasificacion");
+        
+        const form = document.getElementById("formRegistrarClasificacion");
+        if (form) {
+          form.reset();
+          limpiarValidaciones(camposFormularioClasificacion, "formRegistrarClasificacion");
+        }
+        
+        // Recargar tabla de procesos
+        if (tablaProcesos) {
+          tablaProcesos.ajax.reload(null, false);
+        }
+      });
+    },
+    onError: (result) => {
+      Swal.fire("Error", result.message || "No se pudo registrar la clasificación.", "error");
+    },
+  }).finally(() => {
+    if (btnGuardar) {
+      btnGuardar.disabled = false;
+      btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Registrar Clasificación`;
+    }
+  });
+}
+
+function registrarEmpaque() {
+  const btnGuardar = document.getElementById("btnGuardarEmpaque");
+
+  if (btnGuardar) {
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...`;
+  }
+
+  registrarEntidad({
+    formId: "formRegistrarEmpaque",
+    endpoint: "Produccion/registrarEmpaque",
+    campos: camposFormularioEmpaque,
+    mapeoNombres: {
+      "emp_lote": "idlote",
+      "emp_operario": "idempleado",
+      "emp_producto_clasificado": "idproducto_clasificado",
+      "emp_peso_paca": "peso_paca",
+      "emp_calidad": "calidad",
+      "emp_observaciones": "observaciones",
+    },
+    onSuccess: (result) => {
+      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+        cerrarModal("modalRegistrarEmpaque");
+        
+        const form = document.getElementById("formRegistrarEmpaque");
+        if (form) {
+          form.reset();
+          limpiarValidaciones(camposFormularioEmpaque, "formRegistrarEmpaque");
+        }
+        
+        // Recargar tabla de procesos
+        if (tablaProcesos) {
+          tablaProcesos.ajax.reload(null, false);
+        }
+      });
+    },
+    onError: (result) => {
+      Swal.fire("Error", result.message || "No se pudo registrar el empaque.", "error");
+    },
+  }).finally(() => {
+    if (btnGuardar) {
+      btnGuardar.disabled = false;
+      btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Registrar Empaque`;
+    }
+  });
+}
+
+// ========================================
+// FUNCIONES DE NÓMINA
+// ========================================
+function cargarLotesParaProduccionDiaria() {
+  fetch("Produccion/getLotesData")
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        const select = document.getElementById("selectLoteProduccionDiaria");
+        let options = '<option value="">Seleccionar lote...</option>';
+        
+        result.data.forEach(lote => {
+          if (lote.estatus_lote === 'EN_PROCESO') {
+            options += `<option value="${lote.idlote}" data-fecha="${lote.fecha_jornada}">${lote.numero_lote} - ${lote.fecha_jornada_formato}</option>`;
+          }
+        });
+        
+        select.innerHTML = options;
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarError("Error al cargar lotes.");
+    });
+}
+
+function cargarOperariosProduccionDiaria() {
+  const select = document.getElementById("selectLoteProduccionDiaria");
+  const idlote = select.value;
+  const fechaInput = document.getElementById("fechaProduccionDiaria");
+  const tbody = document.getElementById("bodyProduccionDiaria");
+  
+  if (!idlote) {
+    tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-gray-500">Seleccione un lote para cargar los operarios</td></tr>';
+    return;
+  }
+
+  // Establecer fecha
+  const fechaOption = select.options[select.selectedIndex].dataset.fecha;
+  if (fechaOption) {
+    fechaInput.value = fechaOption;
+  }
+
+  document.getElementById("idLoteProduccionDiaria").value = idlote;
+
+  // Cargar operarios asignados al lote
+  fetch(`Produccion/getAsignacionesLote/${idlote}`)
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        mostrarOperariosProduccionDiaria(result.data);
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-gray-500">No hay operarios asignados a este lote</td></tr>';
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-red-500">Error al cargar operarios</td></tr>';
+    });
+}
+
+function mostrarOperariosProduccionDiaria(operarios) {
+  const tbody = document.getElementById("bodyProduccionDiaria");
+  let html = "";
+
+  operarios.forEach((operario, index) => {
+    html += `
+      <tr>
+        <td class="border border-gray-300 px-3 py-2">
+          <input type="hidden" name="operarios[${index}][idempleado]" value="${operario.idempleado}">
+          <div class="font-medium">${operario.operario}</div>
+          <div class="text-xs text-gray-500">${operario.tipo_tarea}</div>
+        </td>
+        <td class="border border-gray-300 px-3 py-2">
+          <input type="number" step="0.01" min="0" 
+                 name="operarios[${index}][kg_clasificados]"
+                 class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
+                 placeholder="0.00">
+        </td>
+        <td class="border border-gray-300 px-3 py-2">
+          <input type="number" step="0.01" min="0" 
+                 name="operarios[${index}][kg_contaminantes]"
+                 class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
+                 placeholder="0.00">
+        </td>
+        <td class="border border-gray-300 px-3 py-2">
+          <input type="number" min="0" 
+                 name="operarios[${index}][pacas_armadas]"
+                 class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
+                 placeholder="0">
+        </td>
+        <td class="border border-gray-300 px-3 py-2">
+          <input type="text" 
+                 name="operarios[${index}][observaciones]"
+                 class="w-full border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
+                 placeholder="Observaciones...">
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+}
+
+function guardarProduccionDiaria() {
+  const idlote = document.getElementById("idLoteProduccionDiaria").value;
+  
+  if (!idlote) {
+    mostrarError("Debe seleccionar un lote.");
+    return;
+  }
+
+  // Recopilar datos de todos los operarios
+  const tabla = document.getElementById("tablaProduccionDiaria");
+  const filas = tabla.querySelectorAll("tbody tr");
+  const registros = [];
+
+  filas.forEach((fila, index) => {
+    const idempleado = fila.querySelector(`input[name="operarios[${index}][idempleado]"]`)?.value;
+    const kgClasificados = parseFloat(fila.querySelector(`input[name="operarios[${index}][kg_clasificados]"]`)?.value || 0);
+    const kgContaminantes = parseFloat(fila.querySelector(`input[name="operarios[${index}][kg_contaminantes]"]`)?.value || 0);
+    const pacasArmadas = parseInt(fila.querySelector(`input[name="operarios[${index}][pacas_armadas]"]`)?.value || 0);
+    const observaciones = fila.querySelector(`input[name="operarios[${index}][observaciones]"]`)?.value || '';
+
+    if (idempleado) {
+      registros.push({
+        idempleado: idempleado,
+        kg_clasificados: kgClasificados,
+        kg_contaminantes: kgContaminantes,
+        pacas_armadas: pacasArmadas,
+        observaciones: observaciones
+      });
+    }
+  });
+
+  if (registros.length === 0) {
+    mostrarError("No hay registros para guardar.");
+    return;
+  }
+
+  const btnGuardar = document.getElementById("btnGuardarProduccionDiaria");
+  if (btnGuardar) {
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+  }
+
+  fetch("Produccion/registrarProduccionDiaria", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({
+      idlote: idlote,
+      registros: registros
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status) {
+        Swal.fire("¡Éxito!", result.message, "success").then(() => {
+          cerrarModal("modalRegistrarProduccionDiaria");
+          if (tablaNomina) {
+            tablaNomina.ajax.reload(null, false);
+          }
+        });
+      } else {
+        Swal.fire("Error", result.message || "No se pudo guardar la producción diaria.", "error");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      Swal.fire("Error", "Error de conexión.", "error");
+    })
+    .finally(() => {
+      if (btnGuardar) {
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Producción`;
+      }
+    });
+}
+
+function abrirModalCalcularNomina() {
+  Swal.fire({
+    title: "Calcular Nómina de Producción",
+    html: `
+      <div class="text-left space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+          <input type="date" id="swal-fecha-inicio" class="w-full border rounded px-3 py-2" 
+                 value="${new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]}">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+          <input type="date" id="swal-fecha-fin" class="w-full border rounded px-3 py-2" 
+                 value="${new Date().toISOString().split('T')[0]}">
+        </div>
+        <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+          <p class="text-yellow-800 text-sm">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            Esta acción calculará los salarios para todos los registros en el periodo seleccionado.
+          </p>
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonColor: "#f59e0b",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Calcular Nómina",
+    cancelButtonText: "Cancelar",
+    preConfirm: () => {
+      const fechaInicio = document.getElementById("swal-fecha-inicio").value;
+      const fechaFin = document.getElementById("swal-fecha-fin").value;
+
+      if (!fechaInicio || !fechaFin) {
+        Swal.showValidationMessage("Debe seleccionar ambas fechas");
+        return false;
+      }
+
+      if (fechaInicio > fechaFin) {
+        Swal.showValidationMessage("La fecha de inicio no puede ser posterior a la fecha fin");
+        return false;
+      }
+
+      return { fechaInicio, fechaFin };
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      calcularNomina(result.value.fechaInicio, result.value.fechaFin);
+    }
+  });
+}
+
+function calcularNomina(fechaInicio, fechaFin) {
+  Swal.fire({
+    title: "Calculando Nómina...",
+    html: "Por favor espere mientras se calculan los salarios.",
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  fetch("Produccion/calcularNomina", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin
+    }),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      Swal.close();
+      
+      if (result.status) {
+        Swal.fire({
+          title: "¡Nómina Calculada!",
+          text: result.message,
+          icon: "success",
+          confirmButtonColor: "#059669"
+        }).then(() => {
+          if (tablaNomina) {
+            tablaNomina.ajax.reload(null, false);
+          }
+        });
+      } else {
+        Swal.fire("Error", result.message || "No se pudo calcular la nómina.", "error");
+      }
+    })
+    .catch((error) => {
+      Swal.close();
+      console.error("Error:", error);
+      Swal.fire("Error", "Error de conexión.", "error");
+    });
+}
+// ========================================
+// FUNCIONES DE CONFIGURACIÓN
+// ========================================
+function cargarConfiguracionInicial() {
+  fetch("Produccion/getConfiguracionProduccion")
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        configuracionActual = result.data;
+        mostrarConfiguracion(result.data);
+      } else {
+        mostrarError("No se pudo cargar la configuración.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarError("Error al cargar configuración.");
+    });
+}
+
+function mostrarConfiguracion(config) {
+  const campos = [
+    'productividad_clasificacion',
+    'capacidad_maxima_planta',
+    'salario_base',
+    'beta_clasificacion',
+    'gamma_empaque',
+    'umbral_error_maximo',
+    'peso_minimo_paca',
+    'peso_maximo_paca'
+  ];
+
+  campos.forEach(campo => {
+    const input = document.getElementById(campo);
+    if (input && config[campo] !== undefined) {
+      input.value = config[campo];
+    }
+  });
+}
+
+function guardarConfiguracion() {
+  const formData = new FormData(document.getElementById("formConfiguracionProduccion"));
+  const data = {};
+  
+  for (let [key, value] of formData.entries()) {
+    data[key] = value;
+  }
+
+  const btnGuardar = document.getElementById("btnGuardarConfiguracion");
+  if (btnGuardar) {
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+  }
+
+  fetch("Produccion/updateConfiguracionProduccion", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status) {
+        configuracionActual = data;
+        Swal.fire("¡Éxito!", result.message, "success");
+      } else {
+        Swal.fire("Error", result.message || "No se pudo guardar la configuración.", "error");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      Swal.fire("Error", "Error de conexión.", "error");
+    })
+    .finally(() => {
+      if (btnGuardar) {
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Configuración`;
+      }
+    });
+}
+// ========================================
+// FUNCIONES AUXILIARES
+// ========================================
+function recargarTablaLotes() {
+  if (tablaLotes && tablaLotes.ajax && typeof tablaLotes.ajax.reload === 'function') {
+    tablaLotes.ajax.reload(null, false);
+  } else {
+    window.location.reload();
+  }
+}
+
+function cargarEmpleadosActivos(selectId = "lote_supervisor") {
+  fetch("Produccion/getEmpleadosActivos")
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        const select = document.getElementById(selectId);
+        if (select) {
+          let options = '<option value="">Seleccionar empleado...</option>';
+          
+          result.data.forEach(empleado => {
+            options += `<option value="${empleado.idempleado}">${empleado.nombre_completo}</option>`;
+          });
+          
+          select.innerHTML = options;
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+    });
+}
+
+function cargarLotesEnProceso(selectId) {
+  fetch("Produccion/getLotesData")
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        const select = document.getElementById(selectId);
+        if (select) {
+          let options = '<option value="">Seleccionar lote...</option>';
+          
+          result.data.forEach(lote => {
+            if (lote.estatus_lote === 'EN_PROCESO') {
+              options += `<option value="${lote.idlote}">${lote.numero_lote} - ${lote.fecha_jornada_formato}</option>`;
             }
           });
-        });
-      } else {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td colspan="5" class="text-center p-2">No hay tareas asignadas.</td>`;
-        tbody.appendChild(tr);
+          
+          select.innerHTML = options;
+        }
       }
-    } catch (err) {
-      console.error("Error al cargar tareas:", err);
-      alert("Hubo un problema al cargar las tareas.");
-    }
-  }
-  document.querySelectorAll(".tab-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const tab = button.getAttribute("data-tab");
-      document.querySelectorAll(".tab-button").forEach((btn) => {
-        btn.classList.remove("active", "border-green-500", "text-green-600");
-        btn.classList.add("border-transparent");
-      });
-      button.classList.add("active", "border-green-500", "text-green-600");
-      button.classList.remove("border-transparent");
-      document.querySelectorAll(".tab-content").forEach((content) => {
-        content.classList.add("hidden");
-      });
-      document.getElementById(`tab-${tab}`).classList.remove("hidden");
+    })
+    .catch((error) => {
+      console.error("Error:", error);
     });
-  });
-});
-function cargarSelectsProductos() {
-  return Promise.all([
-    cargarSelect({
-      selectId: "select_producto",
-      endpoint: "productos/getListaProductosParaFormulario",
-      optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
-      optionValueFn: (p) => p.idproducto || "",
-      placeholder: "Seleccione un producto terminado...",
-    }),
-    cargarSelect({
-      selectId: "select_producto_agregar_detalle",
-      endpoint: "productos/getListaProductosParaFormulario",
-      optionTextFn: (p) => `${p.nombre_producto} (${p.nombre_categoria})`,
-      optionValueFn: (p) => p.idproducto || "",
-      placeholder: "Seleccione un insumo...",
-    }),
-  ]);
 }
+
+// CAMBIAR esta función:
+function cargarProductosClasificados(selectId) {
+    // Implementar carga de productos clasificados
+    const select = document.getElementById(selectId);
+    select.innerHTML = '<option value="">Cargando productos...</option>';
+    
+    // REEMPLAZAR con:
+    fetch(`Produccion/getProductos?tipo=clasificados`)
+        .then((response) => response.json())
+        .then((result) => {
+            if (result.status && result.data) {
+                const select = document.getElementById(selectId);
+                let options = '<option value="">Seleccionar material...</option>';
+                
+                result.data.forEach(producto => {
+                    options += `<option value="${producto.idproducto}">${producto.nombre} (${producto.existencia} ${producto.unidad_medida})</option>`;
+                });
+                
+                select.innerHTML = options;
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+        });
+}
+
+function mostrarError(mensaje) {
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: mensaje,
+    confirmButtonColor: "#dc2626"
+  });
+}
+
+function mostrarExito(mensaje) {
+  Swal.fire({
+    icon: "success",
+    title: "¡Éxito!",
+    text: mensaje,
+    confirmButtonColor: "#059669"
+  });
+}
+
+function mostrarAdvertencia(mensaje) {
+  Swal.fire({
+    icon: "warning",
+    title: "Advertencia",
+    text: mensaje,
+    confirmButtonColor: "#f59e0b"
+  });
+}
+// ========================================
+// EXPOSICIÓN GLOBAL
+// ========================================
+window.toggleOperarioAsignado = toggleOperarioAsignado;
+window.actualizarTareaOperario = actualizarTareaOperario;
+window.removerOperarioAsignado = removerOperarioAsignado;
+window.debugAsignaciones = debugAsignaciones;
