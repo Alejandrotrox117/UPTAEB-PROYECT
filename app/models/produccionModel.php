@@ -12,9 +12,6 @@ class ProduccionModel extends Mysql
 
     public function __construct() {}
 
-    // ========================================
-    // GESTIÓN DE LOTES
-    // ========================================
 
     public function insertLote(array $data)
     {
@@ -23,11 +20,9 @@ class ProduccionModel extends Mysql
         $db = $conexion->get_conectGeneral();
 
         try {
-            // Calcular operarios requeridos: N_total = ⌈V_día/p_clasificación⌉
             $config = $this->obtenerConfiguracion($db);
             $operariosRequeridos = ceil($data['volumen_estimado'] / $config['productividad_clasificacion']);
 
-            // Validar capacidad máxima
             if ($operariosRequeridos > $config['capacidad_maxima_planta']) {
                 return [
                     'status' => false,
@@ -35,7 +30,6 @@ class ProduccionModel extends Mysql
                 ];
             }
 
-            // Generar número de lote
             $numeroLote = $this->generarNumeroLote($data['fecha_jornada'], $db);
 
             $query = "INSERT INTO lotes_produccion (
@@ -177,27 +171,27 @@ class ProduccionModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // Verificar que todos los operarios tengan registros
-            $query = "SELECT COUNT(*) as operarios_asignados,
-                        COUNT(rp.idregistro) as operarios_con_registro
-                FROM asignaciones_operarios a
-                LEFT JOIN registro_produccion rp ON a.idempleado = rp.idempleado 
-                    AND rp.idlote = a.idlote
-                WHERE a.idlote = ?";
-
+            // Verificar que el lote existe y está en estado válido para cerrar
+            $query = "SELECT estatus_lote FROM lotes_produccion WHERE idlote = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$idlote]);
-            $verificacion = $stmt->fetch(PDO::FETCH_ASSOC);
+            $lote = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($verificacion['operarios_asignados'] != $verificacion['operarios_con_registro']) {
-                $faltantes = $verificacion['operarios_asignados'] - $verificacion['operarios_con_registro'];
+            if (!$lote) {
                 return [
                     'status' => false,
-                    'message' => "Faltan registros de producción para {$faltantes} operarios."
+                    'message' => 'El lote no existe.'
                 ];
             }
 
-            // Cerrar el lote
+            if ($lote['estatus_lote'] === 'FINALIZADO') {
+                return [
+                    'status' => false,
+                    'message' => 'El lote ya está finalizado.'
+                ];
+            }
+
+            // Cerrar el lote directamente sin validaciones de registros
             $query = "UPDATE lotes_produccion 
                 SET estatus_lote = 'FINALIZADO', fecha_fin_real = NOW() 
                 WHERE idlote = ?";
@@ -216,20 +210,113 @@ class ProduccionModel extends Mysql
             error_log("Error al cerrar lote: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => 'Error al cerrar lote.'
+                'message' => 'Error al cerrar lote: ' . $e->getMessage()
             ];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    // ========================================
-    // GESTIÓN DE OPERARIOS
-    // ========================================
+    public function verificarRegistrosProduccionLote(int $idlote)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
-    // ========================================
-    // MÉTODO CORREGIDO PARA ASIGNAR OPERARIOS
-    // ========================================
+        try {
+            $query = "SELECT 
+                a.idempleado,
+                CONCAT(e.nombre, ' ', e.apellido) as operario,
+                a.tipo_tarea,
+                a.turno,
+                COALESCE(rp.kg_clasificados, 0) as kg_clasificados,
+                COALESCE(rp.kg_contaminantes, 0) as kg_contaminantes,
+                COALESCE(rp.pacas_armadas, 0) as pacas_armadas,
+                CASE WHEN rp.idempleado IS NOT NULL THEN 'SI' ELSE 'NO' END as tiene_registro,
+                (SELECT COUNT(*) FROM movimientos_existencia me 
+                 WHERE me.observaciones LIKE CONCAT('%Operario: ', a.idempleado, ',%')
+                 AND me.observaciones LIKE CONCAT('%Lote: ', ?, '%')) as movimientos_registrados
+            FROM asignaciones_operarios a
+            INNER JOIN empleado e ON a.idempleado = e.idempleado
+            LEFT JOIN registro_produccion rp ON a.idempleado = rp.idempleado AND rp.idlote = a.idlote
+            WHERE a.idlote = ?
+            ORDER BY e.nombre, e.apellido";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote, $idlote]);
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                "status" => true,
+                "message" => "Verificación de registros obtenida.",
+                "data" => $result
+            ];
+        } catch (Exception $e) {
+            error_log("Error al verificar registros: " . $e->getMessage());
+            return [
+                "status" => false,
+                "message" => "Error al verificar registros.",
+                "data" => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    public function marcarOperarioAusente(int $idlote, int $idempleado, string $observaciones = '')
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
+            // Verificar que el operario esté asignado al lote
+            $query = "SELECT COUNT(*) FROM asignaciones_operarios WHERE idlote = ? AND idempleado = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote, $idempleado]);
+            
+            if ($stmt->fetchColumn() == 0) {
+                return ['status' => false, 'message' => 'Operario no asignado a este lote.'];
+            }
+
+            // Actualizar estado de asignación
+            $query = "UPDATE asignaciones_operarios 
+                SET estatus_asignacion = 'AUSENTE', observaciones = CONCAT(observaciones, ' - AUSENTE: ', ?)
+                WHERE idlote = ? AND idempleado = ?";
+            
+            $stmt = $db->prepare($query);
+            $stmt->execute([$observaciones, $idlote, $idempleado]);
+
+            // Crear registro de producción con valores en 0
+            $query = "SELECT fecha_jornada FROM lotes_produccion WHERE idlote = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote]);
+            $fechaJornada = $stmt->fetchColumn();
+
+            $query = "INSERT INTO registro_produccion (
+                fecha_jornada, idlote, idempleado, kg_clasificados, 
+                kg_contaminantes, pacas_armadas, estatus, observaciones
+            ) VALUES (?, ?, ?, 0, 0, 0, 'CALCULADO', ?)
+            ON DUPLICATE KEY UPDATE
+                estatus = 'CALCULADO',
+                observaciones = VALUES(observaciones)";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([$fechaJornada, $idlote, $idempleado, "AUSENTE - " . $observaciones]);
+
+            $db->commit();
+
+            return ['status' => true, 'message' => 'Operario marcado como ausente.'];
+        } catch (Exception $e) {
+            $db->rollback();
+            error_log("Error al marcar ausencia: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Error al marcar ausencia.'];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
 
     public function asignarOperariosLote(int $idlote, array $operarios)
     {
@@ -240,7 +327,6 @@ class ProduccionModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // Verificar que el lote existe y está en estado correcto
             $query = "SELECT estatus_lote FROM lotes_produccion WHERE idlote = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$idlote]);
@@ -254,16 +340,13 @@ class ProduccionModel extends Mysql
                 throw new Exception("Solo se pueden asignar operarios a lotes planificados");
             }
 
-            // Limpiar asignaciones existentes
             $query = "DELETE FROM asignaciones_operarios WHERE idlote = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$idlote]);
 
             $operariosAsignados = 0;
 
-            // Validar y insertar nuevas asignaciones
             foreach ($operarios as $operario) {
-                // Validar datos del operario
                 if (
                     empty($operario['idempleado']) ||
                     empty($operario['tipo_tarea']) ||
@@ -272,7 +355,6 @@ class ProduccionModel extends Mysql
                     throw new Exception("Datos incompletos del operario");
                 }
 
-                // Verificar que el empleado existe
                 $query = "SELECT idempleado FROM empleado WHERE idempleado = ? AND estatus = 'Activo'";
                 $stmt = $db->prepare($query);
                 $stmt->execute([intval($operario['idempleado'])]);
@@ -280,17 +362,14 @@ class ProduccionModel extends Mysql
                     throw new Exception("El empleado ID {$operario['idempleado']} no existe o no está activo");
                 }
 
-                // Validar tipo de tarea
                 if (!in_array($operario['tipo_tarea'], ['CLASIFICACION', 'EMPAQUE'])) {
                     throw new Exception("Tipo de tarea inválido: {$operario['tipo_tarea']}");
                 }
 
-                // Validar turno
                 if (!in_array($operario['turno'], ['MAÑANA', 'TARDE', 'NOCHE'])) {
                     throw new Exception("Turno inválido: {$operario['turno']}");
                 }
 
-                // Insertar asignación
                 $query = "INSERT INTO asignaciones_operarios (
                 idlote, idempleado, tipo_tarea, turno, observaciones, fecha_asignacion
             ) VALUES (?, ?, ?, ?, ?, NOW())";
@@ -307,7 +386,6 @@ class ProduccionModel extends Mysql
                 $operariosAsignados++;
             }
 
-            // Actualizar contador en lote
             $query = "UPDATE lotes_produccion SET operarios_asignados = ? WHERE idlote = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$operariosAsignados, $idlote]);
@@ -331,9 +409,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ========================================
-    // MÉTODO CORREGIDO PARA OBTENER OPERARIOS DISPONIBLES
-    // ========================================
 
     public function selectOperariosDisponibles(string $fecha)
     {
@@ -387,9 +462,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ========================================
-    // MÉTODO CORREGIDO PARA OBTENER ASIGNACIONES
-    // ========================================
 
     public function selectAsignacionesLote(int $idlote)
     {
@@ -434,9 +506,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ========================================
-    // PROCESOS DE PRODUCCIÓN
-    // ========================================
 
     public function registrarProcesoClasificacion(array $data)
     {
@@ -447,7 +516,6 @@ class ProduccionModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // 1. Descontar material origen del stock
             $query = "UPDATE producto 
             SET existencia = existencia - ?
             WHERE idproducto = ? AND existencia >= ?";
@@ -463,7 +531,6 @@ class ProduccionModel extends Mysql
                 throw new Exception("Stock insuficiente del producto origen");
             }
 
-            // 2. Registrar movimiento de salida (material procesado)
             $numeroMovimiento = 'CLA-' . date('YmdHis') . '-' . $data['idempleado'];
             $observaciones = "Clasificación - Lote: {$data['idlote']}, Operario: {$data['idempleado']}, ";
             $observaciones .= "Procesado: {$data['kg_procesados']} kg, Limpio: {$data['kg_limpios']} kg, ";
@@ -474,23 +541,30 @@ class ProduccionModel extends Mysql
 
             $query = "INSERT INTO movimientos_existencia (
             numero_movimiento, idproducto, idtipomovimiento, 
-            cantidad_salida, observaciones, fecha_creacion
-        ) VALUES (?, ?, 3, ?, ?, NOW())";
+            cantidad_salida, stock_anterior, stock_resultante, 
+            total, observaciones, estatus, fecha_creacion
+        ) VALUES (?, ?, 3, ?, ?, ?, ?, ?, 'activo', NOW())";
+
+            // Obtener stock actual para calcular el stock resultante
+            $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
+            $stmtStock = $db->prepare($queryStock);
+            $stmtStock->execute([$data['idproducto_origen']]);
+            $stockActual = $stmtStock->fetchColumn();
 
             $stmt = $db->prepare($query);
             $stmt->execute([
                 $numeroMovimiento,
                 $data['idproducto_origen'],
                 $data['kg_procesados'],
+                $stockActual + $data['kg_procesados'], // stock_anterior (antes de la salida)
+                $stockActual, // stock_resultante (después de la salida)
+                $stockActual, // total (stock resultante)
                 $observaciones
             ]);
 
-            // 3. Si hay material limpio, agregarlo al inventario de productos clasificados
             if ($data['kg_limpios'] > 0) {
-                // Buscar o crear producto clasificado correspondiente
                 $idProductoClasificado = $this->obtenerOCrearProductoClasificado($data['idproducto_origen'], $db);
 
-                // Incrementar stock del producto clasificado
                 $query = "UPDATE producto 
                 SET existencia = existencia + ?
                 WHERE idproducto = ?";
@@ -498,26 +572,34 @@ class ProduccionModel extends Mysql
                 $stmt = $db->prepare($query);
                 $stmt->execute([$data['kg_limpios'], $idProductoClasificado]);
 
-                // Registrar movimiento de entrada para material clasificado
                 $numeroMovimientoEntrada = 'CLA-E-' . date('YmdHis') . '-' . $data['idempleado'];
                 $observacionesEntrada = "Material clasificado - Lote: {$data['idlote']}, ";
                 $observacionesEntrada .= "Material limpio obtenido: {$data['kg_limpios']} kg";
 
                 $query = "INSERT INTO movimientos_existencia (
                 numero_movimiento, idproducto, idtipomovimiento, 
-                cantidad_entrada, observaciones, fecha_creacion
-            ) VALUES (?, ?, 3, ?, ?, NOW())";
+                cantidad_entrada, stock_anterior, stock_resultante,
+                total, observaciones, estatus, fecha_creacion
+            ) VALUES (?, ?, 3, ?, ?, ?, ?, ?, 'activo', NOW())";
+
+                // Obtener stock actual del producto clasificado
+                $queryStockClasificado = "SELECT existencia FROM producto WHERE idproducto = ?";
+                $stmtStockClasificado = $db->prepare($queryStockClasificado);
+                $stmtStockClasificado->execute([$idProductoClasificado]);
+                $stockClasificado = $stmtStockClasificado->fetchColumn();
 
                 $stmt = $db->prepare($query);
                 $stmt->execute([
                     $numeroMovimientoEntrada,
                     $idProductoClasificado,
                     $data['kg_limpios'],
+                    $stockClasificado - $data['kg_limpios'], // stock_anterior (antes de la entrada)
+                    $stockClasificado, // stock_resultante (después de la entrada)
+                    $stockClasificado, // total (stock resultante)
                     $observacionesEntrada
                 ]);
             }
 
-            // 4. Actualizar registro de producción del operario
             $this->actualizarRegistroProduccionOperario([
                 'idlote' => $data['idlote'],
                 'idempleado' => $data['idempleado'],
@@ -553,7 +635,6 @@ class ProduccionModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // Validar peso de paca
             $config = $this->obtenerConfiguracion($db);
             if (
                 $data['peso_paca'] < $config['peso_minimo_paca'] ||
@@ -562,7 +643,6 @@ class ProduccionModel extends Mysql
                 throw new Exception("El peso debe estar entre {$config['peso_minimo_paca']} y {$config['peso_maximo_paca']} kg");
             }
 
-            // 1. Descontar material clasificado
             $query = "UPDATE producto 
             SET existencia = existencia - ?
             WHERE idproducto = ? AND existencia >= ?";
@@ -578,7 +658,6 @@ class ProduccionModel extends Mysql
                 throw new Exception("Stock insuficiente del producto clasificado");
             }
 
-            // 2. Registrar movimiento de salida (material usado para empacar)
             $numeroMovimientoSalida = 'EMP-S-' . date('YmdHis') . '-' . $data['idempleado'];
             $observacionesSalida = "Empaque - Material usado - Lote: {$data['idlote']}, ";
             $observacionesSalida .= "Operario: {$data['idempleado']}, Peso: {$data['peso_paca']} kg, ";
@@ -589,21 +668,29 @@ class ProduccionModel extends Mysql
 
             $query = "INSERT INTO movimientos_existencia (
             numero_movimiento, idproducto, idtipomovimiento, 
-            cantidad_salida, observaciones, fecha_creacion
-        ) VALUES (?, ?, 4, ?, ?, NOW())";
+            cantidad_salida, stock_anterior, stock_resultante,
+            total, observaciones, estatus, fecha_creacion
+        ) VALUES (?, ?, 4, ?, ?, ?, ?, ?, 'activo', NOW())";
+
+            // Obtener stock actual para calcular valores
+            $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
+            $stmtStock = $db->prepare($queryStock);
+            $stmtStock->execute([$data['idproducto_clasificado']]);
+            $stockActual = $stmtStock->fetchColumn();
 
             $stmt = $db->prepare($query);
             $stmt->execute([
                 $numeroMovimientoSalida,
                 $data['idproducto_clasificado'],
                 $data['peso_paca'],
+                $stockActual + $data['peso_paca'], // stock_anterior (antes de la salida)
+                $stockActual, // stock_resultante (después de la salida)
+                $stockActual, // total (stock resultante)
                 $observacionesSalida
             ]);
 
-            // 3. Obtener o crear producto "pacas" correspondiente
             $idProductoPacas = $this->obtenerOCrearProductoPacas($data['idproducto_clasificado'], $data['calidad'], $db);
 
-            // 4. Incrementar stock de pacas
             $query = "UPDATE producto 
             SET existencia = existencia + ?
             WHERE idproducto = ?";
@@ -611,7 +698,6 @@ class ProduccionModel extends Mysql
             $stmt = $db->prepare($query);
             $stmt->execute([$data['peso_paca'], $idProductoPacas]);
 
-            // 5. Registrar movimiento de entrada (paca creada)
             $codigoPaca = 'PACA-' . date('Ymd') . '-' . str_pad($data['idempleado'], 3, '0', STR_PAD_LEFT) . '-' . date('His');
             $numeroMovimientoEntrada = 'EMP-E-' . date('YmdHis') . '-' . $data['idempleado'];
 
@@ -624,18 +710,27 @@ class ProduccionModel extends Mysql
 
             $query = "INSERT INTO movimientos_existencia (
             numero_movimiento, idproducto, idtipomovimiento, 
-            cantidad_entrada, observaciones, fecha_creacion
-        ) VALUES (?, ?, 4, ?, ?, NOW())";
+            cantidad_entrada, stock_anterior, stock_resultante,
+            total, observaciones, estatus, fecha_creacion
+        ) VALUES (?, ?, 4, ?, ?, ?, ?, ?, 'activo', NOW())";
+
+            // Obtener stock actual del producto de pacas
+            $queryStockPacas = "SELECT existencia FROM producto WHERE idproducto = ?";
+            $stmtStockPacas = $db->prepare($queryStockPacas);
+            $stmtStockPacas->execute([$idProductoPacas]);
+            $stockPacas = $stmtStockPacas->fetchColumn();
 
             $stmt = $db->prepare($query);
             $stmt->execute([
                 $numeroMovimientoEntrada,
                 $idProductoPacas,
                 $data['peso_paca'],
+                $stockPacas - $data['peso_paca'], // stock_anterior (antes de la entrada)
+                $stockPacas, // stock_resultante (después de la entrada)
+                $stockPacas, // total (stock resultante)
                 $observacionesEntrada
             ]);
 
-            // 6. Actualizar registro de producción
             $this->actualizarRegistroProduccionOperario([
                 'idlote' => $data['idlote'],
                 'idempleado' => $data['idempleado'],
@@ -661,9 +756,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ========================================
-    // NÓMINA Y PRODUCCIÓN DIARIA
-    // ========================================
 
     public function registrarProduccionDiariaLote(int $idlote, array $registros)
     {
@@ -675,7 +767,6 @@ class ProduccionModel extends Mysql
             $db->beginTransaction();
 
             foreach ($registros as $registro) {
-                // Insertar o actualizar registro de producción
                 $query = "INSERT INTO registro_produccion (
                     fecha_jornada, idlote, idempleado, kg_clasificados,
                     kg_contaminantes, pacas_armadas, observaciones
@@ -728,7 +819,6 @@ class ProduccionModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // Actualizar registros con cálculos (el trigger se encarga del cálculo)
             $query = "UPDATE registro_produccion SET
                 estatus = 'CALCULADO'
                 WHERE fecha_jornada BETWEEN ? AND ? 
@@ -757,9 +847,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ========================================
-    // DATOS PARA TABLAS
-    // ========================================
 
     public function selectProcesosRecientes(string $fecha)
     {
@@ -770,20 +857,33 @@ class ProduccionModel extends Mysql
         try {
             $query = "SELECT 
                 DATE_FORMAT(me.fecha_creacion, '%d/%m/%Y %H:%i') as fecha,
-                CONCAT(e.nombre, ' ', e.apellido) as operario,
-                me.tipo_proceso as proceso,
                 CASE 
-                    WHEN me.tipo_proceso = 'CLASIFICACION' THEN CONCAT(me.cantidad_salida, ' kg procesados')
-                    WHEN me.tipo_proceso = 'EMPAQUE' THEN CONCAT(me.cantidad_salida, ' kg empacados')
-                    ELSE CONCAT(me.cantidad_salida, ' kg')
+                    WHEN me.idtipomovimiento = 3 THEN 'CLASIFICACIÓN'
+                    WHEN me.idtipomovimiento = 4 THEN 'EMPAQUE'
+                    ELSE 'OTRO'
+                END as proceso,
+                CASE 
+                    WHEN me.cantidad_salida > 0 THEN CONCAT(me.cantidad_salida, ' kg procesados')
+                    WHEN me.cantidad_entrada > 0 THEN CONCAT(me.cantidad_entrada, ' kg producidos')
+                    ELSE 'N/A'
                 END as cantidad,
                 me.observaciones,
-                l.numero_lote
+                p.nombre as producto,
+                COALESCE(
+                    CONCAT(e.nombre, ' ', e.apellido),
+                    'No especificado'
+                ) as operario
             FROM movimientos_existencia me
-            LEFT JOIN empleado e ON me.idempleado = e.idempleado
-            LEFT JOIN lotes_produccion l ON me.idlote = l.idlote
+            LEFT JOIN producto p ON me.idproducto = p.idproducto
+            LEFT JOIN empleado e ON e.idempleado = CAST(
+                SUBSTRING_INDEX(
+                    SUBSTRING_INDEX(me.observaciones, 'Operario: ', -1), 
+                    ',', 1
+                ) AS UNSIGNED
+            )
             WHERE DATE(me.fecha_creacion) = ?
-            AND me.tipo_proceso IN ('CLASIFICACION', 'EMPAQUE')
+            AND me.idtipomovimiento IN (3, 4)
+            AND me.observaciones LIKE '%Operario:%'
             ORDER BY me.fecha_creacion DESC
             LIMIT 20";
 
@@ -852,9 +952,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ========================================
-    // CONFIGURACIÓN
-    // ========================================
 
     public function selectConfiguracionProduccion()
     {
@@ -949,9 +1046,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ========================================
-    // DATOS AUXILIARES
-    // ========================================
 
     public function selectEmpleadosActivos()
     {
@@ -1045,9 +1139,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ========================================
-    // MÉTODOS AUXILIARES PRIVADOS
-    // ========================================
 
     private function obtenerConfiguracion($db)
     {
@@ -1059,7 +1150,6 @@ class ProduccionModel extends Mysql
         $config = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$config) {
-            // Valores por defecto
             return [
                 'productividad_clasificacion' => 150.00,
                 'capacidad_maxima_planta' => 50,
@@ -1091,7 +1181,6 @@ class ProduccionModel extends Mysql
     private function actualizarRegistroProduccionOperario(array $data, $db)
     {
         try {
-            // Obtener fecha del lote
             $query = "SELECT fecha_jornada FROM lotes_produccion WHERE idlote = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$data['idlote']]);
@@ -1101,7 +1190,6 @@ class ProduccionModel extends Mysql
                 throw new Exception("Lote no encontrado");
             }
 
-            // Verificar si ya existe registro
             $query = "SELECT idregistro FROM registro_produccion 
             WHERE fecha_jornada = ? AND idempleado = ?";
             $stmt = $db->prepare($query);
@@ -1109,7 +1197,6 @@ class ProduccionModel extends Mysql
             $registroExistente = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($registroExistente) {
-                // Actualizar registro existente
                 $updateFields = [];
                 $updateValues = [];
 
@@ -1136,7 +1223,6 @@ class ProduccionModel extends Mysql
                     $stmt->execute($updateValues);
                 }
             } else {
-                // Crear nuevo registro
                 $query = "INSERT INTO registro_produccion (
                 fecha_jornada, idlote, idempleado, kg_clasificados, 
                 kg_contaminantes, pacas_armadas, estatus
@@ -1158,7 +1244,6 @@ class ProduccionModel extends Mysql
     }
     private function obtenerOCrearProductoPacas($idProductoClasificado, $calidad, $db)
     {
-        // Obtener información del producto clasificado
         $query = "SELECT nombre, idcategoria FROM producto WHERE idproducto = ?";
         $stmt = $db->prepare($query);
         $stmt->execute([$idProductoClasificado]);
@@ -1168,7 +1253,6 @@ class ProduccionModel extends Mysql
             throw new Exception("Producto clasificado no encontrado");
         }
 
-        // Buscar si ya existe un producto paca correspondiente
         $nombrePaca = "Paca " . str_replace(" Clasificado", "", $productoClasificado['nombre']) . " " . ucfirst(strtolower($calidad));
 
         $query = "SELECT idproducto FROM producto WHERE nombre = ? AND estatus = 'activo'";
@@ -1180,11 +1264,10 @@ class ProduccionModel extends Mysql
             return $productoExistente['idproducto'];
         }
 
-        // Crear nuevo producto paca si no existe
         $query = "INSERT INTO producto (
         nombre, descripcion, idcategoria, unidad_medida, 
-        precio, existencia, estatus, fecha_creacion
-    ) VALUES (?, ?, ?, 'kg', 0, 0, 'activo', NOW())";
+        precio, existencia, moneda, estatus, fecha_creacion
+    ) VALUES (?, ?, ?, 'KG', 0, 0, 'USD', 'activo', NOW())";
 
         $stmt = $db->prepare($query);
         $stmt->execute([
@@ -1197,7 +1280,6 @@ class ProduccionModel extends Mysql
     }
     private function obtenerOCrearProductoClasificado($idProductoOrigen, $db)
     {
-        // Obtener información del producto origen
         $query = "SELECT nombre, idcategoria FROM producto WHERE idproducto = ?";
         $stmt = $db->prepare($query);
         $stmt->execute([$idProductoOrigen]);
@@ -1207,7 +1289,6 @@ class ProduccionModel extends Mysql
             throw new Exception("Producto origen no encontrado");
         }
 
-        // Buscar si ya existe un producto clasificado correspondiente
         $nombreClasificado = $productoOrigen['nombre'] . " Clasificado";
 
         $query = "SELECT idproducto FROM producto WHERE nombre = ? AND estatus = 'activo'";
@@ -1219,11 +1300,10 @@ class ProduccionModel extends Mysql
             return $productoExistente['idproducto'];
         }
 
-        // Crear nuevo producto clasificado si no existe
         $query = "INSERT INTO producto (
         nombre, descripcion, idcategoria, unidad_medida, 
-        precio, existencia, estatus, fecha_creacion
-    ) VALUES (?, ?, ?, 'kg', 0, 0, 'activo', NOW())";
+        precio, existencia, moneda, estatus, fecha_creacion
+    ) VALUES (?, ?, ?, 'KG', 0, 0, 'USD', 'activo', NOW())";
 
         $stmt = $db->prepare($query);
         $stmt->execute([

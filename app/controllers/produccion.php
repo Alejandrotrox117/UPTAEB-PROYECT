@@ -45,9 +45,6 @@ class Produccion extends Controllers
         $this->views->getView($this, "produccion", $data);
     }
 
-    // ========================================
-    // GESTIÓN DE LOTES
-    // ========================================
 
     public function createLote()
     {
@@ -56,7 +53,6 @@ class Produccion extends Controllers
                 $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
-                // Validar campos requeridos
                 if (empty($request['fecha_jornada']) || 
                     empty($request['volumen_estimado']) || 
                     empty($request['idsupervisor'])) {
@@ -194,9 +190,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // GESTIÓN DE OPERARIOS
-    // ========================================
 
     public function asignarOperarios()
     {
@@ -272,9 +265,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // PROCESOS DE PRODUCCIÓN
-    // ========================================
 
     public function registrarClasificacion()
     {
@@ -283,7 +273,6 @@ class Produccion extends Controllers
                 $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
-                // Validar campos requeridos
                 $camposRequeridos = ['idlote', 'idempleado', 'idproducto_origen', 'kg_procesados', 'kg_limpios', 'kg_contaminantes'];
                 foreach ($camposRequeridos as $campo) {
                     if (!isset($request[$campo]) || $request[$campo] === '') {
@@ -295,7 +284,6 @@ class Produccion extends Controllers
                     }
                 }
 
-                // Validar que la suma sea correcta
                 $procesados = floatval($request['kg_procesados']);
                 $limpios = floatval($request['kg_limpios']);
                 $contaminantes = floatval($request['kg_contaminantes']);
@@ -342,7 +330,6 @@ class Produccion extends Controllers
                 $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
-                // Validar campos requeridos
                 $camposRequeridos = ['idlote', 'idempleado', 'idproducto_clasificado', 'peso_paca', 'calidad'];
                 foreach ($camposRequeridos as $campo) {
                     if (!isset($request[$campo]) || $request[$campo] === '') {
@@ -396,9 +383,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // NÓMINA Y PRODUCCIÓN DIARIA
-    // ========================================
 
     public function registrarProduccionDiaria()
     {
@@ -503,9 +487,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // CONFIGURACIÓN
-    // ========================================
 
     public function getConfiguracionProduccion()
     {
@@ -529,7 +510,6 @@ class Produccion extends Controllers
                 $postdata = file_get_contents('php://input');
                 $request = json_decode($postdata, true);
 
-                // Validar campos numéricos
                 $camposNumericos = [
                     'productividad_clasificacion', 'capacidad_maxima_planta', 'salario_base',
                     'beta_clasificacion', 'gamma_empaque', 'umbral_error_maximo',
@@ -546,7 +526,6 @@ class Produccion extends Controllers
                     }
                 }
 
-                // Validaciones adicionales
                 if (floatval($request['peso_minimo_paca']) >= floatval($request['peso_maximo_paca'])) {
                     echo json_encode([
                         'status' => false, 
@@ -591,9 +570,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // DATOS AUXILIARES
-    // ========================================
 
     public function getEmpleadosActivos()
     {
@@ -616,7 +592,6 @@ class Produccion extends Controllers
             try {
                 $tipo = $_GET['tipo'] ?? 'todos';
                 
-                // Validar tipo
                 $tiposPermitidos = ['todos', 'por_clasificar', 'clasificados'];
                 if (!in_array($tipo, $tiposPermitidos)) {
                     $tipo = 'todos';
@@ -633,9 +608,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // MÉTODOS AUXILIARES PARA DEBUG
-    // ========================================
 
     public function getEstadisticasProduccion()
     {
@@ -669,9 +641,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // VALIDACIÓN DE DATOS
-    // ========================================
 
     private function validarDatosLote($data)
     {
@@ -716,7 +685,6 @@ class Produccion extends Controllers
             }
         }
 
-        // Validar que los valores numéricos sean válidos
         if (!empty($data['kg_procesados']) && floatval($data['kg_procesados']) <= 0) {
             $errores[] = 'Los kg procesados deben ser mayor a cero.';
         }
@@ -729,7 +697,6 @@ class Produccion extends Controllers
             $errores[] = 'Los kg contaminantes no pueden ser negativos.';
         }
 
-        // Validar que la suma sea correcta
         if (!empty($data['kg_procesados']) && !empty($data['kg_limpios']) && !empty($data['kg_contaminantes'])) {
             $procesados = floatval($data['kg_procesados']);
             $limpios = floatval($data['kg_limpios']);
@@ -761,7 +728,6 @@ class Produccion extends Controllers
             }
         }
 
-        // Validar peso de paca
         if (!empty($data['peso_paca'])) {
             $peso = floatval($data['peso_paca']);
             if ($peso <= 0) {
@@ -769,7 +735,6 @@ class Produccion extends Controllers
             }
         }
 
-        // Validar calidad
         if (!empty($data['calidad'])) {
             $calidadesPermitidas = ['PREMIUM', 'ESTANDAR', 'SEGUNDA'];
             if (!in_array($data['calidad'], $calidadesPermitidas)) {
@@ -780,9 +745,6 @@ class Produccion extends Controllers
         return $errores;
     }
 
-    // ========================================
-    // MÉTODOS DE UTILIDAD
-    // ========================================
 
     private function respuestaError($mensaje, $codigo = 400)
     {
@@ -839,9 +801,6 @@ class Produccion extends Controllers
         return $this->limpiarDatos($data);
     }
 
-    // ========================================
-    // ENDPOINTS ADICIONALES PARA EL MODELO
-    // ========================================
 
     public function verificarDisponibilidadOperario()
     {
@@ -921,9 +880,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // ENDPOINTS PARA VALIDACIONES EN TIEMPO REAL
-    // ========================================
 
     public function validarStockProducto()
     {
@@ -968,15 +924,11 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // MÉTODOS DE LIMPIEZA Y MANTENIMIENTO
-    // ========================================
 
     public function limpiarRegistrosTemporales()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                // Solo permitir a administradores
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                 
                 $arrResponse = $this->model->limpiarRegistrosTemporales();
@@ -1019,9 +971,6 @@ class Produccion extends Controllers
         }
     }
 
-    // ========================================
-    // ENDPOINT DE ESTADO DEL SISTEMA
-    // ========================================
 
     public function getEstadoSistema()
     {
