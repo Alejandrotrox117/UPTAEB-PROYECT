@@ -260,8 +260,8 @@
 <!-- MODALES -->
 
 <!-- Modal Registrar Lote -->
-<div id="modalRegistrarLote"
-    class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
+<div id="modalRegistrarLote" 
+    class="fixed inset-0 flex  items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4 ">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-2xl max-h-[95vh]">
         <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h3 class="text-xl md:text-2xl font-bold text-gray-800">Crear Lote de Producción</h3>
@@ -271,7 +271,7 @@
                 </svg>
             </button>
         </div>
-        <form id="formRegistrarLote" class="px-4 md:px-8 py-6">
+        <form id="formRegistrarLote" class="px-4 md:px-8 py-6 overflow-auto-y max-h-[75vh]">
             <div class="grid grid-cols-1 gap-6">
                 <div>
                     <label for="lote_fecha_jornada" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Jornada <span class="text-red-500">*</span></label>
@@ -463,7 +463,7 @@
                 </svg>
             </button>
         </div>
-        <form id="formRegistrarClasificacion" class="px-4 md:px-8 py-6">
+        <form id="formRegistrarClasificacion" class="px-4 md:px-8 py-6 max-h-[75vh] overflow-auto-y">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="clas_lote" class="block text-sm font-medium text-gray-700 mb-1">Lote <span class="text-red-500">*</span></label>

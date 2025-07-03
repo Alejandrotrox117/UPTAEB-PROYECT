@@ -294,7 +294,7 @@ window.permisosCompras = <?php echo json_encode($permisos); ?>;
                     <div id="tasaDelDiaInfoActualizar" class="text-xs text-blue-700 font-semibold my-2"></div>
                 </div>
                 <div>
-                    <label for="idmoneda_general_compra_actualizar" class="hidden block text-sm font-medium text-gray-700 mb-1">Moneda General <span class="text-red-500">*</span></label>
+                    <label for="idmoneda_general_compra_actualizar" class="hidden text-sm font-medium text-gray-700 mb-1">Moneda General <span class="text-red-500">*</span></label>
                     <select id="idmoneda_general_compra_actualizar" name="idmoneda_general_compra" class=" hidden w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required>
                         <option value="">Cargando...</option>
                     </select>
