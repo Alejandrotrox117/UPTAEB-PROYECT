@@ -4,53 +4,173 @@ require_once "app/core/mysql.php";
 
 class ModulosModel extends mysql
 {
-    private $conexion;
-    private $dbPrincipal;
-    private $dbSeguridad;
+    private $query;
+    private $array;
+    private $data;
+    private $result;
+    private $message;
+    private $status;
+
+    private $idmodulo;
+    private $titulo;
+    private $descripcion;
+    private $estatus;
 
     public function __construct()
     {
-        $this->conexion = new Conexion();
-        $this->conexion->connect();
-        $this->dbPrincipal = $this->conexion->get_conectGeneral();
-        $this->dbSeguridad = $this->conexion->get_conectSeguridad();
+        parent::__construct();
     }
 
-    private function verificarControllerExiste(string $titulo): bool
+    // GETTERS Y SETTERS DE CONTROL
+    public function getQuery(){
+        return $this->query;
+    }
+    public function setQuery(string $query){
+        $this->query = $query; 
+    }
+    public function getArray(){ 
+        return $this->array ?? []; 
+    }
+    public function setArray(array $array){
+        $this->array = $array;
+    }
+    public function getData(){
+        return $this->data ?? []; 
+    }
+    public function setData(array $data){
+        $this->data = $data; 
+    }
+    public function getResult(){
+        return $this->result;
+    }
+    public function setResult($result){
+        $this->result = $result;
+    }
+    public function getMessage(){
+        return $this->message ?? ''; 
+    }
+    public function setMessage(string $message){
+        $this->message = $message;
+    }
+    public function getStatus(){
+        return $this->status ?? false;
+    }
+    public function setStatus(bool $status){
+        $this->status = $status;
+    }
+
+    // GETTERS Y SETTERS DE ENTIDAD
+    public function setIdModulo($idmodulo){
+        $this->idmodulo = $idmodulo;
+    }
+    public function getIdModulo(){
+        return $this->idmodulo;
+    }
+    public function setTitulo($titulo){
+        $this->titulo = $titulo;
+    }
+    public function getTitulo(){
+        return $this->titulo;
+    }
+    public function setDescripcion($descripcion){
+        $this->descripcion = $descripcion;
+    }
+    public function getDescripcion(){
+        return $this->descripcion;
+    }
+    public function setEstatus($estatus){
+        $this->estatus = $estatus;
+    }
+    public function getEstatus(){
+        return $this->estatus;
+    }
+
+    // MÉTODOS PÚBLICOS
+    public function insertModulo(array $data)
     {
-        $nombreController = ucfirst(strtolower(trim($titulo)));
+        $this->setData($data);
+        return $this->ejecutarInsercionModulo();
+    }
+
+    public function updateModulo(int $idmodulo, array $data)
+    {
+        $this->setIdModulo($idmodulo);
+        $this->setData($data);
+        return $this->ejecutarActualizacionModulo();
+    }
+
+    public function selectModuloById(int $idmodulo)
+    {
+        $this->setIdModulo($idmodulo);
+        return $this->ejecutarConsultaModuloPorId();
+    }
+
+    public function deleteModuloById(int $idmodulo)
+    {
+        $this->setIdModulo($idmodulo);
+        return $this->ejecutarEliminacionLogicaModulo();
+    }
+
+    public function selectAllModulosActivos()
+    {
+        return $this->ejecutarConsultaTodosModulosActivos();
+    }
+
+    public function getControlladoresDisponibles()
+    {
+        return $this->ejecutarConsultaControlladoresDisponibles();
+    }
+
+    // MÉTODOS PRIVADOS
+    private function ejecutarVerificacionControllerExiste()
+    {
+        $nombreController = ucfirst(strtolower(trim($this->getTitulo())));
         $rutaController = "app/Controllers/" . $nombreController . ".php";
         return file_exists($rutaController);
     }
 
-    private function verificarModuloExiste(string $titulo, int $idModuloExcluir = null): bool
+    private function ejecutarVerificacionModuloExiste()
     {
-        $sql = "SELECT COUNT(*) as total FROM modulos WHERE LOWER(titulo) = LOWER(?)";
-        $params = [trim($titulo)];
-        
-        if ($idModuloExcluir !== null) {
-            $sql .= " AND idmodulo != ?";
-            $params[] = $idModuloExcluir;
-        }
-        
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
         try {
-            $stmt = $this->dbSeguridad->prepare($sql);
-            $stmt->execute($params);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $this->setQuery("SELECT COUNT(*) as total FROM modulos WHERE LOWER(titulo) = LOWER(?)");
+            $this->setArray([trim($this->getTitulo())]);
+            
+            if ($this->getIdModulo() !== null) {
+                $this->setQuery("SELECT COUNT(*) as total FROM modulos WHERE LOWER(titulo) = LOWER(?) AND idmodulo != ?");
+                $this->setArray([trim($this->getTitulo()), $this->getIdModulo()]);
+            }
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+            
+            $result = $this->getResult();
             return $result['total'] > 0;
+            
         } catch (Exception $e) {
-            error_log("Error al verificar módulo existente: " . $e->getMessage());
+            error_log("ModulosModel::ejecutarVerificacionModuloExiste - Error: " . $e->getMessage());
             return true;
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    public function insertModulo(array $data): array
+    private function ejecutarInsercionModulo()
     {
-        try {
-            $titulo = $data['titulo'];
-            $descripcion = $data['descripcion'];
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
 
-            if ($this->verificarModuloExiste($titulo)) {
+        try {
+            $data = $this->getData();
+            $this->setTitulo($data['titulo']);
+            $this->setDescripcion($data['descripcion']);
+
+            if ($this->ejecutarVerificacionModuloExiste()) {
                 return [
                     'status' => false,
                     'message' => 'Ya existe un módulo con ese título.',
@@ -58,32 +178,31 @@ class ModulosModel extends mysql
                 ];
             }
 
-            if (!$this->verificarControllerExiste($titulo)) {
+            if (!$this->ejecutarVerificacionControllerExiste()) {
                 return [
                     'status' => false,
-                    'message' => 'No existe un controlador con el nombre "' . ucfirst(strtolower($titulo)) . '.php". Debe crear el controlador antes de registrar el módulo.',
+                    'message' => 'No existe un controlador con el nombre "' . ucfirst(strtolower($this->getTitulo())) . '.php". Debe crear el controlador antes de registrar el módulo.',
                     'modulo_id' => null
                 ];
             }
 
-            $this->dbSeguridad->beginTransaction();
+            $dbSeguridad->beginTransaction();
 
-            $sql = "INSERT INTO modulos (titulo, descripcion, estatus, fecha_creacion, fecha_modificacion) VALUES (?, ?, ?, NOW(), NOW())";
-            
-            $valores = [
-                $titulo,
-                $descripcion,
+            $this->setQuery("INSERT INTO modulos (titulo, descripcion, estatus, fecha_creacion, fecha_modificacion) VALUES (?, ?, ?, NOW(), NOW())");
+            $this->setArray([
+                $this->getTitulo(),
+                $this->getDescripcion(),
                 'ACTIVO'
-            ];
+            ]);
             
-            $stmt = $this->dbSeguridad->prepare($sql);
-            $insertExitoso = $stmt->execute($valores);
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $insertExitoso = $stmt->execute($this->getArray());
 
-            $idModuloInsertado = $this->dbSeguridad->lastInsertId();
+            $idModuloInsertado = $dbSeguridad->lastInsertId();
 
             if (!$idModuloInsertado) {
-                $this->dbSeguridad->rollBack();
-                error_log("Error: No se pudo obtener el lastInsertId para el módulo.");
+                $dbSeguridad->rollBack();
+                error_log("ModulosModel::ejecutarInsercionModulo - Error: No se pudo obtener el lastInsertId");
                 return [
                     'status' => false, 
                     'message' => 'Error al obtener ID de módulo tras registro.',
@@ -91,7 +210,7 @@ class ModulosModel extends mysql
                 ];
             }
 
-            $this->dbSeguridad->commit();
+            $dbSeguridad->commit();
 
             return [
                 'status' => true, 
@@ -100,60 +219,66 @@ class ModulosModel extends mysql
             ];
 
         } catch (PDOException $e) {
-            if ($this->dbSeguridad->inTransaction()) {
-                $this->dbSeguridad->rollBack();
+            if ($dbSeguridad->inTransaction()) {
+                $dbSeguridad->rollBack();
             }
-            error_log("Error al insertar módulo: " . $e->getMessage());
+            error_log("ModulosModel::ejecutarInsercionModulo - Error: " . $e->getMessage());
             return [
                 'status' => false, 
                 'message' => 'Error de base de datos al registrar módulo: ' . $e->getMessage(),
                 'modulo_id' => null
             ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    public function updateModulo(int $idmodulo, array $data): array
+    private function ejecutarActualizacionModulo()
     {
-        try {
-            $titulo = $data['titulo'];
-            $descripcion = $data['descripcion'];
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
 
-            if ($this->verificarModuloExiste($titulo, $idmodulo)) {
+        try {
+            $data = $this->getData();
+            $this->setTitulo($data['titulo']);
+            $this->setDescripcion($data['descripcion']);
+
+            if ($this->ejecutarVerificacionModuloExiste()) {
                 return [
                     'status' => false,
                     'message' => 'Ya existe otro módulo con ese título.'
                 ];
             }
 
-            if (!$this->verificarControllerExiste($titulo)) {
+            if (!$this->ejecutarVerificacionControllerExiste()) {
                 return [
                     'status' => false,
-                    'message' => 'No existe un controlador con el nombre "' . ucfirst(strtolower($titulo)) . '.php". Debe crear el controlador antes de actualizar el módulo.'
+                    'message' => 'No existe un controlador con el nombre "' . ucfirst(strtolower($this->getTitulo())) . '.php". Debe crear el controlador antes de actualizar el módulo.'
                 ];
             }
 
-            $this->dbSeguridad->beginTransaction();
+            $dbSeguridad->beginTransaction();
 
-            $sql = "UPDATE modulos SET titulo = ?, descripcion = ?, fecha_modificacion = NOW() WHERE idmodulo = ?";
+            $this->setQuery("UPDATE modulos SET titulo = ?, descripcion = ?, fecha_modificacion = NOW() WHERE idmodulo = ?");
+            $this->setArray([
+                $this->getTitulo(),
+                $this->getDescripcion(),
+                $this->getIdModulo()
+            ]);
             
-            $valores = [
-                $titulo,
-                $descripcion,
-                $idmodulo
-            ];
-            
-            $stmt = $this->dbSeguridad->prepare($sql);
-            $updateExitoso = $stmt->execute($valores);
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $updateExitoso = $stmt->execute($this->getArray());
 
             if (!$updateExitoso || $stmt->rowCount() === 0) {
-                $this->dbSeguridad->rollBack();
+                $dbSeguridad->rollBack();
                 return [
                     'status' => false, 
                     'message' => 'No se pudo actualizar el módulo o no se realizaron cambios.'
                 ];
             }
 
-            $this->dbSeguridad->commit();
+            $dbSeguridad->commit();
 
             return [
                 'status' => true, 
@@ -161,90 +286,129 @@ class ModulosModel extends mysql
             ];
 
         } catch (PDOException $e) {
-            if ($this->dbSeguridad->inTransaction()) {
-                $this->dbSeguridad->rollBack();
+            if ($dbSeguridad->inTransaction()) {
+                $dbSeguridad->rollBack();
             }
-            error_log("Error al actualizar módulo: " . $e->getMessage());
+            error_log("ModulosModel::ejecutarActualizacionModulo - Error: " . $e->getMessage());
             return [
                 'status' => false, 
                 'message' => 'Error de base de datos al actualizar módulo: ' . $e->getMessage()
             ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    public function selectModuloById(int $idmodulo)
+    private function ejecutarConsultaModuloPorId()
     {
-        $sql = "SELECT 
-                    idmodulo,
-                    titulo,
-                    descripcion,
-                    estatus,
-                    fecha_creacion,
-                    fecha_modificacion,
-                    DATE_FORMAT(fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
-                    DATE_FORMAT(fecha_modificacion, '%d/%m/%Y %H:%i') as fecha_modificacion_formato
-                FROM modulos 
-                WHERE idmodulo = ?";
-        try {
-            $stmt = $this->dbSeguridad->prepare($sql);
-            $stmt->execute([$idmodulo]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            error_log("ModulosModel::selectModuloById -> " . $e->getMessage());
-            return false;
-        }
-    }
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
 
-    public function deleteModuloById(int $idmodulo): bool
-    {
         try {
-            $this->dbSeguridad->beginTransaction();
-
-            $sql = "UPDATE modulos SET estatus = 'INACTIVO', fecha_modificacion = NOW() WHERE idmodulo = ?";
-            $stmt = $this->dbSeguridad->prepare($sql);
-            $stmt->execute([$idmodulo]);
+            $this->setQuery("SELECT 
+                        idmodulo,
+                        titulo,
+                        descripcion,
+                        estatus,
+                        fecha_creacion,
+                        fecha_modificacion,
+                        DATE_FORMAT(fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
+                        DATE_FORMAT(fecha_modificacion, '%d/%m/%Y %H:%i') as fecha_modificacion_formato
+                    FROM modulos 
+                    WHERE idmodulo = ?");
             
-            $this->dbSeguridad->commit();
+            $this->setArray([$this->getIdModulo()]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
+            
+            return $this->getResult();
+            
+        } catch (Exception $e) {
+            error_log("ModulosModel::ejecutarConsultaModuloPorId - Error: " . $e->getMessage());
+            return false;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarEliminacionLogicaModulo()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
+        try {
+            $dbSeguridad->beginTransaction();
+
+            $this->setQuery("UPDATE modulos SET estatus = 'INACTIVO', fecha_modificacion = NOW() WHERE idmodulo = ?");
+            $this->setArray([$this->getIdModulo()]);
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            
+            $dbSeguridad->commit();
             return $stmt->rowCount() > 0;
 
         } catch (PDOException $e) {
-            $this->dbSeguridad->rollBack();
-            error_log("ModulosModel::deleteModuloById -> " . $e->getMessage());
+            $dbSeguridad->rollBack();
+            error_log("ModulosModel::ejecutarEliminacionLogicaModulo - Error: " . $e->getMessage());
             return false;
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    public function selectAllModulosActivos()
+    private function ejecutarConsultaTodosModulosActivos()
     {
-        $sql = "SELECT 
-                    idmodulo,
-                    titulo,
-                    descripcion,
-                    estatus,
-                    fecha_creacion,
-                    fecha_modificacion,
-                    DATE_FORMAT(fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato,
-                    DATE_FORMAT(fecha_modificacion, '%d/%m/%Y') as fecha_modificacion_formato
-                FROM modulos 
-                WHERE estatus = 'ACTIVO'
-                ORDER BY titulo ASC";
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
 
         try {
-            $stmt = $this->dbSeguridad->query($sql);
-            $modulos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return ["status" => true, "message" => "Módulos obtenidos.", "data" => $modulos];
+            $this->setQuery("SELECT 
+                        idmodulo,
+                        titulo,
+                        descripcion,
+                        estatus,
+                        fecha_creacion,
+                        fecha_modificacion,
+                        DATE_FORMAT(fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato,
+                        DATE_FORMAT(fecha_modificacion, '%d/%m/%Y') as fecha_modificacion_formato
+                    FROM modulos 
+                    WHERE estatus = 'ACTIVO'
+                    ORDER BY titulo ASC");
+
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute();
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+
+            return [
+                "status" => true, 
+                "message" => "Módulos obtenidos.", 
+                "data" => $this->getResult()
+            ];
+
         } catch (PDOException $e) {
-            error_log("ModulosModel::selectAllModulosActivos - Error al seleccionar módulos: " . $e->getMessage());
-            return ["status" => false, "message" => "Error al obtener módulos: " . $e->getMessage(), "data" => []];
+            error_log("ModulosModel::ejecutarConsultaTodosModulosActivos - Error: " . $e->getMessage());
+            return [
+                "status" => false, 
+                "message" => "Error al obtener módulos: " . $e->getMessage(), 
+                "data" => []
+            ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    public function getControlladoresDisponibles(): array
+    private function ejecutarConsultaControlladoresDisponibles()
     {
-        $controladores = [];
-        $rutaControllers = "app/Controllers/";
-        
         try {
+            $controladores = [];
+            $rutaControllers = "app/Controllers/";
+            
             if (is_dir($rutaControllers)) {
                 $archivos = scandir($rutaControllers);
                 foreach ($archivos as $archivo) {
@@ -259,9 +423,11 @@ class ModulosModel extends mysql
                     }
                 }
             }
+            
             return ["status" => true, "data" => $controladores];
+            
         } catch (Exception $e) {
-            error_log("Error al obtener controladores: " . $e->getMessage());
+            error_log("ModulosModel::ejecutarConsultaControlladoresDisponibles - Error: " . $e->getMessage());
             return ["status" => false, "data" => []];
         }
     }
