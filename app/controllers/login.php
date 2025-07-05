@@ -295,9 +295,7 @@ class Login extends Controllers
         exit();
     }
 
-    /**
-     * Verifica reCAPTCHA si está configurado
-     */
+    //Verifica reCAPTCHA si está configurado
     private function verifyRecaptcha($recaptcha_response)
     {
         if (empty($recaptcha_response)) {
