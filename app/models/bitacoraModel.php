@@ -138,7 +138,7 @@ class BitacoraModel extends mysql
         return $this->ejecutarConsultaHistorialConFiltros();
     }
 
-    public function limpiarRegistrosAntiguos($dias = 30)
+    public function limpiarRegistrosAntiguos($dias)
     {
         $this->setDias($dias);
         return $this->ejecutarLimpiezaRegistrosAntiguos();
