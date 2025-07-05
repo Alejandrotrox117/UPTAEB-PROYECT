@@ -1,9 +1,7 @@
 <?php
-
 require_once("app/core/conexion.php");
-require_once("app/core/mysql.php");
 
-class VentasModel extends Mysql
+class VentasModel // Eliminamos "extends Mysql"
 {
     // Propiedades privadas
     private $query;
@@ -21,7 +19,7 @@ class VentasModel extends Mysql
 
     public function __construct()
     {
-        parent::__construct();
+        // parent::__construct(); // Ya no es necesario
     }
 
     // Getters y Setters
@@ -145,56 +143,104 @@ class VentasModel extends Mysql
         $this->estatus = $estatus;
     }
 
+    // Método search implementado localmente para eliminar la dependencia de Mysql
+    private function search(string $query, array $params = [])
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        $result = false;
+
+        try {
+            $stmt = $db->prepare($query);
+            $stmt->execute($params);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("VentasModel::search - Error: " . $e->getMessage());
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $result;
+    }
+
     // Métodos privados encapsulados
-    private function ejecutarBusquedaTodasVentas()
+    private function ejecutarBusquedaTodasVentas(array $params)
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
+        // Parámetros de DataTables
+        $start = $params['start'] ?? 0;
+        $length = $params['length'] ?? 10;
+        $searchValue = $params['search']['value'] ?? '';
+        $orderColumnIndex = $params['order'][0]['column'] ?? 0;
+        $orderColumnName = $params['columns'][$orderColumnIndex]['data'] ?? 'v.fecha_venta';
+        $orderDir = $params['order'][0]['dir'] ?? 'desc';
+
+      
+        $columnasPermitidas = ['nro_venta', 'fecha_venta', 'cliente_nombre', 'total_general', 'estatus_formato'];
+        if (!in_array($orderColumnName, $columnasPermitidas)) {
+            $orderColumnName = 'v.fecha_venta'; // Columna segura por defecto
+        }
+
         try {
-            $this->setQuery(
-                "SELECT 
-                    v.idventa,
-                    v.nro_venta, 
-                    v.fecha_venta,
-                    CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
-                    v.total_general,
-                    v.estatus,
-                    DATE_FORMAT(v.fecha_venta, '%d/%m/%Y') as fecha_formato,
-                    DATE_FORMAT(v.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
-                    CASE 
-                        WHEN v.estatus = 'BORRADOR' THEN 'Borrador'
-                        WHEN v.estatus = 'POR_PAGAR' THEN 'Por Pagar'
-                        WHEN v.estatus = 'PAGADA' THEN 'Pagada'
-                        WHEN v.estatus = 'ANULADA' THEN 'Anulada'
-                        WHEN v.estatus = 'activo' THEN 'Activo'
-                        WHEN v.estatus = 'inactivo' THEN 'Inactivo'
-                        ELSE v.estatus
-                    END as estatus_formato
-                FROM venta v
-                LEFT JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.estatus NOT IN ('inactivo', 'eliminado')
-                ORDER BY v.fecha_venta DESC, v.nro_venta DESC"
-            );
+            $bindings = [];
+            $whereClause = " WHERE v.estatus NOT IN ('inactivo', 'eliminado')";
+
+            // Lógica de búsqueda
+            if (!empty($searchValue)) {
+                $whereClause .= " AND (v.nro_venta LIKE ? OR CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) LIKE ? OR v.estatus LIKE ?)";
+                $searchTerm = "%{$searchValue}%";
+                array_push($bindings, $searchTerm, $searchTerm, $searchTerm);
+            }
+
+            // Contar total de registros (sin filtrar)
+            $totalRecords = $db->query("SELECT COUNT(v.idventa) FROM venta v WHERE v.estatus NOT IN ('inactivo', 'eliminado')")->fetchColumn();
+
+            // Contar total de registros (con filtro de búsqueda)
+            $queryFiltered = "SELECT COUNT(v.idventa) FROM venta v LEFT JOIN cliente c ON v.idcliente = c.idcliente" . $whereClause;
+            $stmtFiltered = $db->prepare($queryFiltered);
+            $stmtFiltered->execute($bindings);
+            $totalFiltered = $stmtFiltered->fetchColumn();
+
+            // Consulta principal con paginación y orden
+            $query = "SELECT 
+                        v.idventa, v.nro_venta, v.fecha_venta,
+                        CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
+                        v.total_general, v.estatus,
+                        DATE_FORMAT(v.fecha_venta, '%d/%m/%Y') as fecha_formato,
+                        CASE 
+                            WHEN v.estatus = 'BORRADOR' THEN 'Borrador'
+                            WHEN v.estatus = 'POR_PAGAR' THEN 'Por Pagar'
+                            WHEN v.estatus = 'PAGADA' THEN 'Pagada'
+                            WHEN v.estatus = 'ANULADA' THEN 'Anulada'
+                            ELSE v.estatus
+                        END as estatus_formato
+                      FROM venta v
+                      LEFT JOIN cliente c ON v.idcliente = c.idcliente
+                      $whereClause
+                      ORDER BY $orderColumnName $orderDir
+                      LIMIT " . intval($start) . ", " . intval($length);
             
-            $this->setArray([]);
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+            $stmt = $db->prepare($query);
+            $stmt->execute($bindings);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
             $resultado = [
-                "status" => true,
-                "message" => "Ventas obtenidas exitosamente.",
-                "data" => $this->getResult()
+                "draw" => intval($params['draw'] ?? 0),
+                "recordsTotal" => intval($totalRecords),
+                "recordsFiltered" => intval($totalFiltered),
+                "data" => $data
             ];
-            
+
         } catch (Exception $e) {
             error_log("VentasModel::ejecutarBusquedaTodasVentas - Error: " . $e->getMessage());
             $resultado = [
-                "status" => false,
-                "message" => "Error al obtener ventas: " . $e->getMessage(),
+                "draw" => intval($params['draw'] ?? 0),
+                "recordsTotal" => 0,
+                "recordsFiltered" => 0,
                 "data" => []
             ];
         } finally {
@@ -281,11 +327,10 @@ class VentasModel extends Mysql
                 'idcliente' => $idCliente,
                 'nro_venta' => $nro_venta
             ];
-
         } catch (Exception $e) {
             $db->rollBack();
             error_log("VentasModel::ejecutarInsercionVenta - Error: " . $e->getMessage());
-            
+
             return [
                 'success' => false,
                 'message' => 'Error al registrar venta: ' . $e->getMessage()
@@ -316,13 +361,12 @@ class VentasModel extends Mysql
                  LEFT JOIN monedas m ON v.idmoneda = m.idmoneda
                  WHERE v.idventa = ?"
             );
-            
+
             $this->setArray([$idventa]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
         } catch (Exception $e) {
             error_log("VentasModel::ejecutarBusquedaVentaPorId - Error: " . $e->getMessage());
             $this->setResult(false);
@@ -348,13 +392,12 @@ class VentasModel extends Mysql
                  WHERE dv.idventa = ?
                  ORDER BY dv.iddetalle_venta"
             );
-            
+
             $this->setArray([$idventa]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
         } catch (Exception $e) {
             error_log("VentasModel::ejecutarBusquedaDetalleVenta - Error: " . $e->getMessage());
             $this->setResult([]);
@@ -380,11 +423,10 @@ class VentasModel extends Mysql
 
             $this->setQuery("UPDATE venta SET estatus = 'Inactivo', ultima_modificacion = NOW() WHERE idventa = ?");
             $this->setArray([$idventa]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount() > 0;
-            
         } catch (Exception $e) {
             error_log("VentasModel::ejecutarEliminacionVenta - Error: " . $e->getMessage());
             $resultado = false;
@@ -410,14 +452,13 @@ class VentasModel extends Mysql
                  ORDER BY nombre, apellido
                  LIMIT 20"
             );
-            
+
             $parametroBusqueda = '%' . $criterio . '%';
             $this->setArray([$parametroBusqueda, $parametroBusqueda, $parametroBusqueda]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
         } catch (Exception $e) {
             error_log("VentasModel::ejecutarBusquedaClientes - Error: " . $e->getMessage());
             $this->setResult([]);
@@ -458,13 +499,12 @@ class VentasModel extends Mysql
                  AND c.nombre = 'Pacas'
                  ORDER BY p.nombre"
             );
-            
+
             $this->setArray([]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
         } catch (Exception $e) {
             error_log("VentasModel::ejecutarBusquedaProductosParaFormulario - Error: " . $e->getMessage());
             $this->setResult([]);
@@ -488,13 +528,12 @@ class VentasModel extends Mysql
                  WHERE estatus = 'Activo'
                  ORDER BY codigo_moneda"
             );
-            
+
             $this->setArray([]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
         } catch (Exception $e) {
             error_log("VentasModel::ejecutarBusquedaMonedasActivas - Error: " . $e->getMessage());
             $this->setResult([]);
@@ -510,7 +549,7 @@ class VentasModel extends Mysql
     {
         $sqlCliente = "INSERT INTO cliente (nombre, apellido, cedula, telefono_principal, direccion, estatus, fecha_creacion, ultima_modificacion)
                        VALUES (?, ?, ?, ?, ?, 'Activo', NOW(), NOW())";
-        
+
         $paramsCliente = [
             $datosCliente['nombre'],
             $datosCliente['apellido'] ?? '',
@@ -574,10 +613,9 @@ class VentasModel extends Mysql
     }
 
     // Métodos públicos que usan las funciones privadas
-    public function getVentasDatatable()
+    public function getVentasDatatable(array $params)
     {
-        $resultado = $this->ejecutarBusquedaTodasVentas();
-        return $resultado['data'] ?? [];
+        return $this->ejecutarBusquedaTodasVentas($params);
     }
 
     public function insertVenta(array $data, array $detalles, array $datosClienteNuevo = null)
@@ -602,6 +640,11 @@ class VentasModel extends Mysql
      * Obtiene el detalle completo de una venta con información de productos
      */
     public function obtenerDetalleVentaCompleto($idventa)
+    {
+        return $this->ejecutarObtenerDetalleVentaCompleto($idventa);
+    }
+
+    private function ejecutarObtenerDetalleVentaCompleto($idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -634,13 +677,12 @@ class VentasModel extends Mysql
              WHERE dv.idventa = ?
              ORDER BY dv.iddetalle_venta"
             );
-            
+
             $this->setArray([$idventa]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
         } catch (Exception $e) {
             error_log("VentasModel::obtenerDetalleVentaCompleto - Error: " . $e->getMessage());
             $this->setResult([]);
@@ -655,7 +697,7 @@ class VentasModel extends Mysql
     {
         $this->setVentaId($idventa);
         $resultado = $this->ejecutarEliminacionVenta($this->getVentaId());
-        
+
         if ($resultado) {
             return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
         } else {
@@ -714,6 +756,11 @@ class VentasModel extends Mysql
 
     public function getTasaPorCodigoYFecha($codigo, $fecha)
     {
+        return $this->ejecutarGetTasaPorCodigoYFecha($codigo, $fecha);
+    }
+
+    private function ejecutarGetTasaPorCodigoYFecha($codigo, $fecha)
+    {
         try {
             $sql = "SELECT tasa_a_bs FROM historial_tasas_bcv WHERE codigo_moneda = ? AND DATE(fecha_publicacion_bcv) <= DATE(?) ORDER BY fecha_publicacion_bcv DESC LIMIT 1";
             $result = $this->search($sql, [$codigo, $fecha]);
@@ -726,6 +773,11 @@ class VentasModel extends Mysql
 
     public function obtenerEstadoVenta($idventa)
     {
+        return $this->ejecutarObtenerEstadoVenta($idventa);
+    }
+
+    private function ejecutarObtenerEstadoVenta($idventa)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -735,9 +787,8 @@ class VentasModel extends Mysql
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idventa]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             return $result ? $result['estatus'] : null;
-            
         } catch (PDOException $e) {
             error_log("VentasModel::obtenerEstadoVenta - Error: " . $e->getMessage());
             return null;
@@ -759,7 +810,7 @@ class VentasModel extends Mysql
 
         try {
             $estadosValidos = ['BORRADOR', 'POR_PAGAR', 'PAGADA', 'ANULADA'];
-            
+
             if (!in_array($nuevoEstado, $estadosValidos)) {
                 return [
                     'status' => false,
@@ -796,7 +847,6 @@ class VentasModel extends Mysql
                 'status' => true,
                 'message' => 'Estado de venta actualizado exitosamente.'
             ];
-
         } catch (PDOException $e) {
             error_log("VentasModel::ejecutarCambioEstadoVenta - Error: " . $e->getMessage());
             return [
@@ -817,14 +867,19 @@ class VentasModel extends Mysql
             'ANULADA' => [] // Una vez anulada, no se puede cambiar
         ];
 
-        return isset($transicionesValidas[$estadoActual]) && 
-               in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
+        return isset($transicionesValidas[$estadoActual]) &&
+            in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
     }
 
     /**
      * Obtiene la tasa de cambio actual de una moneda específica
      */
     public function obtenerTasaActualMoneda($codigoMoneda)
+    {
+        return $this->ejecutarObtenerTasaActualMoneda($codigoMoneda);
+    }
+
+    private function ejecutarObtenerTasaActualMoneda($codigoMoneda)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -839,13 +894,12 @@ class VentasModel extends Mysql
                  ORDER BY htbc.fecha_publicacion_bcv DESC
                  LIMIT 1"
             );
-            
+
             $this->setArray([$codigoMoneda]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
         } catch (Exception $e) {
             error_log("VentasModel::obtenerTasaActualMoneda - Error: " . $e->getMessage());
             $this->setResult(false);
@@ -856,4 +910,3 @@ class VentasModel extends Mysql
         return $this->getResult();
     }
 }
-?>

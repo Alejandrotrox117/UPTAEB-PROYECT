@@ -130,7 +130,9 @@ class Ventas extends Controllers
         }
 
         try {
-            $arrData = $this->model->getVentasDatatable();
+            
+            // $_REQUEST contiene los datos de $_GET y $_POST, que es donde DataTables los envía.
+            $arrData = $this->model->getVentasDatatable($_REQUEST);
 
 
             $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
@@ -145,8 +147,8 @@ class Ventas extends Controllers
                 "data" => $arrData ?: []
             ];
 
-            header('Content-Type: application/json');
-            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+            // Devuelve los datos en formato JSON para que DataTables los entienda.
+            echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getventasData: " . $e->getMessage());
             header('Content-Type: application/json');
