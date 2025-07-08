@@ -840,6 +840,17 @@ class VentasModel // Eliminamos "extends Mysql"
                 ];
             }
 
+            // Validación especial para marcar como PAGADA
+            if ($nuevoEstado === 'PAGADA') {
+                $validacionPago = $this->validarPagosCompletosVenta($db, $idventa);
+                if (!$validacionPago['valido']) {
+                    return [
+                        'status' => false,
+                        'message' => $validacionPago['mensaje']
+                    ];
+                }
+            }
+
             $this->setQuery("UPDATE venta SET estatus = ?, ultima_modificacion = NOW() WHERE idventa = ?");
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$nuevoEstado, $idventa]);
@@ -957,5 +968,57 @@ class VentasModel // Eliminamos "extends Mysql"
         }
 
         return $this->getResult();
+    }
+
+    /**
+     * Valida que una venta tenga pagos conciliados que cubran el total
+     */
+    private function validarPagosCompletosVenta($db, $idventa)
+    {
+        try {
+            // Obtener información de la venta
+            $this->setQuery("SELECT total_general FROM venta WHERE idventa = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $venta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$venta) {
+                return [
+                    'valido' => false,
+                    'mensaje' => 'Venta no encontrada.'
+                ];
+            }
+
+            $totalVenta = $venta['total_general'];
+
+            // Obtener el total de pagos conciliados
+            $this->setQuery("SELECT COALESCE(SUM(monto), 0) as total_pagado FROM pagos WHERE idventa = ? AND estatus = 'conciliado'");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $resultadoPagos = $stmt->fetch(PDO::FETCH_ASSOC);
+            $totalPagado = $resultadoPagos['total_pagado'] ?? 0;
+
+            // Verificar si el total pagado cubre el total de la venta
+            $diferencia = abs($totalVenta - $totalPagado);
+            
+            if ($diferencia > 0.01) { // Tolerancia para problemas de redondeo
+                return [
+                    'valido' => false,
+                    'mensaje' => "No se puede marcar como pagada. Total venta: $totalVenta, Total pagado (conciliado): $totalPagado. Faltan: " . ($totalVenta - $totalPagado)
+                ];
+            }
+
+            return [
+                'valido' => true,
+                'mensaje' => 'Pagos completos validados.'
+            ];
+
+        } catch (Exception $e) {
+            error_log("VentasModel::validarPagosCompletosVenta - Error: " . $e->getMessage());
+            return [
+                'valido' => false,
+                'mensaje' => 'Error al validar pagos: ' . $e->getMessage()
+            ];
+        }
     }
 }

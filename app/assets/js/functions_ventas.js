@@ -1173,10 +1173,16 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     const mensaje = mensajesEstado[nuevoEstado] || "cambiar estado de";
+    
+    // Mensaje especial para marcar como pagada
+    let textoConfirmacion = `¿Deseas ${mensaje} esta venta?`;
+    if (nuevoEstado === "PAGADA") {
+      textoConfirmacion = `¿Deseas marcar esta venta como pagada?\n\nNOTA: Esta acción solo será exitosa si existen pagos registrados y conciliados que cubran el total de la venta.`;
+    }
 
     Swal.fire({
       title: "¿Confirmar acción?",
-      text: `¿Deseas ${mensaje} esta venta?`,
+      text: textoConfirmacion,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
