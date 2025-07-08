@@ -1,6 +1,7 @@
 <?php
 require_once "app/core/Controllers.php";
 require_once "app/models/ventasModel.php";
+require_once "app/models/notificacionesModel.php";
 require_once "helpers/PermisosModuloVerificar.php";
 require_once "helpers/helpers.php";
 require_once "app/models/bitacoraModel.php";
@@ -11,6 +12,7 @@ class Ventas extends Controllers
 {
     private $bitacoraModel;
     private $BitacoraHelper;
+    private $notificacionesModel;
 
     public function get_model()
     {
@@ -28,6 +30,7 @@ class Ventas extends Controllers
         $this->model = new VentasModel();
         $this->bitacoraModel = new BitacoraModel();
         $this->BitacoraHelper = new BitacoraHelper();
+        $this->notificacionesModel = new NotificacionesModel();
 
 
         if (session_status() === PHP_SESSION_NONE) {
@@ -393,6 +396,8 @@ class Ventas extends Controllers
             $resultado = $this->model->insertVenta($data, $detalles, $datosClienteNuevo);
 
             if ($resultado['success']) {
+                // Generar notificación de pago para la venta
+                $this->generarNotificacionPago($resultado['idventa']);
 
                 if ($idusuario) {
                     $resultadoBitacora = $this->bitacoraModel->registrarAccion('ventas', 'CREAR', $idusuario);
@@ -1108,5 +1113,55 @@ class Ventas extends Controllers
             ]);
         }
         exit();
+    }
+
+    private function generarNotificacionPago($idventa)
+    {
+        try {
+            // Obtener información de la venta
+            $ventaData = $this->get_model()->getVentaDetalle($idventa);
+            if (!$ventaData || !isset($ventaData['venta'])) {
+                throw new Exception("No se pudo obtener información de la venta");
+            }
+            
+            $ventaInfo = $ventaData['venta'];
+            
+            // Verificar si ya existe una notificación de pago para esta venta
+            if ($this->notificacionesModel->verificarNotificacionExistente(
+                'VENTA_CREADA_PAGO', 
+                'ventas', 
+                $idventa
+            )) {
+                return; // Ya existe una notificación
+            }
+            
+            // Obtener roles que pueden registrar pagos (crear)
+            $rolesRegistradores = $this->notificacionesModel->obtenerUsuariosConPermiso('pagos', 'crear');
+            
+            if (empty($rolesRegistradores)) {
+                error_log("No se encontraron roles con permisos para crear/registrar en pagos");
+                return;
+            }
+            
+            // Crear notificación para cada rol registrador
+            foreach ($rolesRegistradores as $rol) {
+                $notificacionData = [
+                    'tipo' => 'VENTA_CREADA_PAGO',
+                    'titulo' => 'Venta Creada - Registrar Pago',
+                    'mensaje' => "La venta #{$ventaInfo['nro_venta']} por un total de " . 
+                               number_format($ventaInfo['total_general'], 2) . 
+                               " ha sido creada y requiere registrar un pago para marcarla como pagada.",
+                    'modulo' => 'ventas',
+                    'referencia_id' => $idventa,
+                    'rol_destinatario' => $rol['idrol'],
+                    'prioridad' => 'MEDIA'
+                ];
+                
+                $this->notificacionesModel->crearNotificacion($notificacionData);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al generar notificación de pago para venta: " . $e->getMessage());
+        }
     }
 }

@@ -746,7 +746,7 @@ document.addEventListener("DOMContentLoaded", function () {
         total_general: parseFloat(
           document.getElementById("total_general").value || 0
         ),
-        estatus: "BORRADOR",
+        estatus: "POR_PAGAR",
         observaciones: document.getElementById("observaciones")?.value || "",
         detalles: [],
       };

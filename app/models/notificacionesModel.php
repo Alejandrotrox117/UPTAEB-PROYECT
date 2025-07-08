@@ -723,5 +723,40 @@ class NotificacionesModel extends Mysql
         
         return $resultado;
     }
+
+    public function limpiarNotificacionesVentaPagada($idVenta)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectSeguridad();
+
+        try {
+            // Eliminar todas las notificaciones de venta cuando se marca como pagada
+            $this->setQuery(
+                "DELETE FROM notificaciones 
+                 WHERE referencia_id = ?
+                 AND modulo = 'ventas'
+                 AND tipo IN ('VENTA_CREADA_PAGO')"
+            );
+            
+            $stmt = $db->prepare($this->getQuery());
+            $resultado = $stmt->execute([$idVenta]);
+            
+            // Log para verificar que se eliminaron las notificaciones
+            if ($resultado && $stmt->rowCount() > 0) {
+                error_log("TRIGGER: Se eliminaron {$stmt->rowCount()} notificaciones de la venta pagada ID: {$idVenta}");
+            } else {
+                error_log("TRIGGER: No se encontraron notificaciones para eliminar de la venta ID: {$idVenta}");
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en trigger al limpiar notificaciones de venta pagada: " . $e->getMessage());
+            $resultado = false;
+        } finally {
+            $conexion->disconnect();
+        }
+        
+        return $resultado;
+    }
 }
 ?>

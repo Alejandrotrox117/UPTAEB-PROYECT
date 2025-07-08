@@ -285,8 +285,8 @@ class VentasModel // Eliminamos "extends Mysql"
             $this->setQuery(
                 "INSERT INTO venta 
                 (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, 
-                 monto_descuento_general, estatus, total_general, observaciones, tasa, fecha_creacion, ultima_modificacion)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+                 monto_descuento_general, estatus, total_general, balance, observaciones, tasa, fecha_creacion, ultima_modificacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
             );
 
             $this->setArray([
@@ -299,6 +299,7 @@ class VentasModel // Eliminamos "extends Mysql"
                 $data['monto_descuento_general'],
                 $data['estatus'],
                 $data['total_general'],
+                $data['total_general'], // balance inicial igual al total
                 $data['observaciones'] ?? '',
                 $data['tasa_usada'] ?? 1
             ]);
@@ -839,7 +840,7 @@ class VentasModel // Eliminamos "extends Mysql"
                 ];
             }
 
-            $this->setQuery("UPDATE venta SET estatus = ?, fecha_modificacion = NOW() WHERE idventa = ?");
+            $this->setQuery("UPDATE venta SET estatus = ?, ultima_modificacion = NOW() WHERE idventa = ?");
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$nuevoEstado, $idventa]);
 
@@ -879,6 +880,54 @@ class VentasModel // Eliminamos "extends Mysql"
         return $this->ejecutarObtenerTasaActualMoneda($codigoMoneda);
     }
 
+    public function getVentaDetalle($idventa)
+    {
+        return $this->ejecutarGetVentaDetalle($idventa);
+    }
+
+    private function ejecutarGetVentaDetalle($idventa)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Obtener información de la venta
+            $this->setQuery(
+                "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.total_general, v.estatus,
+                        CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
+                        m.codigo_moneda, m.nombre_moneda
+                 FROM venta v
+                 LEFT JOIN cliente c ON v.idcliente = c.idcliente
+                 LEFT JOIN monedas m ON v.idmoneda = m.idmoneda
+                 WHERE v.idventa = ?"
+            );
+
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $venta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$venta) {
+                return ['status' => false, 'message' => 'Venta no encontrada'];
+            }
+
+            // Obtener detalles de la venta
+            $detalles = $this->obtenerDetalleVentaCompleto($idventa);
+
+            return [
+                'status' => true,
+                'venta' => $venta,
+                'detalles' => $detalles
+            ];
+
+        } catch (Exception $e) {
+            error_log("VentasModel::ejecutarGetVentaDetalle - Error: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Error al obtener detalle de venta'];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
     private function ejecutarObtenerTasaActualMoneda($codigoMoneda)
     {
         $conexion = new Conexion();
@@ -901,7 +950,7 @@ class VentasModel // Eliminamos "extends Mysql"
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
         } catch (Exception $e) {
-            error_log("VentasModel::obtenerTasaActualMoneda - Error: " . $e->getMessage());
+            error_log("VentasModel::ejecutarObtenerTasaActualMoneda - Error: " . $e->getMessage());
             $this->setResult(false);
         } finally {
             $conexion->disconnect();
