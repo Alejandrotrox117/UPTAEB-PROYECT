@@ -509,17 +509,22 @@ class ProductosModel extends Mysql
     // Métodos para crear notificaciones
     private function crearNotificacionNuevoProducto(string $nombreProducto, int $productoId){
         try {
-            $dataNotificacion = [
-                'tipo' => 'PRODUCTO_NUEVO',
-                'titulo' => 'Nuevo Producto Registrado',
-                'mensaje' => "Se ha registrado un nuevo producto: '{$nombreProducto}'",
-                'modulo' => 'productos',
-                'referencia_id' => $productoId,
-                'rol_destinatario' => $this->obtenerRolProductos(),
-                'prioridad' => 'MEDIA'
-            ];
+            // Obtener permisos relevantes para notificaciones de productos
+            $permisosRelevantes = $this->notificacionesModel->obtenerPermisosParaAccion('productos', 'ver');
             
-            $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            foreach ($permisosRelevantes as $permiso) {
+                $dataNotificacion = [
+                    'tipo' => 'PRODUCTO_NUEVO',
+                    'titulo' => 'Nuevo Producto Registrado',
+                    'mensaje' => "Se ha registrado un nuevo producto: '{$nombreProducto}'",
+                    'modulo' => 'productos',
+                    'referencia_id' => $productoId,
+                    'permiso_id' => $permiso['idpermiso'],
+                    'prioridad' => 'MEDIA'
+                ];
+                
+                $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            }
         } catch (Exception $e) {
             error_log("Error al crear notificación de nuevo producto: " . $e->getMessage());
         }
@@ -527,17 +532,22 @@ class ProductosModel extends Mysql
 
     private function crearNotificacionProductoActualizado(string $nombreProducto, int $productoId){
         try {
-            $dataNotificacion = [
-                'tipo' => 'PRODUCTO_ACTUALIZADO',
-                'titulo' => 'Producto Actualizado',
-                'mensaje' => "El producto '{$nombreProducto}' ha sido actualizado",
-                'modulo' => 'productos',
-                'referencia_id' => $productoId,
-                'rol_destinatario' => $this->obtenerRolProductos(),
-                'prioridad' => 'BAJA'
-            ];
+            // Obtener permisos relevantes para notificaciones de productos
+            $permisosRelevantes = $this->notificacionesModel->obtenerPermisosParaAccion('productos', 'ver');
             
-            $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            foreach ($permisosRelevantes as $permiso) {
+                $dataNotificacion = [
+                    'tipo' => 'PRODUCTO_ACTUALIZADO',
+                    'titulo' => 'Producto Actualizado',
+                    'mensaje' => "El producto '{$nombreProducto}' ha sido actualizado",
+                    'modulo' => 'productos',
+                    'referencia_id' => $productoId,
+                    'permiso_id' => $permiso['idpermiso'],
+                    'prioridad' => 'BAJA'
+                ];
+                
+                $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            }
         } catch (Exception $e) {
             error_log("Error al crear notificación de producto actualizado: " . $e->getMessage());
         }
@@ -545,17 +555,22 @@ class ProductosModel extends Mysql
 
     private function crearNotificacionProductoDesactivado(string $nombreProducto, int $productoId){
         try {
-            $dataNotificacion = [
-                'tipo' => 'PRODUCTO_DESACTIVADO',
-                'titulo' => 'Producto Desactivado',
-                'mensaje' => "El producto '{$nombreProducto}' ha sido desactivado",
-                'modulo' => 'productos',
-                'referencia_id' => $productoId,
-                'rol_destinatario' => $this->obtenerRolProductos(),
-                'prioridad' => 'MEDIA'
-            ];
+            // Obtener permisos relevantes para notificaciones de productos
+            $permisosRelevantes = $this->notificacionesModel->obtenerPermisosParaAccion('productos', 'ver');
             
-            $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            foreach ($permisosRelevantes as $permiso) {
+                $dataNotificacion = [
+                    'tipo' => 'PRODUCTO_DESACTIVADO',
+                    'titulo' => 'Producto Desactivado',
+                    'mensaje' => "El producto '{$nombreProducto}' ha sido desactivado",
+                    'modulo' => 'productos',
+                    'referencia_id' => $productoId,
+                    'permiso_id' => $permiso['idpermiso'],
+                    'prioridad' => 'MEDIA'
+                ];
+                
+                $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            }
         } catch (Exception $e) {
             error_log("Error al crear notificación de producto desactivado: " . $e->getMessage());
         }
@@ -563,47 +578,24 @@ class ProductosModel extends Mysql
 
     private function crearNotificacionProductoActivado(string $nombreProducto, int $productoId){
         try {
-            $dataNotificacion = [
-                'tipo' => 'PRODUCTO_ACTIVADO',
-                'titulo' => 'Producto Activado',
-                'mensaje' => "El producto '{$nombreProducto}' ha sido activado",
-                'modulo' => 'productos',
-                'referencia_id' => $productoId,
-                'rol_destinatario' => $this->obtenerRolProductos(),
-                'prioridad' => 'BAJA'
-            ];
+            // Obtener permisos relevantes para notificaciones de productos
+            $permisosRelevantes = $this->notificacionesModel->obtenerPermisosParaAccion('productos', 'ver');
             
-            $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            foreach ($permisosRelevantes as $permiso) {
+                $dataNotificacion = [
+                    'tipo' => 'PRODUCTO_ACTIVADO',
+                    'titulo' => 'Producto Activado',
+                    'mensaje' => "El producto '{$nombreProducto}' ha sido activado",
+                    'modulo' => 'productos',
+                    'referencia_id' => $productoId,
+                    'permiso_id' => $permiso['idpermiso'],
+                    'prioridad' => 'BAJA'
+                ];
+                
+                $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            }
         } catch (Exception $e) {
             error_log("Error al crear notificación de producto activado: " . $e->getMessage());
-        }
-    }
-
-    private function obtenerRolProductos(){
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $this->setQuery(
-                "SELECT r.idrol FROM rol r 
-                JOIN roles_permisos rp ON r.idrol = rp.rol_id 
-                JOIN permisos p ON rp.permiso_id = p.idpermiso 
-                WHERE p.modulo = 'productos' AND p.accion = 'ver' AND r.estatus = 'ACTIVO'
-                LIMIT 1"
-            );
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute();
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            return $result ? $result['idrol'] : null;
-            
-        } catch (Exception $e) {
-            error_log("Error al obtener rol de productos: " . $e->getMessage());
-            return null;
-        } finally {
-            $conexion->disconnect();
         }
     }
 

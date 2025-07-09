@@ -174,20 +174,35 @@ function loadNotifications() {
   const notificationsList = document.getElementById("notifications-list");
   if (!notificationsList) return;
   
+  console.log("🔔 loadNotifications - Iniciando carga de notificaciones");
   notificationsList.innerHTML = `<div class="text-center py-4 text-blue-500"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Cargando...</p></div>`;
   
+  console.log("🔔 loadNotifications - Intentando fetch a getNotificaciones");
   fetch("./Notificaciones/getNotificaciones")
-    .then((response) => response.json())
+    .then((response) => {
+      console.log("🔔 loadNotifications - Respuesta recibida:", response);
+      console.log("🔔 loadNotifications - Status:", response.status);
+      return response.json();
+    })
     .then((result) => {
+      console.log("🔔 loadNotifications - JSON parseado:", result);
       if (result.status && result.data) {
+        console.log("🔔 loadNotifications - Mostrando notificaciones");
         displayNotifications(result.data);
         actualizarContadorNotificaciones(); // Actualizar contador también
       } else {
+        console.log("🔔 loadNotifications - No hay notificaciones o error");
         notificationsList.innerHTML = `<div class="text-center py-4 text-gray-500"><i class="fas fa-bell-slash fa-2x mb-2"></i><p>No hay notificaciones</p></div>`;
+      }
+      
+      // Mostrar información de debug si existe
+      if (result.debug_info) {
+        console.log("🔔 DEBUG INFO:", result.debug_info);
       }
     })
     .catch((error) => {
-      console.error("Error al cargar notificaciones:", error);
+      console.error("🔔 ERROR al cargar notificaciones:", error);
+      console.error("🔔 ERROR detalles:", error.message);
       notificationsList.innerHTML = `<div class="text-center py-4 text-red-500"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Error al cargar</p></div>`;
     });
 }
