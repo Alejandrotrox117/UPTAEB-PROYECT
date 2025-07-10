@@ -8,6 +8,9 @@ require_once "app/core/Controllers.php";
 require_once "vendor/autoload.php";
 require_once "helpers/helpers.php";
 
+// Configurar headers de seguridad CSP
+setCSPHeaders();
+
 $url = !empty($_GET['url']) ? $_GET['url'] : 'dashboard/dashboard'; // URL
 
 $arrUrl = explode('/', $url);

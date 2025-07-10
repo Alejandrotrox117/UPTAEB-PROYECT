@@ -159,7 +159,7 @@ headerAdmin($data);
     </div>
 </div>
 
-<script>
+<script nonce="<?= generateCSPNonce(); ?>">
     async function cargarDatosSelects() {
     try {
         // Cargar usuarios
@@ -205,8 +205,7 @@ headerAdmin($data);
 
 </script>
 
-
-<script>
+<script nonce="<?= generateCSPNonce(); ?>">
     document.getElementById("formRegistrarRol").addEventListener("submit", function (e) {
         e.preventDefault();
 
@@ -315,7 +314,7 @@ headerAdmin($data);
 
 
 <!-- Scripts personalizados -->
-<script>
+<script nonce="<?= generateCSPNonce(); ?>">
     /* eliminar roles */
     function modalEliminar(id) {
     const modal = document.getElementById('modalEliminar');

@@ -1,4 +1,4 @@
-<script>
+<script nonce="<?= generateCSPNonce(); ?>">
   const base_url = "<?= base_url(); ?>";
 </script>
 
