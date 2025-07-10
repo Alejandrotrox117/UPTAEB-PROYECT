@@ -141,4 +141,50 @@ function strClean($str)
     return $string;
 }
 
+/**
+ * Generar token CSRF
+ */
+function generateCSRFToken() {
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['csrf_token'] = $token;
+    return $token;
+}
+
+/**
+ * Validar token CSRF
+ */
+function validateCSRFToken($token) {
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    if (!isset($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    
+    $isValid = hash_equals($_SESSION['csrf_token'], $token);
+    
+    // Regenerar el token después de validar (one-time use)
+    if ($isValid) {
+        unset($_SESSION['csrf_token']);
+    }
+    
+    return $isValid;
+}
+
+/**
+ * Obtener token CSRF actual de la sesión
+ */
+function getCSRFToken() {
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    return $_SESSION['csrf_token'] ?? generateCSRFToken();
+}
+
 ?>

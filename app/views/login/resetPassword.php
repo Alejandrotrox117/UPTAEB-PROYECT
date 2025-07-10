@@ -27,6 +27,9 @@
         </div>
 
         <form id="formResetPass" action="<?= base_url() ?>/login/enviarResetPassword" method="POST" class="space-y-4">
+            <!-- Token CSRF -->
+            <input type="hidden" name="csrf_token" value="<?= $data['csrf_token'] ?? '' ?>">
+            
             <div>
                 <label for="txtEmailReset" class="block text-sm font-medium text-gray-700 mb-2">
                     Correo Electrónico:

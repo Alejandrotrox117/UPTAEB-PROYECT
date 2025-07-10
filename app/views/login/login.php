@@ -28,6 +28,9 @@
         </div>
         
         <form action="<?= base_url() ?>/login/loginUser" method="POST" id="formLogin" class="space-y-2">
+            <!-- Token CSRF -->
+            <input type="hidden" name="csrf_token" value="<?= $data['csrf_token'] ?? '' ?>">
+            
             <div>
                 <label for="txtEmail" class="block text-xs font-medium text-gray-700 mb-0.5">
                     Correo Electrónico:
