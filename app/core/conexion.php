@@ -1,5 +1,8 @@
 <?php
 
+// Cargar configuración
+require_once __DIR__ . '/../../config/config.php';
+
 class Conexion
 {
     private $servidor;
@@ -11,17 +14,18 @@ class Conexion
     private $conectGeneral;
 
     public function __construct(
-        $servidor = 'localhost',
-        $username = 'root',
-        $password = '',
-        $databaseGeneral = 'bd_pda',
-        $databaseSeguridad = 'bd_pda_seguridad'
+        $servidor = null,
+        $username = null,
+        $password = null,
+        $databaseGeneral = null,
+        $databaseSeguridad = null
     ) {
-        $this->servidor = $servidor;
-        $this->username = $username;
-        $this->password = $password;
-        $this->databaseGeneral = $databaseGeneral;
-        $this->databaseSeguridad = $databaseSeguridad;
+        // Usar variables de entorno si no se proporcionan parámetros
+        $this->servidor = $servidor ?? DB_HOST;
+        $this->username = $username ?? DB_USERNAME;
+        $this->password = $password ?? DB_PASSWORD;
+        $this->databaseGeneral = $databaseGeneral ?? DB_NAME_GENERAL;
+        $this->databaseSeguridad = $databaseSeguridad ?? DB_NAME_SEGURIDAD;
     }
 
     // Getters

@@ -1,1 +1,78 @@
+# Ejecutables
 *.exe
+
+# Variables de entorno - NUNCA subir al repositorio
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.bak
+*~
+
+# Directorios de dependencias
+vendor/
+node_modules/
+
+# Archivos de configuración local del IDE
+.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de caché
+cache/
+*.cache
+
+# Archivos de sesión
+sessions/
+tmp/
+
+# Archivos subidos por usuarios
+uploads/
+storage/
+public/uploads/
+
+# Archivos de backup de base de datos
+*.sql
+*.sql.gz
+backup/
+backups/
+
+# Archivos de configuración específicos del servidor
+.htaccess.local
+php.ini.local
+
+# Claves y certificados
+*.key
+*.pem
+*.crt
+*.p12
+
+# Archivos de composer
+composer.phar
+
+# Archivos de testing
+phpunit.xml
+.phpunit.result.cache
+
+# Archivos de documentación generada
+docs/build/
+api-docs/
+
+# Archivos de profiling
+xdebug/
+profile/
