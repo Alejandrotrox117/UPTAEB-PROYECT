@@ -1,0 +1,7 @@
+# Denegar acceso directo a los archivos de backup
+Order Deny,Allow
+Deny from all
+
+# Solo permitir acceso desde localhost (para desarrollo)
+# Allow from 127.0.0.1
+# Allow from ::1
