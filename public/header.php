@@ -103,9 +103,9 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
           <li class="menu-item"><a href="/project/movimientos" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-boxes-stacked w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Movimientos</span></a></li>
           <?php endif; ?>
 
-          <!-- Sueldos Temporales -->
-          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos_temporales', 'ver')): ?>
-          <li class="menu-item"><a href="/project/sueldos_temporales" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Sueldos</span></a></li>
+          <!-- Gestionar Sueldos -->
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos', 'ver')): ?>
+          <li class="menu-item"><a href="/project/sueldos" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Sueldos</span></a></li>
           <?php endif; ?>
 
           <!-- Gestionar Ventas -->
