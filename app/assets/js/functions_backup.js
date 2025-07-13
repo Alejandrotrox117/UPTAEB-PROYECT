@@ -1,19 +1,36 @@
-document.addEventListener('DOMContentLoaded', function() {
-    let tablaBackups;
-    let modalBackupTabla;
-    let modalConfirmarRestaurar;
-    let archivoParaRestaurar = '';
+// Verificar que el script solo se ejecute una vez
+if (window.backupScriptLoaded) {
+    console.warn('Script de backup ya está cargado');
+} else {
+    window.backupScriptLoaded = true;
 
-    // Inicialización
-    init();
-
-    function init() {
-        configurarModales();
-        configurarEventos();
-        cargarListaBackups();
-        cargarTablas();
-        cargarEstadisticas();
+// Esperar a que jQuery y DataTables estén completamente cargados
+function esperarLibrerias(callback) {
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        callback();
+    } else {
+        setTimeout(() => esperarLibrerias(callback), 100);
     }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    esperarLibrerias(function() {
+        let tablaBackups;
+        let modalBackupTabla;
+        let modalConfirmarRestaurar;
+        let archivoParaRestaurar = '';
+        let tablaInicializada = false; // Flag para controlar la inicialización
+
+        // Inicialización
+        init();
+
+        function init() {
+            configurarModales();
+            configurarEventos();
+            cargarListaBackups();
+            cargarTablas();
+            cargarEstadisticas();
+        }
 
     function configurarModales() {
         modalBackupTabla = document.getElementById('modalBackupTabla');
@@ -282,11 +299,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (data.status === 'success') {
-                if (tablaBackups) {
-                    tablaBackups.destroy();
+                // Si la tabla ya existe, solo actualizar los datos
+                if (tablaInicializada && tablaBackups && $.fn.DataTable.isDataTable('#tablaBackups')) {
+                    try {
+                        tablaBackups.clear();
+                        if (data.backups && data.backups.length > 0) {
+                            tablaBackups.rows.add(data.backups);
+                        }
+                        tablaBackups.draw();
+                    } catch (updateError) {
+                        console.error('Error al actualizar tabla:', updateError);
+                        // Si falla la actualización, recargar la página
+                        location.reload();
+                    }
+                } else {
+                    // Primera inicialización
+                    configurarDataTable(data.backups || []);
                 }
-                
-                configurarDataTable(data.backups || []);
             } else {
                 throw new Error(data.mensaje || 'Error al cargar los backups');
             }
@@ -304,15 +333,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function configurarDataTable(backups) {
-        tablaBackups = $('#tablaBackups').DataTable({
-            data: backups,
-            responsive: true,
-            pageLength: 10,
-            order: [[3, 'desc']], // Ordenar por fecha descendente
-            language: {
-                url: '/project/app/assets/DataTables/Spanish.json'
-            },
-            columns: [
+        // Solo inicializar si no está ya inicializado
+        if (tablaInicializada || $.fn.DataTable.isDataTable('#tablaBackups')) {
+            console.warn('DataTable ya está inicializada');
+            return;
+        }
+        
+        try {
+            tablaBackups = $('#tablaBackups').DataTable({
+                data: backups,
+                responsive: true,
+                pageLength: 10,
+                order: [[3, 'desc']], // Ordenar por fecha descendente
+                language: {
+                    "decimal": "",
+                    "emptyTable": "No hay datos disponibles en la tabla",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
+                    "infoFiltered": "(filtrado de _MAX_ entradas totales)",
+                    "infoPostFix": "",
+                    "thousands": ",",
+                    "lengthMenu": "Mostrar _MENU_ entradas",
+                    "loadingRecords": "Cargando...",
+                    "processing": "Procesando...",
+                    "search": "Buscar:",
+                    "zeroRecords": "No se encontraron registros coincidentes",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    },
+                    "aria": {
+                        "sortAscending": ": activar para ordenar la columna ascendente",
+                        "sortDescending": ": activar para ordenar la columna descendente"
+                    }
+                },
+                columns: [
                 {
                     data: 'nombre_archivo',
                     render: function(data, type, row) {
@@ -366,6 +423,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             ]
         });
+        
+        // Marcar como inicializada
+        tablaInicializada = true;
+        
+        } catch (error) {
+            console.error('Error al configurar DataTable:', error);
+            tablaInicializada = false;
+        }
     }
 
     async function cargarTablas() {
@@ -405,15 +470,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Función global para descargar backup
+    // Funciones globales
     window.descargarBackup = function(archivo) {
         window.open(base_url + 'backup/descargarBackup?archivo=' + encodeURIComponent(archivo), '_blank');
     };
 
-    // Función global para mostrar modal de restaurar
     window.mostrarModalRestaurar = mostrarModalRestaurar;
-    
-    // Función global para eliminar backup
     window.eliminarBackup = eliminarBackup;
 
     // Función para formatear tamaños de archivo
@@ -426,4 +488,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-});
+    
+    }); // Cierre de esperarLibrerias
+}); // Cierre de DOMContentLoaded
+
+} // Cierre del bloque principal del script

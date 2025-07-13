@@ -247,4 +247,4 @@
 <?php footerAdmin($data); ?>
 
 <!-- Scripts específicos -->
-<script src="<?= base_url(); ?>app/assets/js/functions_backup.js"></script>
+<script type="module" src="<?= base_url(); ?>app/assets/js/functions_backup.js"></script>
