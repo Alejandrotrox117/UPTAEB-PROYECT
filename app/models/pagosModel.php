@@ -142,6 +142,11 @@ class PagosModel extends Mysql
             $this->setPagoId($db->lastInsertId());
             
             if ($this->getPagoId()) {
+                // Si el pago está asociado a una venta, verificar si debe marcarse como pagada
+                if (!empty($data['idventa'])) {
+                    $this->verificarEstadoVentaDespuesPago($db, $data['idventa']);
+                }
+                
                 $this->setStatus(true);
                 $this->setMessage('Pago registrado exitosamente.');
             } else {
@@ -168,6 +173,50 @@ class PagosModel extends Mysql
         }
 
         return $resultado;
+    }
+
+    private function verificarEstadoVentaDespuesPago($db, $idventa) {
+        try {
+            // Solo actualizar el balance, NO marcar como pagada automáticamente
+            // La venta solo se marca como pagada cuando se concilian los pagos
+            
+            // Calcular el total de pagos registrados (activos + conciliados)
+            $this->setQuery("
+                SELECT COALESCE(SUM(monto), 0) as total_pagado
+                FROM pagos 
+                WHERE idventa = ? AND estatus IN ('activo', 'conciliado')
+            ");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $resultadoPagos = $stmt->fetch(PDO::FETCH_ASSOC);
+            $totalPagado = $resultadoPagos['total_pagado'] ?? 0;
+            
+            // Obtener el total de la venta
+            $this->setQuery("SELECT total_general FROM venta WHERE idventa = ?");
+            $stmtVenta = $db->prepare($this->getQuery());
+            $stmtVenta->execute([$idventa]);
+            $ventaInfo = $stmtVenta->fetch(PDO::FETCH_ASSOC);
+            
+            if ($ventaInfo) {
+                $totalVenta = $ventaInfo['total_general'];
+                $nuevoBalance = $totalVenta - $totalPagado;
+                
+                // Asegurar que el balance no sea negativo
+                if ($nuevoBalance < 0) {
+                    $nuevoBalance = 0;
+                }
+                
+                // SOLO actualizar el balance, no cambiar el estado
+                $this->setQuery("UPDATE venta SET balance = ? WHERE idventa = ?");
+                $stmt = $db->prepare($this->getQuery());
+                $stmt->execute([$nuevoBalance, $idventa]);
+                
+                error_log("PagosModel::verificarEstadoVentaDespuesPago -> Balance actualizado para venta ID: " . $idventa . " - Nuevo balance: $nuevoBalance (Total pagado: $totalPagado)");
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error al verificar estado de venta después del pago: " . $e->getMessage());
+        }
     }
 
     // Función privada para actualizar pago
@@ -474,6 +523,7 @@ class PagosModel extends Mysql
                 "SELECT
                     c.idcompra,
                     c.nro_compra,
+                    c.total_general as total,
                     c.balance, 
                     p.nombre AS proveedor,
                     p.identificacion AS proveedor_identificacion
@@ -482,8 +532,8 @@ class PagosModel extends Mysql
                 INNER JOIN
                     proveedor p ON c.idproveedor = p.idproveedor
                 WHERE
-                    (c.estatus_compra = 'POR_PAGAR' OR c.estatus_compra = 'PAGO_FRACCIONADO')
-                    AND c.balance > 0
+                    c.estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')
+                    AND c.balance > 0.01
                 ORDER BY
                     c.fecha DESC"
             );
@@ -525,18 +575,14 @@ class PagosModel extends Mysql
                 "SELECT 
                     v.idventa,
                     v.nro_venta,
-                    v.total,
-                    c.nombre as cliente,
+                    v.total_general as total,
+                    v.balance,
+                    CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente,
                     c.cedula as cliente_identificacion
                 FROM venta v
                 INNER JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.estatus = 'activo'
-                AND v.idventa NOT IN (
-                    SELECT pg.idventa 
-                    FROM pagos pg 
-                    WHERE pg.idventa IS NOT NULL 
-                    AND pg.estatus IN ('activo', 'conciliado')
-                )
+                WHERE v.estatus IN ('POR_PAGAR', 'PAGO_FRACCIONADO')
+                AND v.balance > 0.01
                 ORDER BY v.fecha_venta DESC"
             );
             
@@ -802,77 +848,56 @@ class PagosModel extends Mysql
     }
 
     // Función privada para conciliar pago
-    private function ejecutarConciliacionPago(int $idpago){
+    private function ejecutarConciliacionPago(int $idpago)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
-            // Primero obtener información del pago
-            $this->setQuery("SELECT idcompra FROM pagos WHERE idpago = ?");
+            $db->beginTransaction();
+
+            // Obtener información del pago a conciliar
+            $this->setQuery("SELECT * FROM pagos WHERE idpago = ?");
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idpago]);
-            $pagoInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$pagoInfo) {
-                error_log("PagosModel::ejecutarConciliacionPago -> Pago no encontrado: " . $idpago);
-                return false;
+            $pago = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$pago) {
+                throw new Exception("Pago no encontrado");
             }
-            
+
+            // Validar que el pago no esté ya conciliado
+            if ($pago['estatus'] === 'conciliado') {
+                throw new Exception("El pago ya está conciliado");
+            }
+
             // Actualizar el estado del pago a conciliado
-            $this->setQuery("UPDATE pagos SET estatus = 'conciliado' WHERE idpago = ? AND estatus = 'activo'");
+            $this->setQuery("UPDATE pagos SET estatus = 'conciliado', fecha_conciliacion = NOW() WHERE idpago = ?");
             $stmt = $db->prepare($this->getQuery());
             $resultado = $stmt->execute([$idpago]);
-            
+
             if (!$resultado || $stmt->rowCount() == 0) {
-                error_log("PagosModel::ejecutarConciliacionPago -> No se pudo actualizar el pago: " . $idpago);
-                return false;
+                throw new Exception("No se pudo actualizar el estado del pago");
             }
-            
-            // Si el pago está asociado a una compra, verificar si todos los pagos están conciliados
-            if ($pagoInfo['idcompra']) {
-                $idcompra = $pagoInfo['idcompra'];
-                
-                // Verificar si todos los pagos de esta compra están conciliados
-                $this->setQuery("
-                    SELECT COUNT(*) as total_pagos, 
-                           SUM(CASE WHEN estatus = 'conciliado' THEN 1 ELSE 0 END) as pagos_conciliados
-                    FROM pagos 
-                    WHERE idcompra = ? AND estatus IN ('activo', 'conciliado')
-                ");
-                $stmt = $db->prepare($this->getQuery());
-                $stmt->execute([$idcompra]);
-                $estatusPagos = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                // Si todos los pagos están conciliados, actualizar el estado de la compra a PAGADA
-                if ($estatusPagos['total_pagos'] > 0 && 
-                    $estatusPagos['total_pagos'] == $estatusPagos['pagos_conciliados']) {
-                    
-                    $this->setQuery("UPDATE compra SET estatus_compra = 'PAGADA' WHERE idcompra = ? AND estatus_compra != 'PAGADA'");
-                    $stmt = $db->prepare($this->getQuery());
-                    $resultadoCompra = $stmt->execute([$idcompra]);
-                    
-                    if ($resultadoCompra && $stmt->rowCount() > 0) {
-                        error_log("PagosModel::ejecutarConciliacionPago -> Compra marcada como PAGADA: " . $idcompra);
-                        
-                        // Limpiar notificaciones de compra cuando se marca como pagada
-                        try {
-                            require_once "app/models/notificacionesModel.php";
-                            $notificacionesModel = new NotificacionesModel();
-                            $notificacionesModel->limpiarNotificacionesCompraPagada($idcompra);
-                            error_log("PagosModel: Notificaciones limpiadas para compra pagada ID: {$idcompra}");
-                        } catch (Exception $e) {
-                            error_log("PagosModel: Error al limpiar notificaciones de compra pagada ID {$idcompra}: " . $e->getMessage());
-                        }
-                    }
-                }
+
+            // Procesar según el tipo (compra o venta)
+            if (!empty($pago['idcompra'])) {
+                // Lógica para compras
+                $this->procesarConciliacionCompra($db, $pago['idcompra']);
+            } 
+            elseif (!empty($pago['idventa'])) {
+                // Lógica para ventas
+                $this->procesarConciliacionVenta($db, $pago['idventa']);
             }
-            
+
+            $db->commit();
             return true;
-            
+
         } catch (Exception $e) {
-            error_log("PagosModel::ejecutarConciliacionPago -> " . $e->getMessage());
-            return false;
+            $db->rollBack();
+            error_log("PagosModel::ejecutarConciliacionPago - Error: " . $e->getMessage());
+            throw $e;
         } finally {
             $conexion->disconnect();
         }
@@ -964,20 +989,205 @@ class PagosModel extends Mysql
 
     public function conciliarPago(int $idpago){
         $this->setPagoId($idpago);
-        $result = $this->ejecutarConciliacionPago($this->getPagoId());
         
-        if ($result) {
+        try {
+            $result = $this->ejecutarConciliacionPago($this->getPagoId());
+            
             return [
                 'status' => true,
                 'message' => 'Pago conciliado exitosamente',
                 'idpago' => $this->getPagoId()
             ];
-        } else {
+            
+        } catch (Exception $e) {
             return [
                 'status' => false,
-                'message' => 'No se pudo conciliar el pago',
+                'message' => $e->getMessage(),
                 'idpago' => $this->getPagoId()
             ];
+        }
+    }
+
+    /**
+     * Obtiene un resumen del estado de pagos de una venta
+     */
+    public function obtenerResumenPagosVenta($idventa)
+    {
+        return $this->ejecutarObtenerResumenPagosVenta($idventa);
+    }
+
+    private function ejecutarObtenerResumenPagosVenta($idventa)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Obtener información de la venta
+            $this->setQuery("SELECT total_general, balance, estatus FROM venta WHERE idventa = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $venta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$venta) {
+                return ['status' => false, 'message' => 'Venta no encontrada'];
+            }
+
+            // Obtener resumen de pagos
+            $this->setQuery("
+                SELECT 
+                    COUNT(*) as total_pagos,
+                    COALESCE(SUM(CASE WHEN estatus = 'conciliado' THEN monto ELSE 0 END), 0) as total_conciliado,
+                    COALESCE(SUM(CASE WHEN estatus = 'activo' THEN monto ELSE 0 END), 0) as total_pendiente,
+                    COALESCE(SUM(monto), 0) as total_pagos_registrados
+                FROM pagos 
+                WHERE idventa = ?
+            ");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $resumenPagos = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $diferenciaPendiente = $venta['total_general'] - $resumenPagos['total_pagos_registrados'];
+
+            return [
+                'status' => true,
+                'venta' => [
+                    'total_venta' => $venta['total_general'],
+                    'balance_actual' => $venta['balance'],
+                    'estatus_venta' => $venta['estatus']
+                ],
+                'pagos' => [
+                    'total_pagos' => $resumenPagos['total_pagos'],
+                    'total_conciliado' => $resumenPagos['total_conciliado'],
+                    'total_pendiente' => $resumenPagos['total_pendiente'],
+                    'total_registrado' => $resumenPagos['total_pagos_registrados'],
+                    'diferencia_pendiente' => $diferenciaPendiente
+                ],
+                'puede_completarse' => $diferenciaPendiente <= 0.01,
+                'falta_por_registrar' => max(0, $diferenciaPendiente)
+            ];
+
+        } catch (Exception $e) {
+            error_log("PagosModel::ejecutarObtenerResumenPagosVenta - Error: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Error al obtener resumen'];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Procesa la conciliación de un pago de compra
+     */
+    private function procesarConciliacionCompra($db, $idcompra)
+    {
+        try {
+            // Obtener información de la compra
+            $this->setQuery("SELECT total_general, balance, estatus_compra FROM compra WHERE idcompra = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idcompra]);
+            $compra = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$compra) {
+                throw new Exception("Compra no encontrada");
+            }
+
+            // Calcular total pagado después de la conciliación
+            $this->setQuery("SELECT COALESCE(SUM(monto), 0) as total_pagado FROM pagos WHERE idcompra = ? AND estatus = 'conciliado'");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idcompra]);
+            $totalPagado = $stmt->fetch(PDO::FETCH_ASSOC)['total_pagado'];
+
+            // Calcular nuevo balance
+            $nuevoBalance = $compra['total_general'] - $totalPagado;
+            if ($nuevoBalance < 0) {
+                $nuevoBalance = 0;
+            }
+
+            // Actualizar balance de la compra
+            $this->setQuery("UPDATE compra SET balance = ?, ultima_modificacion = NOW() WHERE idcompra = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$nuevoBalance, $idcompra]);
+
+            // Si el balance llega a 0, marcar como pagada
+            if ($nuevoBalance <= 0.01) {
+                $this->setQuery("UPDATE compra SET estatus_compra = 'PAGADA', balance = 0, ultima_modificacion = NOW() WHERE idcompra = ?");
+                $stmt = $db->prepare($this->getQuery());
+                $stmt->execute([$idcompra]);
+
+                // Limpiar notificaciones
+                try {
+                    require_once "app/models/notificacionesModel.php";
+                    $notificacionesModel = new NotificacionesModel();
+                    $notificacionesModel->limpiarNotificacionesCompraPagada($idcompra);
+                    error_log("PagosModel: Notificaciones limpiadas para compra pagada ID: {$idcompra}");
+                } catch (Exception $e) {
+                    error_log("PagosModel: Error al limpiar notificaciones de compra pagada ID {$idcompra}: " . $e->getMessage());
+                }
+            }
+
+            error_log("PagosModel::procesarConciliacionCompra -> Compra ID: {$idcompra}, Balance actualizado: {$nuevoBalance}");
+
+        } catch (Exception $e) {
+            error_log("PagosModel::procesarConciliacionCompra - Error: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Procesa la conciliación de un pago de venta
+     */
+    private function procesarConciliacionVenta($db, $idventa)
+    {
+        try {
+            // Obtener información de la venta
+            $this->setQuery("SELECT total_general, balance, estatus FROM venta WHERE idventa = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $venta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$venta) {
+                throw new Exception("Venta no encontrada");
+            }
+
+            // Calcular total pagado después de la conciliación
+            $this->setQuery("SELECT COALESCE(SUM(monto), 0) as total_pagado FROM pagos WHERE idventa = ? AND estatus = 'conciliado'");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $totalPagado = $stmt->fetch(PDO::FETCH_ASSOC)['total_pagado'];
+
+            // Calcular nuevo balance
+            $nuevoBalance = $venta['total_general'] - $totalPagado;
+            if ($nuevoBalance < 0) {
+                $nuevoBalance = 0;
+            }
+
+            // Actualizar balance de la venta
+            $this->setQuery("UPDATE venta SET balance = ?, ultima_modificacion = NOW() WHERE idventa = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$nuevoBalance, $idventa]);
+
+            // Si el balance llega a 0, marcar como pagada
+            if ($nuevoBalance <= 0.01) {
+                $this->setQuery("UPDATE venta SET estatus = 'PAGADA', balance = 0, ultima_modificacion = NOW() WHERE idventa = ?");
+                $stmt = $db->prepare($this->getQuery());
+                $stmt->execute([$idventa]);
+
+                // Limpiar notificaciones
+                try {
+                    require_once "app/models/notificacionesModel.php";
+                    $notificacionesModel = new NotificacionesModel();
+                    $notificacionesModel->limpiarNotificacionesVentaPagada($idventa);
+                    error_log("PagosModel: Notificaciones limpiadas para venta pagada ID: {$idventa}");
+                } catch (Exception $e) {
+                    error_log("PagosModel: Error al limpiar notificaciones de venta pagada ID {$idventa}: " . $e->getMessage());
+                }
+            }
+
+            error_log("PagosModel::procesarConciliacionVenta -> Venta ID: {$idventa}, Balance actualizado: {$nuevoBalance}");
+
+        } catch (Exception $e) {
+            error_log("PagosModel::procesarConciliacionVenta - Error: " . $e->getMessage());
+            throw $e;
         }
     }
 }

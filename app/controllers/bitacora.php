@@ -38,7 +38,7 @@ class Bitacora extends Controllers
 
         
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-        BitacoraHelper::registrarAccesoModulo('Bitacora', $idusuario, $this->model);
+        // BitacoraHelper::registrarAccesoModulo('Bitacora', $idusuario, $this->model);
 
         $data['page_title'] = "Bitácora del Sistema";
         $data['page_name'] = "Bitácora";
