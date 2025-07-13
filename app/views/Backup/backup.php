@@ -83,17 +83,6 @@
             </div>
         </div>
         
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <div class="flex items-center">
-                <div class="bg-purple-100 p-3 rounded-full mr-4">
-                    <i class="fas fa-hdd text-purple-600"></i>
-                </div>
-                <div>
-                    <h4 class="text-sm font-medium text-gray-500">Espacio Total</h4>
-                    <p id="espacioTotal" class="text-lg font-semibold text-gray-900">-</p>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Tabla de Backups -->

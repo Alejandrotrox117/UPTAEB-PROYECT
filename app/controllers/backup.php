@@ -27,16 +27,8 @@ class Backup extends Controllers
             die();
         }
 
-        // Verificación de permisos temporal - permitir acceso para testing
-        // TODO: Agregar módulo 'backups' a la base de datos
-        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
-            die();
-        }
-
-        // Verificar si es superadministrador (puede acceder a backups)
-        $idRol = $_SESSION['user']['idrol'] ?? $_SESSION['rol_id'] ?? 0;
-        if ($idRol != 1) { // Solo rol de administrador puede acceder
+        // Verificar permisos de acceso al módulo backups
+        if (!PermisosModuloVerificar::verificarAccesoModulo('Backup')) {
             $this->views->getView($this, "permisos");
             exit();
         }
@@ -45,7 +37,7 @@ class Backup extends Controllers
     public function index()
     {
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-        BitacoraHelper::registrarAccesoModulo('backups', $idusuario, $this->bitacoraModel);
+        BitacoraHelper::registrarAccesoModulo('Backup', $idusuario, $this->bitacoraModel);
 
         $data['page_tag'] = "Backups";
         $data['page_title'] = "Gestión de Backups";
@@ -61,7 +53,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 echo json_encode([
                     'status' => false,
                     'message' => 'No tienes permisos para ver backups',
@@ -75,7 +67,7 @@ class Backup extends Controllers
                 
                 if ($resultado['status']) {
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                    $this->bitacoraModel->registrarAccion('backups', 'CONSULTA_LISTADO', $idusuario);
+                    $this->bitacoraModel->registrarAccion('Backup', 'CONSULTA_LISTADO', $idusuario);
                 }
                 
                 echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
@@ -97,7 +89,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('crear')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'crear')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para crear backups'
@@ -136,7 +128,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('crear')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'crear')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para crear backups'
@@ -186,7 +178,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('eliminar')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'eliminar')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para eliminar backups'
@@ -238,7 +230,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('editar')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'editar')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para restaurar backups'
@@ -299,7 +291,7 @@ class Backup extends Controllers
     public function descargarBackup()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 http_response_code(403);
                 echo "No tienes permisos para descargar backups";
                 die();
@@ -323,7 +315,7 @@ class Backup extends Controllers
                 }
 
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                $this->bitacoraModel->registrarAccion('backups', 'DESCARGAR_BACKUP', $idusuario, $nombreArchivo);
+                $this->bitacoraModel->registrarAccion('Backup', 'DESCARGAR_BACKUP', $idusuario, $nombreArchivo);
 
                 header('Content-Type: application/octet-stream');
                 header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
@@ -347,7 +339,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('editar')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'editar')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para importar bases de datos'
@@ -446,7 +438,7 @@ class Backup extends Controllers
                 
                 if ($resultado['status']) {
                     // Registrar en bitácora
-                    $this->bitacoraModel->registrarAccion('backups', 'IMPORTACION_DB', $idusuario, "Archivo: {$archivo['name']}, BD: {$baseDatos}");
+                    $this->bitacoraModel->registrarAccion('Backup', 'IMPORTACION_DB', $idusuario, "Archivo: {$archivo['name']}, BD: {$baseDatos}");
 
                     echo json_encode([
                         'status' => 'success',
@@ -480,7 +472,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para ver tablas',
@@ -531,7 +523,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para ver backups',
@@ -545,7 +537,7 @@ class Backup extends Controllers
                 
                 if ($resultado['status']) {
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                    $this->bitacoraModel->registrarAccion('backups', 'CONSULTA_LISTADO', $idusuario);
+                    $this->bitacoraModel->registrarAccion('Backup', 'CONSULTA_LISTADO', $idusuario);
                     
                     echo json_encode([
                         'status' => 'success',
@@ -577,7 +569,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para ver estadísticas'
@@ -598,20 +590,6 @@ class Backup extends Controllers
             }
             die();
         }
-    }
-
-    /**
-     * Método temporal para verificar permisos hasta que se configure el módulo en la BD
-     * TODO: Reemplazar con PermisosModuloVerificar una vez configurado el módulo
-     */
-    private function verificarPermisoTemporal($accion = 'ver') 
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $idRol = $_SESSION['user']['idrol'] ?? $_SESSION['rol_id'] ?? 0;
-        return $idRol == 1; // Solo administradores por ahora
     }
 }
 ?>
