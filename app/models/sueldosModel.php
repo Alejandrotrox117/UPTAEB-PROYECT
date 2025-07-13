@@ -131,8 +131,8 @@ class SueldosModel extends Mysql
             
             $this->setQuery(
                 "INSERT INTO sueldos (
-                    idpersona, idempleado, monto, balance, observacion, estatus, fecha_creacion, fecha_modificacion
-                ) VALUES (?, ?, ?, ?, ?, 'POR_PAGAR', NOW(), NOW())"
+                    idpersona, idempleado, monto, balance, idmoneda, observacion, estatus, fecha_creacion, fecha_modificacion
+                ) VALUES (?, ?, ?, ?, ?, ?, 'POR_PAGAR', NOW(), NOW())"
             );
             
             $this->setArray([
@@ -140,6 +140,7 @@ class SueldosModel extends Mysql
                 $data['idempleado'] ?? null,
                 $data['monto'],
                 $balance,
+                isset($data['idmoneda']) && $data['idmoneda'] > 0 ? $data['idmoneda'] : 3, // Default a Bolívares (VES) si no se especifica o es 0
                 $data['observacion']
             ]);
             
@@ -200,7 +201,7 @@ class SueldosModel extends Mysql
             $this->setQuery(
                 "UPDATE sueldos SET 
                     idpersona = ?, idempleado = ?, monto = ?, balance = ?, 
-                    observacion = ?, fecha_modificacion = NOW() 
+                    idmoneda = ?, observacion = ?, fecha_modificacion = NOW() 
                 WHERE idsueldo = ?"
             );
             
@@ -209,6 +210,7 @@ class SueldosModel extends Mysql
                 $data['idempleado'] ?? null,
                 $data['monto'],
                 $nuevoBalance,
+                isset($data['idmoneda']) && $data['idmoneda'] > 0 ? $data['idmoneda'] : 3, // Default a Bolívares (VES) si no se especifica o es 0
                 $data['observacion'],
                 $idsueldo
             ]);
@@ -253,18 +255,20 @@ class SueldosModel extends Mysql
         try {
             $this->setQuery(
                 "SELECT 
-                    s.idsueldo, s.idpersona, s.idempleado, s.monto, s.balance,
+                    s.idsueldo, s.idpersona, s.idempleado, s.monto, s.balance, s.idmoneda,
                     s.observacion, s.estatus, s.fecha_creacion, s.fecha_modificacion,
                     CONCAT(COALESCE(p.nombre, ''), ' ', COALESCE(p.apellido, '')) as nombre_persona,
                     p.identificacion as identificacion_persona,
                     CONCAT(COALESCE(e.nombre, ''), ' ', COALESCE(e.apellido, '')) as nombre_empleado,
                     e.identificacion as identificacion_empleado,
                     e.puesto,
+                    m.codigo_moneda, m.nombre_moneda, m.valor as valor_moneda,
                     DATE_FORMAT(s.fecha_creacion, ?) as fecha_creacion_formato,
                     DATE_FORMAT(s.fecha_modificacion, ?) as fecha_modificacion_formato
                 FROM sueldos s
                 LEFT JOIN personas p ON s.idpersona = p.idpersona
                 LEFT JOIN empleado e ON s.idempleado = e.idempleado
+                LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
                 WHERE s.idsueldo = ?"
             );
             
@@ -323,18 +327,20 @@ class SueldosModel extends Mysql
             
             $this->setQuery(
                 "SELECT 
-                    s.idsueldo, s.idpersona, s.idempleado, s.monto, s.balance,
+                    s.idsueldo, s.idpersona, s.idempleado, s.monto, s.balance, s.idmoneda,
                     s.observacion, s.estatus, s.fecha_creacion, s.fecha_modificacion,
                     CONCAT(COALESCE(p.nombre, ''), ' ', COALESCE(p.apellido, '')) as nombre_persona,
                     p.identificacion as identificacion_persona,
                     CONCAT(COALESCE(e.nombre, ''), ' ', COALESCE(e.apellido, '')) as nombre_empleado,
                     e.identificacion as identificacion_empleado,
                     e.puesto,
+                    m.codigo_moneda, m.nombre_moneda, m.valor as valor_moneda,
                     DATE_FORMAT(s.fecha_creacion, ?) as fecha_creacion_formato,
                     DATE_FORMAT(s.fecha_modificacion, ?) as fecha_modificacion_formato
                 FROM sueldos s
                 LEFT JOIN personas p ON s.idpersona = p.idpersona
                 LEFT JOIN empleado e ON s.idempleado = e.idempleado
+                LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
                 ORDER BY s.fecha_creacion DESC"
             );
             
@@ -516,134 +522,37 @@ class SueldosModel extends Mysql
         return $resultado;
     }
 
-    // Métodos públicos que usan las funciones privadas
-    public function insertSueldo(array $data){
-        $this->setData($data);
-        
-        // Verificar si ya existe un sueldo reciente para esta persona/empleado
-        $dataArray = $this->getData();
-        $idpersona = $dataArray['idpersona'] ?? null;
-        $idempleado = $dataArray['idempleado'] ?? null;
-
-        if ($this->ejecutarVerificacionSueldo($idpersona, $idempleado)) {
-            return [
-                'status' => false,
-                'message' => 'Ya existe un sueldo registrado para esta persona/empleado en los últimos 30 días.',
-                'sueldo_id' => null
-            ];
-        }
-
-        return $this->ejecutarInsercionSueldo($this->getData());
-    }
-
-    public function updateSueldo(int $idsueldo, array $data){
-        $this->setData($data);
-        $this->setSueldoId($idsueldo);
-        
-        $dataArray = $this->getData();
-        $idpersona = $dataArray['idpersona'] ?? null;
-        $idempleado = $dataArray['idempleado'] ?? null;
-
-        if ($this->ejecutarVerificacionSueldo($idpersona, $idempleado, $this->getSueldoId())) {
-            return [
-                'status' => false,
-                'message' => 'Ya existe otro sueldo registrado para esta persona/empleado en los últimos 30 días.'
-            ];
-        }
-
-        return $this->ejecutarActualizacionSueldo($this->getSueldoId(), $this->getData());
-    }
-
-    public function selectSueldoById(int $idsueldo){
-        $this->setSueldoId($idsueldo);
-        return $this->ejecutarBusquedaSueldoPorId($this->getSueldoId());
-    }
-
-    public function deleteSueldoById(int $idsueldo){
-        $this->setSueldoId($idsueldo);
-        return $this->ejecutarInactivacionSueldo($this->getSueldoId());
-    }
-
-    public function reactivarSueldoById(int $idsueldo){
-        $this->setSueldoId($idsueldo);
-        return $this->ejecutarReactivacionSueldo($this->getSueldoId());
-    }
-
-    public function selectAllSueldos(int $idUsuarioSesion = 0){
-        return $this->ejecutarBusquedaTodosSueldos($idUsuarioSesion);
-    }
-
-    public function buscarSueldos($termino)
-    {
+    // Función para obtener todas las monedas activas
+    public function getMonedas(){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
             $this->setQuery(
-                "SELECT 
-                    s.idsueldo, s.idpersona, s.idempleado, s.monto, s.balance,
-                    s.observacion, s.estatus, s.fecha_creacion,
-                    CONCAT(COALESCE(p.nombre, ''), ' ', COALESCE(p.apellido, '')) as nombre_persona,
-                    p.identificacion as identificacion_persona,
-                    CONCAT(COALESCE(e.nombre, ''), ' ', COALESCE(e.apellido, '')) as nombre_empleado,
-                    e.identificacion as identificacion_empleado,
-                    e.puesto,
-                    DATE_FORMAT(s.fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato
-                FROM sueldos s
-                LEFT JOIN personas p ON s.idpersona = p.idpersona
-                LEFT JOIN empleado e ON s.idempleado = e.idempleado
-                WHERE (p.nombre LIKE ? OR p.apellido LIKE ? OR p.identificacion LIKE ? 
-                       OR e.nombre LIKE ? OR e.apellido LIKE ? OR e.identificacion LIKE ?
-                       OR s.observacion LIKE ?)
-                ORDER BY s.fecha_creacion DESC
-                LIMIT 50"
+                "SELECT idmoneda, codigo_moneda, nombre_moneda, valor 
+                FROM monedas 
+                WHERE estatus = 'activo' 
+                ORDER BY codigo_moneda ASC"
             );
             
-            $param = "%{$termino}%";
-            $this->setArray([$param, $param, $param, $param, $param, $param, $param]);
-            
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
+            $stmt->execute();
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
             
             $resultado = [
                 "status" => true,
-                "message" => "Búsqueda completada.",
+                "message" => "Monedas obtenidas exitosamente.",
                 "data" => $this->getResult()
             ];
             
         } catch (Exception $e) {
-            error_log("SueldosModel::buscarSueldos - Error: " . $e->getMessage());
+            error_log("SueldosModel::getMonedas - Error: " . $e->getMessage());
             $resultado = [
                 "status" => false,
-                "message" => "Error en la búsqueda: " . $e->getMessage(),
+                "message" => "Error al obtener monedas: " . $e->getMessage(),
                 "data" => []
             ];
-        } finally {
-            $conexion->disconnect();
-        }
-
-        return $resultado;
-    }
-
-    // Función para eliminar sueldo (cambio de estatus a INACTIVO)
-    private function ejecutarInactivacionSueldo(int $idsueldo){
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $this->setQuery("UPDATE sueldos SET estatus = 'INACTIVO', fecha_modificacion = NOW() WHERE idsueldo = ?");
-            $this->setArray([$idsueldo]);
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $resultado = $stmt->rowCount() > 0;
-            
-        } catch (Exception $e) {
-            error_log("SueldosModel::ejecutarInactivacionSueldo -> " . $e->getMessage());
-            $resultado = false;
         } finally {
             $conexion->disconnect();
         }
@@ -673,5 +582,31 @@ class SueldosModel extends Mysql
         }
 
         return $resultado;
+    }
+
+    // Funciones públicas para acceso desde el controlador
+    public function insertSueldo(array $data){
+        return $this->ejecutarInsercionSueldo($data);
+    }
+
+    public function updateSueldo(int $idsueldo, array $data){
+        return $this->ejecutarActualizacionSueldo($idsueldo, $data);
+    }
+
+    public function selectSueldoById(int $idsueldo){
+        return $this->ejecutarBusquedaSueldoPorId($idsueldo);
+    }
+
+    public function deleteSueldo(int $idsueldo){
+        return $this->ejecutarEliminacionSueldo($idsueldo);
+    }
+
+    public function selectAllSueldos(int $idUsuarioSesion = 0){
+        return $this->ejecutarBusquedaTodosSueldos($idUsuarioSesion);
+    }
+
+    // Función para reactivar sueldo (cambio de estatus a POR_PAGAR)
+    public function reactivarSueldo(int $idsueldo){
+        return $this->ejecutarReactivacionSueldo($idsueldo);
     }
 }

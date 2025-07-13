@@ -71,6 +71,13 @@
                            placeholder="Ingrese el monto del sueldo">
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
+                <div>
+                    <label for="sueldoMoneda" class="block text-sm font-medium text-gray-700 mb-1">Moneda *</label>
+                    <select id="sueldoMoneda" name="idmoneda" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm">
+                        <option value="">Seleccionar moneda...</option>
+                    </select>
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
                 <div class="md:col-span-2">
                     <label for="sueldoObservacion" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
                     <textarea id="sueldoObservacion" name="observacion" rows="3" 
@@ -129,6 +136,13 @@
                     <input type="number" id="sueldoMontoActualizar" name="monto" step="0.01" min="0" 
                            class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
                            placeholder="Ingrese el monto del sueldo">
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
+                <div>
+                    <label for="sueldoMonedaActualizar" class="block text-sm font-medium text-gray-700 mb-1">Moneda *</label>
+                    <select id="sueldoMonedaActualizar" name="idmoneda" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm">
+                        <option value="">Seleccionar moneda...</option>
+                    </select>
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div class="md:col-span-2">

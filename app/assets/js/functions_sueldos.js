@@ -6,6 +6,9 @@ import {
   registrarEntidad,
 } from "./validaciones.js";
 
+// Obtener base_url de la variable global
+const base_url = window.base_url || "/project";
+
 let tablaSueldos;
 let esSuperUsuarioActual = false;
 let idUsuarioActual = 0;
@@ -32,6 +35,13 @@ const camposFormularioSueldo = [
     mensajes: {
       vacio: "El monto es obligatorio.",
       formato: "El monto debe ser un número válido mayor a 0.",
+    },
+  },
+  {
+    id: "sueldoMoneda",
+    tipo: "select",
+    mensajes: {
+      vacio: "Debe seleccionar una moneda.",
     },
   },
   {
@@ -69,6 +79,13 @@ const camposFormularioActualizarSueldo = [
     },
   },
   {
+    id: "sueldoMonedaActualizar",
+    tipo: "select",
+    mensajes: {
+      vacio: "Debe seleccionar una moneda.",
+    },
+  },
+  {
     id: "sueldoObservacionActualizar",
     tipo: "textarea",
     regex: expresiones.textoGeneral,
@@ -79,10 +96,16 @@ const camposFormularioActualizarSueldo = [
 ];
 
 document.addEventListener("DOMContentLoaded", function () {
+  console.log("Functions_sueldos.js - DOM cargado");
+  console.log("Base URL:", base_url);
+  
   verificarSuperUsuario();
   initTablaSueldos();
   initEventListeners();
   cargarPersonasYEmpleados();
+  cargarMonedas();
+  
+  console.log("Functions_sueldos.js - Todas las funciones inicializadas");
 });
 
 function verificarSuperUsuario() {
@@ -169,10 +192,12 @@ function initTablaSueldos() {
         title: "Monto",
         className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
         render: function (data, type, row) {
+          const codigo_moneda = row.codigo_moneda || 'VES';
           return new Intl.NumberFormat("es-VE", {
-            style: "currency",
-            currency: "VES",
-          }).format(data);
+            style: "decimal",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(data) + ' ' + codigo_moneda;
         },
       },
       {
@@ -180,10 +205,12 @@ function initTablaSueldos() {
         title: "Balance",
         className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
         render: function (data, type, row) {
+          const codigo_moneda = row.codigo_moneda || 'VES';
           return new Intl.NumberFormat("es-VE", {
-            style: "currency",
-            currency: "VES",
-          }).format(data);
+            style: "decimal",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(data) + ' ' + codigo_moneda;
         },
       },
       {
@@ -498,6 +525,55 @@ function cargarPersonasYEmpleados() {
     });
 }
 
+function cargarMonedas() {
+  console.log("Cargando monedas...");
+  fetch(base_url + "/sueldos/getMonedas")
+    .then((response) => {
+      console.log("Response monedas:", response);
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Datos monedas recibidos:", data);
+      if (data.status) {
+        const selectRegistrar = document.getElementById("sueldoMoneda");
+        const selectActualizar = document.getElementById("sueldoMonedaActualizar");
+        
+        console.log("Selects encontrados:", {
+          registrar: !!selectRegistrar,
+          actualizar: !!selectActualizar
+        });
+        
+        if (selectRegistrar && selectActualizar) {
+          // Limpiar opciones existentes
+          selectRegistrar.innerHTML = '<option value="">Seleccionar moneda...</option>';
+          selectActualizar.innerHTML = '<option value="">Seleccionar moneda...</option>';
+          
+          // Agregar opciones de monedas
+          data.data.forEach(moneda => {
+            const optionRegistrar = document.createElement("option");
+            optionRegistrar.value = moneda.idmoneda;
+            optionRegistrar.textContent = `${moneda.codigo_moneda} - ${moneda.nombre_moneda}`;
+            selectRegistrar.appendChild(optionRegistrar);
+            
+            const optionActualizar = document.createElement("option");
+            optionActualizar.value = moneda.idmoneda;
+            optionActualizar.textContent = `${moneda.codigo_moneda} - ${moneda.nombre_moneda}`;
+            selectActualizar.appendChild(optionActualizar);
+          });
+          
+          console.log("Monedas cargadas exitosamente");
+        } else {
+          console.error("No se encontraron los selects de moneda");
+        }
+      } else {
+        console.error("Error en respuesta:", data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error cargando monedas:", error);
+    });
+}
+
 function cargarPersonasEmpleadosPorTipo(tipo, selectId) {
   const select = document.getElementById(selectId);
   select.innerHTML = '<option value="">Seleccionar...</option>';
@@ -527,15 +603,17 @@ function registrarSueldo() {
   const tipoPersona = document.getElementById("tipoPersona").value;
   const personaEmpleadoId = document.getElementById("sueldoPersonaEmpleado").value;
   const monto = document.getElementById("sueldoMonto").value;
+  const idmoneda = document.getElementById("sueldoMoneda").value;
   const observacion = document.getElementById("sueldoObservacion").value;
 
-  if (!tipoPersona || !personaEmpleadoId || !monto) {
+  if (!tipoPersona || !personaEmpleadoId || !monto || !idmoneda) {
     Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
     return;
   }
 
   const datos = {
     monto: parseFloat(monto),
+    idmoneda: parseInt(idmoneda),
     observacion: observacion,
   };
 
@@ -608,6 +686,7 @@ function mostrarModalEditarSueldo(sueldo) {
   // Llenar formulario
   document.getElementById("idSueldoActualizar").value = sueldo.idsueldo || "";
   document.getElementById("sueldoMontoActualizar").value = sueldo.monto || "";
+  document.getElementById("sueldoMonedaActualizar").value = sueldo.idmoneda || "";
   document.getElementById("sueldoObservacionActualizar").value = sueldo.observacion || "";
 
   // Determinar tipo y cargar select
@@ -639,9 +718,10 @@ function actualizarSueldo() {
   const personaEmpleadoId = document.getElementById("sueldoPersonaEmpleadoActualizar").value;
   const idsueldo = document.getElementById("idSueldoActualizar").value;
   const monto = document.getElementById("sueldoMontoActualizar").value;
+  const idmoneda = document.getElementById("sueldoMonedaActualizar").value;
   const observacion = document.getElementById("sueldoObservacionActualizar").value;
 
-  if (!tipoPersona || !personaEmpleadoId || !monto) {
+  if (!tipoPersona || !personaEmpleadoId || !monto || !idmoneda) {
     Swal.fire("Error", "Por favor complete todos los campos obligatorios", "error");
     return;
   }
@@ -649,6 +729,7 @@ function actualizarSueldo() {
   const datos = {
     idsueldo: parseInt(idsueldo),
     monto: parseFloat(monto),
+    idmoneda: parseInt(idmoneda),
     observacion: observacion,
   };
 

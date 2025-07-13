@@ -81,6 +81,13 @@ class Sueldos extends Controllers
                     die();
                 }
 
+                // Validar que se especifique una moneda
+                if (empty($request['idmoneda'])) {
+                    $arrResponse = array('status' => false, 'message' => 'Debe seleccionar una moneda');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
                 // Validar que monto sea numérico
                 if (!is_numeric($request['monto'])) {
                     $arrResponse = array('status' => false, 'message' => 'El monto debe ser un valor numérico');
@@ -100,6 +107,7 @@ class Sueldos extends Controllers
                     'idpersona' => !empty($request['idpersona']) ? intval($request['idpersona']) : null,
                     'idempleado' => !empty($request['idempleado']) ? intval($request['idempleado']) : null,
                     'monto' => floatval($request['monto']),
+                    'idmoneda' => intval($request['idmoneda']),
                     'observacion' => trim($request['observacion'] ?? '')
                 );
 
@@ -147,6 +155,50 @@ class Sueldos extends Controllers
         $data['page_content'] = "Gestión integral de sueldos del sistema";
         $data['page_functions_js'] = "functions_sueldos.js";
         $this->views->getView($this, "sueldos", $data);
+    }
+
+    public function getMonedas()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                error_log("Sueldos::getMonedas - Iniciando...");
+                
+                if (!$this->model) {
+                    error_log("Sueldos::getMonedas - ERROR: Modelo no está disponible");
+                    $arrResponse = array('status' => false, 'message' => 'Error interno: modelo no disponible', 'data' => []);
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+                
+                $arrResponse = $this->model->getMonedas();
+                error_log("Sueldos::getMonedas - Respuesta del modelo: " . json_encode($arrResponse));
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getMonedas: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage(), 'data' => []);
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    // Función de debug temporal - eliminar en producción
+    public function debugMonedas()
+    {
+        try {
+            error_log("DEBUG: Intentando obtener monedas...");
+            $result = $this->model->getMonedas();
+            error_log("DEBUG: Resultado: " . json_encode($result));
+            
+            header('Content-Type: application/json');
+            echo json_encode($result, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("DEBUG ERROR: " . $e->getMessage());
+            $response = array('status' => false, 'message' => 'Error: ' . $e->getMessage(), 'data' => []);
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        }
+        die();
     }
 
     public function getSueldosData()
@@ -252,6 +304,13 @@ class Sueldos extends Controllers
                     die();
                 }
 
+                // Validar que se especifique una moneda
+                if (empty($request['idmoneda'])) {
+                    $arrResponse = array('status' => false, 'message' => 'Debe seleccionar una moneda');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
                 // Validar que monto sea numérico
                 if (!is_numeric($request['monto'])) {
                     $arrResponse = array('status' => false, 'message' => 'El monto debe ser un valor numérico');
@@ -271,6 +330,7 @@ class Sueldos extends Controllers
                     'idpersona' => !empty($request['idpersona']) ? intval($request['idpersona']) : null,
                     'idempleado' => !empty($request['idempleado']) ? intval($request['idempleado']) : null,
                     'monto' => floatval($request['monto']),
+                    'idmoneda' => intval($request['idmoneda']),
                     'observacion' => trim($request['observacion'] ?? '')
                 );
 
