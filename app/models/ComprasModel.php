@@ -3,7 +3,7 @@ require_once "app/core/Conexion.php";
 require_once "app/core/Mysql.php";
 require_once "app/models/notificacionesModel.php";
 
-class ComprasModel extends Mysql
+class ComprasModel
 {
     const SUPER_USUARIO_ROL_ID = 1; // ID del rol de super usuario
     
@@ -41,7 +41,7 @@ class ComprasModel extends Mysql
 
     public function __construct()
     {
-        parent::__construct();
+       
     }
 
     // GETTERS Y SETTERS DE CONTROL
