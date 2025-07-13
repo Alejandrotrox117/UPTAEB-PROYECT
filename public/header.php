@@ -182,11 +182,7 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
                 <?php endif; ?>
 
                 <!-- Gestión de Backups -->
-                <?php 
-                // Verificación temporal para backups - solo administradores
-                $idRol = $_SESSION['user']['idrol'] ?? $_SESSION['rol_id'] ?? 0;
-                if ($idRol == 1): 
-                ?>
+                <?php if (PermisosModuloVerificar::verificarAccesoModulo('Backup')): ?>
                 <li class="menu-item">
                   <a href="/project/backup" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
                     <i class="nav-icon fa-solid fa-database w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
@@ -195,16 +191,7 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
                 </li>
                 <?php endif; ?>
                
-                
-                <!-- Administración y Backups -->
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'total')): ?>
-                <li class="menu-item">
-                  <a href="/project/administracion" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
-                    <i class="nav-icon fa-solid fa-shield-alt w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
-                    <span class="nav-text ml-3">Administración</span>
-                  </a>
-                </li>
-                <?php endif; ?>
+    
                 
               </ul>
             </details>

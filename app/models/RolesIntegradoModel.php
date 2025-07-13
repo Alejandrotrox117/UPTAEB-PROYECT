@@ -295,7 +295,7 @@ class RolesIntegradoModel extends mysql
         $dbSeguridad = $conexion->get_conectSeguridad();
 
         try {
-            $this->setQuery("SELECT idrol, nombre, descripcion FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC");
+            $this->setQuery("SELECT idrol, nombre, descripcion FROM roles WHERE estatus = 'activo' ORDER BY nombre ASC");
             
             $stmt = $dbSeguridad->prepare($this->getQuery());
             $stmt->execute();

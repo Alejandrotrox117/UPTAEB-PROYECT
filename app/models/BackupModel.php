@@ -629,6 +629,397 @@ class BackupModel {
         return round(($bytes / pow($k, $i)), 2) . ' ' . $sizes[$i];
     }
 
+    /**
+     * Importa una base de datos desde un archivo SQL
+     */
+    public function importarBaseDatos($rutaArchivo, $baseDatos = 'bd_pda')
+    {
+        try {
+            if (!file_exists($rutaArchivo)) {
+                return ['status' => false, 'message' => 'El archivo SQL no existe'];
+            }
+
+            // Leer el contenido del archivo
+            $contenidoSQL = file_get_contents($rutaArchivo);
+            if ($contenidoSQL === false) {
+                return ['status' => false, 'message' => 'No se pudo leer el archivo SQL'];
+            }
+
+            // Validar que el archivo no esté vacío
+            if (empty(trim($contenidoSQL))) {
+                return ['status' => false, 'message' => 'El archivo SQL está vacío'];
+            }
+
+            // Determinar qué base(s) de datos importar
+            $resultados = [];
+            
+            if ($baseDatos === 'ambas') {
+                $resultados['bd_pda'] = $this->ejecutarImportacion($contenidoSQL, $this->dbGeneral, 'BD Principal');
+                
+                try {
+                    $resultados['bd_pda_seguridad'] = $this->ejecutarImportacion($contenidoSQL, $this->dbSeguridad, 'BD Seguridad');
+                } catch (Exception $e) {
+                    $resultados['bd_pda_seguridad'] = ['status' => false, 'message' => 'BD Seguridad no disponible: ' . $e->getMessage()];
+                }
+                
+                // Verificar si al menos una fue exitosa
+                $alguaExitosa = $resultados['bd_pda']['status'] || $resultados['bd_pda_seguridad']['status'];
+                
+                if ($alguaExitosa) {
+                    $mensajes = [];
+                    if ($resultados['bd_pda']['status']) $mensajes[] = 'BD Principal: OK';
+                    if ($resultados['bd_pda_seguridad']['status']) $mensajes[] = 'BD Seguridad: OK';
+                    
+                    $errores = [];
+                    if (!$resultados['bd_pda']['status']) $errores[] = 'BD Principal: ' . $resultados['bd_pda']['message'];
+                    if (!$resultados['bd_pda_seguridad']['status']) $errores[] = 'BD Seguridad: ' . $resultados['bd_pda_seguridad']['message'];
+                    
+                    $mensaje = 'Importación completada. ' . implode(', ', $mensajes);
+                    if (!empty($errores)) {
+                        $mensaje .= '. Advertencias: ' . implode('; ', $errores);
+                    }
+                    
+                    return ['status' => true, 'message' => $mensaje];
+                } else {
+                    $errores = [];
+                    if (!$resultados['bd_pda']['status']) $errores[] = 'BD Principal: ' . $resultados['bd_pda']['message'];
+                    if (!$resultados['bd_pda_seguridad']['status']) $errores[] = 'BD Seguridad: ' . $resultados['bd_pda_seguridad']['message'];
+                    return ['status' => false, 'message' => 'Errores en importación: ' . implode('; ', $errores)];
+                }
+            } else {
+                // Importar a una sola base de datos
+                try {
+                    $db = ($baseDatos === 'bd_pda_seguridad') ? $this->dbSeguridad : $this->dbGeneral;
+                    $nombreDB = ($baseDatos === 'bd_pda_seguridad') ? 'BD Seguridad' : 'BD Principal';
+                    
+                    return $this->ejecutarImportacion($contenidoSQL, $db, $nombreDB);
+                } catch (Exception $e) {
+                    return ['status' => false, 'message' => 'Error de conexión a la base de datos: ' . $e->getMessage()];
+                }
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en importarBaseDatos: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Error al importar: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Ejecuta la importación en una base de datos específica
+     */
+    private function ejecutarImportacion($contenidoSQL, $db, $nombreDB)
+    {
+        try {
+            // Verificar que la conexión esté disponible
+            if (!$db) {
+                return ['status' => false, 'message' => "Conexión a {$nombreDB} no disponible"];
+            }
+
+            // Dividir el contenido en sentencias individuales
+            $sentencias = $this->dividirSentenciasSQL($contenidoSQL);
+            
+            if (empty($sentencias)) {
+                return ['status' => false, 'message' => "No se encontraron sentencias SQL válidas para {$nombreDB}"];
+            }
+
+            $db->beginTransaction();
+            
+            $sentenciasEjecutadas = 0;
+            $sentenciasOmitidas = 0;
+            $errores = [];
+            $advertencias = [];
+
+            foreach ($sentencias as $index => $sentencia) {
+                $sentencia = trim($sentencia);
+                if (empty($sentencia)) continue;
+
+                try {
+                    // Verificar si es una sentencia que debe omitirse
+                    if ($this->debeOmitirSentencia($sentencia)) {
+                        $sentenciasOmitidas++;
+                        $advertencias[] = "Sentencia omitida (línea " . ($index + 1) . "): " . substr($sentencia, 0, 50) . "...";
+                        continue;
+                    }
+
+                    $stmt = $db->prepare($sentencia);
+                    $stmt->execute();
+                    $sentenciasEjecutadas++;
+                    
+                } catch (PDOException $e) {
+                    $errorMsg = $e->getMessage();
+                    
+                    // Errores que podemos ignorar (no críticos)
+                    if ($this->esErrorIgnorable($errorMsg)) {
+                        $advertencias[] = "Advertencia (línea " . ($index + 1) . "): " . $errorMsg;
+                        continue;
+                    }
+                    
+                    // Errores críticos
+                    $errores[] = "Error crítico (línea " . ($index + 1) . "): " . $errorMsg . " - Sentencia: " . substr($sentencia, 0, 100) . "...";
+                    
+                    // Si hay muchos errores críticos, detener la importación
+                    if (count($errores) > 10) {
+                        throw new Exception("Demasiados errores críticos encontrados. Deteniendo importación.");
+                    }
+                }
+            }
+
+            $db->commit();
+
+            // Preparar mensaje de resultado
+            $mensaje = "Importación en {$nombreDB} completada:\n";
+            $mensaje .= "- Sentencias ejecutadas: {$sentenciasEjecutadas}\n";
+            
+            if ($sentenciasOmitidas > 0) {
+                $mensaje .= "- Sentencias omitidas: {$sentenciasOmitidas}\n";
+            }
+            
+            if (!empty($advertencias)) {
+                $mensaje .= "- Advertencias: " . count($advertencias) . "\n";
+            }
+            
+            if (!empty($errores)) {
+                $mensaje .= "- Errores no críticos: " . count($errores) . "\n";
+            }
+
+            if ($sentenciasEjecutadas > 0) {
+                return [
+                    'status' => true, 
+                    'message' => $mensaje,
+                    'detalles' => [
+                        'ejecutadas' => $sentenciasEjecutadas,
+                        'omitidas' => $sentenciasOmitidas,
+                        'advertencias' => $advertencias,
+                        'errores' => $errores
+                    ]
+                ];
+            } else {
+                return [
+                    'status' => false, 
+                    'message' => "No se pudo ejecutar ninguna sentencia en {$nombreDB}. Errores: " . implode('; ', array_slice($errores, 0, 3))
+                ];
+            }
+
+        } catch (Exception $e) {
+            if ($db && $db->inTransaction()) {
+                $db->rollBack();
+            }
+            return [
+                'status' => false, 
+                'message' => "Error en {$nombreDB}: " . $e->getMessage(),
+                'detalles' => [
+                    'error_tipo' => 'transaccion',
+                    'errores' => $errores ?? []
+                ]
+            ];
+        }
+    }
+
+    /**
+     * Verifica si una sentencia debe omitirse
+     */
+    private function debeOmitirSentencia($sentencia)
+    {
+        $patronesOmitir = [
+            '/^\s*DELIMITER\s/i',
+            '/^\s*USE\s+/i',
+            '/^\s*SET\s+SQL_MODE\s*=/i',
+            '/^\s*SET\s+FOREIGN_KEY_CHECKS\s*=/i',
+            '/^\s*SET\s+UNIQUE_CHECKS\s*=/i',
+            '/^\s*SET\s+AUTOCOMMIT\s*=/i',
+            '/^\s*--/i',  // Comentarios
+            '/^\s*\/\*/i' // Comentarios multilínea
+        ];
+        
+        foreach ($patronesOmitir as $patron) {
+            if (preg_match($patron, $sentencia)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Verifica si un error puede ser ignorado (no crítico)
+     */
+    private function esErrorIgnorable($errorMsg)
+    {
+        $erroresIgnorables = [
+            'already exists',
+            'duplicate entry',
+            'duplicate key',
+            'table already exists',
+            'database already exists',
+            'ya existe',
+            'duplicado',
+            'duplicate column',
+            'column already exists'
+        ];
+        
+        $errorMsgLower = strtolower($errorMsg);
+        
+        foreach ($erroresIgnorables as $errorIgnorable) {
+            if (strpos($errorMsgLower, strtolower($errorIgnorable)) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Divide el contenido SQL en sentencias individuales
+     */
+    private function dividirSentenciasSQL($contenidoSQL)
+    {
+        // Remover comentarios pero mantener la estructura
+        $contenidoSQL = preg_replace('/\/\*.*?\*\//s', '', $contenidoSQL);
+        $contenidoSQL = preg_replace('/--.*$/m', '', $contenidoSQL);
+        
+        // Limpiar espacios extra
+        $contenidoSQL = preg_replace('/\s+/', ' ', $contenidoSQL);
+        $contenidoSQL = trim($contenidoSQL);
+        
+        $sentencias = [];
+        $sentenciaActual = '';
+        $dentroComillas = false;
+        $tipoComilla = '';
+        $delimitador = ';';
+        $i = 0;
+        $longitud = strlen($contenidoSQL);
+        
+        while ($i < $longitud) {
+            $char = $contenidoSQL[$i];
+            
+            // Detectar cambio de delimitador
+            if (!$dentroComillas && strtoupper(substr($contenidoSQL, $i, 9)) === 'DELIMITER') {
+                // Buscar el nuevo delimitador
+                $finLinea = strpos($contenidoSQL, "\n", $i);
+                if ($finLinea === false) $finLinea = $longitud;
+                
+                $lineaDelimitador = trim(substr($contenidoSQL, $i, $finLinea - $i));
+                $partesDelimitador = explode(' ', $lineaDelimitador);
+                
+                if (count($partesDelimitador) >= 2) {
+                    $nuevoDelimitador = trim($partesDelimitador[1]);
+                    if (!empty($nuevoDelimitador)) {
+                        $delimitador = $nuevoDelimitador;
+                    }
+                }
+                
+                // Saltar toda la línea DELIMITER
+                $i = $finLinea + 1;
+                continue;
+            }
+            
+            // Manejo de comillas
+            if (!$dentroComillas && ($char === '"' || $char === "'")) {
+                $dentroComillas = true;
+                $tipoComilla = $char;
+                $sentenciaActual .= $char;
+            } elseif ($dentroComillas && $char === $tipoComilla) {
+                // Verificar si es escape
+                if ($i > 0 && $contenidoSQL[$i-1] !== '\\') {
+                    $dentroComillas = false;
+                    $tipoComilla = '';
+                }
+                $sentenciaActual .= $char;
+            } elseif (!$dentroComillas && substr($contenidoSQL, $i, strlen($delimitador)) === $delimitador) {
+                // Encontrado delimitador
+                $sentenciaActual = trim($sentenciaActual);
+                if (!empty($sentenciaActual) && !$this->esLineaDelimitador($sentenciaActual)) {
+                    $sentencias[] = $sentenciaActual;
+                }
+                $sentenciaActual = '';
+                $i += strlen($delimitador) - 1; // -1 porque el bucle incrementará i
+            } else {
+                $sentenciaActual .= $char;
+            }
+            
+            $i++;
+        }
+        
+        // Agregar la última sentencia si no termina con delimitador
+        $sentenciaActual = trim($sentenciaActual);
+        if (!empty($sentenciaActual) && !$this->esLineaDelimitador($sentenciaActual)) {
+            $sentencias[] = $sentenciaActual;
+        }
+        
+        return $this->preprocesarSentencias($sentencias);
+    }
+
+    /**
+     * Verifica si una línea es una declaración de delimitador
+     */
+    private function esLineaDelimitador($sentencia)
+    {
+        return stripos(trim($sentencia), 'DELIMITER') === 0;
+    }
+
+    /**
+     * Preprocesa las sentencias para manejar casos especiales
+     */
+    private function preprocesarSentencias($sentencias)
+    {
+        $sentenciasProcesadas = [];
+        
+        foreach ($sentencias as $sentencia) {
+            $sentencia = trim($sentencia);
+            
+            // Saltar sentencias vacías o solo de delimitador
+            if (empty($sentencia) || $this->esLineaDelimitador($sentencia)) {
+                continue;
+            }
+            
+            // Manejar triggers, procedimientos y funciones
+            if ($this->esSentenciaCompleja($sentencia)) {
+                $sentenciasProcesadas[] = $this->normalizarSentenciaCompleja($sentencia);
+            } else {
+                $sentenciasProcesadas[] = $sentencia;
+            }
+        }
+        
+        return $sentenciasProcesadas;
+    }
+
+    /**
+     * Verifica si es una sentencia compleja (trigger, procedure, function)
+     */
+    private function esSentenciaCompleja($sentencia)
+    {
+        $patrones = [
+            '/^\s*CREATE\s+(TRIGGER|PROCEDURE|FUNCTION)/i',
+            '/^\s*DROP\s+(TRIGGER|PROCEDURE|FUNCTION)/i'
+        ];
+        
+        foreach ($patrones as $patron) {
+            if (preg_match($patron, $sentencia)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Normaliza sentencias complejas para MariaDB/MySQL
+     */
+    private function normalizarSentenciaCompleja($sentencia)
+    {
+        // Remover cualquier referencia a DELIMITER que pueda quedar
+        $sentencia = preg_replace('/DELIMITER\s+\$\$\s*/i', '', $sentencia);
+        $sentencia = preg_replace('/\$\$\s*DELIMITER\s*;/i', '', $sentencia);
+        
+        // Limpiar delimitadores especiales
+        $sentencia = str_replace('$$', '', $sentencia);
+        
+        // Asegurar que termine con punto y coma
+        $sentencia = rtrim($sentencia, ' ;') . ';';
+        
+        return $sentencia;
+    }
+
     public function __destruct()
     {
         if ($this->conexion) {

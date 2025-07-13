@@ -27,16 +27,8 @@ class Backup extends Controllers
             die();
         }
 
-        // Verificación de permisos temporal - permitir acceso para testing
-        // TODO: Agregar módulo 'backups' a la base de datos
-        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
-            die();
-        }
-
-        // Verificar si es superadministrador (puede acceder a backups)
-        $idRol = $_SESSION['user']['idrol'] ?? $_SESSION['rol_id'] ?? 0;
-        if ($idRol != 1) { // Solo rol de administrador puede acceder
+        // Verificar permisos de acceso al módulo backups
+        if (!PermisosModuloVerificar::verificarAccesoModulo('Backup')) {
             $this->views->getView($this, "permisos");
             exit();
         }
@@ -45,7 +37,7 @@ class Backup extends Controllers
     public function index()
     {
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-        BitacoraHelper::registrarAccesoModulo('backups', $idusuario, $this->bitacoraModel);
+        BitacoraHelper::registrarAccesoModulo('Backup', $idusuario, $this->bitacoraModel);
 
         $data['page_tag'] = "Backups";
         $data['page_title'] = "Gestión de Backups";
@@ -61,7 +53,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 echo json_encode([
                     'status' => false,
                     'message' => 'No tienes permisos para ver backups',
@@ -75,7 +67,7 @@ class Backup extends Controllers
                 
                 if ($resultado['status']) {
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                    $this->bitacoraModel->registrarAccion('backups', 'CONSULTA_LISTADO', $idusuario);
+                    $this->bitacoraModel->registrarAccion('Backup', 'CONSULTA_LISTADO', $idusuario);
                 }
                 
                 echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
@@ -97,7 +89,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('crear')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'crear')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para crear backups'
@@ -136,7 +128,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('crear')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'crear')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para crear backups'
@@ -186,7 +178,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('eliminar')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'eliminar')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para eliminar backups'
@@ -238,7 +230,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('editar')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'editar')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para restaurar backups'
@@ -299,7 +291,7 @@ class Backup extends Controllers
     public function descargarBackup()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 http_response_code(403);
                 echo "No tienes permisos para descargar backups";
                 die();
@@ -323,7 +315,7 @@ class Backup extends Controllers
                 }
 
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                $this->bitacoraModel->registrarAccion('backups', 'DESCARGAR_BACKUP', $idusuario, $nombreArchivo);
+                $this->bitacoraModel->registrarAccion('Backup', 'DESCARGAR_BACKUP', $idusuario, $nombreArchivo);
 
                 header('Content-Type: application/octet-stream');
                 header('Content-Disposition: attachment; filename="' . $nombreArchivo . '"');
@@ -342,12 +334,145 @@ class Backup extends Controllers
         }
     }
 
+    public function importarDB()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            header('Content-Type: application/json');
+            
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'editar')) {
+                echo json_encode([
+                    'status' => 'error',
+                    'mensaje' => 'No tienes permisos para importar bases de datos'
+                ], JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
+            try {
+                // Verificar que el usuario sea super administrador
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                
+                // Intentar verificar en BD de seguridad primero, luego en BD general como respaldo
+                $esSuperUsuario = false;
+                
+                try {
+                    $stmt = $this->model->getDbSeguridad()->prepare("SELECT COUNT(*) FROM usuarios WHERE idusuario = ? AND estatus = 'activo' AND idrol = 1");
+                    $stmt->execute([$idusuario]);
+                    $esSuperUsuario = $stmt->fetchColumn() > 0;
+                } catch (Exception $e) {
+                    // Si falla la BD de seguridad, intentar con la BD general
+                    try {
+                        $stmt = $this->model->getDbGeneral()->prepare("SELECT COUNT(*) FROM usuarios WHERE idusuario = ? AND estatus = 'activo' AND idrol = 1");
+                        $stmt->execute([$idusuario]);
+                        $esSuperUsuario = $stmt->fetchColumn() > 0;
+                    } catch (Exception $e2) {
+                        // Si ambas fallan, verificar por session como último recurso
+                        $esSuperUsuario = (isset($_SESSION['user']['idrol']) && $_SESSION['user']['idrol'] == 1);
+                    }
+                }
+                
+                if (!$esSuperUsuario) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'Solo usuarios con privilegios de super administrador pueden importar bases de datos'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Verificar que se haya subido un archivo
+                if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'No se pudo cargar el archivo SQL'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $archivo = $_FILES['archivo'];
+                $baseDatos = $_POST['base_datos'] ?? 'bd_pda';
+
+                // Validar extensión del archivo
+                $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+                if ($extension !== 'sql') {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'Solo se permiten archivos con extensión .sql'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Validar tamaño del archivo (máximo 50MB)
+                $maxSize = 50 * 1024 * 1024; // 50MB
+                if ($archivo['size'] > $maxSize) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'El archivo es demasiado grande. Máximo permitido: 50MB'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Crear directorio temporal si no existe
+                $dirTemporal = __DIR__ . '/../../config/temp/';
+                if (!is_dir($dirTemporal)) {
+                    mkdir($dirTemporal, 0755, true);
+                }
+
+                // Mover archivo a directorio temporal
+                $nombreTemporal = uniqid('import_') . '.sql';
+                $rutaTemporal = $dirTemporal . $nombreTemporal;
+                
+                if (!move_uploaded_file($archivo['tmp_name'], $rutaTemporal)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'Error al procesar el archivo'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Ejecutar importación
+                $resultado = $this->model->importarBaseDatos($rutaTemporal, $baseDatos);
+                
+                // Limpiar archivo temporal
+                if (file_exists($rutaTemporal)) {
+                    unlink($rutaTemporal);
+                }
+                
+                if ($resultado['status']) {
+                    // Registrar en bitácora
+                    $this->bitacoraModel->registrarAccion('Backup', 'IMPORTACION_DB', $idusuario, "Archivo: {$archivo['name']}, BD: {$baseDatos}");
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'mensaje' => $resultado['message']
+                    ], JSON_UNESCAPED_UNICODE);
+                } else {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => $resultado['message']
+                    ], JSON_UNESCAPED_UNICODE);
+                }
+                
+            } catch (Exception $e) {
+                // Limpiar archivo temporal en caso de error
+                if (isset($rutaTemporal) && file_exists($rutaTemporal)) {
+                    unlink($rutaTemporal);
+                }
+                
+                error_log("Error en importarDB: " . $e->getMessage());
+                echo json_encode([
+                    'status' => 'error',
+                    'mensaje' => 'Error al importar base de datos: ' . $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
     public function obtenerTablas()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para ver tablas',
@@ -398,7 +523,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para ver backups',
@@ -412,7 +537,7 @@ class Backup extends Controllers
                 
                 if ($resultado['status']) {
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                    $this->bitacoraModel->registrarAccion('backups', 'CONSULTA_LISTADO', $idusuario);
+                    $this->bitacoraModel->registrarAccion('Backup', 'CONSULTA_LISTADO', $idusuario);
                     
                     echo json_encode([
                         'status' => 'success',
@@ -444,7 +569,7 @@ class Backup extends Controllers
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             header('Content-Type: application/json');
             
-            if (!$this->verificarPermisoTemporal('ver')) {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Backup', 'ver')) {
                 echo json_encode([
                     'status' => 'error',
                     'mensaje' => 'No tienes permisos para ver estadísticas'
@@ -465,20 +590,6 @@ class Backup extends Controllers
             }
             die();
         }
-    }
-
-    /**
-     * Método temporal para verificar permisos hasta que se configure el módulo en la BD
-     * TODO: Reemplazar con PermisosModuloVerificar una vez configurado el módulo
-     */
-    private function verificarPermisoTemporal($accion = 'ver') 
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $idRol = $_SESSION['user']['idrol'] ?? $_SESSION['rol_id'] ?? 0;
-        return $idRol == 1; // Solo administradores por ahora
     }
 }
 ?>
