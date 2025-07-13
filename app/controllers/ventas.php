@@ -1135,16 +1135,26 @@ class Ventas extends Controllers
                 return; // Ya existe una notificación
             }
             
-            // Obtener roles que pueden registrar pagos (crear)
-            $rolesRegistradores = $this->notificacionesModel->obtenerUsuariosConPermiso('pagos', 'crear');
+            // Obtener permisos que pueden registrar pagos (crear)
+            $permisosRegistradores = $this->notificacionesModel->obtenerPermisosParaAccion('pagos', 'crear');
             
-            if (empty($rolesRegistradores)) {
-                error_log("No se encontraron roles con permisos para crear/registrar en pagos");
+            if (empty($permisosRegistradores)) {
+                error_log("No se encontraron permisos para crear/registrar en pagos");
                 return;
             }
             
-            // Crear notificación para cada rol registrador
-            foreach ($rolesRegistradores as $rol) {
+            // Crear UNA notificación por permiso
+            foreach ($permisosRegistradores as $permiso) {
+                // Verificar si ya existe una notificación para este permiso
+                if ($this->notificacionesModel->verificarNotificacionExistente(
+                    'VENTA_CREADA_PAGO', 
+                    'ventas', 
+                    $idventa,
+                    $permiso['idpermiso']
+                )) {
+                    continue; // Ya existe una notificación para este permiso
+                }
+
                 $notificacionData = [
                     'tipo' => 'VENTA_CREADA_PAGO',
                     'titulo' => 'Venta Creada - Registrar Pago',
@@ -1153,7 +1163,7 @@ class Ventas extends Controllers
                                " ha sido creada y requiere registrar un pago para marcarla como pagada.",
                     'modulo' => 'ventas',
                     'referencia_id' => $idventa,
-                    'rol_destinatario' => $rol['idrol'],
+                    'permiso_id' => $permiso['idpermiso'],
                     'prioridad' => 'MEDIA'
                 ];
                 
