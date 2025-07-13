@@ -342,6 +342,139 @@ class Backup extends Controllers
         }
     }
 
+    public function importarDB()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            header('Content-Type: application/json');
+            
+            if (!$this->verificarPermisoTemporal('editar')) {
+                echo json_encode([
+                    'status' => 'error',
+                    'mensaje' => 'No tienes permisos para importar bases de datos'
+                ], JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
+            try {
+                // Verificar que el usuario sea super administrador
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                
+                // Intentar verificar en BD de seguridad primero, luego en BD general como respaldo
+                $esSuperUsuario = false;
+                
+                try {
+                    $stmt = $this->model->getDbSeguridad()->prepare("SELECT COUNT(*) FROM usuarios WHERE idusuario = ? AND estatus = 'activo' AND idrol = 1");
+                    $stmt->execute([$idusuario]);
+                    $esSuperUsuario = $stmt->fetchColumn() > 0;
+                } catch (Exception $e) {
+                    // Si falla la BD de seguridad, intentar con la BD general
+                    try {
+                        $stmt = $this->model->getDbGeneral()->prepare("SELECT COUNT(*) FROM usuarios WHERE idusuario = ? AND estatus = 'activo' AND idrol = 1");
+                        $stmt->execute([$idusuario]);
+                        $esSuperUsuario = $stmt->fetchColumn() > 0;
+                    } catch (Exception $e2) {
+                        // Si ambas fallan, verificar por session como último recurso
+                        $esSuperUsuario = (isset($_SESSION['user']['idrol']) && $_SESSION['user']['idrol'] == 1);
+                    }
+                }
+                
+                if (!$esSuperUsuario) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'Solo usuarios con privilegios de super administrador pueden importar bases de datos'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Verificar que se haya subido un archivo
+                if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'No se pudo cargar el archivo SQL'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $archivo = $_FILES['archivo'];
+                $baseDatos = $_POST['base_datos'] ?? 'bd_pda';
+
+                // Validar extensión del archivo
+                $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
+                if ($extension !== 'sql') {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'Solo se permiten archivos con extensión .sql'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Validar tamaño del archivo (máximo 50MB)
+                $maxSize = 50 * 1024 * 1024; // 50MB
+                if ($archivo['size'] > $maxSize) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'El archivo es demasiado grande. Máximo permitido: 50MB'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Crear directorio temporal si no existe
+                $dirTemporal = __DIR__ . '/../../config/temp/';
+                if (!is_dir($dirTemporal)) {
+                    mkdir($dirTemporal, 0755, true);
+                }
+
+                // Mover archivo a directorio temporal
+                $nombreTemporal = uniqid('import_') . '.sql';
+                $rutaTemporal = $dirTemporal . $nombreTemporal;
+                
+                if (!move_uploaded_file($archivo['tmp_name'], $rutaTemporal)) {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => 'Error al procesar el archivo'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Ejecutar importación
+                $resultado = $this->model->importarBaseDatos($rutaTemporal, $baseDatos);
+                
+                // Limpiar archivo temporal
+                if (file_exists($rutaTemporal)) {
+                    unlink($rutaTemporal);
+                }
+                
+                if ($resultado['status']) {
+                    // Registrar en bitácora
+                    $this->bitacoraModel->registrarAccion('backups', 'IMPORTACION_DB', $idusuario, "Archivo: {$archivo['name']}, BD: {$baseDatos}");
+
+                    echo json_encode([
+                        'status' => 'success',
+                        'mensaje' => $resultado['message']
+                    ], JSON_UNESCAPED_UNICODE);
+                } else {
+                    echo json_encode([
+                        'status' => 'error',
+                        'mensaje' => $resultado['message']
+                    ], JSON_UNESCAPED_UNICODE);
+                }
+                
+            } catch (Exception $e) {
+                // Limpiar archivo temporal en caso de error
+                if (isset($rutaTemporal) && file_exists($rutaTemporal)) {
+                    unlink($rutaTemporal);
+                }
+                
+                error_log("Error en importarDB: " . $e->getMessage());
+                echo json_encode([
+                    'status' => 'error',
+                    'mensaje' => 'Error al importar base de datos: ' . $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
     public function obtenerTablas()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {

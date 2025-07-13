@@ -42,6 +42,12 @@
                     Backup por Tabla
                 </button>
                 
+                <button id="btnImportarDB" 
+                        class="px-6 py-3 bg-orange-500 text-black rounded-lg hover:bg-orange-600 transition-colors duration-200 flex items-center text-sm font-medium shadow-md">
+                    <i class="fas fa-upload mr-2"></i>
+                    Importar DB
+                </button>
+                
                 <button id="btnActualizarLista" 
                         class="px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 flex items-center text-sm" 
                         title="Actualizar lista">
@@ -191,6 +197,82 @@
                 Crear Backup
             </button>
         </div>
+    </div>
+</div>
+
+<!-- MODAL IMPORTAR BASE DE DATOS -->
+<div id="modalImportarDB" 
+     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform duration-300">
+        
+        <!-- Header del Modal -->
+        <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-yellow-50">
+            <div class="flex items-center">
+                <div class="bg-orange-100 p-3 rounded-full mr-4">
+                    <i class="fas fa-upload text-orange-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-black-100">Importar Base de Datos</h3>
+                    <p class="text-sm text-gray-600">Selecciona un archivo SQL para importar</p>
+                </div>
+            </div>
+            <button id="btnCerrarModalImportar" class="text-gray-400 hover:text-gray-600 text-xl p-1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Contenido del Modal -->
+        <form id="formImportarDB" enctype="multipart/form-data">
+            <div class="p-6">
+                <!-- Advertencia -->
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-triangle text-orange-500 mt-0.5 mr-2"></i>
+                        <div class="text-sm text-orange-700">
+                            <p class="font-medium">¡Advertencia!</p>
+                            <p>Esta acción sobrescribirá todos los datos actuales. Asegúrate de tener un backup antes de continuar.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Selección de archivo -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Archivo SQL (.sql)
+                    </label>
+                    <input type="file" 
+                           id="archivoSQL" 
+                           name="archivo" 
+                           accept=".sql"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">Solo archivos .sql permitidos</p>
+                </div>
+                
+                <!-- Opciones de importación -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Base de datos de destino</label>
+                    <select id="selectBaseDatos" name="base_datos" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="bd_pda">BD Principal (bd_pda)</option>
+                        <option value="bd_pda_seguridad">BD Seguridad (bd_pda_seguridad)</option>
+                        <option value="ambas">Ambas bases de datos</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Footer del Modal -->
+            <div class="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+                <button type="button" id="btnCancelarImportar" 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar
+                </button>
+                <button type="submit" id="btnConfirmarImportar" 
+                        class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center">
+                    <i class="fas fa-upload mr-2"></i>
+                    Importar
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
