@@ -342,7 +342,25 @@ class SueldosModel extends Mysql
             
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
-            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            $rawResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Log temporal para debugging
+            error_log("=== DEBUG SUELDOS MODEL ===");
+            error_log("Total registros obtenidos: " . count($rawResults));
+            foreach ($rawResults as $index => $row) {
+                error_log("Registro $index:");
+                error_log("  idsueldo: " . ($row['idsueldo'] ?? 'NULL'));
+                error_log("  idpersona: " . ($row['idpersona'] ?? 'NULL'));
+                error_log("  idempleado: " . ($row['idempleado'] ?? 'NULL'));
+                error_log("  nombre_persona: " . ($row['nombre_persona'] ?? 'NULL'));
+                error_log("  nombre_empleado: " . ($row['nombre_empleado'] ?? 'NULL'));
+                error_log("  identificacion_persona: " . ($row['identificacion_persona'] ?? 'NULL'));
+                error_log("  identificacion_empleado: " . ($row['identificacion_empleado'] ?? 'NULL'));
+                error_log("  ---");
+            }
+            error_log("=== FIN DEBUG SUELDOS MODEL ===");
+            
+            $this->setResult($rawResults);
             
             $resultado = [
                 "status" => true,

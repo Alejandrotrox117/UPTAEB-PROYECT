@@ -124,18 +124,30 @@ function initTablaSueldos() {
       },
     },
     columns: [
-      { data: "idsueldo", title: "ID", className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background" },
+      {
+        data: "fecha_creacion_formato",
+        title: "Fecha Registro",
+        className: "min-tablet-p whitespace-nowrap py-2 px-3 text-gray-700",
+      },
       {
         data: null,
         title: "Beneficiario",
         className: "all whitespace-nowrap py-2 px-3 text-gray-700",
         render: function (data, type, row) {
-          if (row.nombre_persona) {
-            return `${row.nombre_persona} (${row.identificacion_persona})`;
-          } else if (row.nombre_empleado) {
-            return `${row.nombre_empleado} (${row.identificacion_empleado})`;
+          // Debug log
+          console.log("Rendering beneficiario for row:", row);
+          
+          // Determinar basándose en los IDs, no en los nombres
+          if (row.idpersona && row.nombre_persona && row.nombre_persona.trim() !== '') {
+            return `${row.nombre_persona} (${row.identificacion_persona || 'Sin ID'})`;
+          } else if (row.idempleado && row.nombre_empleado && row.nombre_empleado.trim() !== '') {
+            return `${row.nombre_empleado} (${row.identificacion_empleado || 'Sin ID'})`;
+          } else if (row.idpersona) {
+            return `<span class="text-red-600">Persona ID: ${row.idpersona} (datos no encontrados)</span>`;
+          } else if (row.idempleado) {
+            return `<span class="text-red-600">Empleado ID: ${row.idempleado} (datos no encontrados)</span>`;
           }
-          return "N/A";
+          return `<span class="text-gray-500">N/A</span>`;
         },
       },
       {
@@ -143,9 +155,10 @@ function initTablaSueldos() {
         title: "Tipo",
         className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
         render: function (data, type, row) {
-          if (row.nombre_persona) {
+          // Determinar basándose en los IDs, no en los nombres
+          if (row.idpersona) {
             return '<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">Persona</span>';
-          } else if (row.nombre_empleado) {
+          } else if (row.idempleado) {
             return '<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">Empleado</span>';
           }
           return "N/A";
@@ -196,11 +209,6 @@ function initTablaSueldos() {
         },
       },
       {
-        data: "fecha_creacion_formato",
-        title: "Fecha Registro",
-        className: "min-tablet-p whitespace-nowrap py-2 px-3 text-gray-700",
-      },
-      {
         data: null,
         title: "Acciones",
         orderable: false,
@@ -210,9 +218,19 @@ function initTablaSueldos() {
           if (!row) return "";
           
           const idSueldo = row.idsueldo || "";
-          const nombrePersona = row.nombre_persona || "";
-          const nombreEmpleado = row.nombre_empleado || "";
-          const nombreCompleto = nombrePersona || nombreEmpleado || "Sin nombre";
+          
+          // Determinar el nombre basándose en los IDs, no solo en los nombres
+          let nombreCompleto = "Sin nombre";
+          if (row.idpersona && row.nombre_persona) {
+            nombreCompleto = row.nombre_persona;
+          } else if (row.idempleado && row.nombre_empleado) {
+            nombreCompleto = row.nombre_empleado;
+          } else if (row.idpersona) {
+            nombreCompleto = `Persona ID: ${row.idpersona}`;
+          } else if (row.idempleado) {
+            nombreCompleto = `Empleado ID: ${row.idempleado}`;
+          }
+          
           const estatusSueldo = row.estatus || "";
           
           // Verificar si el sueldo está inactivo
@@ -521,11 +539,23 @@ function registrarSueldo() {
     observacion: observacion,
   };
 
+  // Log para debugging
+  console.log("Tipo seleccionado:", tipoPersona);
+  console.log("ID seleccionado:", personaEmpleadoId);
+
   if (tipoPersona === "persona") {
     datos.idpersona = parseInt(personaEmpleadoId);
-  } else {
+    datos.idempleado = null; // Asegurar que el otro campo esté null
+  } else if (tipoPersona === "empleado") {
     datos.idempleado = parseInt(personaEmpleadoId);
+    datos.idpersona = null; // Asegurar que el otro campo esté null
+  } else {
+    Swal.fire("Error", "Tipo de persona inválido", "error");
+    return;
   }
+
+  // Log para verificar datos finales
+  console.log("Datos a enviar:", datos);
 
   const btnGuardar = document.getElementById("btnGuardarSueldo");
   btnGuardar.disabled = true;
@@ -622,11 +652,23 @@ function actualizarSueldo() {
     observacion: observacion,
   };
 
+  // Log para debugging
+  console.log("Actualizando - Tipo seleccionado:", tipoPersona);
+  console.log("Actualizando - ID seleccionado:", personaEmpleadoId);
+
   if (tipoPersona === "persona") {
     datos.idpersona = parseInt(personaEmpleadoId);
-  } else {
+    datos.idempleado = null; // Asegurar que el otro campo esté null
+  } else if (tipoPersona === "empleado") {
     datos.idempleado = parseInt(personaEmpleadoId);
+    datos.idpersona = null; // Asegurar que el otro campo esté null
+  } else {
+    Swal.fire("Error", "Tipo de persona inválido", "error");
+    return;
   }
+
+  // Log para verificar datos finales
+  console.log("Datos a enviar para actualización:", datos);
 
   const btnActualizar = document.getElementById("btnActualizarSueldo");
   btnActualizar.disabled = true;

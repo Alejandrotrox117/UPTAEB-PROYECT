@@ -67,6 +67,13 @@ class Sueldos extends Controllers
                     die();
                 }
 
+                // Validar que no se envíen ambos campos al mismo tiempo
+                if (!empty($request['idpersona']) && !empty($request['idempleado'])) {
+                    $arrResponse = array('status' => false, 'message' => 'No se puede especificar persona y empleado al mismo tiempo');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
                 // Validar campos obligatorios
                 if (empty($request['monto'])) {
                     $arrResponse = array('status' => false, 'message' => 'El monto es obligatorio');
@@ -88,12 +95,17 @@ class Sueldos extends Controllers
                     die();
                 }
 
+                // Crear array de datos - asegurar que solo uno de los dos campos esté presente
                 $arrData = array(
                     'idpersona' => !empty($request['idpersona']) ? intval($request['idpersona']) : null,
                     'idempleado' => !empty($request['idempleado']) ? intval($request['idempleado']) : null,
                     'monto' => floatval($request['monto']),
                     'observacion' => trim($request['observacion'] ?? '')
                 );
+
+                // Log para debugging
+                error_log("Datos recibidos para sueldo: " . json_encode($request));
+                error_log("Datos procesados para sueldo: " . json_encode($arrData));
 
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
@@ -226,6 +238,13 @@ class Sueldos extends Controllers
                     die();
                 }
 
+                // Validar que no se envíen ambos campos al mismo tiempo
+                if (!empty($request['idpersona']) && !empty($request['idempleado'])) {
+                    $arrResponse = array('status' => false, 'message' => 'No se puede especificar persona y empleado al mismo tiempo');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
                 // Validar campos obligatorios
                 if (empty($request['monto'])) {
                     $arrResponse = array('status' => false, 'message' => 'El monto es obligatorio');
@@ -247,12 +266,17 @@ class Sueldos extends Controllers
                     die();
                 }
 
+                // Crear array de datos - asegurar que solo uno de los dos campos esté presente
                 $arrData = array(
                     'idpersona' => !empty($request['idpersona']) ? intval($request['idpersona']) : null,
                     'idempleado' => !empty($request['idempleado']) ? intval($request['idempleado']) : null,
                     'monto' => floatval($request['monto']),
                     'observacion' => trim($request['observacion'] ?? '')
                 );
+
+                // Log para debugging
+                error_log("Actualización - Datos recibidos para sueldo: " . json_encode($request));
+                error_log("Actualización - Datos procesados para sueldo: " . json_encode($arrData));
 
                 $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
 
