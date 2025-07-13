@@ -433,7 +433,7 @@ class BackupModel {
                         if ($valor === null) {
                             $valores[] = "NULL";
                         } else {
-                            $valores[] = "'" . $db->quote($valor) . "'";
+                            $valores[] = $db->quote($valor);
                         }
                     }
                     $backup .= implode(", ", $valores);
@@ -479,7 +479,7 @@ class BackupModel {
 
     private function obtenerRutaBackups()
     {
-        $ruta = dirname(__FILE__) . '/../../config/backups/';
+        $ruta = __DIR__ . '/../../config/backups/';
         $rutaAbsoluta = realpath($ruta);
         
         if ($rutaAbsoluta === false) {

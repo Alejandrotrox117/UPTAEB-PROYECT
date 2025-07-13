@@ -6,7 +6,7 @@ require 'app/libs/phpmailer/src/Exception.php';
 require 'app/libs/phpmailer/src/PHPMailer.php';
 require 'app/libs/phpmailer/src/SMTP.php';
 date_default_timezone_set('America/Caracas');
-const BASE_URL = "http://localhost/project";
+const BASE_URL = "http://localhost/project/";
 function base_url()
 {
     return BASE_URL;

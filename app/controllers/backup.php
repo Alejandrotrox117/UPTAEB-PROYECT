@@ -44,13 +44,6 @@ class Backup extends Controllers
 
     public function index()
     {
-        // Verificación temporal de permisos
-        $idRol = $_SESSION['user']['idrol'] ?? $_SESSION['rol_id'] ?? 0;
-        if ($idRol != 1) { // Solo administradores
-            $this->views->getView($this, "permisos");
-            exit();
-        }
-
         $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
         BitacoraHelper::registrarAccesoModulo('backups', $idusuario, $this->bitacoraModel);
 

@@ -244,8 +244,7 @@
     </div>
 </div>
 
-<!-- Scripts específicos -->
-<script src="/project/app/assets/js/functions_backup.js"></script>
+<?php footerAdmin($data); ?>
 
-<?php footerAdmin($data); ?>
-<?php footerAdmin($data); ?>
+<!-- Scripts específicos -->
+<script src="<?= base_url(); ?>app/assets/js/functions_backup.js"></script>
