@@ -1,6 +1,37 @@
+# Configuración de seguridad Apache
 Options All -Indexes
 RewriteEngine on
 
+# Rewrite rules
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+# Content Security Policy y otros headers de seguridad
+<IfModule mod_headers.c>
+    # Content Security Policy (respaldo al configurado en PHP)
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Prevent access to sensitive files
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<FilesMatch "\.(log|sql|md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevent access to configuration files
+<Files "*.config.*">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Remove server signature
+ServerSignature Off

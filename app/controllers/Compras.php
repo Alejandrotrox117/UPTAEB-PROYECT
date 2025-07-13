@@ -630,25 +630,30 @@ class Compras extends Controllers
             
             $compraInfo = $compraData['solicitud'];
             
-            // Verificar si ya existe una notificación de autorización para esta compra
-            if ($this->notificacionesModel->verificarNotificacionExistente(
-                'COMPRA_POR_AUTORIZAR', 
-                'compras', 
-                $idcompra
-            )) {
-                return; // Ya existe una notificación
+            // Obtener permisos que pueden autorizar (eliminar)
+            $permisosAutorizadores = $this->notificacionesModel->obtenerPermisosParaAccion('compras', 'eliminar');
+            
+            if (empty($permisosAutorizadores)) {
+                // Fallback: intentar obtener permisos con acceso total
+                $permisosAutorizadores = $this->notificacionesModel->obtenerPermisosParaAccion('compras', 'ver');
+                if (empty($permisosAutorizadores)) {
+                    error_log("No se encontraron permisos para autorizar compras");
+                    return;
+                }
             }
             
-            // Obtener roles que pueden autorizar (eliminar)
-            $rolesAutorizadores = $this->notificacionesModel->obtenerUsuariosConPermiso('compras', 'eliminar');
-            
-            if (empty($rolesAutorizadores)) {
-                error_log("No se encontraron roles con permisos para autorizar compras");
-                return;
-            }
-            
-            // Crear notificación para cada rol autorizador
-            foreach ($rolesAutorizadores as $rol) {
+            // Crear UNA notificación por permiso
+            foreach ($permisosAutorizadores as $permiso) {
+                // Verificar si ya existe una notificación para este permiso
+                if ($this->notificacionesModel->verificarNotificacionExistente(
+                    'COMPRA_POR_AUTORIZAR', 
+                    'compras', 
+                    $idcompra,
+                    $permiso['idpermiso']
+                )) {
+                    continue; // Ya existe una notificación para este permiso
+                }
+
                 $notificacionData = [
                     'tipo' => 'COMPRA_POR_AUTORIZAR',
                     'titulo' => 'Compra Pendiente de Autorización',
@@ -657,7 +662,7 @@ class Compras extends Controllers
                                " está pendiente de autorización.",
                     'modulo' => 'compras',
                     'referencia_id' => $idcompra,
-                    'rol_destinatario' => $rol['idrol'],
+                    'permiso_id' => $permiso['idpermiso'],
                     'prioridad' => 'ALTA'
                 ];
                 
@@ -680,25 +685,30 @@ class Compras extends Controllers
             
             $compraInfo = $compraData['solicitud'];
             
-            // Verificar si ya existe una notificación de pago para esta compra
-            if ($this->notificacionesModel->verificarNotificacionExistente(
-                'COMPRA_AUTORIZADA_PAGO', 
-                'compras', 
-                $idcompra
-            )) {
-                return; // Ya existe una notificación
+            // Obtener permisos que pueden registrar pagos (crear)
+            $permisosRegistradores = $this->notificacionesModel->obtenerPermisosParaAccion('compras', 'crear');
+            
+            if (empty($permisosRegistradores)) {
+                // Fallback: intentar obtener permisos con acceso total
+                $permisosRegistradores = $this->notificacionesModel->obtenerPermisosParaAccion('compras', 'ver');
+                if (empty($permisosRegistradores)) {
+                    error_log("No se encontraron permisos para crear/registrar en compras");
+                    return;
+                }
             }
             
-            // Obtener roles que pueden registrar pagos (crear)
-            $rolesRegistradores = $this->notificacionesModel->obtenerUsuariosConPermiso('compras', 'crear');
-            
-            if (empty($rolesRegistradores)) {
-                error_log("No se encontraron roles con permisos para crear/registrar en compras");
-                return;
-            }
-            
-            // Crear notificación para cada rol registrador
-            foreach ($rolesRegistradores as $rol) {
+            // Crear UNA notificación por permiso
+            foreach ($permisosRegistradores as $permiso) {
+                // Verificar si ya existe una notificación para este permiso
+                if ($this->notificacionesModel->verificarNotificacionExistente(
+                    'COMPRA_AUTORIZADA_PAGO', 
+                    'compras', 
+                    $idcompra,
+                    $permiso['idpermiso']
+                )) {
+                    continue; // Ya existe una notificación para este permiso
+                }
+
                 $notificacionData = [
                     'tipo' => 'COMPRA_AUTORIZADA_PAGO',
                     'titulo' => 'Compra Autorizada - Registrar Pago',
@@ -707,7 +717,7 @@ class Compras extends Controllers
                                " ha sido autorizada y requiere registrar un pago.",
                     'modulo' => 'compras',
                     'referencia_id' => $idcompra,
-                    'rol_destinatario' => $rol['idrol'],
+                    'permiso_id' => $permiso['idpermiso'],
                     'prioridad' => 'MEDIA'
                 ];
                 

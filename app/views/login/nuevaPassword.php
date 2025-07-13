@@ -26,7 +26,9 @@
         </div>
         
         <form id="formNuevaPassword" action="<?= base_url() ?>/login/actualizarPassword" method="POST" class="space-y-4">
-            <input type="hidden" name="token" value="<?= $data['token'] ?>">
+            <!-- Token CSRF -->
+            <input type="hidden" name="csrf_token" value="<?= $data['csrf_token'] ?? '' ?>">
+            <input type="hidden" name="token" value="<?= $data['token'] ?>">>
             
             <div>
                 <label for="txtPassword" class="block text-sm font-medium text-gray-700 mb-2">

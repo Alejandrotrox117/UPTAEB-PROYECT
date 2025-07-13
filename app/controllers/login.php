@@ -20,6 +20,7 @@ class Login extends Controllers
         $data["page_name"] = "login";
         $data["page_functions_js"] = "functions_login.js";
         $data["recaptcha_site_key"] = defined('RECAPTCHA_SITE_KEY') ? RECAPTCHA_SITE_KEY : '';
+        $data["csrf_token"] = generateCSRFToken(); // Generar token CSRF
         $this->views->getView($this, "login", $data);
     }
 
@@ -31,6 +32,13 @@ class Login extends Controllers
         }
 
         try {
+            
+            // Validar token CSRF
+            $csrf_token = $_POST['csrf_token'] ?? '';
+            if (!validateCSRFToken($csrf_token)) {
+                echo json_encode(['status' => false, 'msg' => 'Token de seguridad inválido. Por favor, recargue la página e intente nuevamente.']);
+                exit();
+            }
             
             if (defined('RECAPTCHA_SECRET_KEY') && !empty(RECAPTCHA_SECRET_KEY)) {
                 $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
@@ -145,6 +153,7 @@ class Login extends Controllers
     {
         $data['page_title'] = "Recuperar Contraseña";
         $data['recaptcha_site_key'] = defined('RECAPTCHA_SITE_KEY') ? RECAPTCHA_SITE_KEY : '';
+        $data["csrf_token"] = generateCSRFToken(); // Generar token CSRF
         $this->views->getView($this, "resetPassword", $data);
     }
 
@@ -152,6 +161,13 @@ class Login extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
+                // Validar token CSRF
+                $csrf_token = $_POST['csrf_token'] ?? '';
+                if (!validateCSRFToken($csrf_token)) {
+                    echo json_encode(['status' => false, 'msg' => 'Token de seguridad inválido. Por favor, recargue la página e intente nuevamente.']);
+                    exit();
+                }
+                
                 $email = strtolower(trim($_POST['txtEmailReset'] ?? ''));
                 
                 if (empty($email)) {
@@ -238,6 +254,7 @@ class Login extends Controllers
         $data['token'] = $token;
         $data['usuario'] = $tokenData;
         $data['page_functions_js'] = "functions_resetpass.js";
+        $data["csrf_token"] = generateCSRFToken(); // Generar token CSRF
         $this->views->getView($this, "nuevaPassword", $data);
     }
 
@@ -245,6 +262,13 @@ class Login extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
+                // Validar token CSRF
+                $csrf_token = $_POST['csrf_token'] ?? '';
+                if (!validateCSRFToken($csrf_token)) {
+                    echo json_encode(['status' => false, 'msg' => 'Token de seguridad inválido. Por favor, recargue la página e intente nuevamente.']);
+                    exit();
+                }
+                
                 $token = trim($_POST['token'] ?? '');
                 $password = trim($_POST['txtPassword'] ?? '');
                 $confirmPassword = trim($_POST['txtConfirmPassword'] ?? '');
@@ -295,9 +319,7 @@ class Login extends Controllers
         exit();
     }
 
-    /**
-     * Verifica reCAPTCHA si está configurado
-     */
+    //Verifica reCAPTCHA si está configurado
     private function verifyRecaptcha($recaptcha_response)
     {
         if (empty($recaptcha_response)) {

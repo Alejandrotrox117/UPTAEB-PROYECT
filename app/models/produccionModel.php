@@ -171,7 +171,6 @@ class ProduccionModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // Verificar que el lote existe y está en estado válido para cerrar
             $query = "SELECT estatus_lote FROM lotes_produccion WHERE idlote = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$idlote]);
@@ -191,7 +190,6 @@ class ProduccionModel extends Mysql
                 ];
             }
 
-            // Cerrar el lote directamente sin validaciones de registros
             $query = "UPDATE lotes_produccion 
                 SET estatus_lote = 'FINALIZADO', fecha_fin_real = NOW() 
                 WHERE idlote = ?";
@@ -272,7 +270,6 @@ class ProduccionModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // Verificar que el operario esté asignado al lote
             $query = "SELECT COUNT(*) FROM asignaciones_operarios WHERE idlote = ? AND idempleado = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$idlote, $idempleado]);
@@ -281,7 +278,6 @@ class ProduccionModel extends Mysql
                 return ['status' => false, 'message' => 'Operario no asignado a este lote.'];
             }
 
-            // Actualizar estado de asignación
             $query = "UPDATE asignaciones_operarios 
                 SET estatus_asignacion = 'AUSENTE', observaciones = CONCAT(observaciones, ' - AUSENTE: ', ?)
                 WHERE idlote = ? AND idempleado = ?";
@@ -289,7 +285,6 @@ class ProduccionModel extends Mysql
             $stmt = $db->prepare($query);
             $stmt->execute([$observaciones, $idlote, $idempleado]);
 
-            // Crear registro de producción con valores en 0
             $query = "SELECT fecha_jornada FROM lotes_produccion WHERE idlote = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$idlote]);
@@ -545,7 +540,6 @@ class ProduccionModel extends Mysql
             total, observaciones, estatus, fecha_creacion
         ) VALUES (?, ?, 3, ?, ?, ?, ?, ?, 'activo', NOW())";
 
-            // Obtener stock actual para calcular el stock resultante
             $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
             $stmtStock = $db->prepare($queryStock);
             $stmtStock->execute([$data['idproducto_origen']]);
@@ -556,9 +550,9 @@ class ProduccionModel extends Mysql
                 $numeroMovimiento,
                 $data['idproducto_origen'],
                 $data['kg_procesados'],
-                $stockActual + $data['kg_procesados'], // stock_anterior (antes de la salida)
-                $stockActual, // stock_resultante (después de la salida)
-                $stockActual, // total (stock resultante)
+                $stockActual + $data['kg_procesados'],
+                $stockActual,
+                $stockActual,
                 $observaciones
             ]);
 
@@ -582,7 +576,6 @@ class ProduccionModel extends Mysql
                 total, observaciones, estatus, fecha_creacion
             ) VALUES (?, ?, 3, ?, ?, ?, ?, ?, 'activo', NOW())";
 
-                // Obtener stock actual del producto clasificado
                 $queryStockClasificado = "SELECT existencia FROM producto WHERE idproducto = ?";
                 $stmtStockClasificado = $db->prepare($queryStockClasificado);
                 $stmtStockClasificado->execute([$idProductoClasificado]);
@@ -593,9 +586,9 @@ class ProduccionModel extends Mysql
                     $numeroMovimientoEntrada,
                     $idProductoClasificado,
                     $data['kg_limpios'],
-                    $stockClasificado - $data['kg_limpios'], // stock_anterior (antes de la entrada)
-                    $stockClasificado, // stock_resultante (después de la entrada)
-                    $stockClasificado, // total (stock resultante)
+                    $stockClasificado - $data['kg_limpios'],
+                    $stockClasificado,
+                    $stockClasificado,
                     $observacionesEntrada
                 ]);
             }
@@ -672,7 +665,6 @@ class ProduccionModel extends Mysql
             total, observaciones, estatus, fecha_creacion
         ) VALUES (?, ?, 4, ?, ?, ?, ?, ?, 'activo', NOW())";
 
-            // Obtener stock actual para calcular valores
             $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
             $stmtStock = $db->prepare($queryStock);
             $stmtStock->execute([$data['idproducto_clasificado']]);
@@ -683,9 +675,9 @@ class ProduccionModel extends Mysql
                 $numeroMovimientoSalida,
                 $data['idproducto_clasificado'],
                 $data['peso_paca'],
-                $stockActual + $data['peso_paca'], // stock_anterior (antes de la salida)
-                $stockActual, // stock_resultante (después de la salida)
-                $stockActual, // total (stock resultante)
+                $stockActual + $data['peso_paca'],
+                $stockActual,
+                $stockActual,
                 $observacionesSalida
             ]);
 
@@ -714,7 +706,6 @@ class ProduccionModel extends Mysql
             total, observaciones, estatus, fecha_creacion
         ) VALUES (?, ?, 4, ?, ?, ?, ?, ?, 'activo', NOW())";
 
-            // Obtener stock actual del producto de pacas
             $queryStockPacas = "SELECT existencia FROM producto WHERE idproducto = ?";
             $stmtStockPacas = $db->prepare($queryStockPacas);
             $stmtStockPacas->execute([$idProductoPacas]);
@@ -725,9 +716,9 @@ class ProduccionModel extends Mysql
                 $numeroMovimientoEntrada,
                 $idProductoPacas,
                 $data['peso_paca'],
-                $stockPacas - $data['peso_paca'], // stock_anterior (antes de la entrada)
-                $stockPacas, // stock_resultante (después de la entrada)
-                $stockPacas, // total (stock resultante)
+                $stockPacas - $data['peso_paca'],
+                $stockPacas,
+                $stockPacas,
                 $observacionesEntrada
             ]);
 

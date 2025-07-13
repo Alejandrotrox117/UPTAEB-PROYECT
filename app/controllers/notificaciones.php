@@ -32,11 +32,18 @@ class Notificaciones extends Controllers
 
     public function getNotificaciones()
     {
+        // LOG DE DEPURACIÓN - INICIO
+        error_log("🔔 getNotificaciones - INICIADO");
+        
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            error_log("🔔 getNotificaciones - Método GET verificado");
+            
             try {
                 $usuarioId = $this->obtenerUsuarioSesion();
+                error_log("🔔 getNotificaciones - Usuario ID obtenido: " . ($usuarioId ?: 'NULL'));
                 
                 if (!$usuarioId) {
+                    error_log("🔔 getNotificaciones - ERROR: Usuario no autenticado");
                     $arrResponse = array(
                         'status' => false, 
                         'message' => 'Usuario no autenticado', 
@@ -46,10 +53,11 @@ class Notificaciones extends Controllers
                     die();
                 }
 
-                
                 $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
+                error_log("🔔 getNotificaciones - Rol ID obtenido: " . ($rolId ?: 'NULL'));
                 
                 if (!$rolId) {
+                    error_log("🔔 getNotificaciones - ERROR: No se pudo obtener el rol del usuario");
                     $arrResponse = array(
                         'status' => false, 
                         'message' => 'No se pudo obtener el rol del usuario', 
@@ -59,15 +67,18 @@ class Notificaciones extends Controllers
                     die();
                 }
 
-                
-                $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 50;
+                // Obtener parámetros opcionales
+                $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 20;
                 $soloNoLeidas = isset($_GET['no_leidas']) ? (bool)$_GET['no_leidas'] : false;
 
-                $arrResponse = $this->model->obtenerNotificacionesPorUsuario($usuarioId, $rolId, $limite, $soloNoLeidas);
+                error_log("🔔 getNotificaciones - Llamando al modelo para obtener notificaciones");
+                $arrResponse = $this->model->obtenerNotificacionesPorUsuario($usuarioId, $rolId);
+                error_log("🔔 getNotificaciones - Respuesta del modelo: " . json_encode($arrResponse));
+                
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                 
             } catch (Exception $e) {
-                error_log("Error en getNotificaciones: " . $e->getMessage());
+                error_log("🔔 getNotificaciones - EXCEPCIÓN: " . $e->getMessage());
                 $response = array(
                     'status' => false, 
                     'message' => 'Error interno del servidor', 
@@ -76,6 +87,8 @@ class Notificaciones extends Controllers
                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
             }
             die();
+        } else {
+            error_log("🔔 getNotificaciones - ERROR: Método no es GET, es: " . $_SERVER['REQUEST_METHOD']);
         }
     }
 
@@ -213,6 +226,75 @@ class Notificaciones extends Controllers
             }
             die();
         }
+    }
+
+    // Método temporal de depuración - REMOVER DESPUÉS DE SOLUCIONAR
+    public function diagnosticar()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            $usuarioId = $this->obtenerUsuarioSesion();
+            $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
+            
+            if (!$usuarioId || !$rolId) {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Usuario o rol no válido',
+                    'usuario_id' => $usuarioId,
+                    'rol_id' => $rolId
+                ], JSON_UNESCAPED_UNICODE);
+                die();
+            }
+            
+            $diagnostico = $this->model->diagnosticarNotificaciones($usuarioId, $rolId);
+            echo json_encode([
+                'status' => true,
+                'usuario_id' => $usuarioId,
+                'rol_id' => $rolId,
+                'diagnostico' => $diagnostico
+            ], JSON_UNESCAPED_UNICODE);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'error' => $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        die();
+    }
+
+    // MÉTODO TEMPORAL DE PRUEBA - ELIMINAR DESPUÉS
+    public function getNotificacionesSimple()
+    {
+        error_log("🔔 getNotificacionesSimple - INICIADO");
+        
+        // Respuesta de prueba
+        $response = [
+            'status' => true,
+            'message' => 'Método temporal funcionando',
+            'data' => [
+                [
+                    'idnotificacion' => 999,
+                    'tipo' => 'TEST',
+                    'titulo' => 'Notificación de Prueba',
+                    'mensaje' => 'Esta es una notificación de prueba para verificar que el controlador funciona',
+                    'fecha_formato' => date('d/m/Y H:i'),
+                    'leida' => 0
+                ]
+            ],
+            'debug_info' => [
+                'session_usuario_id' => $_SESSION['usuario_id'] ?? 'No definido',
+                'session_rol_id' => $_SESSION['rol_id'] ?? 'No definido',
+                'session_login' => $_SESSION['login'] ?? 'No definido',
+                'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'No definido'
+            ]
+        ];
+        
+        header('Content-Type: application/json');
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        error_log("🔔 getNotificacionesSimple - RESPUESTA ENVIADA");
+        die();
     }
 }
 ?>

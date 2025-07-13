@@ -3,9 +3,7 @@ headerAdmin($data);
 $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
 ?>
 
-<script>
-    window.permisosClientes = <?php echo json_encode($permisos); ?>;
-</script>
+<?= renderJavaScriptData('permisosClientes', $permisos); ?>
 
 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">

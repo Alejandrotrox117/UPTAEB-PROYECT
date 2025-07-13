@@ -13,6 +13,145 @@ let tablaPagos;
 let tiposPago = [];
 let pagoEditando = null; 
 
+// ============================================
+// FUNCIONES GLOBALES (disponibles en window)
+// ============================================
+
+window.verPago = function (idPago) {
+  if (!tienePermiso("ver")) {
+    mostrarModalPermisosDenegados("No tienes permisos para ver este pago.");
+    return;
+  }
+
+  fetch(`Pagos/getPagoById/${idPago}`)
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        mostrarModalVerPago(result.data);
+      } else {
+        mostrarNotificacion(
+          result.message || "Error al obtener el pago",
+          "error"
+        );
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarNotificacion("Error de conexión al obtener el pago", "error");
+    });
+};
+
+window.editarPago = function (idPago) {
+  if (!tienePermiso("editar")) {
+    mostrarModalPermisosDenegados("No tienes permisos para editar este pago.");
+    return;
+  }
+
+  fetch(`Pagos/getPagoById/${idPago}`)
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.status && result.data) {
+        pagoEditando = result.data;
+        abrirModalEdicion(result.data);
+      } else {
+        mostrarNotificacion(
+          result.message || "Error al obtener el pago",
+          "error"
+        );
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      mostrarNotificacion("Error de conexión al obtener el pago", "error");
+    });
+};
+
+window.eliminarPago = function (idPago, descripcion) {
+  if (!tienePermiso("eliminar")) {
+    mostrarModalPermisosDenegados("No tienes permisos para eliminar este pago.");
+    return;
+  }
+
+  Swal.fire({
+    title: "¿Estás seguro?",
+    text: `¿Deseas eliminar el pago: ${descripcion}?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Pagos/deletePago", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `idpago=${idPago}`,
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            mostrarNotificacion(result.message, "success");
+            tablaPagos.ajax.reload(null, false);
+          } else {
+            mostrarNotificacion(result.message, "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          mostrarNotificacion("Error al eliminar el pago", "error");
+        });
+    }
+  });
+};
+
+window.conciliarPago = function (idPago, descripcion) {
+  if (!tienePermiso("editar")) {
+    mostrarModalPermisosDenegados("No tienes permisos para conciliar este pago.");
+    return;
+  }
+
+  Swal.fire({
+    title: "¿Confirmar conciliación?",
+    text: `¿Deseas marcar como conciliado el pago: ${descripcion}?`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#28a745",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Sí, conciliar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Pagos/conciliarPago", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `idpago=${idPago}`,
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            mostrarNotificacion(result.message, "success");
+            tablaPagos.ajax.reload(null, false);
+          } else {
+            mostrarNotificacion(result.message, "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          mostrarNotificacion("Error al conciliar el pago", "error");
+        });
+    }
+  });
+};
+
+// ============================================
+// FUNCIONES AUXILIARES
+// ============================================ 
+
 function mostrarModalPermisosDenegados(
   mensaje = "No tienes permisos para realizar esta acción."
 ) {
@@ -122,17 +261,42 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function inicializarModulo() {
+  console.log('🔧 [PAGOS] Iniciando módulo...');
+  
   if (!tienePermiso("ver")) {
     mostrarModalPermisosDenegados("No tienes permisos para ver los pagos.");
-    
     const mainContainer = document.querySelector(".container-fluid");
     if (mainContainer) mainContainer.innerHTML = "";
     return;
   }
+  
+  // Verificar que DataTables esté disponible
+  if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') {
+    console.error('❌ jQuery o DataTables no están disponibles');
+    return;
+  }
+  
+  // Verificar que SweetAlert esté disponible
+  if (typeof Swal === 'undefined') {
+    console.error('❌ SweetAlert no está disponible');
+    return;
+  }
+  
+  // Verificar que las funciones globales estén definidas
+  console.log('🌐 [PAGOS] Verificando funciones globales:');
+  console.log('- verPago:', typeof window.verPago);
+  console.log('- editarPago:', typeof window.editarPago);
+  console.log('- eliminarPago:', typeof window.eliminarPago);
+  console.log('- conciliarPago:', typeof window.conciliarPago);
+  
+  console.log('✅ [PAGOS] Dependencias verificadas');
+  
   inicializarTablaPagos();
   configurarEventos();
   cargarTiposPago();
   inicializarValidaciones(camposFormularioPago, "formRegistrarPago");
+  
+  console.log('✅ [PAGOS] Módulo inicializado correctamente');
 }
 
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
@@ -263,8 +427,8 @@ function inicializarTablaPagos() {
           let buttons = "";
           if (tienePermiso("ver")) {
             buttons += `
-              <button onclick="verPago(${row.idpago})" 
-                      class="text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
+              <button data-action="ver" data-id="${row.idpago}"
+                      class="btn-action text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
                       title="Ver detalles">
                 <i class="fas fa-eye fa-fw text-base"></i>
               </button>
@@ -273,13 +437,13 @@ function inicializarTablaPagos() {
           if (row.estatus === "activo") {
             if (tienePermiso("editar")) {
               buttons += `
-                <button onclick="editarPago(${row.idpago})" 
-                        class="text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
+                <button data-action="editar" data-id="${row.idpago}"
+                        class="btn-action text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
                         title="Editar">
                   <i class="fas fa-edit fa-fw text-base"></i>
                 </button>
-                <button onclick="conciliarPago(${row.idpago}, '${row.destinatario}')" 
-                        class="text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
+                <button data-action="conciliar" data-id="${row.idpago}" data-descripcion="${row.destinatario}"
+                        class="btn-action text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
                         title="Conciliar">
                   <i class="fas fa-check fa-fw text-base"></i>
                 </button>
@@ -287,8 +451,8 @@ function inicializarTablaPagos() {
             }
             if (tienePermiso("eliminar")) {
               buttons += `
-                <button onclick="eliminarPago(${row.idpago}, '${row.destinatario}')" 
-                        class="text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
+                <button data-action="eliminar" data-id="${row.idpago}" data-descripcion="${row.destinatario}"
+                        class="btn-action text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
                         title="Eliminar">
                   <i class="fas fa-trash-alt fa-fw text-base"></i>
                 </button>
@@ -394,54 +558,6 @@ function inicializarTablaPagos() {
   });
 }
 
-window.conciliarPago = function (idPago, descripcion) {
-  if (!tienePermiso("editar")) {
-    mostrarModalPermisosDenegados("No tienes permisos para conciliar pagos.");
-    return;
-  }
-
-  Swal.fire({
-    title: "¿Estás seguro?",
-    text: `¿Deseas conciliar el pago "${descripcion}"? Esta acción no se puede deshacer.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#10B981",
-    cancelButtonColor: "#6B7280",
-    confirmButtonText: "Sí, conciliar",
-    cancelButtonText: "Cancelar",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      fetch("Pagos/conciliarPago", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ idpago: idPago }),
-      })
-        .then((response) => response.json())
-        .then((result) => {
-          if (result.status) {
-            Swal.fire({
-              title: "¡Éxito!",
-              text: result.message,
-              icon: "success",
-              confirmButtonText: "Aceptar",
-              confirmButtonColor: "#10B981",
-            }).then(() => {
-              tablaPagos.ajax.reload();
-            });
-          } else {
-            mostrarNotificacion(result.message, "error");
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          mostrarNotificacion("Error de conexión al conciliar", "error");
-        });
-    }
-  });
-};
-
 function configurarEventos() {
   const btnAbrirModal = document.getElementById("btnAbrirModalRegistrarPago");
   const btnCerrarModal = document.getElementById("btnCerrarModalRegistrar");
@@ -510,6 +626,51 @@ function configurarEventos() {
       }
     });
   }
+
+  // Event listener para botones de acción en la tabla (usando event delegation)
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.btn-action')) {
+      const button = e.target.closest('.btn-action');
+      const action = button.getAttribute('data-action');
+      const id = button.getAttribute('data-id');
+      const descripcion = button.getAttribute('data-descripcion');
+      
+      console.log(`🔧 [PAGOS] Ejecutando acción: ${action} para ID: ${id}`);
+      
+      switch(action) {
+        case 'ver':
+          if (typeof window.verPago === 'function') {
+            window.verPago(id);
+          } else {
+            console.error('❌ window.verPago no está definida');
+          }
+          break;
+        case 'editar':
+          if (typeof window.editarPago === 'function') {
+            window.editarPago(id);
+          } else {
+            console.error('❌ window.editarPago no está definida');
+          }
+          break;
+        case 'eliminar':
+          if (typeof window.eliminarPago === 'function') {
+            window.eliminarPago(id, descripcion);
+          } else {
+            console.error('❌ window.eliminarPago no está definida');
+          }
+          break;
+        case 'conciliar':
+          if (typeof window.conciliarPago === 'function') {
+            window.conciliarPago(id, descripcion);
+          } else {
+            console.error('❌ window.conciliarPago no está definida');
+          }
+          break;
+        default:
+          console.warn('⚠️ Acción no reconocida:', action);
+      }
+    }
+  });
 }
 
 function obtenerCamposDinamicos() {

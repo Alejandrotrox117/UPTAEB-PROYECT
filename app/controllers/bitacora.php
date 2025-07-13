@@ -209,7 +209,7 @@ class Bitacora extends Controllers
         }
 
         try {
-            $dias = intval($_POST['dias'] ?? 30);
+            $dias = intval($_POST['dias']);
             if ($dias < 1) {
                 echo json_encode([
                     "status" => false,

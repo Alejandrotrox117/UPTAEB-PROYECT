@@ -8,10 +8,8 @@ $idUsuarioSesion = $_SESSION['usuario_id'] ?? 0;
 $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
 ?>
 
-<script>
-    window.permisosRoles = <?php echo json_encode($permisos); ?>;
-    window.esSuperUsuario = <?php echo json_encode($esSuperUsuario); ?>;
-</script>
+<?= renderJavaScriptData('permisosRoles', $permisos); ?>
+<?= renderJavaScriptData('esSuperUsuario', $esSuperUsuario); ?>
 
 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -269,17 +267,17 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
 <!-- ✅ AGREGAR REQUIRE PARA USAR EL HELPER EN LA VISTA -->
 <?php
 require_once "helpers/PermisosModuloVerificar.php";
+
+$permisosRoles = [
+    'crear' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear'),
+    'editar' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar'),
+    'eliminar' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar'),
+    'ver' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')
+];
 ?>
 
-<script>
-// ✅ VARIABLES GLOBALES DE PERMISOS PARA JAVASCRIPT
-window.PERMISOS_ROLES = {
-    crear: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear') ? 'true' : 'false'; ?>,
-    editar: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar') ? 'true' : 'false'; ?>,
-    eliminar: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar') ? 'true' : 'false'; ?>,
-    ver: <?php echo PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') ? 'true' : 'false'; ?>
-};
-
+<?= renderJavaScriptData('PERMISOS_ROLES', $permisosRoles); ?>
+<script nonce="<?= generateCSPNonce(); ?>">
 // ✅ FUNCIÓN PARA VERIFICAR PERMISOS EN JAVASCRIPT
 window.tienePermiso = function(accion) {
     return window.PERMISOS_ROLES[accion] || false;

@@ -4,23 +4,124 @@ require_once "app/core/mysql.php";
 
 class RolesIntegradoModel extends mysql
 {
-    private $conexion;
-    private $dbSeguridad;
+    private $query;
+    private $array;
+    private $data;
+    private $result;
+    private $message;
+    private $status;
+
+    private $idrol;
+    private $idmodulo;
+    private $idpermiso;
+    private $asignaciones;
 
     public function __construct()
     {
-        $this->conexion = new Conexion();
-        $this->conexion->connect();
-        $this->dbSeguridad = $this->conexion->get_conectSeguridad();
+        parent::__construct();
     }
 
-    /**
-     * Obtiene asignaciones completas con permisos específicos por módulo
-     */
+    // GETTERS Y SETTERS DE CONTROL
+    public function getQuery(){
+        return $this->query;
+    }
+    public function setQuery(string $query){
+        $this->query = $query; 
+    }
+    public function getArray(){ 
+        return $this->array ?? []; 
+    }
+    public function setArray(array $array){
+        $this->array = $array;
+    }
+    public function getData(){
+        return $this->data ?? []; 
+    }
+    public function setData(array $data){
+        $this->data = $data; 
+    }
+    public function getResult(){
+        return $this->result;
+    }
+    public function setResult($result){
+        $this->result = $result;
+    }
+    public function getMessage(){
+        return $this->message ?? ''; 
+    }
+    public function setMessage(string $message){
+        $this->message = $message;
+    }
+    public function getStatus(){
+        return $this->status ?? false;
+    }
+    public function setStatus(bool $status){
+        $this->status = $status;
+    }
+
+    // GETTERS Y SETTERS DE ENTIDAD
+    public function setIdRol($idrol){
+        $this->idrol = $idrol;
+    }
+    public function getIdRol(){
+        return $this->idrol;
+    }
+    public function setIdModulo($idmodulo){
+        $this->idmodulo = $idmodulo;
+    }
+    public function getIdModulo(){
+        return $this->idmodulo;
+    }
+    public function setIdPermiso($idpermiso){
+        $this->idpermiso = $idpermiso;
+    }
+    public function getIdPermiso(){
+        return $this->idpermiso;
+    }
+    public function setAsignaciones($asignaciones){
+        $this->asignaciones = $asignaciones;
+    }
+    public function getAsignaciones(){
+        return $this->asignaciones;
+    }
+
+    // MÉTODOS PÚBLICOS
     public function selectAsignacionesRolCompletas(int $idrol)
     {
+        $this->setIdRol($idrol);
+        return $this->ejecutarConsultaAsignacionesRolCompletas();
+    }
+
+    public function guardarAsignacionesRolCompletas(array $data)
+    {
+        $this->setData($data);
+        return $this->ejecutarGuardadoAsignacionesRolCompletas();
+    }
+
+    public function selectAllRoles()
+    {
+        return $this->ejecutarConsultaTodosRoles();
+    }
+
+    public function selectAllModulosActivos()
+    {
+        return $this->ejecutarConsultaTodosModulosActivos();
+    }
+
+    public function selectAllPermisosActivos()
+    {
+        return $this->ejecutarConsultaTodosPermisosActivos();
+    }
+
+    // MÉTODOS PRIVADOS
+    private function ejecutarConsultaAsignacionesRolCompletas()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
         try {
-            $sql = "SELECT 
+            $this->setQuery("SELECT 
                         m.idmodulo,
                         m.titulo as nombre_modulo,
                         m.descripcion as descripcion_modulo,
@@ -33,14 +134,16 @@ class RolesIntegradoModel extends mysql
                     LEFT JOIN permisos p ON rmp.idpermiso = p.idpermiso
                     WHERE m.estatus = 'activo'
                     GROUP BY m.idmodulo, m.titulo, m.descripcion, rm.idrol
-                    ORDER BY m.titulo ASC";
+                    ORDER BY m.titulo ASC");
 
-            $stmt = $this->dbSeguridad->prepare($sql);
-            $stmt->execute([$idrol, $idrol]);
-            $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->setArray([$this->getIdRol(), $this->getIdRol()]);
+
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
 
             $modulosConPermisos = [];
-            foreach ($resultados as $fila) {
+            foreach ($this->getResult() as $fila) {
                 $permisosIds = $fila['permisos_especificos_ids'] ? explode(',', $fila['permisos_especificos_ids']) : [];
                 $permisosNombres = $fila['permisos_especificos_nombres'] ? explode('|', $fila['permisos_especificos_nombres']) : [];
                 
@@ -70,21 +173,25 @@ class RolesIntegradoModel extends mysql
             ];
 
         } catch (PDOException $e) {
-            error_log("Error al obtener asignaciones del rol: " . $e->getMessage());
+            error_log("RolesIntegradoModel::ejecutarConsultaAsignacionesRolCompletas - Error: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error al obtener asignaciones.',
                 'data' => []
             ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    /**
-     * Guarda asignaciones con permisos específicos por módulo
-     */
-    public function guardarAsignacionesRolCompletas(array $data)
+    private function ejecutarGuardadoAsignacionesRolCompletas()
     {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
         try {
+            $data = $this->getData();
             $idrol = intval($data['idrol'] ?? 0);
             $asignaciones = $data['asignaciones'] ?? [];
 
@@ -92,35 +199,37 @@ class RolesIntegradoModel extends mysql
                 return ['status' => false, 'message' => 'ID de rol no válido.'];
             }
 
-            $this->dbSeguridad->beginTransaction();
+            $this->setIdRol($idrol);
+            $this->setAsignaciones($asignaciones);
 
-            // Eliminar asignaciones existentes
-            $this->eliminarAsignacionesExistentes($idrol);
+            $dbSeguridad->beginTransaction();
+
+            $this->ejecutarEliminacionAsignacionesExistentes($dbSeguridad);
 
             $totalModulos = 0;
             $totalPermisosEspecificos = 0;
 
-            foreach ($asignaciones as $asignacion) {
+            foreach ($this->getAsignaciones() as $asignacion) {
                 $idmodulo = intval($asignacion['idmodulo'] ?? 0);
                 $permisosEspecificos = $asignacion['permisos_especificos'] ?? [];
 
                 if ($idmodulo > 0 && !empty($permisosEspecificos)) {
-                  
-                    $this->insertarRolModulo($idrol, $idmodulo);
+                    $this->setIdModulo($idmodulo);
+                    $this->ejecutarInsercionRolModulo($dbSeguridad);
                     $totalModulos++;
 
-           
                     foreach ($permisosEspecificos as $idpermiso) {
                         $idpermiso = intval($idpermiso);
                         if ($idpermiso > 0) {
-                            $this->insertarRolModuloPermiso($idrol, $idmodulo, $idpermiso);
+                            $this->setIdPermiso($idpermiso);
+                            $this->ejecutarInsercionRolModuloPermiso($dbSeguridad);
                             $totalPermisosEspecificos++;
                         }
                     }
                 }
             }
 
-            $this->dbSeguridad->commit();
+            $dbSeguridad->commit();
 
             return [
                 'status' => true,
@@ -130,101 +239,145 @@ class RolesIntegradoModel extends mysql
             ];
 
         } catch (PDOException $e) {
-            if ($this->dbSeguridad->inTransaction()) {
-                $this->dbSeguridad->rollBack();
+            if ($dbSeguridad->inTransaction()) {
+                $dbSeguridad->rollBack();
             }
-            error_log("Error al guardar asignaciones: " . $e->getMessage());
+            error_log("RolesIntegradoModel::ejecutarGuardadoAsignacionesRolCompletas - Error: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error al guardar la configuración: ' . $e->getMessage()
             ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    private function eliminarAsignacionesExistentes(int $idrol): void
+    private function ejecutarEliminacionAsignacionesExistentes($dbSeguridad)
     {
-        // Eliminar permisos específicos por módulo
-        $sqlPermisosEspecificos = "DELETE FROM rol_modulo_permisos WHERE idrol = ?";
-        $stmtPermisosEspecificos = $this->dbSeguridad->prepare($sqlPermisosEspecificos);
-        $stmtPermisosEspecificos->execute([$idrol]);
+        $this->setQuery("DELETE FROM rol_modulo_permisos WHERE idrol = ?");
+        $this->setArray([$this->getIdRol()]);
+        $stmt = $dbSeguridad->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
 
-        // Eliminar módulos del rol
-        $sqlModulos = "DELETE FROM rol_modulo WHERE idrol = ?";
-        $stmtModulos = $this->dbSeguridad->prepare($sqlModulos);
-        $stmtModulos->execute([$idrol]);
+        $this->setQuery("DELETE FROM rol_modulo WHERE idrol = ?");
+        $this->setArray([$this->getIdRol()]);
+        $stmt = $dbSeguridad->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
     }
 
-    private function insertarRolModulo(int $idrol, int $idmodulo): void
+    private function ejecutarInsercionRolModulo($dbSeguridad)
     {
-        // Verificar si ya existe antes de insertar
-        $sqlCheck = "SELECT COUNT(*) FROM rol_modulo WHERE idrol = ? AND idmodulo = ?";
-        $stmtCheck = $this->dbSeguridad->prepare($sqlCheck);
-        $stmtCheck->execute([$idrol, $idmodulo]);
+        $this->setQuery("SELECT COUNT(*) FROM rol_modulo WHERE idrol = ? AND idmodulo = ?");
+        $this->setArray([$this->getIdRol(), $this->getIdModulo()]);
+        $stmt = $dbSeguridad->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
         
-        if ($stmtCheck->fetchColumn() == 0) {
-            $sql = "INSERT INTO rol_modulo (idrol, idmodulo) VALUES (?, ?)";
-            $stmt = $this->dbSeguridad->prepare($sql);
-            $stmt->execute([$idrol, $idmodulo]);
+        if ($stmt->fetchColumn() == 0) {
+            $this->setQuery("INSERT INTO rol_modulo (idrol, idmodulo) VALUES (?, ?)");
+            $this->setArray([$this->getIdRol(), $this->getIdModulo()]);
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
         }
     }
 
-    private function insertarRolModuloPermiso(int $idrol, int $idmodulo, int $idpermiso): void
+    private function ejecutarInsercionRolModuloPermiso($dbSeguridad)
     {
-        $sql = "INSERT INTO rol_modulo_permisos (idrol, idmodulo, idpermiso, activo) VALUES (?, ?, ?, 1)";
-        $stmt = $this->dbSeguridad->prepare($sql);
-        $stmt->execute([$idrol, $idmodulo, $idpermiso]);
+        $this->setQuery("INSERT INTO rol_modulo_permisos (idrol, idmodulo, idpermiso, activo) VALUES (?, ?, ?, 1)");
+        $this->setArray([$this->getIdRol(), $this->getIdModulo(), $this->getIdPermiso()]);
+        $stmt = $dbSeguridad->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
     }
 
-    /**
-     * Obtiene todos los roles activos
-     */
-    public function selectAllRoles()
+    private function ejecutarConsultaTodosRoles()
     {
-        
-        $sql = "SELECT idrol, nombre, descripcion FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC";
-        
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
         try {
-            $stmt = $this->dbSeguridad->query($sql);
-            $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return ['status' => true, 'message' => 'Roles obtenidos.', 'data' => $roles];
+            $this->setQuery("SELECT idrol, nombre, descripcion FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC");
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute();
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+
+            return [
+                'status' => true, 
+                'message' => 'Roles obtenidos.', 
+                'data' => $this->getResult()
+            ];
+
         } catch (PDOException $e) {
-            error_log("Error al obtener roles: " . $e->getMessage());
-            return ['status' => false, 'message' => 'Error al obtener roles.', 'data' => []];
+            error_log("RolesIntegradoModel::ejecutarConsultaTodosRoles - Error: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error al obtener roles.', 
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    /**
-     * Obtiene todos los módulos activos
-     */
-    public function selectAllModulosActivos()
+    private function ejecutarConsultaTodosModulosActivos()
     {
-       
-        $sql = "SELECT idmodulo, titulo, descripcion FROM modulos WHERE estatus = 'activo' ORDER BY titulo ASC";
-        
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
         try {
-            $stmt = $this->dbSeguridad->query($sql);
-            $modulos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return ['status' => true, 'message' => 'Módulos obtenidos.', 'data' => $modulos];
+            $this->setQuery("SELECT idmodulo, titulo, descripcion FROM modulos WHERE estatus = 'activo' ORDER BY titulo ASC");
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute();
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+
+            return [
+                'status' => true, 
+                'message' => 'Módulos obtenidos.', 
+                'data' => $this->getResult()
+            ];
+
         } catch (PDOException $e) {
-            error_log("Error al obtener módulos: " . $e->getMessage());
-            return ['status' => false, 'message' => 'Error al obtener módulos.', 'data' => []];
+            error_log("RolesIntegradoModel::ejecutarConsultaTodosModulosActivos - Error: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error al obtener módulos.', 
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 
-    /**
-     * Obtiene todos los permisos activos
-     */
-    public function selectAllPermisosActivos()
+    private function ejecutarConsultaTodosPermisosActivos()
     {
-        $sql = "SELECT idpermiso, nombre_permiso FROM permisos ORDER BY nombre_permiso ASC";
-        
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+
         try {
-            $stmt = $this->dbSeguridad->query($sql);
-            $permisos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return ['status' => true, 'message' => 'Permisos obtenidos.', 'data' => $permisos];
+            $this->setQuery("SELECT idpermiso, nombre_permiso FROM permisos ORDER BY nombre_permiso ASC");
+            
+            $stmt = $dbSeguridad->prepare($this->getQuery());
+            $stmt->execute();
+            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+
+            return [
+                'status' => true, 
+                'message' => 'Permisos obtenidos.', 
+                'data' => $this->getResult()
+            ];
+
         } catch (PDOException $e) {
-            error_log("Error al obtener permisos: " . $e->getMessage());
-            return ['status' => false, 'message' => 'Error al obtener permisos.', 'data' => []];
+            error_log("RolesIntegradoModel::ejecutarConsultaTodosPermisosActivos - Error: " . $e->getMessage());
+            return [
+                'status' => false, 
+                'message' => 'Error al obtener permisos.', 
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
         }
     }
 }

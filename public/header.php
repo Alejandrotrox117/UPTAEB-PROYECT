@@ -39,7 +39,14 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
   <header class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-md p-4 flex items-center justify-between z-50 h-16">
     <img src="/project/app/assets/img/LOGO.png" alt="Recuperadora" class="h-16 w-auto">
     <div class="flex items-center space-x-4">
-      <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?>
+      <?php 
+      // Mostrar notificaciones si el usuario tiene acceso a cualquier módulo que puede generar notificaciones
+      $puedeVerNotificaciones = PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver') ||
+                                PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'ver') ||
+                                PermisosModuloVerificar::verificarAccesoModulo('productos') ||
+                                PermisosModuloVerificar::verificarAccesoModulo('compras');
+      ?>
+      <?php if ($puedeVerNotificaciones): ?>
       <div class="relative">
         <button id="mobile-notifications-toggle" class="text-gray-700 hover:text-green-600 focus:outline-none p-2 relative">
           <i class="fas fa-bell text-xl"></i>
@@ -96,9 +103,9 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
           <li class="menu-item"><a href="/project/movimientos" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-boxes-stacked w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Movimientos</span></a></li>
           <?php endif; ?>
 
-          <!-- Sueldos Temporales -->
-          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos_temporales', 'ver')): ?>
-          <li class="menu-item"><a href="/project/sueldos_temporales" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Sueldos</span></a></li>
+          <!-- Gestionar Sueldos -->
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos', 'ver')): ?>
+          <li class="menu-item"><a href="/project/sueldos" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Sueldos</span></a></li>
           <?php endif; ?>
 
           <!-- Gestionar Ventas -->
@@ -222,7 +229,7 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
     <div class="flex-1 w-full relative">
         
         <!-- Icono de notificaciones posicionado absolutamente (solo para desktop) -->
-        <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?>
+        <?php if ($puedeVerNotificaciones): ?>
         <div class="hidden lg:block absolute top-4 right-6 z-20">
             <div class="relative">
                 <button id="desktop-notifications-toggle" class="text-gray-600 hover:text-green-600 p-2 relative bg-white rounded-full shadow-md">
@@ -236,7 +243,7 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
         <!-- El tag <main> de tus vistas se renderizará aquí -->
         
         <!-- Dropdown de notificaciones -->
-        <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')): ?>
+        <?php if ($puedeVerNotificaciones): ?>
         <div id="notifications-dropdown" class="fixed top-16 right-6 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
           <div class="p-4 border-b border-gray-200 flex justify-between items-center">
             <h3 class="text-lg font-semibold text-gray-900"><i class="fas fa-bell mr-2 text-green-600"></i> Notificaciones</h3>
