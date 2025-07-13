@@ -560,6 +560,135 @@ class SueldosModel extends Mysql
         return $resultado;
     }
 
+    // Función para obtener la tasa de cambio más reciente de una moneda
+    public function getTasaCambioActual($codigoMoneda)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT tasa_a_bs, fecha_publicacion_bcv 
+                FROM historial_tasas_bcv 
+                WHERE codigo_moneda = ? 
+                ORDER BY fecha_publicacion_bcv DESC, fecha_creacion DESC 
+                LIMIT 1"
+            );
+            
+            $this->setArray([$codigoMoneda]);
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($resultado) {
+                return [
+                    'status' => true,
+                    'data' => $resultado,
+                    'message' => 'Tasa obtenida exitosamente'
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'data' => null,
+                    'message' => 'No se encontró tasa para la moneda ' . $codigoMoneda
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("SueldosModel::getTasaCambioActual - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'data' => null,
+                'message' => 'Error al obtener tasa: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    // Función para convertir monto de sueldo a bolívares
+    public function convertirMontoABolivares($idsueldo)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Obtener información del sueldo con su moneda
+            $this->setQuery(
+                "SELECT s.monto, s.balance, m.codigo_moneda, m.nombre_moneda
+                FROM sueldos s
+                LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
+                WHERE s.idsueldo = ?"
+            );
+            
+            $this->setArray([$idsueldo]);
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $sueldo = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$sueldo) {
+                return [
+                    'status' => false,
+                    'message' => 'Sueldo no encontrado',
+                    'data' => null
+                ];
+            }
+            
+            // Si ya está en bolívares, retornar el balance directamente
+            if ($sueldo['codigo_moneda'] === 'VES' || empty($sueldo['codigo_moneda'])) {
+                return [
+                    'status' => true,
+                    'message' => 'Monto ya está en bolívares',
+                    'data' => [
+                        'monto_original' => $sueldo['balance'],
+                        'monto_bolivares' => $sueldo['balance'],
+                        'tasa_cambio' => 1.0000,
+                        'codigo_moneda' => 'VES',
+                        'fecha_tasa' => date('Y-m-d')
+                    ]
+                ];
+            }
+            
+            // Obtener tasa de cambio actual
+            $tasaInfo = $this->getTasaCambioActual($sueldo['codigo_moneda']);
+            
+            if (!$tasaInfo['status']) {
+                return [
+                    'status' => false,
+                    'message' => 'No se pudo obtener tasa de cambio para ' . $sueldo['codigo_moneda'],
+                    'data' => null
+                ];
+            }
+            
+            $tasa = $tasaInfo['data']['tasa_a_bs'];
+            $montoBolivares = $sueldo['balance'] * $tasa;
+            
+            return [
+                'status' => true,
+                'message' => 'Conversión realizada exitosamente',
+                'data' => [
+                    'monto_original' => $sueldo['balance'],
+                    'monto_bolivares' => round($montoBolivares, 2),
+                    'tasa_cambio' => $tasa,
+                    'codigo_moneda' => $sueldo['codigo_moneda'],
+                    'fecha_tasa' => $tasaInfo['data']['fecha_publicacion_bcv']
+                ]
+            ];
+            
+        } catch (Exception $e) {
+            error_log("SueldosModel::convertirMontoABolivares - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error en conversión: ' . $e->getMessage(),
+                'data' => null
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
     // Función para reactivar sueldo (cambio de estatus a POR_PAGAR)
     private function ejecutarReactivacionSueldo(int $idsueldo){
         $conexion = new Conexion();
@@ -608,5 +737,199 @@ class SueldosModel extends Mysql
     // Función para reactivar sueldo (cambio de estatus a POR_PAGAR)
     public function reactivarSueldo(int $idsueldo){
         return $this->ejecutarReactivacionSueldo($idsueldo);
+    }
+
+    // Función para procesar pago de sueldo
+    public function procesarPagoSueldo($data)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Iniciar transacción
+            $db->beginTransaction();
+
+            // 1. Obtener información del sueldo actual
+            $this->setQuery(
+                "SELECT s.monto, s.balance, s.estatus, s.idmoneda, m.codigo_moneda
+                FROM sueldos s
+                LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
+                WHERE s.idsueldo = ?"
+            );
+            
+            $this->setArray([intval($data['idsueldo'])]);
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $sueldo = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$sueldo) {
+                throw new Exception('Sueldo no encontrado');
+            }
+
+            if ($sueldo['estatus'] === 'PAGADO') {
+                throw new Exception('El sueldo ya está completamente pagado');
+            }
+
+            // 2. Convertir monto del sueldo a bolívares si es necesario
+            $conversionResult = $this->convertirMontoABolivares(intval($data['idsueldo']));
+            if (!$conversionResult['status']) {
+                throw new Exception('Error al convertir monto: ' . $conversionResult['message']);
+            }
+
+            $montoTotalBolivares = $conversionResult['data']['monto_bolivares'];
+            $montoPago = floatval($data['monto']);
+
+            // 3. Validar que el monto no exceda el balance
+            if ($montoPago > $montoTotalBolivares) {
+                throw new Exception('El monto a pagar no puede ser mayor al saldo pendiente');
+            }
+
+            // 4. Obtener información de persona/empleado del sueldo para el pago
+            $this->setQuery(
+                "SELECT idpersona, idempleado FROM sueldos WHERE idsueldo = ?"
+            );
+            $this->setArray([intval($data['idsueldo'])]);
+            $stmtPersona = $db->prepare($this->getQuery());
+            $stmtPersona->execute($this->getArray());
+            $personaInfo = $stmtPersona->fetch(PDO::FETCH_ASSOC);
+            
+            // Determinar idpersona para el pago
+            $idPersonaPago = null;
+            if ($personaInfo['idpersona']) {
+                $idPersonaPago = $personaInfo['idpersona'];
+            } elseif ($personaInfo['idempleado']) {
+                // Si es empleado, necesitamos buscar si tiene una persona asociada
+                // o usar NULL ya que la tabla pagos permite idpersona NULL
+                $idPersonaPago = null;
+            }
+            
+            // 5. Insertar el pago en la tabla pagos
+            $this->setQuery(
+                "INSERT INTO pagos (
+                    idpersona, idtipo_pago, idsueldotemp, monto, referencia, 
+                    fecha_pago, observaciones, estatus, fecha_creacion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'activo', NOW())"
+            );
+            
+            $this->setArray([
+                $idPersonaPago,
+                intval($data['idtipo_pago']),
+                intval($data['idsueldo']),
+                $montoPago,
+                $data['referencia'] ?? null,
+                $data['fecha_pago'],
+                $data['observaciones'] ?? null
+            ]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $pagoId = $db->lastInsertId();
+
+            // 6. Actualizar balance del sueldo
+            $nuevoBalance = $montoTotalBolivares - $montoPago;
+            
+            // Determinar nuevo estatus
+            $nuevoEstatus = 'POR_PAGAR';
+            if ($nuevoBalance <= 0) {
+                $nuevoEstatus = 'PAGADO';
+                $nuevoBalance = 0;
+            } else {
+                $nuevoEstatus = 'PAGO_FRACCIONADO';
+            }
+
+            // Convertir el nuevo balance a la moneda original del sueldo
+            $nuevoBalanceMonedaOriginal = $nuevoBalance;
+            if ($sueldo['codigo_moneda'] !== 'VES' && $sueldo['codigo_moneda'] !== null) {
+                $tasaInfo = $this->getTasaCambioActual($sueldo['codigo_moneda']);
+                if ($tasaInfo['status']) {
+                    $nuevoBalanceMonedaOriginal = $nuevoBalance / $tasaInfo['data']['tasa_a_bs'];
+                }
+            }
+
+            $this->setQuery(
+                "UPDATE sueldos SET 
+                    balance = ?, estatus = ?, fecha_modificacion = NOW() 
+                WHERE idsueldo = ?"
+            );
+            
+            $this->setArray([
+                round($nuevoBalanceMonedaOriginal, 2),
+                $nuevoEstatus,
+                intval($data['idsueldo'])
+            ]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+
+            // Confirmar transacción
+            $db->commit();
+
+            return [
+                'status' => true,
+                'message' => 'Pago procesado exitosamente',
+                'data' => [
+                    'pago_id' => $pagoId,
+                    'monto_pagado' => $montoPago,
+                    'nuevo_balance' => $nuevoBalanceMonedaOriginal,
+                    'nuevo_estatus' => $nuevoEstatus
+                ]
+            ];
+
+        } catch (Exception $e) {
+            $db->rollback();
+            error_log("SueldosModel::procesarPagoSueldo - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al procesar pago: ' . $e->getMessage(),
+                'data' => null
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    // Función para obtener pagos asociados a un sueldo
+    public function getPagosSueldo($idsueldo)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $this->setQuery(
+                "SELECT 
+                    p.idpago, p.monto, p.referencia, p.fecha_pago, 
+                    p.observaciones, p.estatus, p.fecha_creacion,
+                    tp.nombre as tipo_pago,
+                    DATE_FORMAT(p.fecha_pago, '%d/%m/%Y') as fecha_pago_formato,
+                    DATE_FORMAT(p.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato
+                FROM pagos p
+                LEFT JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago
+                WHERE p.idsueldotemp = ?
+                ORDER BY p.fecha_creacion DESC"
+            );
+            
+            $this->setArray([$idsueldo]);
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return [
+                'status' => true,
+                'message' => 'Pagos obtenidos exitosamente',
+                'data' => $result
+            ];
+            
+        } catch (Exception $e) {
+            error_log("SueldosModel::getPagosSueldo - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al obtener pagos: ' . $e->getMessage(),
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
     }
 }

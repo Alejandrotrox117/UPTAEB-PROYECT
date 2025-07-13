@@ -191,4 +191,76 @@
     </div>
 </div>
 
+<!-- Modal Pagar Sueldo -->
+<div id="modalPagarSueldo"
+    class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-2xl max-h-[95vh]">
+        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-xl md:text-2xl font-bold text-gray-800">Pagar Sueldo</h3>
+            <button id="btnCerrarModalPagar" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Información del sueldo -->
+        <div id="infoSueldoPago" class="px-4 md:px-6 py-4 bg-gray-50 border-b">
+            <!-- Se llenará dinámicamente -->
+        </div>
+        
+        <form id="formPagarSueldo" class="px-4 md:px-8 py-6 max-h-[calc(70vh-120px)] sm:max-h-[60vh] overflow-y-auto">
+            <input type="hidden" id="idSueldoPagar" name="idsueldo">
+            <input type="hidden" id="montoTotalBolivares" name="monto_total_bolivares">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                    <label for="montoPago" class="block text-sm font-medium text-gray-700 mb-1">Monto a Pagar (Bs.) *</label>
+                    <input type="number" id="montoPago" name="monto" step="0.01" min="0" 
+                           class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
+                           placeholder="Ingrese el monto a pagar">
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
+                <div>
+                    <label for="tipoPagoPago" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Pago *</label>
+                    <select id="tipoPagoPago" name="idtipo_pago" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm">
+                        <option value="">Seleccionar tipo...</option>
+                    </select>
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
+                <div>
+                    <label for="referenciaPago" class="block text-sm font-medium text-gray-700 mb-1">Referencia</label>
+                    <input type="text" id="referenciaPago" name="referencia" 
+                           class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"
+                           placeholder="Número de referencia (opcional)">
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
+                <div>
+                    <label for="fechaPagoPago" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Pago *</label>
+                    <input type="date" id="fechaPagoPago" name="fecha_pago" 
+                           class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm">
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="observacionesPago" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+                    <textarea id="observacionesPago" name="observaciones" rows="3" 
+                              class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm resize-none"
+                              placeholder="Observaciones del pago..."></textarea>
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                <button id="btnCancelarPago" type="button" 
+                        class="w-full sm:w-auto px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors">
+                    Cancelar
+                </button>
+                <button id="btnProcesarPago" type="submit" 
+                        class="w-full sm:w-auto px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium text-sm transition-colors">
+                    Procesar Pago
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <?php footerAdmin($data); ?>

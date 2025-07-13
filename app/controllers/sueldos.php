@@ -257,6 +257,27 @@ class Sueldos extends Controllers
         }
     }
 
+    public function getMontoBolivares($idsueldo)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            if (empty($idsueldo) || !is_numeric($idsueldo)) {
+                $arrResponse = array('status' => false, 'message' => 'ID de sueldo inválido');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
+            try {
+                $arrResponse = $this->model->convertirMontoABolivares(intval($idsueldo));
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getMontoBolivares: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
     public function updateSueldo()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -623,6 +644,109 @@ class Sueldos extends Controllers
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
             die();
+        }
+    }
+
+    public function procesarPagoSueldo()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validar datos recibidos
+            $requiredFields = ['idsueldo', 'monto', 'idtipo_pago', 'fecha_pago'];
+            $data = [];
+            
+            foreach ($requiredFields as $field) {
+                if (empty($_POST[$field])) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => "El campo {$field} es requerido"
+                    ]);
+                    return;
+                }
+                $data[$field] = $_POST[$field];
+            }
+            
+            // Campos opcionales
+            $optionalFields = ['referencia', 'observaciones'];
+            foreach ($optionalFields as $field) {
+                if (isset($_POST[$field])) {
+                    $data[$field] = $_POST[$field];
+                }
+            }
+            
+            // Validar que el monto sea válido
+            if (!is_numeric($data['monto']) || floatval($data['monto']) <= 0) {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'El monto debe ser un número mayor a 0'
+                ]);
+                return;
+            }
+            
+            // Procesar el pago
+            $result = $this->model->procesarPagoSueldo($data);
+            
+            // Si el pago fue exitoso, registrar en bitácora
+            if ($result['status']) {
+                $this->BitacoraHelper->registrarAccion(
+                    'Sueldos',
+                    'Procesar pago',
+                    "Pago procesado para sueldo ID: {$data['idsueldo']}, Monto: {$data['monto']} Bs., Pago ID: {$result['data']['pago_id']}",
+                    $data['idsueldo']
+                );
+            }
+            
+            echo json_encode($result);
+        } else {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Método no permitido'
+            ]);
+        }
+    }
+
+    public function getTiposPagos()
+    {
+        // Incluir el modelo de tipos de pago
+        require_once "app/models/tiposPagosModel.php";
+        $tiposPagosModel = new TiposPagosModel();
+        
+        try {
+            $result = $tiposPagosModel->selectTiposPagosActivos();
+            echo json_encode($result);
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al obtener tipos de pago: ' . $e->getMessage(),
+                'data' => []
+            ]);
+        }
+    }
+
+    public function getPagosSueldo($idsueldo = null)
+    {
+        if (!$idsueldo && isset($_GET['idsueldo'])) {
+            $idsueldo = intval($_GET['idsueldo']);
+        }
+        
+        if (!$idsueldo) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'ID de sueldo requerido',
+                'data' => []
+            ]);
+            return;
+        }
+
+        try {
+            // Obtener pagos asociados al sueldo desde la tabla pagos
+            $result = $this->model->getPagosSueldo($idsueldo);
+            echo json_encode($result);
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al obtener pagos: ' . $e->getMessage(),
+                'data' => []
+            ]);
         }
     }
 }

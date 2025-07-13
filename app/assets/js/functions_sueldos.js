@@ -237,6 +237,31 @@ function initTablaSueldos() {
       },
       {
         data: null,
+        title: "Pago",
+        className: "desktop text-center py-2 px-3",
+        render: function (data, type, row) {
+          if (!row) return "";
+          
+          const estatus = row.estatus || "";
+          const idsueldo = row.idsueldo || "";
+          
+          // Solo mostrar botón de pago si el sueldo está por pagar o con pago fraccionado
+          if (estatus === "POR_PAGAR" || estatus === "PAGO_FRACCIONADO") {
+            return `
+              <button class="pagar-sueldo-btn bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1 rounded-full transition-colors duration-150" 
+                      data-idsueldo="${idsueldo}" 
+                      title="Realizar pago">
+                  <i class="fas fa-dollar-sign mr-1"></i>Pagar
+              </button>`;
+          } else if (estatus === "PAGADO") {
+            return '<span class="text-green-600 text-xs font-semibold"><i class="fas fa-check-circle mr-1"></i>Pagado</span>';
+          } else {
+            return '<span class="text-gray-400 text-xs">-</span>';
+          }
+        },
+      },
+      {
+        data: null,
         title: "Acciones",
         orderable: false,
         searchable: false,
@@ -393,6 +418,16 @@ function initTablaSueldos() {
     }
   });
 
+  $("#TablaSueldos tbody").on("click", ".pagar-sueldo-btn", function () {
+    const idSueldo = $(this).data("idsueldo");
+    if (idSueldo) {
+      abrirModalPagoSueldo(idSueldo);
+    } else {
+      console.error("ID de sueldo no encontrado.");
+      Swal.fire("Error", "No se pudo obtener el ID del sueldo.", "error");
+    }
+  });
+
   $("#TablaSueldos tbody").on("click", ".eliminar-sueldo-btn", function () {
     const idSueldo = $(this).data("idsueldo");
     const nombreSueldo = $(this).data("nombre");
@@ -413,6 +448,14 @@ function initTablaSueldos() {
     } else {
       console.error("Función reactivarSueldo no definida o idSueldo no encontrado.", idSueldo);
       Swal.fire("Error", "No se pudo obtener el ID del sueldo.", "error");
+    }
+  });
+
+  // Evento para ver historial de pagos
+  $("#TablaSueldos tbody").on("click", ".historial-pagos-btn", function () {
+    const idSueldo = $(this).data("idsueldo");
+    if (idSueldo) {
+      verHistorialPagos(idSueldo);
     }
   });
 }
@@ -466,6 +509,19 @@ function initEventListeners() {
       cerrarModal("modalVerSueldo");
     });
 
+  // Modal pagar sueldo
+  document
+    .getElementById("btnCerrarModalPagar")
+    .addEventListener("click", function () {
+      cerrarModal("modalPagarSueldo");
+    });
+
+  document
+    .getElementById("btnCancelarPago")
+    .addEventListener("click", function () {
+      cerrarModal("modalPagarSueldo");
+    });
+
   // Formulario registrar
   document
     .getElementById("formRegistrarSueldo")
@@ -480,6 +536,14 @@ function initEventListeners() {
     .addEventListener("submit", function (e) {
       e.preventDefault();
       actualizarSueldo();
+    });
+
+  // Formulario pagar sueldo
+  document
+    .getElementById("formPagarSueldo")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      procesarPagoSueldo();
     });
 
   // Cambio de tipo de persona
@@ -942,8 +1006,298 @@ function limpiarFormulario(formId) {
   }
 }
 
-// Exponer funciones globalmente
-window.editarSueldo = editarSueldo;
-window.verSueldo = verSueldo;
-window.eliminarSueldo = eliminarSueldo;
-window.reactivarSueldo = reactivarSueldo;
+// Función para cargar tipos de pago
+async function cargarTiposPago() {
+    try {
+        const response = await fetch(base_url + '/sueldos/getTiposPagos');
+        const data = await response.json();
+        
+        const selectTipoPago = document.getElementById('tipoPagoPago');
+        if (selectTipoPago && data.status) {
+            selectTipoPago.innerHTML = '<option value="">Seleccionar tipo de pago</option>';
+            
+            data.data.forEach(tipo => {
+                const option = document.createElement('option');
+                option.value = tipo.idtipo_pago;
+                option.textContent = tipo.nombre;
+                selectTipoPago.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error cargando tipos de pago:', error);
+    }
+}
+
+// Función para abrir modal de pago de sueldo
+function abrirModalPagoSueldo(idSueldo) {
+  console.log("Abriendo modal de pago para sueldo:", idSueldo);
+  
+  // Cargar tipos de pago
+  cargarTiposPago();
+  
+  // Obtener información del sueldo y monto en bolívares
+  fetch(base_url + "/sueldos/getMontoBolivares/" + idSueldo)
+    .then(response => response.json())
+    .then(data => {
+      console.log("Datos de conversión:", data);
+      
+      if (data.status) {
+        mostrarModalPagoSueldo(idSueldo, data.data);
+      } else {
+        Swal.fire("Error", data.message, "error");
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      Swal.fire("Error", "Error al obtener información del sueldo", "error");
+    });
+}
+
+function mostrarModalPagoSueldo(idSueldo, conversionData) {
+  // Llenar información del sueldo
+  document.getElementById("idSueldoPagar").value = idSueldo;
+  document.getElementById("montoTotalBolivares").value = conversionData.monto_bolivares;
+  
+  // Mostrar información de conversión
+  const infoDiv = document.getElementById("infoSueldoPago");
+  let infoHTML = `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+      <div>
+        <span class="font-semibold text-gray-700">Monto Original:</span>
+        <span class="text-gray-900">${conversionData.monto_original} ${conversionData.codigo_moneda}</span>
+      </div>
+      <div>
+        <span class="font-semibold text-gray-700">Monto en Bolívares:</span>
+        <span class="text-green-600 font-bold">${new Intl.NumberFormat('es-VE', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(conversionData.monto_bolivares)} Bs.</span>
+      </div>`;
+  
+  if (conversionData.codigo_moneda !== 'VES') {
+    infoHTML += `
+      <div>
+        <span class="font-semibold text-gray-700">Tasa de Cambio:</span>
+        <span class="text-blue-600">${conversionData.tasa_cambio} Bs./${conversionData.codigo_moneda}</span>
+      </div>
+      <div>
+        <span class="font-semibold text-gray-700">Fecha Tasa:</span>
+        <span class="text-gray-900">${conversionData.fecha_tasa}</span>
+      </div>`;
+  }
+  
+  infoHTML += `</div>`;
+  infoDiv.innerHTML = infoHTML;
+  
+  // Establecer monto por defecto
+  document.getElementById("montoPago").value = conversionData.monto_bolivares;
+  document.getElementById("montoPago").setAttribute("max", conversionData.monto_bolivares);
+  
+  // Establecer fecha actual
+  document.getElementById("fechaPagoPago").value = new Date().toISOString().split('T')[0];
+  
+  // Cargar tipos de pago
+  cargarTiposPago();
+  
+  // Abrir modal
+  abrirModal("modalPagarSueldo");
+}
+
+// Función para procesar el pago del sueldo
+function procesarPagoSueldo() {
+    const formPagoSueldo = document.getElementById('formPagarSueldo');
+    if (!formPagoSueldo) {
+        console.error('Formulario de pago no encontrado');
+        return;
+    }
+
+    const formData = new FormData(formPagoSueldo);
+    
+    // Validar campos requeridos
+    const requiredFields = ['idsueldo', 'monto', 'idtipo_pago', 'fecha_pago'];
+    for (const field of requiredFields) {
+        if (!formData.get(field)) {
+            fntSweetAlert('error', `El campo ${field} es requerido`, '');
+            return;
+        }
+    }
+
+    // Validar monto
+    const monto = parseFloat(formData.get('monto'));
+    if (isNaN(monto) || monto <= 0) {
+        fntSweetAlert('error', 'El monto debe ser un número mayor a 0', '');
+        return;
+    }
+
+    // Crear objeto con los datos
+    const data = {
+        idsueldo: formData.get('idsueldo'),
+        monto: monto,
+        idtipo_pago: formData.get('idtipo_pago'),
+        fecha_pago: formData.get('fecha_pago'),
+        referencia: formData.get('referencia') || '',
+        observaciones: formData.get('observaciones') || ''
+    };
+
+    // Mostrar confirmación
+    Swal.fire({
+        title: '¿Confirmar pago?',
+        text: `¿Está seguro de procesar el pago por ${monto.toLocaleString('es-VE', {
+            style: 'currency',
+            currency: 'VES'
+        })}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, procesar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Realizar petición AJAX
+            const ajaxRequest = new XMLHttpRequest();
+            ajaxRequest.open('POST', base_url + '/sueldos/procesarPagoSueldo', true);
+            ajaxRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            const postData = Object.keys(data).map(key => 
+                encodeURIComponent(key) + '=' + encodeURIComponent(data[key])
+            ).join('&');
+            
+            ajaxRequest.onreadystatechange = function() {
+                if (ajaxRequest.readyState === 4) {
+                    if (ajaxRequest.status === 200) {
+                        try {
+                            const response = JSON.parse(ajaxRequest.responseText);
+                            
+                            if (response.status) {
+                                fntSweetAlert('success', 'Pago procesado exitosamente', response.message);
+                                
+                                // Cerrar modal
+                                const modal = document.getElementById('modalPagarSueldo');
+                                if (modal) {
+                                    const bsModal = bootstrap.Modal.getInstance(modal);
+                                    if (bsModal) {
+                                        bsModal.hide();
+                                    }
+                                }
+                                
+                                // Recargar tabla
+                                if (typeof tableSueldos !== 'undefined') {
+                                    tableSueldos.ajax.reload();
+                                }
+                                
+                                // Limpiar formulario
+                                formPagoSueldo.reset();
+                                
+                            } else {
+                                fntSweetAlert('error', 'Error al procesar pago', response.message);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing response:', e);
+                            fntSweetAlert('error', 'Error de respuesta del servidor', '');
+                        }
+                    } else {
+                        fntSweetAlert('error', 'Error de conexión', 'No se pudo conectar con el servidor');
+                    }
+                }
+            };
+            
+            ajaxRequest.send(postData);
+        }
+    });
+}
+
+// Función para mostrar historial de pagos de un sueldo
+function verHistorialPagos(idSueldo) {
+    fetch(base_url + "/sueldos/getPagosSueldo?idsueldo=" + idSueldo)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status) {
+                mostrarModalHistorialPagos(idSueldo, data.data);
+            } else {
+                Swal.fire("Error", data.message, "error");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            Swal.fire("Error", "Error al obtener historial de pagos", "error");
+        });
+}
+
+function mostrarModalHistorialPagos(idSueldo, pagos) {
+    let html = `
+        <div class="p-4">
+            <h4 class="text-lg font-bold mb-4">Historial de Pagos - Sueldo #${idSueldo}</h4>
+            <div class="max-h-96 overflow-y-auto">
+    `;
+    
+    if (pagos.length === 0) {
+        html += `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-4"></i>
+                <p>No se han registrado pagos para este sueldo</p>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="space-y-3">
+        `;
+        
+        pagos.forEach(pago => {
+            const estatusClass = pago.estatus === 'activo' ? 'bg-green-100 text-green-800' : 
+                               pago.estatus === 'conciliado' ? 'bg-blue-100 text-blue-800' : 
+                               'bg-red-100 text-red-800';
+                               
+            html += `
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="font-semibold text-lg">${Number(pago.monto).toLocaleString('es-VE')} Bs.</span>
+                            <span class="ml-2 px-2 py-1 rounded-full text-xs ${estatusClass}">${pago.estatus}</span>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            Pago #${pago.idpago}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="font-medium">Tipo:</span> ${pago.tipo_pago || 'N/A'}
+                        </div>
+                        <div>
+                            <span class="font-medium">Fecha:</span> ${pago.fecha_pago_formato}
+                        </div>
+                        ${pago.referencia ? `
+                        <div>
+                            <span class="font-medium">Referencia:</span> ${pago.referencia}
+                        </div>
+                        ` : ''}
+                        <div>
+                            <span class="font-medium">Registrado:</span> ${pago.fecha_creacion_formato}
+                        </div>
+                    </div>
+                    ${pago.observaciones ? `
+                    <div class="mt-2 text-sm">
+                        <span class="font-medium">Observaciones:</span> ${pago.observaciones}
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        
+        html += `</div>`;
+    }
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    Swal.fire({
+        title: '',
+        html: html,
+        width: '600px',
+        showCloseButton: true,
+        showConfirmButton: false,
+        customClass: {
+            popup: 'text-left'
+        }
+    });
+}
