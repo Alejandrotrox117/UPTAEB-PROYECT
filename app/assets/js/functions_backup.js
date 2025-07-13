@@ -17,8 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
     esperarLibrerias(function() {
         let tablaBackups;
         let modalBackupTabla;
-        let modalConfirmarRestaurar;
-        let archivoParaRestaurar = '';
         let tablaInicializada = false; // Flag para controlar la inicialización
 
         // Inicialización
@@ -34,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function configurarModales() {
         modalBackupTabla = document.getElementById('modalBackupTabla');
-        modalConfirmarRestaurar = document.getElementById('modalConfirmarRestaurar');
     }
 
     function configurarEventos() {
@@ -48,17 +45,25 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('btnCancelarBackupTabla').addEventListener('click', ocultarModalBackupTabla);
         document.getElementById('btnConfirmarBackupTabla').addEventListener('click', crearBackupTabla);
 
-        // Modal Confirmar Restaurar
-        document.getElementById('btnCancelarRestaurar').addEventListener('click', ocultarModalRestaurar);
-        document.getElementById('btnConfirmarRestaurar').addEventListener('click', ejecutarRestauracion);
+        // Event delegation para botones de la tabla
+        document.addEventListener('click', function(e) {
+            const button = e.target.closest('button[data-action]');
+            if (!button) return;
+            
+            const action = button.getAttribute('data-action');
+            const archivo = button.getAttribute('data-archivo');
+            
+            if (action === 'descargar') {
+                descargarBackup(archivo);
+            } else if (action === 'eliminar') {
+                eliminarBackup(archivo);
+            }
+        });
 
         // Cerrar modales al hacer click fuera
         window.addEventListener('click', function(event) {
             if (event.target === modalBackupTabla) {
                 ocultarModalBackupTabla();
-            }
-            if (event.target === modalConfirmarRestaurar) {
-                ocultarModalRestaurar();
             }
         });
     }
@@ -75,21 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
         modalBackupTabla.querySelector('.transform').classList.remove('scale-100');
         modalBackupTabla.querySelector('.transform').classList.add('scale-95');
         document.getElementById('formBackupTabla').reset();
-    }
-
-    function mostrarModalRestaurar(archivo) {
-        archivoParaRestaurar = archivo;
-        document.getElementById('archivoRestaurar').textContent = archivo;
-        modalConfirmarRestaurar.classList.remove('opacity-0', 'pointer-events-none');
-        modalConfirmarRestaurar.querySelector('.transform').classList.remove('scale-95');
-        modalConfirmarRestaurar.querySelector('.transform').classList.add('scale-100');
-    }
-
-    function ocultarModalRestaurar() {
-        modalConfirmarRestaurar.classList.add('opacity-0', 'pointer-events-none');
-        modalConfirmarRestaurar.querySelector('.transform').classList.remove('scale-100');
-        modalConfirmarRestaurar.querySelector('.transform').classList.add('scale-95');
-        archivoParaRestaurar = '';
     }
 
     // Funciones de backup
@@ -194,52 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function ejecutarRestauracion() {
-        if (!archivoParaRestaurar) return;
-
-        const btn = document.getElementById('btnConfirmarRestaurar');
-        const btnText = btn.innerHTML;
-        
-        try {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Restaurando...';
-            
-            const response = await fetch(base_url + 'backup/restaurarBackup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ archivo: archivoParaRestaurar })
-            });
-
-            const data = await response.json();
-
-            if (data.status === 'success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Restauración Completada!',
-                    text: data.mensaje || 'La base de datos ha sido restaurada exitosamente',
-                    confirmButtonColor: '#10B981'
-                });
-                ocultarModalRestaurar();
-                cargarListaBackups();
-            } else {
-                throw new Error(data.mensaje || 'Error al restaurar el backup');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error en la Restauración',
-                text: error.message || 'Error al restaurar el backup',
-                confirmButtonColor: '#EF4444'
-            });
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = btnText;
-        }
-    }
-
     async function eliminarBackup(archivo) {
         const result = await Swal.fire({
             title: '¿Eliminar backup?',
@@ -286,6 +230,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
+    }
+
+    function descargarBackup(archivo) {
+        window.open(base_url + 'backup/descargarBackup?archivo=' + encodeURIComponent(archivo), '_blank');
     }
 
     // Funciones de carga de datos
@@ -402,17 +350,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     render: function(data, type, row) {
                         return `
                             <div class="flex space-x-2">
-                                <button onclick="descargarBackup('${row.nombre_archivo}')" 
+                                <button data-action="descargar" data-archivo="${row.nombre_archivo}" 
                                         class="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors duration-200"
                                         title="Descargar">
                                     <i class="fas fa-download"></i>
                                 </button>
-                                <button onclick="mostrarModalRestaurar('${row.nombre_archivo}')" 
-                                        class="px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors duration-200"
-                                        title="Restaurar">
-                                    <i class="fas fa-undo"></i>
-                                </button>
-                                <button onclick="eliminarBackup('${row.nombre_archivo}')" 
+                                <button data-action="eliminar" data-archivo="${row.nombre_archivo}" 
                                         class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors duration-200"
                                         title="Eliminar">
                                     <i class="fas fa-trash"></i>
@@ -469,14 +412,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error al cargar estadísticas:', error);
         }
     }
-
-    // Funciones globales
-    window.descargarBackup = function(archivo) {
-        window.open(base_url + 'backup/descargarBackup?archivo=' + encodeURIComponent(archivo), '_blank');
-    };
-
-    window.mostrarModalRestaurar = mostrarModalRestaurar;
-    window.eliminarBackup = eliminarBackup;
 
     // Función para formatear tamaños de archivo
     function formatearTamaño(bytes) {

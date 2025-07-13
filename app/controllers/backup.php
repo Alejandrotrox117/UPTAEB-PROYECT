@@ -231,6 +231,8 @@ class Backup extends Controllers
         }
     }
 
+    /*
+    // MÉTODO RESTAURAR BACKUP DESHABILITADO POR SEGURIDAD
     public function restaurarBackup()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -292,6 +294,7 @@ class Backup extends Controllers
             die();
         }
     }
+    */
 
     public function descargarBackup()
     {

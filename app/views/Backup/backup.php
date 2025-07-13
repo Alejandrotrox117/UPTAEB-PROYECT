@@ -194,56 +194,6 @@
     </div>
 </div>
 
-<!-- MODAL CONFIRMACIÓN RESTAURAR -->
-<div id="modalConfirmarRestaurar" 
-     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform duration-300">
-        
-        <!-- Header del Modal -->
-        <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50">
-            <div class="flex items-center">
-                <div class="bg-red-100 p-3 rounded-full mr-4">
-                    <i class="fas fa-exclamation-triangle text-red-600"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900">Confirmar Restauración</h3>
-                    <p class="text-sm text-gray-600">Esta acción es irreversible</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Contenido del Modal -->
-        <div class="p-6">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <div class="flex items-start">
-                    <i class="fas fa-exclamation-triangle text-red-500 mt-0.5 mr-2"></i>
-                    <div class="text-sm text-red-700">
-                        <p class="font-medium">¡Advertencia!</p>
-                        <p>Esta acción sobrescribirá todos los datos actuales con la información del backup seleccionado.</p>
-                        <p class="mt-2">Archivo: <span id="archivoRestaurar" class="font-mono bg-red-100 px-1 rounded">-</span></p>
-                    </div>
-                </div>
-            </div>
-            
-            <p class="text-gray-600 text-center">¿Está seguro de que desea continuar?</p>
-        </div>
-        
-        <!-- Footer del Modal -->
-        <div class="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
-            <button id="btnCancelarRestaurar" 
-                    class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 flex items-center">
-                <i class="fas fa-times mr-2"></i>
-                Cancelar
-            </button>
-            <button id="btnConfirmarRestaurar" 
-                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center">
-                <i class="fas fa-undo mr-2"></i>
-                Restaurar
-            </button>
-        </div>
-    </div>
-</div>
-
 <?php footerAdmin($data); ?>
 
 <!-- Scripts específicos -->
