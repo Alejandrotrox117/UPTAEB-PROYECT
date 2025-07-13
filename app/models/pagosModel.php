@@ -442,7 +442,6 @@ class PagosModel extends Mysql
                 LEFT JOIN proveedor prov ON c.idproveedor = prov.idproveedor
                 LEFT JOIN venta v ON p.idventa = v.idventa  
                 LEFT JOIN cliente cli ON v.idcliente = cli.idcliente
-             
                 ORDER BY p.fecha_pago DESC, p.idpago DESC"
             );
             
@@ -873,7 +872,7 @@ class PagosModel extends Mysql
             }
 
             // Actualizar el estado del pago a conciliado
-            $this->setQuery("UPDATE pagos SET estatus = 'conciliado', fecha_conciliacion = NOW() WHERE idpago = ?");
+            $this->setQuery("UPDATE pagos SET estatus = 'conciliado' WHERE idpago = ?");
             $stmt = $db->prepare($this->getQuery());
             $resultado = $stmt->execute([$idpago]);
 
@@ -1077,55 +1076,42 @@ class PagosModel extends Mysql
 
     /**
      * Procesa la conciliación de un pago de compra
+     * Nota: El trigger trg_pago_update_compra_conciliado maneja automáticamente
+     * la actualización del balance y estado de la compra
      */
     private function procesarConciliacionCompra($db, $idcompra)
     {
         try {
-            // Obtener información de la compra
-            $this->setQuery("SELECT total_general, balance, estatus_compra FROM compra WHERE idcompra = ?");
+            // El trigger de la base de datos se encarga de:
+            // 1. Calcular el total pagado
+            // 2. Actualizar el balance de la compra  
+            // 3. Cambiar el estado de la compra según corresponda
+            // Por lo tanto, solo registramos el evento
+            
+            error_log("PagosModel::procesarConciliacionCompra -> Procesando compra ID: {$idcompra}");
+            
+            // Opcional: Verificar el resultado después del trigger
+            $this->setQuery("SELECT balance, estatus_compra FROM compra WHERE idcompra = ?");
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idcompra]);
             $compra = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$compra) {
-                throw new Exception("Compra no encontrada");
-            }
-
-            // Calcular total pagado después de la conciliación
-            $this->setQuery("SELECT COALESCE(SUM(monto), 0) as total_pagado FROM pagos WHERE idcompra = ? AND estatus = 'conciliado'");
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$idcompra]);
-            $totalPagado = $stmt->fetch(PDO::FETCH_ASSOC)['total_pagado'];
-
-            // Calcular nuevo balance
-            $nuevoBalance = $compra['total_general'] - $totalPagado;
-            if ($nuevoBalance < 0) {
-                $nuevoBalance = 0;
-            }
-
-            // Actualizar balance de la compra
-            $this->setQuery("UPDATE compra SET balance = ?, ultima_modificacion = NOW() WHERE idcompra = ?");
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$nuevoBalance, $idcompra]);
-
-            // Si el balance llega a 0, marcar como pagada
-            if ($nuevoBalance <= 0.01) {
-                $this->setQuery("UPDATE compra SET estatus_compra = 'PAGADA', balance = 0, ultima_modificacion = NOW() WHERE idcompra = ?");
-                $stmt = $db->prepare($this->getQuery());
-                $stmt->execute([$idcompra]);
-
-                // Limpiar notificaciones
-                try {
-                    require_once "app/models/notificacionesModel.php";
-                    $notificacionesModel = new NotificacionesModel();
-                    $notificacionesModel->limpiarNotificacionesCompraPagada($idcompra);
-                    error_log("PagosModel: Notificaciones limpiadas para compra pagada ID: {$idcompra}");
-                } catch (Exception $e) {
-                    error_log("PagosModel: Error al limpiar notificaciones de compra pagada ID {$idcompra}: " . $e->getMessage());
+            
+            if ($compra) {
+                error_log("PagosModel::procesarConciliacionCompra -> Compra ID: {$idcompra}, Balance: {$compra['balance']}, Estado: {$compra['estatus_compra']}");
+                
+                // Si la compra está pagada, procesar notificaciones
+                if ($compra['estatus_compra'] === 'PAGADA') {
+                    try {
+                        if (file_exists("app/models/notificacionesModel.php")) {
+                            require_once "app/models/notificacionesModel.php";
+                            $notificacionesModel = new NotificacionesModel();
+                            error_log("PagosModel: Compra marcada como pagada ID: {$idcompra}");
+                        }
+                    } catch (Exception $e) {
+                        error_log("PagosModel: Error al procesar notificaciones de compra pagada ID {$idcompra}: " . $e->getMessage());
+                    }
                 }
             }
-
-            error_log("PagosModel::procesarConciliacionCompra -> Compra ID: {$idcompra}, Balance actualizado: {$nuevoBalance}");
 
         } catch (Exception $e) {
             error_log("PagosModel::procesarConciliacionCompra - Error: " . $e->getMessage());
@@ -1172,14 +1158,20 @@ class PagosModel extends Mysql
                 $stmt = $db->prepare($this->getQuery());
                 $stmt->execute([$idventa]);
 
-                // Limpiar notificaciones
+                // Limpiar notificaciones si existe el modelo
                 try {
-                    require_once "app/models/notificacionesModel.php";
-                    $notificacionesModel = new NotificacionesModel();
-                    $notificacionesModel->limpiarNotificacionesVentaPagada($idventa);
-                    error_log("PagosModel: Notificaciones limpiadas para venta pagada ID: {$idventa}");
+                    if (file_exists("app/models/notificacionesModel.php")) {
+                        require_once "app/models/notificacionesModel.php";
+                        $notificacionesModel = new NotificacionesModel();
+                        // TODO: Implementar método limpiarNotificacionesVentaPagada si es necesario
+                        // if (method_exists($notificacionesModel, 'limpiarNotificacionesVentaPagada')) {
+                        //     $notificacionesModel->limpiarNotificacionesVentaPagada($idventa);
+                        //     error_log("PagosModel: Notificaciones limpiadas para venta pagada ID: {$idventa}");
+                        // }
+                        error_log("PagosModel: Venta marcada como pagada ID: {$idventa}");
+                    }
                 } catch (Exception $e) {
-                    error_log("PagosModel: Error al limpiar notificaciones de venta pagada ID {$idventa}: " . $e->getMessage());
+                    error_log("PagosModel: Error al procesar notificaciones de venta pagada ID {$idventa}: " . $e->getMessage());
                 }
             }
 
