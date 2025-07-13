@@ -913,8 +913,7 @@ function mostrarOperariosDisponibles(operarios) {
                            class="operario-checkbox" 
                            data-idempleado="${operario.idempleado}"
                            data-nombre="${operario.nombre_completo}"
-                           ${disponible ? '' : 'disabled'}
-                           onchange="toggleOperarioAsignado(this)">
+                           ${disponible ? '' : 'disabled'}>
                 </td>
                 <td class="px-3 py-3">
                     <div>
@@ -933,6 +932,14 @@ function mostrarOperariosDisponibles(operarios) {
     });
 
     tbody.innerHTML = html;
+
+    // Asignar evento change a los checkboxes por JS (CSP safe)
+    const checkboxes = tbody.querySelectorAll('.operario-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            toggleOperarioAsignado(this);
+        });
+    });
 }
 
 function toggleOperarioAsignado(checkbox) {
