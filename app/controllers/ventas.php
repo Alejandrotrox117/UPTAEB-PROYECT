@@ -1174,4 +1174,51 @@ class Ventas extends Controllers
             error_log("Error al generar notificación de pago para venta: " . $e->getMessage());
         }
     }
+
+    /**
+     * Genera la nota de despacho de una venta
+     */
+    public function notaDespacho($idventa)
+    {
+        // Verificar permisos básicos
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+            header('Location: ' . base_url() . '/login');
+            die();
+        }
+
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
+
+        try {
+            // Registrar acceso en bitácora
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'GENERAR_NOTA_DESPACHO', $idUsuario);
+            }
+
+            // Obtener datos de la venta
+            $data['page_tag'] = "Nota de Despacho - Sistema de Ventas";
+            $data['page_title'] = "Nota de Despacho <small>Sistema de Ventas</small>";
+            $data['page_name'] = "Nota de Despacho";
+            $ventaData = $this->model->getVentaDetalle($idventa);
+            
+            // Verificar si se obtuvieron los datos
+            if (empty($ventaData) || !$ventaData['status'] || !isset($ventaData['venta'])) {
+                // Redirigir con mensaje de error si no se encontró la venta
+                header('Location: ' . base_url() . '/ventas?error=venta_no_encontrada');
+                exit();
+            }
+            
+            $data['arrVenta'] = $ventaData;
+
+            $this->views->getView($this, "nota_despacho", $data);
+            
+        } catch (Exception $e) {
+            error_log("Error en notaDespacho: " . $e->getMessage());
+            header('Location: ' . base_url() . '/ventas?error=error_interno');
+            exit();
+        }
+    }
 }

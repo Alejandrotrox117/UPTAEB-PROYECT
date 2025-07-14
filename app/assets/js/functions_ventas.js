@@ -1251,6 +1251,20 @@ document.addEventListener("DOMContentLoaded", function () {
       `);
     }
 
+    // Botón Nota de Despacho (disponible para ventas no en estado BORRADOR)
+    if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver && 
+        estadoActual.toUpperCase() !== "BORRADOR") {
+      botones.push(`
+        <button
+          class="nota-despacho-btn text-purple-600 hover:text-purple-700 p-1 transition-colors duration-150"
+          data-idventa="${idVenta}"
+          title="Generar Nota de Despacho"
+        >
+          <i class="fas fa-file-alt fa-fw text-base"></i>
+        </button>
+      `);
+    }
+
     // Botón Editar (solo en estado BORRADOR)
     if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_editar) && 
         estadoActual.toUpperCase() === "BORRADOR") {
@@ -1548,6 +1562,25 @@ document.addEventListener("DOMContentLoaded", function () {
           recalcularPreciosDetalle();
         }
       });
+    }
+  });
+
+  // Event listener para botón de nota de despacho
+  document.addEventListener("click", function (e) {
+    // Verificar si el click fue en el botón o en su ícono
+    const notaDespachoBtn = e.target.closest(".nota-despacho-btn");
+    if (notaDespachoBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const idventa = notaDespachoBtn.getAttribute("data-idventa");
+      if (!idventa || isNaN(parseInt(idventa))) {
+        Swal.fire("Error", "ID de venta no válido.", "error");
+        return;
+      }
+
+      // Navegar en la misma ventana
+      window.location.href = `${base_url}ventas/notaDespacho/${idventa}`;
     }
   });
 
