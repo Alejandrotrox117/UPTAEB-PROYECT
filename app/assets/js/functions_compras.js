@@ -2734,9 +2734,9 @@ function verFactura(idCompra) {
     return;
   }
 
-  // Abrir la factura en una nueva ventana/pestaña
+  // Abrir la factura en la misma ventana/pestaña
   const url = `Compras/verFactura/${idCompra}`;
-  window.open(url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+  window.location.href = url;
 }
 window.verFactura = verFactura;
 

@@ -1,20 +1,26 @@
-<?php headerAdmin($data); ?>
+<?php 
+// Asegurar que helpers esté disponible
+if (!function_exists('generateCSPNonce')) {
+    require_once __DIR__ . '/../../../helpers/helpers.php';
+}
+headerAdmin($data); 
+?>
 
 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
   <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 print:hidden">
     <div>
       <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
         <i class="fas fa-file-invoice text-blue-600 mr-2"></i>
-        Factura de Compra
+        Nota de Recepcion
       </h1>
       <nav class="flex text-sm text-gray-600 mt-2">
-        <a href="<?= base_url(); ?>" class="hover:text-blue-600">
+        <a href="<?= base_url(); ?>/dashboard" class="hover:text-blue-600">
           <i class="fas fa-home mr-1"></i>Inicio
         </a>
         <span class="mx-2">/</span>
         <a href="<?= base_url(); ?>/compras" class="hover:text-blue-600">Compras</a>
         <span class="mx-2">/</span>
-        <span class="text-gray-500">Factura</span>
+        <span class="text-gray-500">Nota de Recepcion</span>
       </nav>
     </div>
   </div>
@@ -44,12 +50,12 @@
         <div class="grid grid-cols-3 gap-4 mb-6 print:mb-6 print:pb-4">
           
           <!-- LOGO (Columna 1) -->
-          <div class="flex justify-start items-start print:border print:border-black print:p-3">
+          <div class="flex justify-start items-start print:border-0 print:p-3">
             <img src="/project/app/assets/img/LOGO.png" alt="Logo" class="h-16 md:h-20 object-contain print:h-16">
           </div>
           
           <!-- INFO EMPRESA (Columna 2) -->
-          <div class="text-center print:border print:border-black print:p-3">
+          <div class="text-center print:border-0 print:p-3">
             <h2 class="text-lg font-bold text-gray-800 mb-2 print:text-base print:mb-2 print:text-black print:font-bold">RECUPERADORA LA PRADERA DE PAVIA</h2>
             <div class="text-xs text-gray-600 space-y-1 print:text-sm print:text-black print:space-y-1">
               <p><span class="font-semibold">RIF:</span> J-27.436.820-5</p>
@@ -59,8 +65,8 @@
           </div>
           
           <!-- INFO DE FACTURA (Columna 3) -->
-          <div class="text-center print:border print:border-black print:p-3">
-            <h3 class="text-lg font-bold text-blue-800 mb-2 print:text-base print:text-black print:mb-2 print:font-bold">FACTURA DE COMPRA</h3>
+          <div class="text-center print:border-0 print:p-3">
+            <h3 class="text-lg font-bold text-blue-800 mb-2 print:text-base print:text-black print:mb-2 print:font-bold">NOTA DE RECEPCION</h3>
             <div class="text-sm text-gray-600 space-y-1 print:text-sm print:text-black print:space-y-1">
               <p><span class="font-semibold">Fecha:</span> <?= date('d/m/Y', strtotime($compra['fecha'])) ?></p>
               <p><span class="font-semibold">Hora:</span> <?= date('H:i:s') ?></p>
@@ -105,7 +111,7 @@
           </div>
 
           <!-- PARTE 2: INFORMACIÓN DE LA COMPRA -->
-          <div class="bg-blue-50 p-6 rounded-lg print:bg-blue-50 print:p-4 print:rounded-none">
+          <div class="bg-gray-50 p-6 rounded-lg print:bg-gray-50 print:p-4 print:rounded-none">
             <h4 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-300 pb-2 print:text-lg print:mb-3 print:text-black print:border-gray-400 print:pb-2 print:font-semibold">
               INFORMACIÓN DE COMPRA
             </h4>
@@ -211,7 +217,7 @@
 
         <!-- Información adicional -->
         <div class="bg-gray-50 p-4 mb-6 rounded-lg print:bg-gray-50 print:p-4 print:mb-6 print:rounded-none">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm print:grid-cols-3 print:gap-4 print:text-sm">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm print:grid-cols-2 print:gap-4 print:text-sm">
             <div class="flex items-center print:block">
               <i class="fas fa-cube text-blue-600 mr-2 print:hidden"></i>
               <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Total de Productos: </span>
@@ -222,7 +228,7 @@
               <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Fecha de Emisión: </span>
               <span class="text-gray-900 ml-2 print:text-black print:ml-1"><?= date('d/m/Y H:i:s') ?></span>
             </div>
-            <div class="flex items-center print:block">
+            <div class="flex items-center print:hidden">
               <i class="fas fa-user text-blue-600 mr-2 print:hidden"></i>
               <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Usuario: </span>
               <span class="text-gray-900 ml-2 print:text-black print:ml-1"><?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Sistema') ?></span>
@@ -232,7 +238,7 @@
 
         <!-- Pie de página para impresión -->
         <div class="hidden print:block text-center text-sm text-black mt-8 pt-4 border-t border-gray-400">
-          <p>Esta factura fue generada automáticamente por el sistema el <?= date('d/m/Y') ?> a las <?= date('H:i:s') ?></p>
+          <p>Esta Nota de Recepcion fue generada automáticamente por el sistema el <?= date('d/m/Y') ?> a las <?= date('H:i:s') ?></p>
           <p class="mt-2">Para consultas o reclamos, contacte a través de nuestros canales oficiales</p>
           <p class="mt-2 font-bold">RECUPERADORA LA PRADERA DE PAVIA - Todos los derechos reservados</p>
         </div>
@@ -242,9 +248,9 @@
       <!-- Botones de Acción -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 print:hidden">
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
+          <button id="printBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
             <i class="fas fa-print mr-2"></i>
-            Imprimir Factura
+            Imprimir Nota de Recepcion
           </button>
           <a href="<?= base_url(); ?>/compras" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
             <i class="fas fa-arrow-left mr-2"></i>
@@ -269,7 +275,7 @@
 
   /* Configuración de página */
   @page {
-    margin: 1.5cm 1cm 1cm 1cm;
+    margin: 0.5cm 0.5cm 0.5cm 0.5cm;
     size: A4;
   }
 
@@ -342,6 +348,10 @@
   /* Bordes */
   .print\\:border {
     border: 1px solid #000 !important;
+  }
+
+  .print\\:border-0 {
+    border: none !important;
   }
 
   .print\\:border-gray-400 {
@@ -559,7 +569,7 @@
 }
 </style>
 
-<script>
+<script nonce="<?= generateCSPNonce(); ?>">
 // Función de impresión mejorada
 function imprimirFactura() {
   const originalTitle = document.title;
@@ -580,6 +590,16 @@ window.addEventListener('beforeprint', function() {
 
 window.addEventListener('afterprint', function() {
   document.body.classList.remove('printing');
+});
+
+// Event listener para el botón de imprimir
+document.addEventListener('DOMContentLoaded', function() {
+  const printBtn = document.getElementById('printBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', function() {
+      window.print();
+    });
+  }
 });
 </script>
 

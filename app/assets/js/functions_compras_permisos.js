@@ -90,9 +90,8 @@ function generarBotonesAccionConPermisos(data, type, row) {
             botones.push(`
                 <a
                   href="./compras/factura/${idCompra}"
-                  target="_blank"
                   class="text-blue-600 hover:text-blue-800 p-1 transition-colors duration-150"
-                  title="Ver Factura"
+                  title="Ver Nota de Recepción"
                 >
                   <i class="fas fa-file-alt fa-fw text-base"></i>
                 </a>
