@@ -178,7 +178,7 @@ function loadNotifications() {
   notificationsList.innerHTML = `<div class="text-center py-4 text-blue-500"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Cargando...</p></div>`;
   
   console.log("🔔 loadNotifications - Intentando fetch a getNotificaciones");
-  fetch("./Notificaciones/getNotificaciones")
+  fetch(`${base_url}/notificaciones/getNotificaciones`)
     .then((response) => {
       console.log("🔔 loadNotifications - Respuesta recibida:", response);
       console.log("🔔 loadNotifications - Status:", response.status);
@@ -208,7 +208,7 @@ function loadNotifications() {
 }
 
 function regenerarNotificacionesStock() {
-  return fetch("./Compras/regenerarNotificaciones", {
+  return fetch(`${base_url}/compras/regenerarNotificaciones`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -335,7 +335,7 @@ function displayNotifications(notifications) {
 }
 
 function actualizarContadorNotificaciones() {
-  fetch("./Notificaciones/getContadorNotificaciones")
+  fetch(`${base_url}/notificaciones/getContadorNotificaciones`)
     .then((response) => response.json())
     .then((result) => {
       const badges = document.querySelectorAll(
@@ -352,7 +352,7 @@ function actualizarContadorNotificaciones() {
 }
 
 function markNotificationAsRead(notificationId) {
-  fetch("./Notificaciones/marcarLeida", {
+  fetch(`${base_url}/notificaciones/marcarLeida`, {
     method: "POST",
     body: JSON.stringify({ idnotificacion: notificationId }),
     headers: { "Content-Type": "application/json" },
@@ -374,7 +374,7 @@ function markNotificationAsRead(notificationId) {
 }
 
 function markAllNotificationsAsRead() {
-  fetch("./Notificaciones/marcarTodasLeidas", { method: "POST" })
+  fetch(`${base_url}/notificaciones/marcarTodasLeidas`, { method: "POST" })
     .then((response) => response.json())
     .then((result) => {
       if (result.status) {
