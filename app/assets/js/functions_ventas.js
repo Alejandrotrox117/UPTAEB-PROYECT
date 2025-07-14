@@ -175,6 +175,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (detalleVentaBody) detalleVentaBody.innerHTML = "";
     if (noDetallesMsg) noDetallesMsg.classList.remove("hidden");
 
+    // Limpiar cliente original de edición
+    clienteOriginalEdicion = null;
+
     [
       "subtotal_general_display_modal",
       "subtotal_general",
@@ -585,6 +588,18 @@ document.addEventListener("DOMContentLoaded", function () {
       abrirModal("ventaModal");
       limpiarFormularioVentaCompleto();
 
+      // Resetear botón a modo de creación
+      const submitBtn = document.getElementById("registrarVentaBtn");
+      if (submitBtn) {
+        const modalTitle = document.querySelector("#ventaModal h3");
+        if (modalTitle) {
+          modalTitle.innerHTML = '<i class="mr-1 text-green-600 fas fa-plus"></i>Nueva Venta';
+        }
+        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Venta';
+        submitBtn.removeAttribute('data-mode');
+        submitBtn.removeAttribute('data-idventa');
+      }
+
       const fechaInput = document.getElementById("fecha_venta_modal");
       if (fechaInput) {
         fechaInput.value = new Date().toISOString().split("T")[0];
@@ -657,7 +672,8 @@ document.addEventListener("DOMContentLoaded", function () {
         nuevoClienteContainer &&
         !nuevoClienteContainer.classList.contains("hidden");
 
-      if (!idClienteSeleccionado && !nuevoClienteFormActivo) {
+      // Solo validar selección de cliente en modo de creación, no en modo de edición
+      if (mode === 'create' && !idClienteSeleccionado && !nuevoClienteFormActivo) {
         Swal.fire(
           "Atención",
           "Debe seleccionar un cliente existente o completar los datos del nuevo cliente.",
@@ -683,11 +699,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!validarCamposVacios(camposCabeceraVenta, "ventaForm")) return;
 
-      // Validación específica para asegurar que VES esté seleccionado
-      const selectMoneda = document.getElementById("idmoneda_general");
-      if (!selectMoneda.value) {
-        Swal.fire("Error", "No se pudo seleccionar la moneda VES automáticamente. Contacte al administrador.", "error");
-        return;
+      // Validación específica para asegurar que VES esté seleccionado (solo en modo creación)
+      if (mode === 'create') {
+        const selectMoneda = document.getElementById("idmoneda_general");
+        if (!selectMoneda.value) {
+          Swal.fire("Error", "No se pudo seleccionar la moneda VES automáticamente. Contacte al administrador.", "error");
+          return;
+        }
       }
 
       let cabeceraValida = true;
@@ -732,7 +750,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const datosVentaFinal = {
         idcliente: idClienteSeleccionado
           ? parseInt(idClienteSeleccionado)
-          : null,
+          : (mode === 'edit' && clienteOriginalEdicion ? parseInt(clienteOriginalEdicion) : null),
         cliente_nuevo: datosClienteNuevo,
         fecha_venta: document.getElementById("fecha_venta_modal").value,
         idmoneda_general: parseInt(
@@ -1335,9 +1353,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  let clienteOriginalEdicion = null; // Variable para almacenar el cliente original en modo edición
+
   // Función para llenar el formulario con los datos de la venta
   async function llenarFormularioEdicion(venta, detalles) {
     try {
+      // Almacenar el cliente original
+      clienteOriginalEdicion = venta.cliente_id || null;
+      
       // Llenar campos básicos
       document.getElementById("fecha_venta_modal").value = venta.fecha_venta || "";
       document.getElementById("observaciones").value = venta.observaciones || "";
@@ -1367,6 +1390,12 @@ document.addEventListener("DOMContentLoaded", function () {
           clienteInfoDiv.classList.remove("hidden");
           clienteInfoDiv.setAttribute("data-cliente-id", clienteInfo.id);
         }
+        
+        // Establecer el ID del cliente en el campo oculto
+        const idClienteField = document.getElementById("idcliente");
+        if (idClienteField) {
+          idClienteField.value = clienteInfo.id;
+        }
       }
 
       // Llenar descuento general
@@ -1393,7 +1422,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         detalles.forEach((detalle, index) => {
           agregarFilaDetalle({
-            producto_id: detalle.producto_id,
+            producto_id: detalle.idproducto,
             nombre_producto: detalle.nombre_producto,
             cantidad: detalle.cantidad,
             precio_unitario_venta: detalle.precio_unitario_venta,
@@ -1418,7 +1447,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Función auxiliar para cargar productos en el select
   async function cargarProductosSelect() {
     try {
-      const response = await fetch("ventas/getProductos");
+      const response = await fetch("ventas/getProductosDisponibles");
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
