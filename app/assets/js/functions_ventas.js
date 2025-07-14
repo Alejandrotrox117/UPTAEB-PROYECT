@@ -1261,9 +1261,9 @@ document.addEventListener("DOMContentLoaded", function () {
       `);
     }
 
-    // Botón Nota de Despacho (disponible para ventas no en estado BORRADOR)
+    // Botón Nota de Despacho (disponible solo para ventas en estado PAGADA)
     if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver && 
-        estadoActual.toUpperCase() !== "BORRADOR") {
+        estadoActual.toUpperCase() === "PAGADA") {
       botones.push(`
         <button
           class="nota-despacho-btn text-purple-600 hover:text-purple-700 p-1 transition-colors duration-150"
