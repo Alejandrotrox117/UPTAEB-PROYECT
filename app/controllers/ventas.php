@@ -1240,4 +1240,70 @@ class Ventas extends Controllers
             exit();
         }
     }
+
+    /**
+     * Genera un reporte PDF de una venta específica
+     */
+    public function reporteVenta($idventa)
+    {
+        // Debug: verificar el ID recibido
+        error_log("DEBUG reporteVenta: ID recibido = '$idventa'");
+        
+        // Validar que el ID sea un número válido
+        if (empty($idventa) || !is_numeric($idventa) || $idventa <= 0) {
+            error_log("DEBUG: ID inválido - '$idventa'");
+            header('Location: ' . base_url() . '/ventas?error=id_invalido');
+            exit();
+        }
+        
+        // Verificar permisos básicos
+        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+            header('Location: ' . base_url() . '/login');
+            die();
+        }
+
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'exportar')) {
+            $this->views->getView($this, "permisos");
+            exit();
+        }
+
+        try {
+            // Registrar acceso en bitácora
+            $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            if ($idUsuario) {
+                $this->bitacoraModel->registrarAccion('ventas', 'GENERAR_REPORTE_PDF', $idUsuario);
+            }
+
+            // Obtener datos de la venta
+            $data['page_tag'] = "Reporte de Venta - Sistema de Ventas";
+            $data['page_title'] = "Reporte de Venta <small>Sistema de Ventas</small>";
+            $data['page_name'] = "Reporte de Venta";
+            
+            // Usar el método original que ya funciona
+            $ventaData = $this->model->getVentaDetalle($idventa);
+            
+            // Debug: Registrar lo que devuelve getVentaDetalle
+            error_log("DEBUG getVentaDetalle resultado: " . print_r($ventaData, true));
+            
+            // Verificar si se obtuvieron los datos
+            if (empty($ventaData) || !isset($ventaData['status']) || !$ventaData['status']) {
+                error_log("DEBUG: getVentaDetalle falló para ID: $idventa");
+                header('Location: ' . base_url() . '/ventas?error=venta_no_encontrada');
+                exit();
+            }
+            
+            // Estructurar los datos para la vista
+            $data['arrVenta'] = $ventaData;
+            
+            // Debug: verificar datos antes de enviar a la vista
+            error_log("DEBUG datos enviados a vista: " . print_r($data['arrVenta'], true));
+
+            $this->views->getView($this, "reporte_venta", $data);
+            
+        } catch (Exception $e) {
+            error_log("Error en reporteVenta: " . $e->getMessage());
+            header('Location: ' . base_url() . '/ventas?error=error_interno');
+            exit();
+        }
+    }
 }

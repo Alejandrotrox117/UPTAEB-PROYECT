@@ -1013,6 +1013,16 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = `pagos?venta=${idVenta}`;
       }
     }
+
+    // Nota de despacho
+    const notaDespachoBtn = e.target.closest(".nota-despacho-btn");
+    if (notaDespachoBtn) {
+      const idVenta = notaDespachoBtn.getAttribute("data-idventa");
+      if (idVenta) {
+        // Redirigir a nota de despacho
+        window.open(`ventas/notaDespacho/${idVenta}`, '_blank');
+      }
+    }
   });
 
   document.addEventListener("click", async function (e) {
@@ -1265,14 +1275,14 @@ document.addEventListener("DOMContentLoaded", function () {
       `);
     }
 
-    // Botón Editar (solo en estado BORRADOR)
+    // Botón Editar (en estado BORRADOR y POR_PAGAR)
     if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_editar) && 
-        estadoActual.toUpperCase() === "BORRADOR") {
+        (estadoActual.toUpperCase() === "BORRADOR" || estadoActual.toUpperCase() === "POR_PAGAR")) {
       botones.push(`
         <button
           class="editar-venta-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
           data-idventa="${idVenta}"
-          title="Editar"
+          title="Modificar"
         >
           <i class="fas fa-edit fa-fw text-base"></i>
         </button>
@@ -1297,7 +1307,7 @@ document.addEventListener("DOMContentLoaded", function () {
           break;
 
         case "POR_PAGAR":
-          // Marcar como pagada o devolver a borrador
+          // Marcar como pagada
           botones.push(`
             <button
               class="cambiar-estado-venta-btn text-green-500 hover:text-green-700 p-1 transition-colors duration-150"
@@ -1307,19 +1317,11 @@ document.addEventListener("DOMContentLoaded", function () {
             >
               <i class="fas fa-check fa-fw text-base"></i>
             </button>
-            <button
-              class="cambiar-estado-venta-btn text-yellow-500 hover:text-yellow-700 p-1 transition-colors duration-150"
-              data-idventa="${idVenta}"
-              data-nuevo-estado="BORRADOR"
-              title="Devolver a Borrador"
-            >
-              <i class="fas fa-undo fa-fw text-base"></i>
-            </button>
           `);
           break;
 
         case "PAGADA":
-          // Opción para ir a módulo de pagos
+          // Ver pagos
           botones.push(`
             <button
               class="ir-pagos-venta-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
@@ -1333,9 +1335,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Botón Eliminar (solo en estado BORRADOR)
+    // Botón Eliminar (en estado BORRADOR y POR_PAGAR)
     if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_eliminar) && 
-        estadoActual.toUpperCase() === "BORRADOR") {
+        (estadoActual.toUpperCase() === "BORRADOR" || estadoActual.toUpperCase() === "POR_PAGAR")) {
       botones.push(`
         <button
           class="eliminar-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
