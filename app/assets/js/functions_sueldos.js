@@ -199,7 +199,7 @@ function initTablaSueldos() {
             maximumFractionDigits: 2,
           }).format(data) + ' ' + codigo_moneda;
         },
-      },
+      },/*
       {
         data: "balance",
         title: "Balance",
@@ -212,7 +212,7 @@ function initTablaSueldos() {
             maximumFractionDigits: 2,
           }).format(data) + ' ' + codigo_moneda;
         },
-      },
+      },*/
       {
         data: "estatus",
         title: "Estatus",
@@ -234,7 +234,7 @@ function initTablaSueldos() {
           }
           return '<span class="text-xs italic text-gray-500">N/A</span>';
         },
-      },
+      },/*
       {
         data: null,
         title: "Pago",
@@ -259,7 +259,7 @@ function initTablaSueldos() {
             return '<span class="text-gray-400 text-xs">-</span>';
           }
         },
-      },
+      },*/
       {
         data: null,
         title: "Acciones",

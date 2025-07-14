@@ -301,9 +301,78 @@ function inicializarTablaProcesos() {
   });
 }
 
+// ========================================
+// INICIALIZACIÓN DE TABLA DE NÓMINA CON CHECKBOX Y BOTÓN REGISTRAR SALARIO
+// ========================================
 function inicializarTablaNomina() {
   if ($.fn.DataTable.isDataTable("#TablaNomina")) {
     $("#TablaNomina").DataTable().destroy();
+  }
+
+  // Insertar el botón "Registrar Salario" arriba de la tabla si no existe
+  if (!document.getElementById("btnRegistrarSalario")) {
+    const btn = document.createElement("button");
+    btn.id = "btnRegistrarSalario";
+    btn.className = "mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition";
+    btn.innerHTML = '<i class="fas fa-money-check-alt mr-2"></i>Registrar Salario';
+    btn.disabled = true;
+    btn.style.display = "block";
+    // Asignar el evento click de forma CSP-compliant
+    const handleRegistrarSalario = function () {
+      const seleccionados = [];
+      $('#TablaNomina tbody input.nomina-checkbox:checked').each(function () {
+        seleccionados.push($(this).data('id'));
+      });
+
+      // Permitir registrar todos los sueldos en borrador si no hay selección
+      let mensaje = "Se crearán registros de sueldo y se cambiará el estado de los registros seleccionados a 'SOLICITUD DE PAGO'.";
+      if (seleccionados.length === 0) {
+        mensaje = "No seleccionó ningún registro. ¿Desea registrar la solicitud de pago para TODOS los registros en estado BORRADOR?";
+      }
+
+      Swal.fire({
+        title: "¿Registrar solicitud de pago?",
+        text: mensaje,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#059669",
+        cancelButtonColor: "#6b7280",
+        confirmButtonText: "Sí, registrar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch("Produccion/registrarSolicitudPago", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify({ registros: seleccionados }),
+          })
+            .then((response) => response.json())
+            .then((result) => {
+              if (result.status) {
+                Swal.fire("¡Éxito!", result.message, "success").then(() => {
+                  if (tablaNomina) tablaNomina.ajax.reload(null, false);
+                  if (window.tablaSueldo && typeof window.tablaSueldo.ajax?.reload === "function") {
+                    window.tablaSueldo.ajax.reload(null, false);
+                  }
+                });
+              } else {
+                Swal.fire("Error", result.message || "No se pudo registrar la solicitud de pago.", "error");
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              Swal.fire("Error", "Error de conexión.", "error");
+            });
+        }
+      });
+    };
+    // Insertar el botón y asignar el evento
+    const tabla = document.getElementById("TablaNomina");
+    if (tabla) tabla.parentNode.insertBefore(btn, tabla);
+    btn.addEventListener("click", handleRegistrarSalario);
   }
 
   tablaNomina = $("#TablaNomina").DataTable({
@@ -322,19 +391,71 @@ function inicializarTablaNomina() {
       }
     },
     columns: [
+      {
+        data: null,
+        orderable: false,
+        searchable: false,
+        className: "text-center",
+        render: function (data, type, row) {
+          return `<input type="checkbox" class="nomina-checkbox" data-id="${row.idregistro || ''}">`;
+        }
+      },
       { data: "fecha", title: "Fecha", className: "all" },
       { data: "operario", title: "Operario", className: "all" },
       { data: "kg_clasificados", title: "Kg Clasificados", className: "desktop" },
       { data: "pacas_armadas", title: "Pacas", className: "tablet-l" },
       { data: "salario_total", title: "Salario", className: "all" },
-      { data: "estatus", title: "Estado", className: "desktop" }
+      {
+        data: "estatus",
+        title: "Estado",
+        className: "desktop",
+        render: function (data) {
+          let color = "bg-gray-100 text-gray-800";
+          let texto = data;
+          if (data === "BORRADOR") {
+            color = "bg-yellow-100 text-yellow-800";
+            texto = "BORRADOR";
+          } else if (data === "ENVIADO") {
+            color = "bg-blue-100 text-blue-800";
+            texto = "ENVIADO";
+          } else if (data === "PAGADO") {
+            color = "bg-green-100 text-green-800";
+            texto = "PAGADO";
+          }
+          return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${color}">${texto}</span>`;
+        }
+      }
     ],
     language: {
       emptyTable: "No hay registros de nómina.",
-      processing: "Cargando nómina..."
+      processing: "Cargando nómina...",
+      lengthMenu: "Mostrar _MENU_ registros por página",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+      infoEmpty: "Mostrando 0 registros",
+      infoFiltered: "(filtrado de _MAX_ registros totales)",
+      search: "_INPUT_",
+      searchPlaceholder: "Buscar...",
+      zeroRecords: "No se encontraron coincidencias.",
+      paginate: {
+        first: '<i class="fas fa-angle-double-left"></i>',
+        last: '<i class="fas fa-angle-double-right"></i>',
+        next: '<i class="fas fa-angle-right"></i>',
+        previous: '<i class="fas fa-angle-left"></i>',
+      },
     },
     pageLength: 10,
-    order: [[0, "desc"]]
+    order: [[1, "desc"]]
+  });
+
+  // Evento para habilitar/deshabilitar el botón según selección
+  $('#TablaNomina tbody').on('change', 'input.nomina-checkbox', function () {
+    const seleccionados = $('#TablaNomina tbody input.nomina-checkbox:checked').length;
+    const btn = document.getElementById("btnRegistrarSalario");
+    if (btn) {
+      btn.disabled = seleccionados === 0;
+      btn.classList.toggle("opacity-50", seleccionados === 0);
+      btn.classList.toggle("cursor-not-allowed", seleccionados === 0);
+    }
   });
 }
 
