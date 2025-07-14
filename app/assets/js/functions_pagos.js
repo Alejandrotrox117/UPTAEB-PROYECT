@@ -404,25 +404,34 @@ function inicializarTablaPagos() {
       {
         data: "destinatario",
         title: "Destinatario",
-        className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
+        className: "min-tablet-l text-ellipsis py-2 px-3 text-gray-700 dt-fixed-col-background",
         render: function (data, type, row) {
           // Si el pago tiene un ID de sueldo, mostrar el nombre del empleado
           if (row.idsueldotemp && row.empleado_nombre) {
-            return row.empleado_nombre;
+            const nombre = row.empleado_nombre;
+            // Truncar nombre si es muy largo para mejor responsividad
+            if (type === 'display' && nombre.length > 20) {
+              return `<span title="${nombre}">${nombre.substring(0, 20)}...</span>`;
+            }
+            return nombre;
           }
           // Si no, mostrar el destinatario normal
-          return data || "N/A";
+          const destinatario = data || "N/A";
+          if (type === 'display' && destinatario.length > 20) {
+            return `<span title="${destinatario}">${destinatario.substring(0, 20)}...</span>`;
+          }
+          return destinatario;
         }
       },
       {
         data: "fecha_pago_formato",
         title: "Fecha",
-        className: "all whitespace-nowrap py-2 px-3 text-gray-700",
+        className: "min-tablet-l py-2 px-3 text-gray-700",
       },
       {
         data: "tipo_pago_texto",
         title: "Tipo",
-        className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+        className: "desktop py-2 px-3 text-gray-700",
         render: function (data) {
           const badges = {
             Compra:
@@ -440,7 +449,7 @@ function inicializarTablaPagos() {
       {
         data: "monto",
         title: "Monto",
-        className: "tablet-l whitespace-nowrap py-2 px-3 text-right",
+        className: "all py-2 px-3 text-right",
         render: function (data) {
           return `<span class="font-semibold text-green-600">Bs.${parseFloat(
             data
@@ -450,7 +459,7 @@ function inicializarTablaPagos() {
       {
         data: "metodo_pago",
         title: "Método",
-        className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+        className: "desktop py-2 px-3 text-gray-700",
       },
       {
         data: "estatus",
