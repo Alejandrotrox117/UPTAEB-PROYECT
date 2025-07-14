@@ -14,11 +14,11 @@ headerAdmin($data);
         Nota de Recepcion
       </h1>
       <nav class="flex text-sm text-gray-600 mt-2">
-        <a href="<?= base_url(); ?>/dashboard" class="hover:text-blue-600">
+        <a href="<?= base_url(); ?>dashboard" class="hover:text-blue-600">
           <i class="fas fa-home mr-1"></i>Inicio
         </a>
         <span class="mx-2">/</span>
-        <a href="<?= base_url(); ?>/compras" class="hover:text-blue-600">Compras</a>
+        <a href="<?= base_url(); ?>compras" class="hover:text-blue-600">Compras</a>
         <span class="mx-2">/</span>
         <span class="text-gray-500">Nota de Recepcion</span>
       </nav>
@@ -33,7 +33,7 @@ headerAdmin($data);
           <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
           <h3 class="text-lg font-semibold text-yellow-800 mb-2">Datos no encontrados</h3>
           <p class="text-yellow-700">No se pudieron cargar los datos de la compra solicitada.</p>
-          <a href="<?= base_url(); ?>/compras" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          <a href="<?= base_url(); ?>compras" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
             <i class="fas fa-arrow-left mr-2"></i>Volver a Compras
           </a>
         </div>
@@ -247,7 +247,7 @@ headerAdmin($data);
             <i class="fas fa-print mr-2"></i>
             Imprimir Nota de Recepcion
           </button>
-          <a href="<?= base_url(); ?>/compras" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
+          <a href="<?= base_url(); ?>compras" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
             <i class="fas fa-arrow-left mr-2"></i>
             Volver a Compras
           </a>
