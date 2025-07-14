@@ -759,27 +759,22 @@ class ClientesModel extends Mysql
         try {
             $db->beginTransaction();
 
-            // Verificar qué campos existen en la tabla personas
+            // Usar la misma tabla que el método original: cliente
             $this->setQuery(
-                "INSERT INTO personas (
-                    nombre, apellido, identificacion, telefono_principal, 
-                    fecha_nacimiento, genero, correo_electronico, direccion, 
-                    observaciones, tipo_persona, estatus, fecha_creacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                "INSERT INTO cliente (
+                    cedula, nombre, apellido, direccion, telefono_principal,
+                    estatus, observaciones, fecha_creacion, ultima_modificacion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ");
             
             $this->setArray([
+                $data['cedula'], // identificacion mapeada a cedula
                 $data['nombre'],
                 $data['apellido'],
-                $data['cedula'], // identificacion
-                $data['telefono_principal'],
-                !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null,
-                !empty($data['genero']) ? $data['genero'] : null,
-                !empty($data['correo_electronico']) ? $data['correo_electronico'] : null,
                 $data['direccion'],
-                $data['observaciones'] ?? '',
-                'cliente', // tipo_persona
-                $data['estatus'] ?? 'Activo'
+                $data['telefono_principal'],
+                $data['estatus'] ?? 'Activo',
+                $data['observaciones'] ?? ''
             ]);
             
             $stmt = $db->prepare($this->getQuery());
@@ -811,7 +806,7 @@ class ClientesModel extends Mysql
             
             // Manejar errores específicos de duplicación
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                if (strpos($e->getMessage(), 'identificacion') !== false) {
+                if (strpos($e->getMessage(), 'cedula') !== false) {
                     $mensaje = 'La identificación ya está registrada.';
                 } else {
                     $mensaje = 'Ya existe un registro con estos datos.';

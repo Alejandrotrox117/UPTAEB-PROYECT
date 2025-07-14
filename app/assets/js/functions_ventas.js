@@ -701,6 +701,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       inicializarBuscadorCliente();
       inicializarBotonesLimpiarCliente();
+      inicializarModalRegistrarCliente();
     });
   }
 
@@ -1925,6 +1926,258 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href = `${base_url}ventas/notaDespacho/${idventa}`;
     }
   });
+
+  // Funciones para el modal de registro de cliente
+  const camposFormularioClienteModal = [
+    {
+      id: "cedula_cliente_modal",
+      tipo: "input",
+      regex: expresiones.cedula,
+      mensajes: {
+        vacio: "La cédula es obligatoria.",
+        formato: "La Cédula debe contener la estructura V-/J-/E- No debe contener espacios y solo números.",
+      },
+    },
+    {
+      id: "nombre_cliente_modal",
+      tipo: "input",
+      regex: expresiones.nombre,
+      mensajes: {
+        vacio: "El nombre es obligatorio.",
+        formato: "El nombre debe tener entre 3 y 50 caracteres alfabéticos.",
+      },
+    },
+    {
+      id: "apellido_cliente_modal",
+      tipo: "input",
+      regex: expresiones.apellido,
+      mensajes: {
+        vacio: "El apellido es obligatorio.",
+        formato: "El apellido debe tener entre 3 y 50 caracteres alfabéticos.",
+      },
+    },
+    {
+      id: "telefono_principal_cliente_modal",
+      tipo: "input",
+      regex: expresiones.telefono_principal,
+      mensajes: {
+        vacio: "El teléfono es obligatorio.",
+        formato: "El teléfono debe tener exactamente 11 dígitos. No debe contener letras. Debe comenzar con 0412, 0414, 0424 o 0416.",
+      },
+    },
+    {
+      id: "direccion_cliente_modal",
+      tipo: "input",
+      regex: expresiones.direccion,
+      mensajes: {
+        vacio: "La dirección es obligatoria.",
+        formato: "La dirección debe tener entre 5 y 100 caracteres.",
+      },
+    },
+    {
+      id: "observaciones_cliente_modal",
+      tipo: "input",
+      regex: expresiones.observaciones,
+      mensajes: {
+        formato: "Las observaciones no deben exceder los 50 caracteres.",
+      },
+    },
+  ];
+
+  const camposObligatoriosClienteModal = [
+    "cedula_cliente_modal",
+    "nombre_cliente_modal", 
+    "apellido_cliente_modal",
+    "telefono_principal_cliente_modal",
+    "direccion_cliente_modal"
+  ];
+
+  function inicializarModalRegistrarCliente() {
+    const btnAbrirModal = document.getElementById("btnAbrirModalRegistrarCliente");
+    const btnCerrarModal = document.getElementById("cerrarModalRegistrarClienteBtn");
+    const btnCancelarModal = document.getElementById("cancelarRegistrarClienteBtn");
+    const formRegistrarCliente = document.getElementById("formRegistrarCliente");
+
+    if (btnAbrirModal) {
+      btnAbrirModal.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        abrirModalRegistrarCliente();
+      });
+    }
+
+    if (btnCerrarModal) {
+      btnCerrarModal.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        cerrarModalRegistrarCliente();
+      });
+    }
+
+    if (btnCancelarModal) {
+      btnCancelarModal.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        cerrarModalRegistrarCliente();
+      });
+    }
+
+    if (formRegistrarCliente) {
+      formRegistrarCliente.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        await registrarClienteModal();
+      });
+    }
+
+    // Inicializar validaciones en tiempo real
+    inicializarValidaciones(camposFormularioClienteModal, "formRegistrarCliente");
+  }
+
+  function abrirModalRegistrarCliente() {
+    const modal = document.getElementById("modalRegistrarCliente");
+    const form = document.getElementById("formRegistrarCliente");
+
+    if (modal) {
+      if (form) form.reset();
+      limpiarValidaciones(camposFormularioClienteModal, "formRegistrarCliente");
+      inicializarValidaciones(camposFormularioClienteModal, "formRegistrarCliente");
+      abrirModal("modalRegistrarCliente");
+    }
+  }
+
+  function cerrarModalRegistrarCliente() {
+    const modal = document.getElementById("modalRegistrarCliente");
+    const form = document.getElementById("formRegistrarCliente");
+
+    if (modal) {
+      limpiarValidaciones(camposFormularioClienteModal, "formRegistrarCliente");
+      if (form) form.reset();
+      cerrarModal("modalRegistrarCliente");
+    }
+  }
+
+  async function registrarClienteModal() {
+    try {
+      // Validar campos obligatorios
+      if (!validarCamposVacios(camposObligatoriosClienteModal, "formRegistrarCliente")) {
+        return;
+      }
+
+      // Validar formato de campos
+      let todosValidos = true;
+      for (const campo of camposFormularioClienteModal) {
+        const inputElement = document.getElementById(campo.id);
+        if (inputElement) {
+          const esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
+          if (!esValidoEsteCampo) {
+            todosValidos = false;
+          }
+        }
+      }
+
+      if (!todosValidos) {
+        Swal.fire({
+          title: 'Error de validación',
+          text: 'Por favor, corrija los errores en el formulario antes de continuar.',
+          icon: 'error'
+        });
+        return;
+      }
+
+      // Mostrar loading en el botón
+      const submitBtn = document.getElementById("registrarClienteBtn");
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Registrando...';
+      submitBtn.disabled = true;
+
+      // Recopilar datos del formulario
+      const formData = {
+        nombre: document.getElementById("nombre_cliente_modal").value.trim(),
+        apellido: document.getElementById("apellido_cliente_modal").value.trim(),
+        identificacion: document.getElementById("cedula_cliente_modal").value.trim(), // Mapear cedula a identificacion
+        telefono_principal: document.getElementById("telefono_principal_cliente_modal").value.trim(),
+        direccion: document.getElementById("direccion_cliente_modal").value.trim(),
+        observaciones: document.getElementById("observaciones_cliente_modal").value.trim()
+      };
+
+      // Enviar datos al servidor
+      const response = await fetch(`${base_url}clientes/registrarClienteModal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (result.status) {
+        Swal.fire({
+          title: 'Éxito',
+          text: result.message,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        // Cerrar modal
+        cerrarModalRegistrarCliente();
+
+        // Seleccionar automáticamente el cliente recién creado
+        if (result.cliente_id) {
+          seleccionarClienteRecienCreado(result.cliente_id, formData.nombre, formData.apellido, formData.identificacion);
+        }
+      } else {
+        throw new Error(result.message || 'Error al registrar cliente');
+      }
+
+    } catch (error) {
+      console.error('Error al registrar cliente:', error);
+      Swal.fire({
+        title: 'Error',
+        text: error.message || 'Error al registrar el cliente',
+        icon: 'error'
+      });
+    } finally {
+      // Restaurar botón
+      const submitBtn = document.getElementById("registrarClienteBtn");
+      if (submitBtn) {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
+    }
+  }
+
+  function seleccionarClienteRecienCreado(id, nombre, apellido, identificacion) {
+    // Seleccionar el cliente en el formulario principal
+    const idClienteInput = document.getElementById("idcliente");
+    const clienteInfoDiv = document.getElementById("cliente_seleccionado_info_modal");
+
+    if (idClienteInput) {
+      idClienteInput.value = id;
+    }
+
+    if (clienteInfoDiv) {
+      clienteInfoDiv.innerHTML = `
+        <strong>Cliente seleccionado:</strong><br>
+        <span class="text-green-600">${nombre} ${apellido}</span><br>
+        <span class="text-gray-600">CI: ${identificacion}</span>
+      `;
+      clienteInfoDiv.classList.remove("hidden");
+    }
+
+    // Limpiar el campo de búsqueda
+    const criterioInput = document.getElementById("inputCriterioClienteModal");
+    if (criterioInput) {
+      criterioInput.value = "";
+    }
+
+    // Ocultar lista de resultados
+    const listaResultados = document.getElementById("listaResultadosClienteModal");
+    if (listaResultados) {
+      listaResultados.classList.add("hidden");
+    }
+  }
 
   // ...existing code...
 });

@@ -225,110 +225,83 @@ $permisos = $data['permisos'] ?? []; ?>
     
     <form id="formRegistrarCliente" class="px-6 py-6">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <!-- Campo oculto para ID -->
+        <input type="hidden" id="idcliente_modal" name="idcliente" value="">
+        
         <div>
-          <label for="nombre_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
+          <label for="cedula_cliente_modal" class="block mb-2 text-gray-700 font-medium">
+            Cédula <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="cedula_cliente_modal" name="cedula" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="V-12345678" required>
+          <div id="error-cedula_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-cedula_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
+        </div>
+        
+        <div>
+          <label for="nombre_cliente_modal" class="block mb-2 text-gray-700 font-medium">
             Nombre <span class="text-red-500">*</span>
           </label>
           <input type="text" id="nombre_cliente_modal" name="nombre" 
-                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
                  placeholder="Ingrese el nombre" required>
-          <div id="error-nombre_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
+          <div id="error-nombre_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-nombre_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
         
         <div>
-          <label for="apellido_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
+          <label for="apellido_cliente_modal" class="block mb-2 text-gray-700 font-medium">
             Apellido <span class="text-red-500">*</span>
           </label>
           <input type="text" id="apellido_cliente_modal" name="apellido" 
-                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
                  placeholder="Ingrese el apellido" required>
-          <div id="error-apellido_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
+          <div id="error-apellido_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-apellido_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
         
         <div>
-          <label for="identificacion_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
-            Identificación <span class="text-red-500">*</span>
-          </label>
-          <input type="text" id="identificacion_cliente_modal" name="identificacion" 
-                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" 
-                 placeholder="Ingrese la identificación" required>
-          <div id="error-identificacion_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
-        </div>
-        
-        <div>
-          <label for="telefono_principal_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
+          <label for="telefono_principal_cliente_modal" class="block mb-2 text-gray-700 font-medium">
             Teléfono Principal <span class="text-red-500">*</span>
           </label>
           <input type="text" id="telefono_principal_cliente_modal" name="telefono_principal" 
-                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" 
-                 placeholder="Ingrese el teléfono" required>
-          <div id="error-telefono_principal_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
-        </div>
-        
-        <div>
-          <label for="fecha_nacimiento_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
-            Fecha de Nacimiento
-          </label>
-          <input type="date" id="fecha_nacimiento_cliente_modal" name="fecha_nacimiento" 
-                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-          <div id="error-fecha_nacimiento_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
-        </div>
-        
-        <div>
-          <label for="genero_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
-            Género
-          </label>
-          <select id="genero_cliente_modal" name="genero" 
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
-            <option value="">Seleccionar género</option>
-            <option value="Masculino">Masculino</option>
-            <option value="Femenino">Femenino</option>
-            <option value="Otro">Otro</option>
-            <option value="Prefiero no decir">Prefiero no decir</option>
-          </select>
-          <div id="error-genero_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="04XX-XXXXXXX" required>
+          <div id="error-telefono_principal_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-telefono_principal_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
         
         <div class="md:col-span-2">
-          <label for="correo_electronico_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
-            Correo Electrónico
-          </label>
-          <input type="email" id="correo_electronico_cliente_modal" name="correo_electronico" 
-                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" 
-                 placeholder="cliente@email.com">
-          <div id="error-correo_electronico_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
-        </div>
-        
-        <div class="md:col-span-2">
-          <label for="direccion_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
+          <label for="direccion_cliente_modal" class="block mb-2 text-gray-700 font-medium">
             Dirección <span class="text-red-500">*</span>
           </label>
-          <textarea id="direccion_cliente_modal" name="direccion" rows="2" 
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" 
-                    placeholder="Ingrese la dirección completa" required></textarea>
-          <div id="error-direccion_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
+          <input type="text" id="direccion_cliente_modal" name="direccion" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="Ingrese la dirección completa" required>
+          <div id="error-direccion_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-direccion_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
         
         <div class="md:col-span-2">
-          <label for="observaciones_cliente_modal" class="block mb-1 text-sm font-medium text-gray-700">
+          <label for="observaciones_cliente_modal" class="block mb-2 text-gray-700 font-medium">
             Observaciones
           </label>
-          <textarea id="observaciones_cliente_modal" name="observaciones" rows="2" 
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" 
-                    placeholder="Observaciones adicionales"></textarea>
-          <div id="error-observaciones_cliente_modal" class="mt-1 text-xs text-red-500 hidden"></div>
+          <input type="text" id="observaciones_cliente_modal" name="observaciones" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="Observaciones adicionales">
+          <div id="error-observaciones_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
       </div>
       
-      <div class="flex justify-end gap-3 mt-6">
+      <div class="grid grid-cols-2 gap-4 mt-6">
         <button type="button" id="cancelarRegistrarClienteBtn" 
-                class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
+                class="px-4 py-2 text-lg text-gray-800 transition bg-gray-200 rounded hover:bg-gray-300">
           Cancelar
         </button>
-        <button type="submit" 
-                class="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
-          <i class="mr-2 fas fa-save"></i>
-          Registrar Cliente
+        <button type="submit" id="registrarClienteBtn"
+                class="px-4 py-2 text-lg text-white transition bg-green-500 rounded hover:bg-green-600">
+          Registrar
         </button>
       </div>
     </form>
