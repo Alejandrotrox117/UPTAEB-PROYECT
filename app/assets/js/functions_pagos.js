@@ -14,6 +14,31 @@ let tiposPago = [];
 let pagoEditando = null; 
 
 // ============================================
+// FUNCIONES UTILITARIAS
+// ============================================
+
+/**
+ * Formatea un monto con su moneda correspondiente
+ */
+function formatearMontoConMoneda(monto, moneda, simbolo = '') {
+  const montoFormateado = parseFloat(monto).toFixed(2);
+  if (simbolo) {
+    return `${simbolo}${montoFormateado}`;
+  }
+  return `${montoFormateado} ${moneda}`;
+}
+
+/**
+ * Formatea información de conversión de moneda
+ */
+function formatearConversionMoneda(montoOriginal, monedaOriginal, simboloOriginal, montoConvertido) {
+  if (monedaOriginal === 'VES') {
+    return `Bs.${parseFloat(montoConvertido).toFixed(2)}`;
+  }
+  return `${simboloOriginal}${parseFloat(montoOriginal).toFixed(2)} (Bs.${parseFloat(montoConvertido).toFixed(2)})`;
+}
+
+// ============================================
 // FUNCIONES GLOBALES (disponibles en window)
 // ============================================
 
@@ -520,7 +545,7 @@ function inicializarTablaPagos() {
       [10, 25, 50, 100, -1],
       [10, 25, 50, 100, "Todos"],
     ],
-    order: [[4, "desc"]],
+    order: [[0, "desc"]], // Ordenar por la primera columna (que contiene datos ordenados por ID)
     dom:
       "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4'" +
       "l" +
@@ -895,10 +920,10 @@ function cargarVentasPendientes() {
         result.data.forEach((venta) => {
           const option = document.createElement("option");
           option.value = venta.idventa;
-          option.textContent = `#${venta.nro_venta} - ${venta.cliente} - $${venta.total}`;
+          option.textContent = `#${venta.nro_venta} - ${venta.cliente} - Bs.${venta.balance}`;
           option.dataset.cliente = venta.cliente;
           option.dataset.identificacion = venta.cliente_identificacion;
-          option.dataset.total = venta.total;
+          option.dataset.total = venta.balance;
           select.appendChild(option);
         });
 
@@ -942,18 +967,47 @@ function cargarSueldosPendientes() {
         result.data.forEach((sueldo) => {
           const option = document.createElement("option");
           option.value = sueldo.idsueldotemp;
-          option.textContent = `${sueldo.empleado} - ${sueldo.periodo} - $${sueldo.total}`;
+          
+          // Formatear información del sueldo con conversión
+          const montoOriginal = sueldo.balance;
+          const montoBolivares = sueldo.monto_bolivares;
+          const moneda = sueldo.codigo_moneda;
+          const simbolo = sueldo.simbolo || '';
+          
+          const montoFormateado = formatearConversionMoneda(
+            montoOriginal, 
+            moneda, 
+            simbolo, 
+            montoBolivares
+          );
+          
+          option.textContent = `${sueldo.empleado} - ${sueldo.periodo} - ${montoFormateado}`;
           option.dataset.empleado = sueldo.empleado;
           option.dataset.identificacion = sueldo.empleado_identificacion;
-          option.dataset.total = sueldo.total;
+          option.dataset.total = montoBolivares; // Siempre usar el monto en bolívares para el pago
+          option.dataset.monedaOriginal = moneda;
+          option.dataset.montoOriginal = montoOriginal;
+          option.dataset.simbolo = simbolo;
           select.appendChild(option);
         });
 
         select.addEventListener("change", function () {
           if (this.value) {
             const option = this.options[this.selectedIndex];
+            
+            // Mostrar información del empleado con detalles de conversión si aplica
+            let nombreCompleto = option.dataset.empleado;
+            if (option.dataset.monedaOriginal !== 'VES') {
+              const conversionInfo = formatearMontoConMoneda(
+                option.dataset.montoOriginal, 
+                option.dataset.monedaOriginal, 
+                option.dataset.simbolo
+              );
+              nombreCompleto += ` (Original: ${conversionInfo})`;
+            }
+            
             mostrarInformacionDestinatario(
-              option.dataset.empleado,
+              nombreCompleto,
               option.dataset.identificacion,
               option.dataset.total
             );

@@ -442,7 +442,7 @@ class PagosModel extends Mysql
                 LEFT JOIN proveedor prov ON c.idproveedor = prov.idproveedor
                 LEFT JOIN venta v ON p.idventa = v.idventa  
                 LEFT JOIN cliente cli ON v.idcliente = cli.idcliente
-                ORDER BY p.fecha_pago DESC, p.idpago DESC"
+                ORDER BY p.idpago DESC, p.fecha_creacion DESC"
             );
             
             $this->setArray([]);
@@ -620,20 +620,44 @@ class PagosModel extends Mysql
         try {
             $this->setQuery(
                 "SELECT 
-                    st.idsueldotemp,
-                    st.descripcion as empleado,
-                    st.monto as total,
-                    st.periodo,
-                    '' as empleado_identificacion
-                FROM sueldos_temporales st
-                WHERE st.estatus = 'activo'
-                AND st.idsueldotemp NOT IN (
-                    SELECT pg.idsueldotemp 
-                    FROM pagos pg 
-                    WHERE pg.idsueldotemp IS NOT NULL 
-                    AND pg.estatus IN ('activo', 'conciliado')
-                )
-                ORDER BY st.fecha_creacion DESC"
+                    s.idsueldo,
+                    s.idsueldo as idsueldotemp, -- Mantener compatibilidad
+                    CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as empleado,
+                    CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as nombre_completo,
+                    ROUND(s.monto, 2) as monto,
+                    ROUND(s.balance, 2) as balance,
+                    s.idmoneda,
+                    COALESCE(m.codigo_moneda, 'VES') as simbolo_moneda,
+                    COALESCE(m.nombre_moneda, 'Bolívares') as nombre_moneda,
+                    ROUND(COALESCE(
+                        (SELECT ht.tasa_a_bs 
+                         FROM historial_tasas_bcv ht 
+                         INNER JOIN monedas m2 ON ht.codigo_moneda = m2.codigo_moneda
+                         WHERE m2.idmoneda = s.idmoneda 
+                           AND ht.fecha_publicacion_bcv = CURDATE() 
+                         ORDER BY ht.fecha_publicacion_bcv DESC 
+                         LIMIT 1), 
+                        COALESCE(m.valor, 1)
+                    ), 2) AS tasa_actual,
+                    ROUND((s.monto * COALESCE(
+                        (SELECT ht.tasa_a_bs 
+                         FROM historial_tasas_bcv ht 
+                         INNER JOIN monedas m2 ON ht.codigo_moneda = m2.codigo_moneda
+                         WHERE m2.idmoneda = s.idmoneda 
+                           AND ht.fecha_publicacion_bcv = CURDATE() 
+                         ORDER BY ht.fecha_publicacion_bcv DESC 
+                         LIMIT 1), 
+                        COALESCE(m.valor, 1)
+                    )), 2) as monto_bolivares,
+                    COALESCE(s.observacion, 'Sin descripción') as periodo,
+                    s.observacion,
+                    s.fecha_creacion
+                FROM sueldos s
+                INNER JOIN personas p ON s.idpersona = p.idpersona
+                LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
+                WHERE s.estatus IN ('POR_PAGAR', 'PAGO_FRACCIONADO')
+                AND s.monto > 0
+                ORDER BY s.fecha_creacion DESC"
             );
             
             $this->setArray([]);
@@ -880,7 +904,7 @@ class PagosModel extends Mysql
                 throw new Exception("No se pudo actualizar el estado del pago");
             }
 
-            // Procesar según el tipo (compra o venta)
+            // Procesar según el tipo (compra, venta o sueldo)
             if (!empty($pago['idcompra'])) {
                 // Lógica para compras
                 $this->procesarConciliacionCompra($db, $pago['idcompra']);
@@ -888,6 +912,14 @@ class PagosModel extends Mysql
             elseif (!empty($pago['idventa'])) {
                 // Lógica para ventas
                 $this->procesarConciliacionVenta($db, $pago['idventa']);
+            }
+            elseif (!empty($pago['idsueldotemp'])) {
+                // Los pagos de sueldos se procesan automáticamente mediante el trigger
+                // trg_pago_sueldo_conciliado que:
+                // - Resta el monto del balance del sueldo
+                // - Marca el sueldo como PAGADO si el balance llega a 0
+                // - Registra los eventos en la bitácora
+                error_log("PagosModel::ejecutarConciliacionPago -> Pago de sueldo ID: {$pago['idsueldotemp']} procesado por trigger automático");
             }
 
             $db->commit();
@@ -978,8 +1010,42 @@ class PagosModel extends Mysql
 
     public function getInfoSueldo(int $idsueldotemp){
         try {
-            // Por ahora retorna null, se puede implementar después si es necesario
-            return ['idpersona' => null];
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectGeneral();
+            
+            // Buscar en la tabla sueldos usando el ID proporcionado
+            $this->setQuery(
+                "SELECT 
+                    s.idpersona,
+                    s.idempleado,
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN s.idpersona
+                        WHEN s.idempleado IS NOT NULL THEN (
+                            SELECT p.idpersona 
+                            FROM personas p 
+                            INNER JOIN empleado e ON p.identificacion = e.cedula 
+                            WHERE e.idempleado = s.idempleado 
+                            LIMIT 1
+                        )
+                        ELSE NULL
+                    END as idpersona_final
+                FROM sueldos s 
+                WHERE s.idsueldo = ?"
+            );
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idsueldotemp]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $conexion->disconnect();
+            
+            if ($result && $result['idpersona_final']) {
+                return ['idpersona' => $result['idpersona_final']];
+            } else {
+                return ['idpersona' => null];
+            }
+            
         } catch (Exception $e) {
             error_log("Error en getInfoSueldo: " . $e->getMessage());
             return ['idpersona' => null];
