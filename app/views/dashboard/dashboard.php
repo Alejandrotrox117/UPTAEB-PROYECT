@@ -330,7 +330,7 @@ select::-ms-expand {
     </div>
   </div>
 
-  <div id="produccionAvanzada" class="report-section">
+  <div id="produccion" class="report-section">
     <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">Centro de Control de Producción</h2>
 

@@ -144,8 +144,8 @@ class Dashboard extends Controllers
                 "cumplimientoTareas" => $this->model->getCumplimientoTareas($prod_fecha_desde, $prod_fecha_hasta),
                 
                 
-                "topClientes" => $this->model->getTopClientes(10),
-                "topProveedores" => $this->model->getTopProveedores(10),
+                "topClientes" => $this->model->getTopClientes(),
+                "topProveedores" => $this->model->getTopProveedores(),
                 
                 
                 "analisisInventario" => $this->model->getAnalisisInventario(),
@@ -445,6 +445,18 @@ class Dashboard extends Controllers
         }
 
         $pdf->Output("D", "Reporte_Ejecutivo_" . date("Y-m-d") . ".pdf");
+    }
+     public function getMovimientosInventarioMes()
+    {
+        try {
+            $data = $this->model->getMovimientosInventarioMes();
+            header('Content-Type: application/json');
+            echo json_encode($data, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Error interno del servidor"]);
+        }
+        exit();
     }
 }
 ?>

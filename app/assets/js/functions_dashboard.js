@@ -1,3 +1,4 @@
+
 let graficoIngresos,
   graficoEgresos,
   graficoVentas,
@@ -610,7 +611,51 @@ function renderizarAnalisisInventario(datos) {
   } catch (e) {
     console.error("Error renderizando valor por categoría:", e);
   }
+  // --- Movimientos de Inventario (Entradas/Salidas) ---
+  try {
+    const movimientos = datos.movimientos_mes || { entradas: 0, salidas: 0 };
+    const selector = document.getElementById("tipoGraficoMovimientosInventario");
+    const tipoSeleccionado = selector ? selector.value || 'bar' : 'bar';
+    renderizarGraficoMovimientosInventario(movimientos, tipoSeleccionado);
+  } catch (e) {
+    console.error("Error renderizando movimientos de inventario:", e);
+  }
+/**
+ * Renderiza la gráfica de movimientos de inventario (entradas/salidas)
+ */
+function renderizarGraficoMovimientosInventario(datos, tipoGrafico) {
+  const ctx = document.getElementById("graficoMovimientosInventario").getContext("2d");
+  if (graficoMovimientosInventario) graficoMovimientosInventario.destroy();
 
+  const labels = ["Entradas", "Salidas"];
+  const valores = [parseInt(datos.entradas) || 0, parseInt(datos.salidas) || 0];
+
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
+  const opciones = tipoGrafico === 'horizontalBar' ? {
+    indexAxis: 'y',
+    scales: { x: { beginAtZero: true } }
+  } : { scales: { y: { beginAtZero: true } } };
+
+  graficoMovimientosInventario = new Chart(ctx, {
+    type: tipoFinal,
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Movimientos del Mes",
+          data: valores,
+          backgroundColor: ["#10B981", "#EF4444"],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom" } },
+      ...opciones
+    },
+  });
+}
   try {
     const productosMasVendidos =
       typeof datos.productos_mas_vendidos === "string"
@@ -937,12 +982,12 @@ function renderizarGraficoIngresosConTipo(datos, tipoGrafico) {
     ],
   };
 
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
   const opciones = tipoGrafico === 'horizontalBar' ? {
     indexAxis: 'y',
     scales: { x: { beginAtZero: true } }
   } : {};
-
-  graficoIngresos = renderizarGraficoGenerico("graficoIngresos", datosGrafico, tipoGrafico, opciones);
+  graficoIngresos = renderizarGraficoGenerico("graficoIngresos", datosGrafico, tipoFinal, opciones);
 }
 
 function renderizarGraficoEgresosConTipo(datos, tipoGrafico) {
@@ -987,12 +1032,12 @@ function renderizarGraficoEgresosConTipo(datos, tipoGrafico) {
     ],
   };
 
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
   const opciones = tipoGrafico === 'horizontalBar' ? {
     indexAxis: 'y',
     scales: { x: { beginAtZero: true } }
   } : {};
-
-  graficoEgresos = renderizarGraficoGenerico("graficoEgresos", datosGrafico, tipoGrafico, opciones);
+  graficoEgresos = renderizarGraficoGenerico("graficoEgresos", datosGrafico, tipoFinal, opciones);
 }
 
 function renderizarGraficoTendenciasVentasConTipo(datos, tipoGrafico) {
@@ -1078,12 +1123,12 @@ function renderizarGraficoRentabilidadProductosConTipo(datos, tipoGrafico) {
     ],
   };
 
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
   const opciones = tipoGrafico === 'horizontalBar' ? {
     indexAxis: 'y',
     scales: { x: { beginAtZero: true } }
   } : { scales: { y: { beginAtZero: true } } };
-
-  graficoRentabilidadProductos = renderizarGraficoGenerico("graficoRentabilidadProductos", datosGrafico, tipoGrafico, opciones);
+  graficoRentabilidadProductos = renderizarGraficoGenerico("graficoRentabilidadProductos", datosGrafico, tipoFinal, opciones);
 }
 
 function renderizarGraficoEficienciaEmpleadosConTipo(datos, tipoGrafico) {
@@ -1107,12 +1152,12 @@ function renderizarGraficoEficienciaEmpleadosConTipo(datos, tipoGrafico) {
     ],
   };
 
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
   const opciones = tipoGrafico === 'horizontalBar' ? {
     indexAxis: 'y',
     scales: { x: { beginAtZero: true, max: 100 } }
   } : { scales: { y: { beginAtZero: true, max: 100 } } };
-
-  graficoEficienciaEmpleados = renderizarGraficoGenerico("graficoEficienciaEmpleados", datosGrafico, tipoGrafico, opciones);
+  graficoEficienciaEmpleados = renderizarGraficoGenerico("graficoEficienciaEmpleados", datosGrafico, tipoFinal, opciones);
 }
 
 function renderizarGraficoEstadosProduccionConTipo(datos, tipoGrafico) {
@@ -1137,12 +1182,12 @@ function renderizarGraficoEstadosProduccionConTipo(datos, tipoGrafico) {
     ],
   };
 
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
   const opciones = tipoGrafico === 'horizontalBar' ? {
     indexAxis: 'y',
     scales: { x: { beginAtZero: true } }
   } : {};
-
-  graficoEstadosProduccion = renderizarGraficoGenerico("graficoEstadosProduccion", datosGrafico, tipoGrafico, opciones);
+  graficoEstadosProduccion = renderizarGraficoGenerico("graficoEstadosProduccion", datosGrafico, tipoFinal, opciones);
 }
 
 function renderizarGraficoTopClientesConTipo(datos, tipoGrafico) {
@@ -1162,12 +1207,12 @@ function renderizarGraficoTopClientesConTipo(datos, tipoGrafico) {
     ],
   };
 
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
   const opciones = tipoGrafico === 'horizontalBar' ? {
     indexAxis: 'y',
     scales: { x: { beginAtZero: true } }
   } : { scales: { y: { beginAtZero: true } } };
-
-  graficoTopClientes = renderizarGraficoGenerico("graficoTopClientes", datosGrafico, tipoGrafico, opciones);
+  graficoTopClientes = renderizarGraficoGenerico("graficoTopClientes", datosGrafico, tipoFinal, opciones);
 }
 
 function renderizarGraficoTopProveedoresConTipo(datos, tipoGrafico) {
@@ -1187,11 +1232,11 @@ function renderizarGraficoTopProveedoresConTipo(datos, tipoGrafico) {
     ],
   };
 
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
   const opciones = tipoGrafico === 'horizontalBar' ? {
     indexAxis: 'y',
     scales: { x: { beginAtZero: true } }
   } : { scales: { y: { beginAtZero: true } } };
-
-  graficoTopProveedores = renderizarGraficoGenerico("graficoTopProveedores", datosGrafico, tipoGrafico, opciones);
+  graficoTopProveedores = renderizarGraficoGenerico("graficoTopProveedores", datosGrafico, tipoFinal, opciones);
 }
 
