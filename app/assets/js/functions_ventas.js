@@ -648,6 +648,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const registrarVentaBtn = document.getElementById("registrarVentaBtn");
   if (registrarVentaBtn) {
     registrarVentaBtn.addEventListener("click", async function () {
+      // Determinar si estamos editando o creando
+      const mode = this.getAttribute('data-mode') || 'create';
+      const idVentaEditar = this.getAttribute('data-idventa');
+
       const idClienteSeleccionado = document.getElementById("idcliente").value;
       const nuevoClienteFormActivo =
         nuevoClienteContainer &&
@@ -751,6 +755,11 @@ document.addEventListener("DOMContentLoaded", function () {
         detalles: [],
       };
 
+      // Si estamos editando, agregar el ID de la venta
+      if (mode === 'edit' && idVentaEditar) {
+        datosVentaFinal.idventa = parseInt(idVentaEditar);
+      }
+
       try {
         datosVentaFinal.tasa_usada = await obtenerTasaActualSeleccionada(
           datosVentaFinal.idmoneda_general,
@@ -805,11 +814,19 @@ document.addEventListener("DOMContentLoaded", function () {
       const btnRegistrar = document.getElementById("registrarVentaBtn");
       const textoOriginal = btnRegistrar.innerHTML;
       btnRegistrar.disabled = true;
-      btnRegistrar.innerHTML =
-        '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+      
+      // Texto diferente para edición
+      const textoLoading = mode === 'edit' 
+        ? '<i class="fas fa-spinner fa-spin mr-2"></i>Actualizando...'
+        : '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+      
+      btnRegistrar.innerHTML = textoLoading;
 
       try {
-        const response = await fetch("ventas/setVenta", {
+        // URL diferente para edición
+        const url = mode === 'edit' ? "ventas/updateVenta" : "ventas/setVenta";
+        
+        const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -826,16 +843,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const result = await response.json();
 
         if (result.status === true) {
-          const mensaje = result.message || "Venta registrada correctamente.";
+          const mensaje = result.message || (mode === 'edit' ? "Venta actualizada correctamente." : "Venta registrada correctamente.");
           let mensajeCompleto = mensaje;
 
           if (result.data && typeof result.data === "object") {
             const { nro_venta, idventa, idcliente } = result.data;
 
             if (nro_venta) {
-              mensajeCompleto = `Venta ${nro_venta} registrada correctamente.`;
+              mensajeCompleto = mode === 'edit' 
+                ? `Venta ${nro_venta} actualizada correctamente.`
+                : `Venta ${nro_venta} registrada correctamente.`;
             }
-          } else {
           }
 
           await Swal.fire("¡Éxito!", mensajeCompleto, "success");
@@ -846,9 +864,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
           cerrarModal("ventaModal");
           limpiarFormularioVentaCompleto();
+          
+          // Restablecer el modo del botón
+          btnRegistrar.removeAttribute('data-mode');
+          btnRegistrar.removeAttribute('data-idventa');
+          btnRegistrar.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Venta';
+          
+          // Restablecer el título del modal
+          const modalTitle = document.querySelector("#ventaModal h3");
+          if (modalTitle) {
+            modalTitle.innerHTML = '<i class="mr-1 text-green-600 fas fa-shopping-cart"></i>Registrar Nueva Venta';
+          }
         } else {
           const mensajeError =
-            result.message || "No se pudo registrar la venta.";
+            result.message || (mode === 'edit' ? "No se pudo actualizar la venta." : "No se pudo registrar la venta.");
           await Swal.fire("¡Error!", mensajeError, "error");
         }
       } catch (error) {
@@ -1021,6 +1050,15 @@ document.addEventListener("DOMContentLoaded", function () {
       if (idVenta) {
         // Redirigir a nota de despacho
         window.open(`ventas/notaDespacho/${idVenta}`, '_blank');
+      }
+    }
+
+    // Editar venta
+    const editarVentaBtn = e.target.closest(".editar-venta-btn");
+    if (editarVentaBtn) {
+      const idVenta = editarVentaBtn.getAttribute("data-idventa");
+      if (idVenta) {
+        cargarVentaParaEditar(idVenta);
       }
     }
   });
@@ -1235,6 +1273,218 @@ document.addEventListener("DOMContentLoaded", function () {
           });
       }
     });
+  }
+
+  // Función para cargar venta para editar
+  async function cargarVentaParaEditar(idVenta) {
+    try {
+      // Mostrar el modal con mensaje de carga
+      const modal = document.getElementById("ventaModal");
+      const modalTitle = modal.querySelector("h3");
+      const submitBtn = document.getElementById("registrarVentaBtn");
+      
+      // Cambiar el título del modal
+      modalTitle.innerHTML = '<i class="mr-1 text-blue-600 fas fa-edit"></i>Editar Venta';
+      
+      // Cambiar el texto del botón
+      submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Actualizar Venta';
+      submitBtn.setAttribute('data-mode', 'edit');
+      submitBtn.setAttribute('data-idventa', idVenta);
+      
+      // Abrir el modal
+      abrirModal("ventaModal");
+      
+      // Mostrar mensaje de carga
+      Swal.fire({
+        title: 'Cargando...',
+        text: 'Obteniendo datos de la venta',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Obtener los datos de la venta
+      const response = await fetch(`ventas/getVentaDetalle?idventa=${encodeURIComponent(idVenta)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.status) {
+        throw new Error(data.message || "No se pudo obtener los datos de la venta.");
+      }
+
+      const venta = data.data.venta;
+      const detalles = data.data.detalle;
+
+      // Cerrar el loading
+      Swal.close();
+
+      // Llenar el formulario con los datos de la venta
+      await llenarFormularioEdicion(venta, detalles);
+
+    } catch (error) {
+      console.error('Error al cargar venta para editar:', error);
+      Swal.fire("Error", error.message || "No se pudo cargar la venta para editar.", "error");
+      cerrarModal("ventaModal");
+    }
+  }
+
+  // Función para llenar el formulario con los datos de la venta
+  async function llenarFormularioEdicion(venta, detalles) {
+    try {
+      // Llenar campos básicos
+      document.getElementById("fecha_venta_modal").value = venta.fecha_venta || "";
+      document.getElementById("observaciones").value = venta.observaciones || "";
+      
+      // Seleccionar cliente
+      if (venta.cliente_cedula) {
+        const clienteInfo = {
+          id: venta.cliente_id,
+          cedula: venta.cliente_cedula,
+          nombre: venta.cliente_nombre || "",
+          apellido: venta.cliente_apellido || "",
+          telefono_principal: venta.cliente_telefono || "",
+          direccion: venta.cliente_direccion || "",
+          observaciones: venta.cliente_observaciones || "",
+          estatus: venta.cliente_estatus || "1"
+        };
+        
+        // Llenar la información del cliente seleccionado
+        const clienteInfoDiv = document.getElementById("cliente_seleccionado_info_modal");
+        if (clienteInfoDiv) {
+          clienteInfoDiv.innerHTML = `
+            <strong>Cliente seleccionado:</strong><br>
+            <span><strong>Nombre:</strong> ${clienteInfo.nombre} ${clienteInfo.apellido}</span><br>
+            <span><strong>Cédula:</strong> ${clienteInfo.cedula}</span><br>
+            <span><strong>Teléfono:</strong> ${clienteInfo.telefono_principal || 'No especificado'}</span>
+          `;
+          clienteInfoDiv.classList.remove("hidden");
+          clienteInfoDiv.setAttribute("data-cliente-id", clienteInfo.id);
+        }
+      }
+
+      // Llenar descuento general
+      if (venta.descuento_porcentaje_general) {
+        document.getElementById("descuento_porcentaje_general").value = venta.descuento_porcentaje_general;
+      }
+
+      // Limpiar detalles actuales
+      const detalleBody = document.getElementById("detalleVentaBody");
+      const noDetallesMsg = document.getElementById("noDetallesMensaje");
+      
+      if (detalleBody) {
+        detalleBody.innerHTML = "";
+      }
+
+      // Cargar productos para los selects
+      await cargarProductosSelect();
+
+      // Agregar los detalles existentes
+      if (Array.isArray(detalles) && detalles.length > 0) {
+        if (noDetallesMsg) {
+          noDetallesMsg.classList.add("hidden");
+        }
+
+        detalles.forEach((detalle, index) => {
+          agregarFilaDetalle({
+            producto_id: detalle.producto_id,
+            nombre_producto: detalle.nombre_producto,
+            cantidad: detalle.cantidad,
+            precio_unitario_venta: detalle.precio_unitario_venta,
+            codigo_moneda: detalle.codigo_moneda || 'VES'
+          });
+        });
+      } else {
+        if (noDetallesMsg) {
+          noDetallesMsg.classList.remove("hidden");
+        }
+      }
+
+      // Recalcular totales
+      calcularTotalesGenerales();
+
+    } catch (error) {
+      console.error('Error al llenar formulario:', error);
+      throw error;
+    }
+  }
+
+  // Función auxiliar para cargar productos en el select
+  async function cargarProductosSelect() {
+    try {
+      const response = await fetch("ventas/getProductos");
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      if (data.status && data.data) {
+        listaProductosCargadosSelect = data.data;
+        // Actualizar el select de productos
+        const selectProducto = document.getElementById("select_producto_agregar_modal");
+        if (selectProducto) {
+          selectProducto.innerHTML = '<option value="">Seleccione un producto</option>';
+          data.data.forEach(producto => {
+            const option = document.createElement('option');
+            option.value = producto.idproducto || producto.id;
+            option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria || 'Sin categoría'})`;
+            selectProducto.appendChild(option);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+    }
+  }
+
+  // Función auxiliar para agregar una fila de detalle
+  function agregarFilaDetalle(producto) {
+    const idProd = producto.producto_id;
+    const nombreProd = `${producto.nombre_producto}`;
+    const cantidad = producto.cantidad || 1;
+    const precioUnit = parseFloat(producto.precio_unitario_venta || 0).toFixed(2);
+    const subtotal = (cantidad * parseFloat(precioUnit)).toFixed(2);
+    const monedaCodigo = producto.codigo_moneda || 'VES';
+
+    const nuevaFilaHTML = `
+    <tr>
+      <td class="px-3 py-1.5">
+        <input type="hidden" name="detalle_idproducto[]" value="${idProd}">
+        <input type="hidden" name="detalle_moneda_original[]" value="${monedaCodigo}">
+        <input type="hidden" name="detalle_precio_original[]" value="${precioUnit}">
+        <span>${nombreProd}</span>
+        <br><small class="text-gray-500">Precio: ${monedaCodigo} ${precioUnit}</small>
+      </td>
+      <td class="px-3 py-1.5">
+        <input type="number" name="detalle_cantidad[]" 
+               class="w-full px-2 py-1 text-xs border rounded-md cantidad-input" 
+               value="${cantidad}" min="1" step="1">
+      </td>
+      <td class="px-3 py-1.5">
+        <input type="number" name="detalle_precio_unitario_venta[]" 
+               class="w-full px-2 py-1 text-xs border rounded-md precio-input bg-gray-100" 
+               value="${precioUnit}" readonly step="0.01">
+      </td>
+      <td class="px-3 py-1.5">
+        <input type="number" name="detalle_subtotal[]" 
+               class="w-full px-2 py-1 text-xs border rounded-md subtotal-input bg-gray-100" 
+               value="${subtotal}" readonly step="0.01">
+      </td>
+      <td class="px-3 py-1.5 text-center">
+        <button type="button" class="text-red-500 eliminar-detalle-btn hover:text-red-700">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    </tr>`;
+
+    detalleVentaBody.insertAdjacentHTML("beforeend", nuevaFilaHTML);
+    actualizarEventosDetalle();
   }
 
   // Event listeners para los nuevos botones
