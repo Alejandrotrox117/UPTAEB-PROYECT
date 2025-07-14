@@ -1,4 +1,4 @@
-<?php headerAdmin($data);?>
+<?php headerAdmin($data); ?>
 
 <input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
 <input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
@@ -16,17 +16,17 @@
     <!-- Pestañas de navegación -->
     <div class="bg-white mt-6 rounded-2xl shadow-lg">
         <div class="border-b border-gray-200">
-            <nav class="flex space-x-8 px-6 py-3" aria-label="Tabs">
-                <button id="tab-lotes" class="tab-button active border-b-2 border-green-500 py-2 px-1 text-sm font-medium text-green-600">
+            <nav class="flex flex-wrap space-x-0 sm:space-x-8 px-2 sm:px-6 py-3" aria-label="Tabs">
+                <button id="tab-lotes" class="tab-button active border-b-2 border-green-500 py-2 px-1 text-sm font-medium text-green-600 w-full sm:w-auto">
                     <i class="fas fa-boxes mr-2"></i>Gestión de Lotes
                 </button>
-                <button id="tab-procesos" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                <button id="tab-procesos" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 w-full sm:w-auto">
                     <i class="fas fa-cogs mr-2"></i>Procesos
                 </button>
-                <button id="tab-nomina" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                <button id="tab-nomina" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 w-full sm:w-auto">
                     <i class="fas fa-calculator mr-2"></i>Nómina
                 </button>
-                <button id="tab-configuracion" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                <button id="tab-configuracion" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 w-full sm:w-auto">
                     <i class="fas fa-cog mr-2"></i>Configuración
                 </button>
             </nav>
@@ -51,6 +51,7 @@
                     <table id="TablaLotes" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 1200px;">
                         <thead>
                             <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
+                                <!-- Columnas inyectadas por JS -->
                             </tr>
                         </thead>
                         <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
@@ -100,6 +101,7 @@
                         <table id="TablaProcesos" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%;">
                             <thead>
                                 <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
+                                    <!-- Columnas inyectadas por JS -->
                                 </tr>
                             </thead>
                             <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
@@ -132,6 +134,7 @@
                     <table id="TablaNomina" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 1000px;">
                         <thead>
                             <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
+                                <!-- Columnas inyectadas por JS -->
                             </tr>
                         </thead>
                         <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
@@ -144,7 +147,6 @@
             <div id="content-configuracion" class="tab-content hidden">
                 <div class="max-w-4xl">
                     <h3 class="text-lg font-semibold text-gray-800 mb-6">Configuración de Producción</h3>
-                    
                     <form id="formConfiguracionProduccion" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Parámetros de Productividad -->

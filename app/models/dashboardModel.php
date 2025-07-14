@@ -4,56 +4,55 @@ require_once "app/core/mysql.php";
 
 class DashboardModel extends mysql
 {
-private $query;
-  private $array;
-  private $result;
+    private $query;
+    private $array;
+    private $result;
 
-  public function __construct()
-  {
-  }
+    public function __construct() {}
 
-  // --- Getters y Setters ---
-  public function getQuery()
-  {
-    return $this->query;
-  }
+    // --- Getters y Setters ---
+    public function getQuery()
+    {
+        return $this->query;
+    }
 
-  public function setQuery(string $query)
-  {
-    $this->query = $query;
-  }
+    public function setQuery(string $query)
+    {
+        $this->query = $query;
+    }
 
-  public function getArray()
-  {
-    return $this->array ?? [];
-  }
+    public function getArray()
+    {
+        return $this->array ?? [];
+    }
 
-  public function setArray(array $array)
-  {
-    $this->array = $array;
-  }
+    public function setArray(array $array)
+    {
+        $this->array = $array;
+    }
 
-  public function getResult()
-  {
-    return $this->result;
-  }
+    public function getResult()
+    {
+        return $this->result;
+    }
 
-  public function setResult($result)
-  {
-    $this->result = $result;
-  }
+    public function setResult($result)
+    {
+        $this->result = $result;
+    }
 
-   
-    public function getResumen(){
+
+    public function getResumen()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
             $stmt = $db->prepare("SELECT 
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')) as ventas_hoy,
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')) as ventas_ayer,
-                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')) as compras_hoy,
-                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')) as compras_ayer,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus = 'PAGADA') as ventas_hoy,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus = 'PAGADA') as ventas_ayer,
+                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra = 'PAGADA') as compras_hoy,
+                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra = 'PAGADA') as compras_ayer,
                 (SELECT COALESCE(SUM(existencia * precio), 0) FROM producto WHERE estatus = 'activo') as valor_inventario,
                 (SELECT COUNT(*) FROM lotes_produccion WHERE estatus_lote IN ('PLANIFICADO', 'EN_PROCESO')) as producciones_activas,
                 (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia > 0) as productos_en_rotacion,
@@ -61,7 +60,6 @@ private $query;
                 CURDATE() as fecha_consulta");
             $stmt->execute();
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-            
             return $resultado;
         } catch (Exception $e) {
             return [
@@ -88,7 +86,7 @@ private $query;
         try {
             $response = [];
 
-           
+            // Productos críticos y normales
             $stmt_critico = $db->prepare("SELECT 
                 (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia <= 10) as critico,
                 (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia > 10) as normal");
@@ -97,7 +95,7 @@ private $query;
             $total_productos = $stock_data['critico'] + $stock_data['normal'];
             $response['stock_critico'] = ($total_productos > 0) ? ($stock_data['critico'] / $total_productos * 100) : 0;
 
-           
+            // Valor por categoría
             $stmt_valor = $db->prepare("SELECT c.nombre, SUM(p.existencia * p.precio) as valor
                 FROM producto p
                 JOIN categoria c ON p.idcategoria = c.idcategoria
@@ -106,10 +104,9 @@ private $query;
                 ORDER BY valor DESC");
             $stmt_valor->execute();
             $categorias = $stmt_valor->fetchAll(PDO::FETCH_ASSOC);
-            // Estructurar datos para JavaScript con formato esperado
             $response['valor_por_categoria'] = json_encode(['categorias' => $categorias]);
 
-          
+            // Movimientos del mes
             $stmt_mov = $db->prepare("SELECT 
                 SUM(CASE WHEN cantidad_entrada > 0 THEN 1 ELSE 0 END) as entradas,
                 SUM(CASE WHEN cantidad_salida > 0 THEN 1 ELSE 0 END) as salidas
@@ -118,26 +115,24 @@ private $query;
             $stmt_mov->execute();
             $response['movimientos_mes'] = $stmt_mov->fetch(PDO::FETCH_ASSOC);
 
-      
+            // Productos más vendidos
             $stmt_vendidos = $db->prepare("SELECT p.nombre, SUM(dv.cantidad) as cantidad
                 FROM detalle_venta dv
                 JOIN producto p ON dv.idproducto = p.idproducto
                 JOIN venta v ON dv.idventa = v.idventa
-                WHERE v.estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO') AND MONTH(v.fecha_venta) = MONTH(CURDATE())
+                WHERE v.estatus = 'PAGADA' AND MONTH(v.fecha_venta) = MONTH(CURDATE())
                 GROUP BY p.idproducto, p.nombre
                 ORDER BY cantidad DESC
                 LIMIT 5");
             $stmt_vendidos->execute();
             $productos = $stmt_vendidos->fetchAll(PDO::FETCH_ASSOC);
-            // Estructurar datos para JavaScript con formato esperado
             $response['productos_mas_vendidos'] = json_encode(['productos' => $productos]);
 
             return $response;
-
         } catch (Exception $e) {
             return [
-                'stock_critico' => 0, 
-                'valor_por_categoria' => json_encode(['categorias' => []]), 
+                'stock_critico' => 0,
+                'valor_por_categoria' => json_encode(['categorias' => []]),
                 'movimientos_mes' => ['entradas' => 0, 'salidas' => 0],
                 'productos_mas_vendidos' => json_encode(['productos' => []])
             ];
@@ -145,8 +140,8 @@ private $query;
             $conexion->disconnect();
         }
     }
-    
- 
+
+
     public function getUltimasVentas()
     {
         $conexion = new Conexion();
@@ -162,7 +157,7 @@ private $query;
                 v.estatus as estado
                 FROM venta v
                 JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')
+                WHERE v.estatus = 'PAGADA'
                 ORDER BY v.fecha_venta DESC, v.idventa DESC
                 LIMIT 10");
             $stmt->execute();
@@ -186,7 +181,7 @@ private $query;
                 COUNT(*) as cantidad
                 FROM venta 
                 WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-                AND estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')
+                AND estatus = 'PAGADA'
                 GROUP BY mes 
                 ORDER BY mes ASC");
             $stmt->execute();
@@ -253,14 +248,14 @@ private $query;
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-        $this->setQuery("SELECT idtipo_pago, nombre FROM tipos_pagos WHERE estatus = 'activo' ORDER BY nombre ASC");
-        $stmt = $db->prepare($this->getQuery());
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $this->setQuery("SELECT idtipo_pago, nombre FROM tipos_pagos WHERE estatus = 'activo' ORDER BY nombre ASC");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        return [];
+            return [];
         } finally {
-        $conexion->disconnect();
+            $conexion->disconnect();
         }
     }
 
@@ -270,23 +265,23 @@ private $query;
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-        $baseSql = "SELECT tp.nombre AS categoria, SUM(p.monto) AS total FROM pagos p JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago WHERE p.idventa IS NOT NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
-        $this->setArray([$fecha_desde, $fecha_hasta]);
+            $baseSql = "SELECT tp.nombre AS categoria, SUM(p.monto) AS total FROM pagos p JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago WHERE p.idventa IS NOT NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
+            $this->setArray([$fecha_desde, $fecha_hasta]);
 
-        if (!empty($idtipo_pago)) {
-            $baseSql .= " AND p.idtipo_pago = ?";
-            $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
-        }
-        $baseSql .= " GROUP BY tp.nombre HAVING SUM(p.monto) > 0";
-        $this->setQuery($baseSql);
+            if (!empty($idtipo_pago)) {
+                $baseSql .= " AND p.idtipo_pago = ?";
+                $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
+            }
+            $baseSql .= " GROUP BY tp.nombre HAVING SUM(p.monto) > 0";
+            $this->setQuery($baseSql);
 
-        $stmt = $db->prepare($this->getQuery());
-        $stmt->execute($this->getArray());
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        return [];
+            return [];
         } finally {
-        $conexion->disconnect();
+            $conexion->disconnect();
         }
     }
 
@@ -296,23 +291,23 @@ private $query;
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-        $baseSql = "SELECT p.fecha_pago, v.nro_venta, CONCAT(c.nombre, ' ', c.apellido) AS cliente, tp.nombre AS tipo_pago, p.referencia, p.monto FROM pagos p JOIN venta v ON p.idventa = v.idventa JOIN cliente c ON v.idcliente = c.idcliente JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago WHERE p.idventa IS NOT NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
-        $this->setArray([$fecha_desde, $fecha_hasta]);
+            $baseSql = "SELECT p.fecha_pago, v.nro_venta, CONCAT(c.nombre, ' ', c.apellido) AS cliente, tp.nombre AS tipo_pago, p.referencia, p.monto FROM pagos p JOIN venta v ON p.idventa = v.idventa JOIN cliente c ON v.idcliente = c.idcliente JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago WHERE p.idventa IS NOT NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
+            $this->setArray([$fecha_desde, $fecha_hasta]);
 
-        if (!empty($idtipo_pago)) {
-            $baseSql .= " AND p.idtipo_pago = ?";
-            $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
-        }
-        $baseSql .= " ORDER BY p.fecha_pago ASC";
-        $this->setQuery($baseSql);
+            if (!empty($idtipo_pago)) {
+                $baseSql .= " AND p.idtipo_pago = ?";
+                $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
+            }
+            $baseSql .= " ORDER BY p.fecha_pago ASC";
+            $this->setQuery($baseSql);
 
-        $stmt = $db->prepare($this->getQuery());
-        $stmt->execute($this->getArray());
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        return [];
+            return [];
         } finally {
-        $conexion->disconnect();
+            $conexion->disconnect();
         }
     }
 
@@ -322,28 +317,28 @@ private $query;
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-        $baseSql = "SELECT CASE WHEN p.idcompra IS NOT NULL THEN 'Compras' WHEN p.idsueldotemp IS NOT NULL THEN 'Sueldos' ELSE 'Otros Egresos' END AS categoria, SUM(p.monto) AS total FROM pagos p WHERE p.idventa IS NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
-        $this->setArray([$fecha_desde, $fecha_hasta]);
+            $baseSql = "SELECT CASE WHEN p.idcompra IS NOT NULL THEN 'Compras' WHEN p.idsueldotemp IS NOT NULL THEN 'Sueldos' ELSE 'Otros Egresos' END AS categoria, SUM(p.monto) AS total FROM pagos p WHERE p.idventa IS NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
+            $this->setArray([$fecha_desde, $fecha_hasta]);
 
-        if (!empty($idtipo_pago)) {
-            $baseSql .= " AND p.idtipo_pago = ?";
-            $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
-        }
-        if (!empty($tipo_egreso)) {
-            if ($tipo_egreso === "Compras") $baseSql .= " AND p.idcompra IS NOT NULL";
-            elseif ($tipo_egreso === "Sueldos") $baseSql .= " AND p.idsueldotemp IS NOT NULL";
-            elseif ($tipo_egreso === "Otros Egresos") $baseSql .= " AND p.idcompra IS NULL AND p.idsueldotemp IS NULL";
-        }
-        $baseSql .= " GROUP BY categoria HAVING SUM(p.monto) > 0";
-        $this->setQuery($baseSql);
+            if (!empty($idtipo_pago)) {
+                $baseSql .= " AND p.idtipo_pago = ?";
+                $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
+            }
+            if (!empty($tipo_egreso)) {
+                if ($tipo_egreso === "Compras") $baseSql .= " AND p.idcompra IS NOT NULL";
+                elseif ($tipo_egreso === "Sueldos") $baseSql .= " AND p.idsueldotemp IS NOT NULL";
+                elseif ($tipo_egreso === "Otros Egresos") $baseSql .= " AND p.idcompra IS NULL AND p.idsueldotemp IS NULL";
+            }
+            $baseSql .= " GROUP BY categoria HAVING SUM(p.monto) > 0";
+            $this->setQuery($baseSql);
 
-        $stmt = $db->prepare($this->getQuery());
-        $stmt->execute($this->getArray());
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        return [];
+            return [];
         } finally {
-        $conexion->disconnect();
+            $conexion->disconnect();
         }
     }
 
@@ -353,28 +348,28 @@ private $query;
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-        $baseSql = "SELECT p.fecha_pago, CASE WHEN p.idcompra IS NOT NULL THEN CONCAT('Compra #', c.nro_compra) WHEN p.idsueldotemp IS NOT NULL THEN 'Pago de Sueldo' ELSE p.observaciones END AS descripcion, tp.nombre AS tipo_pago, p.referencia, p.monto FROM pagos p JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago LEFT JOIN compra c ON p.idcompra = c.idcompra WHERE p.idventa IS NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
-        $this->setArray([$fecha_desde, $fecha_hasta]);
+            $baseSql = "SELECT p.fecha_pago, CASE WHEN p.idcompra IS NOT NULL THEN CONCAT('Compra #', c.nro_compra) WHEN p.idsueldotemp IS NOT NULL THEN 'Pago de Sueldo' ELSE p.observaciones END AS descripcion, tp.nombre AS tipo_pago, p.referencia, p.monto FROM pagos p JOIN tipos_pagos tp ON p.idtipo_pago = tp.idtipo_pago LEFT JOIN compra c ON p.idcompra = c.idcompra WHERE p.idventa IS NULL AND p.estatus = 'conciliado' AND p.fecha_pago BETWEEN ? AND ?";
+            $this->setArray([$fecha_desde, $fecha_hasta]);
 
-        if (!empty($idtipo_pago)) {
-            $baseSql .= " AND p.idtipo_pago = ?";
-            $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
-        }
-        if (!empty($tipo_egreso)) {
-            if ($tipo_egreso === "Compras") $baseSql .= " AND p.idcompra IS NOT NULL";
-            elseif ($tipo_egreso === "Sueldos") $baseSql .= " AND p.idsueldotemp IS NOT NULL";
-            elseif ($tipo_egreso === "Otros Egresos") $baseSql .= " AND p.idcompra IS NULL AND p.idsueldotemp IS NULL";
-        }
-        $baseSql .= " ORDER BY p.fecha_pago ASC";
-        $this->setQuery($baseSql);
+            if (!empty($idtipo_pago)) {
+                $baseSql .= " AND p.idtipo_pago = ?";
+                $this->setArray(array_merge($this->getArray(), [$idtipo_pago]));
+            }
+            if (!empty($tipo_egreso)) {
+                if ($tipo_egreso === "Compras") $baseSql .= " AND p.idcompra IS NOT NULL";
+                elseif ($tipo_egreso === "Sueldos") $baseSql .= " AND p.idsueldotemp IS NOT NULL";
+                elseif ($tipo_egreso === "Otros Egresos") $baseSql .= " AND p.idcompra IS NULL AND p.idsueldotemp IS NULL";
+            }
+            $baseSql .= " ORDER BY p.fecha_pago ASC";
+            $this->setQuery($baseSql);
 
-        $stmt = $db->prepare($this->getQuery());
-        $stmt->execute($this->getArray());
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        return [];
+            return [];
         } finally {
-        $conexion->disconnect();
+            $conexion->disconnect();
         }
     }
 
@@ -402,21 +397,21 @@ private $query;
                 INNER JOIN producto p ON dc.idproducto = p.idproducto
                 WHERE c.fecha BETWEEN ? AND ?
                 AND c.estatus_compra IN ('BORRADOR', 'POR_AUTORIZAR', 'AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')";
-            
+
             $params = [$fecha_desde, $fecha_hasta];
-            
+
             if ($idproveedor) {
                 $sql .= " AND c.idproveedor = ?";
                 $params[] = $idproveedor;
             }
-            
+
             if ($idproducto) {
                 $sql .= " AND dc.idproducto = ?";
                 $params[] = $idproducto;
             }
-            
+
             $sql .= " ORDER BY c.fecha DESC, c.nro_compra DESC";
-            
+
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -427,7 +422,7 @@ private $query;
         }
     }
 
-   
+
     public function getKPIsEjecutivos()
     {
         $conexion = new Conexion();
@@ -438,13 +433,13 @@ private $query;
             $stmt = $db->prepare("SELECT 
                 CAST(COALESCE(
                     (SELECT (SUM(v.total_general) - (SELECT COALESCE(SUM(c.total_general), 0) FROM compra c WHERE MONTH(c.fecha) = MONTH(CURDATE()))) / NULLIF(SUM(v.total_general), 0) * 100
-                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'activo'), 0
+                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'PAGADA'), 0
                 ) AS DECIMAL(10,2)) as margen_ganancia,
                 
                 CAST(COALESCE(
-                    (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()))) / 
-                    NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE())), 0)) * 100
-                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'activo'), 0
+                    (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND estatus_compra = 'PAGADA')) / 
+                    NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND estatus_compra = 'PAGADA'), 0)) * 100
+                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'PAGADA'), 0
                 ) AS DECIMAL(10,2)) as roi_mes,
                 
                 CAST(COALESCE(
@@ -456,7 +451,7 @@ private $query;
                     FROM registro_produccion 
                     WHERE estatus = 'CALCULADO' AND MONTH(fecha_jornada) = MONTH(CURDATE())), 0
                 ) AS DECIMAL(10,2)) as productividad_general");
-            
+
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
@@ -479,7 +474,7 @@ private $query;
                 AVG(total_general) as ticket_promedio
                 FROM venta 
                 WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                AND estatus = 'activo'
+                AND estatus = 'PAGADA'
                 GROUP BY periodo 
                 ORDER BY periodo ASC");
             $stmt->execute();
@@ -509,7 +504,7 @@ private $query;
                         SUM(dv.cantidad * dv.precio_unitario_venta) as ingresos
                     FROM detalle_venta dv
                     INNER JOIN venta v ON dv.idventa = v.idventa
-                    WHERE v.estatus = 'activo'
+                    WHERE v.estatus = 'PAGADA'
                     GROUP BY dv.idproducto
                 ) ventas ON p.idproducto = ventas.idproducto
                 LEFT JOIN (
@@ -518,7 +513,7 @@ private $query;
                         SUM(dc.cantidad * dc.precio_unitario_compra) as costos
                     FROM detalle_compra dc
                     INNER JOIN compra c ON dc.idcompra = c.idcompra
-                    WHERE c.estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')
+                    WHERE c.estatus_compra = 'PAGADA'
                     GROUP BY dc.idproducto
                 ) compras ON p.idproducto = compras.idproducto
                 WHERE p.estatus = 'activo'
@@ -548,15 +543,15 @@ private $query;
                 FROM empleado e
                 LEFT JOIN registro_produccion rp ON e.idempleado = rp.idempleado
                 WHERE e.estatus = 'Activo'";
-            
+
             $params = [];
-            
+
             if ($fecha_desde && $fecha_hasta) {
                 $sql .= " AND rp.fecha_jornada BETWEEN ? AND ?";
                 $params[] = $fecha_desde;
                 $params[] = $fecha_hasta;
             }
-            
+
             if (!empty($idempleado)) {
                 $sql .= " AND e.idempleado = ?";
                 $params[] = $idempleado;
@@ -565,9 +560,9 @@ private $query;
                 $sql .= " AND rp.estatus = ?";
                 $params[] = $estado;
             }
-            
+
             $sql .= " GROUP BY e.idempleado, empleado_nombre ORDER BY ordenes_completadas DESC";
-            
+
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -590,16 +585,16 @@ private $query;
                 COUNT(*) as cantidad,
                 SUM(volumen_estimado) as total_kg
                 FROM lotes_produccion";
-            
+
             if ($fecha_desde && $fecha_hasta) {
                 $sql .= " WHERE fecha_jornada BETWEEN ? AND ?";
                 $params = [$fecha_desde, $fecha_hasta];
             } else {
                 $params = [];
             }
-            
+
             $sql .= " GROUP BY estatus_lote ORDER BY cantidad DESC";
-            
+
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -623,14 +618,14 @@ private $query;
                 SUM(CASE WHEN rp.estatus = 'BORRADOR' THEN 1 ELSE 0 END) as tareas_pendientes
                 FROM registro_produccion rp
                 INNER JOIN lotes_produccion lp ON rp.idlote = lp.idlote";
-            
+
             if ($fecha_desde && $fecha_hasta) {
                 $sql .= " WHERE rp.fecha_jornada BETWEEN ? AND ?";
                 $params = [$fecha_desde, $fecha_hasta];
             } else {
                 $params = [];
             }
-            
+
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
             return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -641,7 +636,7 @@ private $query;
         }
     }
 
-    public function getTopClientes($limit = 10)
+    public function getTopClientes()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -655,12 +650,12 @@ private $query;
                 AVG(v.total_general) as ticket_promedio
                 FROM cliente c
                 JOIN venta v ON c.idcliente = v.idcliente
-                WHERE c.estatus = 'activo' AND v.estatus = 'activo'
+                WHERE c.estatus = 'activo' AND v.estatus = 'PAGADA'
                 GROUP BY c.idcliente, cliente_nombre
                 HAVING total_comprado > 0
                 ORDER BY total_comprado DESC
-                LIMIT :limit");
-            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+                LIMIT 10");
+           
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
@@ -670,25 +665,14 @@ private $query;
         }
     }
 
-    public function getTopProveedores($limit = 10)
+    public function getTopProveedores()
     {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-            $stmt = $db->prepare("SELECT 
-                pr.idproveedor,
-                CONCAT(pr.nombre, ' ', pr.apellido) as proveedor_nombre,
-                COUNT(c.idcompra) as num_compras,
-                SUM(c.total_general) as total_comprado
-                FROM proveedor pr
-                JOIN compra c ON pr.idproveedor = c.idproveedor
-                WHERE pr.estatus = 'activo'
-                GROUP BY pr.idproveedor, proveedor_nombre
-                HAVING total_comprado > 0
-                ORDER BY total_comprado DESC
-                LIMIT :limit");
-            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt = $db->prepare("SELECT pr.idproveedor, CONCAT(pr.nombre, ' ', pr.apellido) as proveedor_nombre, COUNT(c.idcompra) as num_compras, SUM(c.total_general) as total_comprado FROM proveedor pr JOIN compra c ON pr.idproveedor = c.idproveedor WHERE pr.estatus = 'activo' GROUP BY pr.idproveedor, proveedor_nombre HAVING total_comprado > 0 ORDER BY total_comprado DESC LIMIT 10;");
+          
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
@@ -710,7 +694,7 @@ private $query;
                 COALESCE(SUM(CASE WHEN fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN total_general ELSE 0 END), 0) as ayer,
                 COALESCE(SUM(CASE WHEN YEARWEEK(fecha_venta, 1) = YEARWEEK(CURDATE(), 1) THEN total_general ELSE 0 END), 0) as esta_semana,
                 COALESCE(SUM(CASE WHEN MONTH(fecha_venta) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) THEN total_general ELSE 0 END), 0) as mes_pasado
-                FROM venta WHERE estatus = 'activo'
+                FROM venta WHERE estatus = 'PAGADA'
                 
                 UNION ALL
                 
@@ -720,7 +704,7 @@ private $query;
                 COUNT(CASE WHEN fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN 1 END) as ayer,
                 COUNT(CASE WHEN YEARWEEK(fecha, 1) = YEARWEEK(CURDATE(), 1) THEN 1 END) as esta_semana,
                 COUNT(CASE WHEN MONTH(fecha) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) THEN 1 END) as mes_pasado
-                FROM compra WHERE estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')
+                FROM compra WHERE estatus_compra = 'PAGADA'
                 
                 UNION ALL
                 
@@ -731,7 +715,7 @@ private $query;
                 COUNT(CASE WHEN YEARWEEK(fecha_fin_real, 1) = YEARWEEK(CURDATE(), 1) AND estatus_lote = 'FINALIZADO' THEN 1 END) as esta_semana,
                 COUNT(CASE WHEN MONTH(fecha_fin_real) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND estatus_lote = 'FINALIZADO' THEN 1 END) as mes_pasado
                 FROM lotes_produccion");
-            
+
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
@@ -741,37 +725,61 @@ private $query;
         }
     }
 
-      // --- Métodos Públicos---
+    // --- Métodos Públicos---
 
 
-  public function getTareasPendientes()
-  {
-    return []; 
-  }
+    public function getTareasPendientes()
+    {
+        return [];
+    }
 
 
-  public function getTiposDePago()
-  {
-    return $this->ejecutarGetTiposDePago();
-  }
+    public function getTiposDePago()
+    {
+        return $this->ejecutarGetTiposDePago();
+    }
 
-  public function getIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null)
-  {
-    return $this->ejecutarGetIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago);
-  }
+    public function getIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null)
+    {
+        return $this->ejecutarGetIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago);
+    }
 
-  public function getIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null)
-  {
-    return $this->ejecutarGetIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago);
-  }
+    public function getIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null)
+    {
+        return $this->ejecutarGetIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago);
+    }
 
-  public function getEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
-  {
-    return $this->ejecutarGetEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
-  }
+    public function getEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
+    {
+        return $this->ejecutarGetEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+    }
 
-  public function getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
-  {
-    return $this->ejecutarGetEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
-  }
+    public function getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
+    {
+        return $this->ejecutarGetEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+    }
+
+    /**
+     * Obtiene los movimientos de inventario (entradas/salidas) del mes actual
+     * @return array [entradas => int, salidas => int]
+     */
+    public function getMovimientosInventarioMes()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            $stmt = $db->prepare("SELECT 
+                SUM(CASE WHEN cantidad_entrada > 0 THEN 1 ELSE 0 END) as entradas,
+                SUM(CASE WHEN cantidad_salida > 0 THEN 1 ELSE 0 END) as salidas
+                FROM movimientos_existencia 
+                WHERE estatus = 'activo' AND MONTH(fecha_creacion) = MONTH(CURDATE())");
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            return ['entradas' => 0, 'salidas' => 0];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
 }

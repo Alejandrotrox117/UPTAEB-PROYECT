@@ -1,3 +1,4 @@
+   
 <?php
 
 require_once "app/core/Controllers.php";
@@ -474,9 +475,8 @@ class Produccion extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
-                $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
-                $fechaFin = $_GET['fecha_fin'] ?? date('Y-m-d');
-                $arrResponse = $this->model->selectRegistrosNomina($fechaInicio, $fechaFin);
+               
+                $arrResponse = $this->model->selectRegistrosNomina();
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
                 error_log("Error en getRegistrosNomina: " . $e->getMessage());
@@ -995,5 +995,27 @@ class Produccion extends Controllers
             die();
         }
     }
+    public function registrarSolicitudPago()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents('php://input');
+                $request = json_decode($postdata, true);
+                $registros = $request['registros'] ?? [];
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                $arrResponse = $this->model->registrarSolicitudPago($registros);
+                if ($arrResponse['status'] === true) {
+                    $this->bitacoraModel->registrarAccion('sueldo_produccion', 'SOLICITUD_PAGO', $idusuario);
+                }
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en registrarSolicitudPago: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
 }
+ 
 ?>

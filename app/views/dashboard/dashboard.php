@@ -48,7 +48,7 @@ select::-ms-expand {
       </div>
       <div>
         <h2 class="text-gray-500 text-sm font-medium">Ventas de Hoy</h2>
-        <p id="ventasHoy" class="text-2xl font-bold text-gray-800">$0.00</p>
+        <p id="ventasHoy" class="text-lg font-bold text-gray-800">$0.00</p>
         <p id="ventasHoyComparacion" class="text-xs text-green-600">↑ +0% vs ayer</p>
       </div>
     </div>
@@ -59,7 +59,7 @@ select::-ms-expand {
       </div>
       <div>
         <h2 class="text-gray-500 text-sm font-medium">Compras de Hoy</h2>
-        <p id="comprasHoy" class="text-2xl font-bold text-gray-800">$0.00</p>
+        <p id="comprasHoy" class="text-lg font-bold text-gray-800">$0.00</p>
         <p id="comprasHoyComparacion" class="text-xs text-red-600">↓ -0% vs ayer</p>
       </div>
     </div>
@@ -70,7 +70,7 @@ select::-ms-expand {
       </div>
       <div>
         <h2 class="text-gray-500 text-sm font-medium">Valor Inventario</h2>
-        <p id="inventarioTotal" class="text-2xl font-bold text-gray-800">$0.00</p>
+        <p id="inventarioTotal" class="text-lg font-bold text-gray-800">$0.00</p>
         <p id="productosRotacion" class="text-xs text-blue-600">0 productos en rotación</p>
       </div>
     </div>
@@ -81,7 +81,7 @@ select::-ms-expand {
       </div>
       <div>
         <h2 class="text-gray-500 text-sm font-medium">Producciones Activas</h2>
-        <p id="empleadosActivos" class="text-2xl font-bold text-gray-800">0</p>
+        <p id="empleadosActivos" class="text-lg font-bold text-gray-800">0</p>
         <p id="eficienciaPromedio" class="text-xs text-purple-600">0% eficiencia promedio</p>
       </div>
     </div>
@@ -330,7 +330,7 @@ select::-ms-expand {
     </div>
   </div>
 
-  <div id="produccionAvanzada" class="report-section">
+  <div id="produccion" class="report-section">
     <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
       <h2 class="text-xl font-semibold text-gray-800 mb-4">Centro de Control de Producción</h2>
 

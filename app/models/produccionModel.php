@@ -1,3 +1,5 @@
+
+   
 <?php
 require_once "app/core/conexion.php";
 require_once "app/core/mysql.php";
@@ -899,7 +901,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    public function selectRegistrosNomina(string $fechaInicio, string $fechaFin)
+    public function selectRegistrosNomina()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -907,6 +909,7 @@ class ProduccionModel extends Mysql
 
         try {
             $query = "SELECT 
+                rp.idregistro,
                 DATE_FORMAT(rp.fecha_jornada, '%d/%m/%Y') as fecha,
                 CONCAT(e.nombre, ' ', e.apellido) as operario,
                 rp.kg_clasificados,
@@ -919,11 +922,11 @@ class ProduccionModel extends Mysql
             FROM registro_produccion rp
             INNER JOIN empleado e ON rp.idempleado = e.idempleado
             INNER JOIN lotes_produccion l ON rp.idlote = l.idlote
-            WHERE rp.fecha_jornada BETWEEN ? AND ?
+           
             ORDER BY rp.fecha_jornada DESC, e.nombre ASC";
 
             $stmt = $db->prepare($query);
-            $stmt->execute([$fechaInicio, $fechaFin]);
+            $stmt->execute();
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return [
@@ -1304,5 +1307,96 @@ class ProduccionModel extends Mysql
         ]);
 
         return $db->lastInsertId();
+    }
+     public function registrarSolicitudPago(array $registros = [])
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            // Si no se pasan registros, buscar todos en estatus 'BORRADOR'
+            if (empty($registros)) {
+                $query = "SELECT idregistro FROM registro_produccion WHERE estatus = 'BORRADOR'";
+                $stmt = $db->prepare($query);
+                $stmt->execute();
+                $registros = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'idregistro');
+            }
+            if (empty($registros)) {
+                error_log('[NOMINA] No hay registros en estado BORRADOR para registrar pago.');
+                return [
+                    'status' => false,
+                    'message' => 'No hay registros en estado BORRADOR para registrar pago.',
+                    'data' => []
+                ];
+            }
+            $db->beginTransaction();
+            $insertados = 0;
+            $errores = [];
+            foreach ($registros as $idregistro) {
+                // Obtener datos del registro SOLO en BORRADOR
+                $query = "SELECT * FROM registro_produccion WHERE idregistro = ? AND estatus = 'BORRADOR'";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$idregistro]);
+                $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!$registro) {
+                    $errores[] = "Registro no encontrado o estatus incorrecto: idregistro=$idregistro";
+                    continue;
+                }
+                // Validar campos requeridos
+                if (empty($registro['idempleado']) || empty($registro['fecha_jornada'])) {
+                    $errores[] = "Campos requeridos vacíos en registro idregistro=$idregistro: idempleado={$registro['idempleado']}, fecha_jornada={$registro['fecha_jornada']}, salario_total=" . ($registro['salario_total'] ?? 'NULL');
+                    continue;
+                }
+                // Permitir salario_total en 0 si no está definido
+                $monto = isset($registro['salario_total']) ? $registro['salario_total'] : 0;
+                // Asumimos idmoneda=2 para USD
+                // Consultar el idmoneda correspondiente a USD
+                $queryMoneda = "SELECT idmoneda FROM monedas WHERE codigo_moneda = 'USD' AND estatus = 'activo' LIMIT 1";
+                $stmtMoneda = $db->prepare($queryMoneda);
+                $stmtMoneda->execute();
+                $idmoneda = $stmtMoneda->fetchColumn();
+                if (!$idmoneda) {
+                    $idmoneda = 2; // Valor por defecto si no se encuentra USD
+                }       try {
+                    $querySueldo = "INSERT INTO sueldos (idempleado, monto, idmoneda, observacion, estatus, fecha_creacion, fecha_modificacion) VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+                    $stmtSueldo = $db->prepare($querySueldo);
+                    $stmtSueldo->execute([
+                        $registro['idempleado'],
+                        $monto,
+                        $idmoneda,
+                        'Nómina generada desde producción',
+                        'POR_PAGAR'
+                    ]);
+                    // Actualizar estatus del registro
+                    $queryUpdate = "UPDATE registro_produccion SET estatus = 'ENVIADO' WHERE idregistro = ?";
+                    $stmtUpdate = $db->prepare($queryUpdate);
+                    $stmtUpdate->execute([$idregistro]);
+                    $insertados++;
+                } catch (Exception $e) {
+                    $errores[] = "Error SQL en registro idregistro=$idregistro: " . $e->getMessage();
+                }
+            }
+            $db->commit();
+            $msg = "Solicitud de pago registrada para {$insertados} registros.";
+            if (!empty($errores)) {
+                $msg .= " Errores: " . implode(' | ', $errores);
+                error_log('[NOMINA] ' . $msg);
+            }
+            return [
+                'status' => $insertados > 0,
+                'message' => $msg,
+                'data' => $registros
+            ];
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log("[NOMINA] Error al registrar solicitud de pago: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al registrar solicitud de pago: ' . $e->getMessage(),
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
     }
 }
