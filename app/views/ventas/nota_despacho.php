@@ -50,10 +50,15 @@
       $venta = $data['arrVenta']['venta'];
       $cliente = $venta['cliente_nombre'] ?? 'Cliente no especificado';
       
-      // Debug temporal para ver qué datos tenemos
-      echo "<!-- DEBUG VENTA: " . print_r($venta, true) . " -->";
-      echo "<!-- DEBUG DETALLES: " . print_r($data['arrVenta']['detalles'] ?? 'NO_DETALLES', true) . " -->";
-      echo "<!-- DEBUG ESTRUCTURA COMPLETA: " . print_r($data['arrVenta'], true) . " -->";
+      // Debug temporal para ver qué datos tenemos - VISIBLE EN PANTALLA
+      if (isset($_GET['debug'])) {
+        echo "<div style='background: yellow; padding: 20px; margin: 20px; border: 2px solid red;'>";
+        echo "<h3>DEBUG INFO:</h3>";
+        echo "<h4>VENTA:</h4><pre>" . htmlspecialchars(print_r($venta, true)) . "</pre>";
+        echo "<h4>DETALLES:</h4><pre>" . htmlspecialchars(print_r($data['arrVenta']['detalles'] ?? 'NO_DETALLES', true)) . "</pre>";
+        echo "<h4>ESTRUCTURA COMPLETA:</h4><pre>" . htmlspecialchars(print_r($data['arrVenta'], true)) . "</pre>";
+        echo "</div>";
+      }
     ?>
       
       <!-- Contenido de la Nota de Despacho -->
@@ -158,6 +163,13 @@
                 <?php 
                   $contador = 1;
                   $subtotal = 0;
+                  
+                  // DEBUG: Verificar qué datos tenemos
+                  echo "<!-- DEBUG - Verificando detalles: -->";
+                  echo "<!-- Existe detalles: " . (isset($data['arrVenta']['detalles']) ? 'SI' : 'NO') . " -->";
+                  echo "<!-- Es array: " . (is_array($data['arrVenta']['detalles'] ?? null) ? 'SI' : 'NO') . " -->";
+                  echo "<!-- Cantidad: " . count($data['arrVenta']['detalles'] ?? []) . " -->";
+                  echo "<!-- Contenido detalles: " . print_r($data['arrVenta']['detalles'] ?? 'VACIO', true) . " -->";
 
                   if(!empty($data['arrVenta']['detalles']) && count($data['arrVenta']['detalles']) > 0){
                       foreach ($data['arrVenta']['detalles'] as $producto) {
@@ -170,11 +182,6 @@
                     <div class="text-sm font-semibold text-gray-900 print:text-sm print:text-black print:font-semibold">
                       <?= htmlspecialchars($producto['nombre_producto'] ?? 'Producto sin nombre') ?>
                     </div>
-                    <?php if(!empty($producto['producto_codigo'])): ?>
-                    <div class="text-xs text-gray-500 print:text-xs print:text-gray-600">
-                      Código: <?= htmlspecialchars($producto['producto_codigo']) ?>
-                    </div>
-                    <?php endif; ?>
                   </td>
                   <td class="px-6 py-3 text-sm text-gray-600 border border-gray-400 print:px-4 print:py-2 print:text-sm print:text-gray-600 print:border print:border-gray-400">
                     <?= htmlspecialchars($producto['nombre_categoria'] ?? 'Sin categoría') ?>

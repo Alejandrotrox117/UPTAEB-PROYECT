@@ -652,6 +652,7 @@ class VentasModel // Eliminamos "extends Mysql"
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Consulta simplificada sin el campo codigo que no existe
             $this->setQuery(
                 "SELECT 
                 dv.iddetalle_venta,
@@ -660,21 +661,11 @@ class VentasModel // Eliminamos "extends Mysql"
                 dv.cantidad,
                 dv.precio_unitario_venta,
                 dv.subtotal_general,
-                0 as descuento_porcentaje_general,
-                dv.tasa_usada,
-                dv.peso_vehiculo,
-                dv.peso_bruto,
-                dv.peso_neto,
-                dv.idmoneda as id_moneda_detalle,
                 p.nombre as nombre_producto,
-                p.codigo as producto_codigo,
-                c.nombre as nombre_categoria,
-                m.codigo_moneda,
-                m.nombre_moneda
+                c.nombre as nombre_categoria
              FROM detalle_venta dv
              LEFT JOIN producto p ON dv.idproducto = p.idproducto
              LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
-             LEFT JOIN monedas m ON dv.idmoneda = m.idmoneda
              WHERE dv.idventa = ?
              ORDER BY dv.iddetalle_venta"
             );
@@ -924,6 +915,11 @@ class VentasModel // Eliminamos "extends Mysql"
 
             // Obtener detalles de la venta
             $detalles = $this->obtenerDetalleVentaCompleto($idventa);
+            
+            // Debug: Verificar qué devuelve obtenerDetalleVentaCompleto
+            error_log("DEBUG obtenerDetalleVentaCompleto - ID: $idventa");
+            error_log("DEBUG obtenerDetalleVentaCompleto - Resultado: " . print_r($detalles, true));
+            error_log("DEBUG obtenerDetalleVentaCompleto - Count: " . count($detalles));
 
             return [
                 'status' => true,

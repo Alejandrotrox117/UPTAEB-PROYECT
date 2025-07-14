@@ -1216,6 +1216,9 @@ class Ventas extends Controllers
             // Usar el método original que ya funciona
             $ventaData = $this->model->getVentaDetalle($idventa);
             
+            // Debug: Registrar lo que devuelve getVentaDetalle
+            error_log("DEBUG getVentaDetalle resultado: " . print_r($ventaData, true));
+            
             // Verificar si se obtuvieron los datos
             if (empty($ventaData) || !isset($ventaData['status']) || !$ventaData['status']) {
                 error_log("DEBUG: getVentaDetalle falló para ID: $idventa");
@@ -1225,6 +1228,9 @@ class Ventas extends Controllers
             
             // Estructurar los datos para la vista
             $data['arrVenta'] = $ventaData;
+            
+            // Debug: verificar datos antes de enviar a la vista
+            error_log("DEBUG datos enviados a vista: " . print_r($data['arrVenta'], true));
 
             $this->views->getView($this, "nota_despacho", $data);
             
