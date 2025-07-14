@@ -328,6 +328,12 @@ class PagosModel extends Mysql
                     cli.nombre as cliente_nombre,
                     cli.apellido as cliente_apellido,
                     cli.cedula as cliente_cedula,
+                    -- Información de sueldo/empleado (maneja personas y empleados)
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN CONCAT(COALESCE(emp.nombre, ''), ' ', COALESCE(emp.apellido, ''))
+                        WHEN s.idempleado IS NOT NULL THEN CONCAT(COALESCE(empl.nombre, ''), ' ', COALESCE(empl.apellido, ''))
+                        ELSE NULL
+                    END as empleado_nombre,
                     CASE 
                         WHEN p.idcompra IS NOT NULL THEN 'Compra'
                         WHEN p.idventa IS NOT NULL THEN 'Venta'
@@ -337,6 +343,12 @@ class PagosModel extends Mysql
                     CASE 
                         WHEN p.idcompra IS NOT NULL THEN CONCAT(COALESCE(prov.nombre, ''), ' ', COALESCE(prov.apellido, ''))
                         WHEN p.idventa IS NOT NULL THEN CONCAT(COALESCE(cli.nombre, ''), ' ', COALESCE(cli.apellido, ''))
+                        WHEN p.idsueldotemp IS NOT NULL THEN 
+                            CASE 
+                                WHEN s.idpersona IS NOT NULL THEN CONCAT(COALESCE(emp.nombre, ''), ' ', COALESCE(emp.apellido, ''))
+                                WHEN s.idempleado IS NOT NULL THEN CONCAT(COALESCE(empl.nombre, ''), ' ', COALESCE(empl.apellido, ''))
+                                ELSE 'Empleado no encontrado'
+                            END
                         ELSE 'Otro pago'
                     END as destinatario
                 FROM pagos p
@@ -346,6 +358,9 @@ class PagosModel extends Mysql
                 LEFT JOIN proveedor prov ON c.idproveedor = prov.idproveedor
                 LEFT JOIN venta v ON p.idventa = v.idventa  
                 LEFT JOIN cliente cli ON v.idcliente = cli.idcliente
+                LEFT JOIN sueldos s ON p.idsueldotemp = s.idsueldo
+                LEFT JOIN personas emp ON s.idpersona = emp.idpersona
+                LEFT JOIN empleado empl ON s.idempleado = empl.idempleado
                 WHERE p.idpago = ?"
             );
             
@@ -402,6 +417,7 @@ class PagosModel extends Mysql
             $this->setQuery(
                 "SELECT 
                     p.idpago,
+                    p.idsueldotemp,
                     p.monto,
                     p.referencia,
                     p.fecha_pago,
@@ -423,6 +439,12 @@ class PagosModel extends Mysql
                     cli.nombre as cliente_nombre,
                     cli.apellido as cliente_apellido,
                     cli.cedula as cliente_cedula,
+                    -- Información de sueldo/empleado (maneja personas y empleados)
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN CONCAT(COALESCE(emp.nombre, ''), ' ', COALESCE(emp.apellido, ''))
+                        WHEN s.idempleado IS NOT NULL THEN CONCAT(COALESCE(empl.nombre, ''), ' ', COALESCE(empl.apellido, ''))
+                        ELSE NULL
+                    END as empleado_nombre,
                     -- Determinar tipo y destinatario
                     CASE 
                         WHEN p.idcompra IS NOT NULL THEN 'Compra'
@@ -433,6 +455,12 @@ class PagosModel extends Mysql
                     CASE 
                         WHEN p.idcompra IS NOT NULL THEN CONCAT(COALESCE(prov.nombre, ''), ' ', COALESCE(prov.apellido, ''))
                         WHEN p.idventa IS NOT NULL THEN CONCAT(COALESCE(cli.nombre, ''), ' ', COALESCE(cli.apellido, ''))
+                        WHEN p.idsueldotemp IS NOT NULL THEN 
+                            CASE 
+                                WHEN s.idpersona IS NOT NULL THEN CONCAT(COALESCE(emp.nombre, ''), ' ', COALESCE(emp.apellido, ''))
+                                WHEN s.idempleado IS NOT NULL THEN CONCAT(COALESCE(empl.nombre, ''), ' ', COALESCE(empl.apellido, ''))
+                                ELSE 'Empleado no encontrado'
+                            END
                         ELSE 'Otro pago'
                     END as destinatario
                 FROM pagos p
@@ -442,6 +470,9 @@ class PagosModel extends Mysql
                 LEFT JOIN proveedor prov ON c.idproveedor = prov.idproveedor
                 LEFT JOIN venta v ON p.idventa = v.idventa  
                 LEFT JOIN cliente cli ON v.idcliente = cli.idcliente
+                LEFT JOIN sueldos s ON p.idsueldotemp = s.idsueldo
+                LEFT JOIN personas emp ON s.idpersona = emp.idpersona
+                LEFT JOIN empleado empl ON s.idempleado = empl.idempleado
                 ORDER BY p.idpago DESC, p.fecha_creacion DESC"
             );
             
@@ -622,8 +653,16 @@ class PagosModel extends Mysql
                 "SELECT 
                     s.idsueldo,
                     s.idsueldo as idsueldotemp, -- Mantener compatibilidad
-                    CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as empleado,
-                    CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as nombre_completo,
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN CONCAT(p.nombre, ' ', COALESCE(p.apellido, ''))
+                        WHEN s.idempleado IS NOT NULL THEN CONCAT(e.nombre, ' ', COALESCE(e.apellido, ''))
+                        ELSE 'Destinatario no encontrado'
+                    END as empleado,
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN CONCAT(p.nombre, ' ', COALESCE(p.apellido, ''))
+                        WHEN s.idempleado IS NOT NULL THEN CONCAT(e.nombre, ' ', COALESCE(e.apellido, ''))
+                        ELSE 'Destinatario no encontrado'
+                    END as nombre_completo,
                     ROUND(s.monto, 2) as monto,
                     ROUND(s.balance, 2) as balance,
                     s.idmoneda,
@@ -653,10 +692,12 @@ class PagosModel extends Mysql
                     s.observacion,
                     s.fecha_creacion
                 FROM sueldos s
-                INNER JOIN personas p ON s.idpersona = p.idpersona
+                LEFT JOIN personas p ON s.idpersona = p.idpersona
+                LEFT JOIN empleado e ON s.idempleado = e.idempleado
                 LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
                 WHERE s.estatus IN ('POR_PAGAR', 'PAGO_FRACCIONADO')
                 AND s.monto > 0
+                AND (s.idpersona IS NOT NULL OR s.idempleado IS NOT NULL)
                 ORDER BY s.fecha_creacion DESC"
             );
             

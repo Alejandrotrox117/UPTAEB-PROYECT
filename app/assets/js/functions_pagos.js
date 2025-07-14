@@ -175,7 +175,7 @@ window.conciliarPago = function (idPago, descripcion) {
 
 // ============================================
 // FUNCIONES AUXILIARES
-// ============================================ 
+// ============================================
 
 function mostrarModalPermisosDenegados(
   mensaje = "No tienes permisos para realizar esta acción."
@@ -328,11 +328,22 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
   if (settings.nTable.id !== "TablaPagos") {
     return true;
   }
+  
   var api = new $.fn.dataTable.Api(settings);
   var rowData = api.row(dataIndex).data();
-  return (
-    rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo"
-  );
+  
+  // Filtro por estatus (excluir inactivos)
+  if (!rowData || !rowData.estatus || rowData.estatus.toLowerCase() === "inactivo") {
+    return false;
+  }
+  
+  // Filtro por tipo de pago
+  const filtroTipo = $('#filtroTipoPago').val();
+  if (filtroTipo && rowData.tipo_pago_texto !== filtroTipo) {
+    return false;
+  }
+  
+  return true;
 });
 
 function inicializarTablaPagos() {
@@ -394,6 +405,14 @@ function inicializarTablaPagos() {
         data: "destinatario",
         title: "Destinatario",
         className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
+        render: function (data, type, row) {
+          // Si el pago tiene un ID de sueldo, mostrar el nombre del empleado
+          if (row.idsueldotemp && row.empleado_nombre) {
+            return row.empleado_nombre;
+          }
+          // Si no, mostrar el destinatario normal
+          return data || "N/A";
+        }
       },
       {
         data: "fecha_pago_formato",
@@ -555,7 +574,7 @@ function inicializarTablaPagos() {
     dom:
       "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4'" +
       "l" +
-      "<'flex items-center'Bf>" +
+      "<'flex items-center gap-2'<'filtro-tipo-pago'>Bf>" +
       ">" +
       "<'overflow-x-auto't>" +
       "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mt-4'i p>",
@@ -568,6 +587,26 @@ function inicializarTablaPagos() {
     className: "compact",
     initComplete: function (settings, json) {
       window.tablaPagos = this.api();
+      
+      // Crear el filtro de tipo de pago
+      const filtroContainer = $(settings.nTableWrapper).find('.filtro-tipo-pago');
+      filtroContainer.html(`
+        <div class="flex items-center gap-2">
+          <label for="filtroTipoPago" class="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrar por tipo:</label>
+          <select id="filtroTipoPago" class="py-1.5 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white min-w-[140px]">
+            <option value="">Todos</option>
+            <option value="Compra">Compras</option>
+            <option value="Venta">Ventas</option>
+            <option value="Sueldo">Sueldos</option>
+            <option value="Otro">Otros</option>
+          </select>
+        </div>
+      `);
+      
+      // Agregar funcionalidad al filtro
+      $('#filtroTipoPago').on('change', function() {
+        window.tablaPagos.draw(); // Redibujar la tabla para aplicar el filtro personalizado
+      });
     },
     drawCallback: function (settings) {
       $(settings.nTableWrapper)
@@ -585,7 +624,7 @@ function inicializarTablaPagos() {
       ) {
         api.fixedColumns().relayout();
       }
-    },
+    }
   });
 }
 
