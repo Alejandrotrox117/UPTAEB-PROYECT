@@ -9,10 +9,10 @@ class PDF extends FPDF
     function Header()
     {
         $this->SetFont("Arial", "B", 14);
-        $this->Cell(0, 7, utf8_decode("Recuperadora La Pradera de Pavia, C.A."), 0, 1, "C");
+        $this->Cell(0, 7, mb_convert_encoding("Recuperadora La Pradera de Pavia, C.A.", 'ISO-8859-1', 'UTF-8'), 0, 1, "C");
         $this->SetFont("Arial", "", 10);
         $this->Cell(0, 5, "RIF: J-40352739-3", 0, 1, "C");
-        $this->Cell(0, 5, utf8_decode("Ctra. Vieja a Carora, Km. 12, Pavia, Barquisimeto, Edo. Lara."), 0, 1, "C");
+        $this->Cell(0, 5, mb_convert_encoding("Ctra. Vieja a Carora, Km. 12, Pavia, Barquisimeto, Edo. Lara.", 'ISO-8859-1', 'UTF-8'), 0, 1, "C");
         $this->Cell(0, 5, "Telf: 0426-550.00.30", 0, 1, "C");
         $this->Ln(10);
     }
@@ -21,7 +21,7 @@ class PDF extends FPDF
     {
         $this->SetY(-15);
         $this->SetFont("Arial", "I", 8);
-        $this->Cell(0, 10, utf8_decode("Página ") . $this->PageNo() . "/{nb}", 0, 0, "C");
+        $this->Cell(0, 10, mb_convert_encoding("Página ", 'ISO-8859-1', 'UTF-8') . $this->PageNo() . "/{nb}", 0, 0, "C");
     }
 }
 
@@ -33,6 +33,18 @@ class Dashboard extends Controllers
     {
         parent::__construct();
         $this->model = new DashboardModel();
+    }
+
+    /**
+     * Helper method to replace deprecated utf8_decode function
+     * Converts UTF-8 text to ISO-8859-1 for PDF compatibility
+     */
+    private function convertTextForPDF($text)
+    {
+        if (empty($text)) {
+            return $text;
+        }
+        return mb_convert_encoding($text, 'ISO-8859-1', 'UTF-8');
     }
 
     public function index()
@@ -80,7 +92,7 @@ class Dashboard extends Controllers
         $fecha_desde_egresos = $this->validarYFormatearFecha($_GET["fecha_desde_egresos"] ?? null, "inicio");
         $fecha_hasta_egresos = $this->validarYFormatearFecha($_GET["fecha_hasta_egresos"] ?? null, "fin");
         $idtipo_pago_egresos = filter_var($_GET["idtipo_pago_egresos"] ?? null, FILTER_VALIDATE_INT) ?: null;
-        $tipo_egreso = filter_var($_GET["tipo_egreso"] ?? null, FILTER_SANITIZE_STRING);
+        $tipo_egreso = isset($_GET["tipo_egreso"]) ? trim(strip_tags($_GET["tipo_egreso"])) : null;
         $tipo_egreso = in_array($tipo_egreso, ["Compras", "Sueldos", "Otros Egresos"]) ? $tipo_egreso : null;
 
         if (!$this->validarRangoFechas($fecha_desde_ingresos, $fecha_hasta_ingresos) ||
@@ -109,7 +121,7 @@ class Dashboard extends Controllers
         $prod_fecha_desde = $this->validarYFormatearFecha($_GET["prod_fecha_desde"] ?? null, "inicio");
         $prod_fecha_hasta = $this->validarYFormatearFecha($_GET["prod_fecha_hasta"] ?? null, "fin");
         $prod_empleado = filter_var($_GET["prod_empleado"] ?? null, FILTER_VALIDATE_INT) ?: null;
-        $prod_estado = filter_var($_GET["prod_estado"] ?? '', FILTER_SANITIZE_STRING);
+        $prod_estado = isset($_GET["prod_estado"]) ? trim(strip_tags($_GET["prod_estado"])) : '';
 
         if (!$this->validarRangoFechas($prod_fecha_desde, $prod_fecha_hasta)) {
             http_response_code(400);
@@ -193,8 +205,8 @@ class Dashboard extends Controllers
             foreach ($ingresosDetallados as $pago) {
                 $pdf->Cell(20, 7, $pago["fecha_pago"], 1, 0);
                 $pdf->Cell(25, 7, $pago["nro_venta"], 1, 0);
-                $pdf->Cell(60, 7, utf8_decode($pago["cliente"]), 1, 0);
-                $pdf->Cell(30, 7, utf8_decode($pago["tipo_pago"]), 1, 0);
+                $pdf->Cell(60, 7, mb_convert_encoding($pago["cliente"], 'ISO-8859-1', 'UTF-8'), 1, 0);
+                $pdf->Cell(30, 7, mb_convert_encoding($pago["tipo_pago"], 'ISO-8859-1', 'UTF-8'), 1, 0);
                 $pdf->Cell(30, 7, $pago["referencia"], 1, 0);
                 $pdf->Cell(30, 7, number_format($pago["monto"], 2, ",", ".") . " Bs.", 1, 1, "R");
                 $totalGeneral += $pago["monto"];
@@ -217,7 +229,7 @@ class Dashboard extends Controllers
             $pdf->Cell(195, 10, "Sin datos para resumir.", 1, 1, "C");
         } else {
             foreach ($ingresosResumen as $resumen) {
-                $pdf->Cell(135, 7, utf8_decode($resumen["categoria"]), 1, 0);
+                $pdf->Cell(135, 7, mb_convert_encoding($resumen["categoria"], 'ISO-8859-1', 'UTF-8'), 1, 0);
                 $pdf->Cell(60, 7, number_format($resumen["total"], 2, ",", ".") . " Bs.", 1, 1, "R");
             }
         }
@@ -230,7 +242,7 @@ class Dashboard extends Controllers
         $fecha_desde = $this->validarYFormatearFecha($_GET["fecha_desde"] ?? null, "inicio");
         $fecha_hasta = $this->validarYFormatearFecha($_GET["fecha_hasta"] ?? null, "fin");
         $idtipo_pago = filter_var($_GET["idtipo_pago"] ?? null, FILTER_VALIDATE_INT) ?: null;
-        $tipo_egreso = filter_var($_GET["tipo_egreso"] ?? null, FILTER_SANITIZE_STRING);
+        $tipo_egreso = isset($_GET["tipo_egreso"]) ? trim(strip_tags($_GET["tipo_egreso"])) : null;
         $tipo_egreso = in_array($tipo_egreso, ["Compras", "Sueldos", "Otros Egresos"]) ? $tipo_egreso : null;
 
         if (!$this->validarRangoFechas($fecha_desde, $fecha_hasta)) {
@@ -265,8 +277,8 @@ class Dashboard extends Controllers
         } else {
             foreach ($egresosDetallados as $pago) {
                 $pdf->Cell(20, 7, $pago["fecha_pago"], 1, 0);
-                $pdf->Cell(75, 7, utf8_decode($pago["descripcion"]), 1, 0);
-                $pdf->Cell(30, 7, utf8_decode($pago["tipo_pago"]), 1, 0);
+                $pdf->Cell(75, 7, mb_convert_encoding($pago["descripcion"], 'ISO-8859-1', 'UTF-8'), 1, 0);
+                $pdf->Cell(30, 7, mb_convert_encoding($pago["tipo_pago"], 'ISO-8859-1', 'UTF-8'), 1, 0);
                 $pdf->Cell(30, 7, $pago["referencia"], 1, 0);
                 $pdf->Cell(40, 7, number_format($pago["monto"], 2, ",", ".") . " Bs.", 1, 1, "R");
                 $totalGeneral += $pago["monto"];
@@ -289,7 +301,7 @@ class Dashboard extends Controllers
             $pdf->Cell(195, 10, "Sin datos para resumir.", 1, 1, "C");
         } else {
             foreach ($egresosResumen as $resumen) {
-                $pdf->Cell(135, 7, utf8_decode($resumen["categoria"]), 1, 0);
+                $pdf->Cell(135, 7, mb_convert_encoding($resumen["categoria"], 'ISO-8859-1', 'UTF-8'), 1, 0);
                 $pdf->Cell(60, 7, number_format($resumen["total"], 2, ",", ".") . " Bs.", 1, 1, "R");
             }
         }
@@ -355,8 +367,8 @@ class Dashboard extends Controllers
             foreach ($compras as $item) {
                 $pdf->Cell(20, 7, $item["fecha"], 1, 0);
                 $pdf->Cell(25, 7, $item["nro_compra"], 1, 0);
-                $pdf->Cell(50, 7, utf8_decode($item["proveedor"]), 1, 0);
-                $pdf->Cell(60, 7, utf8_decode($item["producto"]), 1, 0);
+                $pdf->Cell(50, 7, mb_convert_encoding($item["proveedor"], 'ISO-8859-1', 'UTF-8'), 1, 0);
+                $pdf->Cell(60, 7, mb_convert_encoding($item["producto"], 'ISO-8859-1', 'UTF-8'), 1, 0);
                 $pdf->Cell(25, 7, number_format($item["cantidad"], 2, ",", "."), 1, 0, "R");
                 $pdf->Cell(30, 7, number_format($item["precio_unitario_compra"], 2, ",", "."), 1, 0, "R");
                 $pdf->Cell(30, 7, number_format($item["subtotal_linea"], 2, ",", "."), 1, 1, "R");
@@ -409,7 +421,7 @@ class Dashboard extends Controllers
 
         $pdf->SetFont("Arial", "", 8);
         foreach ($topClientes as $cliente) {
-            $pdf->Cell(90, 6, utf8_decode($cliente['cliente_nombre']), 1, 0);
+            $pdf->Cell(90, 6, mb_convert_encoding($cliente['cliente_nombre'], 'ISO-8859-1', 'UTF-8'), 1, 0);
             $pdf->Cell(30, 6, $cliente['num_compras'], 1, 0, "C");
             $pdf->Cell(35, 6, number_format($cliente['total_comprado'], 2, ',', '.'), 1, 0, "R");
             $pdf->Cell(35, 6, number_format($cliente['ticket_promedio'], 2, ',', '.'), 1, 1, "R");
@@ -427,7 +439,7 @@ class Dashboard extends Controllers
 
         $pdf->SetFont("Arial", "", 8);
         foreach ($topProveedores as $proveedor) {
-            $pdf->Cell(120, 6, utf8_decode($proveedor['proveedor_nombre']), 1, 0);
+            $pdf->Cell(120, 6, mb_convert_encoding($proveedor['proveedor_nombre'], 'ISO-8859-1', 'UTF-8'), 1, 0);
             $pdf->Cell(30, 6, $proveedor['num_compras'], 1, 0, "C");
             $pdf->Cell(40, 6, number_format($proveedor['total_comprado'], 2, ',', '.'), 1, 1, "R");
         }

@@ -1,5 +1,35 @@
 <?php headerAdmin($data); ?>
 
+<style>
+/* Estilos para eliminar completamente las flechas nativas de los select */
+select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: none !important;
+}
+
+/* Estilos específicos para Firefox */
+select::-moz-appearance {
+  -moz-appearance: none !important;
+}
+
+/* Estilos específicos para IE */
+select::-ms-expand {
+  display: none !important;
+}
+
+/* Asegurar que el icono personalizado esté visible */
+.select-custom-arrow {
+  pointer-events: none;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+}
+</style>
+
 <main class="flex-1 overflow-y-auto bg-gray-50 p-6 lg:p-8">
   <div id="dashboard-header" class="mb-8">
     <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
@@ -62,10 +92,11 @@
     <i class="fas fa-file-alt mr-1 text-indigo-500"></i> Selecciona un Reporte:
   </label>
 
-  <div class="relative">
+  <div class="relative max-w-md">
     <select
       id="selectorReporte"
-      class="w-full appearance-none rounded-xl border border-gray-300 bg-white py-2.5 px-4 pr-10 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition duration-200"
+      class="w-full appearance-none rounded-lg border border-gray-300 bg-white py-2 px-3 pr-8 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition duration-200"
+      style="appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none;"
     >
       <option value="">-- Selecciona un reporte --</option>
       <option value="reporteIngresosEgresos"> Reporte de Ingresos e Egresos</option>
@@ -78,42 +109,43 @@
       <option value="kpis"> KPIs</option>
     </select>
 
-    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-      <i class="fas fa-chevron-down text-sm"></i>
+    <div class="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400 select-custom-arrow">
+      <i class="fas fa-chevron-down text-xs"></i>
     </div>
   </div>
 </div>
 
   <div id="reporteIngresosEgresos" class="report-section">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <!-- Reporte de Ingresos -->
       <div class="bg-white p-6 rounded-xl shadow-sm">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-semibold text-gray-800">Reporte de Ingresos (Conciliados)</h2>
-          <div class="flex items-center gap-4">
-            <select id="tipoGraficoIngresos" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-              <option value="pie">Gráfico de Torta</option>
-              <option value="doughnut">Gráfico de Dona</option>
-              <option value="bar">Gráfico de Barras</option>
-              <option value="horizontalBar">Barras Horizontales</option>
+          <div class="flex items-center gap-2">
+            <select id="tipoGraficoIngresos" class="px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <option value="pie">Torta</option>
+              <option value="doughnut">Dona</option>
+              <option value="bar">Barras</option>
+              <option value="horizontalBar">H. Barras</option>
             </select>
-            <button id="btnDescargarIngresos" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
+            <button id="btnDescargarIngresos" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition">
               <i class="fas fa-download"></i>
-              <span>Descargar PDF</span>
+              <span>PDF</span>
             </button>
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <div>
-            <label for="fecha_desde_ingresos" class="text-sm font-medium text-gray-700">Desde:</label>
-            <input type="date" id="fecha_desde_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+            <label for="fecha_desde_ingresos" class="text-xs font-medium text-gray-700">Desde:</label>
+            <input type="date" id="fecha_desde_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs" />
           </div>
           <div>
-            <label for="fecha_hasta_ingresos" class="text-sm font-medium text-gray-700">Hasta:</label>
-            <input type="date" id="fecha_hasta_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+            <label for="fecha_hasta_ingresos" class="text-xs font-medium text-gray-700">Hasta:</label>
+            <input type="date" id="fecha_hasta_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs" />
           </div>
           <div>
-            <label for="filtro_tipo_pago_ingresos" class="text-sm font-medium text-gray-700">Tipo de Pago:</label>
-            <select id="filtro_tipo_pago_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            <label for="filtro_tipo_pago_ingresos" class="text-xs font-medium text-gray-700">Tipo de Pago:</label>
+            <select id="filtro_tipo_pago_ingresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
               <option value="">Todos</option>
               <?php foreach ($data['tipos_pago'] as $tipo): ?>
                 <option value="<?php echo $tipo['idtipo_pago']; ?>"><?php echo $tipo['nombre']; ?></option>
@@ -121,50 +153,63 @@
             </select>
           </div>
         </div>
-        <div id="error-ingresos" class="text-red-600 text-sm mb-2 h-4"></div>
+        <div id="error-ingresos" class="text-red-600 text-xs mb-2 h-4"></div>
         <div class="h-64 w-full"><canvas id="graficoIngresos"></canvas></div>
         <p class="text-right mt-4 font-bold text-lg text-gray-700">
           Total Ingresos: <span id="totalIngresos">$0.00</span>
         </p>
+      </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-800">Reporte de Egresos (Conciliados)</h2>
-            <div class="flex items-center gap-4">
-              <select id="tipoGraficoEgresos" class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="pie">Gráfico de Torta</option>
-                <option value="doughnut">Gráfico de Dona</option>
-                <option value="bar">Gráfico de Barras</option>
-                <option value="horizontalBar">Barras Horizontales</option>
-              </select>
-              <button id="btnDescargarEgresos" class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
-                <i class="fas fa-download"></i>
-                <span>Descargar PDF</span>
-              </button>
-            </div>
+      <!-- Reporte de Egresos -->
+      <div class="bg-white p-6 rounded-xl shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">Reporte de Egresos (Conciliados)</h2>
+          <div class="flex items-center gap-2">
+            <select id="tipoGraficoEgresos" class="px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <option value="pie">Torta</option>
+              <option value="doughnut">Dona</option>
+              <option value="bar">Barras</option>
+              <option value="horizontalBar">H. Barras</option>
+            </select>
+            <button id="btnDescargarEgresos" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition">
+              <i class="fas fa-download"></i>
+              <span>PDF</span>
+            </button>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <input type="date" id="fecha_desde_egresos" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Desde" />
-            <input type="date" id="fecha_hasta_egresos" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Hasta" />
-            <select id="filtro_tipo_pago_egresos" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-              <option value="">Tipo de Pago (Todos)</option>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div>
+            <label for="fecha_desde_egresos" class="text-xs font-medium text-gray-700">Desde:</label>
+            <input type="date" id="fecha_desde_egresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs" />
+          </div>
+          <div>
+            <label for="fecha_hasta_egresos" class="text-xs font-medium text-gray-700">Hasta:</label>
+            <input type="date" id="fecha_hasta_egresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs" />
+          </div>
+          <div>
+            <label for="filtro_tipo_pago_egresos" class="text-xs font-medium text-gray-700">Tipo de Pago:</label>
+            <select id="filtro_tipo_pago_egresos" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+              <option value="">Todos</option>
               <?php foreach ($data['tipos_pago'] as $tipo): ?>
                 <option value="<?php echo $tipo['idtipo_pago']; ?>"><?php echo $tipo['nombre']; ?></option>
               <?php endforeach; ?>
             </select>
-            <select id="filtro_tipo_egreso" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-              <option value="">Tipo de Egreso (Todos)</option>
+          </div>
+          <div>
+            <label for="filtro_tipo_egreso" class="text-xs font-medium text-gray-700">Tipo de Egreso:</label>
+            <select id="filtro_tipo_egreso" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-xs">
+              <option value="">Todos</option>
               <?php foreach ($data['tipos_egreso'] as $tipo): ?>
                 <option value="<?php echo $tipo; ?>"><?php echo $tipo; ?></option>
               <?php endforeach; ?>
             </select>
           </div>
-          <div id="error-egresos" class="text-red-600 text-sm mb-2 h-4"></div>
-          <div class="h-64 w-full"><canvas id="graficoEgresos"></canvas></div>
-          <p class="text-right mt-4 font-bold text-lg text-gray-700">
-            Total Egresos: <span id="totalEgresos">$0.00</span>
-          </p>
         </div>
+        <div id="error-egresos" class="text-red-600 text-xs mb-2 h-4"></div>
+        <div class="h-64 w-full"><canvas id="graficoEgresos"></canvas></div>
+        <p class="text-right mt-4 font-bold text-lg text-gray-700">
+          Total Egresos: <span id="totalEgresos">$0.00</span>
+        </p>
       </div>
     </div>
   </div>
