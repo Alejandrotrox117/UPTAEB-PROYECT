@@ -1180,6 +1180,16 @@ class Ventas extends Controllers
      */
     public function notaDespacho($idventa)
     {
+        // Debug: verificar el ID recibido
+        error_log("DEBUG notaDespacho: ID recibido = '$idventa'");
+        
+        // Validar que el ID sea un número válido
+        if (empty($idventa) || !is_numeric($idventa) || $idventa <= 0) {
+            error_log("DEBUG: ID inválido - '$idventa'");
+            header('Location: ' . base_url() . '/ventas?error=id_invalido');
+            exit();
+        }
+        
         // Verificar permisos básicos
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
             header('Location: ' . base_url() . '/login');
@@ -1202,15 +1212,18 @@ class Ventas extends Controllers
             $data['page_tag'] = "Nota de Despacho - Sistema de Ventas";
             $data['page_title'] = "Nota de Despacho <small>Sistema de Ventas</small>";
             $data['page_name'] = "Nota de Despacho";
+            
+            // Usar el método original que ya funciona
             $ventaData = $this->model->getVentaDetalle($idventa);
             
             // Verificar si se obtuvieron los datos
-            if (empty($ventaData) || !$ventaData['status'] || !isset($ventaData['venta'])) {
-                // Redirigir con mensaje de error si no se encontró la venta
+            if (empty($ventaData) || !isset($ventaData['status']) || !$ventaData['status']) {
+                error_log("DEBUG: getVentaDetalle falló para ID: $idventa");
                 header('Location: ' . base_url() . '/ventas?error=venta_no_encontrada');
                 exit();
             }
             
+            // Estructurar los datos para la vista
             $data['arrVenta'] = $ventaData;
 
             $this->views->getView($this, "nota_despacho", $data);

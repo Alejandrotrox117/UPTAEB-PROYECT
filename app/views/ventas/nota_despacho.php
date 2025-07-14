@@ -49,6 +49,11 @@
     <?php else: 
       $venta = $data['arrVenta']['venta'];
       $cliente = $venta['cliente_nombre'] ?? 'Cliente no especificado';
+      
+      // Debug temporal para ver qué datos tenemos
+      echo "<!-- DEBUG VENTA: " . print_r($venta, true) . " -->";
+      echo "<!-- DEBUG DETALLES: " . print_r($data['arrVenta']['detalles'] ?? 'NO_DETALLES', true) . " -->";
+      echo "<!-- DEBUG ESTRUCTURA COMPLETA: " . print_r($data['arrVenta'], true) . " -->";
     ?>
       
       <!-- Contenido de la Nota de Despacho -->
@@ -103,24 +108,6 @@
                 <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Cliente: </span>
                 <span class="text-gray-900 print:text-black"><?= htmlspecialchars($cliente ?: 'No especificado') ?></span>
               </div>
-              <?php if(!empty($venta['cliente_cedula'])): ?>
-              <div class="print:block">
-                <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Cédula: </span>
-                <span class="text-gray-900 print:text-black"><?= htmlspecialchars($venta['cliente_cedula']) ?></span>
-              </div>
-              <?php endif; ?>
-              <?php if(!empty($venta['cliente_telefono'])): ?>
-              <div class="print:block">
-                <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Teléfono: </span>
-                <span class="text-gray-900 print:text-black"><?= htmlspecialchars($venta['cliente_telefono']) ?></span>
-              </div>
-              <?php endif; ?>
-              <?php if(!empty($venta['cliente_direccion'])): ?>
-              <div class="print:block">
-                <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Dirección: </span>
-                <span class="text-gray-900 print:text-black"><?= htmlspecialchars($venta['cliente_direccion']) ?></span>
-              </div>
-              <?php endif; ?>
             </div>
           </div>
 
@@ -146,12 +133,6 @@
                 <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Moneda: </span>
                 <span class="text-gray-900 print:text-black"><?= htmlspecialchars($venta['codigo_moneda'] ?? 'VES') ?></span>
               </div>
-              <?php if(!empty($venta['observaciones'])): ?>
-              <div class="print:block">
-                <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Observaciones: </span>
-                <span class="text-gray-900 print:text-black"><?= htmlspecialchars($venta['observaciones']) ?></span>
-              </div>
-              <?php endif; ?>
             </div>
           </div>
         </div>
@@ -167,7 +148,7 @@
                 <tr class="bg-gray-200 text-gray-800 text-sm print:bg-gray-200 print:text-black print:text-sm">
                   <th class="px-6 py-4 text-center font-bold border border-gray-400 print:px-4 print:py-3 print:border print:border-gray-400 print:font-bold">#</th>
                   <th class="px-6 py-4 text-left font-bold border border-gray-400 print:px-4 print:py-3 print:border print:border-gray-400 print:font-bold">Producto</th>
-                  <th class="px-6 py-4 text-left font-bold border border-gray-400 print:px-4 print:py-3 print:border print:border-gray-400 print:font-bold">Descripción</th>
+                  <th class="px-6 py-4 text-left font-bold border border-gray-400 print:px-4 print:py-3 print:border print:border-gray-400 print:font-bold">Categoría</th>
                   <th class="px-6 py-4 text-center font-bold border border-gray-400 print:px-4 print:py-3 print:border print:border-gray-400 print:font-bold">Cantidad</th>
                   <th class="px-6 py-4 text-center font-bold border border-gray-400 print:px-4 print:py-3 print:border print:border-gray-400 print:font-bold">Precio Unit.</th>
                   <th class="px-6 py-4 text-center font-bold border border-gray-400 print:px-4 print:py-3 print:border print:border-gray-400 print:font-bold">Total</th>
@@ -180,23 +161,23 @@
 
                   if(!empty($data['arrVenta']['detalles']) && count($data['arrVenta']['detalles']) > 0){
                       foreach ($data['arrVenta']['detalles'] as $producto) {
-                          $total_linea = floatval($producto['subtotal_general'] ?? $producto['subtotal'] ?? 0);
+                          $total_linea = floatval($producto['subtotal_general'] ?? 0);
                           $subtotal += $total_linea;
                 ?>
                 <tr class="hover:bg-gray-50 transition-colors print:hover:bg-transparent bg-white print:bg-white">
                   <td class="px-6 py-3 text-center text-sm font-medium text-gray-900 border border-gray-400 print:px-4 print:py-2 print:text-sm print:text-black print:border print:border-gray-400"><?= $contador ?></td>
                   <td class="px-6 py-3 border border-gray-400 print:px-4 print:py-2 print:border print:border-gray-400">
                     <div class="text-sm font-semibold text-gray-900 print:text-sm print:text-black print:font-semibold">
-                      <?= htmlspecialchars($producto['nombre_producto'] ?? $producto['nombre'] ?? 'Producto sin nombre') ?>
+                      <?= htmlspecialchars($producto['nombre_producto'] ?? 'Producto sin nombre') ?>
                     </div>
-                    <?php if(!empty($producto['producto_codigo']) || !empty($producto['codigo_producto'])): ?>
+                    <?php if(!empty($producto['producto_codigo'])): ?>
                     <div class="text-xs text-gray-500 print:text-xs print:text-gray-600">
-                      Código: <?= htmlspecialchars($producto['producto_codigo'] ?? $producto['codigo_producto'] ?? '') ?>
+                      Código: <?= htmlspecialchars($producto['producto_codigo']) ?>
                     </div>
                     <?php endif; ?>
                   </td>
                   <td class="px-6 py-3 text-sm text-gray-600 border border-gray-400 print:px-4 print:py-2 print:text-sm print:text-gray-600 print:border print:border-gray-400">
-                    <?= htmlspecialchars($producto['descripcion_producto'] ?? $producto['descripcion'] ?? 'Sin descripción adicional') ?>
+                    <?= htmlspecialchars($producto['nombre_categoria'] ?? 'Sin categoría') ?>
                   </td>
                   <td class="px-6 py-3 text-center text-sm font-medium text-gray-900 border border-gray-400 print:px-4 print:py-2 print:text-sm print:text-black print:border print:border-gray-400">
                     <?= number_format($producto['cantidad'], 2) ?>
@@ -227,7 +208,7 @@
                     SUBTOTAL:
                   </th>
                   <td class="px-6 py-4 text-center text-lg font-bold text-gray-900 border border-gray-400 print:px-4 print:py-3 print:text-base print:text-black print:border print:border-gray-400 print:font-bold">
-                    <?= number_format($subtotal > 0 ? $subtotal : ($venta['subtotal_general'] ?? 0), 2) ?>
+                    <?= number_format($venta['total_general'] ?? 0, 2) ?>
                   </td>
                 </tr>
                 <?php if(isset($venta['descuento_porcentaje_general']) && $venta['descuento_porcentaje_general'] > 0): ?>
@@ -288,7 +269,24 @@
 <!-- CSS para impresión -->
 <style>
 @media print {
-  body { font-size: 12pt; }
+  /* Ocultar elementos que no deben aparecer en impresión */
+  nav, .navbar, header, .header, .sidebar, .print\:hidden { display: none !important; }
+  
+  /* Configuración general para impresión */
+  body { 
+    font-size: 12pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Asegurar que solo se imprima el contenido principal */
+  main { 
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
   .print\:hidden { display: none !important; }
   .print\:block { display: block !important; }
   .print\:text-black { color: black !important; }
