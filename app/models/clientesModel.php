@@ -727,5 +727,103 @@ class ClientesModel extends Mysql
             $conexion->disconnect();
         }
     }
+
+    /**
+     * Insertar cliente completo con todos los campos del modal
+     */
+    public function insertClienteCompleto(array $data){
+        $this->setData($data);
+        $dataArray = $this->getData();
+        $cedula = $dataArray['cedula'];
+
+        // Verificar si ya existe la cédula
+        if ($this->ejecutarVerificacionClientePorCedula($cedula)) {
+            return [
+                'status' => false,
+                'message' => 'La identificación ya está registrada. Por favor, utilice otra.',
+                'cliente_id' => null
+            ];
+        }
+
+        return $this->ejecutarInsercionClienteCompleto($this->getData());
+    }
+
+    /**
+     * Ejecutar inserción completa de cliente con todos los campos
+     */
+    private function ejecutarInsercionClienteCompleto(array $data){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
+            // Usar la misma tabla que el método original: cliente
+            $this->setQuery(
+                "INSERT INTO cliente (
+                    cedula, nombre, apellido, direccion, telefono_principal,
+                    estatus, observaciones, fecha_creacion, ultima_modificacion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ");
+            
+            $this->setArray([
+                $data['cedula'], // identificacion mapeada a cedula
+                $data['nombre'],
+                $data['apellido'],
+                $data['direccion'],
+                $data['telefono_principal'],
+                $data['estatus'] ?? 'Activo',
+                $data['observaciones'] ?? ''
+            ]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setClienteId($db->lastInsertId());
+            
+            if ($this->getClienteId()) {
+                $db->commit();
+                $this->setStatus(true);
+                $this->setMessage('Cliente registrado exitosamente.');
+            } else {
+                $db->rollBack();
+                $this->setStatus(false);
+                $this->setMessage('Error al obtener ID de cliente tras registro.');
+            }
+            
+            $resultado = [
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage(),
+                'cliente_id' => $this->getClienteId()
+            ];
+            
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            $conexion->disconnect();
+            error_log("Error al insertar cliente completo: " . $e->getMessage());
+            
+            // Manejar errores específicos de duplicación
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                if (strpos($e->getMessage(), 'cedula') !== false) {
+                    $mensaje = 'La identificación ya está registrada.';
+                } else {
+                    $mensaje = 'Ya existe un registro con estos datos.';
+                }
+            } else {
+                $mensaje = 'Error al registrar el cliente.';
+            }
+            
+            $resultado = [
+                'status' => false,
+                'message' => $mensaje,
+                'cliente_id' => null
+            ];
+        }
+        
+        $conexion->disconnect();
+        return $resultado;
+    }
 }
 ?>

@@ -242,7 +242,7 @@ headerAdmin($data);
       </div>
       <!-- Botones de Acción -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 print:hidden">
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <div class="flexre flex-col sm:flex-row gap-3 justify-center">
           <button id="printBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
             <i class="fas fa-print mr-2"></i>
             Imprimir Nota de Recepcion

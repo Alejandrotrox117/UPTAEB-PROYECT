@@ -111,72 +111,23 @@ $permisos = $data['permisos'] ?? []; ?>
             <div class="flex gap-2 mb-2">
               <input type="text" id="inputCriterioClienteModal" class="w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Nombre, Apellido o Identificación...">
               <button type="button" id="btnBuscarClienteModal" class="px-4 py-1.5 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 transition">Buscar</button>
+              <button type="button" id="btnLimpiarClienteModal" class="px-3 py-1.5 text-sm text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition hidden" title="Limpiar selección">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
             <input type="hidden" id="idcliente" name="idcliente"> <!-- ID del cliente para la VENTA -->
-            <div id="cliente_seleccionado_info_modal" class="p-1.5 mt-1 hidden rounded-md border border-gray-200 bg-gray-50 text-xs"></div>
+            <div id="cliente_seleccionado_info_modal" class="p-1.5 mt-1 hidden rounded-md border border-gray-200 bg-gray-50 text-xs relative">
+              <button type="button" id="btnEliminarClienteSeleccionado" class="absolute top-1 right-1 p-1 text-gray-400 hover:text-red-500 transition-colors" title="Eliminar cliente seleccionado">
+                <i class="fas fa-times text-xs"></i>
+              </button>
+            </div>
             <div id="listaResultadosClienteModal" class="z-10 mt-1 hidden max-h-20 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg"></div>
           </div>
 
-          <!-- Botón para MOSTRAR/OCULTAR el formulario de nuevo cliente -->
-          <button type="button" id="btnToggleNuevoCliente" class="px-4 py-2 mb-3 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition">
+          <!-- Botón para abrir el modal de registro de cliente -->
+          <button type="button" id="btnAbrirModalRegistrarCliente" class="px-4 py-2 mb-3 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition">
             <i class="mr-2 fas fa-user-plus"></i>Registrar Nuevo Cliente
           </button>
-
-          <!-- Contenedor para el formulario de nuevo cliente (inicialmente oculto) -->
-          <div id="nuevoClienteContainer" class="hidden p-3 mb-4 bg-gray-50 border border-gray-200 rounded-md">
-            <h3 class="pb-1 mb-2 text-gray-700 border-b text-md font-semibold">Datos del Nuevo Cliente</h3>
-            <!-- Aquí NO necesitas un <form> anidado, usarás los campos directamente -->
-            <div class="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
-              <!-- Campo oculto para el ID del cliente nuevo, si se registra y se quiere usar inmediatamente -->
-              <input type="hidden" id="idcliente_nuevo_hidden" name="idcliente_nuevo_formulario_hidden" value="" disabled>
-              <div>
-                <label for="cedula_nuevo" class="block mb-0.5 text-xs font-medium text-gray-600">Cédula <span class="text-red-500">*</span></label>
-                <input type="text" id="cedula_nuevo" name="cedula_nuevo_formulario" class="w-full px-2.5 py-1 text-xs border rounded-md focus:ring-1 focus:ring-green-400 focus:border-green-400" disabled>
-                <div id="error-cedula_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
-                <div id="error-cedula_nuevo-formato" class="mt-0.5 hidden text-xs text-red-500"></div>
-              </div>
-              <div>
-                <label for="nombre_nuevo" class="block mb-0.5 text-xs font-medium text-gray-600">Nombre <span class="text-red-500">*</span></label>
-                <input type="text" id="nombre_nuevo" name="nombre_nuevo_formulario" class="w-full px-2.5 py-1 text-xs border rounded-md focus:ring-1 focus:ring-green-400 focus:border-green-400" disabled>
-                <div id="error-nombre_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
-                <div id="error-nombre_nuevo-formato" class="mt-0.5 hidden text-xs text-red-500"></div>
-              </div>
-              <div>
-                <label for="apellido_nuevo" class="block mb-0.5 text-xs font-medium text-gray-600">Apellido <span class="text-red-500">*</span></label>
-                <input type="text" id="apellido_nuevo" name="apellido_nuevo_formulario" class="w-full px-2.5 py-1 text-xs border rounded-md focus:ring-1 focus:ring-green-400 focus:border-green-400" disabled>
-                <div id="error-apellido_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
-                <div id="error-apellido_nuevo-formato" class="mt-0.5 hidden text-xs text-red-500"></div>
-              </div>
-              <div>
-                <label for="telefono_principal_nuevo" class="block mb-0.5 text-xs font-medium text-gray-600">Teléfono <span class="text-red-500">*</span></label>
-                <input type="text" id="telefono_principal_nuevo" name="telefono_principal_nuevo_formulario" class="w-full px-2.5 py-1 text-xs border rounded-md focus:ring-1 focus:ring-green-400 focus:border-green-400" disabled>
-                <div id="error-telefono_principal_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
-                <div id="error-telefono_principal_nuevo-formato" class="mt-0.5 hidden text-xs text-red-500"></div>
-              </div>
-              <div class="md:col-span-2">
-                <label for="direccion_nuevo" class="block mb-0.5 text-xs font-medium text-gray-600">Dirección <span class="text-red-500">*</span></label>
-                <input type="text" id="direccion_nuevo" name="direccion_nuevo_formulario" class="w-full px-2.5 py-1 text-xs border rounded-md focus:ring-1 focus:ring-green-400 focus:border-green-400" disabled>
-                <div id="error-direccion_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
-                <div id="error-direccion_nuevo-formato" class="mt-0.5 hidden text-xs text-red-500"></div>
-              </div>
-              <div class="md:col-span-2">
-                <label for="observacionesCliente_nuevo" class="block mb-0.5 text-xs font-medium text-gray-600">Observaciones</label>
-                <textarea id="observacionesCliente_nuevo" name="observacionesCliente_nuevo_formulario" rows="1" class="w-full px-2.5 py-1 text-xs border rounded-md focus:ring-1 focus:ring-green-400 focus:border-green-400" disabled></textarea>
-                <div id="error-observacionesCliente_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
-                <div id="error-observacionesCliente_nuevo-formato" class="mt-0.5 hidden text-xs text-red-500"></div>
-              </div>
-              <div>
-                <label for="estatus_nuevo" class="block mb-0.5 text-xs font-medium text-gray-600">Estatus <span class="text-red-500">*</span></label>
-                <select id="estatus_nuevo" name="estatus_nuevo_formulario" class="w-full px-2.5 py-1 text-xs bg-white border rounded-md focus:ring-1 focus:ring-green-400 focus:border-green-400" disabled>
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                </select>
-                <div id="error-estatus_nuevo-vacio" class="mt-0.5 hidden text-xs text-red-500"></div>
-              </div>
-            </div>
-
-          </div>
-          <!-- FIN Contenedor para el formulario de nuevo cliente -->
 
           <!-- Sección Detalle de la Venta -->
           <div class="mb-4">
@@ -256,6 +207,106 @@ $permisos = $data['permisos'] ?? []; ?>
   </div>
 <?php endif; ?>
 
+
+<!-- Modal Registrar Cliente -->
+<div id="modalRegistrarCliente" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300">
+  <div class="w-full max-w-lg mx-4 bg-white rounded-xl shadow-xl transform scale-95 transition-transform duration-300">
+    <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-xl">
+      <h3 class="text-xl font-bold text-gray-800">
+        <i class="mr-2 text-green-600 fas fa-user-plus"></i>
+        Registrar Nuevo Cliente
+      </h3>
+      <button id="cerrarModalRegistrarClienteBtn" class="p-1 text-gray-400 transition-colors rounded-full hover:text-gray-600 hover:bg-gray-200">
+        <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <form id="formRegistrarCliente" class="px-6 py-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <!-- Campo oculto para ID -->
+        <input type="hidden" id="idcliente_modal" name="idcliente" value="">
+        
+        <div>
+          <label for="cedula_cliente_modal" class="block mb-2 text-gray-700 font-medium">
+            Cédula <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="cedula_cliente_modal" name="cedula" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="V-12345678" required>
+          <div id="error-cedula_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-cedula_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
+        </div>
+        
+        <div>
+          <label for="nombre_cliente_modal" class="block mb-2 text-gray-700 font-medium">
+            Nombre <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="nombre_cliente_modal" name="nombre" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="Ingrese el nombre" required>
+          <div id="error-nombre_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-nombre_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
+        </div>
+        
+        <div>
+          <label for="apellido_cliente_modal" class="block mb-2 text-gray-700 font-medium">
+            Apellido <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="apellido_cliente_modal" name="apellido" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="Ingrese el apellido" required>
+          <div id="error-apellido_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-apellido_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
+        </div>
+        
+        <div>
+          <label for="telefono_principal_cliente_modal" class="block mb-2 text-gray-700 font-medium">
+            Teléfono Principal <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="telefono_principal_cliente_modal" name="telefono_principal" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="04XX-XXXXXXX" required>
+          <div id="error-telefono_principal_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-telefono_principal_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
+        </div>
+        
+        <div class="md:col-span-2">
+          <label for="direccion_cliente_modal" class="block mb-2 text-gray-700 font-medium">
+            Dirección <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="direccion_cliente_modal" name="direccion" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="Ingrese la dirección completa" required>
+          <div id="error-direccion_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
+          <div id="error-direccion_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
+        </div>
+        
+        <div class="md:col-span-2">
+          <label for="observaciones_cliente_modal" class="block mb-2 text-gray-700 font-medium">
+            Observaciones
+          </label>
+          <input type="text" id="observaciones_cliente_modal" name="observaciones" 
+                 class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
+                 placeholder="Observaciones adicionales">
+          <div id="error-observaciones_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4 mt-6">
+        <button type="button" id="cancelarRegistrarClienteBtn" 
+                class="px-4 py-2 text-lg text-gray-800 transition bg-gray-200 rounded hover:bg-gray-300">
+          Cancelar
+        </button>
+        <button type="submit" id="registrarClienteBtn"
+                class="px-4 py-2 text-lg text-white transition bg-green-500 rounded hover:bg-green-600">
+          Registrar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Modal Detalle de Venta -->
 <div id="modalDetalleVenta" class="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 opacity-0 pointer-events-none transparent backdrop-blur-[2px] transition-opacity duration-300">

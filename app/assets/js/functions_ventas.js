@@ -166,14 +166,40 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // Función auxiliar para limpiar la selección de cliente
+  function limpiarSeleccionClienteCompleta() {
+    const inputCriterio = document.getElementById("inputCriterioClienteModal");
+    const inputIdCliente = document.getElementById("idcliente");
+    const divInfoCliente = document.getElementById("cliente_seleccionado_info_modal");
+    const listaResultados = document.getElementById("listaResultadosClienteModal");
+    const btnLimpiarCliente = document.getElementById("btnLimpiarClienteModal");
+
+    if (inputCriterio) inputCriterio.value = "";
+    if (inputIdCliente) inputIdCliente.value = "";
+    if (divInfoCliente) divInfoCliente.classList.add("hidden");
+    if (listaResultados) listaResultados.classList.add("hidden");
+    if (btnLimpiarCliente) btnLimpiarCliente.classList.add("hidden");
+    
+    // Limpiar validaciones relacionadas con el cliente si las hay
+    const errorClienteDiv = document.getElementById("error-idcliente-vacio");
+    if (errorClienteDiv) errorClienteDiv.classList.add("hidden");
+  }
+
   function limpiarFormularioVentaCompleto() {
     if (ventaForm) {
       ventaForm.reset();
       limpiarValidaciones(camposCabeceraVenta, "ventaForm");
     }
     resetYDeshabilitarFormClienteEmbebido();
+    
+    // Limpiar selección de cliente
+    limpiarSeleccionClienteCompleta();
+    
     if (detalleVentaBody) detalleVentaBody.innerHTML = "";
     if (noDetallesMsg) noDetallesMsg.classList.remove("hidden");
+
+    // Limpiar cliente original de edición
+    clienteOriginalEdicion = null;
 
     [
       "subtotal_general_display_modal",
@@ -394,6 +420,42 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  function inicializarBotonesLimpiarCliente() {
+    const btnLimpiarCliente = document.getElementById("btnLimpiarClienteModal");
+    const btnEliminarClienteSeleccionado = document.getElementById("btnEliminarClienteSeleccionado");
+    const inputCriterio = document.getElementById("inputCriterioClienteModal");
+
+    // Evento para el botón limpiar en el buscador
+    if (btnLimpiarCliente && !btnLimpiarCliente.dataset.listenerAttached) {
+      btnLimpiarCliente.dataset.listenerAttached = "true";
+      btnLimpiarCliente.addEventListener("click", function() {
+        limpiarSeleccionClienteCompleta();
+      });
+    }
+
+    // Evento para el botón eliminar en la información del cliente seleccionado
+    if (btnEliminarClienteSeleccionado && !btnEliminarClienteSeleccionado.dataset.listenerAttached) {
+      btnEliminarClienteSeleccionado.dataset.listenerAttached = "true";
+      btnEliminarClienteSeleccionado.addEventListener("click", function() {
+        limpiarSeleccionClienteCompleta();
+      });
+    }
+
+    // Mostrar el botón limpiar cuando hay texto en el input
+    if (inputCriterio && !inputCriterio.dataset.inputListenerAttached) {
+      inputCriterio.dataset.inputListenerAttached = "true";
+      inputCriterio.addEventListener("input", function() {
+        if (btnLimpiarCliente) {
+          if (this.value.trim().length > 0) {
+            btnLimpiarCliente.classList.remove("hidden");
+          } else {
+            btnLimpiarCliente.classList.add("hidden");
+          }
+        }
+      });
+    }
+  }
+
   const agregarDetalleBtn = document.getElementById("agregarDetalleBtn");
   if (agregarDetalleBtn) {
     agregarDetalleBtn.addEventListener("click", async function () {
@@ -585,6 +647,18 @@ document.addEventListener("DOMContentLoaded", function () {
       abrirModal("ventaModal");
       limpiarFormularioVentaCompleto();
 
+      // Resetear botón a modo de creación
+      const submitBtn = document.getElementById("registrarVentaBtn");
+      if (submitBtn) {
+        const modalTitle = document.querySelector("#ventaModal h3");
+        if (modalTitle) {
+          modalTitle.innerHTML = '<i class="mr-1 text-green-600 fas fa-plus"></i>Nueva Venta';
+        }
+        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Venta';
+        submitBtn.removeAttribute('data-mode');
+        submitBtn.removeAttribute('data-idventa');
+      }
+
       const fechaInput = document.getElementById("fecha_venta_modal");
       if (fechaInput) {
         fechaInput.value = new Date().toISOString().split("T")[0];
@@ -626,6 +700,8 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       inicializarBuscadorCliente();
+      inicializarBotonesLimpiarCliente();
+      inicializarModalRegistrarCliente();
     });
   }
 
@@ -648,12 +724,17 @@ document.addEventListener("DOMContentLoaded", function () {
   const registrarVentaBtn = document.getElementById("registrarVentaBtn");
   if (registrarVentaBtn) {
     registrarVentaBtn.addEventListener("click", async function () {
+      // Determinar si estamos editando o creando
+      const mode = this.getAttribute('data-mode') || 'create';
+      const idVentaEditar = this.getAttribute('data-idventa');
+
       const idClienteSeleccionado = document.getElementById("idcliente").value;
       const nuevoClienteFormActivo =
         nuevoClienteContainer &&
         !nuevoClienteContainer.classList.contains("hidden");
 
-      if (!idClienteSeleccionado && !nuevoClienteFormActivo) {
+      // Solo validar selección de cliente en modo de creación, no en modo de edición
+      if (mode === 'create' && !idClienteSeleccionado && !nuevoClienteFormActivo) {
         Swal.fire(
           "Atención",
           "Debe seleccionar un cliente existente o completar los datos del nuevo cliente.",
@@ -679,11 +760,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!validarCamposVacios(camposCabeceraVenta, "ventaForm")) return;
 
-      // Validación específica para asegurar que VES esté seleccionado
-      const selectMoneda = document.getElementById("idmoneda_general");
-      if (!selectMoneda.value) {
-        Swal.fire("Error", "No se pudo seleccionar la moneda VES automáticamente. Contacte al administrador.", "error");
-        return;
+      // Validación específica para asegurar que VES esté seleccionado (solo en modo creación)
+      if (mode === 'create') {
+        const selectMoneda = document.getElementById("idmoneda_general");
+        if (!selectMoneda.value) {
+          Swal.fire("Error", "No se pudo seleccionar la moneda VES automáticamente. Contacte al administrador.", "error");
+          return;
+        }
       }
 
       let cabeceraValida = true;
@@ -728,7 +811,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const datosVentaFinal = {
         idcliente: idClienteSeleccionado
           ? parseInt(idClienteSeleccionado)
-          : null,
+          : (mode === 'edit' && clienteOriginalEdicion ? parseInt(clienteOriginalEdicion) : null),
         cliente_nuevo: datosClienteNuevo,
         fecha_venta: document.getElementById("fecha_venta_modal").value,
         idmoneda_general: parseInt(
@@ -750,6 +833,11 @@ document.addEventListener("DOMContentLoaded", function () {
         observaciones: document.getElementById("observaciones")?.value || "",
         detalles: [],
       };
+
+      // Si estamos editando, agregar el ID de la venta
+      if (mode === 'edit' && idVentaEditar) {
+        datosVentaFinal.idventa = parseInt(idVentaEditar);
+      }
 
       try {
         datosVentaFinal.tasa_usada = await obtenerTasaActualSeleccionada(
@@ -805,11 +893,19 @@ document.addEventListener("DOMContentLoaded", function () {
       const btnRegistrar = document.getElementById("registrarVentaBtn");
       const textoOriginal = btnRegistrar.innerHTML;
       btnRegistrar.disabled = true;
-      btnRegistrar.innerHTML =
-        '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+      
+      // Texto diferente para edición
+      const textoLoading = mode === 'edit' 
+        ? '<i class="fas fa-spinner fa-spin mr-2"></i>Actualizando...'
+        : '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+      
+      btnRegistrar.innerHTML = textoLoading;
 
       try {
-        const response = await fetch("ventas/setVenta", {
+        // URL diferente para edición
+        const url = mode === 'edit' ? "ventas/updateVenta" : "ventas/setVenta";
+        
+        const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -826,16 +922,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const result = await response.json();
 
         if (result.status === true) {
-          const mensaje = result.message || "Venta registrada correctamente.";
+          const mensaje = result.message || (mode === 'edit' ? "Venta actualizada correctamente." : "Venta registrada correctamente.");
           let mensajeCompleto = mensaje;
 
           if (result.data && typeof result.data === "object") {
             const { nro_venta, idventa, idcliente } = result.data;
 
             if (nro_venta) {
-              mensajeCompleto = `Venta ${nro_venta} registrada correctamente.`;
+              mensajeCompleto = mode === 'edit' 
+                ? `Venta ${nro_venta} actualizada correctamente.`
+                : `Venta ${nro_venta} registrada correctamente.`;
             }
-          } else {
           }
 
           await Swal.fire("¡Éxito!", mensajeCompleto, "success");
@@ -846,9 +943,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
           cerrarModal("ventaModal");
           limpiarFormularioVentaCompleto();
+          
+          // Restablecer el modo del botón
+          btnRegistrar.removeAttribute('data-mode');
+          btnRegistrar.removeAttribute('data-idventa');
+          btnRegistrar.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Venta';
+          
+          // Restablecer el título del modal
+          const modalTitle = document.querySelector("#ventaModal h3");
+          if (modalTitle) {
+            modalTitle.innerHTML = '<i class="mr-1 text-green-600 fas fa-shopping-cart"></i>Registrar Nueva Venta';
+          }
         } else {
           const mensajeError =
-            result.message || "No se pudo registrar la venta.";
+            result.message || (mode === 'edit' ? "No se pudo actualizar la venta." : "No se pudo registrar la venta.");
           await Swal.fire("¡Error!", mensajeError, "error");
         }
       } catch (error) {
@@ -1021,6 +1129,15 @@ document.addEventListener("DOMContentLoaded", function () {
       if (idVenta) {
         // Redirigir a nota de despacho
         window.open(`ventas/notaDespacho/${idVenta}`, '_blank');
+      }
+    }
+
+    // Editar venta
+    const editarVentaBtn = e.target.closest(".editar-venta-btn");
+    if (editarVentaBtn) {
+      const idVenta = editarVentaBtn.getAttribute("data-idventa");
+      if (idVenta) {
+        cargarVentaParaEditar(idVenta);
       }
     }
   });
@@ -1237,6 +1354,230 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Función para cargar venta para editar
+  async function cargarVentaParaEditar(idVenta) {
+    try {
+      // Mostrar el modal con mensaje de carga
+      const modal = document.getElementById("ventaModal");
+      const modalTitle = modal.querySelector("h3");
+      const submitBtn = document.getElementById("registrarVentaBtn");
+      
+      // Cambiar el título del modal
+      modalTitle.innerHTML = '<i class="mr-1 text-blue-600 fas fa-edit"></i>Editar Venta';
+      
+      // Cambiar el texto del botón
+      submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Actualizar Venta';
+      submitBtn.setAttribute('data-mode', 'edit');
+      submitBtn.setAttribute('data-idventa', idVenta);
+      
+      // Abrir el modal
+      abrirModal("ventaModal");
+      
+      // Mostrar mensaje de carga
+      Swal.fire({
+        title: 'Cargando...',
+        text: 'Obteniendo datos de la venta',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Obtener los datos de la venta
+      const response = await fetch(`ventas/getVentaDetalle?idventa=${encodeURIComponent(idVenta)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.status) {
+        throw new Error(data.message || "No se pudo obtener los datos de la venta.");
+      }
+
+      const venta = data.data.venta;
+      const detalles = data.data.detalle;
+
+      // Cerrar el loading
+      Swal.close();
+
+      // Llenar el formulario con los datos de la venta
+      await llenarFormularioEdicion(venta, detalles);
+
+    } catch (error) {
+      console.error('Error al cargar venta para editar:', error);
+      Swal.fire("Error", error.message || "No se pudo cargar la venta para editar.", "error");
+      cerrarModal("ventaModal");
+    }
+  }
+
+  let clienteOriginalEdicion = null; // Variable para almacenar el cliente original en modo edición
+
+  // Función para llenar el formulario con los datos de la venta
+  async function llenarFormularioEdicion(venta, detalles) {
+    try {
+      // Almacenar el cliente original
+      clienteOriginalEdicion = venta.cliente_id || null;
+      
+      // Llenar campos básicos
+      document.getElementById("fecha_venta_modal").value = venta.fecha_venta || "";
+      document.getElementById("observaciones").value = venta.observaciones || "";
+      
+      // Seleccionar cliente
+      if (venta.cliente_cedula) {
+        const clienteInfo = {
+          id: venta.cliente_id,
+          cedula: venta.cliente_cedula,
+          nombre: venta.cliente_nombre || "",
+          apellido: venta.cliente_apellido || "",
+          telefono_principal: venta.cliente_telefono || "",
+          direccion: venta.cliente_direccion || "",
+          observaciones: venta.cliente_observaciones || "",
+          estatus: venta.cliente_estatus || "1"
+        };
+        
+        // Llenar la información del cliente seleccionado
+        const clienteInfoDiv = document.getElementById("cliente_seleccionado_info_modal");
+        if (clienteInfoDiv) {
+          clienteInfoDiv.innerHTML = `
+            <strong>Cliente seleccionado:</strong><br>
+            <span><strong>Nombre:</strong> ${clienteInfo.nombre} ${clienteInfo.apellido}</span><br>
+            <span><strong>Cédula:</strong> ${clienteInfo.cedula}</span><br>
+            <span><strong>Teléfono:</strong> ${clienteInfo.telefono_principal || 'No especificado'}</span>
+          `;
+          clienteInfoDiv.classList.remove("hidden");
+          clienteInfoDiv.setAttribute("data-cliente-id", clienteInfo.id);
+        }
+        
+        // Establecer el ID del cliente en el campo oculto
+        const idClienteField = document.getElementById("idcliente");
+        if (idClienteField) {
+          idClienteField.value = clienteInfo.id;
+        }
+      }
+
+      // Llenar descuento general
+      if (venta.descuento_porcentaje_general) {
+        document.getElementById("descuento_porcentaje_general").value = venta.descuento_porcentaje_general;
+      }
+
+      // Limpiar detalles actuales
+      const detalleBody = document.getElementById("detalleVentaBody");
+      const noDetallesMsg = document.getElementById("noDetallesMensaje");
+      
+      if (detalleBody) {
+        detalleBody.innerHTML = "";
+      }
+
+      // Cargar productos para los selects
+      await cargarProductosSelect();
+
+      // Agregar los detalles existentes
+      if (Array.isArray(detalles) && detalles.length > 0) {
+        if (noDetallesMsg) {
+          noDetallesMsg.classList.add("hidden");
+        }
+
+        detalles.forEach((detalle, index) => {
+          agregarFilaDetalle({
+            producto_id: detalle.idproducto,
+            nombre_producto: detalle.nombre_producto,
+            cantidad: detalle.cantidad,
+            precio_unitario_venta: detalle.precio_unitario_venta,
+            codigo_moneda: detalle.codigo_moneda || 'VES'
+          });
+        });
+      } else {
+        if (noDetallesMsg) {
+          noDetallesMsg.classList.remove("hidden");
+        }
+      }
+
+      // Recalcular totales
+      calcularTotalesGenerales();
+
+    } catch (error) {
+      console.error('Error al llenar formulario:', error);
+      throw error;
+    }
+  }
+
+  // Función auxiliar para cargar productos en el select
+  async function cargarProductosSelect() {
+    try {
+      const response = await fetch("ventas/getProductosDisponibles");
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      const data = await response.json();
+      
+      if (data.status && data.data) {
+        listaProductosCargadosSelect = data.data;
+        // Actualizar el select de productos
+        const selectProducto = document.getElementById("select_producto_agregar_modal");
+        if (selectProducto) {
+          selectProducto.innerHTML = '<option value="">Seleccione un producto</option>';
+          data.data.forEach(producto => {
+            const option = document.createElement('option');
+            option.value = producto.idproducto || producto.id;
+            // Usar la misma lógica que en el modo de creación para mostrar moneda y precio
+            option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria || "N/A"}) - ${producto.codigo_moneda_producto || 'N/A'} ${parseFloat(producto.precio_unitario || 0).toFixed(2)}`;
+            selectProducto.appendChild(option);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+    }
+  }
+
+  // Función auxiliar para agregar una fila de detalle
+  function agregarFilaDetalle(producto) {
+    const idProd = producto.producto_id;
+    const nombreProd = `${producto.nombre_producto}`;
+    const cantidad = producto.cantidad || 1;
+    const precioUnit = parseFloat(producto.precio_unitario_venta || 0).toFixed(2);
+    const subtotal = (cantidad * parseFloat(precioUnit)).toFixed(2);
+    const monedaCodigo = producto.codigo_moneda || 'VES';
+
+    const nuevaFilaHTML = `
+    <tr>
+      <td class="px-3 py-1.5">
+        <input type="hidden" name="detalle_idproducto[]" value="${idProd}">
+        <input type="hidden" name="detalle_moneda_original[]" value="${monedaCodigo}">
+        <input type="hidden" name="detalle_precio_original[]" value="${precioUnit}">
+        <span>${nombreProd}</span>
+        <br><small class="text-gray-500">Precio: ${monedaCodigo} ${precioUnit}</small>
+      </td>
+      <td class="px-3 py-1.5">
+        <input type="number" name="detalle_cantidad[]" 
+               class="w-full px-2 py-1 text-xs border rounded-md cantidad-input" 
+               value="${cantidad}" min="1" step="1">
+      </td>
+      <td class="px-3 py-1.5">
+        <input type="number" name="detalle_precio_unitario_venta[]" 
+               class="w-full px-2 py-1 text-xs border rounded-md precio-input bg-gray-100" 
+               value="${precioUnit}" readonly step="0.01">
+      </td>
+      <td class="px-3 py-1.5">
+        <input type="number" name="detalle_subtotal[]" 
+               class="w-full px-2 py-1 text-xs border rounded-md subtotal-input bg-gray-100" 
+               value="${subtotal}" readonly step="0.01">
+      </td>
+      <td class="px-3 py-1.5 text-center">
+        <button type="button" class="text-red-500 eliminar-detalle-btn hover:text-red-700">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    </tr>`;
+
+    detalleVentaBody.insertAdjacentHTML("beforeend", nuevaFilaHTML);
+    actualizarEventosDetalle();
+  }
+
   // Event listeners para los nuevos botones
   // Función para generar botones de acción con estados
   function generarBotonesAccionVentas(data, type, row) {
@@ -1261,9 +1602,9 @@ document.addEventListener("DOMContentLoaded", function () {
       `);
     }
 
-    // Botón Nota de Despacho (disponible para ventas no en estado BORRADOR)
+    // Botón Nota de Despacho (disponible solo para ventas en estado PAGADA)
     if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver && 
-        estadoActual.toUpperCase() !== "BORRADOR") {
+        estadoActual.toUpperCase() === "PAGADA") {
       botones.push(`
         <button
           class="nota-despacho-btn text-purple-600 hover:text-purple-700 p-1 transition-colors duration-150"
@@ -1585,6 +1926,258 @@ document.addEventListener("DOMContentLoaded", function () {
       window.location.href = `${base_url}ventas/notaDespacho/${idventa}`;
     }
   });
+
+  // Funciones para el modal de registro de cliente
+  const camposFormularioClienteModal = [
+    {
+      id: "cedula_cliente_modal",
+      tipo: "input",
+      regex: expresiones.cedula,
+      mensajes: {
+        vacio: "La cédula es obligatoria.",
+        formato: "La Cédula debe contener la estructura V-/J-/E- No debe contener espacios y solo números.",
+      },
+    },
+    {
+      id: "nombre_cliente_modal",
+      tipo: "input",
+      regex: expresiones.nombre,
+      mensajes: {
+        vacio: "El nombre es obligatorio.",
+        formato: "El nombre debe tener entre 3 y 50 caracteres alfabéticos.",
+      },
+    },
+    {
+      id: "apellido_cliente_modal",
+      tipo: "input",
+      regex: expresiones.apellido,
+      mensajes: {
+        vacio: "El apellido es obligatorio.",
+        formato: "El apellido debe tener entre 3 y 50 caracteres alfabéticos.",
+      },
+    },
+    {
+      id: "telefono_principal_cliente_modal",
+      tipo: "input",
+      regex: expresiones.telefono_principal,
+      mensajes: {
+        vacio: "El teléfono es obligatorio.",
+        formato: "El teléfono debe tener exactamente 11 dígitos. No debe contener letras. Debe comenzar con 0412, 0414, 0424 o 0416.",
+      },
+    },
+    {
+      id: "direccion_cliente_modal",
+      tipo: "input",
+      regex: expresiones.direccion,
+      mensajes: {
+        vacio: "La dirección es obligatoria.",
+        formato: "La dirección debe tener entre 5 y 100 caracteres.",
+      },
+    },
+    {
+      id: "observaciones_cliente_modal",
+      tipo: "input",
+      regex: expresiones.observaciones,
+      mensajes: {
+        formato: "Las observaciones no deben exceder los 50 caracteres.",
+      },
+    },
+  ];
+
+  const camposObligatoriosClienteModal = [
+    "cedula_cliente_modal",
+    "nombre_cliente_modal", 
+    "apellido_cliente_modal",
+    "telefono_principal_cliente_modal",
+    "direccion_cliente_modal"
+  ];
+
+  function inicializarModalRegistrarCliente() {
+    const btnAbrirModal = document.getElementById("btnAbrirModalRegistrarCliente");
+    const btnCerrarModal = document.getElementById("cerrarModalRegistrarClienteBtn");
+    const btnCancelarModal = document.getElementById("cancelarRegistrarClienteBtn");
+    const formRegistrarCliente = document.getElementById("formRegistrarCliente");
+
+    if (btnAbrirModal) {
+      btnAbrirModal.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        abrirModalRegistrarCliente();
+      });
+    }
+
+    if (btnCerrarModal) {
+      btnCerrarModal.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        cerrarModalRegistrarCliente();
+      });
+    }
+
+    if (btnCancelarModal) {
+      btnCancelarModal.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        cerrarModalRegistrarCliente();
+      });
+    }
+
+    if (formRegistrarCliente) {
+      formRegistrarCliente.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        await registrarClienteModal();
+      });
+    }
+
+    // Inicializar validaciones en tiempo real
+    inicializarValidaciones(camposFormularioClienteModal, "formRegistrarCliente");
+  }
+
+  function abrirModalRegistrarCliente() {
+    const modal = document.getElementById("modalRegistrarCliente");
+    const form = document.getElementById("formRegistrarCliente");
+
+    if (modal) {
+      if (form) form.reset();
+      limpiarValidaciones(camposFormularioClienteModal, "formRegistrarCliente");
+      inicializarValidaciones(camposFormularioClienteModal, "formRegistrarCliente");
+      abrirModal("modalRegistrarCliente");
+    }
+  }
+
+  function cerrarModalRegistrarCliente() {
+    const modal = document.getElementById("modalRegistrarCliente");
+    const form = document.getElementById("formRegistrarCliente");
+
+    if (modal) {
+      limpiarValidaciones(camposFormularioClienteModal, "formRegistrarCliente");
+      if (form) form.reset();
+      cerrarModal("modalRegistrarCliente");
+    }
+  }
+
+  async function registrarClienteModal() {
+    try {
+      // Validar campos obligatorios
+      if (!validarCamposVacios(camposObligatoriosClienteModal, "formRegistrarCliente")) {
+        return;
+      }
+
+      // Validar formato de campos
+      let todosValidos = true;
+      for (const campo of camposFormularioClienteModal) {
+        const inputElement = document.getElementById(campo.id);
+        if (inputElement) {
+          const esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
+          if (!esValidoEsteCampo) {
+            todosValidos = false;
+          }
+        }
+      }
+
+      if (!todosValidos) {
+        Swal.fire({
+          title: 'Error de validación',
+          text: 'Por favor, corrija los errores en el formulario antes de continuar.',
+          icon: 'error'
+        });
+        return;
+      }
+
+      // Mostrar loading en el botón
+      const submitBtn = document.getElementById("registrarClienteBtn");
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Registrando...';
+      submitBtn.disabled = true;
+
+      // Recopilar datos del formulario
+      const formData = {
+        nombre: document.getElementById("nombre_cliente_modal").value.trim(),
+        apellido: document.getElementById("apellido_cliente_modal").value.trim(),
+        identificacion: document.getElementById("cedula_cliente_modal").value.trim(), // Mapear cedula a identificacion
+        telefono_principal: document.getElementById("telefono_principal_cliente_modal").value.trim(),
+        direccion: document.getElementById("direccion_cliente_modal").value.trim(),
+        observaciones: document.getElementById("observaciones_cliente_modal").value.trim()
+      };
+
+      // Enviar datos al servidor
+      const response = await fetch(`${base_url}clientes/registrarClienteModal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (result.status) {
+        Swal.fire({
+          title: 'Éxito',
+          text: result.message,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        // Cerrar modal
+        cerrarModalRegistrarCliente();
+
+        // Seleccionar automáticamente el cliente recién creado
+        if (result.cliente_id) {
+          seleccionarClienteRecienCreado(result.cliente_id, formData.nombre, formData.apellido, formData.identificacion);
+        }
+      } else {
+        throw new Error(result.message || 'Error al registrar cliente');
+      }
+
+    } catch (error) {
+      console.error('Error al registrar cliente:', error);
+      Swal.fire({
+        title: 'Error',
+        text: error.message || 'Error al registrar el cliente',
+        icon: 'error'
+      });
+    } finally {
+      // Restaurar botón
+      const submitBtn = document.getElementById("registrarClienteBtn");
+      if (submitBtn) {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
+    }
+  }
+
+  function seleccionarClienteRecienCreado(id, nombre, apellido, identificacion) {
+    // Seleccionar el cliente en el formulario principal
+    const idClienteInput = document.getElementById("idcliente");
+    const clienteInfoDiv = document.getElementById("cliente_seleccionado_info_modal");
+
+    if (idClienteInput) {
+      idClienteInput.value = id;
+    }
+
+    if (clienteInfoDiv) {
+      clienteInfoDiv.innerHTML = `
+        <strong>Cliente seleccionado:</strong><br>
+        <span class="text-green-600">${nombre} ${apellido}</span><br>
+        <span class="text-gray-600">CI: ${identificacion}</span>
+      `;
+      clienteInfoDiv.classList.remove("hidden");
+    }
+
+    // Limpiar el campo de búsqueda
+    const criterioInput = document.getElementById("inputCriterioClienteModal");
+    if (criterioInput) {
+      criterioInput.value = "";
+    }
+
+    // Ocultar lista de resultados
+    const listaResultados = document.getElementById("listaResultadosClienteModal");
+    if (listaResultados) {
+      listaResultados.classList.add("hidden");
+    }
+  }
 
   // ...existing code...
 });

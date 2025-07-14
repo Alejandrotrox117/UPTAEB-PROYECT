@@ -497,7 +497,7 @@ class VentasModel // Eliminamos "extends Mysql"
                      FROM historial_tasas_bcv
                  ) htbc ON p.moneda = htbc.codigo_moneda AND htbc.rn = 1
                  WHERE p.estatus = 'ACTIVO' 
-                 AND c.nombre = 'Pacas'
+                 AND (p.nombre LIKE '%Paca%' OR c.nombre LIKE '%paca%')
                  ORDER BY p.nombre"
             );
 
@@ -573,28 +573,49 @@ class VentasModel // Eliminamos "extends Mysql"
                         idmoneda, subtotal_general, peso_vehiculo, peso_bruto, peso_neto)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        foreach ($detalles as $detalle) {
+        foreach ($detalles as $index => $detalle) {
+            // Validar datos del detalle
+            if (!isset($detalle['idproducto']) || empty($detalle['idproducto'])) {
+                error_log("Detalle inválido en índice $index: " . print_r($detalle, true));
+                throw new Exception("El producto en el detalle #" . ($index + 1) . " no tiene ID válido");
+            }
+
+            $idproducto = intval($detalle['idproducto']);
+            if ($idproducto <= 0) {
+                error_log("ID producto inválido en índice $index: " . $detalle['idproducto']);
+                throw new Exception("El producto en el detalle #" . ($index + 1) . " tiene un ID inválido: " . $detalle['idproducto']);
+            }
+
             // Validar que el producto existe
-            $productoExiste = $this->search("SELECT COUNT(*) as count FROM producto WHERE idproducto = ?", [$detalle['idproducto']]);
-            if ($productoExiste['count'] == 0) {
-                throw new Exception("El producto con ID " . $detalle['idproducto'] . " no existe");
+            $productoExiste = $this->search("SELECT COUNT(*) as count FROM producto WHERE idproducto = ?", [$idproducto]);
+            if (!$productoExiste || $productoExiste['count'] == 0) {
+                throw new Exception("El producto con ID " . $idproducto . " no existe en el detalle #" . ($index + 1));
+            }
+
+            // Validar otros campos requeridos
+            if (!isset($detalle['cantidad']) || floatval($detalle['cantidad']) <= 0) {
+                throw new Exception("La cantidad debe ser mayor a 0 en el detalle #" . ($index + 1));
+            }
+
+            if (!isset($detalle['precio_unitario_venta']) || floatval($detalle['precio_unitario_venta']) < 0) {
+                throw new Exception("El precio unitario debe ser válido en el detalle #" . ($index + 1));
             }
 
             $paramsDetalle = [
                 $idventa,
-                $detalle['idproducto'],
-                $detalle['cantidad'],
-                $detalle['precio_unitario_venta'],
+                $idproducto,
+                floatval($detalle['cantidad']),
+                floatval($detalle['precio_unitario_venta']),
                 $detalle['id_moneda_detalle'] ?? $idmoneda_general,
-                $detalle['subtotal_general'] ?? 0,
-                $detalle['peso_vehiculo'] ?? 0,
-                $detalle['peso_bruto'] ?? 0,
-                $detalle['peso_neto'] ?? 0
+                floatval($detalle['subtotal_general'] ?? 0),
+                floatval($detalle['peso_vehiculo'] ?? 0),
+                floatval($detalle['peso_bruto'] ?? 0),
+                floatval($detalle['peso_neto'] ?? 0)
             ];
 
             $stmtDetalle = $db->prepare($sqlDetalle);
             if (!$stmtDetalle->execute($paramsDetalle)) {
-                throw new Exception("No se pudo insertar el detalle del producto ID: " . $detalle['idproducto']);
+                throw new Exception("No se pudo insertar el detalle del producto ID: " . $idproducto . " (detalle #" . ($index + 1) . ")");
             }
         }
     }
@@ -624,6 +645,135 @@ class VentasModel // Eliminamos "extends Mysql"
         $this->setData($data);
         return $this->ejecutarInsercionVenta($this->getData(), $detalles, $datosClienteNuevo);
     }
+
+    public function updateVenta(int $idventa, array $data)
+    {
+        $this->setVentaId($idventa);
+        $this->setData($data);
+        return $this->ejecutarActualizacionVenta($this->getVentaId(), $this->getData());
+    }
+
+    private function ejecutarActualizacionVenta(int $idventa, array $data)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            error_log("VentasModel::updateVenta - Iniciando actualización de venta ID: $idventa");
+            error_log("VentasModel::updateVenta - Datos recibidos: " . print_r($data, true));
+            
+            $db->beginTransaction();
+
+            // Verificar que la venta existe
+            $ventaExistente = $this->search("SELECT * FROM venta WHERE idventa = ?", [$idventa]);
+            if (!$ventaExistente) {
+                throw new Exception("La venta especificada no existe");
+            }
+
+            // Si hay datos de cliente nuevo, crear el cliente
+            $idCliente = $data['idcliente'] ?? $ventaExistente['idcliente'];
+            if (!$idCliente && isset($data['datosClienteNuevo'])) {
+                $idCliente = $this->crearClienteNuevo($db, $data['datosClienteNuevo']);
+                if (!$idCliente) {
+                    throw new Exception("No se pudo crear el cliente nuevo");
+                }
+            }
+
+            // Validar que el cliente existe
+            if ($idCliente) {
+                $clienteExiste = $this->search("SELECT COUNT(*) as count FROM cliente WHERE idcliente = ?", [$idCliente]);
+                if ($clienteExiste['count'] == 0) {
+                    throw new Exception("El cliente especificado no existe");
+                }
+            }
+
+            // Actualizar la venta
+            $this->setQuery(
+                "UPDATE venta SET 
+                    idcliente = ?, 
+                    fecha_venta = ?, 
+                    idmoneda = ?, 
+                    subtotal_general = ?, 
+                    descuento_porcentaje_general = ?, 
+                    monto_descuento_general = ?, 
+                    estatus = ?, 
+                    total_general = ?, 
+                    balance = ?, 
+                    observaciones = ?, 
+                    tasa = ?, 
+                    ultima_modificacion = NOW()
+                WHERE idventa = ?"
+            );
+
+            $this->setArray([
+                $idCliente ?: $ventaExistente['idcliente'],
+                $data['fecha_venta'] ?? $ventaExistente['fecha_venta'],
+                $data['idmoneda_general'] ?? $ventaExistente['idmoneda'],
+                $data['subtotal_general'] ?? $ventaExistente['subtotal_general'],
+                $data['descuento_porcentaje_general'] ?? $ventaExistente['descuento_porcentaje_general'],
+                $data['monto_descuento_general'] ?? $ventaExistente['monto_descuento_general'],
+                $data['estatus'] ?? $ventaExistente['estatus'],
+                $data['total_general'] ?? $ventaExistente['total_general'],
+                $data['total_general'] ?? $ventaExistente['total_general'], // balance igual al total
+                $data['observaciones'] ?? $ventaExistente['observaciones'],
+                $data['tasa_usada'] ?? $ventaExistente['tasa'],
+                $idventa
+            ]);
+
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+
+            // Si hay detalles nuevos, actualizar los detalles
+            if (isset($data['detalles']) && is_array($data['detalles'])) {
+                error_log("VentasModel::updateVenta - Procesando detalles para venta ID: $idventa");
+                error_log("VentasModel::updateVenta - Número de detalles recibidos: " . count($data['detalles']));
+                error_log("VentasModel::updateVenta - Detalles recibidos: " . print_r($data['detalles'], true));
+
+                // Eliminar detalles existentes
+                $sqlEliminarDetalles = "DELETE FROM detalle_venta WHERE idventa = ?";
+                $stmtEliminar = $db->prepare($sqlEliminarDetalles);
+                $stmtEliminar->execute([$idventa]);
+
+                // Insertar nuevos detalles solo si hay detalles válidos
+                if (!empty($data['detalles'])) {
+                    // Validar que los detalles tienen estructura correcta
+                    foreach ($data['detalles'] as $index => $detalle) {
+                        if (!is_array($detalle)) {
+                            throw new Exception("El detalle #" . ($index + 1) . " no tiene formato válido");
+                        }
+                    }
+                    
+                    $this->insertarDetallesVenta($db, $idventa, $data['detalles'], $data['idmoneda_general'] ?? $ventaExistente['idmoneda']);
+                }
+            } else {
+                error_log("VentasModel::updateVenta - No se recibieron detalles para actualizar (mantener existentes)");
+            }
+
+            $db->commit();
+
+            $this->setStatus(true);
+            $this->setMessage('Venta actualizada exitosamente');
+
+            return [
+                'success' => true,
+                'message' => $this->getMessage(),
+                'idventa' => $idventa
+            ];
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log("VentasModel::ejecutarActualizacionVenta - Error: " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Error al actualizar venta: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    // ...existing code...
 
     public function obtenerVentaPorId(int $idventa)
     {
@@ -997,7 +1147,8 @@ class VentasModel // Eliminamos "extends Mysql"
             // Verificar si el total pagado cubre el total de la venta
             $diferencia = abs($totalVenta - $totalPagado);
             
-            if ($diferencia > 0.01) { // Tolerancia para problemas de redondeo
+            if ($diferencia > 0.01) // Tolerancia para problemas de redondeo
+            {
                 return [
                     'valido' => false,
                     'mensaje' => "No se puede marcar como pagada. Total venta: $totalVenta, Total pagado (conciliado): $totalPagado. Faltan: " . ($totalVenta - $totalPagado)

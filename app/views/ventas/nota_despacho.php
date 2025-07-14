@@ -17,20 +17,6 @@
         <span class="text-gray-500">Nota de Despacho</span>
       </nav>
     </div>
-    
-    <!-- Botones de acción (solo visible en pantalla) -->
-    <div class="flex gap-2 print:hidden">
-      <button id="printBtn" 
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2">
-        <i class="fas fa-print"></i>
-        Imprimir
-      </button>
-      <a href="<?= base_url(); ?>/ventas" 
-         class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2">
-        <i class="fas fa-arrow-left"></i>
-        Volver
-      </a>
-    </div>
   </div>
 
   <div class="bg-white rounded-2xl shadow-lg overflow-hidden print:shadow-none print:rounded-none">
@@ -242,7 +228,7 @@
         </div>
 
         <!-- FIRMAS Y SELLOS -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 print:grid-cols-3 print:gap-6 print:mt-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-30 print:grid-cols-3 print:gap-6 print:mt-40">
           <div class="text-center print:text-center">
             <div class="border-t border-gray-400 pt-2 print:border-t print:border-gray-400 print:pt-2">
               <p class="text-sm font-semibold text-gray-700 print:text-sm print:text-black print:font-semibold">DESPACHADO POR</p>
@@ -269,6 +255,21 @@
           <p class="mt-1">Este documento NO tiene valor fiscal</p>
         </div>
       </div>
+      
+      <!-- Botones de Acción -->
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 print:hidden">
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <button id="printBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
+            <i class="fas fa-print mr-2"></i>
+            Imprimir Nota de Despacho
+          </button>
+          <a href="<?= base_url(); ?>/ventas" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Volver a Ventas
+          </a>
+        </div>
+      </div>
+
     <?php endif; ?>
   </div>
 </main>
@@ -323,6 +324,7 @@
   .print\:mb-4 { margin-bottom: 1rem !important; }
   .print\:mb-3 { margin-bottom: 0.75rem !important; }
   .print\:mt-8 { margin-top: 2rem !important; }
+  .print\:mt-40 { margin-top: 160px !important; }
   .print\:mt-6 { margin-top: 1.5rem !important; }
   .print\:mt-3 { margin-top: 0.75rem !important; }
   .print\:mt-1 { margin-top: 0.25rem !important; }
