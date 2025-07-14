@@ -50,10 +50,10 @@ private $query;
         $db = $conexion->get_conectGeneral();
         try {
             $stmt = $db->prepare("SELECT 
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')) as ventas_hoy,
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')) as ventas_ayer,
-                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')) as compras_hoy,
-                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')) as compras_ayer,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus = 'PAGADA') as ventas_hoy,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus = 'PAGADA') as ventas_ayer,
+                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra = 'PAGADA') as compras_hoy,
+                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra = 'PAGADA') as compras_ayer,
                 (SELECT COALESCE(SUM(existencia * precio), 0) FROM producto WHERE estatus = 'activo') as valor_inventario,
                 (SELECT COUNT(*) FROM lotes_produccion WHERE estatus_lote IN ('PLANIFICADO', 'EN_PROCESO')) as producciones_activas,
                 (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia > 0) as productos_en_rotacion,
@@ -123,7 +123,7 @@ private $query;
                 FROM detalle_venta dv
                 JOIN producto p ON dv.idproducto = p.idproducto
                 JOIN venta v ON dv.idventa = v.idventa
-                WHERE v.estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO') AND MONTH(v.fecha_venta) = MONTH(CURDATE())
+                WHERE v.estatus = 'PAGADA' AND MONTH(v.fecha_venta) = MONTH(CURDATE())
                 GROUP BY p.idproducto, p.nombre
                 ORDER BY cantidad DESC
                 LIMIT 5");
@@ -162,7 +162,7 @@ private $query;
                 v.estatus as estado
                 FROM venta v
                 JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')
+                WHERE v.estatus = 'PAGADA'
                 ORDER BY v.fecha_venta DESC, v.idventa DESC
                 LIMIT 10");
             $stmt->execute();
@@ -186,7 +186,7 @@ private $query;
                 COUNT(*) as cantidad
                 FROM venta 
                 WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-                AND estatus IN ('PAGADA', 'POR_PAGAR', 'PAGO_FRACCIONADO')
+                AND estatus = 'PAGADA'
                 GROUP BY mes 
                 ORDER BY mes ASC");
             $stmt->execute();
@@ -438,13 +438,13 @@ private $query;
             $stmt = $db->prepare("SELECT 
                 CAST(COALESCE(
                     (SELECT (SUM(v.total_general) - (SELECT COALESCE(SUM(c.total_general), 0) FROM compra c WHERE MONTH(c.fecha) = MONTH(CURDATE()))) / NULLIF(SUM(v.total_general), 0) * 100
-                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'activo'), 0
+                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'PAGADA'), 0
                 ) AS DECIMAL(10,2)) as margen_ganancia,
                 
                 CAST(COALESCE(
-                    (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()))) / 
-                    NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE())), 0)) * 100
-                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'activo'), 0
+                    (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND estatus_compra = 'PAGADA')) / 
+                    NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND estatus_compra = 'PAGADA'), 0)) * 100
+                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'PAGADA'), 0
                 ) AS DECIMAL(10,2)) as roi_mes,
                 
                 CAST(COALESCE(
@@ -509,7 +509,7 @@ private $query;
                         SUM(dv.cantidad * dv.precio_unitario_venta) as ingresos
                     FROM detalle_venta dv
                     INNER JOIN venta v ON dv.idventa = v.idventa
-                    WHERE v.estatus = 'activo'
+                    WHERE v.estatus = 'PAGADA'
                     GROUP BY dv.idproducto
                 ) ventas ON p.idproducto = ventas.idproducto
                 LEFT JOIN (
@@ -518,7 +518,7 @@ private $query;
                         SUM(dc.cantidad * dc.precio_unitario_compra) as costos
                     FROM detalle_compra dc
                     INNER JOIN compra c ON dc.idcompra = c.idcompra
-                    WHERE c.estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')
+                    WHERE c.estatus_compra = 'PAGADA'
                     GROUP BY dc.idproducto
                 ) compras ON p.idproducto = compras.idproducto
                 WHERE p.estatus = 'activo'
@@ -655,7 +655,7 @@ private $query;
                 AVG(v.total_general) as ticket_promedio
                 FROM cliente c
                 JOIN venta v ON c.idcliente = v.idcliente
-                WHERE c.estatus = 'activo' AND v.estatus = 'activo'
+                WHERE c.estatus = 'activo' AND v.estatus = 'PAGADA'
                 GROUP BY c.idcliente, cliente_nombre
                 HAVING total_comprado > 0
                 ORDER BY total_comprado DESC
@@ -710,7 +710,7 @@ private $query;
                 COALESCE(SUM(CASE WHEN fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN total_general ELSE 0 END), 0) as ayer,
                 COALESCE(SUM(CASE WHEN YEARWEEK(fecha_venta, 1) = YEARWEEK(CURDATE(), 1) THEN total_general ELSE 0 END), 0) as esta_semana,
                 COALESCE(SUM(CASE WHEN MONTH(fecha_venta) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) THEN total_general ELSE 0 END), 0) as mes_pasado
-                FROM venta WHERE estatus = 'activo'
+                FROM venta WHERE estatus = 'PAGADA'
                 
                 UNION ALL
                 
@@ -720,7 +720,7 @@ private $query;
                 COUNT(CASE WHEN fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN 1 END) as ayer,
                 COUNT(CASE WHEN YEARWEEK(fecha, 1) = YEARWEEK(CURDATE(), 1) THEN 1 END) as esta_semana,
                 COUNT(CASE WHEN MONTH(fecha) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) THEN 1 END) as mes_pasado
-                FROM compra WHERE estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')
+                FROM compra WHERE estatus_compra = 'PAGADA'
                 
                 UNION ALL
                 
