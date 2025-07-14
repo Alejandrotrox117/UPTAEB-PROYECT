@@ -367,7 +367,8 @@ function inicializarTablaPagos() {
       type: "GET",
       dataSrc: function (json) {
         if (json.status === true && Array.isArray(json.data)) {
-          return json.data.slice().reverse();
+          // Retornar los datos tal como vienen del servidor, el ordenamiento se manejará por la columna ID
+          return json.data;
         }
         if (json.message && json.message.includes("permiso")) {
           mostrarModalPermisosDenegados(json.message);
@@ -384,10 +385,20 @@ function inicializarTablaPagos() {
     },
     columns: [
       {
+        data: "idpago",
+        title: "ID",
+        visible: false,
+        searchable: false
+      },
+      {
         data: "destinatario",
         title: "Destinatario",
-        className:
-          "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
+        className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
+      },
+      {
+        data: "fecha_pago_formato",
+        title: "Fecha",
+        className: "all whitespace-nowrap py-2 px-3 text-gray-700",
       },
       {
         data: "tipo_pago_texto",
@@ -421,11 +432,6 @@ function inicializarTablaPagos() {
         data: "metodo_pago",
         title: "Método",
         className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
-      },
-      {
-        data: "fecha_pago_formato",
-        title: "Fecha",
-        className: "all whitespace-nowrap py-2 px-3 text-gray-700",
       },
       {
         data: "estatus",
@@ -545,7 +551,7 @@ function inicializarTablaPagos() {
       [10, 25, 50, 100, -1],
       [10, 25, 50, 100, "Todos"],
     ],
-    order: [[0, "desc"]], // Ordenar por la primera columna (que contiene datos ordenados por ID)
+    order: [[0, "desc"]], // Ordenar por ID (primera columna oculta) de forma descendente para mostrar los últimos registrados primero
     dom:
       "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4'" +
       "l" +
