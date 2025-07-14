@@ -1462,7 +1462,8 @@ document.addEventListener("DOMContentLoaded", function () {
           data.data.forEach(producto => {
             const option = document.createElement('option');
             option.value = producto.idproducto || producto.id;
-            option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria || 'Sin categoría'})`;
+            // Usar la misma lógica que en el modo de creación para mostrar moneda y precio
+            option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria || "N/A"}) - ${producto.codigo_moneda_producto || 'N/A'} ${parseFloat(producto.precio_unitario || 0).toFixed(2)}`;
             selectProducto.appendChild(option);
           });
         }
