@@ -328,6 +328,12 @@ class PagosModel extends Mysql
                     cli.nombre as cliente_nombre,
                     cli.apellido as cliente_apellido,
                     cli.cedula as cliente_cedula,
+                    -- Información de sueldo/empleado (maneja personas y empleados)
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN CONCAT(COALESCE(emp.nombre, ''), ' ', COALESCE(emp.apellido, ''))
+                        WHEN s.idempleado IS NOT NULL THEN CONCAT(COALESCE(empl.nombre, ''), ' ', COALESCE(empl.apellido, ''))
+                        ELSE NULL
+                    END as empleado_nombre,
                     CASE 
                         WHEN p.idcompra IS NOT NULL THEN 'Compra'
                         WHEN p.idventa IS NOT NULL THEN 'Venta'
@@ -337,6 +343,12 @@ class PagosModel extends Mysql
                     CASE 
                         WHEN p.idcompra IS NOT NULL THEN CONCAT(COALESCE(prov.nombre, ''), ' ', COALESCE(prov.apellido, ''))
                         WHEN p.idventa IS NOT NULL THEN CONCAT(COALESCE(cli.nombre, ''), ' ', COALESCE(cli.apellido, ''))
+                        WHEN p.idsueldotemp IS NOT NULL THEN 
+                            CASE 
+                                WHEN s.idpersona IS NOT NULL THEN CONCAT(COALESCE(emp.nombre, ''), ' ', COALESCE(emp.apellido, ''))
+                                WHEN s.idempleado IS NOT NULL THEN CONCAT(COALESCE(empl.nombre, ''), ' ', COALESCE(empl.apellido, ''))
+                                ELSE 'Empleado no encontrado'
+                            END
                         ELSE 'Otro pago'
                     END as destinatario
                 FROM pagos p
@@ -346,6 +358,9 @@ class PagosModel extends Mysql
                 LEFT JOIN proveedor prov ON c.idproveedor = prov.idproveedor
                 LEFT JOIN venta v ON p.idventa = v.idventa  
                 LEFT JOIN cliente cli ON v.idcliente = cli.idcliente
+                LEFT JOIN sueldos s ON p.idsueldotemp = s.idsueldo
+                LEFT JOIN personas emp ON s.idpersona = emp.idpersona
+                LEFT JOIN empleado empl ON s.idempleado = empl.idempleado
                 WHERE p.idpago = ?"
             );
             
@@ -402,6 +417,7 @@ class PagosModel extends Mysql
             $this->setQuery(
                 "SELECT 
                     p.idpago,
+                    p.idsueldotemp,
                     p.monto,
                     p.referencia,
                     p.fecha_pago,
@@ -423,6 +439,12 @@ class PagosModel extends Mysql
                     cli.nombre as cliente_nombre,
                     cli.apellido as cliente_apellido,
                     cli.cedula as cliente_cedula,
+                    -- Información de sueldo/empleado (maneja personas y empleados)
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN CONCAT(COALESCE(emp.nombre, ''), ' ', COALESCE(emp.apellido, ''))
+                        WHEN s.idempleado IS NOT NULL THEN CONCAT(COALESCE(empl.nombre, ''), ' ', COALESCE(empl.apellido, ''))
+                        ELSE NULL
+                    END as empleado_nombre,
                     -- Determinar tipo y destinatario
                     CASE 
                         WHEN p.idcompra IS NOT NULL THEN 'Compra'
@@ -433,6 +455,12 @@ class PagosModel extends Mysql
                     CASE 
                         WHEN p.idcompra IS NOT NULL THEN CONCAT(COALESCE(prov.nombre, ''), ' ', COALESCE(prov.apellido, ''))
                         WHEN p.idventa IS NOT NULL THEN CONCAT(COALESCE(cli.nombre, ''), ' ', COALESCE(cli.apellido, ''))
+                        WHEN p.idsueldotemp IS NOT NULL THEN 
+                            CASE 
+                                WHEN s.idpersona IS NOT NULL THEN CONCAT(COALESCE(emp.nombre, ''), ' ', COALESCE(emp.apellido, ''))
+                                WHEN s.idempleado IS NOT NULL THEN CONCAT(COALESCE(empl.nombre, ''), ' ', COALESCE(empl.apellido, ''))
+                                ELSE 'Empleado no encontrado'
+                            END
                         ELSE 'Otro pago'
                     END as destinatario
                 FROM pagos p
@@ -442,8 +470,10 @@ class PagosModel extends Mysql
                 LEFT JOIN proveedor prov ON c.idproveedor = prov.idproveedor
                 LEFT JOIN venta v ON p.idventa = v.idventa  
                 LEFT JOIN cliente cli ON v.idcliente = cli.idcliente
-             
-                ORDER BY p.fecha_pago DESC, p.idpago DESC"
+                LEFT JOIN sueldos s ON p.idsueldotemp = s.idsueldo
+                LEFT JOIN personas emp ON s.idpersona = emp.idpersona
+                LEFT JOIN empleado empl ON s.idempleado = empl.idempleado
+                ORDER BY p.idpago DESC, p.fecha_creacion DESC"
             );
             
             $this->setArray([]);
@@ -621,20 +651,54 @@ class PagosModel extends Mysql
         try {
             $this->setQuery(
                 "SELECT 
-                    st.idsueldotemp,
-                    st.descripcion as empleado,
-                    st.monto as total,
-                    st.periodo,
-                    '' as empleado_identificacion
-                FROM sueldos_temporales st
-                WHERE st.estatus = 'activo'
-                AND st.idsueldotemp NOT IN (
-                    SELECT pg.idsueldotemp 
-                    FROM pagos pg 
-                    WHERE pg.idsueldotemp IS NOT NULL 
-                    AND pg.estatus IN ('activo', 'conciliado')
-                )
-                ORDER BY st.fecha_creacion DESC"
+                    s.idsueldo,
+                    s.idsueldo as idsueldotemp, -- Mantener compatibilidad
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN CONCAT(p.nombre, ' ', COALESCE(p.apellido, ''))
+                        WHEN s.idempleado IS NOT NULL THEN CONCAT(e.nombre, ' ', COALESCE(e.apellido, ''))
+                        ELSE 'Destinatario no encontrado'
+                    END as empleado,
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN CONCAT(p.nombre, ' ', COALESCE(p.apellido, ''))
+                        WHEN s.idempleado IS NOT NULL THEN CONCAT(e.nombre, ' ', COALESCE(e.apellido, ''))
+                        ELSE 'Destinatario no encontrado'
+                    END as nombre_completo,
+                    ROUND(s.monto, 2) as monto,
+                    ROUND(s.balance, 2) as balance,
+                    s.idmoneda,
+                    COALESCE(m.codigo_moneda, 'VES') as simbolo_moneda,
+                    COALESCE(m.nombre_moneda, 'Bolívares') as nombre_moneda,
+                    ROUND(COALESCE(
+                        (SELECT ht.tasa_a_bs 
+                         FROM historial_tasas_bcv ht 
+                         INNER JOIN monedas m2 ON ht.codigo_moneda = m2.codigo_moneda
+                         WHERE m2.idmoneda = s.idmoneda 
+                           AND ht.fecha_publicacion_bcv = CURDATE() 
+                         ORDER BY ht.fecha_publicacion_bcv DESC 
+                         LIMIT 1), 
+                        COALESCE(m.valor, 1)
+                    ), 2) AS tasa_actual,
+                    ROUND((s.monto * COALESCE(
+                        (SELECT ht.tasa_a_bs 
+                         FROM historial_tasas_bcv ht 
+                         INNER JOIN monedas m2 ON ht.codigo_moneda = m2.codigo_moneda
+                         WHERE m2.idmoneda = s.idmoneda 
+                           AND ht.fecha_publicacion_bcv = CURDATE() 
+                         ORDER BY ht.fecha_publicacion_bcv DESC 
+                         LIMIT 1), 
+                        COALESCE(m.valor, 1)
+                    )), 2) as monto_bolivares,
+                    COALESCE(s.observacion, 'Sin descripción') as periodo,
+                    s.observacion,
+                    s.fecha_creacion
+                FROM sueldos s
+                LEFT JOIN personas p ON s.idpersona = p.idpersona
+                LEFT JOIN empleado e ON s.idempleado = e.idempleado
+                LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
+                WHERE s.estatus IN ('POR_PAGAR', 'PAGO_FRACCIONADO')
+                AND s.monto > 0
+                AND (s.idpersona IS NOT NULL OR s.idempleado IS NOT NULL)
+                ORDER BY s.fecha_creacion DESC"
             );
             
             $this->setArray([]);
@@ -873,7 +937,7 @@ class PagosModel extends Mysql
             }
 
             // Actualizar el estado del pago a conciliado
-            $this->setQuery("UPDATE pagos SET estatus = 'conciliado', fecha_conciliacion = NOW() WHERE idpago = ?");
+            $this->setQuery("UPDATE pagos SET estatus = 'conciliado' WHERE idpago = ?");
             $stmt = $db->prepare($this->getQuery());
             $resultado = $stmt->execute([$idpago]);
 
@@ -881,7 +945,7 @@ class PagosModel extends Mysql
                 throw new Exception("No se pudo actualizar el estado del pago");
             }
 
-            // Procesar según el tipo (compra o venta)
+            // Procesar según el tipo (compra, venta o sueldo)
             if (!empty($pago['idcompra'])) {
                 // Lógica para compras
                 $this->procesarConciliacionCompra($db, $pago['idcompra']);
@@ -889,6 +953,14 @@ class PagosModel extends Mysql
             elseif (!empty($pago['idventa'])) {
                 // Lógica para ventas
                 $this->procesarConciliacionVenta($db, $pago['idventa']);
+            }
+            elseif (!empty($pago['idsueldotemp'])) {
+                // Los pagos de sueldos se procesan automáticamente mediante el trigger
+                // trg_pago_sueldo_conciliado que:
+                // - Resta el monto del balance del sueldo
+                // - Marca el sueldo como PAGADO si el balance llega a 0
+                // - Registra los eventos en la bitácora
+                error_log("PagosModel::ejecutarConciliacionPago -> Pago de sueldo ID: {$pago['idsueldotemp']} procesado por trigger automático");
             }
 
             $db->commit();
@@ -979,8 +1051,42 @@ class PagosModel extends Mysql
 
     public function getInfoSueldo(int $idsueldotemp){
         try {
-            // Por ahora retorna null, se puede implementar después si es necesario
-            return ['idpersona' => null];
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectGeneral();
+            
+            // Buscar en la tabla sueldos usando el ID proporcionado
+            $this->setQuery(
+                "SELECT 
+                    s.idpersona,
+                    s.idempleado,
+                    CASE 
+                        WHEN s.idpersona IS NOT NULL THEN s.idpersona
+                        WHEN s.idempleado IS NOT NULL THEN (
+                            SELECT p.idpersona 
+                            FROM personas p 
+                            INNER JOIN empleado e ON p.identificacion = e.cedula 
+                            WHERE e.idempleado = s.idempleado 
+                            LIMIT 1
+                        )
+                        ELSE NULL
+                    END as idpersona_final
+                FROM sueldos s 
+                WHERE s.idsueldo = ?"
+            );
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idsueldotemp]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $conexion->disconnect();
+            
+            if ($result && $result['idpersona_final']) {
+                return ['idpersona' => $result['idpersona_final']];
+            } else {
+                return ['idpersona' => null];
+            }
+            
         } catch (Exception $e) {
             error_log("Error en getInfoSueldo: " . $e->getMessage());
             return ['idpersona' => null];
@@ -1077,55 +1183,42 @@ class PagosModel extends Mysql
 
     /**
      * Procesa la conciliación de un pago de compra
+     * Nota: El trigger trg_pago_update_compra_conciliado maneja automáticamente
+     * la actualización del balance y estado de la compra
      */
     private function procesarConciliacionCompra($db, $idcompra)
     {
         try {
-            // Obtener información de la compra
-            $this->setQuery("SELECT total_general, balance, estatus_compra FROM compra WHERE idcompra = ?");
+            // El trigger de la base de datos se encarga de:
+            // 1. Calcular el total pagado
+            // 2. Actualizar el balance de la compra  
+            // 3. Cambiar el estado de la compra según corresponda
+            // Por lo tanto, solo registramos el evento
+            
+            error_log("PagosModel::procesarConciliacionCompra -> Procesando compra ID: {$idcompra}");
+            
+            // Opcional: Verificar el resultado después del trigger
+            $this->setQuery("SELECT balance, estatus_compra FROM compra WHERE idcompra = ?");
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idcompra]);
             $compra = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$compra) {
-                throw new Exception("Compra no encontrada");
-            }
-
-            // Calcular total pagado después de la conciliación
-            $this->setQuery("SELECT COALESCE(SUM(monto), 0) as total_pagado FROM pagos WHERE idcompra = ? AND estatus = 'conciliado'");
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$idcompra]);
-            $totalPagado = $stmt->fetch(PDO::FETCH_ASSOC)['total_pagado'];
-
-            // Calcular nuevo balance
-            $nuevoBalance = $compra['total_general'] - $totalPagado;
-            if ($nuevoBalance < 0) {
-                $nuevoBalance = 0;
-            }
-
-            // Actualizar balance de la compra
-            $this->setQuery("UPDATE compra SET balance = ?, ultima_modificacion = NOW() WHERE idcompra = ?");
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$nuevoBalance, $idcompra]);
-
-            // Si el balance llega a 0, marcar como pagada
-            if ($nuevoBalance <= 0.01) {
-                $this->setQuery("UPDATE compra SET estatus_compra = 'PAGADA', balance = 0, ultima_modificacion = NOW() WHERE idcompra = ?");
-                $stmt = $db->prepare($this->getQuery());
-                $stmt->execute([$idcompra]);
-
-                // Limpiar notificaciones
-                try {
-                    require_once "app/models/notificacionesModel.php";
-                    $notificacionesModel = new NotificacionesModel();
-                    $notificacionesModel->limpiarNotificacionesCompraPagada($idcompra);
-                    error_log("PagosModel: Notificaciones limpiadas para compra pagada ID: {$idcompra}");
-                } catch (Exception $e) {
-                    error_log("PagosModel: Error al limpiar notificaciones de compra pagada ID {$idcompra}: " . $e->getMessage());
+            
+            if ($compra) {
+                error_log("PagosModel::procesarConciliacionCompra -> Compra ID: {$idcompra}, Balance: {$compra['balance']}, Estado: {$compra['estatus_compra']}");
+                
+                // Si la compra está pagada, procesar notificaciones
+                if ($compra['estatus_compra'] === 'PAGADA') {
+                    try {
+                        if (file_exists("app/models/notificacionesModel.php")) {
+                            require_once "app/models/notificacionesModel.php";
+                            $notificacionesModel = new NotificacionesModel();
+                            error_log("PagosModel: Compra marcada como pagada ID: {$idcompra}");
+                        }
+                    } catch (Exception $e) {
+                        error_log("PagosModel: Error al procesar notificaciones de compra pagada ID {$idcompra}: " . $e->getMessage());
+                    }
                 }
             }
-
-            error_log("PagosModel::procesarConciliacionCompra -> Compra ID: {$idcompra}, Balance actualizado: {$nuevoBalance}");
 
         } catch (Exception $e) {
             error_log("PagosModel::procesarConciliacionCompra - Error: " . $e->getMessage());
@@ -1172,14 +1265,20 @@ class PagosModel extends Mysql
                 $stmt = $db->prepare($this->getQuery());
                 $stmt->execute([$idventa]);
 
-                // Limpiar notificaciones
+                // Limpiar notificaciones si existe el modelo
                 try {
-                    require_once "app/models/notificacionesModel.php";
-                    $notificacionesModel = new NotificacionesModel();
-                    $notificacionesModel->limpiarNotificacionesVentaPagada($idventa);
-                    error_log("PagosModel: Notificaciones limpiadas para venta pagada ID: {$idventa}");
+                    if (file_exists("app/models/notificacionesModel.php")) {
+                        require_once "app/models/notificacionesModel.php";
+                        $notificacionesModel = new NotificacionesModel();
+                        // TODO: Implementar método limpiarNotificacionesVentaPagada si es necesario
+                        // if (method_exists($notificacionesModel, 'limpiarNotificacionesVentaPagada')) {
+                        //     $notificacionesModel->limpiarNotificacionesVentaPagada($idventa);
+                        //     error_log("PagosModel: Notificaciones limpiadas para venta pagada ID: {$idventa}");
+                        // }
+                        error_log("PagosModel: Venta marcada como pagada ID: {$idventa}");
+                    }
                 } catch (Exception $e) {
-                    error_log("PagosModel: Error al limpiar notificaciones de venta pagada ID {$idventa}: " . $e->getMessage());
+                    error_log("PagosModel: Error al procesar notificaciones de venta pagada ID {$idventa}: " . $e->getMessage());
                 }
             }
 

@@ -49,21 +49,32 @@ private $query;
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-    
             $stmt = $db->prepare("SELECT 
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus = 'activo') as ventas_hoy,
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus = 'activo') as ventas_ayer,
-                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')) as compras_hoy,
-                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')) as compras_ayer,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus = 'PAGADA') as ventas_hoy,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus = 'PAGADA') as ventas_ayer,
+                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra = 'PAGADA') as compras_hoy,
+                (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra = 'PAGADA') as compras_ayer,
                 (SELECT COALESCE(SUM(existencia * precio), 0) FROM producto WHERE estatus = 'activo') as valor_inventario,
                 (SELECT COUNT(*) FROM lotes_produccion WHERE estatus_lote IN ('PLANIFICADO', 'EN_PROCESO')) as producciones_activas,
                 (SELECT COUNT(*) FROM producto WHERE estatus = 'activo' AND existencia > 0) as productos_en_rotacion,
-                (SELECT COALESCE(AVG(CASE WHEN lp.estatus_lote = 'FINALIZADO' THEN 100 ELSE 50 END), 0) FROM lotes_produccion lp WHERE lp.fecha_jornada >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)) as eficiencia_promedio");
+                (SELECT COALESCE(AVG(CASE WHEN lp.estatus_lote = 'FINALIZADO' THEN 100 ELSE 50 END), 0) FROM lotes_produccion lp WHERE lp.fecha_jornada >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)) as eficiencia_promedio,
+                CURDATE() as fecha_consulta");
             $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $resultado;
         } catch (Exception $e) {
-            error_log("Error en getResumen: " . $e->getMessage());
-            return [];
+            return [
+                'ventas_hoy' => 0,
+                'ventas_ayer' => 0,
+                'compras_hoy' => 0,
+                'compras_ayer' => 0,
+                'valor_inventario' => 0,
+                'producciones_activas' => 0,
+                'productos_en_rotacion' => 0,
+                'eficiencia_promedio' => 0,
+                'fecha_consulta' => date('Y-m-d')
+            ];
         } finally {
             $conexion->disconnect();
         }
@@ -112,7 +123,7 @@ private $query;
                 FROM detalle_venta dv
                 JOIN producto p ON dv.idproducto = p.idproducto
                 JOIN venta v ON dv.idventa = v.idventa
-                WHERE v.estatus = 'activo' AND MONTH(v.fecha_venta) = MONTH(CURDATE())
+                WHERE v.estatus = 'PAGADA' AND MONTH(v.fecha_venta) = MONTH(CURDATE())
                 GROUP BY p.idproducto, p.nombre
                 ORDER BY cantidad DESC
                 LIMIT 5");
@@ -124,7 +135,6 @@ private $query;
             return $response;
 
         } catch (Exception $e) {
-            error_log("Error en getAnalisisInventario: " . $e->getMessage());
             return [
                 'stock_critico' => 0, 
                 'valor_por_categoria' => json_encode(['categorias' => []]), 
@@ -152,13 +162,12 @@ private $query;
                 v.estatus as estado
                 FROM venta v
                 JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.estatus = 'activo'
+                WHERE v.estatus = 'PAGADA'
                 ORDER BY v.fecha_venta DESC, v.idventa DESC
                 LIMIT 10");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getUltimasVentas: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -177,13 +186,12 @@ private $query;
                 COUNT(*) as cantidad
                 FROM venta 
                 WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-                AND estatus = 'activo'
+                AND estatus = 'PAGADA'
                 GROUP BY mes 
                 ORDER BY mes ASC");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getVentasMensuales: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -201,7 +209,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getProveedoresActivos: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -218,7 +225,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getProductos: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -235,7 +241,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getEmpleadosActivos: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -253,7 +258,6 @@ private $query;
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        error_log("DashboardModel::ejecutarGetTiposDePago - Error: " . $e->getMessage());
         return [];
         } finally {
         $conexion->disconnect();
@@ -280,7 +284,6 @@ private $query;
         $stmt->execute($this->getArray());
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        error_log("DashboardModel::ejecutarGetIngresosReporte - Error: " . $e->getMessage());
         return [];
         } finally {
         $conexion->disconnect();
@@ -307,7 +310,6 @@ private $query;
         $stmt->execute($this->getArray());
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        error_log("DashboardModel::ejecutarGetIngresosDetallados - Error: " . $e->getMessage());
         return [];
         } finally {
         $conexion->disconnect();
@@ -339,7 +341,6 @@ private $query;
         $stmt->execute($this->getArray());
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        error_log("DashboardModel::ejecutarGetEgresosReporte - Error: " . $e->getMessage());
         return [];
         } finally {
         $conexion->disconnect();
@@ -371,7 +372,6 @@ private $query;
         $stmt->execute($this->getArray());
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-        error_log("DashboardModel::ejecutarGetEgresosDetallados - Error: " . $e->getMessage());
         return [];
         } finally {
         $conexion->disconnect();
@@ -421,7 +421,6 @@ private $query;
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getReporteCompras: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -439,13 +438,13 @@ private $query;
             $stmt = $db->prepare("SELECT 
                 CAST(COALESCE(
                     (SELECT (SUM(v.total_general) - (SELECT COALESCE(SUM(c.total_general), 0) FROM compra c WHERE MONTH(c.fecha) = MONTH(CURDATE()))) / NULLIF(SUM(v.total_general), 0) * 100
-                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'activo'), 0
+                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'PAGADA'), 0
                 ) AS DECIMAL(10,2)) as margen_ganancia,
                 
                 CAST(COALESCE(
-                    (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()))) / 
-                    NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE())), 0)) * 100
-                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'activo'), 0
+                    (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND estatus_compra = 'PAGADA')) / 
+                    NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND estatus_compra = 'PAGADA'), 0)) * 100
+                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'PAGADA'), 0
                 ) AS DECIMAL(10,2)) as roi_mes,
                 
                 CAST(COALESCE(
@@ -461,7 +460,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getKPIsEjecutivos: " . $e->getMessage());
             return ['margen_ganancia' => 0, 'roi_mes' => 0, 'rotacion_inventario' => 0, 'productividad_general' => 0];
         } finally {
             $conexion->disconnect();
@@ -487,7 +485,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getTendenciasVentas: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -512,7 +509,7 @@ private $query;
                         SUM(dv.cantidad * dv.precio_unitario_venta) as ingresos
                     FROM detalle_venta dv
                     INNER JOIN venta v ON dv.idventa = v.idventa
-                    WHERE v.estatus = 'activo'
+                    WHERE v.estatus = 'PAGADA'
                     GROUP BY dv.idproducto
                 ) ventas ON p.idproducto = ventas.idproducto
                 LEFT JOIN (
@@ -521,7 +518,7 @@ private $query;
                         SUM(dc.cantidad * dc.precio_unitario_compra) as costos
                     FROM detalle_compra dc
                     INNER JOIN compra c ON dc.idcompra = c.idcompra
-                    WHERE c.estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')
+                    WHERE c.estatus_compra = 'PAGADA'
                     GROUP BY dc.idproducto
                 ) compras ON p.idproducto = compras.idproducto
                 WHERE p.estatus = 'activo'
@@ -530,7 +527,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getRentabilidadProductos: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -576,7 +572,7 @@ private $query;
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getEficienciaEmpleados: " . $e->getMessage());
+            return [];
             return [];
         } finally {
             $conexion->disconnect();
@@ -608,7 +604,6 @@ private $query;
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getEstadosProduccion: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -640,7 +635,6 @@ private $query;
             $stmt->execute($params);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getCumplimientoTareas: " . $e->getMessage());
             return ['total_tareas' => 0, 'tareas_completadas' => 0, 'tareas_en_progreso' => 0, 'tareas_pendientes' => 0];
         } finally {
             $conexion->disconnect();
@@ -661,7 +655,7 @@ private $query;
                 AVG(v.total_general) as ticket_promedio
                 FROM cliente c
                 JOIN venta v ON c.idcliente = v.idcliente
-                WHERE c.estatus = 'activo' AND v.estatus = 'activo'
+                WHERE c.estatus = 'activo' AND v.estatus = 'PAGADA'
                 GROUP BY c.idcliente, cliente_nombre
                 HAVING total_comprado > 0
                 ORDER BY total_comprado DESC
@@ -670,7 +664,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getTopClientes: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -699,7 +692,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getTopProveedores: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -718,7 +710,7 @@ private $query;
                 COALESCE(SUM(CASE WHEN fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN total_general ELSE 0 END), 0) as ayer,
                 COALESCE(SUM(CASE WHEN YEARWEEK(fecha_venta, 1) = YEARWEEK(CURDATE(), 1) THEN total_general ELSE 0 END), 0) as esta_semana,
                 COALESCE(SUM(CASE WHEN MONTH(fecha_venta) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) THEN total_general ELSE 0 END), 0) as mes_pasado
-                FROM venta WHERE estatus = 'activo'
+                FROM venta WHERE estatus = 'PAGADA'
                 
                 UNION ALL
                 
@@ -728,7 +720,7 @@ private $query;
                 COUNT(CASE WHEN fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN 1 END) as ayer,
                 COUNT(CASE WHEN YEARWEEK(fecha, 1) = YEARWEEK(CURDATE(), 1) THEN 1 END) as esta_semana,
                 COUNT(CASE WHEN MONTH(fecha) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) THEN 1 END) as mes_pasado
-                FROM compra WHERE estatus_compra IN ('AUTORIZADA', 'POR_PAGAR', 'PAGADA', 'PAGO_FRACCIONADO')
+                FROM compra WHERE estatus_compra = 'PAGADA'
                 
                 UNION ALL
                 
@@ -743,7 +735,6 @@ private $query;
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("Error en getKPIsTiempoReal: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();

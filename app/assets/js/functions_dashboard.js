@@ -180,8 +180,12 @@ function cargarDatosDashboard() {
   });
 
   fetch(`dashboard/getDashboardData?${params.toString()}`)
-    .then(response => response.json())
+    .then(response => {
+      console.log("Respuesta del servidor:", response);
+      return response.json();
+    })
     .then(data => {
+      console.log("Datos recibidos del dashboard:", data);
       actualizarResumen(data.resumen);
 
       datosGraficos.ingresos = data.reporteIngresos;
@@ -190,9 +194,9 @@ function cargarDatosDashboard() {
       renderizarGraficoIngresos(data.reporteIngresos);
       renderizarGraficoEgresos(data.reporteEgresos);
     })
-    .catch(error =>
-      console.error("Error al cargar datos del dashboard:", error)
-    );
+    .catch(error => {
+      console.error("Error al cargar datos del dashboard:", error);
+    });
 }
 
 function cargarDashboardAvanzado() {
@@ -371,6 +375,8 @@ function renderizarTablaCompras(data) {
 }
 
 function actualizarResumen(resumen) {
+  console.log("Datos de resumen recibidos:", resumen);
+  
   if (!resumen || typeof resumen !== 'object') {
     console.error("Datos de resumen no válidos recibidos.");
     return;
@@ -382,7 +388,7 @@ function actualizarResumen(resumen) {
       currency: "VES",
     });
 
-
+  // Actualizar métricas principales
   document.getElementById("ventasHoy").textContent = formatMoney(
     resumen.ventas_hoy
   );
@@ -393,9 +399,15 @@ function actualizarResumen(resumen) {
     resumen.valor_inventario
   );
   document.getElementById("empleadosActivos").textContent =
-    resumen.producciones_activas;
+    resumen.producciones_activas || 0;
 
+  // Actualizar métricas secundarias
+  document.getElementById("productosRotacion").textContent = 
+    `${resumen.productos_en_rotacion || 0} productos en rotación`;
+  document.getElementById("eficienciaPromedio").textContent = 
+    `${Math.round(resumen.eficiencia_promedio || 0)}% eficiencia promedio`;
 
+  // Calcular comparaciones
   const ventasComparacion =
     resumen.ventas_ayer > 0
       ? ((resumen.ventas_hoy - resumen.ventas_ayer) / resumen.ventas_ayer) * 100
@@ -417,11 +429,13 @@ function actualizarResumen(resumen) {
     1
   )}% vs ayer`;
 
-
+  // Actualizar clases CSS para los colores
   document.getElementById("ventasHoyComparacion").className = `text-xs ${ventasComparacion >= 0 ? "text-green-600" : "text-red-600"
     }`;
   document.getElementById("comprasHoyComparacion").className = `text-xs ${comprasComparacion >= 0 ? "text-green-600" : "text-red-600"
     }`;
+
+  console.log("Resumen actualizado correctamente");
 }
 
 

@@ -163,6 +163,30 @@ function recargarTablaCompras() {
   }
 }
 
+function formatearFechaSinZonaHoraria(fechaString) {
+  if (!fechaString) return "N/A";
+
+  try {
+    // Dividir la fecha en componentes para evitar problemas de zona horaria
+    const partes = fechaString.split("-");
+    if (partes.length === 3) {
+      const año = parseInt(partes[0]);
+      const mes = parseInt(partes[1]) - 1; // Los meses en JavaScript van de 0-11
+      const dia = parseInt(partes[2]);
+
+      // Crear fecha sin conversión de zona horaria
+      const fecha = new Date(año, mes, dia);
+      return fecha.toLocaleDateString("es-ES");
+    }
+
+    // Fallback al método original si el formato no es YYYY-MM-DD
+    return new Date(fechaString).toLocaleDateString("es-ES");
+  } catch (error) {
+    console.error("Error al formatear fecha:", error);
+    return "N/A";
+  }
+}
+
 function initializeDataTable() {
   $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
     if (settings.nTable.id !== "TablaCompras") {
@@ -223,7 +247,7 @@ function initializeDataTable() {
         title: "Fecha",
         className: "all whitespace-nowrap py-2 px-3 text-gray-700",
         render: function (data) {
-          return data ? new Date(data).toLocaleDateString("es-ES") : "N/A";
+          return formatearFechaSinZonaHoraria(data);
         },
       },
       {

@@ -40,7 +40,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('pagos');
             <?php if ($permisos['crear']): ?>
             <button id="btnAbrirModalRegistrarPago"
                 class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
-                <i class="fas fa-plus mr-1 md:mr-2"></i> Registrar Pago
+                <i class="mr-1 md:mr-2"></i> Registrar Pago
             </button>
             <?php else: ?>
             <div class="bg-gray-100 px-4 py-2 md:px-6 rounded-lg text-gray-500 text-sm md:text-base">

@@ -14,6 +14,31 @@ let tiposPago = [];
 let pagoEditando = null; 
 
 // ============================================
+// FUNCIONES UTILITARIAS
+// ============================================
+
+/**
+ * Formatea un monto con su moneda correspondiente
+ */
+function formatearMontoConMoneda(monto, moneda, simbolo = '') {
+  const montoFormateado = parseFloat(monto).toFixed(2);
+  if (simbolo) {
+    return `${simbolo}${montoFormateado}`;
+  }
+  return `${montoFormateado} ${moneda}`;
+}
+
+/**
+ * Formatea información de conversión de moneda
+ */
+function formatearConversionMoneda(montoOriginal, monedaOriginal, simboloOriginal, montoConvertido) {
+  if (monedaOriginal === 'VES') {
+    return `Bs.${parseFloat(montoConvertido).toFixed(2)}`;
+  }
+  return `${simboloOriginal}${parseFloat(montoOriginal).toFixed(2)} (Bs.${parseFloat(montoConvertido).toFixed(2)})`;
+}
+
+// ============================================
 // FUNCIONES GLOBALES (disponibles en window)
 // ============================================
 
@@ -150,7 +175,7 @@ window.conciliarPago = function (idPago, descripcion) {
 
 // ============================================
 // FUNCIONES AUXILIARES
-// ============================================ 
+// ============================================
 
 function mostrarModalPermisosDenegados(
   mensaje = "No tienes permisos para realizar esta acción."
@@ -303,11 +328,22 @@ $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
   if (settings.nTable.id !== "TablaPagos") {
     return true;
   }
+  
   var api = new $.fn.dataTable.Api(settings);
   var rowData = api.row(dataIndex).data();
-  return (
-    rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo"
-  );
+  
+  // Filtro por estatus (excluir inactivos)
+  if (!rowData || !rowData.estatus || rowData.estatus.toLowerCase() === "inactivo") {
+    return false;
+  }
+  
+  // Filtro por tipo de pago
+  const filtroTipo = $('#filtroTipoPago').val();
+  if (filtroTipo && rowData.tipo_pago_texto !== filtroTipo) {
+    return false;
+  }
+  
+  return true;
 });
 
 function inicializarTablaPagos() {
@@ -342,7 +378,8 @@ function inicializarTablaPagos() {
       type: "GET",
       dataSrc: function (json) {
         if (json.status === true && Array.isArray(json.data)) {
-          return json.data.slice().reverse();
+          // Retornar los datos tal como vienen del servidor, el ordenamiento se manejará por la columna ID
+          return json.data;
         }
         if (json.message && json.message.includes("permiso")) {
           mostrarModalPermisosDenegados(json.message);
@@ -359,15 +396,42 @@ function inicializarTablaPagos() {
     },
     columns: [
       {
+        data: "idpago",
+        title: "ID",
+        visible: false,
+        searchable: false
+      },
+      {
         data: "destinatario",
         title: "Destinatario",
-        className:
-          "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
+        className: "min-tablet-l text-ellipsis py-2 px-3 text-gray-700 dt-fixed-col-background",
+        render: function (data, type, row) {
+          // Si el pago tiene un ID de sueldo, mostrar el nombre del empleado
+          if (row.idsueldotemp && row.empleado_nombre) {
+            const nombre = row.empleado_nombre;
+            // Truncar nombre si es muy largo para mejor responsividad
+            if (type === 'display' && nombre.length > 20) {
+              return `<span title="${nombre}">${nombre.substring(0, 20)}...</span>`;
+            }
+            return nombre;
+          }
+          // Si no, mostrar el destinatario normal
+          const destinatario = data || "N/A";
+          if (type === 'display' && destinatario.length > 20) {
+            return `<span title="${destinatario}">${destinatario.substring(0, 20)}...</span>`;
+          }
+          return destinatario;
+        }
+      },
+      {
+        data: "fecha_pago_formato",
+        title: "Fecha",
+        className: "min-tablet-l py-2 px-3 text-gray-700",
       },
       {
         data: "tipo_pago_texto",
         title: "Tipo",
-        className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+        className: "desktop py-2 px-3 text-gray-700",
         render: function (data) {
           const badges = {
             Compra:
@@ -385,7 +449,7 @@ function inicializarTablaPagos() {
       {
         data: "monto",
         title: "Monto",
-        className: "tablet-l whitespace-nowrap py-2 px-3 text-right",
+        className: "all py-2 px-3 text-right",
         render: function (data) {
           return `<span class="font-semibold text-green-600">Bs.${parseFloat(
             data
@@ -395,12 +459,7 @@ function inicializarTablaPagos() {
       {
         data: "metodo_pago",
         title: "Método",
-        className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
-      },
-      {
-        data: "fecha_pago_formato",
-        title: "Fecha",
-        className: "all whitespace-nowrap py-2 px-3 text-gray-700",
+        className: "desktop py-2 px-3 text-gray-700",
       },
       {
         data: "estatus",
@@ -520,11 +579,11 @@ function inicializarTablaPagos() {
       [10, 25, 50, 100, -1],
       [10, 25, 50, 100, "Todos"],
     ],
-    order: [[4, "desc"]],
+    order: [[0, "desc"]], // Ordenar por ID (primera columna oculta) de forma descendente para mostrar los últimos registrados primero
     dom:
       "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4'" +
       "l" +
-      "<'flex items-center'Bf>" +
+      "<'flex items-center gap-2'<'filtro-tipo-pago'>Bf>" +
       ">" +
       "<'overflow-x-auto't>" +
       "<'flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mt-4'i p>",
@@ -537,6 +596,26 @@ function inicializarTablaPagos() {
     className: "compact",
     initComplete: function (settings, json) {
       window.tablaPagos = this.api();
+      
+      // Crear el filtro de tipo de pago
+      const filtroContainer = $(settings.nTableWrapper).find('.filtro-tipo-pago');
+      filtroContainer.html(`
+        <div class="flex items-center gap-2">
+          <label for="filtroTipoPago" class="text-sm font-medium text-gray-700 whitespace-nowrap">Filtrar por tipo:</label>
+          <select id="filtroTipoPago" class="py-1.5 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white min-w-[140px]">
+            <option value="">Todos</option>
+            <option value="Compra">Compras</option>
+            <option value="Venta">Ventas</option>
+            <option value="Sueldo">Sueldos</option>
+            <option value="Otro">Otros</option>
+          </select>
+        </div>
+      `);
+      
+      // Agregar funcionalidad al filtro
+      $('#filtroTipoPago').on('change', function() {
+        window.tablaPagos.draw(); // Redibujar la tabla para aplicar el filtro personalizado
+      });
     },
     drawCallback: function (settings) {
       $(settings.nTableWrapper)
@@ -554,7 +633,7 @@ function inicializarTablaPagos() {
       ) {
         api.fixedColumns().relayout();
       }
-    },
+    }
   });
 }
 
@@ -895,10 +974,10 @@ function cargarVentasPendientes() {
         result.data.forEach((venta) => {
           const option = document.createElement("option");
           option.value = venta.idventa;
-          option.textContent = `#${venta.nro_venta} - ${venta.cliente} - $${venta.total}`;
+          option.textContent = `#${venta.nro_venta} - ${venta.cliente} - Bs.${venta.balance}`;
           option.dataset.cliente = venta.cliente;
           option.dataset.identificacion = venta.cliente_identificacion;
-          option.dataset.total = venta.total;
+          option.dataset.total = venta.balance;
           select.appendChild(option);
         });
 
@@ -942,18 +1021,47 @@ function cargarSueldosPendientes() {
         result.data.forEach((sueldo) => {
           const option = document.createElement("option");
           option.value = sueldo.idsueldotemp;
-          option.textContent = `${sueldo.empleado} - ${sueldo.periodo} - $${sueldo.total}`;
+          
+          // Formatear información del sueldo con conversión
+          const montoOriginal = sueldo.balance;
+          const montoBolivares = sueldo.monto_bolivares;
+          const moneda = sueldo.codigo_moneda;
+          const simbolo = sueldo.simbolo || '';
+          
+          const montoFormateado = formatearConversionMoneda(
+            montoOriginal, 
+            moneda, 
+            simbolo, 
+            montoBolivares
+          );
+          
+          option.textContent = `${sueldo.empleado} - ${sueldo.periodo} - ${montoFormateado}`;
           option.dataset.empleado = sueldo.empleado;
           option.dataset.identificacion = sueldo.empleado_identificacion;
-          option.dataset.total = sueldo.total;
+          option.dataset.total = montoBolivares; // Siempre usar el monto en bolívares para el pago
+          option.dataset.monedaOriginal = moneda;
+          option.dataset.montoOriginal = montoOriginal;
+          option.dataset.simbolo = simbolo;
           select.appendChild(option);
         });
 
         select.addEventListener("change", function () {
           if (this.value) {
             const option = this.options[this.selectedIndex];
+            
+            // Mostrar información del empleado con detalles de conversión si aplica
+            let nombreCompleto = option.dataset.empleado;
+            if (option.dataset.monedaOriginal !== 'VES') {
+              const conversionInfo = formatearMontoConMoneda(
+                option.dataset.montoOriginal, 
+                option.dataset.monedaOriginal, 
+                option.dataset.simbolo
+              );
+              nombreCompleto += ` (Original: ${conversionInfo})`;
+            }
+            
             mostrarInformacionDestinatario(
-              option.dataset.empleado,
+              nombreCompleto,
               option.dataset.identificacion,
               option.dataset.total
             );

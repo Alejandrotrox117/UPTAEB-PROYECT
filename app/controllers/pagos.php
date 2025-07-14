@@ -218,22 +218,56 @@ class Pagos extends Controllers
                 die();
             }
 
+            // Manejar tanto datos JSON como form-urlencoded
+            $request = [];
+            
+            // Intentar primero leer como JSON
             $postdata = file_get_contents('php://input');
-            $request = json_decode($postdata, true);
+            if (!empty($postdata)) {
+                $jsonRequest = json_decode($postdata, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($jsonRequest)) {
+                    $request = $jsonRequest;
+                } else {
+                    // Si no es JSON válido, intentar parsear como form-urlencoded
+                    parse_str($postdata, $request);
+                }
+            }
+            
+            // Si no hay datos en php://input, usar $_POST
+            if (empty($request) && !empty($_POST)) {
+                $request = $_POST;
+            }
 
-            if (
-                json_last_error() !== JSON_ERROR_NONE ||
-                empty($request['idpago'])
-            ) {
-                throw new Exception('Datos inválidos');
+            if (empty($request) || !is_array($request)) {
+                throw new Exception('No se recibieron datos válidos');
+            }
+
+            if (!isset($request['idpago']) || 
+                ($request['idpago'] === '' || $request['idpago'] === null || $request['idpago'] === 0)) {
+                throw new Exception('ID de pago requerido para la conciliación');
             }
 
             $idpago = intval($request['idpago']);
+            if ($idpago <= 0) {
+                throw new Exception('ID de pago inválido: debe ser un número mayor a 0');
+            }
+
             if (!$idusuario) {
                 throw new Exception('Usuario no autenticado');
             }
 
-            $resultado = $this->model->conciliarPago($idpago, $idusuario);
+            // Verificar que el pago existe antes de conciliar
+            $pagoExistente = $this->model->selectPagoById($idpago);
+            if (!$pagoExistente['status'] || !$pagoExistente['data']) {
+                throw new Exception('El pago no existe o no se pudo obtener la información');
+            }
+
+            // Verificar que el pago no esté ya conciliado
+            if (isset($pagoExistente['data']['estatus']) && strtolower($pagoExistente['data']['estatus']) === 'conciliado') {
+                throw new Exception('El pago ya está conciliado');
+            }
+
+            $resultado = $this->model->conciliarPago($idpago);
 
             if ($resultado['status'] === true) {
                 $detalle = "Pago conciliado con ID: " . $idpago;
