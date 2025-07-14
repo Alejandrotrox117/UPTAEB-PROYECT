@@ -128,14 +128,7 @@ headerAdmin($data);
                 <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Fecha Compra: </span>
                 <span class="text-gray-900 print:text-black"><?= date('d/m/Y', strtotime($compra['fecha'])) ?></span>
               </div>
-              <?php if(!empty($compra['observaciones_compra'])): ?>
-              <div class="mt-4 print:mt-3">
-                <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Observaciones:</span>
-                <div class="text-gray-900 text-sm mt-2 bg-white p-3 rounded border print:text-black print:bg-white print:border print:border-gray-300 print:p-2 print:mt-1 print:rounded-none">
-                  <?= htmlspecialchars($compra['observaciones_compra']) ?>
-                </div>
-              </div>
-              <?php endif; ?>
+
             </div>
           </div>
         </div>
@@ -215,36 +208,38 @@ headerAdmin($data);
           </div>
         </div>
 
-        <!-- Información adicional -->
-        <div class="bg-gray-50 p-4 mb-6 rounded-lg print:bg-gray-50 print:p-4 print:mb-6 print:rounded-none">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm print:grid-cols-2 print:gap-4 print:text-sm">
-            <div class="flex items-center print:block">
-              <i class="fas fa-cube text-blue-600 mr-2 print:hidden"></i>
-              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Total de Productos: </span>
-              <span class="text-gray-900 ml-2 print:text-black print:ml-1"><?= ($contador - 1) ?> items</span>
+        <!-- FIRMAS Y SELLOS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-30 print:grid-cols-3 print:gap-6 print:mt-40" >
+          <div class="text-center print:text-center">
+            <span>
+
+            </span>
+            <div class="border-t border-gray-400 pt-2 print:border-t print:border-gray-400 print:pt-2">
+              <p class="text-sm font-semibold text-gray-700 print:text-sm print:text-black print:font-semibold">ENTREGADO POR</p>
+              <p class="text-xs text-gray-500 mt-1 print:text-xs print:text-gray-600 print:mt-1">Nombre y Firma</p>
             </div>
-            <div class="flex items-center print:block">
-              <i class="fas fa-calendar text-blue-600 mr-2 print:hidden"></i>
-              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Fecha de Emisión: </span>
-              <span class="text-gray-900 ml-2 print:text-black print:ml-1"><?= date('d/m/Y H:i:s') ?></span>
+          </div>    
+          <div class="text-center print:text-center">
+            <div class="border-t border-gray-400 pt-2 print:border-t print:border-gray-400 print:pt-2">
+              <p class="text-sm font-semibold text-gray-700 print:text-sm print:text-black print:font-semibold">RECIBIDO POR</p>
+              <p class="text-xs text-gray-500 mt-1 print:text-xs print:text-gray-600 print:mt-1">Nombre y Firma del Cliente</p>
             </div>
-            <div class="flex items-center print:hidden">
-              <i class="fas fa-user text-blue-600 mr-2 print:hidden"></i>
-              <span class="font-semibold text-gray-700 print:text-blue-600 print:font-semibold"> Usuario: </span>
-              <span class="text-gray-900 ml-2 print:text-black print:ml-1"><?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Sistema') ?></span>
+          </div>
+          <div class="text-center print:text-center">
+            <div class="border-t border-gray-400 pt-2 print:border-t print:border-gray-400 print:pt-2">
+              <p class="text-sm font-semibold text-gray-700 print:text-sm print:text-black print:font-semibold">FECHA DE ENTREGA</p>
+              <p class="text-xs text-gray-500 mt-1 print:text-xs print:text-gray-600 print:mt-1">___/___/______</p>
             </div>
           </div>
         </div>
 
-        <!-- Pie de página para impresión -->
-        <div class="hidden print:block text-center text-sm text-black mt-8 pt-4 border-t border-gray-400">
-          <p>Esta Nota de Recepcion fue generada automáticamente por el sistema el <?= date('d/m/Y') ?> a las <?= date('H:i:s') ?></p>
-          <p class="mt-2">Para consultas o reclamos, contacte a través de nuestros canales oficiales</p>
-          <p class="mt-2 font-bold">RECUPERADORA LA PRADERA DE PAVIA - Todos los derechos reservados</p>
+        <!-- PIE DE PÁGINA -->
+        <div class="mt-8 pt-4 border-t border-gray-300 text-center text-xs text-gray-500 print:mt-6 print:pt-3 print:border-t print:border-gray-300 print:text-center print:text-xs print:text-gray-600">
+          <p>Nota de Recepcion generada el <?= date('d/m/Y H:i:s') ?></p>
+          <p class="mt-1">Este documento NO tiene valor fiscal</p>
         </div>
 
       </div>
-
       <!-- Botones de Acción -->
       <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 print:hidden">
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
@@ -448,24 +443,36 @@ headerAdmin($data);
     margin-bottom: 24px !important;
   }
 
-  .print\\:mt-1 {
-    margin-top: 4px !important;
+  .print\\:mt-8 {
+    margin-top: 32px !important;
   }
 
-  .print\\:mt-3 {
-    margin-top: 12px !important;
+  .print\\:mt-16 {
+    margin-top: 64px !important;
   }
 
-  .print\\:ml-1 {
-    margin-left: 4px !important;
+  .print\\:mt-24 {
+    margin-top: 96px !important;
   }
 
-  .print\\:gap-4 {
-    gap: 16px !important;
+  .print\\:mt-40 {
+    margin-top: 160px !important;
   }
 
-  .print\\:gap-6 {
-    gap: 24px !important;
+  .print\\:pt-2 {
+    padding-top: 8px !important;
+  }
+
+  .print\\:pt-3 {
+    padding-top: 12px !important;
+  }
+
+  .print\\:border-t {
+    border-top: 1px solid #000 !important;
+  }
+
+  .print\\:border-gray-300 {
+    border-color: #d1d5db !important;
   }
 
   /* Espaciado entre elementos */
