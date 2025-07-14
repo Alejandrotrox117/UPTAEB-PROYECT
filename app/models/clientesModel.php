@@ -727,5 +727,108 @@ class ClientesModel extends Mysql
             $conexion->disconnect();
         }
     }
+
+    /**
+     * Insertar cliente completo con todos los campos del modal
+     */
+    public function insertClienteCompleto(array $data){
+        $this->setData($data);
+        $dataArray = $this->getData();
+        $cedula = $dataArray['cedula'];
+
+        // Verificar si ya existe la cédula
+        if ($this->ejecutarVerificacionClientePorCedula($cedula)) {
+            return [
+                'status' => false,
+                'message' => 'La identificación ya está registrada. Por favor, utilice otra.',
+                'cliente_id' => null
+            ];
+        }
+
+        return $this->ejecutarInsercionClienteCompleto($this->getData());
+    }
+
+    /**
+     * Ejecutar inserción completa de cliente con todos los campos
+     */
+    private function ejecutarInsercionClienteCompleto(array $data){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
+            // Verificar qué campos existen en la tabla personas
+            $this->setQuery(
+                "INSERT INTO personas (
+                    nombre, apellido, identificacion, telefono_principal, 
+                    fecha_nacimiento, genero, correo_electronico, direccion, 
+                    observaciones, tipo_persona, estatus, fecha_creacion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            
+            $this->setArray([
+                $data['nombre'],
+                $data['apellido'],
+                $data['cedula'], // identificacion
+                $data['telefono_principal'],
+                !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null,
+                !empty($data['genero']) ? $data['genero'] : null,
+                !empty($data['correo_electronico']) ? $data['correo_electronico'] : null,
+                $data['direccion'],
+                $data['observaciones'] ?? '',
+                'cliente', // tipo_persona
+                $data['estatus'] ?? 'Activo'
+            ]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $this->setClienteId($db->lastInsertId());
+            
+            if ($this->getClienteId()) {
+                $db->commit();
+                $this->setStatus(true);
+                $this->setMessage('Cliente registrado exitosamente.');
+            } else {
+                $db->rollBack();
+                $this->setStatus(false);
+                $this->setMessage('Error al obtener ID de cliente tras registro.');
+            }
+            
+            $resultado = [
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage(),
+                'cliente_id' => $this->getClienteId()
+            ];
+            
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            $conexion->disconnect();
+            error_log("Error al insertar cliente completo: " . $e->getMessage());
+            
+            // Manejar errores específicos de duplicación
+            if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                if (strpos($e->getMessage(), 'identificacion') !== false) {
+                    $mensaje = 'La identificación ya está registrada.';
+                } else {
+                    $mensaje = 'Ya existe un registro con estos datos.';
+                }
+            } else {
+                $mensaje = 'Error al registrar el cliente.';
+            }
+            
+            $resultado = [
+                'status' => false,
+                'message' => $mensaje,
+                'cliente_id' => null
+            ];
+        }
+        
+        $conexion->disconnect();
+        return $resultado;
+    }
 }
 ?>

@@ -466,5 +466,127 @@ class Clientes extends Controllers
             die();
         }
     }
+
+    public function registrarClienteModal()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'crear')) {
+                    $arrResponse = array('status' => false, 'message' => 'No tienes permisos para crear clientes');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $postdata = file_get_contents('php://input');
+                $request = json_decode($postdata, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $arrResponse = array('status' => false, 'message' => 'Datos JSON inválidos');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Limpiar y validar datos de entrada
+                $datosLimpios = [
+                    'nombre' => strClean($request['nombre'] ?? ''),
+                    'apellido' => strClean($request['apellido'] ?? ''),
+                    'identificacion' => strClean($request['identificacion'] ?? ''),
+                    'telefono_principal' => strClean($request['telefono_principal'] ?? ''),
+                    'fecha_nacimiento' => strClean($request['fecha_nacimiento'] ?? ''),
+                    'genero' => strClean($request['genero'] ?? ''),
+                    'correo_electronico' => strClean($request['correo_electronico'] ?? ''),
+                    'direccion' => strClean($request['direccion'] ?? ''),
+                    'observaciones' => strClean($request['observaciones'] ?? '')
+                ];
+
+                // Validar campos obligatorios
+                $camposObligatorios = ['nombre', 'apellido', 'identificacion', 'telefono_principal', 'direccion'];
+                foreach ($camposObligatorios as $campo) {
+                    if (empty($datosLimpios[$campo])) {
+                        $nombreCampo = str_replace('_', ' ', ucfirst($campo));
+                        $arrResponse = array('status' => false, 'message' => "El campo {$nombreCampo} es obligatorio");
+                        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+                }
+
+                // Validaciones específicas
+                if (strlen($datosLimpios['nombre']) < 2 || strlen($datosLimpios['nombre']) > 50) {
+                    $arrResponse = array('status' => false, 'message' => 'El nombre debe tener entre 2 y 50 caracteres');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                if (strlen($datosLimpios['apellido']) < 2 || strlen($datosLimpios['apellido']) > 50) {
+                    $arrResponse = array('status' => false, 'message' => 'El apellido debe tener entre 2 y 50 caracteres');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                if (strlen($datosLimpios['identificacion']) < 6 || strlen($datosLimpios['identificacion']) > 20) {
+                    $arrResponse = array('status' => false, 'message' => 'La identificación debe tener entre 6 y 20 caracteres');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Validar email si se proporciona
+                if (!empty($datosLimpios['correo_electronico']) && !filter_var($datosLimpios['correo_electronico'], FILTER_VALIDATE_EMAIL)) {
+                    $arrResponse = array('status' => false, 'message' => 'El formato del correo electrónico no es válido');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Validar fecha si se proporciona
+                if (!empty($datosLimpios['fecha_nacimiento'])) {
+                    $fecha = DateTime::createFromFormat('Y-m-d', $datosLimpios['fecha_nacimiento']);
+                    if (!$fecha || $fecha->format('Y-m-d') !== $datosLimpios['fecha_nacimiento']) {
+                        $arrResponse = array('status' => false, 'message' => 'El formato de fecha de nacimiento no es válido');
+                        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+                }
+
+                $arrData = array(
+                    'nombre' => $datosLimpios['nombre'],
+                    'apellido' => $datosLimpios['apellido'],
+                    'cedula' => $datosLimpios['identificacion'], // Mapear identificacion a cedula
+                    'telefono_principal' => $datosLimpios['telefono_principal'],
+                    'fecha_nacimiento' => $datosLimpios['fecha_nacimiento'],
+                    'genero' => $datosLimpios['genero'],
+                    'correo_electronico' => $datosLimpios['correo_electronico'],
+                    'direccion' => $datosLimpios['direccion'],
+                    'observaciones' => $datosLimpios['observaciones'],
+                    'estatus' => 'Activo' // Por defecto activo
+                );
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+
+                if (!$idusuario) {
+                    error_log("ERROR: No se encontró ID de usuario en la sesión durante registrarClienteModal()");
+                    $arrResponse = array('status' => false, 'message' => 'Error: Usuario no autenticado');
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $arrResponse = $this->model->insertClienteCompleto($arrData);
+
+                if ($arrResponse['status'] === true) {
+                    $resultadoBitacora = $this->bitacoraModel->registrarAccion('clientes', 'CREAR_CLIENTE_MODAL', $idusuario);
+
+                    if (!$resultadoBitacora) {
+                        error_log("Warning: No se pudo registrar en bitácora la creación del cliente ID: " .
+                            ($arrResponse['cliente_id'] ?? 'desconocido'));
+                    }
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en registrarClienteModal: " . $e->getMessage());
+                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
 }
 ?>

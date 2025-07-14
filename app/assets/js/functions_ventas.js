@@ -166,12 +166,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // Función auxiliar para limpiar la selección de cliente
+  function limpiarSeleccionClienteCompleta() {
+    const inputCriterio = document.getElementById("inputCriterioClienteModal");
+    const inputIdCliente = document.getElementById("idcliente");
+    const divInfoCliente = document.getElementById("cliente_seleccionado_info_modal");
+    const listaResultados = document.getElementById("listaResultadosClienteModal");
+    const btnLimpiarCliente = document.getElementById("btnLimpiarClienteModal");
+
+    if (inputCriterio) inputCriterio.value = "";
+    if (inputIdCliente) inputIdCliente.value = "";
+    if (divInfoCliente) divInfoCliente.classList.add("hidden");
+    if (listaResultados) listaResultados.classList.add("hidden");
+    if (btnLimpiarCliente) btnLimpiarCliente.classList.add("hidden");
+    
+    // Limpiar validaciones relacionadas con el cliente si las hay
+    const errorClienteDiv = document.getElementById("error-idcliente-vacio");
+    if (errorClienteDiv) errorClienteDiv.classList.add("hidden");
+  }
+
   function limpiarFormularioVentaCompleto() {
     if (ventaForm) {
       ventaForm.reset();
       limpiarValidaciones(camposCabeceraVenta, "ventaForm");
     }
     resetYDeshabilitarFormClienteEmbebido();
+    
+    // Limpiar selección de cliente
+    limpiarSeleccionClienteCompleta();
+    
     if (detalleVentaBody) detalleVentaBody.innerHTML = "";
     if (noDetallesMsg) noDetallesMsg.classList.remove("hidden");
 
@@ -395,6 +418,42 @@ document.addEventListener("DOMContentLoaded", function () {
         listaResultados.classList.add("hidden");
       }
     });
+  }
+
+  function inicializarBotonesLimpiarCliente() {
+    const btnLimpiarCliente = document.getElementById("btnLimpiarClienteModal");
+    const btnEliminarClienteSeleccionado = document.getElementById("btnEliminarClienteSeleccionado");
+    const inputCriterio = document.getElementById("inputCriterioClienteModal");
+
+    // Evento para el botón limpiar en el buscador
+    if (btnLimpiarCliente && !btnLimpiarCliente.dataset.listenerAttached) {
+      btnLimpiarCliente.dataset.listenerAttached = "true";
+      btnLimpiarCliente.addEventListener("click", function() {
+        limpiarSeleccionClienteCompleta();
+      });
+    }
+
+    // Evento para el botón eliminar en la información del cliente seleccionado
+    if (btnEliminarClienteSeleccionado && !btnEliminarClienteSeleccionado.dataset.listenerAttached) {
+      btnEliminarClienteSeleccionado.dataset.listenerAttached = "true";
+      btnEliminarClienteSeleccionado.addEventListener("click", function() {
+        limpiarSeleccionClienteCompleta();
+      });
+    }
+
+    // Mostrar el botón limpiar cuando hay texto en el input
+    if (inputCriterio && !inputCriterio.dataset.inputListenerAttached) {
+      inputCriterio.dataset.inputListenerAttached = "true";
+      inputCriterio.addEventListener("input", function() {
+        if (btnLimpiarCliente) {
+          if (this.value.trim().length > 0) {
+            btnLimpiarCliente.classList.remove("hidden");
+          } else {
+            btnLimpiarCliente.classList.add("hidden");
+          }
+        }
+      });
+    }
   }
 
   const agregarDetalleBtn = document.getElementById("agregarDetalleBtn");
@@ -641,6 +700,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       inicializarBuscadorCliente();
+      inicializarBotonesLimpiarCliente();
     });
   }
 
