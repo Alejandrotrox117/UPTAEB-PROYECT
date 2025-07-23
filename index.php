@@ -29,7 +29,7 @@ if (isset($arrUrl[2]) && $arrUrl[2] != "") {
 // Verificar autenticación excepto para login
 if ($controller !== 'Login' && $controller !== 'Error') {
     if (!isset($_SESSION['login']) || $_SESSION['login'] !== true || !isset($_SESSION['usuario_id'])) {
-        header('Location: ' . base_url() . 'login');
+        header('Location: ' . base_url('login'));
         exit();
     }
 }
