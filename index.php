@@ -6,6 +6,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once "app/core/Controllers.php";
 require_once "vendor/autoload.php";
+require_once "config/config.php"; // Cargar configuración antes que helpers
 require_once "helpers/helpers.php";
 
 // Configurar headers de seguridad CSP
@@ -28,7 +29,7 @@ if (isset($arrUrl[2]) && $arrUrl[2] != "") {
 // Verificar autenticación excepto para login
 if ($controller !== 'Login' && $controller !== 'Error') {
     if (!isset($_SESSION['login']) || $_SESSION['login'] !== true || !isset($_SESSION['usuario_id'])) {
-        header('Location: /project/login');
+        header('Location: ' . base_url() . 'login');
         exit();
     }
 }
