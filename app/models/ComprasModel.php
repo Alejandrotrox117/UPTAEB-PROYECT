@@ -490,6 +490,11 @@ class ComprasModel
 
     private function ejecutarActualizacionCompra(int $idcompra, array $datosCompra, array $detallesCompra)
     {
+        // Validación: solo se puede editar si la compra está en estado BORRADOR
+        $compraActual = $this->ejecutarBusquedaCompraPorId($idcompra);
+        if (!$compraActual || (isset($compraActual['estatus_compra']) && $compraActual['estatus_compra'] !== 'BORRADOR')) {
+            return false;
+        }
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
