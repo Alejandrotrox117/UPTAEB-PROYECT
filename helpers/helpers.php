@@ -6,10 +6,22 @@ require 'app/libs/phpmailer/src/Exception.php';
 require 'app/libs/phpmailer/src/PHPMailer.php';
 require 'app/libs/phpmailer/src/SMTP.php';
 date_default_timezone_set('America/Caracas');
-const BASE_URL = "http://localhost/project/";
-function base_url()
+
+function base_url($path = '')
 {
-    return BASE_URL;
+    // Cargar configuración si no está disponible
+    if (!defined('APP_URL')) {
+        require_once __DIR__ . '/../config/config.php';
+    }
+    
+    // Usar APP_URL si está definida, sino usar localhost como fallback
+    $base_url = defined('APP_URL') ? APP_URL : "http://localhost/project";
+    
+    // Asegurar que la base termina con / y el path no empieza con /
+    $base_url = rtrim($base_url, '/') . '/';
+    $path = ltrim($path, '/');
+    
+    return $base_url . $path;
 }
 
 const RECAPTCHA_SITE_KEY = "6LdZw1srAAAAAKMqgrnpTZzD52Mb1piDmpwMR-VX";

@@ -34,7 +34,16 @@ document.addEventListener("DOMContentLoaded", function () {
   inicializarEventos();
   cargarConfiguracionInicial();
 });
-
+ document.addEventListener('DOMContentLoaded', function() {
+            const botones = document.querySelectorAll('.btnUltimoPesoRomanaClasificacion');
+            
+            botones.forEach(boton => {
+                boton.addEventListener('click', function() {
+                    const campo = this.getAttribute('data-campo');
+                    manejarPesoRomanaClasificacion(campo);
+                });
+            });
+        });
 // ========================================
 // INICIALIZACIÓN DE COMPONENTES
 // ========================================
@@ -2007,6 +2016,48 @@ function mostrarAdvertencia(mensaje) {
     confirmButtonColor: "#f59e0b"
   });
 }
+
+async function manejarPesoRomanaClasificacion(campo) {
+            try {
+                const response = await fetch("Compras/getUltimoPesoRomana");
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (data.status) {
+                    // Asignar el peso al campo correspondiente
+                    document.getElementById(campo).value = data.peso;
+                    
+                    // Guardar el peso en la base de datos
+                    await fetch("Compras/guardarPesoRomana", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            peso: data.peso,
+                            fecha: new Date().toISOString().slice(0, 19).replace("T", " "),
+                        }),
+                    });
+
+                    // Mostrar mensaje de éxito
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: `Peso actualizado: ${data.peso} kg`,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire(
+                        "Atención",
+                        data.message || "No se pudo obtener el peso.",
+                        "warning"
+                    );
+                }
+            } catch (e) {
+                console.error("Error completo:", e);
+                Swal.fire("Error", "Error al consultar la romana: " + e.message, "error");
+            }
+        }
 // ========================================
 // EXPOSICIÓN GLOBAL
 // ========================================

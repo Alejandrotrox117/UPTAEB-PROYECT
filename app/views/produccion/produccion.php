@@ -72,7 +72,7 @@
                                 <p class="text-blue-600 text-sm">Registra material clasificado y contaminantes</p>
                             </div>
                         </div>
-                        <button id="btnAbrirModalClasificacion" 
+                        <button id="btnAbrirModalClasificacion"
                             class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition">
                             <i class="fas fa-plus mr-2"></i> Registrar Clasificación
                         </button>
@@ -87,7 +87,7 @@
                                 <p class="text-purple-600 text-sm">Crea pacas desde material clasificado</p>
                             </div>
                         </div>
-                        <button id="btnAbrirModalEmpaque" 
+                        <button id="btnAbrirModalEmpaque"
                             class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-medium transition">
                             <i class="fas fa-plus mr-2"></i> Registrar Empaque
                         </button>
@@ -159,14 +159,14 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Productividad Clasificación (kg/operario/día)
                                         </label>
-                                        <input type="number" step="0.01" id="productividad_clasificacion" name="productividad_clasificacion" 
+                                        <input type="number" step="0.01" id="productividad_clasificacion" name="productividad_clasificacion"
                                             class="w-full border rounded-lg px-3 py-2 text-sm" value="150.00">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Capacidad Máxima Planta (operarios)
                                         </label>
-                                        <input type="number" id="capacidad_maxima_planta" name="capacidad_maxima_planta" 
+                                        <input type="number" id="capacidad_maxima_planta" name="capacidad_maxima_planta"
                                             class="w-full border rounded-lg px-3 py-2 text-sm" value="50">
                                     </div>
                                 </div>
@@ -182,21 +182,21 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Salario Base Diario ($)
                                         </label>
-                                        <input type="number" step="0.01" id="salario_base" name="salario_base" 
+                                        <input type="number" step="0.01" id="salario_base" name="salario_base"
                                             class="w-full border rounded-lg px-3 py-2 text-sm" value="30.00">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Beta - Bono Clasificación ($/kg)
                                         </label>
-                                        <input type="number" step="0.0001" id="beta_clasificacion" name="beta_clasificacion" 
+                                        <input type="number" step="0.0001" id="beta_clasificacion" name="beta_clasificacion"
                                             class="w-full border rounded-lg px-3 py-2 text-sm" value="0.2500">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Gamma - Bono Empaque ($/paca)
                                         </label>
-                                        <input type="number" step="0.01" id="gamma_empaque" name="gamma_empaque" 
+                                        <input type="number" step="0.01" id="gamma_empaque" name="gamma_empaque"
                                             class="w-full border rounded-lg px-3 py-2 text-sm" value="5.00">
                                     </div>
                                 </div>
@@ -212,7 +212,7 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Umbral Máximo de Error (%)
                                         </label>
-                                        <input type="number" step="0.01" id="umbral_error_maximo" name="umbral_error_maximo" 
+                                        <input type="number" step="0.01" id="umbral_error_maximo" name="umbral_error_maximo"
                                             class="w-full border rounded-lg px-3 py-2 text-sm" value="5.00">
                                     </div>
                                 </div>
@@ -228,14 +228,14 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Peso Mínimo Paca (kg)
                                         </label>
-                                        <input type="number" step="0.01" id="peso_minimo_paca" name="peso_minimo_paca" 
+                                        <input type="number" step="0.01" id="peso_minimo_paca" name="peso_minimo_paca"
                                             class="w-full border rounded-lg px-3 py-2 text-sm" value="25.00">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             Peso Máximo Paca (kg)
                                         </label>
-                                        <input type="number" step="0.01" id="peso_maximo_paca" name="peso_maximo_paca" 
+                                        <input type="number" step="0.01" id="peso_maximo_paca" name="peso_maximo_paca"
                                             class="w-full border rounded-lg px-3 py-2 text-sm" value="35.00">
                                     </div>
                                 </div>
@@ -243,11 +243,11 @@
                         </div>
 
                         <div class="flex justify-end pt-6 border-t border-gray-200">
-                            <button type="button" id="btnCargarConfiguracion" 
+                            <button type="button" id="btnCargarConfiguracion"
                                 class="mr-3 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
                                 <i class="fas fa-sync-alt mr-2"></i> Recargar
                             </button>
-                            <button type="submit" id="btnGuardarConfiguracion" 
+                            <button type="submit" id="btnGuardarConfiguracion"
                                 class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-medium">
                                 <i class="fas fa-save mr-2"></i> Guardar Configuración
                             </button>
@@ -262,7 +262,7 @@
 <!-- MODALES -->
 
 <!-- Modal Registrar Lote -->
-<div id="modalRegistrarLote" 
+<div id="modalRegistrarLote"
     class="fixed inset-0 flex  items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4 ">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-2xl max-h-[95vh]">
         <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -293,7 +293,7 @@
                     <label for="lote_observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
                     <textarea id="lote_observaciones" name="observaciones" rows="3" placeholder="Observaciones adicionales..." class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"></textarea>
                 </div>
-                
+
                 <!-- Información calculada -->
                 <div id="infoCalculada" class="bg-blue-50 p-4 rounded-lg border border-blue-200 hidden">
                     <h4 class="text-sm font-semibold text-blue-800 mb-2">Información Calculada</h4>
@@ -333,10 +333,10 @@
                 </svg>
             </button>
         </div>
-        
+
         <div class="px-4 md:px-8 py-6 max-h-[calc(95vh-180px)] overflow-y-auto">
             <input type="hidden" id="idLoteAsignar">
-            
+
             <!-- Información del Lote -->
             <div class="mb-6">
                 <h4 class="text-md font-semibold text-gray-800 mb-3">Información del Lote</h4>
@@ -360,7 +360,7 @@
 
             <!-- Área principal de asignaciones -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
+
                 <!-- Panel izquierdo: Operarios disponibles -->
                 <div class="bg-white border border-gray-200 rounded-lg">
                     <div class="bg-blue-50 px-4 py-3 border-b border-blue-200">
@@ -424,7 +424,7 @@
                 <div id="debugContent" class="text-xs mt-2 bg-white p-2 rounded"></div>
             </div>
         </div>
-        
+
         <!-- Footer del modal -->
         <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -436,14 +436,14 @@
                     <span id="progresoRequeridos" class="font-semibold text-blue-600">0</span>
                     <span> requeridos</span>
                 </div>
-                
+
                 <!-- Botones de acción -->
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                    <button type="button" id="btnCancelarModalAsignarOperarios" 
+                    <button type="button" id="btnCancelarModalAsignarOperarios"
                         class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
                         <i class="fas fa-times mr-2"></i>Cancelar
                     </button>
-                    <button type="button" id="btnGuardarAsignaciones" 
+                    <button type="button" id="btnGuardarAsignaciones"
                         class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm md:text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-save mr-1 md:mr-2"></i>Guardar Asignaciones
                     </button>
@@ -485,18 +485,53 @@
                         <option value="">Seleccionar producto...</option>
                     </select>
                 </div>
-                <div>
-                    <label for="clas_kg_procesados" class="block text-sm font-medium text-gray-700 mb-1">Total Procesado (kg) <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" id="clas_kg_procesados" name="kg_procesados" placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
+                
+                <div class="campo-con-boton">
+                    <label for="clas_kg_procesados" class="block text-sm font-medium text-gray-700 mb-1">
+                        Total Procesado (kg) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="input-con-boton">
+                        <input type="number" step="0.01" id="clas_kg_procesados" name="kg_procesados"
+                            placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
+                        <button type="button" class="btnUltimoPesoRomanaClasificacion boton-interno"
+                            data-campo="clas_kg_procesados" title="Traer último peso de romana">
+                            <i class="fas fa-balance-scale"></i>
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <label for="clas_kg_limpios" class="block text-sm font-medium text-gray-700 mb-1">Material Limpio (kg) <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" id="clas_kg_limpios" name="kg_limpios" placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
+
+                <div class="campo-con-boton">
+                    <label for="clas_kg_limpios" class="block text-sm font-medium text-gray-700 mb-1">
+                        Material Limpio (kg) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="input-con-boton">
+                        <input type="number" step="0.01" id="clas_kg_limpios" name="kg_limpios"
+                            placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
+                        <button type="button" class="btnUltimoPesoRomanaClasificacion boton-interno"
+                            data-campo="clas_kg_limpios" title="Traer último peso de romana">
+                            <i class="fas fa-balance-scale"></i>
+                        </button>
+                    </div>
                 </div>
-                <div>
-                    <label for="clas_kg_contaminantes" class="block text-sm font-medium text-gray-700 mb-1">Contaminantes (kg) <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" id="clas_kg_contaminantes" name="kg_contaminantes" placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
+
+                <div class="campo-con-boton">
+                    <label for="clas_kg_contaminantes" class="block text-sm font-medium text-gray-700 mb-1">
+                        Contaminantes (kg) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="input-con-boton">
+                        <input type="number" step="0.01" id="clas_kg_contaminantes" name="kg_contaminantes"
+                            placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
+                        <button type="button" class="btnUltimoPesoRomanaClasificacion boton-interno"
+                            data-campo="clas_kg_contaminantes" title="Traer último peso de romana">
+                            <i class="fas fa-balance-scale"></i>
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Div vacío para mantener el grid balanceado -->
+                <div></div>
+
+                <!-- Validación - ocupa las 2 columnas -->
                 <div class="md:col-span-2">
                     <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
                         <p class="text-blue-800 text-sm font-medium">Validación:</p>
@@ -504,6 +539,8 @@
                         <p id="validacionClasificacion" class="text-xs mt-1 font-semibold">Diferencia: 0.00 kg</p>
                     </div>
                 </div>
+
+                <!-- Observaciones - ocupa las 2 columnas -->
                 <div class="md:col-span-2">
                     <label for="clas_observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
                     <textarea id="clas_observaciones" name="observaciones" rows="3" placeholder="Observaciones del proceso..." class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"></textarea>
@@ -549,7 +586,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div>
                     <label for="emp_producto_clasificado" class="block text-sm font-medium text-gray-700 mb-1">Material Clasificado <span class="text-red-500">*</span></label>
                     <select id="emp_producto_clasificado" name="idproducto_clasificado" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm" required>
@@ -604,7 +641,7 @@
         </div>
         <div class="px-4 md:px-8 py-6 max-h-[calc(70vh-120px)] overflow-y-auto">
             <input type="hidden" id="idLoteProduccionDiaria">
-            
+
             <div class="mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -659,164 +696,197 @@
 
 <!-- Estilos adicionales -->
 <style>
-.operario-asignado {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border: 1px solid #0ea5e9;
-    border-radius: 0.75rem;
-    padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.operario-asignado::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(180deg, #0ea5e9, #0284c7);
-}
-
-.operario-asignado:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
-}
-
-.operario-asignado .info {
-    flex: 1;
-    padding-left: 0.5rem;
-}
-
-.operario-asignado .info .font-medium {
-    color: #075985;
-    font-size: 0.95rem;
-}
-
-.operario-asignado .acciones {
-    flex-shrink: 0;
-}
-
-.operario-asignado select {
-    font-size: 0.75rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 0.375rem;
-    padding: 0.25rem 0.5rem;
-    background-color: white;
-    color: #374151;
-    transition: border-color 0.2s;
-}
-
-.operario-asignado select:focus {
-    outline: none;
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 1px #0ea5e9;
-}
-
-.operario-checkbox {
-    width: 1.125rem;
-    height: 1.125rem;
-    accent-color: #0ea5e9;
-    cursor: pointer;
-}
-
-.operario-checkbox:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-/* Animaciones para las transiciones */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.operario-asignado {
-    animation: fadeInUp 0.3s ease;
-}
-
-/* Estados de carga */
-.loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    color: #6b7280;
-}
-
-.loading-state i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
     .operario-asignado {
-        flex-direction: column;
-        gap: 0.75rem;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #0ea5e9;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
-    
+
+    .operario-asignado::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #0ea5e9, #0284c7);
+    }
+
+    .operario-asignado:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+    }
+
+    .operario-asignado .info {
+        flex: 1;
+        padding-left: 0.5rem;
+    }
+
+    .operario-asignado .info .font-medium {
+        color: #075985;
+        font-size: 0.95rem;
+    }
+
     .operario-asignado .acciones {
-        align-self: flex-end;
+        flex-shrink: 0;
     }
-    
-    .operario-asignado .info .flex {
+
+    .operario-asignado select {
+        font-size: 0.75rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.375rem;
+        padding: 0.25rem 0.5rem;
+        background-color: white;
+        color: #374151;
+        transition: border-color 0.2s;
+    }
+
+    .operario-asignado select:focus {
+        outline: none;
+        border-color: #0ea5e9;
+        box-shadow: 0 0 0 1px #0ea5e9;
+    }
+
+    .operario-checkbox {
+        width: 1.125rem;
+        height: 1.125rem;
+        accent-color: #0ea5e9;
+        cursor: pointer;
+    }
+
+    .operario-checkbox:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    /* Animaciones para las transiciones */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .operario-asignado {
+        animation: fadeInUp 0.3s ease;
+    }
+
+    /* Estados de carga */
+    .loading-state {
+        display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: #6b7280;
     }
-}
 
-/* Indicadores visuales mejorados */
-.badge-disponible {
-    background-color: #dcfce7;
-    color: #166534;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.25rem 0.5rem;
-    border-radius: 9999px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-}
+    .loading-state i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        animation: spin 1s linear infinite;
+    }
 
-.badge-asignado {
-    background-color: #fed7aa;
-    color: #9a3412;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.25rem 0.5rem;
-    border-radius: 9999px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-}
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
 
-.badge-disponible::before {
-    content: '●';
-    color: #22c55e;
-}
+        to {
+            transform: rotate(360deg);
+        }
+    }
 
-.badge-asignado::before {
-    content: '●';
-    color: #f97316;
-}
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .operario-asignado {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .operario-asignado .acciones {
+            align-self: flex-end;
+        }
+
+        .operario-asignado .info .flex {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Indicadores visuales mejorados */
+    .badge-disponible {
+        background-color: #dcfce7;
+        color: #166534;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .badge-asignado {
+        background-color: #fed7aa;
+        color: #9a3412;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .badge-disponible::before {
+        content: '●';
+        color: #22c55e;
+    }
+
+    .badge-asignado::before {
+        content: '●';
+        color: #f97316;
+    }
+
+    .campo-con-boton {
+        position: relative;
+    }
+
+    .input-con-boton {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .input-con-boton input {
+        width: 100%;
+        padding-right: 40px;
+    }
+
+    .boton-interno {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #1d4ed8;
+        cursor: pointer;
+        font-size: 14px;
+    }
 </style>
 
 <?php footerAdmin($data); ?>
