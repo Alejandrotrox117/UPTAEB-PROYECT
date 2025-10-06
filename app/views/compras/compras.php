@@ -116,7 +116,6 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Compras');
             <label for="inputCriterioProveedorModal" class="block text-sm font-medium text-gray-700 mb-1">Buscar Proveedor <span class="text-red-500">*</span></label>
             <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end mt-1">
                 <input type="text" id="inputCriterioProveedorModal" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Nombre, Apellido o Identificación...">
-                <button type="button" id="btnBuscarProveedorModal" class="bg-green-500 hover:bg-green-600 text-white rounded-lg transition text-sm md:text-base px-4 py-3 w-full sm:w-auto">Buscar</button>
             </div>
             <input type="hidden" id="idproveedor_seleccionado_modal" name="idproveedor_seleccionado">
             <div id="proveedor_seleccionado_info_modal" class="mt-2 p-2 border border-gray-200 rounded-md bg-gray-50 text-xs hidden"></div>
@@ -305,7 +304,6 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Compras');
             <label for="inputCriterioProveedorActualizar" class="block text-sm font-medium text-gray-700 mb-1">Buscar Proveedor <span class="text-red-500">*</span></label>
             <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end mt-1">
                 <input type="text" id="inputCriterioProveedorActualizar" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Nombre, Apellido o Identificación...">
-                <button type="button" id="btnBuscarProveedorActualizar" class="bg-green-500 hover:bg-green-600 text-white rounded-lg transition text-sm md:text-base px-4 py-3 w-full sm:w-auto">Buscar</button>
             </div>
             <input type="hidden" id="idproveedor_seleccionado_actualizar" name="idproveedor_seleccionado">
             <div id="proveedor_seleccionado_info_actualizar" class="mt-2 p-2 border border-gray-200 rounded-md bg-gray-50 text-xs hidden"></div>

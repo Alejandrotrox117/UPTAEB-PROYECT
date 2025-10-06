@@ -845,7 +845,7 @@ class Compras extends Controllers
         $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
         date_default_timezone_set('America/Caracas');
         $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
-        $observaciones_compra = $_POST['observaciones_compra'] ?? '';
+        $observaciones_compra = $_POST['observacionesActualizar'] ?? '';
         $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
 
         if (empty($idproveedor)) {

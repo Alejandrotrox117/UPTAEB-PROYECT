@@ -110,31 +110,14 @@ const camposFormularioProveedor = [
   },
 ];
 
-const camposCompras = [
-  {
-    id: "observaciones_compra_modal",
-    tipo: "textarea",
-    regex: expresiones.observaciones,
-    mensajes: {
-      formato: "Las observaciones no deben exceder los 100 caracteres.",
-    },
-  },
-];
+const camposCompras = [];
 
 const camposFormularioActualizarCompra = [
   {
     id: "fechaActualizar",
     tipo: "date",
     mensajes: { vacio: "La fecha es obligatoria." },
-  },
-  {
-    id: "observacionesActualizar",
-    tipo: "textarea",
-    regex: expresiones.observaciones,
-    mensajes: {
-      formato: "Las observaciones no deben exceder los 100 caracteres.",
-    },
-  },
+  }
 ];
 
 function recargarTablaCompras() {
@@ -625,11 +608,10 @@ function bindModalEvents() {
   }
 
   if (
-    elements.btnBuscarProveedorModal &&
     elements.inputCriterioProveedorModal
   ) {
-    elements.btnBuscarProveedorModal.addEventListener(
-      "click",
+    elements.inputCriterioProveedorModal.addEventListener(
+      "input",
       async function () {
         await buscarProveedor(elements);
       }
@@ -793,8 +775,6 @@ function convertirAMonedaBaseActualizar(monto, idmoneda) {
   if (!idmoneda || !tasasMonedasActualizar) {
     return 0;
   }
-  // La moneda base (Bolívares) usualmente no necesita conversión o su tasa es 1.
-  // Asumiendo que el ID 3 es para Bolívares (VES) como en el modal de creación.
   if (idmoneda == 3) {
     return monto;
   }
@@ -862,12 +842,12 @@ function renderizarTablaDetalleActualizar() {
           item.no_usa_vehiculo ? "hidden" : ""
         }">
           P.Bru: 
-          <input type="number" step="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_actualizar" value="${
+          <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_actualizar" value="${
             item.peso_bruto || ""
           }" placeholder="0.00">
           <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           P.Veh: 
-          <input type="number" step="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_actualizar" value="${
+          <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_actualizar" value="${
             item.peso_vehiculo || ""
           }" placeholder="0.00">
           <button type="button" class="btnUltimoPesoRomanaVehiculoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
@@ -879,7 +859,7 @@ function renderizarTablaDetalleActualizar() {
         <div class="campo_peso_neto_directo_actualizar ${
           !item.no_usa_vehiculo ? "hidden" : ""
         }">
-          P.Neto: <input type="number" step="0.01" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_actualizar" value="${
+          P.Neto: <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_actualizar" value="${
             item.peso_neto_directo || ""
           }" placeholder="0.00">
           <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
@@ -895,7 +875,7 @@ function renderizarTablaDetalleActualizar() {
     } else {
       infoEspecificaHtml = `
         <div>
-          Cant: <input type="number" step="0.01" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_actualizar" value="${
+          Cant: <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_actualizar" value="${
             item.cantidad_unidad || "1"
           }" placeholder="1">
         </div>`;
@@ -909,7 +889,7 @@ function renderizarTablaDetalleActualizar() {
             item.idmoneda_item
           } <input type="number" step="0.01" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_actualizar" value="${item.precio_unitario.toFixed(
       2
-    )}" placeholder="0.00">
+    )}" placeholder="0.00" readonly>
       </td>
       <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_actualizar">${
         item.idmoneda_item
@@ -1171,12 +1151,9 @@ function bindEditarModalEvents() {
     );
   }
 
-  if (
-    elements.btnBuscarProveedorActualizar &&
-    elements.inputCriterioProveedorActualizar
-  ) {
-    elements.btnBuscarProveedorActualizar.addEventListener(
-      "click",
+  if (elements.inputCriterioProveedorActualizar) {
+    elements.inputCriterioProveedorActualizar.addEventListener(
+      "input",
       async function () {
         await buscarProveedorActualizar(elements);
       }
@@ -1378,11 +1355,8 @@ async function cargarProductosParaModal() {
 async function buscarProveedor(elements) {
   const termino = elements.inputCriterioProveedorModal.value.trim();
   if (termino.length < 2) {
-    Swal.fire(
-      "Atención",
-      "Ingrese al menos 2 caracteres para buscar.",
-      "warning"
-    );
+    elements.listaResultadosProveedorModal.innerHTML = "";
+    elements.listaResultadosProveedorModal.classList.add("hidden");
     return;
   }
 
@@ -1586,12 +1560,12 @@ function renderizarTablaDetalleModal() {
           item.no_usa_vehiculo ? "hidden" : ""
         }">
           P.Bru: 
-          <input type="number" step="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${
+          <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${
             item.peso_bruto || ""
           }" placeholder="0.00">
           <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           P.Veh: 
-          <input type="number" step="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${
+          <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${
             item.peso_vehiculo || ""
           }" placeholder="0.00">
           <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
@@ -1603,7 +1577,7 @@ function renderizarTablaDetalleModal() {
         <div class="campo_peso_neto_directo_modal ${
           !item.no_usa_vehiculo ? "hidden" : ""
         }">
-          P.Neto: <input type="number" step="0.01" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${
+          P.Neto: <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${
             item.peso_neto_directo || ""
           }" placeholder="0.00">
           <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
@@ -1619,7 +1593,7 @@ function renderizarTablaDetalleModal() {
     } else {
       infoEspecificaHtml = `
         <div>
-          Cant: <input type="number" step="0.01" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${
+          Cant: <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${
             item.cantidad_unidad || "1"
           }" placeholder="1">
         </div>`;
@@ -1633,7 +1607,7 @@ function renderizarTablaDetalleModal() {
             item.idmoneda_item
           } <input type="number" step="0.01" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(
       2
-    )}" placeholder="0.00">
+    )}" placeholder="0.00" readonly>
       </td>
       <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_modal">${
         item.idmoneda_item
@@ -2238,11 +2212,8 @@ async function cargarProductosParaActualizar() {
 async function buscarProveedorActualizar(elements) {
   const termino = elements.inputCriterioProveedorActualizar.value.trim();
   if (termino.length < 2) {
-    Swal.fire(
-      "Atención",
-      "Ingrese al menos 2 caracteres para buscar.",
-      "warning"
-    );
+    elements.listaResultadosProveedorActualizar.innerHTML = "";
+    elements.listaResultadosProveedorActualizar.classList.add("hidden");
     return;
   }
 
