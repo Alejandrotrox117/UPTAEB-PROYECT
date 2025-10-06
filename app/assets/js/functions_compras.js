@@ -790,8 +790,21 @@ function calcularPesoNetoItemActualizar(item) {
 }
 
 function convertirAMonedaBaseActualizar(monto, idmoneda) {
-  if (idmoneda == 3) return monto;
-  const tasa = tasasMonedasActualizar[idmoneda] || 1;
+  if (!idmoneda || !tasasMonedasActualizar) {
+    return 0;
+  }
+  // La moneda base (Bolívares) usualmente no necesita conversión o su tasa es 1.
+  // Asumiendo que el ID 3 es para Bolívares (VES) como en el modal de creación.
+  if (idmoneda == 3) {
+    return monto;
+  }
+  const tasa = tasasMonedasActualizar[idmoneda];
+  if (!tasa) {
+    console.warn(
+      `No se encontró tasa para la moneda con ID: ${idmoneda}. Se usará tasa 1.`
+    );
+    return monto; // O retornar 0 si se prefiere un fallo explícito
+  }
   return monto * tasa;
 }
 

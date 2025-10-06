@@ -334,11 +334,12 @@ class Compras extends Controllers
     exit();
     }
     
-    public function getCompraById(int $idcompra)
+    public function getCompraById($idcompra)
     {
-        if ($idcompra > 0) {
-            $compra = $this->get_model()->getCompraById($idcompra);
-            $detalles = $this->get_model()->getDetalleCompraById($idcompra);
+        $id = is_array($idcompra) ? $idcompra[0] : $idcompra;
+        if ($id > 0) {
+            $compra = $this->get_model()->getCompraById($id);
+            $detalles = $this->get_model()->getDetalleCompraById($id);
             
             if (empty($compra)) {
                 $response = ["status" => false, "message" => "Compra no encontrada."];

@@ -1088,8 +1088,9 @@ class ComprasModel
                     LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor  
                     WHERE c.idcompra = ?");
             
+            $id = is_array($idcompra) ? $idcompra[0] : $idcompra;
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$idcompra]);
+            $stmt->execute([$id]);
             $compra = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$compra) {
@@ -1109,8 +1110,9 @@ class ComprasModel
                     LEFT JOIN producto p ON dc.idproducto = p.idproducto
                     WHERE dc.idcompra = ?");
             
+            $id = is_array($idcompra) ? $idcompra[0] : $idcompra;
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$idcompra]);
+            $stmt->execute([$id]);
             $detalles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             return [
