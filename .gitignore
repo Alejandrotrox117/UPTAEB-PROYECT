@@ -1,6 +1,7 @@
 # Ejecutables
 *.exe
-
+*.lock
+vendor/
 # Variables de entorno - NUNCA subir al repositorio
 .env
 .env.local
