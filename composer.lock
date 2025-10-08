@@ -57,16 +57,16 @@
         },
         {
             "name": "datatables.net/datatables.net",
-            "version": "2.3.1",
+            "version": "2.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataTables/Dist-DataTables.git",
-                "reference": "f21820b8821a495efb6682d4b42bac25ce6fd662"
+                "reference": "87ae886679e2d4529032364c9f26f0042711cd0e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataTables/Dist-DataTables/zipball/f21820b8821a495efb6682d4b42bac25ce6fd662",
-                "reference": "f21820b8821a495efb6682d4b42bac25ce6fd662",
+                "url": "https://api.github.com/repos/DataTables/Dist-DataTables/zipball/87ae886679e2d4529032364c9f26f0042711cd0e",
+                "reference": "87ae886679e2d4529032364c9f26f0042711cd0e",
                 "shasum": ""
             },
             "require": {
@@ -94,20 +94,20 @@
                 "forum": "https://datatables.net/forums",
                 "source": "https://github.com/DataTables/Dist-DataTables"
             },
-            "time": "2025-05-16T10:50:51+00:00"
+            "time": "2025-09-09T10:50:51+00:00"
         },
         {
             "name": "datatables.net/datatables.net-datetime",
-            "version": "1.5.4",
+            "version": "1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataTables/DateTime.git",
-                "reference": "66ce652a4a790a3b6dae410863de49a8f13d7b22"
+                "reference": "9739163d588367e79df4748136214a3c6267f907"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataTables/DateTime/zipball/66ce652a4a790a3b6dae410863de49a8f13d7b22",
-                "reference": "66ce652a4a790a3b6dae410863de49a8f13d7b22",
+                "url": "https://api.github.com/repos/DataTables/DateTime/zipball/9739163d588367e79df4748136214a3c6267f907",
+                "reference": "9739163d588367e79df4748136214a3c6267f907",
                 "shasum": ""
             },
             "type": "library",
@@ -133,20 +133,20 @@
                 "issues": "https://github.com/DataTables/DateTime/issues",
                 "source": "https://github.com/DataTables/DateTime"
             },
-            "time": "2024-09-13T11:00:32+00:00"
+            "time": "2025-09-09T10:08:47+00:00"
         },
         {
             "name": "datatables.net/datatables.net-dt",
-            "version": "2.3.1",
+            "version": "2.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataTables/Dist-DataTables-DataTables.git",
-                "reference": "681270adc93044afa6cbb58d9daa810b14cb1eef"
+                "reference": "d85363c92a63a1eb266770db269477df2a9f8b25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-DataTables/zipball/681270adc93044afa6cbb58d9daa810b14cb1eef",
-                "reference": "681270adc93044afa6cbb58d9daa810b14cb1eef",
+                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-DataTables/zipball/d85363c92a63a1eb266770db269477df2a9f8b25",
+                "reference": "d85363c92a63a1eb266770db269477df2a9f8b25",
                 "shasum": ""
             },
             "require": {
@@ -174,20 +174,20 @@
                 "forum": "https://datatables.net/forums",
                 "source": "https://github.com/DataTables/Dist-DataTables-DataTables"
             },
-            "time": "2025-05-16T10:51:30+00:00"
+            "time": "2025-09-09T10:51:30+00:00"
         },
         {
             "name": "datatables.net/datatables.net-fixedcolumns",
-            "version": "5.0.4",
+            "version": "5.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataTables/Dist-DataTables-FixedColumns.git",
-                "reference": "caa6627651ed87ab19a466ecbbf5e88169df6376"
+                "reference": "e830c1fb6e11c99f9c8e9afa5f6c5655f93482f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-FixedColumns/zipball/caa6627651ed87ab19a466ecbbf5e88169df6376",
-                "reference": "caa6627651ed87ab19a466ecbbf5e88169df6376",
+                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-FixedColumns/zipball/e830c1fb6e11c99f9c8e9afa5f6c5655f93482f4",
+                "reference": "e830c1fb6e11c99f9c8e9afa5f6c5655f93482f4",
                 "shasum": ""
             },
             "require": {
@@ -216,20 +216,20 @@
                 "forum": "https://datatables.net/forums",
                 "source": "https://github.com/DataTables/Dist-DataTables-FixedColumns"
             },
-            "time": "2024-10-15T13:55:15+00:00"
+            "time": "2025-08-12T10:25:48+00:00"
         },
         {
             "name": "datatables.net/datatables.net-fixedcolumns-dt",
-            "version": "5.0.4",
+            "version": "5.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DataTables/Dist-DataTables-FixedColumns-DataTables.git",
-                "reference": "900bb5460ef529b7bf42fd0b710712339e786165"
+                "reference": "154dfdbc584edbbd5ce1d5a87b8508a7c860b678"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-FixedColumns-DataTables/zipball/900bb5460ef529b7bf42fd0b710712339e786165",
-                "reference": "900bb5460ef529b7bf42fd0b710712339e786165",
+                "url": "https://api.github.com/repos/DataTables/Dist-DataTables-FixedColumns-DataTables/zipball/154dfdbc584edbbd5ce1d5a87b8508a7c860b678",
+                "reference": "154dfdbc584edbbd5ce1d5a87b8508a7c860b678",
                 "shasum": ""
             },
             "require": {
@@ -259,20 +259,20 @@
                 "forum": "https://datatables.net/forums",
                 "source": "https://github.com/DataTables/Dist-DataTables-FixedColumns-DataTables"
             },
-            "time": "2024-10-15T13:55:33+00:00"
+            "time": "2025-08-12T10:25:59+00:00"
         },
         {
             "name": "google/recaptcha",
-            "version": "1.3.0",
+            "version": "1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/google/recaptcha.git",
-                "reference": "d59a801e98a4e9174814a6d71bbc268dff1202df"
+                "reference": "56522c261d2e8c58ba416c90f81a4cd9f2ed89b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/google/recaptcha/zipball/d59a801e98a4e9174814a6d71bbc268dff1202df",
-                "reference": "d59a801e98a4e9174814a6d71bbc268dff1202df",
+                "url": "https://api.github.com/repos/google/recaptcha/zipball/56522c261d2e8c58ba416c90f81a4cd9f2ed89b9",
+                "reference": "56522c261d2e8c58ba416c90f81a4cd9f2ed89b9",
                 "shasum": ""
             },
             "require": {
@@ -311,7 +311,7 @@
                 "issues": "https://github.com/google/recaptcha/issues",
                 "source": "https://github.com/google/recaptcha"
             },
-            "time": "2023-02-18T17:41:46+00:00"
+            "time": "2025-06-26T22:21:57+00:00"
         },
         {
             "name": "setasign/fpdf",
@@ -2020,10 +2020,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": {},
-    "platform-dev": {},
+    "platform": [],
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
