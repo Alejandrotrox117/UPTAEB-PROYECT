@@ -26,7 +26,7 @@ def read_weight_continuous():
     global running
     
     # Configuración del puerto serial para balanza
-    PORT = 'COM5'
+    PORT = 'COM4'
     BAUDRATE = 9600
     TIMEOUT = 0.1
     

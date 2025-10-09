@@ -38,6 +38,38 @@ let fechaActualCompraActualizar = null;
 let tasasMonedas = {};
 let fechaActualCompra = null;
 
+function normalizarFechaParaInput(fecha) {
+  if (!fecha) return "";
+
+  if (fecha instanceof Date && !isNaN(fecha.getTime())) {
+    return fecha.toISOString().slice(0, 10);
+  }
+
+  const fechaString = String(fecha).trim();
+  if (!fechaString) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fechaString)) {
+    return fechaString;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}[T\s]/.test(fechaString)) {
+    return fechaString.slice(0, 10);
+  }
+
+  if (/^\d{2}[\/\-]\d{2}[\/\-]\d{4}$/.test(fechaString)) {
+    const separador = fechaString.includes("/") ? "/" : "-";
+    const [dia, mes, anio] = fechaString.split(separador);
+    return `${anio}-${mes}-${dia}`;
+  }
+
+  const fechaParseada = new Date(fechaString);
+  if (!isNaN(fechaParseada.getTime())) {
+    return fechaParseada.toISOString().slice(0, 10);
+  }
+
+  return "";
+}
+
 const camposFormularioProveedor = [
   {
     id: "proveedorNombre",
@@ -2017,6 +2049,7 @@ async function editarCompra(idCompra) {
 window.editarCompra = editarCompra;
 
 async function abrirModalEditarCompra(compra, detalles) {
+  console.log("Abriendo modal de edición para la compra:", detalles);
   const formEditarCompraModal = document.getElementById(
     "formEditarCompraModal"
   );
@@ -2043,12 +2076,24 @@ async function abrirModalEditarCompra(compra, detalles) {
   mensajeErrorFormCompraActualizar.textContent = "";
 
   document.getElementById("idcompra_editar").value = compra.idcompra;
-  fechaActualizar.value = compra.fecha;
-  fechaActualCompraActualizar = compra.fecha;
+  const fechaRegistroCruda =
+    compra.fecha || compra.fecha_compra || compra.fecha_registro || "";
+  const fechaCreacionCruda = compra.fecha_creacion || "";
+  const fechaCompraNormalizada =
+    normalizarFechaParaInput(fechaRegistroCruda) ||
+    normalizarFechaParaInput(fechaCreacionCruda);
+
+  fechaActualizar.value = fechaCompraNormalizada || "";
+  if (fechaActualizar.dataset) {
+    fechaActualizar.dataset.valorOriginal = fechaRegistroCruda || "";
+  }
+  fechaActualCompraActualizar = fechaCompraNormalizada || "";
   document.getElementById("observacionesActualizar").value =
     compra.observaciones_compra || "";
 
-  await cargarTasasPorFechaActualizar(compra.fecha);
+  const fechaConsultaTasa =
+    fechaCompraNormalizada || normalizarFechaParaInput(fechaRegistroCruda);
+  await cargarTasasPorFechaActualizar(fechaConsultaTasa || fechaRegistroCruda);
   await cargarMonedasParaActualizar();
   selectMonedaGeneralActualizar.value = compra.idmoneda_general;
   await cargarProductosParaActualizar();
@@ -2059,12 +2104,19 @@ async function abrirModalEditarCompra(compra, detalles) {
   inputCriterioProveedorActualizar.value = compra.proveedor_nombre;
 
   if (detalles && detalles.length > 0) {
+    const productosResponse = await fetch("Compras/getListaProductosParaFormulario");
+    const productos = await productosResponse.json();
+    const productosMap = new Map(productos.map(p => [p.idproducto.toString(), p]));
+
     detalles.forEach((detalle) => {
+      const productoInfo = productosMap.get(detalle.idproducto.toString());
+      const idcategoria = productoInfo ? parseInt(productoInfo.idcategoria) : 1; // Default to 1 if not found
+
       const item = {
         idproducto: detalle.idproducto,
         nombre:
           detalle.producto_nombre || detalle.descripcion_temporal_producto,
-        idcategoria: parseInt(detalle.idcategoria),
+        idcategoria: idcategoria,
         precio_unitario: parseFloat(detalle.precio_unitario_compra),
         idmoneda_item: detalle.codigo_moneda,
         simbolo_moneda_item: detalle.codigo_moneda,
@@ -2077,7 +2129,7 @@ async function abrirModalEditarCompra(compra, detalles) {
             ? parseFloat(detalle.peso_neto) || 0
             : 0,
         cantidad_unidad:
-          parseInt(detalle.idcategoria) === 2
+          idcategoria === 2
             ? 0
             : parseFloat(detalle.cantidad),
         descuento: parseFloat(detalle.descuento) || 0,
@@ -2360,6 +2412,11 @@ async function actualizarCompra(elements) {
     "formEditarCompraModal"
   );
   const formData = new FormData(formEditarCompraModal);
+  const inputFechaActualizar = document.getElementById("fechaActualizar");
+  formData.set(
+    "fecha_compra",
+    inputFechaActualizar ? inputFechaActualizar.value : ""
+  );
   const productosDetalle = detalleCompraItemsActualizar.map((item) => ({
     idproducto: item.idproducto,
     nombre_producto: item.nombre,
