@@ -103,7 +103,7 @@ select::-ms-expand {
       <option value="reporteCompras"> Reporte de Compras Finalizadas</option>
       <option value="panelEjecutivo"> Panel Ejecutivo</option>
       <option value="tendenciasVentas"> Tendencias de Ventas</option>
-      <option value="produccion"> Producción</option>
+      <option value="produccion">🏭 Centro de Control de Producción</option>
       <option value="clientesProveedores"> Top Clientes y Proveedores</option>
       <option value="inventario"> Inventario</option>
       <option value="kpis"> KPIs</option>
@@ -332,28 +332,79 @@ select::-ms-expand {
 
   <div id="produccion" class="report-section">
     <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
-      <h2 class="text-xl font-semibold text-gray-800 mb-4">Centro de Control de Producción</h2>
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">
+        <i class="fas fa-cogs text-indigo-600 mr-2"></i>
+        Centro de Control de Producción
+      </h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <input type="date" id="prod_fecha_desde" class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Fecha Desde">
-        <input type="date" id="prod_fecha_hasta" class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" placeholder="Fecha Hasta">
-        <select id="prod_empleado" class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-          <option value="">Todos los Empleados</option>
-          <?php foreach ($data['empleados'] as $empleado): ?>
-            <option value="<?= $empleado['idempleado'] ?>"><?= $empleado['nombre_completo'] ?></option>
-          <?php endforeach; ?>
-        </select>
-        <select id="prod_estado" class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-          <option value="">Todos los Estados</option>
-          <option value="borrador">Borrador</option>
-          <option value="en_clasificacion">En Clasificación</option>
-          <option value="empacando">Empacando</option>
-          <option value="realizado">Realizado</option>
-        </select>
+      <!-- Filtros Globales -->
+      <div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-5 rounded-xl shadow-sm mb-6 border-l-4 border-indigo-500">
+        <h3 class="text-sm font-bold text-gray-700 mb-4">
+          <i class="fas fa-filter text-indigo-600 mr-2"></i>
+          Filtros de Consulta
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div>
+            <label for="prod_fecha_desde" class="block text-xs font-semibold text-gray-700 mb-2">
+              <i class="fas fa-calendar-alt text-indigo-600 mr-1"></i> Fecha Desde:
+            </label>
+            <input type="date" id="prod_fecha_desde" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+          </div>
+          <div>
+            <label for="prod_fecha_hasta" class="block text-xs font-semibold text-gray-700 mb-2">
+              <i class="fas fa-calendar-check text-indigo-600 mr-1"></i> Fecha Hasta:
+            </label>
+            <input type="date" id="prod_fecha_hasta" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+          </div>
+          <div>
+            <label for="prod_empleado" class="block text-xs font-semibold text-gray-700 mb-2">
+              <i class="fas fa-user text-indigo-600 mr-1"></i> Empleado:
+            </label>
+            <select id="prod_empleado" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+              <option value="">Todos los Empleados</option>
+              <?php foreach ($data['empleados'] as $empleado): ?>
+                <option value="<?= $empleado['idempleado'] ?>"><?= $empleado['nombre_completo'] ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div>
+            <label for="prod_estado" class="block text-xs font-semibold text-gray-700 mb-2">
+              <i class="fas fa-flag text-indigo-600 mr-1"></i> Estado:
+            </label>
+            <select id="prod_estado" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+              <option value="">Todos los Estados</option>
+              <option value="borrador">Borrador</option>
+              <option value="en_clasificacion">En Clasificación</option>
+              <option value="empacando">Empacando</option>
+              <option value="realizado">Realizado</option>
+            </select>
+          </div>
+          <div>
+            <label for="prod_tipo_proceso" class="block text-xs font-semibold text-gray-700 mb-2">
+              <i class="fas fa-cogs text-indigo-600 mr-1"></i> Tipo Proceso:
+            </label>
+            <select id="prod_tipo_proceso" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+              <option value="">Todos</option>
+              <option value="CLASIFICACION">Clasificación</option>
+              <option value="EMPAQUE">Empaque</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button id="btnAplicarFiltrosProduccion" 
+            class="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white px-6 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+            <i class="fas fa-sync-alt mr-2"></i> Actualizar Reportes
+          </button>
+        </div>
       </div>
     </div>
 
-    <div id="produccion" class="report-section">
+    <!-- Sección 1: Gráficos de Estados y Eficiencia -->
+    <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">
+        <i class="fas fa-chart-pie text-blue-600 mr-2"></i>
+        Resumen de Estados y Eficiencia
+      </h3>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bg-gray-50 p-4 rounded-lg">
           <div class="flex justify-between items-center mb-2">
@@ -381,6 +432,136 @@ select::-ms-expand {
         <div class="bg-gray-50 p-4 rounded-lg">
           <h4 class="font-medium text-gray-700 mb-2">Cumplimiento de Tareas</h4>
           <div class="h-64"><canvas id="graficoCumplimientoTareas"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección 2: Reportes Semanales de Producción -->
+    <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">
+        <i class="fas fa-chart-bar text-green-600 mr-2"></i>
+        Reportes Detallados de Producción
+      </h3>
+      
+      <!-- Resumen General -->
+      <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-5 rounded-xl shadow-sm mb-6 border-l-4 border-green-500">
+        <h4 class="text-md font-bold text-gray-800 mb-4">
+          <i class="fas fa-chart-pie text-green-600 mr-2"></i>
+          Resumen del Período Seleccionado
+        </h4>
+        <div id="resumenSemanal" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- Se llenará dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Reportes en Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Reporte 1: Producción por Empleado -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl shadow-sm border border-blue-200">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-md font-bold text-gray-800">
+              <i class="fas fa-users-cog text-blue-600 mr-2"></i>
+              Producción por Empleado
+            </h4>
+            <select id="tipoGraficoEmpleados" 
+              class="px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-2 focus:ring-blue-500">
+              <option value="bar">Barras</option>
+              <option value="horizontalBar">Barras Horizontales</option>
+              <option value="pie">Torta</option>
+              <option value="doughnut">Dona</option>
+            </select>
+          </div>
+          <div class="h-72 bg-white rounded-lg p-3">
+            <canvas id="graficoEmpleadosSemanal"></canvas>
+          </div>
+          <div class="mt-4 overflow-x-auto">
+            <table id="tablaEmpleadosSemanal" class="w-full text-xs bg-white rounded-lg overflow-hidden">
+              <thead class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+                <tr>
+                  <th class="px-3 py-2 text-left font-bold">Empleado</th>
+                  <th class="px-3 py-2 text-left font-bold">Tipo</th>
+                  <th class="px-3 py-2 text-right font-bold">Procesado (kg)</th>
+                  <th class="px-3 py-2 text-right font-bold">Producido (kg)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <!-- Se llenará dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reporte 2: Materiales Más Procesados -->
+        <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl shadow-sm border border-purple-200">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-md font-bold text-gray-800">
+              <i class="fas fa-boxes text-purple-600 mr-2"></i>
+              Materiales Más Procesados
+            </h4>
+            <select id="tipoGraficoMateriales" 
+              class="px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-2 focus:ring-purple-500">
+              <option value="bar">Barras</option>
+              <option value="horizontalBar">Barras Horizontales</option>
+              <option value="pie">Torta</option>
+              <option value="doughnut">Dona</option>
+            </select>
+          </div>
+          <div class="h-72 bg-white rounded-lg p-3">
+            <canvas id="graficoMaterialesSemanal"></canvas>
+          </div>
+          <div class="mt-4 overflow-x-auto">
+            <table id="tablaMaterialesSemanal" class="w-full text-xs bg-white rounded-lg overflow-hidden">
+              <thead class="bg-gradient-to-r from-purple-500 to-pink-600 text-white">
+                <tr>
+                  <th class="px-3 py-2 text-left font-bold">Producto Inicial</th>
+                  <th class="px-3 py-2 text-left font-bold">Producto Final</th>
+                  <th class="px-3 py-2 text-right font-bold">Usado (kg)</th>
+                  <th class="px-3 py-2 text-right font-bold">Rendimiento %</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <!-- Se llenará dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Reporte 3: Total por Tipo de Proceso -->
+        <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-sm border border-green-200 lg:col-span-2">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="text-md font-bold text-gray-800">
+              <i class="fas fa-chart-line text-green-600 mr-2"></i>
+              Total por Tipo de Proceso
+            </h4>
+            <select id="tipoGraficoTotales" 
+              class="px-2 py-1 border border-gray-300 rounded-md text-xs focus:ring-2 focus:ring-green-500">
+              <option value="bar">Barras</option>
+              <option value="horizontalBar">Barras Horizontales</option>
+              <option value="pie">Torta</option>
+              <option value="doughnut">Dona</option>
+            </select>
+          </div>
+          <div class="h-72 bg-white rounded-lg p-3">
+            <canvas id="graficoTotalesSemanal"></canvas>
+          </div>
+          <div class="mt-4 overflow-x-auto">
+            <table id="tablaTotalesSemanal" class="w-full text-sm bg-white rounded-lg overflow-hidden">
+              <thead class="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                <tr>
+                  <th class="px-4 py-3 text-left font-bold">Tipo Proceso</th>
+                  <th class="px-4 py-3 text-center font-bold">Empleados</th>
+                  <th class="px-4 py-3 text-center font-bold">Lotes</th>
+                  <th class="px-4 py-3 text-right font-bold">Procesado (kg)</th>
+                  <th class="px-4 py-3 text-right font-bold">Producido (kg)</th>
+                  <th class="px-4 py-3 text-right font-bold">Rendimiento %</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <!-- Se llenará dinámicamente -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

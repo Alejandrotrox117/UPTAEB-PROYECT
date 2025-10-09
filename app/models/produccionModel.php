@@ -54,6 +54,7 @@ class ProduccionModel extends Mysql
             return [
                 'status' => true,
                 'message' => 'Lote creado exitosamente.',
+                'idlote' => $loteId, // Agregado para compatibilidad
                 'lote_id' => $loteId,
                 'numero_lote' => $numeroLote,
                 'operarios_requeridos' => $operariosRequeridos
@@ -211,292 +212,6 @@ class ProduccionModel extends Mysql
             return [
                 'status' => false,
                 'message' => 'Error al cerrar lote: ' . $e->getMessage()
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    public function verificarRegistrosProduccionLote(int $idlote)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $query = "SELECT 
-                a.idempleado,
-                CONCAT(e.nombre, ' ', e.apellido) as operario,
-                a.tipo_tarea,
-                a.turno,
-                COALESCE(rp.kg_clasificados, 0) as kg_clasificados,
-                COALESCE(rp.kg_contaminantes, 0) as kg_contaminantes,
-                COALESCE(rp.pacas_armadas, 0) as pacas_armadas,
-                CASE WHEN rp.idempleado IS NOT NULL THEN 'SI' ELSE 'NO' END as tiene_registro,
-                (SELECT COUNT(*) FROM movimientos_existencia me 
-                 WHERE me.observaciones LIKE CONCAT('%Operario: ', a.idempleado, ',%')
-                 AND me.observaciones LIKE CONCAT('%Lote: ', ?, '%')) as movimientos_registrados
-            FROM asignaciones_operarios a
-            INNER JOIN empleado e ON a.idempleado = e.idempleado
-            LEFT JOIN registro_produccion rp ON a.idempleado = rp.idempleado AND rp.idlote = a.idlote
-            WHERE a.idlote = ?
-            ORDER BY e.nombre, e.apellido";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$idlote, $idlote]);
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return [
-                "status" => true,
-                "message" => "Verificación de registros obtenida.",
-                "data" => $result
-            ];
-        } catch (Exception $e) {
-            error_log("Error al verificar registros: " . $e->getMessage());
-            return [
-                "status" => false,
-                "message" => "Error al verificar registros.",
-                "data" => []
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    public function marcarOperarioAusente(int $idlote, int $idempleado, string $observaciones = '')
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $db->beginTransaction();
-
-            $query = "SELECT COUNT(*) FROM asignaciones_operarios WHERE idlote = ? AND idempleado = ?";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$idlote, $idempleado]);
-            
-            if ($stmt->fetchColumn() == 0) {
-                return ['status' => false, 'message' => 'Operario no asignado a este lote.'];
-            }
-
-            $query = "UPDATE asignaciones_operarios 
-                SET estatus_asignacion = 'AUSENTE', observaciones = CONCAT(observaciones, ' - AUSENTE: ', ?)
-                WHERE idlote = ? AND idempleado = ?";
-            
-            $stmt = $db->prepare($query);
-            $stmt->execute([$observaciones, $idlote, $idempleado]);
-
-            $query = "SELECT fecha_jornada FROM lotes_produccion WHERE idlote = ?";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
-            $fechaJornada = $stmt->fetchColumn();
-
-            $query = "INSERT INTO registro_produccion (
-                fecha_jornada, idlote, idempleado, kg_clasificados, 
-                kg_contaminantes, pacas_armadas, estatus, observaciones
-            ) VALUES (?, ?, ?, 0, 0, 0, 'CALCULADO', ?)
-            ON DUPLICATE KEY UPDATE
-                estatus = 'CALCULADO',
-                observaciones = VALUES(observaciones)";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$fechaJornada, $idlote, $idempleado, "AUSENTE - " . $observaciones]);
-
-            $db->commit();
-
-            return ['status' => true, 'message' => 'Operario marcado como ausente.'];
-        } catch (Exception $e) {
-            $db->rollback();
-            error_log("Error al marcar ausencia: " . $e->getMessage());
-            return ['status' => false, 'message' => 'Error al marcar ausencia.'];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    public function asignarOperariosLote(int $idlote, array $operarios)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $db->beginTransaction();
-
-            $query = "SELECT estatus_lote FROM lotes_produccion WHERE idlote = ?";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
-            $lote = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$lote) {
-                throw new Exception("El lote no existe");
-            }
-
-            if ($lote['estatus_lote'] !== 'PLANIFICADO') {
-                throw new Exception("Solo se pueden asignar operarios a lotes planificados");
-            }
-
-            $query = "DELETE FROM asignaciones_operarios WHERE idlote = ?";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
-
-            $operariosAsignados = 0;
-
-            foreach ($operarios as $operario) {
-                if (
-                    empty($operario['idempleado']) ||
-                    empty($operario['tipo_tarea']) ||
-                    empty($operario['turno'])
-                ) {
-                    throw new Exception("Datos incompletos del operario");
-                }
-
-                $query = "SELECT idempleado FROM empleado WHERE idempleado = ? AND estatus = 'Activo'";
-                $stmt = $db->prepare($query);
-                $stmt->execute([intval($operario['idempleado'])]);
-                if (!$stmt->fetch()) {
-                    throw new Exception("El empleado ID {$operario['idempleado']} no existe o no está activo");
-                }
-
-                if (!in_array($operario['tipo_tarea'], ['CLASIFICACION', 'EMPAQUE'])) {
-                    throw new Exception("Tipo de tarea inválido: {$operario['tipo_tarea']}");
-                }
-
-                if (!in_array($operario['turno'], ['MAÑANA', 'TARDE', 'NOCHE'])) {
-                    throw new Exception("Turno inválido: {$operario['turno']}");
-                }
-
-                $query = "INSERT INTO asignaciones_operarios (
-                idlote, idempleado, tipo_tarea, turno, observaciones, fecha_asignacion
-            ) VALUES (?, ?, ?, ?, ?, NOW())";
-
-                $stmt = $db->prepare($query);
-                $stmt->execute([
-                    $idlote,
-                    intval($operario['idempleado']),
-                    $operario['tipo_tarea'],
-                    $operario['turno'],
-                    $operario['observaciones'] ?? ''
-                ]);
-
-                $operariosAsignados++;
-            }
-
-            $query = "UPDATE lotes_produccion SET operarios_asignados = ? WHERE idlote = ?";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$operariosAsignados, $idlote]);
-
-            $db->commit();
-
-            return [
-                'status' => true,
-                'message' => "Se asignaron {$operariosAsignados} operarios al lote exitosamente.",
-                'operarios_asignados' => $operariosAsignados
-            ];
-        } catch (Exception $e) {
-            $db->rollback();
-            error_log("Error al asignar operarios: " . $e->getMessage());
-            return [
-                'status' => false,
-                'message' => 'Error al asignar operarios: ' . $e->getMessage()
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-
-    public function selectOperariosDisponibles(string $fecha)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $query = "SELECT 
-            e.idempleado, 
-            CONCAT(e.nombre, ' ', e.apellido) as nombre_completo,
-            e.puesto,
-            e.telefono_principal,
-            CASE 
-                WHEN a.idasignacion IS NOT NULL THEN 'ASIGNADO'
-                ELSE 'DISPONIBLE'
-            END as estatus_disponibilidad,
-            COALESCE(l.numero_lote, '') as lote_asignado
-        FROM empleado e
-        LEFT JOIN asignaciones_operarios a ON e.idempleado = a.idempleado 
-            AND EXISTS (
-                SELECT 1 FROM lotes_produccion lp 
-                WHERE lp.idlote = a.idlote 
-                AND lp.fecha_jornada = ?
-                AND lp.estatus_lote IN ('PLANIFICADO', 'EN_PROCESO')
-            )
-        LEFT JOIN lotes_produccion l ON a.idlote = l.idlote 
-            AND l.fecha_jornada = ?
-            AND l.estatus_lote IN ('PLANIFICADO', 'EN_PROCESO')
-        WHERE e.estatus = 'Activo'
-        ORDER BY e.nombre, e.apellido";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$fecha, $fecha]);
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return [
-                "status" => true,
-                "message" => "Operarios disponibles obtenidos.",
-                "data" => $result
-            ];
-        } catch (Exception $e) {
-            error_log("Error al obtener operarios disponibles: " . $e->getMessage());
-            return [
-                "status" => false,
-                "message" => "Error al obtener operarios disponibles: " . $e->getMessage(),
-                "data" => []
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-
-    public function selectAsignacionesLote(int $idlote)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $query = "SELECT 
-            a.idasignacion, 
-            a.idempleado,
-            a.tipo_tarea, 
-            a.turno, 
-            a.estatus_asignacion,
-            a.observaciones,
-            CONCAT(e.nombre, ' ', e.apellido) as operario,
-            e.telefono_principal,
-            e.puesto
-        FROM asignaciones_operarios a
-        INNER JOIN empleado e ON a.idempleado = e.idempleado
-        WHERE a.idlote = ?
-        ORDER BY a.tipo_tarea, e.nombre, e.apellido";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return [
-                "status" => true,
-                "message" => "Asignaciones obtenidas.",
-                "data" => $result
-            ];
-        } catch (Exception $e) {
-            error_log("Error al obtener asignaciones: " . $e->getMessage());
-            return [
-                "status" => false,
-                "message" => "Error al obtener asignaciones: " . $e->getMessage(),
-                "data" => []
             ];
         } finally {
             $conexion->disconnect();
@@ -744,6 +459,198 @@ class ProduccionModel extends Mysql
                 'status' => false,
                 'message' => 'Error al registrar empaque: ' . $e->getMessage()
             ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    // ========================================
+    // MÉTODOS PARA OBTENER PROCESOS POR LOTE
+    // ========================================
+    
+    public function obtenerProcesosClasificacionPorLote($idlote)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $query = "SELECT 
+                me.idmovimiento_existencia,
+                me.numero_movimiento,
+                me.cantidad_salida as kg_procesados,
+                me.observaciones,
+                me.fecha_creacion,
+                p.idproducto,
+                p.nombre as producto_nombre,
+                p.codigo as producto_codigo,
+                DATE_FORMAT(me.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_formato
+            FROM movimientos_existencia me
+            INNER JOIN producto p ON me.idproducto = p.idproducto
+            WHERE me.idtipomovimiento = 3 
+            AND me.observaciones LIKE CONCAT('%Lote: ', ?, '%')
+            AND me.observaciones LIKE '%Clasificación%'
+            AND me.cantidad_salida > 0
+            ORDER BY me.fecha_creacion DESC";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote]);
+            $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $procesos = [];
+            foreach ($movimientos as $mov) {
+                // Extraer información de las observaciones
+                $obs = $mov['observaciones'];
+                
+                // Extraer operario
+                preg_match('/Operario: (\d+)/', $obs, $matchesOperario);
+                $idempleado = isset($matchesOperario[1]) ? $matchesOperario[1] : null;
+                
+                // Extraer kg procesados, limpios y contaminantes
+                preg_match('/Procesado: ([\d.]+) kg/', $obs, $matchesProcesado);
+                preg_match('/Limpio: ([\d.]+) kg/', $obs, $matchesLimpio);
+                preg_match('/Contaminantes: ([\d.]+) kg/', $obs, $matchesContaminantes);
+                
+                $kgProcesados = isset($matchesProcesado[1]) ? $matchesProcesado[1] : $mov['kg_procesados'];
+                $kgLimpios = isset($matchesLimpio[1]) ? $matchesLimpio[1] : 0;
+                $kgContaminantes = isset($matchesContaminantes[1]) ? $matchesContaminantes[1] : 0;
+                
+                // Obtener nombre del operario
+                $nombreOperario = '-';
+                if ($idempleado) {
+                    $queryEmpleado = "SELECT CONCAT(nombre, ' ', apellido) as nombre_completo 
+                                     FROM empleado WHERE idempleado = ?";
+                    $stmtEmpleado = $db->prepare($queryEmpleado);
+                    $stmtEmpleado->execute([$idempleado]);
+                    $empleado = $stmtEmpleado->fetch(PDO::FETCH_ASSOC);
+                    if ($empleado) {
+                        $nombreOperario = $empleado['nombre_completo'];
+                    }
+                }
+                
+                $procesos[] = [
+                    'idmovimiento' => $mov['idmovimiento_existencia'],
+                    'numero_movimiento' => $mov['numero_movimiento'],
+                    'idempleado' => $idempleado,
+                    'operario_nombre' => $nombreOperario,
+                    'empleado_nombre' => $nombreOperario,
+                    'idproducto_origen' => $mov['idproducto'],
+                    'producto_nombre' => $mov['producto_nombre'],
+                    'nombre_producto' => $mov['producto_nombre'],
+                    'producto_codigo' => $mov['producto_codigo'],
+                    'kg_procesados' => $kgProcesados,
+                    'kg_limpios' => $kgLimpios,
+                    'kg_contaminantes' => $kgContaminantes,
+                    'observaciones' => $obs,
+                    'fecha_creacion' => $mov['fecha_creacion'],
+                    'fecha_formato' => $mov['fecha_formato']
+                ];
+            }
+
+            return $procesos;
+
+        } catch (Exception $e) {
+            error_log("Error al obtener procesos de clasificación: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    public function obtenerProcesosEmpaquePorLote($idlote)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $query = "SELECT 
+                me.idmovimiento_existencia,
+                me.numero_movimiento,
+                me.cantidad_entrada as peso_paca,
+                me.observaciones,
+                me.fecha_creacion,
+                p.idproducto,
+                p.nombre as producto_nombre,
+                p.codigo as producto_codigo,
+                DATE_FORMAT(me.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_formato
+            FROM movimientos_existencia me
+            INNER JOIN producto p ON me.idproducto = p.idproducto
+            WHERE me.idtipomovimiento = 4 
+            AND me.observaciones LIKE CONCAT('%Lote: ', ?, '%')
+            AND me.observaciones LIKE '%Paca empacada%'
+            AND me.cantidad_entrada > 0
+            ORDER BY me.fecha_creacion DESC";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote]);
+            $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $procesos = [];
+            foreach ($movimientos as $mov) {
+                // Extraer información de las observaciones
+                $obs = $mov['observaciones'];
+                
+                // Extraer operario
+                preg_match('/Operario: (\d+)/', $obs, $matchesOperario);
+                $idempleado = isset($matchesOperario[1]) ? $matchesOperario[1] : null;
+                
+                // Extraer peso
+                preg_match('/Peso: ([\d.]+) kg/', $obs, $matchesPeso);
+                $pesoPaca = isset($matchesPeso[1]) ? $matchesPeso[1] : $mov['peso_paca'];
+                
+                // Extraer calidad
+                preg_match('/Calidad: (\w+)/', $obs, $matchesCalidad);
+                $calidad = isset($matchesCalidad[1]) ? $matchesCalidad[1] : 'ESTANDAR';
+                
+                // Extraer código de paca
+                preg_match('/Código: (PACA-[\w-]+)/', $obs, $matchesCodigo);
+                $codigoPaca = isset($matchesCodigo[1]) ? $matchesCodigo[1] : '-';
+                
+                // Obtener nombre del operario
+                $nombreOperario = '-';
+                if ($idempleado) {
+                    $queryEmpleado = "SELECT CONCAT(nombre, ' ', apellido) as nombre_completo 
+                                     FROM empleado WHERE idempleado = ?";
+                    $stmtEmpleado = $db->prepare($queryEmpleado);
+                    $stmtEmpleado->execute([$idempleado]);
+                    $empleado = $stmtEmpleado->fetch(PDO::FETCH_ASSOC);
+                    if ($empleado) {
+                        $nombreOperario = $empleado['nombre_completo'];
+                    }
+                }
+                
+                // Extraer observaciones adicionales (después del último guion)
+                $observacionesAdicionales = '';
+                if (preg_match('/ - (.+)$/', $obs, $matchesObs)) {
+                    $observacionesAdicionales = $matchesObs[1];
+                }
+                
+                $procesos[] = [
+                    'idmovimiento' => $mov['idmovimiento_existencia'],
+                    'numero_movimiento' => $mov['numero_movimiento'],
+                    'codigo_paca' => $codigoPaca,
+                    'idempleado' => $idempleado,
+                    'operario_nombre' => $nombreOperario,
+                    'empleado_nombre' => $nombreOperario,
+                    'idproducto_clasificado' => $mov['idproducto'],
+                    'producto_nombre' => $mov['producto_nombre'],
+                    'nombre_producto' => $mov['producto_nombre'],
+                    'producto_codigo' => $mov['producto_codigo'],
+                    'peso_paca' => $pesoPaca,
+                    'calidad' => $calidad,
+                    'observaciones' => $observacionesAdicionales,
+                    'observaciones_completas' => $obs,
+                    'fecha_creacion' => $mov['fecha_creacion'],
+                    'fecha_formato' => $mov['fecha_formato']
+                ];
+            }
+
+            return $procesos;
+
+        } catch (Exception $e) {
+            error_log("Error al obtener procesos de empaque: " . $e->getMessage());
+            return [];
         } finally {
             $conexion->disconnect();
         }
@@ -1399,4 +1306,819 @@ class ProduccionModel extends Mysql
             $conexion->disconnect();
         }
     }
+
+    // ============================================================
+    // MÉTODOS PARA REGISTRO_PRODUCCION
+    // ============================================================
+
+    /**
+     * Inserta un nuevo registro de producción
+     * Calcula automáticamente los salarios según configuración
+     */
+    public function insertarRegistroProduccion(array $data)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
+            // Obtener configuración activa
+            $config = $this->obtenerConfiguracion($db);
+
+            // Validar que el lote existe
+            $queryLote = "SELECT idlote FROM lotes_produccion WHERE idlote = ?";
+            $stmtLote = $db->prepare($queryLote);
+            $stmtLote->execute([$data['idlote']]);
+            if (!$stmtLote->fetch()) {
+                throw new Exception("El lote especificado no existe");
+            }
+
+            // Validar que el empleado existe
+            if (!empty($data['idempleado'])) {
+                $queryEmpleado = "SELECT idempleado FROM empleado WHERE idempleado = ?";
+                $stmtEmpleado = $db->prepare($queryEmpleado);
+                $stmtEmpleado->execute([$data['idempleado']]);
+                if (!$stmtEmpleado->fetch()) {
+                    throw new Exception("El empleado especificado no existe");
+                }
+            }
+
+            // Calcular salarios
+            $salario_base_dia = floatval($config['salario_base'] ?? 30.00);
+            $cantidad_producida = floatval($data['cantidad_producida']);
+            
+            // Pago por clasificación/trabajo según cantidad producida
+            // Fórmula: beta * cantidad_producida (para clasificación)
+            // O: gamma por cada unidad (para empaque)
+            if ($data['tipo_movimiento'] === 'CLASIFICACION') {
+                $beta = floatval($config['beta_clasificacion'] ?? 0.25);
+                $pago_clasificacion_trabajo = $beta * $cantidad_producida;
+            } else { // EMPAQUE
+                $gamma = floatval($config['gamma_empaque'] ?? 5.00);
+                $pago_clasificacion_trabajo = $gamma * $cantidad_producida;
+            }
+
+            // Salario total
+            $salario_total = $salario_base_dia + $pago_clasificacion_trabajo;
+
+            // Insertar registro
+            $query = "INSERT INTO registro_produccion (
+                idlote, idempleado, fecha_jornada, idproducto_producir, cantidad_producir,
+                idproducto_terminado, cantidad_producida, salario_base_dia,
+                pago_clasificacion_trabajo, salario_total, tipo_movimiento, observaciones
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([
+                $data['idlote'],
+                $data['idempleado'] ?? null,
+                $data['fecha_jornada'],
+                $data['idproducto_producir'],
+                floatval($data['cantidad_producir']),
+                $data['idproducto_terminado'],
+                $cantidad_producida,
+                $salario_base_dia,
+                $pago_clasificacion_trabajo,
+                $salario_total,
+                $data['tipo_movimiento'],
+                $data['observaciones'] ?? ''
+            ]);
+
+            $idregistro = $db->lastInsertId();
+            $db->commit();
+
+            return [
+                'status' => true,
+                'message' => 'Registro de producción guardado exitosamente',
+                'idregistro' => $idregistro,
+                'salarios' => [
+                    'salario_base_dia' => $salario_base_dia,
+                    'pago_clasificacion_trabajo' => $pago_clasificacion_trabajo,
+                    'salario_total' => $salario_total
+                ]
+            ];
+
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log("[PRODUCCION] Error al insertar registro de producción: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al guardar registro: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Obtiene todos los registros de producción por lote
+     */
+    public function obtenerRegistrosPorLote($idlote)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            error_log("=== obtenerRegistrosPorLote MODEL ===");
+            error_log("ID Lote: " . $idlote);
+            
+            $query = "SELECT 
+                rp.idregistro,
+                rp.idlote,
+                rp.idempleado,
+                CONCAT(e.nombre, ' ', e.apellido) as nombre_empleado,
+                rp.fecha_jornada,
+                DATE_FORMAT(rp.fecha_jornada, '%d/%m/%Y') as fecha_jornada_formato,
+                pp.nombre as producto_producir_codigo,
+                pp.descripcion as producto_producir_nombre,
+                rp.cantidad_producir,
+                pt.nombre as producto_terminado_codigo,
+                pt.descripcion as producto_terminado_nombre,
+                rp.cantidad_producida,
+                rp.salario_base_dia,
+                rp.pago_clasificacion_trabajo,
+                rp.salario_total,
+                rp.tipo_movimiento,
+                rp.observaciones,
+                rp.estatus,
+                DATE_FORMAT(rp.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
+                DATE_FORMAT(rp.ultima_modificacion, '%d/%m/%Y %H:%i') as ultima_modificacion_formato
+            FROM registro_produccion rp
+            INNER JOIN producto pp ON rp.idproducto_producir = pp.idproducto
+            INNER JOIN producto pt ON rp.idproducto_terminado = pt.idproducto
+            LEFT JOIN empleado e ON rp.idempleado = e.idempleado
+            WHERE rp.idlote = ?
+            ORDER BY rp.fecha_jornada DESC, rp.fecha_creacion DESC";
+
+            error_log("Query preparada, ejecutando...");
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote]);
+            $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Registros encontrados: " . count($registros));
+
+            // Calcular totales
+            $totales = [
+                'total_registros' => count($registros),
+                'total_cantidad_producir' => 0,
+                'total_cantidad_producida' => 0,
+                'total_salario_base' => 0,
+                'total_pago_trabajo' => 0,
+                'total_salario_general' => 0,
+                'registros_clasificacion' => 0,
+                'registros_empaque' => 0
+            ];
+
+            foreach ($registros as $registro) {
+                $totales['total_cantidad_producir'] += floatval($registro['cantidad_producir']);
+                $totales['total_cantidad_producida'] += floatval($registro['cantidad_producida']);
+                $totales['total_salario_base'] += floatval($registro['salario_base_dia']);
+                $totales['total_pago_trabajo'] += floatval($registro['pago_clasificacion_trabajo']);
+                $totales['total_salario_general'] += floatval($registro['salario_total']);
+                
+                if ($registro['tipo_movimiento'] === 'CLASIFICACION') {
+                    $totales['registros_clasificacion']++;
+                } else {
+                    $totales['registros_empaque']++;
+                }
+            }
+            
+            error_log("Totales calculados: " . json_encode($totales));
+
+            return [
+                'status' => true,
+                'message' => 'Registros obtenidos exitosamente',
+                'data' => $registros,
+                'totales' => $totales
+            ];
+
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] Error al obtener registros por lote: " . $e->getMessage());
+            error_log("[PRODUCCION] Stack trace: " . $e->getTraceAsString());
+            return [
+                'status' => false,
+                'message' => 'Error al obtener registros: ' . $e->getMessage(),
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Obtiene todos los registros de producción con filtros opcionales
+     */
+    public function selectAllRegistrosProduccion($filtros = [])
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $where = [];
+            $params = [];
+
+            if (!empty($filtros['fecha_desde'])) {
+                $where[] = "rp.fecha_jornada >= ?";
+                $params[] = $filtros['fecha_desde'];
+            }
+
+            if (!empty($filtros['fecha_hasta'])) {
+                $where[] = "rp.fecha_jornada <= ?";
+                $params[] = $filtros['fecha_hasta'];
+            }
+
+            if (!empty($filtros['tipo_movimiento'])) {
+                $where[] = "rp.tipo_movimiento = ?";
+                $params[] = $filtros['tipo_movimiento'];
+            }
+
+            if (!empty($filtros['idlote'])) {
+                $where[] = "rp.idlote = ?";
+                $params[] = $filtros['idlote'];
+            }
+
+            $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+
+            $query = "SELECT 
+                rp.idregistro,
+                l.numero_lote,
+                l.estatus_lote,
+                rp.idempleado,
+                CONCAT(e.nombre, ' ', e.apellido) as nombre_empleado,
+                rp.fecha_jornada,
+                DATE_FORMAT(rp.fecha_jornada, '%d/%m/%Y') as fecha_jornada_formato,
+                pp.nombre as producto_producir_codigo,
+                pp.descripcion as producto_producir_nombre,
+                rp.cantidad_producir,
+                pt.nombre as producto_terminado_codigo,
+                pt.descripcion as producto_terminado_nombre,
+                rp.cantidad_producida,
+                rp.salario_base_dia,
+                rp.pago_clasificacion_trabajo,
+                rp.salario_total,
+                rp.tipo_movimiento,
+                rp.observaciones,
+                rp.estatus
+            FROM registro_produccion rp
+            INNER JOIN lotes_produccion l ON rp.idlote = l.idlote
+            LEFT JOIN empleado e ON rp.idempleado = e.idempleado
+            INNER JOIN producto pp ON rp.idproducto_producir = pp.idproducto
+            INNER JOIN producto pt ON rp.idproducto_terminado = pt.idproducto
+            $whereClause
+            ORDER BY rp.fecha_jornada DESC, rp.fecha_creacion DESC";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute($params);
+            $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'status' => true,
+                'message' => 'Registros obtenidos exitosamente',
+                'data' => $registros
+            ];
+
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] Error al obtener todos los registros: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al obtener registros: ' . $e->getMessage(),
+                'data' => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Actualiza un registro de producción
+     */
+    public function actualizarRegistroProduccion($idregistro, array $data)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            error_log("=== actualizarRegistroProduccion MODEL ===");
+            error_log("ID Registro: " . $idregistro);
+            
+            // Verificar que el registro existe y su estado
+            $queryVerificar = "SELECT rp.idregistro, rp.estatus, rp.idlote 
+                              FROM registro_produccion rp
+                              WHERE rp.idregistro = ?";
+            $stmtVerificar = $db->prepare($queryVerificar);
+            $stmtVerificar->execute([$idregistro]);
+            $registro = $stmtVerificar->fetch(PDO::FETCH_ASSOC);
+
+            if (!$registro) {
+                return [
+                    'status' => false,
+                    'message' => 'Registro no encontrado'
+                ];
+            }
+
+            // Solo permitir edición si el REGISTRO está en estado BORRADOR
+            if ($registro['estatus'] !== 'BORRADOR') {
+                return [
+                    'status' => false,
+                    'message' => 'Solo se pueden editar registros en estado BORRADOR. Estado actual: ' . $registro['estatus']
+                ];
+            }
+            
+            $db->beginTransaction();
+
+            // Obtener configuración para recalcular salarios
+            $config = $this->obtenerConfiguracion($db);
+
+            // Recalcular salarios
+            $salario_base_dia = floatval($config['salario_base'] ?? 30.00);
+            $cantidad_producida = floatval($data['cantidad_producida']);
+            
+            if ($data['tipo_movimiento'] === 'CLASIFICACION') {
+                $beta = floatval($config['beta_clasificacion'] ?? 0.25);
+                $pago_clasificacion_trabajo = $beta * $cantidad_producida;
+            } else {
+                $gamma = floatval($config['gamma_empaque'] ?? 5.00);
+                $pago_clasificacion_trabajo = $gamma * $cantidad_producida;
+            }
+
+            $salario_total = $salario_base_dia + $pago_clasificacion_trabajo;
+
+            $query = "UPDATE registro_produccion SET 
+                fecha_jornada = ?,
+                idproducto_producir = ?,
+                cantidad_producir = ?,
+                idproducto_terminado = ?,
+                cantidad_producida = ?,
+                salario_base_dia = ?,
+                pago_clasificacion_trabajo = ?,
+                salario_total = ?,
+                tipo_movimiento = ?,
+                observaciones = ?
+            WHERE idregistro = ?";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([
+                $data['fecha_jornada'],
+                $data['idproducto_producir'],
+                floatval($data['cantidad_producir']),
+                $data['idproducto_terminado'],
+                $cantidad_producida,
+                $salario_base_dia,
+                $pago_clasificacion_trabajo,
+                $salario_total,
+                $data['tipo_movimiento'],
+                $data['observaciones'] ?? '',
+                $idregistro
+            ]);
+
+            $db->commit();
+            
+            error_log("Registro actualizado exitosamente");
+
+            return [
+                'status' => true,
+                'message' => 'Registro actualizado exitosamente'
+            ];
+
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log("[PRODUCCION] Error al actualizar registro: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al actualizar registro: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Elimina un registro de producción
+     * Solo permite eliminar si está en estado BORRADOR
+     */
+    public function eliminarRegistroProduccion($idregistro)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            error_log("=== eliminarRegistroProduccion MODEL ===");
+            error_log("ID Registro: " . $idregistro);
+            
+            // Verificar que el registro existe y su estado
+            $queryVerificar = "SELECT rp.idregistro, rp.estatus, rp.idlote 
+                              FROM registro_produccion rp
+                              WHERE rp.idregistro = ?";
+            $stmtVerificar = $db->prepare($queryVerificar);
+            $stmtVerificar->execute([$idregistro]);
+            $registro = $stmtVerificar->fetch(PDO::FETCH_ASSOC);
+
+            if (!$registro) {
+                return [
+                    'status' => false,
+                    'message' => 'Registro no encontrado'
+                ];
+            }
+
+            // Solo permitir eliminación si el REGISTRO está en estado BORRADOR
+            if ($registro['estatus'] !== 'BORRADOR') {
+                return [
+                    'status' => false,
+                    'message' => 'Solo se pueden eliminar registros en estado BORRADOR. Estado actual: ' . $registro['estatus']
+                ];
+            }
+            
+            $query = "DELETE FROM registro_produccion WHERE idregistro = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idregistro]);
+            
+            error_log("Registro eliminado exitosamente");
+
+            return [
+                'status' => true,
+                'message' => 'Registro eliminado exitosamente',
+                'idlote' => $registro['idlote']
+            ];
+
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] Error al eliminar registro: " . $e->getMessage());
+            error_log("[PRODUCCION] Stack trace: " . $e->getTraceAsString());
+            return [
+                'status' => false,
+                'message' => 'Error al eliminar registro: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Marca un registro de producción como PAGADO
+     */
+    public function marcarRegistroComoPagado($idregistro)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Verificar que el registro existe y está en estado ENVIADO
+            $query = "SELECT estatus, idempleado, salario_total FROM registro_produccion WHERE idregistro = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idregistro]);
+            $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$registro) {
+                return [
+                    'status' => false,
+                    'message' => 'Registro no encontrado'
+                ];
+            }
+
+            if ($registro['estatus'] !== 'ENVIADO') {
+                return [
+                    'status' => false,
+                    'message' => 'Solo se pueden marcar como pagados los registros en estado ENVIADO. Estado actual: ' . $registro['estatus']
+                ];
+            }
+
+            // Actualizar estado a PAGADO
+            $query = "UPDATE registro_produccion SET estatus = 'PAGADO' WHERE idregistro = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idregistro]);
+
+            // Opcional: También actualizar el registro en la tabla sueldos si existe
+            $queryUpdateSueldo = "UPDATE sueldos s 
+                                 INNER JOIN registro_produccion rp ON s.idempleado = rp.idempleado 
+                                 SET s.estatus = 'PAGADO' 
+                                 WHERE rp.idregistro = ? 
+                                 AND s.estatus = 'POR_PAGAR'
+                                 AND ABS(s.monto - rp.salario_total) < 0.01";
+            $stmtSueldo = $db->prepare($queryUpdateSueldo);
+            $stmtSueldo->execute([$idregistro]);
+
+            return [
+                'status' => true,
+                'message' => 'Registro marcado como PAGADO exitosamente'
+            ];
+
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] Error al marcar como pagado: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al marcar como pagado: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Cancela un registro de producción
+     */
+    public function cancelarRegistroProduccion($idregistro)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            // Verificar que el registro existe
+            $query = "SELECT estatus FROM registro_produccion WHERE idregistro = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idregistro]);
+            $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$registro) {
+                return [
+                    'status' => false,
+                    'message' => 'Registro no encontrado'
+                ];
+            }
+
+            if ($registro['estatus'] === 'PAGADO') {
+                return [
+                    'status' => false,
+                    'message' => 'No se pueden cancelar registros que ya han sido pagados'
+                ];
+            }
+
+            if ($registro['estatus'] === 'CANCELADO') {
+                return [
+                    'status' => false,
+                    'message' => 'El registro ya está cancelado'
+                ];
+            }
+
+            // Actualizar estado a CANCELADO
+            $query = "UPDATE registro_produccion SET estatus = 'CANCELADO' WHERE idregistro = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idregistro]);
+
+            // Si estaba ENVIADO, también cancelar el sueldo asociado
+            if ($registro['estatus'] === 'ENVIADO') {
+                $queryUpdateSueldo = "UPDATE sueldos s 
+                                     INNER JOIN registro_produccion rp ON s.idempleado = rp.idempleado 
+                                     SET s.estatus = 'CANCELADO' 
+                                     WHERE rp.idregistro = ? 
+                                     AND s.estatus = 'POR_PAGAR'
+                                     AND ABS(s.monto - rp.salario_total) < 0.01";
+                $stmtSueldo = $db->prepare($queryUpdateSueldo);
+                $stmtSueldo->execute([$idregistro]);
+            }
+
+            return [
+                'status' => true,
+                'message' => 'Registro cancelado exitosamente'
+            ];
+
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] Error al cancelar registro: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al cancelar registro: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Obtiene un registro de producción por ID con toda su información
+     */
+    public function getRegistroById($idregistro)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $query = "SELECT 
+                rp.*,
+                CONCAT(e.nombre, ' ', e.apellido) as nombre_empleado,
+                l.numero_lote,
+                l.estatus_lote,
+                pp.nombre as producto_producir_nombre,
+                pp.descripcion as producto_producir_descripcion,
+                pt.nombre as producto_terminado_nombre,
+                pt.descripcion as producto_terminado_descripcion,
+                DATE_FORMAT(rp.fecha_jornada, '%Y-%m-%d') as fecha_jornada_input
+            FROM registro_produccion rp
+            LEFT JOIN empleado e ON rp.idempleado = e.idempleado
+            LEFT JOIN lotes_produccion l ON rp.idlote = l.idlote
+            LEFT JOIN producto pp ON rp.idproducto_producir = pp.idproducto
+            LEFT JOIN producto pt ON rp.idproducto_terminado = pt.idproducto
+            WHERE rp.idregistro = ?";
+
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idregistro]);
+            $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($registro) {
+                return [
+                    'status' => true,
+                    'data' => $registro
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'Registro no encontrado'
+                ];
+            }
+
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] Error al obtener registro: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al obtener registro: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Actualiza un lote de producción
+     * Solo permite actualizar lotes en estado PLANIFICADO
+     */
+    public function actualizarLote($idlote, array $data)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
+            // Verificar que el lote existe y está en estado PLANIFICADO
+            $query = "SELECT estatus_lote FROM lotes_produccion WHERE idlote = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote]);
+            $lote = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$lote) {
+                return [
+                    'status' => false,
+                    'message' => 'El lote no existe'
+                ];
+            }
+
+            if ($lote['estatus_lote'] !== 'PLANIFICADO') {
+                return [
+                    'status' => false,
+                    'message' => 'Solo se pueden editar lotes en estado PLANIFICADO'
+                ];
+            }
+
+            // Validar y recalcular operarios requeridos si cambió el volumen
+            if (isset($data['volumen_estimado'])) {
+                $config = $this->obtenerConfiguracion($db);
+                $operariosRequeridos = ceil($data['volumen_estimado'] / $config['productividad_clasificacion']);
+
+                if ($operariosRequeridos > $config['capacidad_maxima_planta']) {
+                    return [
+                        'status' => false,
+                        'message' => "Se requieren {$operariosRequeridos} operarios pero la capacidad máxima es {$config['capacidad_maxima_planta']}"
+                    ];
+                }
+            }
+
+            // Construir la consulta de actualización dinámicamente
+            $updateFields = [];
+            $updateValues = [];
+
+            if (isset($data['fecha_jornada'])) {
+                $updateFields[] = "fecha_jornada = ?";
+                $updateValues[] = $data['fecha_jornada'];
+            }
+
+            if (isset($data['volumen_estimado'])) {
+                $updateFields[] = "volumen_estimado = ?";
+                $updateValues[] = $data['volumen_estimado'];
+                $updateFields[] = "operarios_requeridos = ?";
+                $updateValues[] = $operariosRequeridos;
+            }
+
+            if (isset($data['idsupervisor'])) {
+                $updateFields[] = "idsupervisor = ?";
+                $updateValues[] = $data['idsupervisor'];
+            }
+
+            if (isset($data['observaciones'])) {
+                $updateFields[] = "observaciones = ?";
+                $updateValues[] = $data['observaciones'];
+            }
+
+            if (empty($updateFields)) {
+                return [
+                    'status' => false,
+                    'message' => 'No hay campos para actualizar'
+                ];
+            }
+
+            $updateValues[] = $idlote;
+            $query = "UPDATE lotes_produccion SET " . implode(", ", $updateFields) . " WHERE idlote = ?";
+            
+            $stmt = $db->prepare($query);
+            $stmt->execute($updateValues);
+
+            $db->commit();
+
+            return [
+                'status' => true,
+                'message' => 'Lote actualizado exitosamente'
+            ];
+
+        } catch (Exception $e) {
+            $db->rollback();
+            error_log("[PRODUCCION] Error al actualizar lote: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al actualizar lote: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Elimina un lote de producción
+     * Solo permite eliminar lotes en estado PLANIFICADO
+     */
+    public function eliminarLote($idlote)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
+            // Verificar que el lote existe y está en estado PLANIFICADO
+            $query = "SELECT estatus_lote, numero_lote FROM lotes_produccion WHERE idlote = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote]);
+            $lote = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$lote) {
+                return [
+                    'status' => false,
+                    'message' => 'El lote no existe'
+                ];
+            }
+
+            if ($lote['estatus_lote'] !== 'PLANIFICADO') {
+                return [
+                    'status' => false,
+                    'message' => 'Solo se pueden eliminar lotes en estado PLANIFICADO'
+                ];
+            }
+
+            // Verificar si tiene registros de producción
+            $query = "SELECT COUNT(*) as total FROM registro_produccion WHERE idlote = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote]);
+            $registros = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($registros['total'] > 0) {
+                return [
+                    'status' => false,
+                    'message' => 'No se puede eliminar el lote porque tiene registros de producción asociados'
+                ];
+            }
+
+            // Eliminar el lote
+            $query = "DELETE FROM lotes_produccion WHERE idlote = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$idlote]);
+
+            $db->commit();
+
+            return [
+                'status' => true,
+                'message' => 'Lote eliminado exitosamente',
+                'numero_lote' => $lote['numero_lote']
+            ];
+
+        } catch (Exception $e) {
+            $db->rollback();
+            error_log("[PRODUCCION] Error al eliminar lote: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al eliminar lote: ' . $e->getMessage()
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
 }
+
+

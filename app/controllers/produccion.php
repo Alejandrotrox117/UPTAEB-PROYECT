@@ -103,10 +103,20 @@ class Produccion extends Controllers
         }
     }
 
-    public function getLoteById($idlote)
+    public function getLoteById($params = [])
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             try {
+                $idlote = is_array($params) ? ($params[0] ?? null) : $params;
+                
+                if (empty($idlote) || !is_numeric($idlote)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de lote inválido'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
                 $arrData = $this->model->selectLoteById(intval($idlote));
                 if (!empty($arrData)) {
                     $arrResponse = array('status' => true, 'data' => $arrData);
@@ -117,6 +127,54 @@ class Produccion extends Controllers
             } catch (Exception $e) {
                 error_log("Error en getLoteById: " . $e->getMessage());
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function obtenerDetalleLote($idlote)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $idlote = intval($idlote);
+                
+                // Obtener datos del lote
+                $lote = $this->model->selectLoteById($idlote);
+                
+                if (empty($lote)) {
+                    $arrResponse = array(
+                        'status' => 'error',
+                        'message' => 'Lote no encontrado'
+                    );
+                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+                
+                // Obtener procesos de clasificación del lote
+                $procesosClasificacion = $this->model->obtenerProcesosClasificacionPorLote($idlote);
+                
+                // Obtener procesos de empaque del lote
+                $procesosEmpaque = $this->model->obtenerProcesosEmpaquePorLote($idlote);
+                
+                $arrResponse = array(
+                    'status' => 'success',
+                    'data' => array(
+                        'lote' => $lote,
+                        'procesos' => array(
+                            'clasificacion' => $procesosClasificacion,
+                            'empaque' => $procesosEmpaque
+                        )
+                    )
+                );
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en obtenerDetalleLote: " . $e->getMessage());
+                $arrResponse = array(
+                    'status' => 'error',
+                    'message' => 'Error al obtener detalle del lote: ' . $e->getMessage()
+                );
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
             die();
@@ -186,81 +244,6 @@ class Produccion extends Controllers
                 error_log("Error en cerrarLote: " . $e->getMessage());
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            }
-            die();
-        }
-    }
-
-
-    public function asignarOperarios()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                $postdata = file_get_contents('php://input');
-                $request = json_decode($postdata, true);
-
-                $idlote = intval($request['idlote'] ?? 0);
-                $operarios = $request['operarios'] ?? [];
-
-                if ($idlote <= 0) {
-                    echo json_encode([
-                        'status' => false, 
-                        'message' => 'ID de lote no válido.'
-                    ], JSON_UNESCAPED_UNICODE);
-                    die();
-                }
-
-                if (empty($operarios)) {
-                    echo json_encode([
-                        'status' => false, 
-                        'message' => 'Debe asignar al menos un operario.'
-                    ], JSON_UNESCAPED_UNICODE);
-                    die();
-                }
-
-                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                $arrResponse = $this->model->asignarOperariosLote($idlote, $operarios);
-
-                if ($arrResponse['status'] === true) {
-                    $this->bitacoraModel->registrarAccion('asignacion_operarios', 'INSERTAR', $idusuario);
-                }
-
-                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                error_log("Error en asignarOperarios: " . $e->getMessage());
-                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
-                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            }
-            die();
-        }
-    }
-
-    public function getOperariosDisponibles()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            try {
-                $fecha = $_GET['fecha'] ?? date('Y-m-d');
-                $arrResponse = $this->model->selectOperariosDisponibles($fecha);
-                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                error_log("Error en getOperariosDisponibles: " . $e->getMessage());
-                $response = array('status' => false, 'message' => 'Error interno del servidor', 'data' => []);
-                echo json_encode($response, JSON_UNESCAPED_UNICODE);
-            }
-            die();
-        }
-    }
-
-    public function getAsignacionesLote($idlote)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            try {
-                $arrResponse = $this->model->selectAsignacionesLote(intval($idlote));
-                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                error_log("Error en getAsignacionesLote: " . $e->getMessage());
-                $response = array('status' => false, 'message' => 'Error interno del servidor', 'data' => []);
-                echo json_encode($response, JSON_UNESCAPED_UNICODE);
             }
             die();
         }
@@ -1012,6 +995,449 @@ class Produccion extends Controllers
                 error_log("Error en registrarSolicitudPago: " . $e->getMessage());
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Marca un registro de producción como PAGADO
+     */
+    public function marcarComoPagado()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents('php://input');
+                $request = json_decode($postdata, true);
+                
+                if (empty($request['idregistro'])) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de registro no proporcionado'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idregistro = intval($request['idregistro']);
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                
+                $arrResponse = $this->model->marcarRegistroComoPagado($idregistro);
+                
+                if ($arrResponse['status'] === true) {
+                    $this->bitacoraModel->registrarAccion('registro_produccion', 'MARCAR_PAGADO', $idusuario);
+                }
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en marcarComoPagado: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor: ' . $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Cancela un registro de producción
+     */
+    public function cancelarRegistroNomina()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents('php://input');
+                $request = json_decode($postdata, true);
+                
+                if (empty($request['idregistro'])) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de registro no proporcionado'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idregistro = intval($request['idregistro']);
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                
+                $arrResponse = $this->model->cancelarRegistroProduccion($idregistro);
+                
+                if ($arrResponse['status'] === true) {
+                    $this->bitacoraModel->registrarAccion('registro_produccion', 'CANCELAR', $idusuario);
+                }
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en cancelarRegistroNomina: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor: ' . $e->getMessage()
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    // ============================================================
+    // MÉTODOS PARA REGISTRO_PRODUCCION
+    // ============================================================
+
+    /**
+     * Crea un nuevo registro de producción
+     */
+    public function crearRegistroProduccion()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                // Validaciones
+                $camposRequeridos = [
+                    'idlote', 'idempleado', 'fecha', 'tipo_proceso', 
+                    'idproducto_inicial', 'idproducto_final', 
+                    'cantidad_producida'
+                ];
+
+                foreach ($camposRequeridos as $campo) {
+                    if (empty($_POST[$campo])) {
+                        echo json_encode([
+                            'status' => false,
+                            'msg' => "El campo {$campo} es obligatorio"
+                        ], JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+                }
+
+                // Validar tipo de proceso
+                if (!in_array($_POST['tipo_proceso'], ['CLASIFICACION', 'EMPAQUE'])) {
+                    echo json_encode([
+                        'status' => false,
+                        'msg' => 'Tipo de proceso inválido'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Validar cantidades
+                if (floatval($_POST['cantidad_producida']) <= 0) {
+                    echo json_encode([
+                        'status' => false,
+                        'msg' => 'La cantidad producida debe ser mayor a cero'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Mapear los campos del frontend a los del modelo
+                $arrData = [
+                    'idlote' => intval($_POST['idlote']),
+                    'idempleado' => intval($_POST['idempleado']),
+                    'fecha_jornada' => $_POST['fecha'],
+                    'tipo_movimiento' => $_POST['tipo_proceso'],
+                    'idproducto_producir' => intval($_POST['idproducto_inicial']),
+                    'cantidad_producir' => floatval($_POST['cantidad_producida']),
+                    'idproducto_terminado' => intval($_POST['idproducto_final']),
+                    'cantidad_producida' => floatval($_POST['cantidad_producida']),
+                    'observaciones' => trim($_POST['observaciones'] ?? '')
+                ];
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                $arrResponse = $this->model->insertarRegistroProduccion($arrData);
+
+                if ($arrResponse['status'] === true) {
+                    $this->bitacoraModel->registrarAccion('registro_produccion', 'INSERTAR', $idusuario);
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en crearRegistroProduccion: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Obtiene todos los registros de producción (con filtros opcionales)
+     */
+    public function getRegistrosProduccion()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $filtros = [];
+                
+                if (!empty($_GET['fecha_desde'])) {
+                    $filtros['fecha_desde'] = $_GET['fecha_desde'];
+                }
+                if (!empty($_GET['fecha_hasta'])) {
+                    $filtros['fecha_hasta'] = $_GET['fecha_hasta'];
+                }
+                if (!empty($_GET['tipo_movimiento'])) {
+                    $filtros['tipo_movimiento'] = $_GET['tipo_movimiento'];
+                }
+                if (!empty($_GET['idlote'])) {
+                    $filtros['idlote'] = intval($_GET['idlote']);
+                }
+
+                $arrResponse = $this->model->selectAllRegistrosProduccion($filtros);
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en getRegistrosProduccion: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor',
+                    'data' => []
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Obtiene los registros de producción de un lote específico
+     */
+    public function getRegistrosPorLote($params = [])
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                error_log("=== getRegistrosPorLote iniciado ===");
+                
+                // Extraer idlote del array de parámetros o directamente si es un valor
+                $idlote = is_array($params) ? ($params[0] ?? null) : $params;
+                
+                error_log("ID Lote recibido: " . var_export($idlote, true));
+                error_log("Params completos: " . var_export($params, true));
+                
+                if (empty($idlote) || !is_numeric($idlote)) {
+                    error_log("ERROR: ID de lote inválido: " . var_export($idlote, true));
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de lote inválido',
+                        'data' => []
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $arrResponse = $this->model->obtenerRegistrosPorLote(intval($idlote));
+                error_log("Respuesta del modelo: " . json_encode([
+                    'status' => $arrResponse['status'],
+                    'total_registros' => $arrResponse['totales']['total_registros'] ?? 0,
+                    'total_producido' => $arrResponse['totales']['total_cantidad_producida'] ?? 0
+                ]));
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("ERROR en getRegistrosPorLote: " . $e->getMessage());
+                error_log("Stack trace: " . $e->getTraceAsString());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor',
+                    'data' => []
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Actualiza un registro de producción existente
+     */
+    public function actualizarRegistroProduccion($params = [])
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'PUT' || $_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $postdata = file_get_contents('php://input');
+                $request = json_decode($postdata, true);
+
+                $idregistro = is_array($params) ? ($params[0] ?? null) : $params;
+                
+                if (empty($idregistro) || !is_numeric($idregistro)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de registro inválido'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $arrData = [
+                    'fecha_jornada' => $request['fecha_jornada'],
+                    'idproducto_producir' => intval($request['idproducto_producir']),
+                    'cantidad_producir' => floatval($request['cantidad_producir']),
+                    'idproducto_terminado' => intval($request['idproducto_terminado']),
+                    'cantidad_producida' => floatval($request['cantidad_producida']),
+                    'tipo_movimiento' => $request['tipo_movimiento'],
+                    'observaciones' => trim($request['observaciones'] ?? '')
+                ];
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                $arrResponse = $this->model->actualizarRegistroProduccion(intval($idregistro), $arrData);
+
+                if ($arrResponse['status'] === true) {
+                    $this->bitacoraModel->registrarAccion('registro_produccion', 'ACTUALIZAR', $idusuario);
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en actualizarRegistroProduccion: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Obtiene un registro de producción por ID
+     */
+    public function getRegistroById($params = [])
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $idregistro = is_array($params) ? ($params[0] ?? null) : $params;
+                
+                if (empty($idregistro) || !is_numeric($idregistro)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de registro inválido'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $arrResponse = $this->model->getRegistroById(intval($idregistro));
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en getRegistroById: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Elimina un registro de producción
+     */
+    public function eliminarRegistroProduccion($params = [])
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'DELETE' || $_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $idregistro = is_array($params) ? ($params[0] ?? null) : $params;
+                
+                if (empty($idregistro) || !is_numeric($idregistro)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de registro inválido'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                $arrResponse = $this->model->eliminarRegistroProduccion(intval($idregistro));
+
+                if ($arrResponse['status'] === true) {
+                    $this->bitacoraModel->registrarAccion('registro_produccion', 'ELIMINAR', $idusuario);
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en eliminarRegistroProduccion: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Actualiza un lote de producción
+     */
+    public function actualizarLote($params = [])
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $idlote = is_array($params) ? ($params[0] ?? null) : $params;
+                
+                if (empty($idlote) || !is_numeric($idlote)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de lote inválido'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $data = json_decode(file_get_contents("php://input"), true);
+                
+                if (!$data) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'Datos inválidos'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                $arrResponse = $this->model->actualizarLote(intval($idlote), $data);
+
+                if ($arrResponse['status'] === true) {
+                    $this->bitacoraModel->registrarAccion('lotes_produccion', 'ACTUALIZAR', $idusuario);
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en actualizarLote: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor'
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    /**
+     * Elimina un lote de producción
+     */
+    public function eliminarLote($params = [])
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'DELETE' || $_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $idlote = is_array($params) ? ($params[0] ?? null) : $params;
+                
+                if (empty($idlote) || !is_numeric($idlote)) {
+                    echo json_encode([
+                        'status' => false,
+                        'message' => 'ID de lote inválido'
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                $arrResponse = $this->model->eliminarLote(intval($idlote));
+
+                if ($arrResponse['status'] === true) {
+                    $this->bitacoraModel->registrarAccion('lotes_produccion', 'ELIMINAR', $idusuario);
+                }
+
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+
+            } catch (Exception $e) {
+                error_log("Error en eliminarLote: " . $e->getMessage());
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Error interno del servidor'
+                ], JSON_UNESCAPED_UNICODE);
             }
             die();
         }

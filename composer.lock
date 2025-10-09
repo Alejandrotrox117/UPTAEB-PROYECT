@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7594b9f36ead8a4e1d9c6232ab29650f",
+    "content-hash": "57d4a8483cc760224bfd378269ee6e63",
     "packages": [
         {
             "name": "components/jquery",
@@ -315,16 +315,16 @@
         },
         {
             "name": "setasign/fpdf",
-            "version": "1.8.2",
+            "version": "1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Setasign/FPDF.git",
-                "reference": "d77904018090c17dc9f3ab6e944679a7a47e710a"
+                "reference": "a8a76e8cfc1db7b1a18c096a021a0cdff70db6b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Setasign/FPDF/zipball/d77904018090c17dc9f3ab6e944679a7a47e710a",
-                "reference": "d77904018090c17dc9f3ab6e944679a7a47e710a",
+                "url": "https://api.github.com/repos/Setasign/FPDF/zipball/a8a76e8cfc1db7b1a18c096a021a0cdff70db6b5",
+                "reference": "a8a76e8cfc1db7b1a18c096a021a0cdff70db6b5",
                 "shasum": ""
             },
             "type": "library",
@@ -335,7 +335,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "MIT"
+                "no usage restriction"
             ],
             "authors": [
                 {
@@ -351,9 +351,9 @@
                 "pdf"
             ],
             "support": {
-                "source": "https://github.com/Setasign/FPDF/tree/1.8.2"
+                "source": "https://github.com/Setasign/FPDF/tree/1.8"
             },
-            "time": "2019-12-08T10:32:10+00:00"
+            "time": "2015-11-30T09:05:35+00:00"
         }
     ],
     "packages-dev": [

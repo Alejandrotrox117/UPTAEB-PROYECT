@@ -61,17 +61,18 @@ class Empleados extends Controllers
             $nombre = trim($data['nombre'] ?? '');
             $apellido = trim($data['apellido'] ?? '');
             $identificacion = trim($data['identificacion'] ?? '');
+            $tipo_empleado = trim($data['tipo_empleado'] ?? 'OPERARIO');
             $fecha_nacimiento = trim($data['fecha_nacimiento'] ?? '');
             $direccion = trim($data['direccion'] ?? '');
             $correo_electronico = trim($data['correo_electronico'] ?? '');
-            $estatus = trim($data['estatus'] ?? '');
+            $estatus = trim($data['estatus'] ?? 'activo');
             $telefono_principal = trim($data['telefono_principal'] ?? '');
             $observaciones = trim($data['observaciones'] ?? '');
             $genero = trim($data['genero'] ?? '');
             $fecha_inicio = trim($data['fecha_inicio'] ?? '');
             $fecha_fin = trim($data['fecha_fin'] ?? '');
             $puesto = trim($data['puesto'] ?? '');
-            $salario = trim($data['salario'] ?? '');
+            $salario = trim($data['salario'] ?? '0.00');
 
             
             if (empty($nombre) || empty($apellido) || empty($identificacion)) {
@@ -84,6 +85,7 @@ class Empleados extends Controllers
                 "nombre" => $nombre,
                 "apellido" => $apellido,
                 "identificacion" => $identificacion,
+                "tipo_empleado" => $tipo_empleado,
                 "fecha_nacimiento" => $fecha_nacimiento,
                 "direccion" => $direccion,
                 "correo_electronico" => $correo_electronico,
@@ -142,69 +144,85 @@ class Empleados extends Controllers
     
     public function updateEmpleado()
     {
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true); 
+        try {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true); 
 
-        
-        $idempleado = trim($data['idempleado']) ?? null;
-        $nombre = trim($data['nombre']) ?? null;
-        $apellido = trim($data['apellido']) ?? null;
-        $identificacion = trim($data['identificacion']) ?? null;
-        $fecha_nacimiento = trim($data['fecha_nacimiento']) ?? null;
-        $direccion = trim($data['direccion']) ?? null;
-        $correo_electronico = trim($data['correo_electronico']) ?? null;
-        $estatus = trim($data['estatus']) ?? null;
-        $telefono_principal = trim($data['telefono_principal']) ?? null;
-        $observaciones = trim($data['observaciones']) ?? null;
-        $genero = trim($data['genero']) ?? null;
-        $fecha_modificacion = date('Y-m-d H:i:s');
-        $fecha_inicio = trim($data['fecha_inicio']) ?? null;
-        $fecha_fin = trim($data['fecha_fin']) ?? null;
-        $puesto = trim($data['puesto']) ?? null;
-        $salario = trim($data['salario']) ?? null;
+            
+            $idempleado = trim($data['idempleado'] ?? '');
+            $nombre = trim($data['nombre'] ?? '');
+            $apellido = trim($data['apellido'] ?? '');
+            $identificacion = trim($data['identificacion'] ?? '');
+            $tipo_empleado = trim($data['tipo_empleado'] ?? 'OPERARIO');
+            $fecha_nacimiento = trim($data['fecha_nacimiento'] ?? '');
+            $direccion = trim($data['direccion'] ?? '');
+            $correo_electronico = trim($data['correo_electronico'] ?? '');
+            $estatus = trim($data['estatus'] ?? 'activo');
+            $telefono_principal = trim($data['telefono_principal'] ?? '');
+            $observaciones = trim($data['observaciones'] ?? '');
+            $genero = trim($data['genero'] ?? '');
+            $fecha_modificacion = date('Y-m-d H:i:s');
+            $fecha_inicio = trim($data['fecha_inicio'] ?? '');
+            $fecha_fin = trim($data['fecha_fin'] ?? '');
+            $puesto = trim($data['puesto'] ?? '');
+            $salario = trim($data['salario'] ?? '0.00');
 
-        
-        if (empty($idempleado) || empty($nombre) || empty($apellido) || empty($identificacion)) {
-            $response = ["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."];
-            echo json_encode($response);
-            return;
+            
+            if (empty($idempleado) || empty($nombre) || empty($apellido) || empty($identificacion)) {
+                echo json_encode(["status" => false, "message" => "Datos incompletos. Nombre, apellido e identificación son obligatorios."]);
+                exit();
+            }
+
+            
+            if (!empty($correo_electronico) && !filter_var($correo_electronico, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(["status" => false, "message" => "El correo electrónico no es válido."]);
+                exit();
+            }
+
+            
+            $updateData = $this->get_model()->updateEmpleado([
+                "idempleado" => $idempleado,
+                "nombre" => $nombre,
+                "apellido" => $apellido,
+                "identificacion" => $identificacion,
+                "tipo_empleado" => $tipo_empleado,
+                "fecha_nacimiento" => $fecha_nacimiento,
+                "direccion" => $direccion,
+                "correo_electronico" => $correo_electronico,
+                "estatus" => $estatus,
+                "telefono_principal" => $telefono_principal,
+                "observaciones" => $observaciones,
+                "genero" => $genero,
+                "fecha_modificacion" => $fecha_modificacion,
+                "fecha_inicio" => $fecha_inicio,
+                "fecha_fin" => $fecha_fin,
+                "puesto" => $puesto,
+                "salario" => $salario,
+            ]);
+
+            
+            if ($updateData) {
+                echo json_encode(["status" => true, "message" => "Empleado actualizado correctamente."]);
+            } else {
+                echo json_encode(["status" => false, "message" => "Error al actualizar el empleado. Intenta nuevamente."]);
+            }
+        } catch (PDOException $e) {
+            // Error específico de base de datos
+            $errorMsg = $e->getMessage();
+            if (strpos($errorMsg, 'tipo_empleado') !== false || strpos($errorMsg, 'Unknown column') !== false) {
+                echo json_encode([
+                    "status" => false, 
+                    "message" => "Error: El campo 'tipo_empleado' no existe en la base de datos. Debes ejecutar la migración SQL."
+                ]);
+            } else {
+                echo json_encode([
+                    "status" => false, 
+                    "message" => "Error de base de datos: " . $errorMsg
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
         }
-
-        
-        if (!filter_var($correo_electronico, FILTER_VALIDATE_EMAIL)) {
-            $response = ["status" => false, "message" => "El correo electrónico no es válido."];
-            echo json_encode($response);
-            return;
-        }
-
-        
-        $updateData = $this->get_model()->updateEmpleado([
-            "idempleado" => $idempleado,
-            "nombre" => $nombre,
-            "apellido" => $apellido,
-            "identificacion" => $identificacion,
-            "fecha_nacimiento" => $fecha_nacimiento,
-            "direccion" => $direccion,
-            "correo_electronico" => $correo_electronico,
-            "estatus" => $estatus,
-            "telefono_principal" => $telefono_principal,
-            "observaciones" => $observaciones,
-            "genero" => $genero,
-            "fecha_modificacion" => $fecha_modificacion,
-            "fecha_inicio" => $fecha_inicio,
-            "fecha_fin" => $fecha_fin,
-            "puesto" => $puesto,
-            "salario" => $salario,
-        ]);
-
-        
-        if ($updateData) {
-            $response = ["status" => true, "message" => "Empleado actualizado correctamente."];
-        } else {
-            $response = ["status" => false, "message" => "Error al actualizar el empleado. Intenta nuevamente."];
-        }
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
 
@@ -212,12 +230,40 @@ class Empleados extends Controllers
     public function getEmpleadoById($idempleado)
     {
         try {
+            // Si $idempleado es un array, tomar el primer elemento
+            if (is_array($idempleado)) {
+                $idempleado = $idempleado[0];
+            }
+            
+            // Validar que sea un número
+            if (!is_numeric($idempleado)) {
+                echo json_encode(["status" => false, "message" => "ID de empleado inválido."]);
+                exit();
+            }
+            
             $empleado = $this->get_model()->getEmpleadoById($idempleado);
 
             if ($empleado) {
                 echo json_encode(["status" => true, "data" => $empleado]);
             } else {
-                echo json_encode(["status" => false, "message" => "Empleado no encontrado."]);
+                echo json_encode([
+                    "status" => false, 
+                    "message" => "Empleado no encontrado con ID: {$idempleado}"
+                ]);
+            }
+        } catch (PDOException $e) {
+            // Error específico de base de datos
+            $errorMsg = $e->getMessage();
+            if (strpos($errorMsg, 'tipo_empleado') !== false) {
+                echo json_encode([
+                    "status" => false, 
+                    "message" => "Error: El campo 'tipo_empleado' no existe en la base de datos. Debes ejecutar la migración SQL."
+                ]);
+            } else {
+                echo json_encode([
+                    "status" => false, 
+                    "message" => "Error de base de datos: " . $errorMsg
+                ]);
             }
         } catch (Exception $e) {
             echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);

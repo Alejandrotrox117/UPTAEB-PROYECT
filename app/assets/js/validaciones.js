@@ -203,7 +203,7 @@ function validarRango(input, min, max, mensajes) {
 }
 
 
-function validarCampo(input, regex, mensajes, esOpcional = false) {
+function validarCampo(input, regex, mensajes = {}, esOpcional = false) {
   // Si no hay input o no está visible, retornar verdadero
   if (!input || input.offsetParent === null) {
     return true; 
@@ -532,12 +532,12 @@ const inicializarValidaciones = (campos, formId = null) => {
         
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
-            validarCampo(input, campo.regex, campo.mensajes);
+            validarCampo(input, campo.regex, campo.mensajes, campo.opcional || false);
           }
         });
         input.addEventListener("blur", () => {
           if (input.offsetParent !== null) {
-            validarCampo(input, campo.regex, campo.mensajes);
+            validarCampo(input, campo.regex, campo.mensajes, campo.opcional || false);
           }
         });
       }

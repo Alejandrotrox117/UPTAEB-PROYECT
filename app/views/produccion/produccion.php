@@ -62,8 +62,43 @@
 
             <!-- Pestaña Procesos -->
             <div id="content-procesos" class="tab-content hidden">
+                
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Registros de Producción</h3>
+                        <p class="text-gray-600 text-sm">Sistema unificado de registro de procesos productivos</p>
+                    </div>
+                    <button id="btnAbrirModalRegistrarProduccion"
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base transition-all hover:shadow-lg">
+                        <i class="fas fa-plus-circle mr-2"></i> Nuevo Registro de Producción
+                    </button>
+                </div>
+
+                <!-- NOTA: Información sobre el registro -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-5 mb-6 rounded-r-lg shadow-sm">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-base font-bold text-blue-800 mb-1">
+                                Sistema Integrado de Producción
+                            </h4>
+                            <p class="text-sm text-blue-700 mb-2">
+                                <strong>Todo en un solo formulario:</strong> Registra cualquier proceso de producción (Clasificación o Empaque) desde el mismo formulario unificado.
+                            </p>
+                            <ul class="text-xs text-blue-600 space-y-1 ml-4">
+                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Selecciona empleado, lote, fecha y tipo de proceso</li>
+                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Define materia prima y producto terminado</li>
+                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Los salarios se calculan automáticamente según configuración</li>
+                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Visualiza todos los procesos del día en la tabla inferior</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Los botones de registro individual están comentados
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <!-- Clasificación -->
                     <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
                         <div class="flex items-center mb-4">
                             <i class="fas fa-filter text-blue-600 text-2xl mr-3"></i>
@@ -78,7 +113,6 @@
                         </button>
                     </div>
 
-                    <!-- Empaque -->
                     <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
                         <div class="flex items-center mb-4">
                             <i class="fas fa-cube text-purple-600 text-2xl mr-3"></i>
@@ -93,6 +127,7 @@
                         </button>
                     </div>
                 </div>
+                -->
 
                 <!-- Lista de procesos recientes -->
                 <div class="mt-8">
@@ -116,17 +151,31 @@
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800">Gestión de Nómina</h3>
-                        <p class="text-gray-600 text-sm">Registra producción diaria y calcula salarios</p>
+                        <p class="text-gray-600 text-sm">Consulta registros de producción y envía pagos a los empleados</p>
                     </div>
                     <div class="flex gap-2">
                         <button id="btnCalcularNomina"
-                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium text-sm">
-                            <i class="fas fa-calculator mr-2"></i> Calcular Nómina
+                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium text-sm shadow-md transition-all hover:shadow-lg">
+                            <i class="fas fa-search mr-2"></i> Consultar Registros por Fecha
                         </button>
-                        <button id="btnRegistrarProduccionDiaria"
-                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm">
-                            <i class="fas fa-clipboard-list mr-2"></i> Registrar Producción
-                        </button>
+                    </div>
+                </div>
+
+                <!-- Información de uso -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-500 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="text-sm font-bold text-blue-800">Cómo usar la nómina:</h4>
+                            <ol class="text-sm text-blue-700 mt-2 ml-4 list-decimal space-y-1">
+                                <li>Haz clic en "Consultar Registros por Fecha" y selecciona el rango de fechas</li>
+                                <li>Revisa los registros de producción con sus salarios calculados automáticamente</li>
+                                <li>Selecciona los registros que deseas enviar a pago usando los checkboxes</li>
+                                <li>Haz clic en "Registrar Salario" para enviarlos al módulo de pagos</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
 
@@ -263,59 +312,240 @@
 
 <!-- Modal Registrar Lote -->
 <div id="modalRegistrarLote"
-    class="fixed inset-0 flex  items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4 ">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-2xl max-h-[95vh]">
-        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xl md:text-2xl font-bold text-gray-800">Crear Lote de Producción</h3>
-            <button id="btnCerrarModalRegistrarLote" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 z-50 p-4">
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden w-full sm:w-11/12 max-w-6xl max-h-[95vh] transform transition-all duration-300 scale-95">
+        
+        <!-- Header Mejorado con Gradiente -->
+        <div class="bg-gradient-to-r from-green-600 to-emerald-700 px-6 md:px-8 py-5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                    <i class="fas fa-boxes text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-bold text-white">
+                        Crear Lote de Producción
+                    </h3>
+                    <p class="text-green-100 text-sm mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Registra un nuevo lote con sus procesos
+                    </p>
+                </div>
+            </div>
+            <button id="btnCerrarModalRegistrarLote" type="button" 
+                class="text-white/80 hover:text-white hover:bg-white/20 transition-all p-2 rounded-full">
+                <svg class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
             </button>
         </div>
-        <form id="formRegistrarLote" class="px-4 md:px-8 py-6 overflow-auto-y max-h-[75vh]">
-            <div class="grid grid-cols-1 gap-6">
-                <div>
-                    <label for="lote_fecha_jornada" class="block text-sm font-medium text-gray-700 mb-1">Fecha de Jornada <span class="text-red-500">*</span></label>
-                    <input type="date" id="lote_fecha_jornada" name="fecha_jornada" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
-                </div>
-                <div>
-                    <label for="lote_volumen_estimado" class="block text-sm font-medium text-gray-700 mb-1">Volumen Estimado (kg) <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" id="lote_volumen_estimado" name="volumen_estimado" placeholder="Ej: 2500.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
-                </div>
-                <div>
-                    <label for="lote_supervisor" class="block text-sm font-medium text-gray-700 mb-1">Supervisor <span class="text-red-500">*</span></label>
-                    <select id="lote_supervisor" name="idsupervisor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
-                        <option value="">Seleccionar supervisor...</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="lote_observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
-                    <textarea id="lote_observaciones" name="observaciones" rows="3" placeholder="Observaciones adicionales..." class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm"></textarea>
+
+        <form id="formRegistrarLote" class="px-6 md:px-8 py-6 max-h-[calc(95vh-200px)] overflow-y-auto custom-scrollbar">
+            
+            <!-- Sección Datos Generales del Lote -->
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200 mb-6">
+                <h4 class="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
+                    <div class="bg-green-500 p-2 rounded-lg">
+                        <i class="fas fa-clipboard-list text-white"></i>
+                    </div>
+                    Datos Generales del Lote
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label for="lote_fecha_jornada" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-calendar-alt text-green-600 mr-1"></i>
+                            Fecha de Jornada <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" id="lote_fecha_jornada" name="fecha_jornada" 
+                            class="w-full border-2 border-green-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
+                    </div>
+                    <div>
+                        <label for="lote_volumen_estimado" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-balance-scale text-green-600 mr-1"></i>
+                            Volumen Estimado (kg) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" step="0.01" id="lote_volumen_estimado" name="volumen_estimado" placeholder="Ej: 2500.00" 
+                            class="w-full border-2 border-green-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
+                    </div>
+                    <div>
+                        <label for="lote_supervisor" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-user-tie text-green-600 mr-1"></i>
+                            Supervisor <span class="text-red-500">*</span>
+                        </label>
+                        <select id="lote_supervisor" name="idsupervisor" 
+                            class="w-full border-2 border-green-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
+                            <option value="">Seleccionar supervisor...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="lote_observaciones" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-comment-alt text-green-600 mr-1"></i>
+                            Observaciones
+                        </label>
+                        <textarea id="lote_observaciones" name="observaciones" rows="3" placeholder="Observaciones adicionales..." 
+                            class="w-full border-2 border-green-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm"></textarea>
+                    </div>
                 </div>
 
                 <!-- Información calculada -->
-                <div id="infoCalculada" class="bg-blue-50 p-4 rounded-lg border border-blue-200 hidden">
-                    <h4 class="text-sm font-semibold text-blue-800 mb-2">Información Calculada</h4>
+                <div id="infoCalculada" class="bg-white/70 backdrop-blur-sm p-4 rounded-xl border border-green-300 mt-4 hidden">
+                    <h4 class="text-sm font-bold text-green-900 mb-3 flex items-center gap-2">
+                        <i class="fas fa-calculator text-green-600"></i>
+                        Información Calculada Automáticamente
+                    </h4>
                     <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="text-blue-600">Operarios Requeridos:</span>
-                            <span id="operariosCalculados" class="font-semibold ml-2">-</span>
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <span class="text-green-700 font-medium">Operarios Requeridos:</span>
+                            <span id="operariosCalculados" class="font-bold ml-2 text-green-900">-</span>
                         </div>
-                        <div>
-                            <span class="text-blue-600">Capacidad Máxima:</span>
-                            <span id="capacidadMaxima" class="font-semibold ml-2">-</span>
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <span class="text-green-700 font-medium">Capacidad Máxima:</span>
+                            <span id="capacidadMaxima" class="font-bold ml-2 text-green-900">-</span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Sección Agregar Registros de Producción al Lote -->
+            <div class="mt-6">
+                <h4 class="text-base font-semibold text-gray-700 mb-3 border-b pb-2 flex items-center">
+                    <i class="fas fa-industry text-green-600 mr-2"></i>
+                    Registros de Producción del Lote
+                </h4>
+                
+                <!-- Formulario para agregar registro de producción -->
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200 mb-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Fila 1: Empleado, Fecha, Tipo -->
+                        <div>
+                            <label for="lote_prod_empleado" class="block text-xs font-medium text-gray-700 mb-1">
+                                Empleado <span class="text-red-500">*</span>
+                            </label>
+                            <select id="lote_prod_empleado" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Seleccionar empleado...</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="lote_prod_fecha" class="block text-xs font-medium text-gray-700 mb-1">
+                                Fecha Proceso <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" id="lote_prod_fecha" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+
+                        <div>
+                            <label for="lote_prod_tipo" class="block text-xs font-medium text-gray-700 mb-1">
+                                Tipo de Proceso <span class="text-red-500">*</span>
+                            </label>
+                            <select id="lote_prod_tipo" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="CLASIFICACION">🔵 Clasificación</option>
+                                <option value="EMPAQUE">🟣 Empaque</option>
+                            </select>
+                        </div>
+
+                        <!-- Fila 2: Producto Inicial y Cantidad -->
+                        <div>
+                            <label for="lote_prod_producto_inicial" class="block text-xs font-medium text-gray-700 mb-1">
+                                Producto Inicial <span class="text-red-500">*</span>
+                            </label>
+                            <select id="lote_prod_producto_inicial" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Seleccionar producto...</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="lote_prod_cantidad_inicial" class="block text-xs font-medium text-gray-700 mb-1">
+                                Cantidad Inicial (kg) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" step="0.01" id="lote_prod_cantidad_inicial" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+
+                        <!-- Fila 3: Producto Final y Cantidad -->
+                        <div>
+                            <label for="lote_prod_producto_final" class="block text-xs font-medium text-gray-700 mb-1">
+                                Producto Final <span class="text-red-500">*</span>
+                            </label>
+                            <select id="lote_prod_producto_final" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                                <option value="">Seleccionar producto...</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="lote_prod_cantidad_producida" class="block text-xs font-medium text-gray-700 mb-1">
+                                Cantidad Producida (kg) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" step="0.01" id="lote_prod_cantidad_producida" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+
+                        <!-- Salarios (calculados automáticamente) -->
+                        <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Salario Base</label>
+                                <input type="text" id="lote_prod_salario_base" readonly class="w-full bg-gray-100 border border-gray-200 rounded px-3 py-2 text-sm text-gray-700" value="$0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Pago por Trabajo</label>
+                                <input type="text" id="lote_prod_pago_trabajo" readonly class="w-full bg-gray-100 border border-gray-200 rounded px-3 py-2 text-sm text-gray-700" value="$0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Salario Total</label>
+                                <input type="text" id="lote_prod_salario_total" readonly class="w-full bg-green-100 border border-green-300 rounded px-3 py-2 text-sm font-bold text-green-700" value="$0.00">
+                            </div>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="lg:col-span-3">
+                            <label for="lote_prod_observaciones" class="block text-xs font-medium text-gray-700 mb-1">
+                                Observaciones
+                            </label>
+                            <textarea id="lote_prod_observaciones" rows="2" placeholder="Observaciones del registro..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Botón Agregar -->
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" id="btnAgregarRegistroProduccionLote" class="bg-green-500 hover:bg-green-600 text-white rounded-lg px-6 py-2.5 text-sm font-medium shadow-sm transition-all hover:shadow-md">
+                            <i class="fas fa-plus-circle mr-2"></i>Agregar Registro
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de registros agregados -->
+                <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+                    <table id="tablaRegistrosProduccionLote" class="w-full text-xs">
+                        <thead class="bg-gradient-to-r from-green-50 to-green-100">
+                            <tr>
+                                <th class="px-2 py-2 text-left font-semibold text-green-900">Empleado</th>
+                                <th class="px-2 py-2 text-left font-semibold text-green-900">Fecha</th>
+                                <th class="px-2 py-2 text-left font-semibold text-green-900">Tipo</th>
+                                <th class="px-2 py-2 text-left font-semibold text-green-900">Prod. Inicial</th>
+                                <th class="px-2 py-2 text-right font-semibold text-green-900">Cant. Inicial</th>
+                                <th class="px-2 py-2 text-left font-semibold text-green-900">Prod. Final</th>
+                                <th class="px-2 py-2 text-right font-semibold text-green-900">Cant. Producida</th>
+                                <th class="px-2 py-2 text-right font-semibold text-green-900">Salario</th>
+                                <th class="px-2 py-2 text-center font-semibold text-green-900">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaRegistrosProduccionLote" class="divide-y divide-gray-200 bg-white">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                    <p id="noRegistrosProdMensaje" class="text-center text-gray-500 py-6 text-sm bg-gray-50">
+                        <i class="fas fa-inbox text-gray-300 text-2xl mb-2"></i><br>
+                        No hay registros de producción agregados al lote.
+                    </p>
+                </div>
+            </div>
+
+            <div id="mensajeErrorFormLote" class="text-red-600 text-xs mt-4 text-center font-medium"></div>
         </form>
+
         <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
             <button type="button" id="btnCancelarModalRegistrarLote" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
                 Cancelar
             </button>
-            <button type="submit" id="btnGuardarLote" form="formRegistrarLote" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm md:text-base font-medium">
-                <i class="fas fa-save mr-1 md:mr-2"></i> Crear Lote
+            <button type="button" id="btnGuardarLote" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm md:text-base font-medium">
+                <i class="fas fa-save mr-1 md:mr-2"></i> Crear Lote con Procesos
             </button>
         </div>
     </div>
@@ -453,179 +683,7 @@
     </div>
 </div>
 
-<!-- Modal Registrar Clasificación -->
-<div id="modalRegistrarClasificacion"
-    class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-3xl max-h-[95vh]">
-        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xl md:text-2xl font-bold text-gray-800">Registrar Proceso de Clasificación</h3>
-            <button id="btnCerrarModalClasificacion" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-        <form id="formRegistrarClasificacion" class="px-4 md:px-8 py-6 max-h-[75vh] overflow-auto-y">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="clas_lote" class="block text-sm font-medium text-gray-700 mb-1">Lote <span class="text-red-500">*</span></label>
-                    <select id="clas_lote" name="idlote" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
-                        <option value="">Seleccionar lote...</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="clas_operario" class="block text-sm font-medium text-gray-700 mb-1">Operario <span class="text-red-500">*</span></label>
-                    <select id="clas_operario" name="idempleado" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
-                        <option value="">Seleccionar operario...</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="clas_producto_origen" class="block text-sm font-medium text-gray-700 mb-1">Producto Origen <span class="text-red-500">*</span></label>
-                    <select id="clas_producto_origen" name="idproducto_origen" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
-                        <option value="">Seleccionar producto...</option>
-                    </select>
-                </div>
-                
-                <div class="campo-con-boton">
-                    <label for="clas_kg_procesados" class="block text-sm font-medium text-gray-700 mb-1">
-                        Total Procesado (kg) <span class="text-red-500">*</span>
-                    </label>
-                    <div class="input-con-boton">
-                        <input type="number" step="0.01" id="clas_kg_procesados" name="kg_procesados"
-                            placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
-                        <button type="button" class="btnUltimoPesoRomanaClasificacion boton-interno"
-                            data-campo="clas_kg_procesados" title="Traer último peso de romana">
-                            <i class="fas fa-balance-scale"></i>
-                        </button>
-                    </div>
-                </div>
 
-                <div class="campo-con-boton">
-                    <label for="clas_kg_limpios" class="block text-sm font-medium text-gray-700 mb-1">
-                        Material Limpio (kg) <span class="text-red-500">*</span>
-                    </label>
-                    <div class="input-con-boton">
-                        <input type="number" step="0.01" id="clas_kg_limpios" name="kg_limpios"
-                            placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
-                        <button type="button" class="btnUltimoPesoRomanaClasificacion boton-interno"
-                            data-campo="clas_kg_limpios" title="Traer último peso de romana">
-                            <i class="fas fa-balance-scale"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="campo-con-boton">
-                    <label for="clas_kg_contaminantes" class="block text-sm font-medium text-gray-700 mb-1">
-                        Contaminantes (kg) <span class="text-red-500">*</span>
-                    </label>
-                    <div class="input-con-boton">
-                        <input type="number" step="0.01" id="clas_kg_contaminantes" name="kg_contaminantes"
-                            placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
-                        <button type="button" class="btnUltimoPesoRomanaClasificacion boton-interno"
-                            data-campo="clas_kg_contaminantes" title="Traer último peso de romana">
-                            <i class="fas fa-balance-scale"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Div vacío para mantener el grid balanceado -->
-                <div></div>
-
-                <!-- Validación - ocupa las 2 columnas -->
-                <div class="md:col-span-2">
-                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
-                        <p class="text-blue-800 text-sm font-medium">Validación:</p>
-                        <p class="text-blue-600 text-xs">Material Limpio + Contaminantes = Total Procesado</p>
-                        <p id="validacionClasificacion" class="text-xs mt-1 font-semibold">Diferencia: 0.00 kg</p>
-                    </div>
-                </div>
-
-                <!-- Observaciones - ocupa las 2 columnas -->
-                <div class="md:col-span-2">
-                    <label for="clas_observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
-                    <textarea id="clas_observaciones" name="observaciones" rows="3" placeholder="Observaciones del proceso..." class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"></textarea>
-                </div>
-            </div>
-        </form>
-        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-            <button type="button" id="btnCancelarModalClasificacion" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
-                Cancelar
-            </button>
-            <button type="submit" id="btnGuardarClasificacion" form="formRegistrarClasificacion" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm md:text-base font-medium">
-                <i class="fas fa-save mr-1 md:mr-2"></i> Registrar Clasificación
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Registrar Empaque -->
-<div id="modalRegistrarEmpaque"
-    class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-2xl max-h-[95vh]">
-        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xl md:text-2xl font-bold text-gray-800">Registrar Proceso de Empaque</h3>
-            <button id="btnCerrarModalEmpaque" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-        <form id="formRegistrarEmpaque" class="px-4 md:px-8 py-6">
-            <div class="grid grid-cols-1 gap-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="emp_lote" class="block text-sm font-medium text-gray-700 mb-1">Lote <span class="text-red-500">*</span></label>
-                        <select id="emp_lote" name="idlote" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm" required>
-                            <option value="">Seleccionar lote...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="emp_operario" class="block text-sm font-medium text-gray-700 mb-1">Operario <span class="text-red-500">*</span></label>
-                        <select id="emp_operario" name="idempleado" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm" required>
-                            <option value="">Seleccionar operario...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="emp_producto_clasificado" class="block text-sm font-medium text-gray-700 mb-1">Material Clasificado <span class="text-red-500">*</span></label>
-                    <select id="emp_producto_clasificado" name="idproducto_clasificado" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm" required>
-                        <option value="">Seleccionar material...</option>
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="emp_peso_paca" class="block text-sm font-medium text-gray-700 mb-1">Peso de la Paca (kg) <span class="text-red-500">*</span></label>
-                        <input type="number" step="0.01" id="emp_peso_paca" name="peso_paca" placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm" required>
-                    </div>
-                    <div>
-                        <label for="emp_calidad" class="block text-sm font-medium text-gray-700 mb-1">Calidad <span class="text-red-500">*</span></label>
-                        <select id="emp_calidad" name="calidad" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm" required>
-                            <option value="">Seleccionar calidad...</option>
-                            <option value="PREMIUM">Premium</option>
-                            <option value="ESTANDAR">Estándar</option>
-                            <option value="SEGUNDA">Segunda</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="emp_observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
-                    <textarea id="emp_observaciones" name="observaciones" rows="3" placeholder="Observaciones del empaque..." class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"></textarea>
-                </div>
-            </div>
-        </form>
-        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-            <button type="button" id="btnCancelarModalEmpaque" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
-                Cancelar
-            </button>
-            <button type="submit" id="btnGuardarEmpaque" form="formRegistrarEmpaque" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition text-sm md:text-base font-medium">
-                <i class="fas fa-save mr-1 md:mr-2"></i> Registrar Empaque
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- Modal Registrar Producción Diaria -->
 <div id="modalRegistrarProduccionDiaria"
@@ -689,6 +747,322 @@
             </button>
             <button type="button" id="btnGuardarProduccionDiaria" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm md:text-base font-medium">
                 <i class="fas fa-save mr-1 md:mr-2"></i> Guardar Producción
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!-- MODAL: REGISTRAR PRODUCCIÓN -->
+<!-- ============================================= -->
+<div id="modalRegistrarProduccion" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] bg-opacity-30 z-50 opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full sm:w-11/12 max-w-4xl max-h-[95vh] overflow-hidden">
+        <!-- Header -->
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 border-b">
+            <h3 class="text-lg md:text-xl font-bold text-white flex items-center">
+                <i class="fas fa-industry mr-2"></i>Registrar Producción
+            </h3>
+            <button id="btnCerrarModalRegistrarProduccion" type="button" class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-green-700">
+                <svg class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Formulario -->
+        <form id="formRegistrarProduccion" class="px-4 md:px-6 py-6 overflow-y-auto max-h-[calc(95vh-180px)]">
+            
+            <!-- Información del Lote y Fecha -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+                <h4 class="text-base font-semibold text-gray-700 mb-4 flex items-center border-b pb-2">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>Información de la Jornada
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="prod_lote" class="block text-sm font-medium text-gray-700 mb-1">
+                            Lote <span class="text-red-500">*</span>
+                        </label>
+                        <select id="prod_lote" name="idlote" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                            <option value="">Seleccionar lote...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="prod_empleado" class="block text-sm font-medium text-gray-700 mb-1">
+                            Empleado/Operario <span class="text-red-500">*</span>
+                        </label>
+                        <select id="prod_empleado" name="idempleado" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                            <option value="">Seleccionar empleado...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="prod_fecha_jornada" class="block text-sm font-medium text-gray-700 mb-1">
+                            Fecha de Jornada <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" id="prod_fecha_jornada" name="fecha_jornada" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Producto a Producir y Cantidad -->
+            <div class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200">
+                <h4 class="text-base font-semibold text-gray-700 mb-4 flex items-center border-b pb-2">
+                    <i class="fas fa-箱 text-blue-600 mr-2"></i>Materia Prima
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="prod_producto_producir" class="block text-sm font-medium text-gray-700 mb-1">
+                            Producto a Producir <span class="text-red-500">*</span>
+                            <span class="text-xs text-gray-500">(Producto que se convertirá)</span>
+                        </label>
+                        <select id="prod_producto_producir" name="idproducto_producir" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            <option value="">Seleccionar producto...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="prod_cantidad_producir" class="block text-sm font-medium text-gray-700 mb-1">
+                            Cantidad a Producir (kg) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" step="0.01" min="0" id="prod_cantidad_producir" name="cantidad_producir" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Producto Terminado y Cantidad Producida -->
+            <div class="bg-green-50 p-4 rounded-lg mb-6 border border-green-200">
+                <h4 class="text-base font-semibold text-gray-700 mb-4 flex items-center border-b pb-2">
+                    <i class="fas fa-check-circle text-green-600 mr-2"></i>Producto Terminado
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="prod_producto_terminado" class="block text-sm font-medium text-gray-700 mb-1">
+                            Producto Terminado <span class="text-red-500">*</span>
+                            <span class="text-xs text-gray-500">(Producto resultante)</span>
+                        </label>
+                        <select id="prod_producto_terminado" name="idproducto_terminado" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                            <option value="">Seleccionar producto...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="prod_cantidad_producida" class="block text-sm font-medium text-gray-700 mb-1">
+                            Cantidad Producida (kg) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" step="0.01" min="0" id="prod_cantidad_producida" name="cantidad_producida" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tipo de Movimiento (Clasificación o Empaque) -->
+            <div class="bg-purple-50 p-4 rounded-lg mb-6 border border-purple-200">
+                <h4 class="text-base font-semibold text-gray-700 mb-4 flex items-center border-b pb-2">
+                    <i class="fas fa-cogs text-purple-600 mr-2"></i>Tipo de Proceso
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="prod_tipo_movimiento" class="block text-sm font-medium text-gray-700 mb-1">
+                            Tipo de Movimiento <span class="text-red-500">*</span>
+                        </label>
+                        <select id="prod_tipo_movimiento" name="tipo_movimiento" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" required>
+                            <option value="">Seleccionar tipo...</option>
+                            <option value="CLASIFICACION">Clasificación</option>
+                            <option value="EMPAQUE">Empaque</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salarios (calculados automáticamente) -->
+            <div class="bg-yellow-50 p-4 rounded-lg mb-6 border border-yellow-200">
+                <h4 class="text-base font-semibold text-gray-700 mb-4 flex items-center border-b pb-2">
+                    <i class="fas fa-dollar-sign text-yellow-600 mr-2"></i>Información Salarial
+                    <span class="ml-auto text-xs text-gray-500 font-normal">(Calculado según configuración)</span>
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="prod_salario_base_dia" class="block text-sm font-medium text-gray-700 mb-1">
+                            Salario Base Día
+                        </label>
+                        <input type="number" step="0.01" min="0" id="prod_salario_base_dia" name="salario_base_dia" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" readonly>
+                        <p class="text-xs text-gray-500 mt-1">Según configuración_produccion</p>
+                    </div>
+                    <div>
+                        <label for="prod_pago_clasificacion" class="block text-sm font-medium text-gray-700 mb-1">
+                            Pago por Trabajo
+                        </label>
+                        <input type="number" step="0.01" min="0" id="prod_pago_clasificacion" name="pago_clasificacion_trabajo" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" readonly>
+                        <p class="text-xs text-gray-500 mt-1">Basado en cantidad producida</p>
+                    </div>
+                    <div>
+                        <label for="prod_salario_total" class="block text-sm font-medium text-gray-700 mb-1">
+                            Salario Total
+                        </label>
+                        <input type="number" step="0.01" min="0" id="prod_salario_total" name="salario_total" placeholder="0.00" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-green-100 font-bold text-green-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" readonly>
+                        <p class="text-xs text-gray-500 mt-1">Suma total</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observaciones -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-4 border border-gray-200">
+                <h4 class="text-base font-semibold text-gray-700 mb-3 flex items-center">
+                    <i class="fas fa-sticky-note text-gray-600 mr-2"></i>Observaciones
+                </h4>
+                <textarea id="prod_observaciones" name="observaciones" rows="3" placeholder="Notas adicionales sobre este registro de producción..." class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent resize-none"></textarea>
+            </div>
+
+        </form>
+
+        <!-- Footer con botones -->
+        <div class="flex flex-col sm:flex-row justify-end gap-3 px-4 md:px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <button type="button" id="btnCancelarRegistrarProduccion" class="w-full sm:w-auto px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium">
+                <i class="fas fa-times mr-2"></i>Cancelar
+            </button>
+            <button type="submit" form="formRegistrarProduccion" id="btnGuardarRegistrarProduccion" class="w-full sm:w-auto px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium">
+                <i class="fas fa-save mr-2"></i>Guardar Registro
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Detalle del Lote -->
+<div id="modalVerLote" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] bg-opacity-30 z-50 opacity-0 pointer-events-none transition-opacity duration-300 p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full sm:w-11/12 max-w-5xl max-h-[95vh]">
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b">
+            <h3 class="text-lg md:text-xl font-bold text-gray-800">
+                <i class="fas fa-boxes mr-2 text-green-600"></i>Detalle del Lote de Producción
+            </h3>
+            <button id="btnCerrarModalVerLote" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-200">
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="p-4 md:p-6 overflow-y-auto max-h-[calc(95vh-180px)] sm:max-h-[70vh]">
+            <!-- Información General del Lote -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-500">Número de Lote:</label>
+                    <p id="verLoteNumero" class="text-sm sm:text-base md:text-lg font-semibold text-gray-900">-</p>
+                </div>
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-500">Fecha de Jornada:</label>
+                    <p id="verLoteFecha" class="text-sm sm:text-base md:text-lg font-semibold text-gray-900">-</p>
+                </div>
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-500">Volumen Estimado:</label>
+                    <p id="verLoteVolumen" class="text-sm sm:text-base md:text-lg font-semibold text-gray-900">-</p>
+                </div>
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-500">Supervisor:</label>
+                    <p id="verLoteSupervisor" class="text-sm sm:text-base md:text-lg font-semibold text-gray-900">-</p>
+                </div>
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-500">Estado:</label>
+                    <p id="verLoteEstado" class="text-sm sm:text-base md:text-lg font-semibold text-gray-900">-</p>
+                </div>
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-500">Operarios Asignados:</label>
+                    <p id="verLoteOperarios" class="text-sm sm:text-base md:text-lg font-semibold text-gray-900">-</p>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-500">Observaciones:</label>
+                    <p id="verLoteObservaciones" class="text-sm sm:text-base text-gray-700">-</p>
+                </div>
+            </div>
+
+            <!-- Registros de Producción del Lote -->
+            <div class="mt-6" id="seccionRegistrosProduccion">
+                <h4 class="text-base md:text-lg font-semibold text-gray-800 mb-3 border-b pb-2 flex items-center">
+                    <i class="fas fa-industry text-green-600 mr-2"></i>
+                    Registros de Producción
+                </h4>
+                <div class="overflow-x-auto border border-gray-200 rounded-md">
+                    <table class="w-full text-sm">
+                        <thead class="bg-green-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-medium text-green-900">Fecha</th>
+                                <th class="px-3 py-2 text-left font-medium text-green-900">Empleado</th>
+                                <th class="px-3 py-2 text-left font-medium text-green-900">Producto Inicial</th>
+                                <th class="px-3 py-2 text-right font-medium text-green-900">Cantidad (kg)</th>
+                                <th class="px-3 py-2 text-left font-medium text-green-900">Producto Final</th>
+                                <th class="px-3 py-2 text-right font-medium text-green-900">Producido (kg)</th>
+                                <th class="px-3 py-2 text-center font-medium text-green-900">Tipo</th>
+                                <th class="px-3 py-2 text-right font-medium text-green-900">Salario Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="verRegistrosProduccion" class="divide-y divide-gray-200">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Resumen de Totales de Producción -->
+            <div class="mt-6 pt-4 border-t">
+                <h4 class="text-base md:text-lg font-semibold text-gray-800 mb-3">Resumen Financiero</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <label class="block text-xs font-medium text-blue-700">Total Registros:</label>
+                        <p id="verTotalRegistros" class="text-lg font-bold text-blue-900">0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <label class="block text-xs font-medium text-green-700">Total Producido:</label>
+                        <p id="verTotalProducido" class="text-lg font-bold text-green-900">0.00 kg</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <label class="block text-xs font-medium text-yellow-700">Total Salarios Base:</label>
+                        <p id="verTotalSalariosBase" class="text-lg font-bold text-yellow-900">$0.00</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <label class="block text-xs font-medium text-purple-700">Total General:</label>
+                        <p id="verTotalSalariosGeneral" class="text-lg font-bold text-purple-900">$0.00</p>
+                    </div>
+                </div>
+                
+                <!-- Desglose por tipo -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <label class="block text-sm font-medium text-blue-700 mb-2">
+                            <i class="fas fa-filter mr-1"></i>Clasificación
+                        </label>
+                        <div class="space-y-1 text-xs text-blue-800">
+                            <p>Registros: <span id="verCantidadClasificacion" class="font-semibold">0</span></p>
+                            <p>Producido: <span id="verTotalKgClasificacion" class="font-semibold">0.00 kg</span></p>
+                        </div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <label class="block text-sm font-medium text-purple-700 mb-2">
+                            <i class="fas fa-cube mr-1"></i>Empaque
+                        </label>
+                        <div class="space-y-1 text-xs text-purple-800">
+                            <p>Registros: <span id="verCantidadEmpaque" class="font-semibold">0</span></p>
+                            <p>Producido: <span id="verTotalKgEmpaque" class="font-semibold">0.00 kg</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje cuando no hay registros -->
+            <div id="mensajeNoRegistros" class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg" style="display: none;">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700 font-medium">
+                            Este lote aún no tiene registros de producción.
+                        </p>
+                        <p class="text-xs text-yellow-600 mt-1">
+                            Los registros se crean desde la pestaña "Procesos" → "Registrar Producción".
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-4 md:pt-6 px-4 md:px-6 pb-4 border-t border-gray-200">
+            <button type="button" id="btnCerrarModalVerLote2" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 text-sm md:text-base">
+                <i class="fas fa-times mr-1 md:mr-2"></i>Cerrar
             </button>
         </div>
     </div>

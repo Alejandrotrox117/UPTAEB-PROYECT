@@ -264,11 +264,12 @@ class empleadosModel extends Mysql
         $sql = "INSERT INTO empleado (
                     nombre, 
                     apellido, 
-                    identificacion, 
+                    identificacion,
+                    tipo_empleado,
+                    estatus,
                     fecha_nacimiento, 
                     direccion, 
                     correo_electronico, 
-                    estatus, 
                     telefono_principal, 
                     observaciones, 
                     genero, 
@@ -276,24 +277,25 @@ class empleadosModel extends Mysql
                     fecha_fin, 
                     puesto, 
                     salario
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->db->prepare($sql);
         $arrValues = [
             $data['nombre'],
             $data['apellido'],
             $data['identificacion'],
-            $data['fecha_nacimiento'],
-            $data['direccion'],
-            $data['correo_electronico'],
-            $data['estatus'],
-            $data['telefono_principal'],
-            $data['observaciones'],
-            $data['genero'],
-            $data['fecha_inicio'],
-            $data['fecha_fin'],
-            $data['puesto'],
-            $data['salario']
+            $data['tipo_empleado'] ?? 'OPERARIO', // Por defecto OPERARIO
+            $data['estatus'] ?? 'activo',
+            !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null,
+            !empty($data['direccion']) ? $data['direccion'] : null,
+            !empty($data['correo_electronico']) ? $data['correo_electronico'] : null,
+            !empty($data['telefono_principal']) ? $data['telefono_principal'] : null,
+            !empty($data['observaciones']) ? $data['observaciones'] : null,
+            !empty($data['genero']) ? $data['genero'] : null,
+            !empty($data['fecha_inicio']) ? $data['fecha_inicio'] : null,
+            !empty($data['fecha_fin']) ? $data['fecha_fin'] : null,
+            !empty($data['puesto']) ? $data['puesto'] : null,
+            !empty($data['salario']) ? $data['salario'] : 0.00
         ];
 
         return $stmt->execute($arrValues);
@@ -313,15 +315,15 @@ class empleadosModel extends Mysql
         $sql = "UPDATE empleado SET 
                     nombre = ?, 
                     apellido = ?, 
-                    identificacion = ?, 
+                    identificacion = ?,
+                    tipo_empleado = ?,
+                    estatus = ?,
                     fecha_nacimiento = ?, 
                     direccion = ?, 
                     correo_electronico = ?, 
-                    estatus = ?, 
                     telefono_principal = ?, 
                     observaciones = ?, 
                     genero = ?, 
-                    fecha_modificacion = ?, 
                     fecha_inicio = ?, 
                     fecha_fin = ?, 
                     puesto = ?, 
@@ -333,18 +335,18 @@ class empleadosModel extends Mysql
             $data['nombre'],
             $data['apellido'],
             $data['identificacion'],
-            $data['fecha_nacimiento'],
-            $data['direccion'],
-            $data['correo_electronico'],
-            $data['estatus'],
-            $data['telefono_principal'],
-            $data['observaciones'],
-            $data['genero'],
-            $data['fecha_modificacion'],
-            $data['fecha_inicio'],
-            $data['fecha_fin'],
-            $data['puesto'],
-            $data['salario'],
+            $data['tipo_empleado'] ?? 'OPERARIO',
+            $data['estatus'] ?? 'activo',
+            !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null,
+            !empty($data['direccion']) ? $data['direccion'] : null,
+            !empty($data['correo_electronico']) ? $data['correo_electronico'] : null,
+            !empty($data['telefono_principal']) ? $data['telefono_principal'] : null,
+            !empty($data['observaciones']) ? $data['observaciones'] : null,
+            !empty($data['genero']) ? $data['genero'] : null,
+            !empty($data['fecha_inicio']) ? $data['fecha_inicio'] : null,
+            !empty($data['fecha_fin']) ? $data['fecha_fin'] : null,
+            !empty($data['puesto']) ? $data['puesto'] : null,
+            !empty($data['salario']) ? $data['salario'] : 0.00,
             $data['idempleado']
         ];
 
@@ -354,11 +356,15 @@ class empleadosModel extends Mysql
     // Método para obtener un empleado por ID
     public function getEmpleadoById($idempleado)
     {
+        // Asegurar que $idempleado sea un entero
+        $idempleado = (int) $idempleado;
+        
         $sql = "SELECT 
                     idempleado, 
                     nombre, 
                     apellido, 
                     identificacion, 
+                    tipo_empleado,
                     fecha_nacimiento, 
                     direccion, 
                     correo_electronico, 
