@@ -192,12 +192,12 @@ def read_weight_continuous():
     signal.signal(signal.SIGINT, signal_handler)
     
     print("=" * 70)
-    print("🔧 LECTOR DE PESO ESTABLE - PUERTO COM5")
+    print(" LECTOR DE PESO ESTABLE - PUERTO COM5")
     print("=" * 70)
-    print(f"📁 Archivos generados en: {DATA_FOLDER}")
-    print(f"📄 Peso actual: {PESO_TXT_FILE}")
+    print(f" Archivos generados en: {DATA_FOLDER}")
+    print(f" Peso actual: {PESO_TXT_FILE}")
     print(f"🗄️  Peso MySQL: {PESO_MYSQL_FILE}")
-    print(f"📋 Historial: {PESO_HISTORICO_FILE}")
+    print(f" Historial: {PESO_HISTORICO_FILE}")
     print(f"📝 Log: {LOG_FILE}")
     print("=" * 70)
     print("⚙️  CONFIGURACIÓN DE ESTABILIDAD:")
@@ -206,7 +206,7 @@ def read_weight_continuous():
     print(f"   • Tiempo mínimo entre registros: {TIEMPO_ESPERA_ESTABILIDAD}s")
     print("=" * 70)
     print("⚖️  Iniciando lectura de balanza...")
-    print("🛑 Presiona Ctrl+C para detener")
+    print(" Presiona Ctrl+C para detener")
     print("=" * 70)
     
     # Limpiar archivos al iniciar
@@ -251,7 +251,7 @@ def read_weight_continuous():
                     promedio_ventana = sum(ventana_pesos) / len(ventana_pesos)
                     ventana_info += f", Promedio: {promedio_ventana:.1f}kg"
                 
-                print(f"📊 Lecturas: {contador_lecturas} | Detectados: {pesos_detectados} | Estables: {pesos_estables_registrados}")
+                print(f" Lecturas: {contador_lecturas} | Detectados: {pesos_detectados} | Estables: {pesos_estables_registrados}")
                 print(f"   {ventana_info}")
             
             # Leer del puerto
@@ -292,10 +292,10 @@ def read_weight_continuous():
                                             if (ultimo_peso_registrado is None or 
                                                 abs(promedio - ultimo_peso_registrado) > TOLERANCIA_VARIACION):
                                                 
-                                                log_message(f"🎯 PESO ESTABLE DETECTADO: {mensaje} (Promedio: {promedio:.1f}kg)")
-                                                print(f"🎯 PESO ESTABLE REGISTRADO: {mensaje}")
-                                                print(f"   📈 Promedio de estabilidad: {promedio:.1f} kg")
-                                                print(f"   📊 {estado}")
+                                                log_message(f" PESO ESTABLE DETECTADO: {mensaje} (Promedio: {promedio:.1f}kg)")
+                                                print(f" PESO ESTABLE REGISTRADO: {mensaje}")
+                                                print(f"    Promedio de estabilidad: {promedio:.1f} kg")
+                                                print(f"    {estado}")
                                                 
                                                 # Guardar peso estable (formato normal)
                                                 if guardar_peso_estable(mensaje, promedio, estado):
@@ -305,7 +305,7 @@ def read_weight_continuous():
                                                     
                                                     # Guardar peso para MySQL
                                                     if guardar_peso_mysql(mensaje, promedio, estado):
-                                                        print(f"💾 PESO GUARDADO PARA MYSQL: {promedio:.2f} kg")
+                                                        print(f" PESO GUARDADO PARA MYSQL: {promedio:.2f} kg")
                                                     
                                                     # Guardar peso JSON para MySQL (alternativa)
                                                     guardar_peso_mysql_json(mensaje, promedio, estado)
@@ -313,16 +313,16 @@ def read_weight_continuous():
                                                     # Agregar al historial
                                                     agregar_a_historico(mensaje, promedio, "ESTABLE")
                                                     
-                                                    print(f"💾 PESO ESTABLE GUARDADO: {promedio:.1f} kg")
+                                                    print(f" PESO ESTABLE GUARDADO: {promedio:.1f} kg")
                                                 else:
-                                                    print(f"❌ Error al guardar peso estable")
+                                                    print(f" Error al guardar peso estable")
                                             else:
                                                 if contador_lecturas % 100 == 0:  # Mostrar ocasionalmente
                                                     print(f"🔄 Peso estable similar al anterior: {promedio:.1f} kg")
                                         else:
                                             tiempo_restante = TIEMPO_ESPERA_ESTABILIDAD - tiempo_transcurrido
                                             if contador_lecturas % 100 == 0:  # Mostrar ocasionalmente
-                                                print(f"⏳ Peso estable detectado, esperando {tiempo_restante:.1f}s más")
+                                                print(f" Peso estable detectado, esperando {tiempo_restante:.1f}s más")
                             
     
                 except Exception as e:
@@ -332,8 +332,8 @@ def read_weight_continuous():
             time.sleep(0.1)
             
     except serial.SerialException as e:
-        log_message(f"❌ Error de puerto serial: {e}")
-        print(f"\n❌ ERROR DE CONEXIÓN:")
+        log_message(f" Error de puerto serial: {e}")
+        print(f"\n ERROR DE CONEXIÓN:")
         print(f"   No se pudo conectar al puerto {PORT}")
         print(f"   Verifica que:")
         print(f"   - La balanza esté conectada")
@@ -344,21 +344,21 @@ def read_weight_continuous():
         try:
             ports = serial.tools.list_ports.comports()
             if ports:
-                print(f"\n📋 Puertos disponibles:")
+                print(f"\n Puertos disponibles:")
                 for port in ports:
                     print(f"   - {port.device}: {port.description}")
             else:
-                print("\n📋 No se encontraron puertos COM disponibles")
+                print("\n No se encontraron puertos COM disponibles")
         except Exception as ex:
             print(f"Error al listar puertos: {ex}")
             
     except KeyboardInterrupt:
         log_message("Programa interrumpido por el usuario (Ctrl+C)")
-        print("\n👋 Programa detenido por el usuario")
+        print("\n Programa detenido por el usuario")
         
     except Exception as e:
-        log_message(f"❌ Error inesperado: {e}")
-        print(f"❌ Error inesperado: {e}")
+        log_message(f" Error inesperado: {e}")
+        print(f" Error inesperado: {e}")
         
     finally:
         # Cerrar conexión
@@ -368,21 +368,21 @@ def read_weight_continuous():
         
         # Resumen final
         print("\n" + "=" * 70)
-        print("📊 RESUMEN DE SESIÓN - DETECCIÓN DE PESO ESTABLE")
+        print(" RESUMEN DE SESIÓN - DETECCIÓN DE PESO ESTABLE")
         print("=" * 70)
-        print(f"📈 Total de lecturas realizadas: {contador_lecturas}")
+        print(f" Total de lecturas realizadas: {contador_lecturas}")
         print(f"⚖️  Total de pesos detectados: {pesos_detectados}")
-        print(f"🎯 Total de pesos estables registrados: {pesos_estables_registrados}")
-        print(f"📄 Último peso estable: {ultimo_peso_registrado:.1f} kg" if ultimo_peso_registrado else "📄 Sin pesos estables registrados")
-        print(f"📁 Archivos generados en: {DATA_FOLDER}")
+        print(f" Total de pesos estables registrados: {pesos_estables_registrados}")
+        print(f" Último peso estable: {ultimo_peso_registrado:.1f} kg" if ultimo_peso_registrado else " Sin pesos estables registrados")
+        print(f" Archivos generados en: {DATA_FOLDER}")
         if os.path.exists(PESO_TXT_FILE):
-            print(f"✅ Archivo de peso actual: {PESO_TXT_FILE}")
+            print(f" Archivo de peso actual: {PESO_TXT_FILE}")
         if os.path.exists(PESO_MYSQL_FILE):
-            print(f"✅ Archivo MySQL: {PESO_MYSQL_FILE}")
+            print(f" Archivo MySQL: {PESO_MYSQL_FILE}")
         if os.path.exists(PESO_HISTORICO_FILE):
-            print(f"✅ Archivo de historial: {PESO_HISTORICO_FILE}")
+            print(f" Archivo de historial: {PESO_HISTORICO_FILE}")
         print("=" * 70)
-        print("👋 Programa finalizado")
+        print(" Programa finalizado")
 
 if __name__ == "__main__":
     # Ejecutar automáticamente el lector continuo
