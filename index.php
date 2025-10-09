@@ -43,7 +43,7 @@ if (file_exists($controllerFile)) {
     $controllerInstance = new $controllerClassName();
 
     if (method_exists($controllerInstance, $method)) {
-        $controllerInstance->{$method}($params);
+        call_user_func_array(array($controllerInstance, $method), $params);
     } else {
         // Método no encontrado, cargar controlador de error
         require_once "app/controllers/error.php";
