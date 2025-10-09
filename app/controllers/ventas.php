@@ -39,7 +39,7 @@ class Ventas extends Controllers
 
 
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
@@ -54,7 +54,7 @@ class Ventas extends Controllers
     {
 
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
@@ -70,7 +70,7 @@ class Ventas extends Controllers
 
         if (!$idUsuario) {
             error_log("Ventas::index - No se pudo obtener ID de usuario");
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
@@ -1180,19 +1180,24 @@ class Ventas extends Controllers
      */
     public function notaDespacho($idventa)
     {
+        // Manejar el caso donde $idventa puede ser un array
+        if (is_array($idventa)) {
+            $idventa = isset($idventa[0]) ? $idventa[0] : '';
+        }
+        
         // Debug: verificar el ID recibido
         error_log("DEBUG notaDespacho: ID recibido = '$idventa'");
         
         // Validar que el ID sea un número válido
         if (empty($idventa) || !is_numeric($idventa) || $idventa <= 0) {
             error_log("DEBUG: ID inválido - '$idventa'");
-            header('Location: ' . base_url() . '/ventas?error=id_invalido');
+            header('Location: ' . base_url('ventas?error=id_invalido'));
             exit();
         }
         
         // Verificar permisos básicos
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
@@ -1246,19 +1251,24 @@ class Ventas extends Controllers
      */
     public function reporteVenta($idventa)
     {
+        // Manejar el caso donde $idventa puede ser un array
+        if (is_array($idventa)) {
+            $idventa = isset($idventa[0]) ? $idventa[0] : '';
+        }
+        
         // Debug: verificar el ID recibido
         error_log("DEBUG reporteVenta: ID recibido = '$idventa'");
         
         // Validar que el ID sea un número válido
         if (empty($idventa) || !is_numeric($idventa) || $idventa <= 0) {
             error_log("DEBUG: ID inválido - '$idventa'");
-            header('Location: ' . base_url() . '/ventas?error=id_invalido');
+            header('Location: ' . base_url('ventas?error=id_invalido'));
             exit();
         }
         
         // Verificar permisos básicos
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
