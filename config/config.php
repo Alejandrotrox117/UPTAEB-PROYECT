@@ -27,6 +27,7 @@ define('ENCRYPTION_KEY', env('ENCRYPTION_KEY', '32-character-encryption-key-here
 // Configuración de la Aplicación
 define('APP_ENV', env('APP_ENV', 'development'));
 define('APP_DEBUG', env('APP_DEBUG', true));
+define('BASE_URL', env('APP_URL', 'http://localhost/project'));
 define('APP_URL', env('APP_URL', 'http://localhost/project'));
 define('APP_NAME', env('APP_NAME', 'Sistema Recuperadora'));
 
