@@ -133,7 +133,7 @@ class RolesIntegradoModel extends mysql
                     LEFT JOIN rol_modulo_permisos rmp ON m.idmodulo = rmp.idmodulo AND rmp.idrol = ? AND rmp.activo = 1
                     LEFT JOIN permisos p ON rmp.idpermiso = p.idpermiso
                     WHERE m.estatus = 'activo'
-                    GROUP BY m.idmodulo, m.titulo, m.descripcion, rm.idrol
+                    GROUP BY m.idmodulo, m.titulo, m.descripcion
                     ORDER BY m.titulo ASC");
 
             $this->setArray([$this->getIdRol(), $this->getIdRol()]);
@@ -211,19 +211,27 @@ class RolesIntegradoModel extends mysql
 
             foreach ($this->getAsignaciones() as $asignacion) {
                 $idmodulo = intval($asignacion['idmodulo'] ?? 0);
-                $permisosEspecificos = $asignacion['permisos_especificos'] ?? [];
+                $tieneAcceso = !empty($asignacion['tiene_acceso']);
 
-                if ($idmodulo > 0 && !empty($permisosEspecificos)) {
+                if ($idmodulo > 0 && $tieneAcceso) {
+                    // Verificar si el módulo existe antes de intentar insertar
+                    if (!$this->verificarExistenciaModulo($dbSeguridad, $idmodulo)) {
+                        throw new PDOException("El módulo con ID {$idmodulo} no existe.");
+                    }
+
                     $this->setIdModulo($idmodulo);
                     $this->ejecutarInsercionRolModulo($dbSeguridad);
                     $totalModulos++;
 
-                    foreach ($permisosEspecificos as $idpermiso) {
-                        $idpermiso = intval($idpermiso);
-                        if ($idpermiso > 0) {
-                            $this->setIdPermiso($idpermiso);
-                            $this->ejecutarInsercionRolModuloPermiso($dbSeguridad);
-                            $totalPermisosEspecificos++;
+                    $permisosEspecificos = $asignacion['permisos_especificos'] ?? [];
+                    if (!empty($permisosEspecificos)) {
+                        foreach ($permisosEspecificos as $permiso) {
+                            $idpermiso = intval($permiso['idpermiso'] ?? 0);
+                            if ($idpermiso > 0) {
+                                $this->setIdPermiso($idpermiso);
+                                $this->ejecutarInsercionRolModuloPermiso($dbSeguridad);
+                                $totalPermisosEspecificos++;
+                            }
                         }
                     }
                 }
@@ -286,6 +294,15 @@ class RolesIntegradoModel extends mysql
         $this->setArray([$this->getIdRol(), $this->getIdModulo(), $this->getIdPermiso()]);
         $stmt = $dbSeguridad->prepare($this->getQuery());
         $stmt->execute($this->getArray());
+    }
+
+    private function verificarExistenciaModulo($dbSeguridad, $idmodulo)
+    {
+        $this->setQuery("SELECT COUNT(*) FROM modulos WHERE idmodulo = ?");
+        $this->setArray([$idmodulo]);
+        $stmt = $dbSeguridad->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        return $stmt->fetchColumn() > 0;
     }
 
     private function ejecutarConsultaTodosRoles()
