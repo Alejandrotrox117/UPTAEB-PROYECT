@@ -1,8 +1,7 @@
 <?php
 require_once "app/core/conexion.php";
-require_once "app/core/mysql.php";
 
-class RolesIntegradoModel extends mysql
+class RolesintegradoModel
 {
     private $query;
     private $array;
@@ -18,7 +17,7 @@ class RolesIntegradoModel extends mysql
 
     public function __construct()
     {
-        parent::__construct();
+        // Inicialización del modelo sin herencia
     }
 
     // GETTERS Y SETTERS DE CONTROL
