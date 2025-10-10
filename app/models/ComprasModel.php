@@ -1,6 +1,6 @@
 <?php
-require_once "app/core/Conexion.php";
-require_once "app/core/Mysql.php";
+require_once "app/core/conexion.php";
+require_once "app/core/mysql.php";
 require_once "app/models/notificacionesModel.php";
 
 class ComprasModel
