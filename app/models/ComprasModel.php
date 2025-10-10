@@ -475,14 +475,21 @@ class ComprasModel
             }
 
             $db->commit();
-            return $idCompra;
+            return [
+                'status' => true,
+                'message' => 'Compra registrada exitosamente.',
+                'id' => $idCompra
+            ];
 
         } catch (Exception $e) {
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
             error_log("ComprasModel::ejecutarInsercionCompra - Error: " . $e->getMessage());
-            return false;
+            return [
+                'status' => false,
+                'message' => 'Error al registrar la compra: ' . $e->getMessage()
+            ];
         } finally {
             $conexion->disconnect();
         }
@@ -493,7 +500,10 @@ class ComprasModel
         // Validación: solo se puede editar si la compra está en estado BORRADOR
         $compraActual = $this->ejecutarBusquedaCompraPorId($idcompra);
         if (!$compraActual || (isset($compraActual['estatus_compra']) && $compraActual['estatus_compra'] !== 'BORRADOR')) {
-            return false;
+            return [
+                'status' => false,
+                'message' => 'La compra no se puede editar porque no está en estado BORRADOR.'
+            ];
         }
         $conexion = new Conexion();
         $conexion->connect();
@@ -566,14 +576,20 @@ class ComprasModel
             }
 
             $db->commit();
-            return true;
+            return [
+                'status' => true,
+                'message' => 'Compra actualizada exitosamente.'
+            ];
 
         } catch (Exception $e) {
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
             error_log("ComprasModel::ejecutarActualizacionCompra - Error: " . $e->getMessage());
-            return false;
+            return [
+                'status' => false,
+                'message' => 'Error al actualizar la compra: ' . $e->getMessage()
+            ];
         } finally {
             $conexion->disconnect();
         }
@@ -718,6 +734,19 @@ class ComprasModel
 
         try {
             $db->beginTransaction();
+
+            // Verificar el estado actual de la compra
+            $stmtCheck = $db->prepare("SELECT estatus_compra FROM compra WHERE idcompra = ?");
+            $stmtCheck->execute([$idcompra]);
+            $compra = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if (!$compra) {
+                return ['status' => false, 'message' => 'La compra no existe.'];
+            }
+
+            if ($compra['estatus_compra'] !== 'BORRADOR') {
+                return ['status' => false, 'message' => 'La compra solo se puede eliminar si su estado es BORRADOR.'];
+            }
             
             $this->setQuery("UPDATE compra SET estatus_compra = 'inactivo' WHERE idcompra = ?");
             $stmt = $db->prepare($this->getQuery());
@@ -725,12 +754,16 @@ class ComprasModel
             
             $db->commit();
             
-            return $stmt->rowCount() > 0;
+            if ($stmt->rowCount() > 0) {
+                return ['status' => true, 'message' => 'Compra eliminada exitosamente.'];
+            } else {
+                return ['status' => false, 'message' => 'No se pudo eliminar la compra.'];
+            }
 
         } catch (PDOException $e) {
             $db->rollBack();
             error_log("ComprasModel::ejecutarEliminacionLogicaCompra - Error: " . $e->getMessage());
-            return false;
+            return ['status' => false, 'message' => 'Error de base de datos: ' . $e->getMessage()];
         } finally {
             $conexion->disconnect();
         }
@@ -1236,11 +1269,63 @@ class ComprasModel
 
     public function insertarCompra(array $datosCompra, array $detallesCompra)
     {
+        // Validación de proveedor
+        $proveedor = $this->getProveedorById($datosCompra['idproveedor']);
+        if (!$proveedor) {
+            $errorMessage = "El proveedor con ID " . $datosCompra['idproveedor'] . " no existe.";
+            error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
+            return ['status' => false, 'message' => $errorMessage];
+        }
+
+        // Validación de detalles
+        foreach ($detallesCompra as $detalle) {
+            // Validación de producto existente
+            $producto = $this->getProductoById($detalle['idproducto']);
+            if (!$producto) {
+                $errorMessage = "El producto con ID " . $detalle['idproducto'] . " no existe.";
+                error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
+                return ['status' => false, 'message' => $errorMessage];
+            }
+
+            // Validación de valores no negativos
+            if ($detalle['cantidad'] <= 0 || $detalle['precio_unitario_compra'] < 0) {
+                $errorMessage = "La cantidad o el precio unitario no pueden ser negativos o cero.";
+                error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
+                return ['status' => false, 'message' => $errorMessage];
+            }
+        }
+
         return $this->ejecutarInsercionCompra($datosCompra, $detallesCompra);
     }
 
     public function actualizarCompra(int $idcompra, array $datosCompra, array $detallesCompra)
     {
+        // Validación de proveedor
+        $proveedor = $this->getProveedorById($datosCompra['idproveedor']);
+        if (!$proveedor) {
+            $errorMessage = "El proveedor con ID " . $datosCompra['idproveedor'] . " no existe.";
+            error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
+            return ['status' => false, 'message' => $errorMessage];
+        }
+
+        // Validación de detalles
+        foreach ($detallesCompra as $detalle) {
+            // Validación de producto existente
+            $producto = $this->getProductoById($detalle['idproducto']);
+            if (!$producto) {
+                $errorMessage = "El producto con ID " . $detalle['idproducto'] . " no existe.";
+                error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
+                return ['status' => false, 'message' => $errorMessage];
+            }
+
+            // Validación de valores no negativos
+            if ($detalle['cantidad'] <= 0 || $detalle['precio_unitario_compra'] < 0) {
+                $errorMessage = "La cantidad o el precio unitario no pueden ser negativos o cero.";
+                error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
+                return ['status' => false, 'message' => $errorMessage];
+            }
+        }
+
         return $this->ejecutarActualizacionCompra($idcompra, $datosCompra, $detallesCompra);
     }
 
