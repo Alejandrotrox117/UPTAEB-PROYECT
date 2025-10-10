@@ -1111,8 +1111,7 @@ function inicializarEventosLotes() {
       // Inicializar validaciones para el sub-formulario de registros de producción
       inicializarValidacionesRegistrosProduccion();
       
-      // Cargar configuración para cálculos
-      cargarConfiguracionProduccion();
+     
     });
   }
 
