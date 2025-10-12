@@ -3,7 +3,8 @@ require_once "app/core/Controllers.php";
 require_once "helpers/PermisosModuloVerificar.php";
 require_once "helpers/helpers.php";
 require_once "app/Models/DashboardModel.php";
-// require_once "vendor/pdf/fpdf.php";
+require_once "vendor/setasign/fpdf/fpdf.php";
+
 class PDF extends FPDF
 {
     function Header()
@@ -158,6 +159,45 @@ class Dashboard extends Controllers
             echo json_encode($response, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getDashboardAvanzado: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(["error" => "Error interno del servidor"]);
+        }
+        exit();
+    }
+
+    /**
+     * Obtiene los reportes semanales de producción
+     */
+    public function getReportesSemanalesProduccion()
+    {
+        // Validar y sanitizar parámetros
+        $fecha_desde = $this->validarYFormatearFecha($_GET["fecha_desde"] ?? null, "inicio");
+        $fecha_hasta = $this->validarYFormatearFecha($_GET["fecha_hasta"] ?? null, "fin");
+        $tipo_proceso = isset($_GET["tipo_proceso"]) ? trim(strip_tags($_GET["tipo_proceso"])) : null;
+        $idempleado = filter_var($_GET["idempleado"] ?? null, FILTER_VALIDATE_INT) ?: null;
+        
+        // Validar tipo de proceso
+        if ($tipo_proceso && !in_array($tipo_proceso, ['CLASIFICACION', 'EMPAQUE'])) {
+            $tipo_proceso = null;
+        }
+
+        if (!$this->validarRangoFechas($fecha_desde, $fecha_hasta)) {
+            http_response_code(400);
+            echo json_encode(["error" => "El rango de fechas es inválido."]);
+            exit();
+        }
+
+        try {
+            $response = [
+                "reporteEmpleados" => $this->model->getReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso, $idempleado),
+                "reporteMateriales" => $this->model->getReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso),
+                "reporteTotalMateriales" => $this->model->getReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta),
+            ];
+
+            header('Content-Type: application/json');
+            echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en getReportesSemanalesProduccion: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(["error" => "Error interno del servidor"]);
         }

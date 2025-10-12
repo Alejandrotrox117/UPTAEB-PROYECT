@@ -7,23 +7,219 @@ import {
   inicializarValidaciones,
   limpiarValidaciones,
   registrarEntidad,
+  validarCampo,
+  validarCampoNumerico,
+  validarRango
 } from "./validaciones.js";
 
 // ========================================
 // VARIABLES GLOBALES
 // ========================================
 let tablaLotes, tablaProcesos, tablaNomina;
-let operariosAsignados = [];
 let configuracionActual = {};
-let operariosDisponibles = [];
-let loteActual = null;
+let registrosProduccionLote = []; // Array para almacenar registros de producción del lote
 
 // ========================================
 // CONFIGURACIÓN DE CAMPOS DE FORMULARIO
 // ========================================
-const camposFormularioLote = [ /* ... */ ];
-const camposFormularioClasificacion = [ /* ... */ ];
-const camposFormularioEmpaque = [ /* ... */ ];
+
+/**
+ * Validaciones para el formulario de creación de lote (datos generales)
+ * Campos: lote_fecha_jornada, lote_volumen_estimado, lote_supervisor, lote_observaciones
+ */
+const camposFormularioLote = [
+  {
+    id: "lote_fecha_jornada",
+    tipo: "fecha",
+    mensajes: {
+      vacio: "La fecha de jornada es obligatoria",
+      formato: "Formato de fecha inválido"
+    }
+  },
+  {
+    id: "lote_volumen_estimado",
+    tipoNumerico: "decimal2",
+    min: 0.01,
+    max: 999999.99,
+    mensajes: {
+      vacio: "El volumen estimado es obligatorio",
+      formato: "Debe ser un número con hasta 2 decimales",
+      rango: "El volumen debe estar entre 0.01 y 999,999.99 kg"
+    }
+  },
+  {
+    id: "lote_supervisor",
+    regex: expresiones.enteroPositivo,
+    mensajes: {
+      vacio: "Debes seleccionar un supervisor",
+      formato: "Selección inválida"
+    }
+  },
+  {
+    id: "lote_observaciones",
+    regex: expresiones.textoGeneral,
+    mensajes: {
+      formato: "Observaciones inválidas (solo letras, números y puntuación básica)"
+    },
+    opcional: true
+  }
+];
+
+/**
+ * Validaciones para el sub-formulario de REGISTROS DE PRODUCCIÓN dentro del lote
+ * Campos: lote_prod_empleado, lote_prod_fecha, lote_prod_tipo, lote_prod_producto_inicial,
+ * lote_prod_cantidad_inicial, lote_prod_producto_final, lote_prod_cantidad_producida
+ */
+const camposRegistroProduccionLote = [
+  {
+    id: "lote_prod_empleado",
+    regex: expresiones.enteroPositivo,
+    mensajes: {
+      vacio: "Debes seleccionar un empleado",
+      formato: "Selección inválida"
+    }
+  },
+  {
+    id: "lote_prod_fecha",
+    tipo: "fecha",
+    mensajes: {
+      vacio: "La fecha del proceso es obligatoria",
+      formato: "Formato de fecha inválido"
+    }
+  },
+  {
+    id: "lote_prod_tipo",
+    regex: /^(CLASIFICACION|EMPAQUE)$/,
+    mensajes: {
+      vacio: "Debes seleccionar el tipo de proceso",
+      formato: "Tipo de proceso inválido"
+    }
+  },
+  {
+    id: "lote_prod_producto_inicial",
+    regex: expresiones.enteroPositivo,
+    mensajes: {
+      vacio: "Debes seleccionar el producto inicial",
+      formato: "Selección inválida"
+    }
+  },
+  {
+    id: "lote_prod_cantidad_inicial",
+    tipoNumerico: "decimal2",
+    min: 0.01,
+    max: 999999.99,
+    mensajes: {
+      vacio: "La cantidad inicial es obligatoria",
+      formato: "Debe ser un número con hasta 2 decimales",
+      rango: "La cantidad debe estar entre 0.01 y 999,999.99 kg"
+    }
+  },
+  {
+    id: "lote_prod_producto_final",
+    regex: expresiones.enteroPositivo,
+    mensajes: {
+      vacio: "Debes seleccionar el producto final",
+      formato: "Selección inválida"
+    }
+  },
+  {
+    id: "lote_prod_cantidad_producida",
+    tipoNumerico: "decimal2",
+    min: 0.01,
+    max: 999999.99,
+    mensajes: {
+      vacio: "La cantidad producida es obligatoria",
+      formato: "Debe ser un número con hasta 2 decimales",
+      rango: "La cantidad debe estar entre 0.01 y 999,999.99 kg"
+    }
+  },
+  {
+    id: "lote_prod_observaciones",
+    regex: expresiones.textoGeneral,
+    mensajes: {
+      formato: "Observaciones inválidas"
+    },
+    opcional: true
+  }
+];
+
+// ========================================
+// FUNCIONES DE VALIDACIÓN PERSONALIZADA
+// ========================================
+
+/**
+ * Valida que la cantidad producida no exceda la cantidad inicial
+ * Aplica para el sub-formulario de registros de producción del lote
+ */
+function validarCantidadProducida() {
+  const cantidadInicial = parseFloat(document.getElementById("lote_prod_cantidad_inicial")?.value) || 0;
+  const cantidadProducida = parseFloat(document.getElementById("lote_prod_cantidad_producida")?.value) || 0;
+  const errorDiv = document.getElementById("error-cantidad-producida");
+  
+  // Crear div de error si no existe
+  if (!errorDiv && cantidadProducida > cantidadInicial) {
+    const inputProducida = document.getElementById("lote_prod_cantidad_producida");
+    if (inputProducida) {
+      const newErrorDiv = document.createElement("small");
+      newErrorDiv.id = "error-cantidad-producida";
+      newErrorDiv.className = "text-yellow-500 text-xs mt-1";
+      inputProducida.parentNode.appendChild(newErrorDiv);
+    }
+  }
+  
+  const errorElement = document.getElementById("error-cantidad-producida");
+  const inputElement = document.getElementById("lote_prod_cantidad_producida");
+  
+  if (cantidadProducida > cantidadInicial && cantidadInicial > 0) {
+    // Warning: la cantidad producida excede la inicial (puede ser válido en algunos procesos)
+    if (errorElement) {
+      errorElement.textContent = `⚠️ La cantidad producida (${cantidadProducida.toFixed(2)} kg) excede la inicial (${cantidadInicial.toFixed(2)} kg)`;
+      errorElement.classList.remove("hidden");
+    }
+    
+    if (inputElement) {
+      inputElement.classList.add("border-yellow-400");
+      inputElement.classList.remove("border-green-300");
+    }
+    
+    return true; // No bloquear, solo advertir
+  } else if (cantidadProducida > 0) {
+    // Cantidad válida
+    if (errorElement) {
+      errorElement.classList.add("hidden");
+    }
+    
+    if (inputElement) {
+      inputElement.classList.remove("border-yellow-400");
+      inputElement.classList.add("border-green-300");
+    }
+    
+    return true;
+  }
+  
+  return true;
+}
+
+/**
+ * Inicializa las validaciones para el sub-formulario de registros de producción
+ * Campos con prefijo lote_prod_*
+ */
+function inicializarValidacionesRegistrosProduccion() {
+  // No usamos el sistema automático porque estos campos no están en un form tradicional
+  // Los validamos manualmente en los event listeners
+  
+  const cantidadInicial = document.getElementById("lote_prod_cantidad_inicial");
+  const cantidadProducida = document.getElementById("lote_prod_cantidad_producida");
+  
+  if (cantidadInicial && cantidadProducida) {
+    cantidadProducida.addEventListener("input", validarCantidadProducida);
+    cantidadInicial.addEventListener("input", validarCantidadProducida);
+  }
+}
+
+// ========================================
+// INICIALIZACIÓN GENERAL
+// ========================================
 
 // ========================================
 // INICIALIZACIÓN GENERAL
@@ -33,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
   inicializarTablas();
   inicializarEventos();
   cargarConfiguracionInicial();
-});
+}); // Ensure this closing bracket matches the corresponding opening bracket
  document.addEventListener('DOMContentLoaded', function() {
             const botones = document.querySelectorAll('.btnUltimoPesoRomanaClasificacion');
             
@@ -179,11 +375,18 @@ function inicializarTablaLotes() {
               </button>`;
 
           if (estatus === "PLANIFICADO") {
+            // Botones de editar y eliminar solo para PLANIFICADO
             acciones += `
-              <button class="asignar-operarios-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
-                      data-idlote="${idlote}" title="Asignar operarios">
-                <i class="fas fa-users fa-fw text-base"></i>
+              <button class="editar-lote-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                      data-idlote="${idlote}" title="Editar lote">
+                <i class="fas fa-edit fa-fw text-base"></i>
               </button>
+              <button class="eliminar-lote-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                      data-idlote="${idlote}" data-numero="${numeroLote}" title="Eliminar lote">
+                <i class="fas fa-trash fa-fw text-base"></i>
+              </button>`;
+
+            acciones += `
               <button class="iniciar-lote-btn text-orange-600 hover:text-orange-700 p-1 transition-colors duration-150" 
                       data-idlote="${idlote}" title="Iniciar lote">
                 <i class="fas fa-play fa-fw text-base"></i>
@@ -257,9 +460,15 @@ function inicializarTablaLotes() {
     verDetallesLote(idlote);
   });
 
-  $("#TablaLotes tbody").on("click", ".asignar-operarios-btn", function () {
+  $("#TablaLotes tbody").on("click", ".editar-lote-btn", function () {
     const idlote = $(this).data("idlote");
-    abrirModalAsignarOperarios(idlote);
+    editarLote(idlote);
+  });
+
+  $("#TablaLotes tbody").on("click", ".eliminar-lote-btn", function () {
+    const idlote = $(this).data("idlote");
+    const numeroLote = $(this).data("numero");
+    eliminarLote(idlote, numeroLote);
   });
 
   $("#TablaLotes tbody").on("click", ".iniciar-lote-btn", function () {
@@ -279,34 +488,170 @@ function inicializarTablaProcesos() {
     $("#TablaProcesos").DataTable().destroy();
   }
 
+  // Cargar TODOS los registros sin filtro de fecha
+  console.log(`📅 Cargando TODOS los registros de producción`);
+
   tablaProcesos = $("#TablaProcesos").DataTable({
     processing: true,
+    serverSide: false,
     ajax: {
-      url: "./Produccion/getProcesosRecientes",
+      url: `./Produccion/getRegistrosProduccion`,
       type: "GET",
       dataSrc: function (json) {
+        console.log("📊 Datos de procesos recibidos:", json);
         if (json && json.status && Array.isArray(json.data)) {
+          console.log(`✅ ${json.data.length} registros de producción cargados`);
           return json.data;
         }
+        console.warn("⚠️ No se recibieron datos válidos");
         return [];
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        console.error("Error cargando procesos:", textStatus, errorThrown);
+        console.error("❌ Error cargando registros de producción:", textStatus, errorThrown);
+        console.error("Respuesta:", jqXHR.responseText);
       }
     },
     columns: [
-      { data: "fecha", title: "Fecha", className: "all" },
-      { data: "operario", title: "Operario", className: "all" },
-      { data: "proceso", title: "Proceso", className: "desktop" },
-      { data: "cantidad", title: "Cantidad", className: "tablet-l" },
-      { data: "observaciones", title: "Observaciones", className: "desktop" }
+      {
+        data: "numero_lote",
+        title: "Lote",
+        className: "all"
+      },
+      {
+        data: "nombre_empleado",
+        title: "Empleado",
+        className: "all",
+        render: function(data) {
+          return data || '<span class="text-gray-400 text-xs">Sin asignar</span>';
+        }
+      },
+      {
+        data: "fecha_jornada_formato",
+        title: "Fecha",
+        className: "desktop"
+      },
+      {
+        data: null,
+        title: "Producto Inicial",
+        className: "desktop",
+        render: function(data, type, row) {
+          return `
+            <div class="text-sm">
+              <div class="font-medium">${row.producto_producir_nombre}</div>
+              <div class="text-xs text-gray-500">${row.producto_producir_codigo}</div>
+            </div>
+          `;
+        }
+      },
+      {
+        data: "cantidad_producir",
+        title: "Cant. Inicial (kg)",
+        className: "tablet-l text-right",
+        render: function(data) {
+          return parseFloat(data).toFixed(2);
+        }
+      },
+      {
+        data: null,
+        title: "Producto Final",
+        className: "desktop",
+        render: function(data, type, row) {
+          return `
+            <div class="text-sm">
+              <div class="font-medium">${row.producto_terminado_nombre}</div>
+              <div class="text-xs text-gray-500">${row.producto_terminado_codigo}</div>
+            </div>
+          `;
+        }
+      },
+      {
+        data: "cantidad_producida",
+        title: "Producido (kg)",
+        className: "all text-right font-semibold text-green-600",
+        render: function(data) {
+          return parseFloat(data).toFixed(2);
+        }
+      },
+      {
+        data: "tipo_movimiento",
+        title: "Tipo",
+        className: "all text-center",
+        render: function(data) {
+          if (data === 'CLASIFICACION') {
+            return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-filter mr-1"></i>Clasificación</span>';
+          } else {
+            return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800"><i class="fas fa-cube mr-1"></i>Empaque</span>';
+          }
+        }
+      },
+      {
+        data: "salario_total",
+        title: "Salario Total",
+        className: "desktop text-right font-bold text-green-700",
+        render: function(data) {
+          return '$' + parseFloat(data).toFixed(2);
+        }
+      },
+      {
+        data: null,
+        title: "Acciones",
+        className: "all text-center",
+        orderable: false,
+        render: function(data, type, row) {
+          // Para PROCESOS verificar el estado del REGISTRO (no del lote)
+          const estatusRegistro = row.estatus || 'BORRADOR';
+          let acciones = '';
+          
+          // Botón Editar - Solo visible si el REGISTRO está en BORRADOR
+          if (estatusRegistro === 'BORRADOR') {
+            acciones += `
+              <button onclick="editarRegistroProduccion(${row.idregistro})" 
+                      class="btn-tabla-accion btn-editar" 
+                      title="Editar registro">
+                <i class="fas fa-edit"></i>
+              </button>
+            `;
+          }
+          
+          // Botón Eliminar - Solo visible si el REGISTRO está en BORRADOR
+          if (estatusRegistro === 'BORRADOR') {
+            acciones += `
+              <button onclick="eliminarRegistroProduccion(${row.idregistro}, '${row.nombre_empleado || 'N/A'}', '${row.numero_lote}')" 
+                      class="btn-tabla-accion btn-eliminar ml-1" 
+                      title="Eliminar registro">
+                <i class="fas fa-trash"></i>
+              </button>
+            `;
+          }
+          
+          // Si el registro no está en BORRADOR, mostrar badge informativo
+          if (estatusRegistro !== 'BORRADOR') {
+            acciones = `<span class="text-xs text-gray-500 italic">No editable (${estatusRegistro})</span>`;
+          }
+          
+          return acciones || '<span class="text-gray-400 text-xs">-</span>';
+        }
+      }
     ],
     language: {
-      emptyTable: "No hay procesos registrados.",
-      processing: "Cargando procesos..."
+      emptyTable: "No hay registros de producción.",
+      processing: "Cargando registros...",
+      search: "Buscar:",
+      lengthMenu: "Mostrar _MENU_ registros",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+      infoEmpty: "Mostrando 0 a 0 de 0 registros",
+      infoFiltered: "(filtrado de _MAX_ registros totales)",
+      paginate: {
+        first: "Primero",
+        last: "Último",
+        next: "Siguiente",
+        previous: "Anterior"
+      }
     },
-    pageLength: 5,
-    order: [[0, "desc"]]
+    pageLength: 10,
+    order: [[1, "desc"]], // Ordenar por fecha descendente
+    responsive: true,
+    dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"<"mb-2 sm:mb-0"l><"mb-2 sm:mb-0"f>>rtip'
   });
 }
 
@@ -314,12 +659,16 @@ function inicializarTablaProcesos() {
 // INICIALIZACIÓN DE TABLA DE NÓMINA CON CHECKBOX Y BOTÓN REGISTRAR SALARIO
 // ========================================
 function inicializarTablaNomina() {
+  console.log('🔧 Inicializando tabla de nómina...');
+  
   if ($.fn.DataTable.isDataTable("#TablaNomina")) {
+    console.log('⚠️ Tabla ya existe, destruyendo...');
     $("#TablaNomina").DataTable().destroy();
   }
 
   // Insertar el botón "Registrar Salario" arriba de la tabla si no existe
   if (!document.getElementById("btnRegistrarSalario")) {
+    console.log('➕ Creando botón Registrar Salario...');
     const btn = document.createElement("button");
     btn.id = "btnRegistrarSalario";
     btn.className = "mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition";
@@ -328,29 +677,86 @@ function inicializarTablaNomina() {
     btn.style.display = "block";
     // Asignar el evento click de forma CSP-compliant
     const handleRegistrarSalario = function () {
+      console.log('💰 Botón Registrar Salario clickeado');
+      
       const seleccionados = [];
       $('#TablaNomina tbody input.nomina-checkbox:checked').each(function () {
-        seleccionados.push($(this).data('id'));
+        const id = $(this).data('id');
+        if (id) {
+          seleccionados.push(id);
+        }
       });
 
-      // Permitir registrar todos los sueldos en borrador si no hay selección
-      let mensaje = "Se crearán registros de sueldo y se cambiará el estado de los registros seleccionados a 'SOLICITUD DE PAGO'.";
+      console.log('📋 Registros seleccionados:', seleccionados);
+      console.log('📊 Cantidad seleccionada:', seleccionados.length);
+
+      // Validar que hay registros en la tabla
+      const totalRegistros = tablaNomina ? tablaNomina.rows().count() : 0;
+      console.log('📈 Total de registros en tabla:', totalRegistros);
+
+      if (totalRegistros === 0) {
+        Swal.fire({
+          title: "Sin Registros",
+          text: "No hay registros de producción para procesar. Primero consulta los registros por fecha.",
+          icon: "warning",
+          confirmButtonColor: "#059669"
+        });
+        return;
+      }
+
+      // Mensaje según selección
+      let mensaje = "";
+      let cantidadAProcesar = 0;
+      
       if (seleccionados.length === 0) {
         mensaje = "No seleccionó ningún registro. ¿Desea registrar la solicitud de pago para TODOS los registros en estado BORRADOR?";
+        cantidadAProcesar = totalRegistros;
+      } else {
+        mensaje = `Se crearán ${seleccionados.length} registros de sueldo y se cambiará el estado a 'ENVIADO'.`;
+        cantidadAProcesar = seleccionados.length;
       }
 
       Swal.fire({
-        title: "¿Registrar solicitud de pago?",
-        text: mensaje,
+        title: "¿Registrar Solicitud de Pago?",
+        html: `
+          <p class="mb-4">${mensaje}</p>
+          <div class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-left">
+            <p class="font-semibold text-blue-800 mb-2">📌 Se realizará lo siguiente:</p>
+            <ul class="list-disc list-inside text-blue-700 space-y-1">
+              <li>Se crearán ${cantidadAProcesar} registros en la tabla de <strong>Sueldos</strong></li>
+              <li>El estado cambiará de <strong>BORRADOR</strong> → <strong>ENVIADO</strong></li>
+              <li>Los registros aparecerán en el módulo de <strong>Pagos</strong></li>
+            </ul>
+          </div>
+        `,
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#059669",
         cancelButtonColor: "#6b7280",
-        confirmButtonText: "Sí, registrar",
-        cancelButtonText: "Cancelar"
+        confirmButtonText: '<i class="fas fa-check mr-2"></i>Sí, registrar',
+        cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+        customClass: {
+          popup: 'text-left'
+        }
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch("Produccion/registrarSolicitudPago", {
+          console.log('✅ Usuario confirmó registro de salarios');
+          
+          // Mostrar loading
+          Swal.fire({
+            title: 'Procesando...',
+            html: `Registrando ${cantidadAProcesar} solicitudes de pago...`,
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+          console.log('📤 Enviando petición al servidor...');
+          console.log('🔗 URL:', base_url + "Produccion/registrarSolicitudPago");
+          console.log('📦 Payload:', { registros: seleccionados });
+
+          fetch(base_url + "Produccion/registrarSolicitudPago", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -358,45 +764,111 @@ function inicializarTablaNomina() {
             },
             body: JSON.stringify({ registros: seleccionados }),
           })
-            .then((response) => response.json())
+            .then((response) => {
+              console.log('📨 Respuesta recibida, status:', response.status);
+              return response.json();
+            })
             .then((result) => {
+              console.log('📊 Resultado del servidor:', result);
+              
               if (result.status) {
-                Swal.fire("¡Éxito!", result.message, "success").then(() => {
-                  if (tablaNomina) tablaNomina.ajax.reload(null, false);
+                Swal.fire({
+                  title: "¡Solicitudes Registradas!",
+                  html: `
+                    <div class="text-center">
+                      <i class="fas fa-check-circle text-green-500 text-5xl mb-3"></i>
+                      <p class="text-lg mb-2">${result.message}</p>
+                      <div class="bg-green-50 border border-green-200 rounded p-3 mt-3">
+                        <p class="text-sm text-green-800">Los registros ahora están en estado <strong>ENVIADO</strong> y pueden ser procesados en el módulo de Pagos.</p>
+                      </div>
+                    </div>
+                  `,
+                  icon: "success",
+                  confirmButtonColor: "#059669"
+                }).then(() => {
+                  console.log('🔄 Recargando tabla de nómina...');
+                  if (tablaNomina) {
+                    tablaNomina.ajax.reload(null, false);
+                  }
+                  
+                  // Recargar tabla de sueldos si existe
                   if (window.tablaSueldo && typeof window.tablaSueldo.ajax?.reload === "function") {
+                    console.log('🔄 Recargando tabla de sueldos...');
                     window.tablaSueldo.ajax.reload(null, false);
                   }
+                  
+                  console.log('✅ Proceso completado exitosamente');
                 });
               } else {
-                Swal.fire("Error", result.message || "No se pudo registrar la solicitud de pago.", "error");
+                console.error('❌ Error del servidor:', result.message);
+                Swal.fire({
+                  title: "Error al Registrar",
+                  html: `
+                    <p class="mb-3">${result.message || "No se pudo registrar la solicitud de pago."}</p>
+                    <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-left">
+                      <p class="font-semibold text-red-800 mb-1">💡 Posibles causas:</p>
+                      <ul class="list-disc list-inside text-red-700 space-y-1">
+                        <li>Los registros ya fueron enviados anteriormente</li>
+                        <li>No hay registros en estado BORRADOR</li>
+                        <li>Error en la base de datos</li>
+                      </ul>
+                    </div>
+                  `,
+                  icon: "error",
+                  confirmButtonColor: "#dc2626"
+                });
               }
             })
             .catch((error) => {
-              console.error("Error:", error);
-              Swal.fire("Error", "Error de conexión.", "error");
+              console.error("❌ Error de conexión:", error);
+              Swal.fire({
+                title: "Error de Conexión",
+                html: `
+                  <p class="mb-3">No se pudo conectar con el servidor.</p>
+                  <div class="bg-orange-50 border border-orange-200 rounded p-3 text-sm">
+                    <p class="text-orange-800"><strong>Error técnico:</strong> ${error.message}</p>
+                  </div>
+                `,
+                icon: "error",
+                confirmButtonColor: "#dc2626"
+              });
             });
+        } else {
+          console.log('❌ Usuario canceló el registro');
         }
       });
     };
     // Insertar el botón y asignar el evento
     const tabla = document.getElementById("TablaNomina");
-    if (tabla) tabla.parentNode.insertBefore(btn, tabla);
+    if (tabla) {
+      tabla.parentNode.insertBefore(btn, tabla);
+      console.log('✅ Botón Registrar Salario insertado');
+    }
     btn.addEventListener("click", handleRegistrarSalario);
   }
 
+  console.log('📊 Creando DataTable de nómina...');
   tablaNomina = $("#TablaNomina").DataTable({
     processing: true,
     ajax: {
-      url: "./Produccion/getRegistrosNomina",
+      url: "./Produccion/getRegistrosProduccion",
       type: "GET",
       dataSrc: function (json) {
+        console.log("📊 Datos de nómina recibidos:", json);
         if (json && json.status && Array.isArray(json.data)) {
+          console.log(`✅ ${json.data.length} registros de nómina cargados`);
+          
+          // Calcular resumen rápido
+          setTimeout(() => actualizarContadorEstados(json.data), 100);
+          
           return json.data;
         }
+        console.warn("⚠️ No se recibieron datos válidos para nómina");
         return [];
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        console.error("Error cargando nómina:", textStatus, errorThrown);
+        console.error("❌ Error cargando nómina:", textStatus, errorThrown);
+        console.error("Respuesta:", jqXHR.responseText);
       }
     },
     columns: [
@@ -404,34 +876,141 @@ function inicializarTablaNomina() {
         data: null,
         orderable: false,
         searchable: false,
-        className: "text-center",
+        className: "text-center all",
         render: function (data, type, row) {
-          return `<input type="checkbox" class="nomina-checkbox" data-id="${row.idregistro || ''}">`;
+          const estatus = row.estatus || 'BORRADOR';
+          // Solo permitir checkbox para registros en BORRADOR
+          if (estatus === 'BORRADOR') {
+            return `<input type="checkbox" class="nomina-checkbox" data-id="${row.idregistro || ''}">`;
+          } else {
+            return `<input type="checkbox" disabled class="opacity-50 cursor-not-allowed" title="Solo registros en BORRADOR pueden ser seleccionados">`;
+          }
         }
       },
-      { data: "fecha", title: "Fecha", className: "all" },
-      { data: "operario", title: "Operario", className: "all" },
-      { data: "kg_clasificados", title: "Kg Clasificados", className: "desktop" },
-      { data: "pacas_armadas", title: "Pacas", className: "tablet-l" },
-      { data: "salario_total", title: "Salario", className: "all" },
-      {
-        data: "estatus",
-        title: "Estado",
-        className: "desktop",
-        render: function (data) {
-          let color = "bg-gray-100 text-gray-800";
-          let texto = data;
-          if (data === "BORRADOR") {
-            color = "bg-yellow-100 text-yellow-800";
-            texto = "BORRADOR";
-          } else if (data === "ENVIADO") {
-            color = "bg-blue-100 text-blue-800";
-            texto = "ENVIADO";
-          } else if (data === "PAGADO") {
-            color = "bg-green-100 text-green-800";
-            texto = "PAGADO";
+      { 
+        data: "fecha_jornada_formato", 
+        title: "Fecha", 
+        className: "all" 
+      },
+      { 
+        data: "nombre_empleado", 
+        title: "Empleado", 
+        className: "all",
+        render: function(data) {
+          return data || '<span class="text-gray-400 text-xs">Sin asignar</span>';
+        }
+      },
+      { 
+        data: "numero_lote", 
+        title: "Lote", 
+        className: "desktop" 
+      },
+      { 
+        data: "tipo_movimiento", 
+        title: "Tipo", 
+        className: "tablet-l",
+        render: function(data) {
+          if (data === 'CLASIFICACION') {
+            return '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">Clasificación</span>';
+          } else {
+            return '<span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">Empaque</span>';
           }
-          return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${color}">${texto}</span>`;
+        }
+      },
+      { 
+        data: "cantidad_producida", 
+        title: "Cant. Producida (kg)", 
+        className: "desktop text-right",
+        render: function(data) {
+          return parseFloat(data).toFixed(2);
+        }
+      },
+      { 
+        data: "salario_base_dia", 
+        title: "Salario Base", 
+        className: "desktop text-right",
+        render: function(data) {
+          return `$${parseFloat(data).toFixed(2)}`;
+        }
+      },
+      { 
+        data: "pago_clasificacion_trabajo", 
+        title: "Pago Trabajo", 
+        className: "desktop text-right",
+        render: function(data) {
+          return `$${parseFloat(data).toFixed(2)}`;
+        }
+      },
+      { 
+        data: "salario_total", 
+        title: "Total", 
+        className: "all text-right font-bold text-green-700",
+        render: function(data) {
+          return `$${parseFloat(data).toFixed(2)}`;
+        }
+      },
+      { 
+        data: "estatus", 
+        title: "Estado", 
+        className: "all text-center",
+        render: function(data) {
+          const estatus = data || 'BORRADOR';
+          const badges = {
+            'BORRADOR': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"><i class="fas fa-edit mr-1"></i>Borrador</span>',
+            'ENVIADO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-paper-plane mr-1"></i>Enviado</span>',
+            'PAGADO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i>Pagado</span>',
+            'CANCELADO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-times-circle mr-1"></i>Cancelado</span>'
+          };
+          return badges[estatus] || badges['BORRADOR'];
+        }
+      },
+      { 
+        data: null, 
+        title: "Acciones", 
+        orderable: false,
+        searchable: false,
+        className: "all text-center",
+        render: function(data, type, row) {
+          const estatus = row.estatus || 'BORRADOR';
+          const idregistro = row.idregistro || '';
+          const nombreEmpleado = row.nombre_empleado || 'Sin asignar';
+          const salarioTotal = parseFloat(row.salario_total || 0).toFixed(2);
+          
+          let botones = '<div class="inline-flex items-center space-x-1">';
+          
+          // Botón para marcar como PAGADO (solo si está ENVIADO)
+          if (estatus === 'ENVIADO') {
+            botones += `
+              <button class="btn-marcar-pagado text-green-600 hover:text-green-800 p-2 transition-colors duration-150 rounded hover:bg-green-50" 
+                      data-id="${idregistro}" 
+                      data-empleado="${nombreEmpleado}" 
+                      data-salario="${salarioTotal}"
+                      title="Marcar como Pagado">
+                <i class="fas fa-check-circle fa-fw text-lg"></i>
+              </button>`;
+          }
+          
+          // Botón para ver detalles (siempre visible)
+          botones += `
+            <button class="btn-ver-detalle-nomina text-blue-600 hover:text-blue-800 p-2 transition-colors duration-150 rounded hover:bg-blue-50" 
+                    data-id="${idregistro}"
+                    title="Ver Detalles">
+              <i class="fas fa-eye fa-fw text-lg"></i>
+            </button>`;
+          
+          // Botón para cancelar (solo si está en BORRADOR o ENVIADO)
+          if (estatus === 'BORRADOR' || estatus === 'ENVIADO') {
+            botones += `
+              <button class="btn-cancelar-nomina text-red-600 hover:text-red-800 p-2 transition-colors duration-150 rounded hover:bg-red-50" 
+                      data-id="${idregistro}" 
+                      data-empleado="${nombreEmpleado}"
+                      title="Cancelar Registro">
+                <i class="fas fa-times-circle fa-fw text-lg"></i>
+              </button>`;
+          }
+          
+          botones += '</div>';
+          return botones;
         }
       }
     ],
@@ -456,6 +1035,9 @@ function inicializarTablaNomina() {
     order: [[1, "desc"]]
   });
 
+  console.log('✅ Tabla de nómina inicializada correctamente');
+  console.log('📌 Tabla:', tablaNomina);
+
   // Evento para habilitar/deshabilitar el botón según selección
   $('#TablaNomina tbody').on('change', 'input.nomina-checkbox', function () {
     const seleccionados = $('#TablaNomina tbody input.nomina-checkbox:checked').length;
@@ -466,6 +1048,27 @@ function inicializarTablaNomina() {
       btn.classList.toggle("cursor-not-allowed", seleccionados === 0);
     }
   });
+
+  // Eventos para botones de acciones en la tabla
+  $('#TablaNomina tbody').on('click', '.btn-marcar-pagado', function () {
+    const idregistro = $(this).data('id');
+    const empleado = $(this).data('empleado');
+    const salario = $(this).data('salario');
+    marcarComoPagado(idregistro, empleado, salario);
+  });
+
+  $('#TablaNomina tbody').on('click', '.btn-ver-detalle-nomina', function () {
+    const idregistro = $(this).data('id');
+    verDetalleRegistroNomina(idregistro);
+  });
+
+  $('#TablaNomina tbody').on('click', '.btn-cancelar-nomina', function () {
+    const idregistro = $(this).data('id');
+    const empleado = $(this).data('empleado');
+    cancelarRegistroNomina(idregistro, empleado);
+  });
+  
+  console.log('🎯 Eventos de nómina configurados');
 }
 
 // ========================================
@@ -473,7 +1076,6 @@ function inicializarTablaNomina() {
 // ========================================
 function inicializarEventos() {
   inicializarEventosLotes();
-  inicializarEventosAsignacion();
   inicializarEventosProcesos();
   inicializarEventosNomina();
   inicializarEventosConfiguracion();
@@ -489,9 +1091,27 @@ function inicializarEventosLotes() {
     btnAbrirModalLote.addEventListener("click", function () {
       abrirModal("modalRegistrarLote");
       if (formLote) formLote.reset();
+      
+      // Limpiar array de registros
+      registrosProduccionLote = [];
+      actualizarTablaRegistrosProduccionLote();
+      
+      // Cargar datos necesarios
       cargarEmpleadosActivos();
+      cargarEmpleadosParaRegistrosLote();
+      cargarProductosParaRegistrosLote();
+      
+      // Setear fecha actual
       document.getElementById("lote_fecha_jornada").value = new Date().toISOString().split('T')[0];
+      document.getElementById("lote_prod_fecha").value = new Date().toISOString().split('T')[0];
+      
+      // Inicializar validaciones para datos generales del lote
       inicializarValidaciones(camposFormularioLote, "formRegistrarLote");
+      
+      // Inicializar validaciones para el sub-formulario de registros de producción
+      inicializarValidacionesRegistrosProduccion();
+      
+     
     });
   }
 
@@ -514,6 +1134,15 @@ function inicializarEventosLotes() {
     });
   }
 
+  // Evento directo al botón de guardar lote
+  const btnGuardarLote = document.getElementById("btnGuardarLote");
+  if (btnGuardarLote) {
+    btnGuardarLote.addEventListener("click", function (e) {
+      e.preventDefault();
+      registrarLote();
+    });
+  }
+
   // Calcular operarios requeridos en tiempo real
   const volumenInput = document.getElementById("lote_volumen_estimado");
   if (volumenInput) {
@@ -521,28 +1150,38 @@ function inicializarEventosLotes() {
       calcularOperariosRequeridos();
     });
   }
-}
 
-function inicializarEventosAsignacion() {
-  const btnCerrarModalAsignar = document.getElementById("btnCerrarModalAsignarOperarios");
-  const btnCancelarModalAsignar = document.getElementById("btnCancelarModalAsignarOperarios");
-  const btnGuardarAsignaciones = document.getElementById("btnGuardarAsignaciones");
+  // Event listeners para registros de producción en el lote
+  const btnAgregarRegistroProd = document.getElementById("btnAgregarRegistroProduccionLote");
+  if (btnAgregarRegistroProd) {
+    btnAgregarRegistroProd.addEventListener("click", agregarRegistroProduccionLote);
+  }
 
-  if (btnCerrarModalAsignar) {
-    btnCerrarModalAsignar.addEventListener("click", function () {
-      cerrarModal("modalAsignarOperarios");
+  // Calcular salarios automáticamente al cambiar cantidad o tipo
+  const cantidadProducidaInput = document.getElementById("lote_prod_cantidad_producida");
+  const tipoMovimientoSelect = document.getElementById("lote_prod_tipo");
+  
+  if (cantidadProducidaInput) {
+    cantidadProducidaInput.addEventListener("input", calcularSalariosRegistroLote);
+  }
+  
+  if (tipoMovimientoSelect) {
+    tipoMovimientoSelect.addEventListener("change", calcularSalariosRegistroLote);
+  }
+
+  // Modal ver detalle de lote
+  const btnCerrarModalVerLote = document.getElementById("btnCerrarModalVerLote");
+  const btnCerrarModalVerLote2 = document.getElementById("btnCerrarModalVerLote2");
+
+  if (btnCerrarModalVerLote) {
+    btnCerrarModalVerLote.addEventListener("click", function () {
+      cerrarModal("modalVerLote");
     });
   }
 
-  if (btnCancelarModalAsignar) {
-    btnCancelarModalAsignar.addEventListener("click", function () {
-      cerrarModal("modalAsignarOperarios");
-    });
-  }
-
-  if (btnGuardarAsignaciones) {
-    btnGuardarAsignaciones.addEventListener("click", function () {
-      guardarAsignacionesOperarios();
+  if (btnCerrarModalVerLote2) {
+    btnCerrarModalVerLote2.addEventListener("click", function () {
+      cerrarModal("modalVerLote");
     });
   }
 }
@@ -559,7 +1198,6 @@ function inicializarEventosProcesos() {
       abrirModal("modalRegistrarClasificacion");
       if (formClasificacion) formClasificacion.reset();
       cargarDatosParaClasificacion();
-      inicializarValidaciones(camposFormularioClasificacion, "formRegistrarClasificacion");
     });
   }
 
@@ -593,7 +1231,6 @@ function inicializarEventosProcesos() {
       abrirModal("modalRegistrarEmpaque");
       if (formEmpaque) formEmpaque.reset();
       cargarDatosParaEmpaque();
-      inicializarValidaciones(camposFormularioEmpaque, "formRegistrarEmpaque");
     });
   }
 
@@ -616,75 +1253,65 @@ function inicializarEventosProcesos() {
     });
   }
 
-  // Validación en tiempo real para clasificación
-  const kgProcesados = document.getElementById("clas_kg_procesados");
-  const kgLimpios = document.getElementById("clas_kg_limpios");
-  const kgContaminantes = document.getElementById("clas_kg_contaminantes");
+  // ====================================================
+  // MODAL REGISTRAR PRODUCCIÓN (NUEVO)
+  // ====================================================
+  const btnAbrirModalRegistrarProduccion = document.getElementById("btnAbrirModalRegistrarProduccion");
+  const btnCerrarModalRegistrarProduccion = document.getElementById("btnCerrarModalRegistrarProduccion");
+  const btnCancelarRegistrarProduccion = document.getElementById("btnCancelarRegistrarProduccion");
+  const formRegistrarProduccion = document.getElementById("formRegistrarProduccion");
 
-  if (kgProcesados && kgLimpios && kgContaminantes) {
-    [kgProcesados, kgLimpios, kgContaminantes].forEach(input => {
-      input.addEventListener("input", validarSumaClasificacion);
+  if (btnAbrirModalRegistrarProduccion) {
+    btnAbrirModalRegistrarProduccion.addEventListener("click", function () {
+      abrirModalRegistrarProduccion();
     });
   }
 
-  // Validación de peso para empaque
-  const pesoPaca = document.getElementById("emp_peso_paca");
-  if (pesoPaca) {
-    pesoPaca.addEventListener("input", validarPesoPaca);
+  if (btnCerrarModalRegistrarProduccion) {
+    btnCerrarModalRegistrarProduccion.addEventListener("click", function () {
+      cerrarModal("modalRegistrarProduccion");
+    });
+  }
+
+  if (btnCancelarRegistrarProduccion) {
+    btnCancelarRegistrarProduccion.addEventListener("click", function () {
+      cerrarModal("modalRegistrarProduccion");
+    });
+  }
+
+  if (formRegistrarProduccion) {
+    formRegistrarProduccion.addEventListener("submit", function (e) {
+      e.preventDefault();
+      guardarRegistroProduccion();
+    });
+  }
+
+  // Calcular salarios automáticamente al cambiar cantidad producida o tipo
+  const prod_cantidad_producida = document.getElementById("prod_cantidad_producida");
+  const prod_tipo_movimiento = document.getElementById("prod_tipo_movimiento");
+
+  if (prod_cantidad_producida) {
+    prod_cantidad_producida.addEventListener("input", calcularSalariosAutomaticamente);
+  }
+
+  if (prod_tipo_movimiento) {
+    prod_tipo_movimiento.addEventListener("change", calcularSalariosAutomaticamente);
   }
 }
 
 function inicializarEventosNomina() {
+  console.log('🔧 Inicializando eventos de nómina...');
+  
   const btnCalcularNomina = document.getElementById("btnCalcularNomina");
-  const btnRegistrarProduccionDiaria = document.getElementById("btnRegistrarProduccionDiaria");
-  const btnCerrarModalProduccionDiaria = document.getElementById("btnCerrarModalProduccionDiaria");
-  const btnCancelarModalProduccionDiaria = document.getElementById("btnCancelarModalProduccionDiaria");
-  const btnGuardarProduccionDiaria = document.getElementById("btnGuardarProduccionDiaria");
-  const btnCargarOperarios = document.getElementById("btnCargarOperarios");
 
   if (btnCalcularNomina) {
     btnCalcularNomina.addEventListener("click", function () {
+      console.log('🔍 Botón Calcular Nómina clickeado');
       abrirModalCalcularNomina();
     });
-  }
-
-  if (btnRegistrarProduccionDiaria) {
-    btnRegistrarProduccionDiaria.addEventListener("click", function () {
-      abrirModal("modalRegistrarProduccionDiaria");
-      cargarLotesParaProduccionDiaria();
-    });
-  }
-
-  if (btnCerrarModalProduccionDiaria) {
-    btnCerrarModalProduccionDiaria.addEventListener("click", function () {
-      cerrarModal("modalRegistrarProduccionDiaria");
-    });
-  }
-
-  if (btnCancelarModalProduccionDiaria) {
-    btnCancelarModalProduccionDiaria.addEventListener("click", function () {
-      cerrarModal("modalRegistrarProduccionDiaria");
-    });
-  }
-
-  if (btnGuardarProduccionDiaria) {
-    btnGuardarProduccionDiaria.addEventListener("click", function () {
-      guardarProduccionDiaria();
-    });
-  }
-
-  if (btnCargarOperarios) {
-    btnCargarOperarios.addEventListener("click", function () {
-      cargarOperariosProduccionDiaria();
-    });
-  }
-
-  // Cambio de lote en producción diaria
-  const selectLote = document.getElementById("selectLoteProduccionDiaria");
-  if (selectLote) {
-    selectLote.addEventListener("change", function () {
-      cargarOperariosProduccionDiaria();
-    });
+    console.log('✅ Evento btnCalcularNomina configurado');
+  } else {
+    console.warn('⚠️ Botón btnCalcularNomina no encontrado');
   }
 }
 
@@ -744,7 +1371,275 @@ function calcularOperariosRequeridos() {
   }
 }
 
-function registrarLote() {
+// ========================================
+// FUNCIONES PARA REGISTROS DE PRODUCCIÓN EN LOTE
+// ========================================
+
+/**
+ * Carga empleados en el selector de registros de producción del lote
+ */
+async function cargarEmpleadosParaRegistrosLote() {
+  try {
+    const response = await fetch("Produccion/getEmpleadosActivos");
+    const data = await response.json();
+    
+    const select = document.getElementById("lote_prod_empleado");
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Seleccionar empleado...</option>';
+    
+    if (data.status && Array.isArray(data.data)) {
+      data.data.forEach(empleado => {
+        const option = document.createElement("option");
+        option.value = empleado.idempleado;
+        option.textContent = empleado.nombre_completo;
+        option.dataset.nombre = empleado.nombre_completo;
+        select.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error("Error al cargar empleados:", error);
+  }
+}
+
+/**
+ * Carga productos en los selectores de registros de producción del lote
+ */
+async function cargarProductosParaRegistrosLote() {
+  try {
+    const response = await fetch("Productos/getProductosData");
+    const data = await response.json();
+    
+    const selectInicial = document.getElementById("lote_prod_producto_inicial");
+    const selectFinal = document.getElementById("lote_prod_producto_final");
+    
+    if (!selectInicial || !selectFinal) return;
+    
+    selectInicial.innerHTML = '<option value="">Seleccionar producto...</option>';
+    selectFinal.innerHTML = '<option value="">Seleccionar producto...</option>';
+    
+    if (data.status && Array.isArray(data.data)) {
+      data.data.forEach(producto => {
+        const option1 = document.createElement("option");
+        option1.value = producto.idproducto;
+        option1.textContent = producto.descripcion || producto.nombre;
+        option1.dataset.nombre = producto.descripcion || producto.nombre;
+        option1.dataset.codigo = producto.codigo || '';
+        selectInicial.appendChild(option1);
+        
+        const option2 = document.createElement("option");
+        option2.value = producto.idproducto;
+        option2.textContent = producto.descripcion || producto.nombre;
+        option2.dataset.nombre = producto.descripcion || producto.nombre;
+        option2.dataset.codigo = producto.codigo || '';
+        selectFinal.appendChild(option2);
+      });
+    }
+  } catch (error) {
+    console.error("Error al cargar productos:", error);
+  }
+}
+
+/**
+ * Calcula salarios automáticamente al cambiar cantidad o tipo
+ */
+function calcularSalariosRegistroLote() {
+  const cantidadProducida = parseFloat(document.getElementById("lote_prod_cantidad_producida").value) || 0;
+  const tipoMovimiento = document.getElementById("lote_prod_tipo").value;
+  
+  if (cantidadProducida <= 0 || !tipoMovimiento || !configuracionActual) {
+    limpiarSalariosRegistroLote();
+    return;
+  }
+  
+  const salarioBase = parseFloat(configuracionActual.salario_base || 30);
+  let pagoTrabajo = 0;
+  
+  if (tipoMovimiento === 'CLASIFICACION') {
+    const beta = parseFloat(configuracionActual.beta_clasificacion || 0.25);
+    pagoTrabajo = beta * cantidadProducida;
+  } else if (tipoMovimiento === 'EMPAQUE') {
+    const gamma = parseFloat(configuracionActual.gamma_empaque || 5.00);
+    pagoTrabajo = gamma * cantidadProducida;
+  }
+  
+  const salarioTotal = salarioBase + pagoTrabajo;
+  
+  document.getElementById("lote_prod_salario_base").value = `$${salarioBase.toFixed(2)}`;
+  document.getElementById("lote_prod_pago_trabajo").value = `$${pagoTrabajo.toFixed(2)}`;
+  document.getElementById("lote_prod_salario_total").value = `$${salarioTotal.toFixed(2)}`;
+}
+
+function limpiarSalariosRegistroLote() {
+  document.getElementById("lote_prod_salario_base").value = '$0.00';
+  document.getElementById("lote_prod_pago_trabajo").value = '$0.00';
+  document.getElementById("lote_prod_salario_total").value = '$0.00';
+}
+
+/**
+ * Agrega un registro de producción al array temporal
+ */
+function agregarRegistroProduccionLote() {
+  console.log('➕ Iniciando agregar registro de producción al lote...');
+  
+  // Obtener valores
+  const idempleado = document.getElementById("lote_prod_empleado").value;
+  const fecha = document.getElementById("lote_prod_fecha").value;
+  const tipo = document.getElementById("lote_prod_tipo").value;
+  const idproductoInicial = document.getElementById("lote_prod_producto_inicial").value;
+  const cantidadInicial = parseFloat(document.getElementById("lote_prod_cantidad_inicial").value);
+  const idproductoFinal = document.getElementById("lote_prod_producto_final").value;
+  const cantidadProducida = parseFloat(document.getElementById("lote_prod_cantidad_producida").value);
+  const observaciones = document.getElementById("lote_prod_observaciones").value;
+  
+  console.log('📝 Datos del formulario:', {
+    idempleado, fecha, tipo, idproductoInicial, cantidadInicial,
+    idproductoFinal, cantidadProducida, observaciones
+  });
+  
+  // Validaciones
+  if (!idempleado || !fecha || !tipo || !idproductoInicial || !idproductoFinal) {
+    console.warn('⚠️ Faltan campos obligatorios');
+    mostrarAdvertencia("Por favor completa todos los campos obligatorios");
+    return;
+  }
+  
+  if (isNaN(cantidadInicial) || cantidadInicial <= 0 || isNaN(cantidadProducida) || cantidadProducida <= 0) {
+    console.warn('⚠️ Cantidades inválidas');
+    mostrarAdvertencia("Las cantidades deben ser mayores a cero");
+    return;
+  }
+  
+  // Obtener nombres para mostrar en la tabla
+  const empleadoSelect = document.getElementById("lote_prod_empleado");
+  const nombreEmpleado = empleadoSelect.options[empleadoSelect.selectedIndex].dataset.nombre;
+  
+  const productoInicialSelect = document.getElementById("lote_prod_producto_inicial");
+  const nombreProductoInicial = productoInicialSelect.options[productoInicialSelect.selectedIndex].dataset.nombre;
+  
+  const productoFinalSelect = document.getElementById("lote_prod_producto_final");
+  const nombreProductoFinal = productoFinalSelect.options[productoFinalSelect.selectedIndex].dataset.nombre;
+  
+  // Calcular salarios
+  const salarioBase = parseFloat(configuracionActual.salario_base || 30);
+  let pagoTrabajo = 0;
+  
+  if (tipo === 'CLASIFICACION') {
+    const beta = parseFloat(configuracionActual.beta_clasificacion || 0.25);
+    pagoTrabajo = beta * cantidadProducida;
+  } else {
+    const gamma = parseFloat(configuracionActual.gamma_empaque || 5.00);
+    pagoTrabajo = gamma * cantidadProducida;
+  }
+  
+  const salarioTotal = salarioBase + pagoTrabajo;
+  
+  // Crear objeto de registro
+  const registro = {
+    idempleado,
+    nombreEmpleado,
+    fecha_jornada: fecha,
+    fecha_jornada_formato: new Date(fecha).toLocaleDateString('es-ES'),
+    idproducto_producir: idproductoInicial,
+    nombreProductoInicial,
+    cantidad_producir: cantidadInicial,
+    idproducto_terminado: idproductoFinal,
+    nombreProductoFinal,
+    cantidad_producida: cantidadProducida,
+    tipo_movimiento: tipo,
+    salario_base_dia: salarioBase,
+    pago_clasificacion_trabajo: pagoTrabajo,
+    salario_total: salarioTotal,
+    observaciones: observaciones || ''
+  };
+  
+  // Agregar al array
+  registrosProduccionLote.push(registro);
+  console.log(`✅ Registro agregado. Total en array: ${registrosProduccionLote.length}`);
+  console.log('📦 Array completo:', registrosProduccionLote);
+  
+  // Actualizar tabla
+  actualizarTablaRegistrosProduccionLote();
+  
+  // Limpiar formulario
+  limpiarFormularioRegistroLote();
+  
+  mostrarExito("Registro agregado correctamente");
+}
+
+/**
+ * Actualiza la tabla visual de registros de producción
+ */
+function actualizarTablaRegistrosProduccionLote() {
+  const tbody = document.getElementById("cuerpoTablaRegistrosProduccionLote");
+  const mensaje = document.getElementById("noRegistrosProdMensaje");
+  
+  if (!tbody) return;
+  
+  if (registrosProduccionLote.length === 0) {
+    tbody.innerHTML = '';
+    if (mensaje) mensaje.style.display = 'block';
+    return;
+  }
+  
+  if (mensaje) mensaje.style.display = 'none';
+  
+  tbody.innerHTML = registrosProduccionLote.map((reg, index) => `
+    <tr class="hover:bg-gray-50">
+      <td class="px-2 py-2 text-xs">${reg.nombreEmpleado}</td>
+      <td class="px-2 py-2 text-xs">${reg.fecha_jornada_formato}</td>
+      <td class="px-2 py-2 text-xs">
+        ${reg.tipo_movimiento === 'CLASIFICACION' 
+          ? '<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">🔵 Clasificación</span>'
+          : '<span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">🟣 Empaque</span>'
+        }
+      </td>
+      <td class="px-2 py-2 text-xs">${reg.nombreProductoInicial}</td>
+      <td class="px-2 py-2 text-xs text-right font-semibold">${reg.cantidad_producir.toFixed(2)} kg</td>
+      <td class="px-2 py-2 text-xs">${reg.nombreProductoFinal}</td>
+      <td class="px-2 py-2 text-xs text-right font-semibold text-green-600">${reg.cantidad_producida.toFixed(2)} kg</td>
+      <td class="px-2 py-2 text-xs text-right font-bold text-green-700">$${reg.salario_total.toFixed(2)}</td>
+      <td class="px-2 py-2 text-center">
+        <button type="button" onclick="eliminarRegistroProduccionLote(${index})" class="text-red-600 hover:text-red-800 transition">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/**
+ * Elimina un registro del array temporal
+ */
+window.eliminarRegistroProduccionLote = function(index) {
+  registrosProduccionLote.splice(index, 1);
+  actualizarTablaRegistrosProduccionLote();
+  mostrarExito("Registro eliminado");
+}
+
+/**
+ * Limpia el formulario de registro de producción
+ */
+function limpiarFormularioRegistroLote() {
+  document.getElementById("lote_prod_empleado").value = '';
+  document.getElementById("lote_prod_tipo").value = '';
+  document.getElementById("lote_prod_producto_inicial").value = '';
+  document.getElementById("lote_prod_cantidad_inicial").value = '';
+  document.getElementById("lote_prod_producto_final").value = '';
+  document.getElementById("lote_prod_cantidad_producida").value = '';
+  document.getElementById("lote_prod_observaciones").value = '';
+  limpiarSalariosRegistroLote();
+}
+
+// ========================================
+// FIN FUNCIONES REGISTROS DE PRODUCCIÓN EN LOTE
+// ========================================
+
+async function registrarLote() {
+  console.log('🚀 Iniciando registro de lote...');
+  console.log('📦 Registros en array:', registrosProduccionLote);
+  console.log('📊 Total de registros a guardar:', registrosProduccionLote.length);
+  
   const btnGuardarLote = document.getElementById("btnGuardarLote");
 
   if (btnGuardarLote) {
@@ -752,89 +1647,667 @@ function registrarLote() {
     btnGuardarLote.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Creando...`;
   }
 
-  registrarEntidad({
-    formId: "formRegistrarLote",
-    endpoint: "Produccion/createLote",
-    campos: camposFormularioLote,
-    mapeoNombres: {
-      "lote_fecha_jornada": "fecha_jornada",
-      "lote_volumen_estimado": "volumen_estimado",
-      "lote_supervisor": "idsupervisor",
-      "lote_observaciones": "observaciones",
-    },
-    onSuccess: (result) => {
-      Swal.fire("¡Éxito!", result.message, "success").then(() => {
-        cerrarModal("modalRegistrarLote");
-        recargarTablaLotes();
-        
-        const formLote = document.getElementById("formRegistrarLote");
-        if (formLote) {
-          formLote.reset();
-          limpiarValidaciones(camposFormularioLote, "formRegistrarLote");
-        }
+  try {
+    // Obtener datos del formulario
+    const formLote = document.getElementById("formRegistrarLote");
+    
+    const formData = {
+      fecha_jornada: document.getElementById("lote_fecha_jornada").value,
+      volumen_estimado: document.getElementById("lote_volumen_estimado").value,
+      idsupervisor: document.getElementById("lote_supervisor").value,
+      observaciones: document.getElementById("lote_observaciones").value || ''
+    };
+
+    console.log('📝 Datos del formulario:', formData);
+
+    // Validar campos obligatorios en el cliente
+    if (!formData.fecha_jornada || !formData.volumen_estimado || !formData.idsupervisor) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Por favor completa todos los campos obligatorios (Fecha, Volumen y Supervisor)",
+        confirmButtonColor: "#dc2626"
       });
-    },
-    onError: (result) => {
-      Swal.fire(
-        "Error",
-        result.message || "No se pudo crear el lote.",
-        "error"
-      );
-    },
-  }).finally(() => {
+      return;
+    }
+
+    // Mostrar loading
+    Swal.fire({
+      title: 'Creando lote...',
+      text: 'Por favor espera',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // 1. Crear el lote
+    console.log('📤 Enviando solicitud para crear lote...');
+    const responseLote = await fetch(base_url + "Produccion/createLote", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    const resultLote = await responseLote.json();
+    console.log('📨 Respuesta del servidor:', resultLote);
+
+    if (!resultLote.status) {
+      throw new Error(resultLote.msg || resultLote.message || "Error al crear el lote");
+    }
+
+    const idlote = resultLote.idlote || resultLote.lote_id;
+    console.log("✅ Lote creado con ID:", idlote);
+
+    // 2. Si hay registros de producción, crearlos
+    if (registrosProduccionLote.length > 0) {
+      console.log(`📋 Creando ${registrosProduccionLote.length} registros de producción...`);
+      
+      Swal.update({
+        title: 'Guardando registros de producción...',
+        text: `Guardando ${registrosProduccionLote.length} registros...`
+      });
+
+      let registrosExitosos = 0;
+      let registrosConError = 0;
+
+      for (let i = 0; i < registrosProduccionLote.length; i++) {
+        const registro = registrosProduccionLote[i];
+        console.log(`🔄 Procesando registro ${i + 1}/${registrosProduccionLote.length}:`, registro);
+        
+        try {
+          const formDataRegistro = new FormData();
+          formDataRegistro.append("idlote", idlote);
+          formDataRegistro.append("idempleado", registro.idempleado);
+          formDataRegistro.append("fecha", registro.fecha_jornada);
+          formDataRegistro.append("tipo_proceso", registro.tipo_movimiento);
+          formDataRegistro.append("idproducto_inicial", registro.idproducto_producir);
+          formDataRegistro.append("idproducto_final", registro.idproducto_terminado);
+          formDataRegistro.append("cantidad_producida", registro.cantidad_producida);
+          formDataRegistro.append("cantidad_rechazada", 0);
+          formDataRegistro.append("observaciones", registro.observaciones || "");
+          formDataRegistro.append("observaciones", registro.observaciones || "");
+
+          const responseRegistro = await fetch(base_url + "Produccion/crearRegistroProduccion", {
+            method: "POST",
+            body: formDataRegistro
+          });
+
+          const resultRegistro = await responseRegistro.json();
+          console.log(`📨 Respuesta registro ${i + 1}:`, resultRegistro);
+
+          if (resultRegistro.status) {
+            registrosExitosos++;
+            console.log(`✅ Registro ${i + 1} guardado correctamente`);
+          } else {
+            registrosConError++;
+            console.error(`❌ Error en registro ${i + 1}:`, resultRegistro.msg || resultRegistro.message);
+          }
+        } catch (error) {
+          registrosConError++;
+          console.error(`❌ Error al procesar registro ${i + 1}:`, error);
+        }
+      }
+
+      console.log(`📊 Resumen: ${registrosExitosos} exitosos, ${registrosConError} con error`);
+
+      // Mostrar mensaje de éxito
+      Swal.fire({
+        icon: registrosConError === 0 ? "success" : "warning",
+        title: "¡Lote creado exitosamente!",
+        html: `
+          <p><strong>Lote:</strong> ${resultLote.numero_lote || idlote}</p>
+          <p><strong>Registros de producción:</strong> ${registrosExitosos} de ${registrosProduccionLote.length} guardados</p>
+          ${registrosConError > 0 ? `<p class="text-orange-600"><strong>Advertencia:</strong> ${registrosConError} registros con error</p>` : ''}
+        `,
+        confirmButtonColor: "#059669"
+      }).then(() => {
+        cerrarModal("modalRegistrarLote");
+        if (typeof tablaLotes !== "undefined" && tablaLotes.ajax) {
+          tablaLotes.ajax.reload();
+        }
+        if (typeof tablaRegistrosProcesos !== "undefined" && tablaRegistrosProcesos.ajax) {
+          tablaRegistrosProcesos.ajax.reload();
+        }
+        
+        // Limpiar formulario y array
+        formLote.reset();
+        registrosProduccionLote = [];
+        actualizarTablaRegistrosProduccionLote();
+        limpiarFormularioRegistroLote();
+      });
+
+    } else {
+      // No hay registros, solo mostrar éxito del lote
+      console.log('ℹ️ Lote creado sin registros de producción');
+      Swal.fire({
+        icon: "success",
+        title: "¡Lote creado!",
+        text: resultLote.msg || resultLote.message || "El lote se creó correctamente",
+        confirmButtonColor: "#059669"
+      }).then(() => {
+        cerrarModal("modalRegistrarLote");
+        if (typeof tablaLotes !== "undefined" && tablaLotes.ajax) {
+          tablaLotes.ajax.reload();
+        }
+        
+        formLote.reset();
+      });
+    }
+
+  } catch (error) {
+    console.error("❌ Error al crear lote:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: error.message || "No se pudo crear el lote",
+      confirmButtonColor: "#dc2626"
+    });
+  } finally {
     if (btnGuardarLote) {
       btnGuardarLote.disabled = false;
-      btnGuardarLote.innerHTML = `<i class="fas fa-save mr-2"></i> Crear Lote`;
+      btnGuardarLote.innerHTML = `<i class="fas fa-save mr-1 md:mr-2"></i> Crear Lote con Procesos`;
     }
-  });
+  }
 }
 
+// ========================================
+// VER DETALLE DEL LOTE CON PROCESOS
+// ========================================
+// ========================================
 function verDetallesLote(idlote) {
-  fetch(`Produccion/getLoteById/${idlote}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        mostrarDetallesLote(result.data);
-      } else {
-        mostrarError("No se pudieron cargar los datos del lote.");
+  console.log('verDetallesLote llamado con idlote:', idlote);
+  
+  // Abrir modal
+  const modalAbierto = abrirModal("modalVerLote");
+  
+  if (!modalAbierto) {
+    mostrarError("Error: No se pudo abrir el modal de detalle del lote.");
+    return;
+  }
+  
+  console.log('Modal abierto correctamente');
+  
+  // Mostrar loading
+  mostrarLoadingEnModalVerDetalle();
+  
+  // Cargar información básica del lote
+  cargarInfoBasicaLote(idlote);
+  
+  // Cargar registros de producción del lote
+  cargarRegistrosProduccionLote(idlote);
+}
+
+/**
+ * Muestra indicador de carga en modal ver detalle
+ */
+function mostrarLoadingEnModalVerDetalle() {
+  // Limpiar tabla de registros
+  const tbody = document.getElementById('verRegistrosProduccion');
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i><p class="text-gray-500 mt-2">Cargando...</p></td></tr>';
+  }
+  
+  // Ocultar mensaje de no registros
+  const mensaje = document.getElementById('mensajeNoRegistros');
+  if (mensaje) mensaje.style.display = 'none';
+}
+
+/**
+ * Carga información básica del lote
+ */
+async function cargarInfoBasicaLote(idlote) {
+  try {
+    const response = await fetch(`Produccion/getLotesData`);
+    const data = await response.json();
+    
+    if (data.status && Array.isArray(data.data)) {
+      const lote = data.data.find(l => l.idlote == idlote);
+      
+      if (lote) {
+        document.getElementById('verLoteNumero').textContent = lote.numero_lote || '-';
+        document.getElementById('verLoteFecha').textContent = lote.fecha_jornada_formato || '-';
+        document.getElementById('verLoteVolumen').textContent = lote.volumen_estimado ? `${lote.volumen_estimado} kg` : '-';
+        document.getElementById('verLoteSupervisor').textContent = lote.supervisor || '-';
+        document.getElementById('verLoteEstado').innerHTML = obtenerBadgeEstado(lote.estatus_lote);
+        document.getElementById('verLoteOperarios').textContent = `${lote.operarios_asignados || 0} / ${lote.operarios_requeridos || 0}`;
+        document.getElementById('verLoteObservaciones').textContent = lote.observaciones || 'Sin observaciones';
       }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      mostrarError("Error de conexión.");
+    }
+  } catch (error) {
+    console.error('Error al cargar info del lote:', error);
+  }
+}
+
+/**
+ * Carga registros de producción del lote
+ */
+async function cargarRegistrosProduccionLote(idlote) {
+  try {
+    console.log('🔍 Cargando registros para lote:', idlote);
+    const response = await fetch(`Produccion/getRegistrosPorLote/${idlote}`);
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', response.headers.get('content-type'));
+    
+    // Primero obtener el texto para ver qué devuelve
+    const responseText = await response.text();
+    console.log('📄 Response text (primeros 500 chars):', responseText.substring(0, 500));
+    
+    // Intentar parsear como JSON
+    let result;
+    try {
+      result = JSON.parse(responseText);
+      console.log('📦 Result completo:', result);
+      console.log('📊 Totales recibidos:', result.totales);
+      console.log('📋 Cantidad de registros:', result.data?.length || 0);
+    } catch (parseError) {
+      console.error('❌ Error al parsear JSON:', parseError);
+      console.error('📄 Respuesta completa del servidor:', responseText);
+      throw new Error('El servidor no devolvió JSON válido. Ver consola para más detalles.');
+    }
+    
+    const tbody = document.getElementById('verRegistrosProduccion');
+    const seccionRegistros = document.getElementById('seccionRegistrosProduccion');
+    const mensajeNoRegistros = document.getElementById('mensajeNoRegistros');
+    
+    if (!tbody) {
+      console.error('❌ No se encontró el tbody con id "verRegistrosProduccion"');
+      return;
+    }
+    
+    if (result.status && result.data && result.data.length > 0) {
+      // Mostrar tabla
+      if (seccionRegistros) seccionRegistros.style.display = 'block';
+      if (mensajeNoRegistros) mensajeNoRegistros.style.display = 'none';
+      
+      // Llenar tabla
+      tbody.innerHTML = result.data.map(registro => `
+        <tr class="hover:bg-gray-50">
+          <td class="px-3 py-2">${registro.fecha_jornada_formato}</td>
+          <td class="px-3 py-2">
+            <div class="text-sm font-medium">${registro.nombre_empleado || 'Sin asignar'}</div>
+          </td>
+          <td class="px-3 py-2">
+            <div class="text-sm font-medium">${registro.producto_producir_nombre}</div>
+            <div class="text-xs text-gray-500">${registro.producto_producir_codigo}</div>
+          </td>
+          <td class="px-3 py-2 text-right font-semibold">${parseFloat(registro.cantidad_producir).toFixed(2)}</td>
+          <td class="px-3 py-2">
+            <div class="text-sm font-medium">${registro.producto_terminado_nombre}</div>
+            <div class="text-xs text-gray-500">${registro.producto_terminado_codigo}</div>
+          </td>
+          <td class="px-3 py-2 text-right font-semibold text-green-600">${parseFloat(registro.cantidad_producida).toFixed(2)}</td>
+          <td class="px-3 py-2 text-center">
+            ${registro.tipo_movimiento === 'CLASIFICACION' 
+              ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-filter mr-1"></i>Clasificación</span>'
+              : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800"><i class="fas fa-cube mr-1"></i>Empaque</span>'
+            }
+          </td>
+          <td class="px-3 py-2 text-right font-bold text-green-700">$${parseFloat(registro.salario_total).toFixed(2)}</td>
+        </tr>
+      `).join('');
+      
+      // Actualizar totales
+      actualizarTotalesRegistros(result.totales);
+      
+    } else {
+      // No hay registros
+      if (seccionRegistros) seccionRegistros.style.display = 'none';
+      if (mensajeNoRegistros) mensajeNoRegistros.style.display = 'block';
+      tbody.innerHTML = '';
+      limpiarTotalesRegistros();
+    }
+    
+  } catch (error) {
+    console.error('Error al cargar registros:', error);
+    const tbody = document.getElementById('verRegistrosProduccion');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Error al cargar registros</td></tr>';
+    }
+  }
+}
+
+/**
+ * Actualiza los totales en el modal
+ */
+function actualizarTotalesRegistros(totales) {
+  console.log('🔢 Actualizando totales con:', totales);
+  
+  if (!totales) {
+    console.warn('⚠️ No se recibieron totales');
+    return;
+  }
+  
+  // Verificar que existan los elementos
+  const elementos = {
+    verTotalRegistros: document.getElementById('verTotalRegistros'),
+    verTotalProducido: document.getElementById('verTotalProducido'),
+    verTotalSalariosBase: document.getElementById('verTotalSalariosBase'),
+    verTotalSalariosGeneral: document.getElementById('verTotalSalariosGeneral'),
+    verCantidadClasificacion: document.getElementById('verCantidadClasificacion'),
+    verCantidadEmpaque: document.getElementById('verCantidadEmpaque'),
+    verTotalKgClasificacion: document.getElementById('verTotalKgClasificacion'),
+    verTotalKgEmpaque: document.getElementById('verTotalKgEmpaque')
+  };
+  
+  // Verificar elementos faltantes
+  for (const [key, elemento] of Object.entries(elementos)) {
+    if (!elemento) {
+      console.error(`❌ Elemento "${key}" no encontrado en el DOM`);
+    }
+  }
+  
+  if (elementos.verTotalRegistros) {
+    elementos.verTotalRegistros.textContent = totales.total_registros || 0;
+    console.log('✅ Total registros:', totales.total_registros);
+  }
+  
+  if (elementos.verTotalProducido) {
+    elementos.verTotalProducido.textContent = `${parseFloat(totales.total_cantidad_producida || 0).toFixed(2)} kg`;
+    console.log('✅ Total producido:', totales.total_cantidad_producida);
+  }
+  
+  if (elementos.verTotalSalariosBase) {
+    elementos.verTotalSalariosBase.textContent = `$${parseFloat(totales.total_salario_base || 0).toFixed(2)}`;
+    console.log('✅ Total salarios base:', totales.total_salario_base);
+  }
+  
+  if (elementos.verTotalSalariosGeneral) {
+    elementos.verTotalSalariosGeneral.textContent = `$${parseFloat(totales.total_salario_general || 0).toFixed(2)}`;
+    console.log('✅ Total salarios general:', totales.total_salario_general);
+  }
+  
+  // Desglose por tipo
+  if (elementos.verCantidadClasificacion) {
+    elementos.verCantidadClasificacion.textContent = totales.registros_clasificacion || 0;
+  }
+  
+  if (elementos.verCantidadEmpaque) {
+    elementos.verCantidadEmpaque.textContent = totales.registros_empaque || 0;
+  }
+  
+  // Calcular kg por tipo (necesitarás agregar esto al backend si quieres el desglose exacto)
+  if (elementos.verTotalKgClasificacion) {
+    elementos.verTotalKgClasificacion.textContent = '0.00 kg'; // Placeholder
+  }
+  
+  if (elementos.verTotalKgEmpaque) {
+    elementos.verTotalKgEmpaque.textContent = '0.00 kg'; // Placeholder
+  }
+  
+  console.log('✅ Totales actualizados correctamente');
+}
+
+/**
+ * Limpia los totales
+ */
+function limpiarTotalesRegistros() {
+  document.getElementById('verTotalRegistros').textContent = '0';
+  document.getElementById('verTotalProducido').textContent = '0.00 kg';
+  document.getElementById('verTotalSalariosBase').textContent = '$0.00';
+  document.getElementById('verTotalSalariosGeneral').textContent = '$0.00';
+  document.getElementById('verCantidadClasificacion').textContent = '0';
+  document.getElementById('verCantidadEmpaque').textContent = '0';
+  document.getElementById('verTotalKgClasificacion').textContent = '0.00 kg';
+  document.getElementById('verTotalKgEmpaque').textContent = '0.00 kg';
+}
+
+/**
+ * Obtiene badge HTML según estado del lote
+ */
+function obtenerBadgeEstado(estatus) {
+  const badges = {
+    'ACTIVO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Activo</span>',
+    'EN_PROCESO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">En Proceso</span>',
+    'COMPLETADO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Completado</span>',
+    'CANCELADO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Cancelado</span>'
+  };
+  
+  return badges[estatus] || '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">-</span>';
+}
+
+function mostrarLoadingEnModal() {
+  console.log('mostrarLoadingEnModal - Iniciando...');
+  
+  // Limpiar datos previos
+  limpiarModalVerLote();
+  
+  // Verificar que los elementos existan
+  const numeroElement = document.getElementById('verLoteNumero');
+  const mensajeElement = document.getElementById('mensajeNoProcesos');
+  
+  console.log('Elemento verLoteNumero:', numeroElement);
+
+  console.log('Elemento mensajeNoProcesos:', mensajeElement);
+  
+  if (!numeroElement || !mensajeElement) {
+    console.error('ERROR: Elementos del modal no encontrados');
+    return;
+  }
+  
+  // Mostrar loading en las secciones principales
+  numeroElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  mensajeElement.style.display = 'block';
+  mensajeElement.innerHTML = `
+    <div class="flex justify-center items-center py-8">
+      <i class="fas fa-spinner fa-spin text-3xl text-blue-500 mr-3"></i>
+      <span class="text-gray-600">Cargando información del lote...</span>
+    </div>
+  `;
+  
+  console.log('Loading mostrado correctamente');
+}
+
+function cargarDatosLoteEnModal(lote) {
+  console.log('cargarDatosLoteEnModal - Lote recibido:', lote);
+  
+  // Datos generales
+  document.getElementById('verLoteNumero').textContent = lote.numero_lote || '-';
+  document.getElementById('verLoteFecha').textContent = lote.fecha_jornada_formato || '-';
+  document.getElementById('verLoteVolumen').textContent = lote.volumen_estimado 
+    ? `${parseFloat(lote.volumen_estimado).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kg` 
+    : '-';
+  document.getElementById('verLoteSupervisor').textContent = lote.supervisor || '-';
+  document.getElementById('verLoteOperarios').textContent = lote.operarios_asignados || '0';
+  document.getElementById('verLoteObservaciones').textContent = lote.observaciones || 'Sin observaciones';
+  
+  // Estado con color
+  const estadoElement = document.getElementById('verLoteEstado');
+  const estado = lote.estatus_lote || lote.estado || '-';
+  estadoElement.textContent = estado;
+  
+  // Limpiar clases previas
+  estadoElement.className = 'text-sm sm:text-base md:text-lg font-semibold';
+  
+  // Aplicar color según estado
+  if (estado === 'ACTIVO' || estado === 'EN PROCESO') {
+    estadoElement.classList.add('text-green-600');
+  } else if (estado === 'FINALIZADO' || estado === 'COMPLETADO') {
+    estadoElement.classList.add('text-blue-600');
+  } else if (estado === 'CANCELADO') {
+    estadoElement.classList.add('text-red-600');
+  } else if (estado === 'PENDIENTE') {
+    estadoElement.classList.add('text-yellow-600');
+  } else {
+    estadoElement.classList.add('text-gray-900');
+  }
+}
+
+function cargarProcesosEnModal(procesos) {
+  const clasificacion = procesos.clasificacion || [];
+  const empaque = procesos.empaque || [];
+  
+  const seccionClasificacion = document.getElementById('seccionClasificacion');
+  const seccionEmpaque = document.getElementById('seccionEmpaque');
+  const mensajeNoProcesos = document.getElementById('mensajeNoProcesos');
+  
+  // Si no hay procesos, mostrar mensaje
+  if (clasificacion.length === 0 && empaque.length === 0) {
+    mensajeNoProcesos.style.display = 'block';
+    mensajeNoProcesos.innerHTML = `
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-yellow-700 font-medium">
+            Este lote aún no tiene procesos registrados.
+          </p>
+          <p class="text-xs text-yellow-600 mt-1">
+            Los procesos de clasificación y empaque se registran durante la jornada de producción.
+          </p>
+        </div>
+      </div>
+    `;
+    seccionClasificacion.style.display = 'none';
+    seccionEmpaque.style.display = 'none';
+    return;
+  }
+  
+  mensajeNoProcesos.style.display = 'none';
+  
+  // Cargar Procesos de Clasificación
+  if (clasificacion.length > 0) {
+    seccionClasificacion.style.display = 'block';
+    const tbodyClasificacion = document.getElementById('verDetalleClasificacion');
+    tbodyClasificacion.innerHTML = '';
+    
+    clasificacion.forEach(proceso => {
+      const kgProcesados = parseFloat(proceso.kg_procesados) || 0;
+      const kgLimpios = parseFloat(proceso.kg_limpios) || 0;
+      const kgContaminantes = parseFloat(proceso.kg_contaminantes) || 0;
+      const eficiencia = kgProcesados > 0 ? ((kgLimpios / kgProcesados) * 100).toFixed(2) : 0;
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="px-3 py-2">${proceso.operario_nombre || proceso.empleado_nombre || '-'}</td>
+        <td class="px-3 py-2">${proceso.producto_nombre || proceso.nombre_producto || '-'}</td>
+        <td class="px-3 py-2 text-right font-semibold">${kgProcesados.toLocaleString('es-ES', {minimumFractionDigits: 2})}</td>
+        <td class="px-3 py-2 text-right font-semibold text-green-600">${kgLimpios.toLocaleString('es-ES', {minimumFractionDigits: 2})}</td>
+        <td class="px-3 py-2 text-right font-semibold text-red-600">${kgContaminantes.toLocaleString('es-ES', {minimumFractionDigits: 2})}</td>
+        <td class="px-3 py-2 text-right">
+          <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold ${
+            eficiencia >= 90 ? 'bg-green-100 text-green-800' :
+            eficiencia >= 75 ? 'bg-yellow-100 text-yellow-800' :
+            'bg-red-100 text-red-800'
+          }">
+            ${eficiencia}%
+          </span>
+        </td>
+      `;
+      tbodyClasificacion.appendChild(row);
     });
+  } else {
+    seccionClasificacion.style.display = 'none';
+  }
+  
+  // Cargar Procesos de Empaque
+  if (empaque.length > 0) {
+    seccionEmpaque.style.display = 'block';
+    const tbodyEmpaque = document.getElementById('verDetalleEmpaque');
+    tbodyEmpaque.innerHTML = '';
+    
+    empaque.forEach(proceso => {
+      const pesoPaca = parseFloat(proceso.peso_paca) || 0;
+      const calidad = proceso.calidad || 'ESTANDAR';
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="px-3 py-2">${proceso.operario_nombre || proceso.empleado_nombre || '-'}</td>
+        <td class="px-3 py-2">${proceso.producto_nombre || proceso.nombre_producto || '-'}</td>
+        <td class="px-3 py-2 text-right font-semibold">${pesoPaca.toLocaleString('es-ES', {minimumFractionDigits: 2})}</td>
+        <td class="px-3 py-2 text-center">
+          <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold ${
+            calidad === 'PREMIUM' ? 'bg-purple-100 text-purple-800' :
+            calidad === 'ESTANDAR' ? 'bg-blue-100 text-blue-800' :
+            'bg-gray-100 text-gray-800'
+          }">
+            ${calidad}
+          </span>
+        </td>
+        <td class="px-3 py-2 text-sm text-gray-600">${proceso.observaciones || '-'}</td>
+      `;
+      tbodyEmpaque.appendChild(row);
+    });
+  } else {
+    seccionEmpaque.style.display = 'none';
+  }
+}
+
+function calcularResumenProduccion(procesos) {
+  const clasificacion = procesos.clasificacion || [];
+  const empaque = procesos.empaque || [];
+  
+  // Totales de Clasificación
+  if (clasificacion.length > 0) {
+    const totalClasificado = clasificacion.reduce((sum, p) => sum + (parseFloat(p.kg_limpios) || 0), 0);
+    const totalContaminantes = clasificacion.reduce((sum, p) => sum + (parseFloat(p.kg_contaminantes) || 0), 0);
+    const totalProcesado = clasificacion.reduce((sum, p) => sum + (parseFloat(p.kg_procesados) || 0), 0);
+    
+    document.getElementById('contenedorTotalClasificado').style.display = 'block';
+    document.getElementById('contenedorTotalContaminantes').style.display = 'block';
+    document.getElementById('verTotalClasificado').textContent = 
+      `${totalClasificado.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kg`;
+    document.getElementById('verTotalContaminantes').textContent = 
+      `${totalContaminantes.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kg`;
+    
+    // Calcular eficiencia general
+    const eficienciaGeneral = totalProcesado > 0 ? ((totalClasificado / totalProcesado) * 100).toFixed(2) : 0;
+    document.getElementById('verEficienciaGeneral').textContent = `${eficienciaGeneral}%`;
+  } else {
+    document.getElementById('contenedorTotalClasificado').style.display = 'none';
+    document.getElementById('contenedorTotalContaminantes').style.display = 'none';
+    document.getElementById('verEficienciaGeneral').textContent = 'N/A';
+  }
+  
+  // Totales de Empaque
+  if (empaque.length > 0) {
+    const totalPacas = empaque.length;
+    const pesoTotalPacas = empaque.reduce((sum, p) => sum + (parseFloat(p.peso_paca) || 0), 0);
+    
+    document.getElementById('contenedorTotalPacas').style.display = 'block';
+    document.getElementById('contenedorPesoTotalPacas').style.display = 'block';
+    document.getElementById('verTotalPacas').textContent = totalPacas;
+    document.getElementById('verPesoTotalPacas').textContent = 
+      `${pesoTotalPacas.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kg`;
+  } else {
+    document.getElementById('contenedorTotalPacas').style.display = 'none';
+    document.getElementById('contenedorPesoTotalPacas').style.display = 'none';
+  }
+}
+
+function limpiarModalVerLote() {
+  // Limpiar datos generales
+  document.getElementById('verLoteNumero').textContent = '-';
+  document.getElementById('verLoteFecha').textContent = '-';
+  document.getElementById('verLoteVolumen').textContent = '-';
+  document.getElementById('verLoteSupervisor').textContent = '-';
+  document.getElementById('verLoteEstado').textContent = '-';
+  document.getElementById('verLoteOperarios').textContent = '-';
+  document.getElementById('verLoteObservaciones').textContent = '-';
+  
+  // Limpiar tablas
+  document.getElementById('verDetalleClasificacion').innerHTML = '';
+  document.getElementById('verDetalleEmpaque').innerHTML = '';
+  
+  // Ocultar secciones
+  document.getElementById('seccionClasificacion').style.display = 'none';
+  document.getElementById('seccionEmpaque').style.display = 'none';
+  document.getElementById('mensajeNoProcesos').style.display = 'none';
+  
+  // Ocultar contenedores de resumen
+  document.getElementById('contenedorTotalClasificado').style.display = 'none';
+  document.getElementById('contenedorTotalContaminantes').style.display = 'none';
+  document.getElementById('contenedorTotalPacas').style.display = 'none';
+  document.getElementById('contenedorPesoTotalPacas').style.display = 'none';
 }
 
 function mostrarDetallesLote(lote) {
-  const html = `
-    <div class="bg-white p-6 rounded-lg">
-      <h3 class="text-lg font-semibold mb-4">Detalles del Lote ${lote.numero_lote}</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <div><strong>Fecha Jornada:</strong> ${lote.fecha_jornada_formato}</div>
-        <div><strong>Supervisor:</strong> ${lote.supervisor}</div>
-        <div><strong>Volumen Estimado:</strong> ${parseFloat(lote.volumen_estimado).toLocaleString()} kg</div>
-        <div><strong>Operarios Requeridos:</strong> ${lote.operarios_requeridos}</div>
-        <div><strong>Operarios Asignados:</strong> ${lote.operarios_asignados}</div>
-        <div><strong>Estado:</strong> <span class="font-semibold">${lote.estatus_lote}</span></div>
-      </div>
-      ${lote.observaciones ? `<div class="mt-4"><strong>Observaciones:</strong> ${lote.observaciones}</div>` : ''}
-    </div>
-  `;
-
-  Swal.fire({
-    title: "Información del Lote",
-    html: html,
-    width: "800px",
-    showCloseButton: true,
-    confirmButtonText: "Cerrar",
-    confirmButtonColor: "#059669",
-  });
+  // Esta función ahora está deprecated, se usa verDetallesLote con el modal
+  console.warn('mostrarDetallesLote está deprecated, usar verDetallesLote');
+  verDetallesLote(lote.idlote);
 }
 
 function iniciarLote(idlote) {
@@ -912,919 +2385,294 @@ function cerrarLote(idlote, numeroLote) {
   });
 }
 
-// ========================================
-// FUNCIONES DE ASIGNACIÓN DE OPERARIOS
-// ========================================
-function abrirModalAsignarOperarios(idlote) {
-    console.log("🚀 Iniciando asignación para lote:", idlote);
-    
-    // Limpiar estado anterior
-    operariosAsignados = [];
-    operariosDisponibles = [];
-    loteActual = null;
-    
-    // Mostrar estado de carga
-    mostrarEstadoCarga();
-    
-    // Cargar información del lote
-    cargarInformacionLote(idlote)
-        .then(lote => {
-            loteActual = lote;
-            console.log("✅ Lote cargado:", lote);
-            return cargarOperariosDisponibles(lote.fecha_jornada);
-        })
-        .then(operarios => {
-            operariosDisponibles = operarios;
-            console.log("✅ Operarios disponibles cargados:", operarios.length);
-            return cargarAsignacionesExistentes(idlote);
-        })
-        .then(asignaciones => {
-            console.log("✅ Asignaciones existentes cargadas:", asignaciones.length);
-            abrirModal("modalAsignarOperarios");
-            actualizarContadores();
-        })
-        .catch(error => {
-            console.error("❌ Error en el proceso:", error);
-            mostrarError("Error al cargar la información: " + error.message);
-        });
-}
-function mostrarEstadoCarga() {
-    const tbody = document.getElementById("bodyOperariosDisponibles");
-    const lista = document.getElementById("listaOperariosAsignados");
-    
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="3" class="text-center py-8 text-gray-500">
-                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                <p>Cargando operarios...</p>
-            </td>
-        </tr>
-    `;
-    
-    lista.innerHTML = `
-        <div class="loading-state">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Cargando asignaciones...</p>
-        </div>
-    `;
-}
-function cargarInformacionLote(idlote) {
-    return fetch(`Produccion/getLoteById/${idlote}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(result => {
-            if (!result.status || !result.data) {
-                throw new Error(result.message || "No se pudo obtener la información del lote");
-            }
-            
-            const lote = result.data;
-            
-            // Actualizar la información en el modal
-            document.getElementById("idLoteAsignar").value = idlote;
-            document.getElementById("infoNumeroLote").textContent = lote.numero_lote;
-            document.getElementById("infoOperariosRequeridos").textContent = lote.operarios_requeridos;
-            document.getElementById("infoFechaJornada").textContent = lote.fecha_jornada_formato;
-            document.getElementById("progresoRequeridos").textContent = lote.operarios_requeridos;
-            
-            return lote;
-        });
-}
-function cargarOperariosDisponibles(fecha) {
-    return fetch(`Produccion/getOperariosDisponibles?fecha=${fecha}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(result => {
-            if (!result.status) {
-                throw new Error(result.message || "Error al cargar operarios disponibles");
-            }
-            
-            const operarios = result.data || [];
-            mostrarOperariosDisponibles(operarios);
-            return operarios;
-        });
-}
+/**
+ * Edita un lote de producción
+ * Solo permite editar lotes en estado PLANIFICADO
+ */
+function editarLote(idlote) {
+  console.log("📝 Editando lote:", idlote);
 
-function mostrarOperariosDisponibles(operarios) {
-    console.log("🎯 Mostrando operarios disponibles:", operarios);
-    
-    const tbody = document.getElementById("bodyOperariosDisponibles");
-    
-    if (!operarios || operarios.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="3" class="text-center py-8 text-gray-500">
-                    <i class="fas fa-user-slash text-2xl mb-2"></i>
-                    <p>No hay operarios disponibles</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    let html = "";
-    operarios.forEach((operario) => {
-        const disponible = operario.estatus_disponibilidad === "DISPONIBLE";
-        const badgeClass = disponible ? "badge-disponible" : "badge-asignado";
-        const textoEstado = disponible ? "Disponible" : `Asignado (${operario.lote_asignado || 'N/A'})`;
-
-        html += `
-            <tr class="${disponible ? 'hover:bg-blue-50 cursor-pointer' : 'bg-gray-50 opacity-75'}" 
-                data-operario-id="${operario.idempleado}">
-                <td class="px-3 py-3 text-center">
-                    <input type="checkbox" 
-                           class="operario-checkbox" 
-                           data-idempleado="${operario.idempleado}"
-                           data-nombre="${operario.nombre_completo}"
-                           ${disponible ? '' : 'disabled'}>
-                </td>
-                <td class="px-3 py-3">
-                    <div>
-                        <div class="font-medium text-gray-900">${operario.nombre_completo}</div>
-                        <div class="text-xs text-gray-500 mt-1">
-                            <i class="fas fa-briefcase mr-1"></i>${operario.puesto || 'Operario'}
-                            ${operario.telefono_principal ? `<i class="fas fa-phone ml-2 mr-1"></i>${operario.telefono_principal}` : ''}
-                        </div>
-                    </div>
-                </td>
-                <td class="px-3 py-3">
-                    <span class="${badgeClass}">${textoEstado}</span>
-                </td>
-            </tr>
-        `;
-    });
-
-    tbody.innerHTML = html;
-
-    // Asignar evento change a los checkboxes por JS (CSP safe)
-    const checkboxes = tbody.querySelectorAll('.operario-checkbox');
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            toggleOperarioAsignado(this);
-        });
-    });
-}
-
-function toggleOperarioAsignado(checkbox) {
-    const idempleado = checkbox.dataset.idempleado;
-    const nombre = checkbox.dataset.nombre;
-    
-    console.log("🔄 Toggle operario:", { idempleado, nombre, checked: checkbox.checked });
-
-    if (checkbox.checked) {
-        // Verificar si ya está asignado
-        const yaAsignado = operariosAsignados.find(op => op.idempleado === idempleado);
-        if (yaAsignado) {
-            console.log("⚠️ Operario ya asignado:", nombre);
-            return;
-        }
-
-        // Agregar a la lista de asignados
-        const operarioAsignado = {
-            idempleado: idempleado,
-            nombre: nombre,
-            tipo_tarea: 'CLASIFICACION',
-            turno: 'MAÑANA',
-            observaciones: ''
-        };
-
-        operariosAsignados.push(operarioAsignado);
-        console.log("➕ Operario agregado:", operarioAsignado);
-    } else {
-        // Remover de la lista de asignados
-        const index = operariosAsignados.findIndex(op => op.idempleado === idempleado);
-        if (index !== -1) {
-            const removido = operariosAsignados.splice(index, 1)[0];
-            console.log("➖ Operario removido:", removido);
-        }
-    }
-
-    actualizarListaOperariosAsignados();
-    actualizarContadores();
-}
-
-function actualizarListaOperariosAsignados() {
-    console.log("🔄 Actualizando lista de asignados:", operariosAsignados);
-    
-    const lista = document.getElementById("listaOperariosAsignados");
-    
-    if (!operariosAsignados || operariosAsignados.length === 0) {
-        lista.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-full text-gray-500 py-8">
-                <i class="fas fa-user-plus text-3xl mb-3 text-gray-300"></i>
-                <p class="text-center">No hay operarios asignados</p>
-                <p class="text-xs text-center mt-1">Selecciona operarios de la lista de la izquierda</p>
-            </div>
-        `;
-        return;
-    }
-
-    let html = "";
-    operariosAsignados.forEach((operario, index) => {
-        html += `
-            <div class="operario-asignado" data-index="${index}">
-                <div class="info">
-                    <div class="font-medium">${operario.nombre}</div>
-                    <div class="flex gap-2 mt-3">
-                        <select class="operario-select" 
-                                onchange="actualizarTareaOperario(${index}, 'tipo_tarea', this.value)"
-                                title="Tipo de tarea">
-                            <option value="CLASIFICACION" ${operario.tipo_tarea === 'CLASIFICACION' ? 'selected' : ''}>
-                                <i class="fas fa-filter"></i> Clasificación
-                            </option>
-                            <option value="EMPAQUE" ${operario.tipo_tarea === 'EMPAQUE' ? 'selected' : ''}>
-                                <i class="fas fa-box"></i> Empaque
-                            </option>
-                        </select>
-                        <select class="operario-select"
-                                onchange="actualizarTareaOperario(${index}, 'turno', this.value)"
-                                title="Turno de trabajo">
-                            <option value="MAÑANA" ${operario.turno === 'MAÑANA' ? 'selected' : ''}>🌅 Mañana</option>
-                            <option value="TARDE" ${operario.turno === 'TARDE' ? 'selected' : ''}>☀️ Tarde</option>
-                            <option value="NOCHE" ${operario.turno === 'NOCHE' ? 'selected' : ''}>🌙 Noche</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="acciones">
-                    <button type="button" 
-                            class="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-all duration-200"
-                            onclick="removerOperarioAsignado(${index})" 
-                            title="Remover operario">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-
-    lista.innerHTML = html;
-}
-
-function actualizarTareaOperario(index, campo, valor) {
-    console.log("🔧 Actualizando tarea:", { index, campo, valor });
-    
-    if (index >= 0 && index < operariosAsignados.length) {
-        operariosAsignados[index][campo] = valor;
-        console.log("✅ Operario actualizado:", operariosAsignados[index]);
-    }
-}
-
-function removerOperarioAsignado(index) {
-    console.log("🗑️ Removiendo operario en índice:", index);
-    
-    if (index >= 0 && index < operariosAsignados.length) {
-        const operario = operariosAsignados[index];
-        
-        // Desmarcar checkbox
-        const checkbox = document.querySelector(`input[data-idempleado="${operario.idempleado}"]`);
-        if (checkbox) {
-            checkbox.checked = false;
-        }
-
-        // Remover de la lista
-        operariosAsignados.splice(index, 1);
-        
-        // Actualizar interfaz
-        actualizarListaOperariosAsignados();
-        actualizarContadores();
-        
-        console.log("✅ Operario removido. Lista actual:", operariosAsignados);
-    }
-}
-
-function actualizarContadores() {
-    const asignados = operariosAsignados.length;
-    const requeridos = loteActual ? loteActual.operarios_requeridos : 0;
-    
-    document.getElementById("contadorAsignados").textContent = asignados;
-    document.getElementById("progresoAsignados").textContent = asignados;
-    
-    // Actualizar estado del botón de guardar
-    const btnGuardar = document.getElementById("btnGuardarAsignaciones");
-    if (btnGuardar) {
-        btnGuardar.disabled = asignados === 0;
-        btnGuardar.classList.toggle("opacity-50", asignados === 0);
-        btnGuardar.classList.toggle("cursor-not-allowed", asignados === 0);
-    }
-    
-    console.log(`📊 Contadores actualizados: ${asignados}/${requeridos}`);
-}
-function cargarAsignacionesExistentes(idlote) {
-    return fetch(`Produccion/getAsignacionesLote/${idlote}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(result => {
-            if (!result.status) {
-                console.log("⚠️ No hay asignaciones existentes o error:", result.message);
-                return [];
-            }
-            
-            const asignaciones = result.data || [];
-            
-            if (asignaciones.length > 0) {
-                // Convertir asignaciones al formato interno
-                operariosAsignados = asignaciones.map(asignacion => ({
-                    idempleado: String(asignacion.idempleado),
-                    nombre: asignacion.operario,
-                    tipo_tarea: asignacion.tipo_tarea || 'CLASIFICACION',
-                    turno: asignacion.turno || 'MAÑANA',
-                    observaciones: asignacion.observaciones || ''
-                }));
-                
-                console.log("📋 Asignaciones convertidas:", operariosAsignados);
-                
-                // Actualizar la interfaz
-                setTimeout(() => {
-                    actualizarListaOperariosAsignados();
-                    marcarCheckboxesAsignados();
-                }, 100);
-            }
-            
-            return asignaciones;
-        });
-}
-function marcarCheckboxesAsignados() {
-    console.log("☑️ Marcando checkboxes para operarios asignados:", operariosAsignados);
-    
-    operariosAsignados.forEach(operario => {
-        const checkbox = document.querySelector(`input[data-idempleado="${operario.idempleado}"]`);
-        if (checkbox) {
-            checkbox.checked = true;
-            console.log("✅ Checkbox marcado para:", operario.nombre);
-        } else {
-            console.warn("⚠️ No se encontró checkbox para operario:", operario.nombre, operario.idempleado);
-        }
-    });
-}
-function guardarAsignacionesOperarios() {
-    console.log("💾 Iniciando guardado de asignaciones");
-    
-    const idlote = document.getElementById("idLoteAsignar").value;
-    
-    // Validaciones
-    if (!idlote || idlote <= 0) {
-        mostrarError("ID de lote no válido.");
-        return;
-    }
-
-    if (!operariosAsignados || operariosAsignados.length === 0) {
-        mostrarError("Debe asignar al menos un operario.");
-        return;
-    }
-
-    // Validar datos de cada operario
-    for (let i = 0; i < operariosAsignados.length; i++) {
-        const operario = operariosAsignados[i];
-        if (!operario.idempleado || !operario.tipo_tarea || !operario.turno) {
-            mostrarError(`Datos incompletos para el operario: ${operario.nombre}`);
-            return;
-        }
-    }
-
-    const btnGuardar = document.getElementById("btnGuardarAsignaciones");
-    if (btnGuardar) {
-        btnGuardar.disabled = true;
-        btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
-    }
-
-    const payload = {
-        idlote: parseInt(idlote),
-        operarios: operariosAsignados.map(op => ({
-            idempleado: parseInt(op.idempleado),
-            tipo_tarea: op.tipo_tarea,
-            turno: op.turno,
-            observaciones: op.observaciones || ''
-        }))
-    };
-
-    console.log("📤 Payload a enviar:", payload);
-
-    fetch("Produccion/asignarOperarios", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-        },
-        body: JSON.stringify(payload),
-    })
-    .then(response => {
-        console.log("📥 Respuesta recibida:", response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        return response.json();
-    })
-    .then(result => {
-        console.log("📋 Resultado del guardado:", result);
-        
-        if (result.status) {
-            Swal.fire({
-                icon: "success",
-                title: "¡Éxito!",
-                text: result.message,
-                confirmButtonColor: "#059669"
-            }).then(() => {
-                cerrarModal("modalAsignarOperarios");
-                recargarTablaLotes();
-                // Limpiar estado
-                operariosAsignados = [];
-                operariosDisponibles = [];
-                loteActual = null;
-            });
-        } else {
-            throw new Error(result.message || "Error desconocido del servidor");
-        }
-    })
-    .catch(error => {
-        console.error("❌ Error en guardado:", error);
-        Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "Error al guardar asignaciones: " + error.message,
-            confirmButtonColor: "#dc2626"
-        });
-    })
-    .finally(() => {
-        if (btnGuardar) {
-            btnGuardar.disabled = false;
-            btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i>Guardar Asignaciones`;
-        }
-    });
-}
-function debugAsignaciones() {
-    const debugInfo = {
-        loteActual: loteActual,
-        operariosAsignados: operariosAsignados,
-        operariosDisponibles: operariosDisponibles.length,
-        idLote: document.getElementById("idLoteAsignar").value,
-        checkboxes: document.querySelectorAll('.operario-checkbox').length,
-        checkboxesMarcados: document.querySelectorAll('.operario-checkbox:checked').length
-    };
-
-    console.log("🐛 DEBUG - Estado actual:", debugInfo);
-
-    const debugContent = document.getElementById("debugContent");
-    if (debugContent) {
-        debugContent.innerHTML = `<pre>${JSON.stringify(debugInfo, null, 2)}</pre>`;
-    }
-
-    // Mostrar panel de debug
-    const debugPanel = document.getElementById("debugPanel");
-    if (debugPanel) {
-        debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-    }
-
-    return debugInfo;
-}
-// ========================================
-// FUNCIONES DE CLASIFICACIÓN Y EMPAQUE
-// ========================================
-function cargarDatosParaClasificacion() {
-  cargarLotesEnProceso("clas_lote");
-  cargarEmpleadosActivos("clas_operario");
-  cargarProductosClasificados("clas_producto_origen");
-}
-
-function cargarDatosParaEmpaque() {
-  cargarLotesEnProceso("emp_lote");
-  cargarEmpleadosActivos("emp_operario");
-  cargarProductosClasificados("emp_producto_clasificado");
-}
-
-function validarSumaClasificacion() {
-  const procesados = parseFloat(document.getElementById("clas_kg_procesados").value || 0);
-  const limpios = parseFloat(document.getElementById("clas_kg_limpios").value || 0);
-  const contaminantes = parseFloat(document.getElementById("clas_kg_contaminantes").value || 0);
-  
-  const suma = limpios + contaminantes;
-  const diferencia = Math.abs(suma - procesados);
-  
-  const validacion = document.getElementById("validacionClasificacion");
-  if (validacion) {
-    if (diferencia < 0.01) {
-      validacion.textContent = "✓ Validación correcta";
-      validacion.className = "text-xs mt-1 font-semibold text-green-600";
-    } else {
-      validacion.textContent = `Diferencia: ${diferencia.toFixed(2)} kg`;
-      validacion.className = "text-xs mt-1 font-semibold text-red-600";
-    }
-  }
-}
-
-function validarPesoPaca() {
-  const peso = parseFloat(document.getElementById("emp_peso_paca").value || 0);
-  
-  if (peso > 0 && configuracionActual.peso_minimo_paca && configuracionActual.peso_maximo_paca) {
-    if (peso < configuracionActual.peso_minimo_paca) {
-      mostrarAdvertencia("Peso por debajo del mínimo permitido");
-    } else if (peso > configuracionActual.peso_maximo_paca) {
-      mostrarAdvertencia("Peso por encima del máximo permitido");
-    }
-  }
-}
-
-function registrarClasificacion() {
-  const btnGuardar = document.getElementById("btnGuardarClasificacion");
-
-  if (btnGuardar) {
-    btnGuardar.disabled = true;
-    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...`;
-  }
-
-  registrarEntidad({
-    formId: "formRegistrarClasificacion",
-    endpoint: "Produccion/registrarClasificacion",
-    campos: camposFormularioClasificacion,
-    mapeoNombres: {
-      "clas_lote": "idlote",
-      "clas_operario": "idempleado",
-      "clas_producto_origen": "idproducto_origen",
-      "clas_kg_procesados": "kg_procesados",
-      "clas_kg_limpios": "kg_limpios",
-      "clas_kg_contaminantes": "kg_contaminantes",
-      "clas_observaciones": "observaciones",
-    },
-    validacionCustom: () => {
-      const procesados = parseFloat(document.getElementById("clas_kg_procesados").value || 0);
-      const limpios = parseFloat(document.getElementById("clas_kg_limpios").value || 0);
-      const contaminantes = parseFloat(document.getElementById("clas_kg_contaminantes").value || 0);
-      
-      const diferencia = Math.abs((limpios + contaminantes) - procesados);
-      if (diferencia > 0.01) {
-        return {
-          valido: false,
-          mensaje: "La suma de material limpio y contaminantes debe ser igual al total procesado."
-        };
-      }
-      
-      return { valido: true };
-    },
-    onSuccess: (result) => {
-      Swal.fire("¡Éxito!", result.message, "success").then(() => {
-        cerrarModal("modalRegistrarClasificacion");
-        
-        const form = document.getElementById("formRegistrarClasificacion");
-        if (form) {
-          form.reset();
-          limpiarValidaciones(camposFormularioClasificacion, "formRegistrarClasificacion");
-        }
-        
-        // Recargar tabla de procesos
-        if (tablaProcesos) {
-          tablaProcesos.ajax.reload(null, false);
-        }
-      });
-    },
-    onError: (result) => {
-      Swal.fire("Error", result.message || "No se pudo registrar la clasificación.", "error");
-    },
-  }).finally(() => {
-    if (btnGuardar) {
-      btnGuardar.disabled = false;
-      btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Registrar Clasificación`;
-    }
-  });
-}
-
-function registrarEmpaque() {
-  const btnGuardar = document.getElementById("btnGuardarEmpaque");
-
-  if (btnGuardar) {
-    btnGuardar.disabled = true;
-    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...`;
-  }
-
-  registrarEntidad({
-    formId: "formRegistrarEmpaque",
-    endpoint: "Produccion/registrarEmpaque",
-    campos: camposFormularioEmpaque,
-    mapeoNombres: {
-      "emp_lote": "idlote",
-      "emp_operario": "idempleado",
-      "emp_producto_clasificado": "idproducto_clasificado",
-      "emp_peso_paca": "peso_paca",
-      "emp_calidad": "calidad",
-      "emp_observaciones": "observaciones",
-    },
-    onSuccess: (result) => {
-      Swal.fire("¡Éxito!", result.message, "success").then(() => {
-        cerrarModal("modalRegistrarEmpaque");
-        
-        const form = document.getElementById("formRegistrarEmpaque");
-        if (form) {
-          form.reset();
-          limpiarValidaciones(camposFormularioEmpaque, "formRegistrarEmpaque");
-        }
-        
-        // Recargar tabla de procesos
-        if (tablaProcesos) {
-          tablaProcesos.ajax.reload(null, false);
-        }
-      });
-    },
-    onError: (result) => {
-      Swal.fire("Error", result.message || "No se pudo registrar el empaque.", "error");
-    },
-  }).finally(() => {
-    if (btnGuardar) {
-      btnGuardar.disabled = false;
-      btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Registrar Empaque`;
-    }
-  });
-}
-
-// ========================================
-// FUNCIONES DE NÓMINA
-// ========================================
-function cargarLotesParaProduccionDiaria() {
-  fetch("Produccion/getLotesData")
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        const select = document.getElementById("selectLoteProduccionDiaria");
-        let options = '<option value="">Seleccionar lote...</option>';
-        
-        result.data.forEach(lote => {
-          if (lote.estatus_lote === 'EN_PROCESO') {
-            options += `<option value="${lote.idlote}" data-fecha="${lote.fecha_jornada}">${lote.numero_lote} - ${lote.fecha_jornada_formato}</option>`;
-          }
-        });
-        
-        select.innerHTML = options;
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      mostrarError("Error al cargar lotes.");
-    });
-}
-
-function cargarOperariosProduccionDiaria() {
-  const select = document.getElementById("selectLoteProduccionDiaria");
-  const idlote = select.value;
-  const fechaInput = document.getElementById("fechaProduccionDiaria");
-  const tbody = document.getElementById("bodyProduccionDiaria");
-  
-  if (!idlote) {
-    tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-gray-500">Seleccione un lote para cargar los operarios</td></tr>';
-    return;
-  }
-
-  // Establecer fecha
-  const fechaOption = select.options[select.selectedIndex].dataset.fecha;
-  if (fechaOption) {
-    fechaInput.value = fechaOption;
-  }
-
-  document.getElementById("idLoteProduccionDiaria").value = idlote;
-
-  // Cargar operarios asignados al lote
-  fetch(`Produccion/getAsignacionesLote/${idlote}`)
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        mostrarOperariosProduccionDiaria(result.data);
-      } else {
-        tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-gray-500">No hay operarios asignados a este lote</td></tr>';
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      tbody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-3 py-4 text-center text-red-500">Error al cargar operarios</td></tr>';
-    });
-}
-
-function mostrarOperariosProduccionDiaria(operarios) {
-  const tbody = document.getElementById("bodyProduccionDiaria");
-  let html = "";
-
-  operarios.forEach((operario, index) => {
-    html += `
-      <tr>
-        <td class="border border-gray-300 px-3 py-2">
-          <input type="hidden" name="operarios[${index}][idempleado]" value="${operario.idempleado}">
-          <div class="font-medium">${operario.operario}</div>
-          <div class="text-xs text-gray-500">${operario.tipo_tarea}</div>
-        </td>
-        <td class="border border-gray-300 px-3 py-2">
-          <input type="number" step="0.01" min="0" 
-                 name="operarios[${index}][kg_clasificados]"
-                 class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
-                 placeholder="0.00">
-        </td>
-        <td class="border border-gray-300 px-3 py-2">
-          <input type="number" step="0.01" min="0" 
-                 name="operarios[${index}][kg_contaminantes]"
-                 class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
-                 placeholder="0.00">
-        </td>
-        <td class="border border-gray-300 px-3 py-2">
-          <input type="number" min="0" 
-                 name="operarios[${index}][pacas_armadas]"
-                 class="w-full text-center border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
-                 placeholder="0">
-        </td>
-        <td class="border border-gray-300 px-3 py-2">
-          <input type="text" 
-                 name="operarios[${index}][observaciones]"
-                 class="w-full border-0 bg-transparent focus:bg-white focus:border focus:border-blue-300 rounded px-2 py-1"
-                 placeholder="Observaciones...">
-        </td>
-      </tr>
-    `;
-  });
-
-  tbody.innerHTML = html;
-}
-
-function guardarProduccionDiaria() {
-  const idlote = document.getElementById("idLoteProduccionDiaria").value;
-  
-  if (!idlote) {
-    mostrarError("Debe seleccionar un lote.");
-    return;
-  }
-
-  // Recopilar datos de todos los operarios
-  const tabla = document.getElementById("tablaProduccionDiaria");
-  const filas = tabla.querySelectorAll("tbody tr");
-  const registros = [];
-
-  filas.forEach((fila, index) => {
-    const idempleado = fila.querySelector(`input[name="operarios[${index}][idempleado]"]`)?.value;
-    const kgClasificados = parseFloat(fila.querySelector(`input[name="operarios[${index}][kg_clasificados]"]`)?.value || 0);
-    const kgContaminantes = parseFloat(fila.querySelector(`input[name="operarios[${index}][kg_contaminantes]"]`)?.value || 0);
-    const pacasArmadas = parseInt(fila.querySelector(`input[name="operarios[${index}][pacas_armadas]"]`)?.value || 0);
-    const observaciones = fila.querySelector(`input[name="operarios[${index}][observaciones]"]`)?.value || '';
-
-    if (idempleado) {
-      registros.push({
-        idempleado: idempleado,
-        kg_clasificados: kgClasificados,
-        kg_contaminantes: kgContaminantes,
-        pacas_armadas: pacasArmadas,
-        observaciones: observaciones
-      });
-    }
-  });
-
-  if (registros.length === 0) {
-    mostrarError("No hay registros para guardar.");
-    return;
-  }
-
-  const btnGuardar = document.getElementById("btnGuardarProduccionDiaria");
-  if (btnGuardar) {
-    btnGuardar.disabled = true;
-    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
-  }
-
-  fetch("Produccion/registrarProduccionDiaria", {
-    method: "POST",
+  // Obtener datos del lote
+  fetch(`Produccion/getLoteById/${idlote}`, {
+    method: "GET",
     headers: {
-      "Content-Type": "application/json",
       "X-Requested-With": "XMLHttpRequest",
     },
-    body: JSON.stringify({
-      idlote: idlote,
-      registros: registros
-    }),
   })
     .then((response) => response.json())
     .then((result) => {
-      if (result.status) {
-        Swal.fire("¡Éxito!", result.message, "success").then(() => {
-          cerrarModal("modalRegistrarProduccionDiaria");
-          if (tablaNomina) {
-            tablaNomina.ajax.reload(null, false);
-          }
-        });
-      } else {
-        Swal.fire("Error", result.message || "No se pudo guardar la producción diaria.", "error");
+      if (!result.status || !result.data) {
+        Swal.fire("Error", "No se pudo obtener la información del lote", "error");
+        return;
       }
+
+      const lote = result.data;
+
+      // Verificar que esté en estado PLANIFICADO
+      if (lote.estatus_lote !== "PLANIFICADO") {
+        Swal.fire({
+          title: "No editable",
+          text: `Solo se pueden editar lotes en estado PLANIFICADO. Este lote está en estado: ${lote.estatus_lote}`,
+          icon: "warning",
+          confirmButtonColor: "#3b82f6",
+        });
+        return;
+      }
+
+      // Cargar lista de supervisores
+      fetch("Produccion/getEmpleadosActivos", {
+        method: "GET",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      })
+        .then((response) => response.json())
+        .then((empleadosResult) => {
+          if (!empleadosResult.status || !empleadosResult.data) {
+            Swal.fire("Error", "No se pudo cargar la lista de supervisores", "error");
+            return;
+          }
+
+          const supervisores = empleadosResult.data;
+
+          // Construir opciones de select
+          let optionsSupervisores = supervisores
+            .map((emp) => {
+              const selected = emp.idempleado == lote.idsupervisor ? "selected" : "";
+              return `<option value="${emp.idempleado}" ${selected}>${emp.nombre_completo}</option>`;
+            })
+            .join("");
+
+          // Mostrar modal de edición con SweetAlert2
+          Swal.fire({
+            title: `<h3 class="text-xl font-bold text-gray-800">Editar Lote ${lote.numero_lote}</h3>`,
+            html: `
+              <div class="text-left space-y-4 max-w-2xl mx-auto">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                  <p class="text-sm text-blue-700">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Editando lote en estado PLANIFICADO
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Fecha Jornada <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="edit-fecha-jornada" 
+                           value="${lote.fecha_jornada}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           required>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Volumen Estimado (kg) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" id="edit-volumen-estimado" 
+                           value="${lote.volumen_estimado}"
+                           min="0" step="0.01"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           required>
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Supervisor <span class="text-red-500">*</span>
+                    </label>
+                    <select id="edit-supervisor" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            required>
+                      <option value="">Seleccionar supervisor</option>
+                      ${optionsSupervisores}
+                    </select>
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Observaciones
+                    </label>
+                    <textarea id="edit-observaciones" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Observaciones adicionales...">${lote.observaciones || ""}</textarea>
+                  </div>
+                </div>
+
+                <div class="bg-gray-50 p-3 rounded">
+                  <p class="text-xs text-gray-600">
+                    <i class="fas fa-calculator mr-1"></i>
+                    Los operarios requeridos se calcularán automáticamente según el volumen estimado
+                  </p>
+                </div>
+              </div>
+            `,
+            width: "700px",
+            showCancelButton: true,
+            confirmButtonColor: "#3b82f6",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: '<i class="fas fa-save mr-2"></i>Guardar Cambios',
+            cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+              const fechaJornada = document.getElementById("edit-fecha-jornada").value;
+              const volumenEstimado = document.getElementById("edit-volumen-estimado").value;
+              const idsupervisor = document.getElementById("edit-supervisor").value;
+              const observaciones = document.getElementById("edit-observaciones").value;
+
+              // Validaciones
+              if (!fechaJornada) {
+                Swal.showValidationMessage("La fecha de jornada es obligatoria");
+                return false;
+              }
+
+              if (!volumenEstimado || parseFloat(volumenEstimado) <= 0) {
+                Swal.showValidationMessage("El volumen estimado debe ser mayor a 0");
+                return false;
+              }
+
+              if (!idsupervisor) {
+                Swal.showValidationMessage("Debe seleccionar un supervisor");
+                return false;
+              }
+
+              // Preparar datos
+              const datos = {
+                fecha_jornada: fechaJornada,
+                volumen_estimado: parseFloat(volumenEstimado),
+                idsupervisor: parseInt(idsupervisor),
+                observaciones: observaciones.trim(),
+              };
+
+              console.log("📤 Datos a enviar:", datos);
+
+              // Enviar actualización
+              return fetch(`Produccion/actualizarLote/${idlote}`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-Requested-With": "XMLHttpRequest",
+                },
+                body: JSON.stringify(datos),
+              })
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error("Error en la respuesta del servidor");
+                  }
+                  return response.json();
+                })
+                .then((data) => {
+                  console.log("✅ Respuesta del servidor:", data);
+                  if (!data.status) {
+                    throw new Error(data.message || "Error al actualizar el lote");
+                  }
+                  return data;
+                })
+                .catch((error) => {
+                  console.error("❌ Error:", error);
+                  Swal.showValidationMessage(`Error: ${error.message}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading(),
+          }).then((result) => {
+            if (result.isConfirmed && result.value) {
+              Swal.fire({
+                title: "¡Actualizado!",
+                text: result.value.message || "El lote ha sido actualizado exitosamente",
+                icon: "success",
+                confirmButtonColor: "#10b981",
+              }).then(() => {
+                recargarTablaLotes();
+              });
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("Error al cargar supervisores:", error);
+          Swal.fire("Error", "Error al cargar la lista de supervisores", "error");
+        });
     })
     .catch((error) => {
-      console.error("Error:", error);
-      Swal.fire("Error", "Error de conexión.", "error");
-    })
-    .finally(() => {
-      if (btnGuardar) {
-        btnGuardar.disabled = false;
-        btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar Producción`;
-      }
+      console.error("Error al obtener lote:", error);
+      Swal.fire("Error", "Error al cargar los datos del lote", "error");
     });
 }
 
-function abrirModalCalcularNomina() {
+/**
+ * Elimina un lote de producción
+ * Solo permite eliminar lotes en estado PLANIFICADO
+ */
+function eliminarLote(idlote, numeroLote) {
+  console.log("🗑️ Eliminando lote:", idlote, numeroLote);
+
   Swal.fire({
-    title: "Calcular Nómina de Producción",
+    title: "¿Eliminar lote?",
     html: `
-      <div class="text-left space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
-          <input type="date" id="swal-fecha-inicio" class="w-full border rounded px-3 py-2" 
-                 value="${new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]}">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
-          <input type="date" id="swal-fecha-fin" class="w-full border rounded px-3 py-2" 
-                 value="${new Date().toISOString().split('T')[0]}">
-        </div>
-        <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
-          <p class="text-yellow-800 text-sm">
+      <div class="text-left">
+        <p class="text-gray-700 mb-3">
+          ¿Está seguro de eliminar el lote <strong>${numeroLote}</strong>?
+        </p>
+        <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+          <p class="text-sm text-red-700">
             <i class="fas fa-exclamation-triangle mr-2"></i>
-            Esta acción calculará los salarios para todos los registros en el periodo seleccionado.
+            Esta acción es <strong>irreversible</strong> y solo se permite para lotes en estado PLANIFICADO.
           </p>
         </div>
       </div>
     `,
+    icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#f59e0b",
+    confirmButtonColor: "#dc2626",
     cancelButtonColor: "#6b7280",
-    confirmButtonText: "Calcular Nómina",
-    cancelButtonText: "Cancelar",
+    confirmButtonText: '<i class="fas fa-trash mr-2"></i>Sí, eliminar',
+    cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+    showLoaderOnConfirm: true,
     preConfirm: () => {
-      const fechaInicio = document.getElementById("swal-fecha-inicio").value;
-      const fechaFin = document.getElementById("swal-fecha-fin").value;
-
-      if (!fechaInicio || !fechaFin) {
-        Swal.showValidationMessage("Debe seleccionar ambas fechas");
-        return false;
-      }
-
-      if (fechaInicio > fechaFin) {
-        Swal.showValidationMessage("La fecha de inicio no puede ser posterior a la fecha fin");
-        return false;
-      }
-
-      return { fechaInicio, fechaFin };
-    }
-  }).then((result) => {
-    if (result.isConfirmed) {
-      calcularNomina(result.value.fechaInicio, result.value.fechaFin);
-    }
-  });
-}
-
-function calcularNomina(fechaInicio, fechaFin) {
-  Swal.fire({
-    title: "Calculando Nómina...",
-    html: "Por favor espere mientras se calculan los salarios.",
-    allowOutsideClick: false,
-    didOpen: () => {
-      Swal.showLoading();
-    }
-  });
-
-  fetch("Produccion/calcularNomina", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-    body: JSON.stringify({
-      fecha_inicio: fechaInicio,
-      fecha_fin: fechaFin
-    }),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      Swal.close();
-      
-      if (result.status) {
-        Swal.fire({
-          title: "¡Nómina Calculada!",
-          text: result.message,
-          icon: "success",
-          confirmButtonColor: "#059669"
-        }).then(() => {
-          if (tablaNomina) {
-            tablaNomina.ajax.reload(null, false);
+      return fetch(`Produccion/eliminarLote/${idlote}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Error en la respuesta del servidor");
           }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("✅ Respuesta del servidor:", data);
+          if (!data.status) {
+            throw new Error(data.message || "Error al eliminar el lote");
+          }
+          return data;
+        })
+        .catch((error) => {
+          console.error("❌ Error:", error);
+          Swal.showValidationMessage(`Error: ${error.message}`);
         });
-      } else {
-        Swal.fire("Error", result.message || "No se pudo calcular la nómina.", "error");
-      }
-    })
-    .catch((error) => {
-      Swal.close();
-      console.error("Error:", error);
-      Swal.fire("Error", "Error de conexión.", "error");
-    });
+    },
+    allowOutsideClick: () => !Swal.isLoading(),
+  }).then((result) => {
+    if (result.isConfirmed && result.value) {
+      Swal.fire({
+        title: "¡Eliminado!",
+        text: result.value.message || "El lote ha sido eliminado exitosamente",
+        icon: "success",
+        confirmButtonColor: "#10b981",
+      }).then(() => {
+        recargarTablaLotes();
+      });
+    }
+  });
 }
+
+// ========================================
+// FUNCIONES DE ASIGNACIÓN DE OPERARIOS
+// ========================================
+
+
 // ========================================
 // FUNCIONES DE CONFIGURACIÓN
 // ========================================
@@ -1907,6 +2755,478 @@ function guardarConfiguracion() {
       }
     });
 }
+
+// ========================================
+// FUNCIONES DE NÓMINA
+// ========================================
+function abrirModalCalcularNomina() {
+  Swal.fire({
+    title: "Calcular Nómina de Producción",
+    html: `
+      <div class="text-left space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+          <input type="date" id="swal-fecha-inicio" class="w-full border rounded px-3 py-2" 
+                 value="${new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]}">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+          <input type="date" id="swal-fecha-fin" class="w-full border rounded px-3 py-2" 
+                 value="${new Date().toISOString().split('T')[0]}">
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+          <p class="text-blue-800 text-sm">
+            <i class="fas fa-info-circle mr-2"></i>
+            Se mostrarán los registros de producción en el periodo seleccionado con sus salarios calculados.
+          </p>
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonColor: "#059669",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Consultar Nómina",
+    cancelButtonText: "Cancelar",
+    preConfirm: () => {
+      const fechaInicio = document.getElementById("swal-fecha-inicio").value;
+      const fechaFin = document.getElementById("swal-fecha-fin").value;
+
+      if (!fechaInicio || !fechaFin) {
+        Swal.showValidationMessage("Debe seleccionar ambas fechas");
+        return false;
+      }
+
+      if (fechaInicio > fechaFin) {
+        Swal.showValidationMessage("La fecha de inicio no puede ser posterior a la fecha fin");
+        return false;
+      }
+
+      return { fechaInicio, fechaFin };
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      consultarNomina(result.value.fechaInicio, result.value.fechaFin);
+    }
+  });
+}
+
+function consultarNomina(fechaInicio, fechaFin) {
+  console.log(`🔍 Consultando nómina desde ${fechaInicio} hasta ${fechaFin}`);
+  
+  // Verificar que la tabla exista
+  if (!tablaNomina) {
+    console.error('❌ tablaNomina no está inicializada');
+    Swal.fire({
+      title: "Error",
+      text: "La tabla de nómina no está inicializada. Por favor, recarga la página.",
+      icon: "error"
+    });
+    return;
+  }
+
+  console.log('✅ Tabla de nómina existe:', tablaNomina);
+  
+  Swal.fire({
+    title: "Consultando Nómina...",
+    html: `Buscando registros desde <strong>${fechaInicio}</strong> hasta <strong>${fechaFin}</strong>`,
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  // Asegurarse de que la pestaña de nómina esté visible
+  const tabNomina = document.getElementById("tab-nomina");
+  if (tabNomina) {
+    console.log('📑 Cambiando a pestaña de nómina...');
+    tabNomina.click();
+  }
+
+  // Esperar un momento para que la pestaña se active
+  setTimeout(() => {
+    // Recargar la tabla de nómina con el rango de fechas
+    if (tablaNomina && tablaNomina.ajax) {
+      const urlConFiltros = `./Produccion/getRegistrosProduccion?fecha_desde=${fechaInicio}&fecha_hasta=${fechaFin}`;
+      console.log('📡 URL de consulta:', urlConFiltros);
+      
+      tablaNomina.ajax.url(urlConFiltros).load(function(json) {
+        console.log('📦 Respuesta completa del servidor:', json);
+        console.log('📊 Tipo de respuesta:', typeof json);
+        console.log('✅ Status:', json?.status);
+        console.log('📋 Data:', json?.data);
+        
+        const cantidadRegistros = json && json.data ? json.data.length : 0;
+        console.log(`📈 Cantidad de registros: ${cantidadRegistros}`);
+        
+        Swal.close();
+        
+        if (cantidadRegistros > 0) {
+          Swal.fire({
+            title: "¡Nómina Consultada!",
+            html: `Se encontraron <strong>${cantidadRegistros}</strong> registros<br>desde ${fechaInicio} hasta ${fechaFin}`,
+            icon: "success",
+            confirmButtonColor: "#059669"
+          });
+        } else {
+          Swal.fire({
+            title: "Sin Resultados",
+            html: `No se encontraron registros<br>desde ${fechaInicio} hasta ${fechaFin}.<br><br>Verifica que existan producciones registradas en ese rango de fechas.`,
+            icon: "info",
+            confirmButtonColor: "#059669"
+          });
+        }
+        
+        // Ajustar columnas de la tabla
+        if (tablaNomina.columns) {
+          setTimeout(() => {
+            tablaNomina.columns.adjust().draw();
+            console.log('🎨 Columnas ajustadas');
+          }, 100);
+        }
+      }, function(xhr, error, thrown) {
+        console.error('❌ Error al cargar nómina:', error, thrown);
+        console.error('📡 Status:', xhr.status);
+        console.error('📝 Respuesta del servidor:', xhr.responseText);
+        console.error('🔍 Estado de la petición:', xhr.readyState);
+        
+        Swal.close();
+        Swal.fire({
+          title: "Error al Consultar",
+          html: `No se pudo cargar la nómina.<br>Error: ${error}<br><br>Revisa la consola (F12) para más detalles.`,
+          icon: "error",
+          confirmButtonColor: "#dc2626"
+        });
+      });
+    } else {
+      console.error('❌ Tabla de nómina no tiene ajax configurado');
+      console.error('🔍 tablaNomina:', tablaNomina);
+      console.error('🔍 tablaNomina.ajax:', tablaNomina?.ajax);
+      
+      Swal.close();
+      Swal.fire({
+        title: "Error de Configuración",
+        text: "La tabla de nómina no está configurada correctamente. Por favor, recarga la página.",
+        icon: "error"
+      });
+    }
+  }, 300);
+}
+
+// ========================================
+// FUNCIONES PARA ACCIONES DE NÓMINA
+// ========================================
+
+/**
+ * Marca un registro de nómina como PAGADO
+ */
+function marcarComoPagado(idregistro, empleado, salario) {
+  console.log(`💰 Marcando registro ${idregistro} como PAGADO`);
+  
+  Swal.fire({
+    title: "¿Marcar como Pagado?",
+    html: `
+      <div class="text-left">
+        <p class="mb-4">¿Confirmas que el pago ha sido realizado?</p>
+        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+          <p class="text-sm"><strong>Empleado:</strong> ${empleado}</p>
+          <p class="text-sm"><strong>Salario:</strong> $${salario}</p>
+        </div>
+        <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mt-3">
+          <p class="text-xs text-yellow-800">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            Esta acción cambiará el estado de <strong>ENVIADO</strong> a <strong>PAGADO</strong>
+          </p>
+        </div>
+      </div>
+    `,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#059669",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: '<i class="fas fa-check mr-2"></i>Sí, marcar como pagado',
+    cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Mostrar loading
+      Swal.fire({
+        title: 'Procesando...',
+        text: 'Marcando registro como pagado...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      console.log('📤 Enviando petición para marcar como pagado...');
+
+      fetch(base_url + "Produccion/marcarComoPagado", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idregistro: idregistro }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          console.log('📊 Resultado:', result);
+          
+          if (result.status) {
+            Swal.fire({
+              title: "¡Marcado como Pagado!",
+              html: `
+                <div class="text-center">
+                  <i class="fas fa-check-circle text-green-500 text-5xl mb-3"></i>
+                  <p class="text-lg mb-2">${result.message}</p>
+                  <div class="bg-green-50 border border-green-200 rounded p-3 mt-3">
+                    <p class="text-sm text-green-800">El registro ahora está en estado <strong>PAGADO</strong></p>
+                  </div>
+                </div>
+              `,
+              icon: "success",
+              confirmButtonColor: "#059669"
+            }).then(() => {
+              // Recargar tabla
+              if (tablaNomina) {
+                tablaNomina.ajax.reload(null, false);
+              }
+            });
+          } else {
+            Swal.fire({
+              title: "Error",
+              text: result.message || "No se pudo marcar el registro como pagado.",
+              icon: "error",
+              confirmButtonColor: "#dc2626"
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Error:", error);
+          Swal.fire({
+            title: "Error de Conexión",
+            text: "No se pudo conectar con el servidor.",
+            icon: "error",
+            confirmButtonColor: "#dc2626"
+          });
+        });
+    }
+  });
+}
+
+/**
+ * Muestra los detalles de un registro de nómina
+ */
+function verDetalleRegistroNomina(idregistro) {
+  console.log(`👁️ Viendo detalles del registro ${idregistro}`);
+  
+  // Obtener datos del registro desde la tabla
+  const datos = tablaNomina.rows().data().toArray();
+  const registro = datos.find(r => r.idregistro == idregistro);
+  
+  if (!registro) {
+    Swal.fire({
+      title: "Error",
+      text: "No se encontró el registro seleccionado.",
+      icon: "error"
+    });
+    return;
+  }
+
+  const estatus = registro.estatus || 'BORRADOR';
+  const estatusBadge = {
+    'BORRADOR': '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-gray-100 text-gray-800"><i class="fas fa-edit mr-1"></i>Borrador</span>',
+    'ENVIADO': '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-paper-plane mr-1"></i>Enviado</span>',
+    'PAGADO': '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i>Pagado</span>',
+    'CANCELADO': '<span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-times-circle mr-1"></i>Cancelado</span>'
+  };
+
+  Swal.fire({
+    title: "Detalle de Registro de Nómina",
+    html: `
+      <div class="text-left space-y-4">
+        <!-- Estado -->
+        <div class="flex justify-between items-center pb-3 border-b">
+          <span class="text-sm text-gray-600">Estado:</span>
+          ${estatusBadge[estatus] || estatusBadge['BORRADOR']}
+        </div>
+
+        <!-- Información del Empleado -->
+        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+          <p class="font-semibold text-blue-800 mb-2"><i class="fas fa-user mr-2"></i>Información del Empleado</p>
+          <p class="text-sm"><strong>Nombre:</strong> ${registro.nombre_empleado || 'Sin asignar'}</p>
+          <p class="text-sm"><strong>Fecha de Jornada:</strong> ${registro.fecha_jornada_formato}</p>
+          <p class="text-sm"><strong>Lote:</strong> ${registro.numero_lote}</p>
+        </div>
+
+        <!-- Detalles de Producción -->
+        <div class="bg-purple-50 border border-purple-200 rounded p-3">
+          <p class="font-semibold text-purple-800 mb-2"><i class="fas fa-box mr-2"></i>Detalles de Producción</p>
+          <p class="text-sm"><strong>Tipo:</strong> ${registro.tipo_movimiento === 'CLASIFICACION' ? 'Clasificación' : 'Empaque'}</p>
+          <p class="text-sm"><strong>Producto Inicial:</strong> ${registro.producto_producir_nombre}</p>
+          <p class="text-sm"><strong>Producto Final:</strong> ${registro.producto_terminado_nombre}</p>
+          <p class="text-sm"><strong>Cantidad Producida:</strong> ${parseFloat(registro.cantidad_producida).toFixed(2)} kg</p>
+        </div>
+
+        <!-- Detalles de Salario -->
+        <div class="bg-green-50 border border-green-200 rounded p-3">
+          <p class="font-semibold text-green-800 mb-2"><i class="fas fa-dollar-sign mr-2"></i>Detalles de Salario</p>
+          <div class="space-y-1">
+            <div class="flex justify-between text-sm">
+              <span>Salario Base:</span>
+              <span class="font-semibold">$${parseFloat(registro.salario_base_dia).toFixed(2)}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span>Pago por Trabajo:</span>
+              <span class="font-semibold">$${parseFloat(registro.pago_clasificacion_trabajo).toFixed(2)}</span>
+            </div>
+            <div class="flex justify-between text-base border-t pt-2 mt-2">
+              <span class="font-bold">Salario Total:</span>
+              <span class="font-bold text-green-700 text-lg">$${parseFloat(registro.salario_total).toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        ${registro.observaciones ? `
+          <div class="bg-gray-50 border border-gray-200 rounded p-3">
+            <p class="font-semibold text-gray-800 mb-1"><i class="fas fa-sticky-note mr-2"></i>Observaciones</p>
+            <p class="text-sm text-gray-700">${registro.observaciones}</p>
+          </div>
+        ` : ''}
+      </div>
+    `,
+    icon: "info",
+    confirmButtonColor: "#059669",
+    confirmButtonText: '<i class="fas fa-times mr-2"></i>Cerrar',
+    width: '600px'
+  });
+}
+
+/**
+ * Cancela un registro de nómina
+ */
+function cancelarRegistroNomina(idregistro, empleado) {
+  console.log(`🚫 Cancelando registro ${idregistro}`);
+  
+  Swal.fire({
+    title: "¿Cancelar Registro?",
+    html: `
+      <div class="text-left">
+        <p class="mb-4">¿Estás seguro de que deseas cancelar este registro?</p>
+        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+          <p class="text-sm"><strong>Empleado:</strong> ${empleado}</p>
+        </div>
+        <div class="bg-red-50 border border-red-200 rounded p-3 mt-3">
+          <p class="text-xs text-red-800">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            El registro cambiará a estado <strong>CANCELADO</strong> y no podrá ser procesado para pago.
+          </p>
+        </div>
+      </div>
+    `,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: '<i class="fas fa-ban mr-2"></i>Sí, cancelar',
+    cancelButtonText: '<i class="fas fa-times mr-2"></i>No cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Mostrar loading
+      Swal.fire({
+        title: 'Procesando...',
+        text: 'Cancelando registro...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      fetch(base_url + "Produccion/cancelarRegistroNomina", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idregistro: idregistro }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire({
+              title: "¡Registro Cancelado!",
+              text: result.message,
+              icon: "success",
+              confirmButtonColor: "#059669"
+            }).then(() => {
+              if (tablaNomina) {
+                tablaNomina.ajax.reload(null, false);
+              }
+            });
+          } else {
+            Swal.fire({
+              title: "Error",
+              text: result.message || "No se pudo cancelar el registro.",
+              icon: "error",
+              confirmButtonColor: "#dc2626"
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Error:", error);
+          Swal.fire({
+            title: "Error de Conexión",
+            text: "No se pudo conectar con el servidor.",
+            icon: "error",
+            confirmButtonColor: "#dc2626"
+          });
+        });
+    }
+  });
+}
+
+// ========================================
+// FUNCIÓN PARA ACTUALIZAR CONTADOR DE ESTADOS EN NÓMINA
+// ========================================
+function actualizarContadorEstados(datos) {
+  if (!datos || !Array.isArray(datos)) {
+    console.warn('⚠️ No hay datos para actualizar contador');
+    return;
+  }
+
+  const contador = {
+    borrador: 0,
+    enviado: 0,
+    pagado: 0,
+    cancelado: 0
+  };
+
+  datos.forEach(registro => {
+    const estatus = (registro.estatus || 'BORRADOR').toUpperCase();
+    switch(estatus) {
+      case 'BORRADOR':
+        contador.borrador++;
+        break;
+      case 'ENVIADO':
+        contador.enviado++;
+        break;
+      case 'PAGADO':
+        contador.pagado++;
+        break;
+      case 'CANCELADO':
+        contador.cancelado++;
+        break;
+    }
+  });
+
+  console.log('📊 Contador de estados:', contador);
+
+  // Actualizar el texto del botón "Registrar Salario" con la cantidad de borradores
+  const btnRegistrarSalario = document.getElementById('btnRegistrarSalario');
+  if (btnRegistrarSalario && contador.borrador > 0) {
+    btnRegistrarSalario.innerHTML = `<i class="fas fa-money-check-alt mr-2"></i>Registrar Salario (${contador.borrador} disponibles)`;
+  }
+}
+
 // ========================================
 // FUNCIONES AUXILIARES
 // ========================================
@@ -1938,56 +3258,6 @@ function cargarEmpleadosActivos(selectId = "lote_supervisor") {
     .catch((error) => {
       console.error("Error:", error);
     });
-}
-
-function cargarLotesEnProceso(selectId) {
-  fetch("Produccion/getLotesData")
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status && result.data) {
-        const select = document.getElementById(selectId);
-        if (select) {
-          let options = '<option value="">Seleccionar lote...</option>';
-          
-          result.data.forEach(lote => {
-            if (lote.estatus_lote === 'EN_PROCESO') {
-              options += `<option value="${lote.idlote}">${lote.numero_lote} - ${lote.fecha_jornada_formato}</option>`;
-            }
-          });
-          
-          select.innerHTML = options;
-        }
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
-}
-
-// CAMBIAR esta función:
-function cargarProductosClasificados(selectId) {
-    // Implementar carga de productos clasificados
-    const select = document.getElementById(selectId);
-    select.innerHTML = '<option value="">Cargando productos...</option>';
-    
-    // REEMPLAZAR con:
-    fetch(`Produccion/getProductos?tipo=clasificados`)
-        .then((response) => response.json())
-        .then((result) => {
-            if (result.status && result.data) {
-                const select = document.getElementById(selectId);
-                let options = '<option value="">Seleccionar material...</option>';
-                
-                result.data.forEach(producto => {
-                    options += `<option value="${producto.idproducto}">${producto.nombre} (${producto.existencia} ${producto.unidad_medida})</option>`;
-                });
-                
-                select.innerHTML = options;
-            }
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-        });
 }
 
 function mostrarError(mensaje) {
@@ -2058,10 +3328,664 @@ async function manejarPesoRomanaClasificacion(campo) {
                 Swal.fire("Error", "Error al consultar la romana: " + e.message, "error");
             }
         }
+
+// ============================================================
+// FUNCIONES PARA REGISTRO DE PRODUCCIÓN
+// ============================================================
+
+/**
+ * Abre el modal de registrar producción y carga datos iniciales
+ */
+function abrirModalRegistrarProduccion() {
+  const modal = abrirModal("modalRegistrarProduccion");
+  
+  if (!modal) {
+    mostrarError("No se pudo abrir el modal");
+    return;
+  }
+
+  // Limpiar formulario
+  const form = document.getElementById("formRegistrarProduccion");
+  if (form) form.reset();
+
+  // Establecer fecha actual
+  const fechaInput = document.getElementById("prod_fecha_jornada");
+  if (fechaInput) {
+    fechaInput.value = new Date().toISOString().split('T')[0];
+  }
+
+  // Cargar datos necesarios
+  cargarLotesActivos();
+  cargarEmpleadosParaProduccion();
+  cargarProductosParaProduccion();
+  limpiarCamposSalarios();
+}
+
+/**
+ * Carga lotes activos en el selector
+ */
+async function cargarLotesActivos() {
+  try {
+    const response = await fetch("Produccion/getLotesData");
+    const data = await response.json();
+
+    const selectLote = document.getElementById("prod_lote");
+    if (!selectLote) return;
+
+    selectLote.innerHTML = '<option value="">Seleccionar lote...</option>';
+
+    if (data.status && Array.isArray(data.data)) {
+      data.data.forEach(lote => {
+        // Solo lotes activos o en proceso
+        if (lote.estatus_lote === 'ACTIVO' || lote.estatus_lote === 'EN_PROCESO') {
+          const option = document.createElement("option");
+          option.value = lote.idlote;
+          option.textContent = `${lote.numero_lote} - ${lote.fecha_jornada_formato}`;
+          selectLote.appendChild(option);
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error al cargar lotes:", error);
+    mostrarError("Error al cargar lotes activos");
+  }
+}
+
+/**
+ * Carga empleados activos en el selector del formulario de producción
+ */
+async function cargarEmpleadosParaProduccion() {
+  try {
+    console.log("🔍 Iniciando carga de empleados...");
+    const response = await fetch("Produccion/getEmpleadosActivos");
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("📦 Respuesta de empleados:", data);
+
+    const selectEmpleado = document.getElementById("prod_empleado");
+
+    if (!selectEmpleado) {
+      console.error("❌ No se encontró el selector de empleados");
+      return;
+    }
+
+    selectEmpleado.innerHTML = '<option value="">Seleccionar empleado...</option>';
+
+    // Verificar si hay datos
+    if (!data || !data.data) {
+      console.error("❌ Respuesta sin datos:", data);
+      mostrarAdvertencia("No se recibieron empleados del servidor");
+      return;
+    }
+
+    if (!Array.isArray(data.data)) {
+      console.error("❌ data.data no es un array:", data.data);
+      mostrarAdvertencia("Formato de datos incorrecto");
+      return;
+    }
+
+    console.log(`📊 Total de empleados recibidos: ${data.data.length}`);
+
+    let empleadosActivos = 0;
+    
+    data.data.forEach((empleado, index) => {
+      console.log(`Empleado ${index}:`, empleado);
+      
+      empleadosActivos++;
+      
+      const option = document.createElement("option");
+      option.value = empleado.idempleado;
+      
+      // Mostrar nombre completo del empleado
+      option.textContent = empleado.nombre_completo || `${empleado.nombre || ''} ${empleado.apellido || ''}`.trim() || `Empleado ${empleado.idempleado}`;
+      
+      selectEmpleado.appendChild(option);
+    });
+    
+    console.log(`✅ ${empleadosActivos} empleados activos cargados correctamente`);
+    
+    if (empleadosActivos === 0) {
+      console.warn("⚠️ No hay empleados activos");
+      mostrarAdvertencia("No hay empleados activos disponibles");
+    }
+    
+  } catch (error) {
+    console.error("❌ Error al cargar empleados:", error);
+    console.error("Detalles del error:", error.message);
+    mostrarError("Error al cargar empleados: " + error.message);
+  }
+}
+
+/**
+ * Carga productos en los selectores
+ */
+async function cargarProductosParaProduccion() {
+  try {
+    console.log("🔍 Iniciando carga de productos...");
+    
+    const response = await fetch("Productos/getProductosData");
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("📦 Respuesta de productos:", data);
+
+    const selectProducir = document.getElementById("prod_producto_producir");
+    const selectTerminado = document.getElementById("prod_producto_terminado");
+
+    if (!selectProducir || !selectTerminado) {
+      console.error("❌ No se encontraron los selectores de productos");
+      return;
+    }
+
+    selectProducir.innerHTML = '<option value="">Seleccionar producto...</option>';
+    selectTerminado.innerHTML = '<option value="">Seleccionar producto...</option>';
+
+    // Verificar si hay datos
+    if (!data || !data.data) {
+      console.error("❌ Respuesta sin datos:", data);
+      mostrarAdvertencia("No se recibieron productos del servidor");
+      return;
+    }
+
+    if (!Array.isArray(data.data)) {
+      console.error("❌ data.data no es un array:", data.data);
+      mostrarAdvertencia("Formato de datos incorrecto");
+      return;
+    }
+
+    console.log(`📊 Total de productos recibidos: ${data.data.length}`);
+
+    let productosActivos = 0;
+    
+    data.data.forEach((producto, index) => {
+      console.log(`Producto ${index}:`, producto);
+      
+      // Intentar cargar todos los productos primero (sin filtro de estatus)
+      // Luego filtraremos por estatus si es necesario
+      const estaActivo = producto.estatus == 'ACTIVO' || 
+                        producto.estatus == 1 || 
+                        producto.estatus == '1' ||
+                        producto.estatus === true;
+      
+      if (estaActivo) {
+        productosActivos++;
+        
+        const option1 = document.createElement("option");
+        option1.value = producto.idproducto;
+        option1.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        selectProducir.appendChild(option1);
+
+        const option2 = document.createElement("option");
+        option2.value = producto.idproducto;
+        option2.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        selectTerminado.appendChild(option2);
+      }
+    });
+    
+    console.log(`✅ ${productosActivos} productos activos cargados correctamente`);
+    
+    if (productosActivos === 0) {
+      console.warn("⚠️ No hay productos activos. Mostrando todos los productos...");
+      
+      // Si no hay productos activos, cargar TODOS los productos
+      selectProducir.innerHTML = '<option value="">Seleccionar producto...</option>';
+      selectTerminado.innerHTML = '<option value="">Seleccionar producto...</option>';
+      
+      data.data.forEach(producto => {
+        const option1 = document.createElement("option");
+        option1.value = producto.idproducto;
+        option1.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        selectProducir.appendChild(option1);
+
+        const option2 = document.createElement("option");
+        option2.value = producto.idproducto;
+        option2.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        selectTerminado.appendChild(option2);
+      });
+      
+      console.log(`✅ ${data.data.length} productos cargados (todos)`);
+    }
+    
+  } catch (error) {
+    console.error("❌ Error al cargar productos:", error);
+    console.error("Detalles del error:", error.message);
+    mostrarError("Error al cargar productos: " + error.message);
+  }
+}
+
+/**
+ * Calcula salarios automáticamente según configuración
+ */
+async function calcularSalariosAutomaticamente() {
+  try {
+    const cantidadProducida = parseFloat(document.getElementById("prod_cantidad_producida").value) || 0;
+    const tipoMovimiento = document.getElementById("prod_tipo_movimiento").value;
+
+    if (cantidadProducida <= 0 || !tipoMovimiento) {
+      limpiarCamposSalarios();
+      return;
+    }
+
+    // Obtener configuración actual
+    if (!configuracionActual || Object.keys(configuracionActual).length === 0) {
+      await cargarConfiguracionInicial();
+    }
+
+    const salarioBase = parseFloat(configuracionActual.salario_base || 30.00);
+    let pagoTrabajo = 0;
+
+    if (tipoMovimiento === 'CLASIFICACION') {
+      const beta = parseFloat(configuracionActual.beta_clasificacion || 0.25);
+      pagoTrabajo = beta * cantidadProducida;
+    } else if (tipoMovimiento === 'EMPAQUE') {
+      const gamma = parseFloat(configuracionActual.gamma_empaque || 5.00);
+      pagoTrabajo = gamma * cantidadProducida;
+    }
+
+    const salarioTotal = salarioBase + pagoTrabajo;
+
+    // Actualizar campos
+    document.getElementById("prod_salario_base_dia").value = salarioBase.toFixed(2);
+    document.getElementById("prod_pago_clasificacion").value = pagoTrabajo.toFixed(2);
+    document.getElementById("prod_salario_total").value = salarioTotal.toFixed(2);
+
+  } catch (error) {
+    console.error("Error al calcular salarios:", error);
+  }
+}
+
+/**
+ * Limpia los campos de salarios
+ */
+function limpiarCamposSalarios() {
+  document.getElementById("prod_salario_base_dia").value = "0.00";
+  document.getElementById("prod_pago_clasificacion").value = "0.00";
+  document.getElementById("prod_salario_total").value = "0.00";
+}
+
+/**
+ * Guarda el registro de producción
+ */
+async function guardarRegistroProduccion() {
+  try {
+    // Obtener datos del formulario
+    const idlote = document.getElementById("prod_lote").value;
+    const idempleado = document.getElementById("prod_empleado").value;
+    const fecha_jornada = document.getElementById("prod_fecha_jornada").value;
+    const idproducto_producir = document.getElementById("prod_producto_producir").value;
+    const cantidad_producir = document.getElementById("prod_cantidad_producir").value;
+    const idproducto_terminado = document.getElementById("prod_producto_terminado").value;
+    const cantidad_producida = document.getElementById("prod_cantidad_producida").value;
+    const tipo_movimiento = document.getElementById("prod_tipo_movimiento").value;
+    const observaciones = document.getElementById("prod_observaciones").value.trim();
+
+    // Validaciones
+    if (!idlote) {
+      mostrarAdvertencia("Debe seleccionar un lote");
+      return;
+    }
+
+    if (!idempleado) {
+      mostrarAdvertencia("Debe seleccionar un empleado");
+      return;
+    }
+
+    if (!fecha_jornada) {
+      mostrarAdvertencia("Debe ingresar la fecha de jornada");
+      return;
+    }
+
+    if (!idproducto_producir) {
+      mostrarAdvertencia("Debe seleccionar el producto a producir");
+      return;
+    }
+
+    if (!idproducto_terminado) {
+      mostrarAdvertencia("Debe seleccionar el producto terminado");
+      return;
+    }
+
+    if (parseFloat(cantidad_producir) <= 0) {
+      mostrarAdvertencia("La cantidad a producir debe ser mayor a cero");
+      return;
+    }
+
+    if (parseFloat(cantidad_producida) <= 0) {
+      mostrarAdvertencia("La cantidad producida debe ser mayor a cero");
+      return;
+    }
+
+    if (!tipo_movimiento) {
+      mostrarAdvertencia("Debe seleccionar el tipo de movimiento");
+      return;
+    }
+
+    // Mostrar loading
+    Swal.fire({
+      title: "Guardando...",
+      text: "Por favor espere",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Crear FormData para enviar
+    const formData = new FormData();
+    formData.append("idlote", idlote);
+    formData.append("idempleado", idempleado);
+    formData.append("fecha", fecha_jornada);
+    formData.append("tipo_proceso", tipo_movimiento);
+    formData.append("idproducto_inicial", idproducto_producir);
+    formData.append("idproducto_final", idproducto_terminado);
+    formData.append("cantidad_producida", cantidad_producida);
+    formData.append("observaciones", observaciones);
+
+    // Enviar datos
+    const response = await fetch(base_url + "Produccion/crearRegistroProduccion", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (result.status) {
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: result.msg || result.message || "Registro de producción guardado correctamente",
+        confirmButtonColor: "#059669"
+      }).then(() => {
+        cerrarModal("modalRegistrarProduccion");
+        
+        // Recargar tabla si existe
+        if (typeof tablaRegistrosProcesos !== "undefined" && tablaRegistrosProcesos.ajax) {
+          tablaRegistrosProcesos.ajax.reload(null, false);
+        }
+        if (typeof tablaProcesos !== "undefined" && tablaProcesos.ajax) {
+          tablaProcesos.ajax.reload(null, false);
+        }
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: result.msg || result.message || "No se pudo guardar el registro",
+        confirmButtonColor: "#dc2626"
+      });
+    }
+
+  } catch (error) {
+    console.error("Error al guardar registro:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Error al guardar el registro de producción",
+      confirmButtonColor: "#dc2626"
+    });
+  }
+}
+
+// ========================================
+// EDITAR Y ELIMINAR REGISTROS
+// ========================================
+
+/**
+ * Edita un registro de producción (solo si está en BORRADOR)
+ */
+async function editarRegistroProduccion(idregistro) {
+  try {
+    console.log('📝 Editando registro:', idregistro);
+    
+    // Obtener datos del registro
+    const response = await fetch(`Produccion/getRegistroById/${idregistro}`);
+    const result = await response.json();
+    
+    if (!result.status || !result.data) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: result.message || 'No se pudo obtener el registro',
+        confirmButtonColor: '#dc2626'
+      });
+      return;
+    }
+    
+    const registro = result.data;
+    
+    // Verificar que el REGISTRO está en BORRADOR
+    if (registro.estatus !== 'BORRADOR') {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No editable',
+        text: `Solo se pueden editar registros en estado BORRADOR. Este registro está en estado: ${registro.estatus}`,
+        confirmButtonColor: '#f59e0b'
+      });
+      return;
+    }
+    
+    // Crear formulario en SweetAlert con todos los campos
+    const { value: formValues } = await Swal.fire({
+      title: `<div class="text-left">
+                <i class="fas fa-edit text-blue-600 mr-2"></i>
+                Editar Registro de Producción
+              </div>`,
+      html: `
+        <div class="text-left space-y-4 max-h-96 overflow-y-auto px-2">
+          <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4">
+            <p class="text-sm"><strong>Lote:</strong> ${registro.numero_lote}</p>
+            <p class="text-sm"><strong>Empleado:</strong> ${registro.nombre_empleado || 'Sin asignar'}</p>
+            <p class="text-sm"><strong>Estado:</strong> ${registro.estatus}</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Jornada:</label>
+            <input id="edit_fecha_jornada" type="date" value="${registro.fecha_jornada_input}" 
+                   class="swal2-input w-full m-0">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Movimiento:</label>
+            <select id="edit_tipo_movimiento" class="swal2-input w-full m-0">
+              <option value="CLASIFICACION" ${registro.tipo_movimiento === 'CLASIFICACION' ? 'selected' : ''}>Clasificación</option>
+              <option value="EMPAQUE" ${registro.tipo_movimiento === 'EMPAQUE' ? 'selected' : ''}>Empaque</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad a Producir (kg):</label>
+            <input id="edit_cantidad_producir" type="number" step="0.01" value="${registro.cantidad_producir}" 
+                   class="swal2-input w-full m-0" placeholder="Cantidad inicial">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad Producida (kg):</label>
+            <input id="edit_cantidad_producida" type="number" step="0.01" value="${registro.cantidad_producida}" 
+                   class="swal2-input w-full m-0" placeholder="Cantidad final producida">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones:</label>
+            <textarea id="edit_observaciones" class="swal2-textarea w-full m-0" rows="3" 
+                      placeholder="Observaciones opcionales">${registro.observaciones || ''}</textarea>
+          </div>
+        </div>
+      `,
+      width: '600px',
+      showCancelButton: true,
+      confirmButtonText: '<i class="fas fa-save mr-2"></i>Guardar Cambios',
+      cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+      confirmButtonColor: '#059669',
+      cancelButtonColor: '#6b7280',
+      focusConfirm: false,
+      preConfirm: () => {
+        const fecha_jornada = document.getElementById('edit_fecha_jornada').value;
+        const tipo_movimiento = document.getElementById('edit_tipo_movimiento').value;
+        const cantidad_producir = document.getElementById('edit_cantidad_producir').value;
+        const cantidad_producida = document.getElementById('edit_cantidad_producida').value;
+        const observaciones = document.getElementById('edit_observaciones').value;
+        
+        // Validaciones
+        if (!fecha_jornada) {
+          Swal.showValidationMessage('La fecha es requerida');
+          return false;
+        }
+        
+        if (!cantidad_producir || parseFloat(cantidad_producir) <= 0) {
+          Swal.showValidationMessage('La cantidad a producir debe ser mayor a 0');
+          return false;
+        }
+        
+        if (!cantidad_producida || parseFloat(cantidad_producida) <= 0) {
+          Swal.showValidationMessage('La cantidad producida debe ser mayor a 0');
+          return false;
+        }
+        
+        return {
+          fecha_jornada,
+          tipo_movimiento,
+          idproducto_producir: registro.idproducto_producir,
+          idproducto_terminado: registro.idproducto_terminado,
+          cantidad_producir: parseFloat(cantidad_producir),
+          cantidad_producida: parseFloat(cantidad_producida),
+          observaciones
+        };
+      }
+    });
+    
+    if (!formValues) return; // Usuario canceló
+    
+    // Enviar actualización
+    const updateResponse = await fetch(`Produccion/actualizarRegistroProduccion/${idregistro}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formValues)
+    });
+    
+    const updateResult = await updateResponse.json();
+    
+    if (updateResult.status) {
+      Swal.fire({
+        icon: 'success',
+        title: '¡Actualizado!',
+        text: updateResult.message || 'Registro actualizado correctamente',
+        confirmButtonColor: '#059669'
+      });
+      
+      // Recargar tabla
+      if (typeof tablaProcesos !== 'undefined' && tablaProcesos.ajax) {
+        tablaProcesos.ajax.reload(null, false);
+      }
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: updateResult.message || 'No se pudo actualizar el registro',
+        confirmButtonColor: '#dc2626'
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error al editar registro:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Error al editar el registro',
+      confirmButtonColor: '#dc2626'
+    });
+  }
+}
+
+/**
+ * Elimina un registro de producción (solo si está en BORRADOR)
+ */
+async function eliminarRegistroProduccion(idregistro, nombreEmpleado, numeroLote) {
+  try {
+    console.log('🗑️ Eliminando registro:', idregistro);
+    
+    // Confirmación con SweetAlert
+    const confirmacion = await Swal.fire({
+      title: '¿Eliminar Registro?',
+      html: `
+        <div class="text-left">
+          <p class="mb-2">¿Está seguro de eliminar este registro de producción?</p>
+          <div class="bg-red-50 border-l-4 border-red-500 p-3 mt-3">
+            <p class="text-sm"><strong>Lote:</strong> ${numeroLote}</p>
+            <p class="text-sm"><strong>Empleado:</strong> ${nombreEmpleado}</p>
+          </div>
+          <p class="text-sm text-gray-600 mt-3">
+            <i class="fas fa-exclamation-triangle text-yellow-600 mr-1"></i>
+            Esta acción no se puede deshacer.
+          </p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: '<i class="fas fa-trash mr-2"></i>Sí, eliminar',
+      cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280'
+    });
+    
+    if (!confirmacion.isConfirmed) return;
+    
+    // Enviar solicitud de eliminación
+    const response = await fetch(`Produccion/eliminarRegistroProduccion/${idregistro}`, {
+      method: 'POST' // Usamos POST porque DELETE puede tener problemas en algunos servidores
+    });
+    
+    const result = await response.json();
+    
+    if (result.status) {
+      Swal.fire({
+        icon: 'success',
+        title: '¡Eliminado!',
+        text: result.message || 'Registro eliminado correctamente',
+        confirmButtonColor: '#059669'
+      });
+      
+      // Recargar tabla
+      if (typeof tablaProcesos !== 'undefined' && tablaProcesos.ajax) {
+        tablaProcesos.ajax.reload(null, false);
+      }
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: result.message || 'No se pudo eliminar el registro',
+        confirmButtonColor: '#dc2626'
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error al eliminar registro:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Error al eliminar el registro',
+      confirmButtonColor: '#dc2626'
+    });
+  }
+}
+
 // ========================================
 // EXPOSICIÓN GLOBAL
 // ========================================
+window.editarRegistroProduccion = editarRegistroProduccion;
+window.eliminarRegistroProduccion = eliminarRegistroProduccion;
+window.editarLote = editarLote;
+window.eliminarLote = eliminarLote;
 window.toggleOperarioAsignado = toggleOperarioAsignado;
 window.actualizarTareaOperario = actualizarTareaOperario;
 window.removerOperarioAsignado = removerOperarioAsignado;
 window.debugAsignaciones = debugAsignaciones;
+

@@ -232,7 +232,7 @@ class DashboardModel extends mysql
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
         try {
-            $stmt = $db->prepare("SELECT idempleado, CONCAT(nombre, ' ', apellido) as nombre_completo FROM empleado WHERE estatus = 'Activo' ORDER BY nombre_completo ASC");
+            $stmt = $db->prepare("SELECT idempleado, nombre, apellido, CONCAT(nombre, ' ', apellido) as nombre_completo FROM empleado WHERE estatus = 'Activo' ORDER BY nombre_completo ASC");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
@@ -782,4 +782,157 @@ class DashboardModel extends mysql
             $conexion->disconnect();
         }
     }
+
+    /**
+     * Reporte semanal: Cuánto clasificó/empacó cada empleado
+     * @param string $fecha_desde
+     * @param string $fecha_hasta
+     * @param string $tipo_proceso 'CLASIFICACION', 'EMPAQUE' o null para ambos
+     * @param int $idempleado
+     * @return array
+     */
+    public function getReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso = null, $idempleado = null)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        
+        try {
+            $where = ["rp.fecha_jornada BETWEEN ? AND ?"];
+            $params = [$fecha_desde, $fecha_hasta];
+            
+            if ($tipo_proceso) {
+                $where[] = "rp.tipo_movimiento = ?";
+                $params[] = $tipo_proceso;
+            }
+            
+            if ($idempleado) {
+                $where[] = "rp.idempleado = ?";
+                $params[] = $idempleado;
+            }
+            
+            $whereClause = implode(" AND ", $where);
+            
+            $query = "SELECT 
+                e.idempleado,
+                CONCAT(e.nombre, ' ', e.apellido) as empleado,
+                rp.tipo_movimiento,
+                COUNT(*) as total_registros,
+                SUM(rp.cantidad_producir) as total_material_procesado_kg,
+                SUM(rp.cantidad_producida) as total_material_producido_kg,
+                SUM(rp.salario_total) as total_salarios
+            FROM registro_produccion rp
+            INNER JOIN empleado e ON rp.idempleado = e.idempleado
+            WHERE {$whereClause}
+            GROUP BY e.idempleado, rp.tipo_movimiento
+            ORDER BY total_material_procesado_kg DESC";
+            
+            $stmt = $db->prepare($query);
+            $stmt->execute($params);
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error en getReporteSemanalEmpleados: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Reporte semanal: Qué material se clasificó/empacó más
+     * @param string $fecha_desde
+     * @param string $fecha_hasta
+     * @param string $tipo_proceso 'CLASIFICACION', 'EMPAQUE' o null para ambos
+     * @return array
+     */
+    public function getReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso = null)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        
+        try {
+            $where = ["rp.fecha_jornada BETWEEN ? AND ?"];
+            $params = [$fecha_desde, $fecha_hasta];
+            
+            if ($tipo_proceso) {
+                $where[] = "rp.tipo_movimiento = ?";
+                $params[] = $tipo_proceso;
+            }
+            
+            $whereClause = implode(" AND ", $where);
+            
+            $query = "SELECT 
+                pp.idproducto as id_producto_inicial,
+                pp.descripcion as producto_inicial,
+                pt.idproducto as id_producto_final,
+                pt.descripcion as producto_final,
+                rp.tipo_movimiento,
+                COUNT(*) as total_procesos,
+                SUM(rp.cantidad_producir) as total_material_usado_kg,
+                SUM(rp.cantidad_producida) as total_material_obtenido_kg,
+                ROUND((SUM(rp.cantidad_producida) / NULLIF(SUM(rp.cantidad_producir), 0)) * 100, 2) as porcentaje_rendimiento
+            FROM registro_produccion rp
+            INNER JOIN producto pp ON rp.idproducto_producir = pp.idproducto
+            INNER JOIN producto pt ON rp.idproducto_terminado = pt.idproducto
+            WHERE {$whereClause}
+            GROUP BY pp.idproducto, pt.idproducto, rp.tipo_movimiento
+            ORDER BY total_material_usado_kg DESC";
+            
+            $stmt = $db->prepare($query);
+            $stmt->execute($params);
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error en getReporteSemanalMateriales: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Reporte semanal: Cuánto se clasificó/empacó en total por material
+     * @param string $fecha_desde
+     * @param string $fecha_hasta
+     * @return array
+     */
+    public function getReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        
+        try {
+            $query = "SELECT 
+                rp.tipo_movimiento,
+                COUNT(DISTINCT rp.idempleado) as total_empleados,
+                COUNT(DISTINCT rp.idlote) as total_lotes,
+                COUNT(*) as total_registros,
+                SUM(rp.cantidad_producir) as total_material_procesado_kg,
+                SUM(rp.cantidad_producida) as total_material_producido_kg,
+                SUM(rp.salario_total) as total_salarios_pagados,
+                ROUND(AVG(rp.cantidad_producir), 2) as promedio_por_registro_kg,
+                ROUND((SUM(rp.cantidad_producida) / NULLIF(SUM(rp.cantidad_producir), 0)) * 100, 2) as rendimiento_promedio
+            FROM registro_produccion rp
+            WHERE rp.fecha_jornada BETWEEN ? AND ?
+            GROUP BY rp.tipo_movimiento
+            ORDER BY rp.tipo_movimiento";
+            
+            $stmt = $db->prepare($query);
+            $stmt->execute([$fecha_desde, $fecha_hasta]);
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error en getReporteSemanalTotalMateriales: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
 }
+

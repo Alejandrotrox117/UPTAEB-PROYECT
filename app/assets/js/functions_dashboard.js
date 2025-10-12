@@ -1240,3 +1240,531 @@ function renderizarGraficoTopProveedoresConTipo(datos, tipoGrafico) {
   graficoTopProveedores = renderizarGraficoGenerico("graficoTopProveedores", datosGrafico, tipoFinal, opciones);
 }
 
+
+// ============================================================================
+// REPORTES SEMANALES DE PRODUCCIÓN
+// ============================================================================
+
+let graficoEmpleadosSemanal, graficoMaterialesSemanal, graficoTotalesSemanal;
+let datosReportesSemanal = null;
+
+/**
+ * Inicializar reportes semanales con fechas de la última semana
+ */
+function inicializarReportesSemanal() {
+  const hoy = new Date();
+  const haceSietedias = new Date(hoy);
+  haceSietedias.setDate(hoy.getDate() - 7);
+  
+  const fechaDesde = haceSietedias.toISOString().split('T')[0];
+  const fechaHasta = hoy.toISOString().split('T')[0];
+  
+  // Usar los filtros del Centro de Control de Producción
+  const inputDesde = document.getElementById('prod_fecha_desde');
+  const inputHasta = document.getElementById('prod_fecha_hasta');
+  
+  if (inputDesde) inputDesde.value = fechaDesde;
+  if (inputHasta) inputHasta.value = fechaHasta;
+  
+  // Configurar event listener en el botón unificado
+  const btnAplicar = document.getElementById('btnAplicarFiltrosProduccion');
+  if (btnAplicar) {
+    btnAplicar.addEventListener('click', () => {
+      cargarReportesSemanales();
+      // También puedes cargar otros reportes de producción aquí si es necesario
+    });
+  }
+  
+  // Event listeners para cambio de tipo de gráfico
+  const selectEmpleados = document.getElementById('tipoGraficoEmpleados');
+  const selectMateriales = document.getElementById('tipoGraficoMateriales');
+  const selectTotales = document.getElementById('tipoGraficoTotales');
+  
+  if (selectEmpleados) {
+    selectEmpleados.addEventListener('change', () => {
+      if (datosReportesSemanal) {
+        renderizarGraficoEmpleadosSemanal(datosReportesSemanal.reporteEmpleados, selectEmpleados.value);
+      }
+    });
+  }
+  
+  if (selectMateriales) {
+    selectMateriales.addEventListener('change', () => {
+      if (datosReportesSemanal) {
+        renderizarGraficoMaterialesSemanal(datosReportesSemanal.reporteMateriales, selectMateriales.value);
+      }
+    });
+  }
+  
+  if (selectTotales) {
+    selectTotales.addEventListener('change', () => {
+      if (datosReportesSemanal) {
+        renderizarGraficoTotalesSemanal(datosReportesSemanal.reporteTotalMateriales, selectTotales.value);
+      }
+    });
+  }
+  
+  // Cargar datos iniciales
+  cargarReportesSemanales();
+}
+
+/**
+ * Cargar reportes semanales desde el servidor
+ */
+async function cargarReportesSemanales() {
+  try {
+    // Usar los filtros del Centro de Control de Producción
+    const fechaDesde = document.getElementById('prod_fecha_desde')?.value || '';
+    const fechaHasta = document.getElementById('prod_fecha_hasta')?.value || '';
+    const tipoProceso = document.getElementById('prod_tipo_proceso')?.value || '';
+    const idempleado = document.getElementById('prod_empleado')?.value || '';
+    
+    const params = new URLSearchParams({
+      fecha_desde: fechaDesde,
+      fecha_hasta: fechaHasta,
+      tipo_proceso: tipoProceso,
+      idempleado: idempleado
+    });
+    
+    console.log('🔍 Cargando reportes semanales con parámetros:', params.toString());
+    
+    const response = await fetch(`dashboard/getReportesSemanalesProduccion?${params}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Error HTTP:', response.status, errorText);
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ Datos recibidos:', data);
+    datosReportesSemanal = data;
+    
+    // Renderizar resumen
+    renderizarResumenSemanal(data);
+    
+    // Renderizar gráficos
+    const tipoEmpleados = document.getElementById('tipoGraficoEmpleados')?.value || 'bar';
+    const tipoMateriales = document.getElementById('tipoGraficoMateriales')?.value || 'bar';
+    const tipoTotales = document.getElementById('tipoGraficoTotales')?.value || 'bar';
+    
+    renderizarGraficoEmpleadosSemanal(data.reporteEmpleados, tipoEmpleados);
+    renderizarGraficoMaterialesSemanal(data.reporteMateriales, tipoMateriales);
+    renderizarGraficoTotalesSemanal(data.reporteTotalMateriales, tipoTotales);
+    
+    // Renderizar tablas
+    renderizarTablaEmpleadosSemanal(data.reporteEmpleados);
+    renderizarTablaMaterialesSemanal(data.reporteMateriales);
+    renderizarTablaTotalesSemanal(data.reporteTotalMateriales);
+    
+    console.log('✅ Reportes semanales cargados exitosamente');
+    
+  } catch (error) {
+    console.error('❌ Error al cargar reportes semanales:', error);
+    mostrarMensajeError('Error al cargar los reportes semanales. Por favor, intente nuevamente.');
+  }
+}
+
+/**
+ * Renderizar resumen general del período
+ */
+function renderizarResumenSemanal(data) {
+  const contenedor = document.getElementById('resumenSemanal');
+  if (!contenedor) return;
+  
+  const totales = data.reporteTotalMateriales || [];
+  
+  let totalProcesado = 0;
+  let totalProducido = 0;
+  let totalSalarios = 0;
+  let totalRegistros = 0;
+  
+  totales.forEach(t => {
+    totalProcesado += parseFloat(t.total_material_procesado_kg || 0);
+    totalProducido += parseFloat(t.total_material_producido_kg || 0);
+    totalSalarios += parseFloat(t.total_salarios_pagados || 0);
+    totalRegistros += parseInt(t.total_registros || 0);
+  });
+  
+  const rendimientoPromedio = totalProcesado > 0 ? ((totalProducido / totalProcesado) * 100).toFixed(2) : 0;
+  
+  contenedor.innerHTML = `
+    <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-blue-100 rounded-full">
+          <i class="fas fa-tasks text-blue-600 text-xl"></i>
+        </div>
+        <div>
+          <p class="text-xs text-gray-600">Total Registros</p>
+          <p class="text-2xl font-bold text-gray-800">${totalRegistros}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-500">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-purple-100 rounded-full">
+          <i class="fas fa-weight text-purple-600 text-xl"></i>
+        </div>
+        <div>
+          <p class="text-xs text-gray-600">Material Procesado</p>
+          <p class="text-2xl font-bold text-gray-800">${totalProcesado.toFixed(2)} kg</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-green-100 rounded-full">
+          <i class="fas fa-box text-green-600 text-xl"></i>
+        </div>
+        <div>
+          <p class="text-xs text-gray-600">Material Producido</p>
+          <p class="text-2xl font-bold text-gray-800">${totalProducido.toFixed(2)} kg</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-orange-500">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-orange-100 rounded-full">
+          <i class="fas fa-percentage text-orange-600 text-xl"></i>
+        </div>
+        <div>
+          <p class="text-xs text-gray-600">Rendimiento Promedio</p>
+          <p class="text-2xl font-bold text-gray-800">${rendimientoPromedio}%</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Renderizar gráfico de empleados
+ */
+function renderizarGraficoEmpleadosSemanal(datos, tipoGrafico) {
+  const canvas = document.getElementById('graficoEmpleadosSemanal');
+  if (!canvas) return;
+  
+  if (graficoEmpleadosSemanal) {
+    graficoEmpleadosSemanal.destroy();
+  }
+  
+  if (!datos || datos.length === 0) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.fillText('No hay datos disponibles', canvas.width / 2, canvas.height / 2);
+    return;
+  }
+  
+  const labels = datos.map(d => `${d.empleado} (${d.tipo_movimiento})`);
+  const dataProcessed = datos.map(d => parseFloat(d.total_material_procesado_kg || 0));
+  
+  const colores = datos.map(d => 
+    d.tipo_movimiento === 'CLASIFICACION' ? '#3B82F6' : '#8B5CF6'
+  );
+  
+  const datosGrafico = {
+    labels: labels,
+    datasets: [{
+      label: 'Material Procesado (kg)',
+      data: dataProcessed,
+      backgroundColor: colores,
+      borderColor: colores.map(c => c + 'CC'),
+      borderWidth: 1
+    }]
+  };
+  
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
+  const opciones = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: tipoGrafico === 'horizontalBar' ? 'y' : 'x',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context) => `${context.parsed.y || context.parsed.x} kg`
+        }
+      }
+    },
+    scales: tipoGrafico.includes('bar') || tipoGrafico === 'horizontalBar' ? {
+      y: { beginAtZero: true },
+      x: { beginAtZero: true }
+    } : {}
+  };
+  
+  graficoEmpleadosSemanal = new Chart(canvas.getContext('2d'), {
+    type: tipoFinal,
+    data: datosGrafico,
+    options: opciones
+  });
+}
+
+/**
+ * Renderizar gráfico de materiales
+ */
+function renderizarGraficoMaterialesSemanal(datos, tipoGrafico) {
+  const canvas = document.getElementById('graficoMaterialesSemanal');
+  if (!canvas) return;
+  
+  if (graficoMaterialesSemanal) {
+    graficoMaterialesSemanal.destroy();
+  }
+  
+  if (!datos || datos.length === 0) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.fillText('No hay datos disponibles', canvas.width / 2, canvas.height / 2);
+    return;
+  }
+  
+  const labels = datos.map(d => `${d.producto_inicial} → ${d.producto_final}`);
+  const dataUsed = datos.map(d => parseFloat(d.total_material_usado_kg || 0));
+  
+  const colores = [
+    '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6',
+    '#6366F1', '#14B8A6', '#F97316', '#84CC16', '#06B6D4'
+  ];
+  
+  const datosGrafico = {
+    labels: labels,
+    datasets: [{
+      label: 'Material Usado (kg)',
+      data: dataUsed,
+      backgroundColor: colores,
+      borderColor: colores.map(c => c + 'CC'),
+      borderWidth: 1
+    }]
+  };
+  
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
+  const opciones = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: tipoGrafico === 'horizontalBar' ? 'y' : 'x',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context) => `${context.parsed.y || context.parsed.x} kg`
+        }
+      }
+    },
+    scales: tipoGrafico.includes('bar') || tipoGrafico === 'horizontalBar' ? {
+      y: { beginAtZero: true },
+      x: { beginAtZero: true }
+    } : {}
+  };
+  
+  graficoMaterialesSemanal = new Chart(canvas.getContext('2d'), {
+    type: tipoFinal,
+    data: datosGrafico,
+    options: opciones
+  });
+}
+
+/**
+ * Renderizar gráfico de totales
+ */
+function renderizarGraficoTotalesSemanal(datos, tipoGrafico) {
+  const canvas = document.getElementById('graficoTotalesSemanal');
+  if (!canvas) return;
+  
+  if (graficoTotalesSemanal) {
+    graficoTotalesSemanal.destroy();
+  }
+  
+  if (!datos || datos.length === 0) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#999';
+    ctx.textAlign = 'center';
+    ctx.fillText('No hay datos disponibles', canvas.width / 2, canvas.height / 2);
+    return;
+  }
+  
+  const labels = datos.map(d => d.tipo_movimiento);
+  const dataProcesado = datos.map(d => parseFloat(d.total_material_procesado_kg || 0));
+  const dataProducido = datos.map(d => parseFloat(d.total_material_producido_kg || 0));
+  
+  const datosGrafico = {
+    labels: labels,
+    datasets: [
+      {
+        label: 'Material Procesado (kg)',
+        data: dataProcesado,
+        backgroundColor: '#3B82F6',
+        borderColor: '#2563EB',
+        borderWidth: 1
+      },
+      {
+        label: 'Material Producido (kg)',
+        data: dataProducido,
+        backgroundColor: '#10B981',
+        borderColor: '#059669',
+        borderWidth: 1
+      }
+    ]
+  };
+  
+  let tipoFinal = tipoGrafico === 'horizontalBar' ? 'bar' : tipoGrafico;
+  const opciones = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: tipoGrafico === 'horizontalBar' ? 'y' : 'x',
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (context) => `${context.dataset.label}: ${context.parsed.y || context.parsed.x} kg`
+        }
+      }
+    },
+    scales: tipoGrafico.includes('bar') || tipoGrafico === 'horizontalBar' ? {
+      y: { beginAtZero: true },
+      x: { beginAtZero: true }
+    } : {}
+  };
+  
+  graficoTotalesSemanal = new Chart(canvas.getContext('2d'), {
+    type: tipoFinal,
+    data: datosGrafico,
+    options: opciones
+  });
+}
+
+/**
+ * Renderizar tabla de empleados
+ */
+function renderizarTablaEmpleadosSemanal(datos) {
+  const tbody = document.querySelector('#tablaEmpleadosSemanal tbody');
+  if (!tbody) return;
+  
+  if (!datos || datos.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No hay datos disponibles</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = datos.map(d => `
+    <tr class="hover:bg-gray-50">
+      <td class="px-3 py-2">${d.empleado}</td>
+      <td class="px-3 py-2">
+        <span class="px-2 py-1 rounded-full text-xs font-semibold ${
+          d.tipo_movimiento === 'CLASIFICACION' 
+            ? 'bg-blue-100 text-blue-800' 
+            : 'bg-purple-100 text-purple-800'
+        }">
+          ${d.tipo_movimiento}
+        </span>
+      </td>
+      <td class="px-3 py-2 text-right">${parseFloat(d.total_material_procesado_kg || 0).toFixed(2)}</td>
+      <td class="px-3 py-2 text-right">${parseFloat(d.total_material_producido_kg || 0).toFixed(2)}</td>
+    </tr>
+  `).join('');
+}
+
+/**
+ * Renderizar tabla de materiales
+ */
+function renderizarTablaMaterialesSemanal(datos) {
+  const tbody = document.querySelector('#tablaMaterialesSemanal tbody');
+  if (!tbody) return;
+  
+  if (!datos || datos.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No hay datos disponibles</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = datos.map(d => `
+    <tr class="hover:bg-gray-50">
+      <td class="px-3 py-2">${d.producto_inicial}</td>
+      <td class="px-3 py-2">${d.producto_final}</td>
+      <td class="px-3 py-2 text-right">${parseFloat(d.total_material_usado_kg || 0).toFixed(2)}</td>
+      <td class="px-3 py-2 text-right">
+        <span class="font-semibold ${
+          parseFloat(d.porcentaje_rendimiento || 0) >= 80 
+            ? 'text-green-600' 
+            : 'text-orange-600'
+        }">
+          ${parseFloat(d.porcentaje_rendimiento || 0).toFixed(2)}%
+        </span>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/**
+ * Renderizar tabla de totales
+ */
+function renderizarTablaTotalesSemanal(datos) {
+  const tbody = document.querySelector('#tablaTotalesSemanal tbody');
+  if (!tbody) return;
+  
+  if (!datos || datos.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No hay datos disponibles</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = datos.map(d => `
+    <tr class="hover:bg-gray-50">
+      <td class="px-4 py-3">
+        <span class="px-3 py-1 rounded-full text-sm font-semibold ${
+          d.tipo_movimiento === 'CLASIFICACION' 
+            ? 'bg-blue-100 text-blue-800' 
+            : 'bg-purple-100 text-purple-800'
+        }">
+          ${d.tipo_movimiento}
+        </span>
+      </td>
+      <td class="px-4 py-3 text-center">${d.total_empleados || 0}</td>
+      <td class="px-4 py-3 text-center">${d.total_lotes || 0}</td>
+      <td class="px-4 py-3 text-right font-semibold">${parseFloat(d.total_material_procesado_kg || 0).toFixed(2)}</td>
+      <td class="px-4 py-3 text-right font-semibold">${parseFloat(d.total_material_producido_kg || 0).toFixed(2)}</td>
+      <td class="px-4 py-3 text-right">
+        <span class="font-bold ${
+          parseFloat(d.rendimiento_promedio || 0) >= 80 
+            ? 'text-green-600' 
+            : 'text-orange-600'
+        }">
+          ${parseFloat(d.rendimiento_promedio || 0).toFixed(2)}%
+        </span>
+      </td>
+      <td class="px-4 py-3 text-right text-green-700 font-semibold">$${parseFloat(d.total_salarios_pagados || 0).toFixed(2)}</td>
+    </tr>
+  `).join('');
+}
+
+/**
+ * Mostrar mensaje de error
+ */
+function mostrarMensajeError(mensaje) {
+  console.error(mensaje);
+  // Aquí podrías agregar una notificación visual si lo deseas
+}
+
+// Inicializar reportes semanales cuando se muestre la sección
+document.addEventListener('DOMContentLoaded', function() {
+  const selector = document.getElementById('selectorReporte');
+  if (selector) {
+    selector.addEventListener('change', function() {
+      // Inicializar reportes semanales cuando se selecciona producción
+      if (this.value === 'produccion') {
+        setTimeout(inicializarReportesSemanal, 100);
+      }
+    });
+  }
+  
+  // Si ya está en la sección de producción al cargar, inicializar
+  if (selector && selector.value === 'produccion') {
+    setTimeout(inicializarReportesSemanal, 200);
+  }
+});
+
