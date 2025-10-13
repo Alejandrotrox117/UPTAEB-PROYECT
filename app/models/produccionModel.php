@@ -17,12 +17,52 @@ class ProduccionModel extends Mysql
 
     public function insertLote(array $data)
     {
+        // VALIDACIONES
+        if (empty($data['idsupervisor'])) {
+            return [
+                'status' => false,
+                'message' => 'El supervisor es requerido'
+            ];
+        }
+
+        if (!isset($data['volumen_estimado']) || $data['volumen_estimado'] <= 0) {
+            return [
+                'status' => false,
+                'message' => 'El volumen debe ser mayor a cero'
+            ];
+        }
+
+        if (empty($data['fecha_jornada'])) {
+            return [
+                'status' => false,
+                'message' => 'La fecha de jornada es requerida'
+            ];
+        }
+
+        // Validar formato de fecha
+        $d = DateTime::createFromFormat('Y-m-d', $data['fecha_jornada']);
+        if (!$d || $d->format('Y-m-d') !== $data['fecha_jornada']) {
+            return [
+                'status' => false,
+                'message' => 'Formato de fecha inválido. Use YYYY-MM-DD'
+            ];
+        }
+
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
             $config = $this->obtenerConfiguracion($db);
+            
+            // Validar que la configuración existe y tiene valores válidos
+            if (!$config || !isset($config['productividad_clasificacion']) || $config['productividad_clasificacion'] <= 0) {
+                return [
+                    'status' => false,
+                    'message' => 'Error en configuración de producción. Configure primero la productividad de clasificación.'
+                ];
+            }
+
             $operariosRequeridos = ceil($data['volumen_estimado'] / $config['productividad_clasificacion']);
 
             if ($operariosRequeridos > $config['capacidad_maxima_planta']) {
