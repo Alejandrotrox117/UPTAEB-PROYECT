@@ -8,7 +8,6 @@ import os
 from datetime import datetime
 import signal
 from collections import deque
-
 # Variables globales para manejo de señales
 running = True
 
