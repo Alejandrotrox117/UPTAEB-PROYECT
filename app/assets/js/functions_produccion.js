@@ -17,6 +17,7 @@ import {
 // ========================================
 let tablaLotes, tablaProcesos, tablaNomina;
 let configuracionActual = {};
+let preciosProceso = [];
 let registrosProduccionLote = []; // Array para almacenar registros de producción del lote
 
 // ========================================
@@ -229,6 +230,19 @@ document.addEventListener("DOMContentLoaded", function () {
   inicializarTablas();
   inicializarEventos();
   cargarConfiguracionInicial();
+  // Poblar select de productos para precios
+  fetch("Productos/getProductosData").then(r=>r.json()).then((data)=>{
+    const sel = document.getElementById('idproducto_precio');
+    if (sel && data.status && Array.isArray(data.data)){
+      sel.innerHTML = '<option value="">Seleccionar producto...</option>';
+      data.data.forEach(p=>{
+        const opt = document.createElement('option');
+        opt.value = p.idproducto;
+        opt.textContent = p.descripcion || p.nombre || (`Producto ${p.idproducto}`);
+        sel.appendChild(opt);
+      });
+    }
+  }).catch(()=>{});
 }); // Ensure this closing bracket matches the corresponding opening bracket
  document.addEventListener('DOMContentLoaded', function() {
             const botones = document.querySelectorAll('.btnUltimoPesoRomanaClasificacion');
@@ -1339,6 +1353,17 @@ function inicializarEventosConfiguracion() {
       guardarConfiguracion();
     });
   }
+
+  // Botón para agregar salario por proceso
+  const btnAgregarSalario = document.getElementById("btnAgregarSalario");
+  if (btnAgregarSalario) {
+    btnAgregarSalario.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("🔘 Click en btnAgregarSalario");
+      crearPrecioProceso();
+    });
+  }
 }
 
 // ========================================
@@ -1454,16 +1479,30 @@ function calcularSalariosRegistroLote() {
   }
   
   const salarioBase = parseFloat(configuracionActual.salario_base || 30);
-  let pagoTrabajo = 0;
+  let precioUnit = 0;
   
-  if (tipoMovimiento === 'CLASIFICACION') {
-    const beta = parseFloat(configuracionActual.beta_clasificacion || 0.25);
-    pagoTrabajo = beta * cantidadProducida;
-  } else if (tipoMovimiento === 'EMPAQUE') {
-    const gamma = parseFloat(configuracionActual.gamma_empaque || 5.00);
-    pagoTrabajo = gamma * cantidadProducida;
+  // Buscar precio configurado según proceso y producto
+  const productoBaseId = tipoMovimiento === 'CLASIFICACION'
+    ? parseInt(document.getElementById('lote_prod_producto_inicial')?.value || 0)
+    : parseInt(document.getElementById('lote_prod_producto_final')?.value || 0);
+  
+  if (productoBaseId && preciosProceso.length) {
+    const match = preciosProceso.find(p => 
+      String(p.tipo_proceso) === String(tipoMovimiento) && 
+      parseInt(p.idproducto) === productoBaseId && 
+      p.estatus === 'activo'
+    );
+    if (match) precioUnit = parseFloat(match.salario_unitario || 0);
   }
   
+  // Fallback a configuración estática si no existe precio configurado
+  if (precioUnit <= 0) {
+    precioUnit = tipoMovimiento === 'CLASIFICACION'
+      ? parseFloat(configuracionActual.beta_clasificacion || 0.25)
+      : parseFloat(configuracionActual.gamma_empaque || 5.00);
+  }
+  
+  const pagoTrabajo = precioUnit * cantidadProducida;
   const salarioTotal = salarioBase + pagoTrabajo;
   
   document.getElementById("lote_prod_salario_base").value = `$${salarioBase.toFixed(2)}`;
@@ -1523,15 +1562,20 @@ function agregarRegistroProduccionLote() {
   
   // Calcular salarios
   const salarioBase = parseFloat(configuracionActual.salario_base || 30);
-  let pagoTrabajo = 0;
-  
-  if (tipo === 'CLASIFICACION') {
-    const beta = parseFloat(configuracionActual.beta_clasificacion || 0.25);
-    pagoTrabajo = beta * cantidadProducida;
-  } else {
-    const gamma = parseFloat(configuracionActual.gamma_empaque || 5.00);
-    pagoTrabajo = gamma * cantidadProducida;
+  let precioUnit = 0;
+  const productoBaseId = tipo === 'CLASIFICACION'
+    ? parseInt(document.getElementById('lote_prod_producto_inicial')?.value || 0)
+    : parseInt(document.getElementById('lote_prod_producto_final')?.value || 0);
+  if (productoBaseId && preciosProceso.length) {
+    const m = preciosProceso.find(p => String(p.tipo_proceso) === String(tipo) && parseInt(p.idproducto) === productoBaseId && p.estatus === 'activo');
+    if (m) precioUnit = parseFloat(m.precio_unitario || 0);
   }
+  if (precioUnit <= 0) {
+    precioUnit = tipo === 'CLASIFICACION' 
+      ? parseFloat(configuracionActual.beta_clasificacion || 0.25)
+      : parseFloat(configuracionActual.gamma_empaque || 5.00);
+  }
+  const pagoTrabajo = precioUnit * cantidadProducida;
   
   const salarioTotal = salarioBase + pagoTrabajo;
   
@@ -2684,6 +2728,7 @@ function cargarConfiguracionInicial() {
       if (result.status && result.data) {
         configuracionActual = result.data;
         mostrarConfiguracion(result.data);
+        cargarPreciosProceso();
       } else {
         mostrarError("No se pudo cargar la configuración.");
       }
@@ -2693,6 +2738,122 @@ function cargarConfiguracionInicial() {
       mostrarError("Error al cargar configuración.");
     });
 }
+
+// ================================
+// CONFIG - Precios por proceso
+// ================================
+async function cargarPreciosProceso() {
+  try {
+    const resp = await fetch("Produccion/getPreciosProceso");
+    const data = await resp.json();
+    if (data.status) {
+      preciosProceso = data.data || [];
+      renderTablaPreciosProceso();
+    }
+  } catch(e) {
+    console.error("Error al cargar precios de proceso:", e);
+  }
+}
+
+function renderTablaPreciosProceso() {
+  const tbody = document.getElementById("tabla-precios-proceso-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  preciosProceso.forEach((p) => {
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-gray-50";
+    const estadoClass = p.estatus === 'activo' ? 'text-green-600' : 'text-gray-500';
+    tr.innerHTML = `
+      <td class="px-2 py-2 text-xs">${p.tipo_proceso}</td>
+      <td class="px-2 py-2 text-xs">${p.producto_nombre || p.idproducto}</td>
+      <td class="px-2 py-2 text-xs text-right font-semibold">$${parseFloat(p.salario_unitario).toFixed(4)}</td>
+      <td class="px-2 py-2 text-xs">${p.moneda || 'USD'}</td>
+      <td class="px-2 py-2 text-xs ${estadoClass}">${p.estatus}</td>
+      <td class="px-2 py-2 text-xs text-right">
+        <button class="text-red-600 hover:text-red-800" data-action="borrar-precio" data-id="${p.idconfig_salario}"><i class="fas fa-trash"></i></button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function crearPrecioProceso() {
+  console.log("🎯 crearPrecioProceso - Iniciando");
+  
+  const tipo = document.getElementById("tipo_proceso_salario")?.value || '';
+  const idproducto = parseInt(document.getElementById("idproducto_precio")?.value || 0);
+  const salario = parseFloat(document.getElementById("salario_unitario_input")?.value || 0);
+  
+  const data = {
+    tipo_proceso: tipo.toUpperCase(),
+    idproducto: idproducto,
+    salario_unitario: salario,
+    moneda: 'USD',
+    unidad_base: null
+  };
+  
+  console.log("📝 Datos a enviar:", data);
+  
+  if (!data.tipo_proceso || !data.idproducto || data.salario_unitario <= 0) {
+    console.warn("⚠️ Validación fallida");
+    Swal.fire("Datos inválidos", "Completa tipo de proceso, producto y salario válido.", "warning");
+    return;
+  }
+  
+  try {
+    console.log("🚀 Enviando solicitud a Produccion/createPrecioProceso");
+    const resp = await fetch("Produccion/createPrecioProceso", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    console.log("📡 Respuesta HTTP:", resp.status, resp.statusText);
+    const json = await resp.json();
+    console.log("📦 Respuesta JSON:", json);
+    
+    if (json.status) {
+      await cargarPreciosProceso();
+      Swal.fire("Creado", json.message || "Salario configurado", "success");
+      // Limpiar formulario
+      document.getElementById("tipo_proceso_salario").value = '';
+      document.getElementById("idproducto_precio").value = '';
+      document.getElementById("salario_unitario_input").value = '';
+    } else {
+      Swal.fire("Error", json.message || "No se pudo crear", "error");
+    }
+  } catch (e) {
+    console.error("❌ Error en crearPrecioProceso:", e);
+    Swal.fire("Error", "Fallo de red: " + e.message, "error");
+  }
+}
+
+document.addEventListener("click", async (e) => {
+  const target = e.target.closest("[data-action='borrar-precio']");
+  if (!target) return;
+  const id = parseInt(target.getAttribute("data-id"));
+  if (!id) return;
+  const ok = await Swal.fire({
+    title: "¿Desactivar precio?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí",
+    cancelButtonText: "No",
+  });
+  if (ok.isConfirmed) {
+    try {
+      const resp = await fetch(`Produccion/deletePrecioProceso/${id}`, { method: "POST" });
+      const json = await resp.json();
+      if (json.status) {
+        await cargarPreciosProceso();
+        Swal.fire("Hecho", json.message || "Precio desactivado", "success");
+      } else {
+        Swal.fire("Error", json.message || "No se pudo desactivar", "error");
+      }
+    } catch (e2) {
+      console.error(e2);
+      Swal.fire("Error", "Fallo de red", "error");
+    }
+  }
+});
 
 function mostrarConfiguracion(config) {
   const campos = [
@@ -3580,15 +3741,22 @@ async function calcularSalariosAutomaticamente() {
     }
 
     const salarioBase = parseFloat(configuracionActual.salario_base || 30.00);
-    let pagoTrabajo = 0;
-
-    if (tipoMovimiento === 'CLASIFICACION') {
-      const beta = parseFloat(configuracionActual.beta_clasificacion || 0.25);
-      pagoTrabajo = beta * cantidadProducida;
-    } else if (tipoMovimiento === 'EMPAQUE') {
-      const gamma = parseFloat(configuracionActual.gamma_empaque || 5.00);
-      pagoTrabajo = gamma * cantidadProducida;
+    let precioUnit = 0;
+    // Elegir producto base según tipo
+    const productoBaseId = tipoMovimiento === 'CLASIFICACION'
+      ? parseInt(document.getElementById('prod_producto_producir')?.value || 0)
+      : parseInt(document.getElementById('prod_producto_terminado')?.value || 0);
+    if (productoBaseId && preciosProceso.length) {
+      const match = preciosProceso.find(p => String(p.tipo_proceso) === String(tipoMovimiento) && parseInt(p.idproducto) === productoBaseId && p.estatus === 'activo');
+      if (match) precioUnit = parseFloat(match.salario_unitario || 0);
     }
+    if (precioUnit <= 0) {
+      // Fallback a configuración anterior
+      precioUnit = tipoMovimiento === 'CLASIFICACION'
+        ? parseFloat(configuracionActual.beta_clasificacion || 0.25)
+        : parseFloat(configuracionActual.gamma_empaque || 5.00);
+    }
+    const pagoTrabajo = precioUnit * cantidadProducida;
 
     const salarioTotal = salarioBase + pagoTrabajo;
 

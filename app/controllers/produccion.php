@@ -486,6 +486,85 @@ class Produccion extends Controllers
         }
     }
 
+    // ==============================
+    // CRUD precios proceso-producto
+    // ==============================
+    public function getPreciosProceso()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $arrResponse = $this->model->selectPreciosProceso();
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en getPreciosProceso: " . $e->getMessage());
+                echo json_encode(['status' => false, 'message' => 'Error interno del servidor', 'data' => []], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function createPrecioProceso()
+    {
+        error_log("[CONTROLLER] createPrecioProceso - REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $rawData = file_get_contents('php://input');
+                error_log("[CONTROLLER] createPrecioProceso - Raw data: " . $rawData);
+                
+                $data = $this->obtenerDatosJSON();
+                error_log("[CONTROLLER] createPrecioProceso - Parsed data: " . json_encode($data));
+                
+                $arrResponse = $this->model->createPrecioProceso($data);
+                error_log("[CONTROLLER] createPrecioProceso - Response: " . json_encode($arrResponse));
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("[CONTROLLER] Error en createPrecioProceso: " . $e->getMessage());
+                echo json_encode(['status' => false, 'message' => 'Error interno del servidor: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function updatePrecioProceso($params = [])
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'PUT' || $_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $idprecio = is_array($params) ? ($params[0] ?? null) : $params;
+                if (empty($idprecio) || !is_numeric($idprecio)) {
+                    echo json_encode(['status' => false, 'message' => 'ID inválido'], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+                $data = $this->obtenerDatosJSON();
+                $arrResponse = $this->model->updatePrecioProceso(intval($idprecio), $data);
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en updatePrecioProceso: " . $e->getMessage());
+                echo json_encode(['status' => false, 'message' => 'Error interno del servidor'], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function deletePrecioProceso($params = [])
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'DELETE' || $_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $idprecio = is_array($params) ? ($params[0] ?? null) : $params;
+                if (empty($idprecio) || !is_numeric($idprecio)) {
+                    echo json_encode(['status' => false, 'message' => 'ID inválido'], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+                $arrResponse = $this->model->deletePrecioProceso(intval($idprecio));
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en deletePrecioProceso: " . $e->getMessage());
+                echo json_encode(['status' => false, 'message' => 'Error interno del servidor'], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
     public function updateConfiguracionProduccion()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {

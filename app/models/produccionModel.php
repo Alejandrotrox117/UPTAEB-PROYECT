@@ -1389,16 +1389,32 @@ class ProduccionModel extends Mysql
             $salario_base_dia = floatval($config['salario_base'] ?? 30.00);
             $cantidad_producida = floatval($data['cantidad_producida']);
             
-            // Pago por clasificación/trabajo según cantidad producida
-            // Fórmula: beta * cantidad_producida (para clasificación)
-            // O: gamma por cada unidad (para empaque)
-            if ($data['tipo_movimiento'] === 'CLASIFICACION') {
-                $beta = floatval($config['beta_clasificacion'] ?? 0.25);
-                $pago_clasificacion_trabajo = $beta * $cantidad_producida;
-            } else { // EMPAQUE
-                $gamma = floatval($config['gamma_empaque'] ?? 5.00);
-                $pago_clasificacion_trabajo = $gamma * $cantidad_producida;
+            // Pago por trabajo según precio dinámico de proceso-producto
+            // Intentar obtener precio dinámico por proceso+producto; si no existe, usar beta/gamma de configuración.
+            $precio_unitario_proceso = 0.0;
+            // Determinar el producto base para el precio según el tipo de movimiento
+            // CLASIFICACION: usar idproducto_producir (materia prima); EMPAQUE: usar idproducto_terminado
+            $productoBase = ($data['tipo_movimiento'] === 'CLASIFICACION') 
+                ? ($data['idproducto_producir'] ?? null) 
+                : ($data['idproducto_terminado'] ?? null);
+
+            if ($productoBase) {
+                $precio_unitario_proceso = $this->getPrecioProceso($db, $data['tipo_movimiento'], intval($productoBase));
             }
+
+            if ($precio_unitario_proceso <= 0) {
+                // Fallback a configuración estática anterior
+                if ($data['tipo_movimiento'] === 'CLASIFICACION') {
+                    $precio_unitario_proceso = floatval($config['beta_clasificacion'] ?? 0.25); // $/kg
+                } else { // EMPAQUE
+                    $precio_unitario_proceso = floatval($config['gamma_empaque'] ?? 5.00); // $/unidad/paca
+                }
+            }
+
+            // Ajustar cantidad a la unidad del producto (si aplica)
+            // Si el producto base usa KG, la cantidad_producida representa kg; si no, se toma como unidades.
+            // Nota: asume que los datos de entrada respetan las unidades del producto seleccionado.
+            $pago_clasificacion_trabajo = $precio_unitario_proceso * $cantidad_producida;
 
             // Salario total
             $salario_total = $salario_base_dia + $pago_clasificacion_trabajo;
@@ -1674,17 +1690,28 @@ class ProduccionModel extends Mysql
             // Obtener configuración para recalcular salarios
             $config = $this->obtenerConfiguracion($db);
 
-            // Recalcular salarios
+            // Recalcular salarios con precio dinámico
             $salario_base_dia = floatval($config['salario_base'] ?? 30.00);
             $cantidad_producida = floatval($data['cantidad_producida']);
-            
-            if ($data['tipo_movimiento'] === 'CLASIFICACION') {
-                $beta = floatval($config['beta_clasificacion'] ?? 0.25);
-                $pago_clasificacion_trabajo = $beta * $cantidad_producida;
-            } else {
-                $gamma = floatval($config['gamma_empaque'] ?? 5.00);
-                $pago_clasificacion_trabajo = $gamma * $cantidad_producida;
+
+            $productoBase = ($data['tipo_movimiento'] === 'CLASIFICACION') 
+                ? ($data['idproducto_producir'] ?? null) 
+                : ($data['idproducto_terminado'] ?? null);
+
+            $precio_unitario_proceso = 0.0;
+            if ($productoBase) {
+                $precio_unitario_proceso = $this->getPrecioProceso($db, $data['tipo_movimiento'], intval($productoBase));
             }
+
+            if ($precio_unitario_proceso <= 0) {
+                if ($data['tipo_movimiento'] === 'CLASIFICACION') {
+                    $precio_unitario_proceso = floatval($config['beta_clasificacion'] ?? 0.25);
+                } else {
+                    $precio_unitario_proceso = floatval($config['gamma_empaque'] ?? 5.00);
+                }
+            }
+
+            $pago_clasificacion_trabajo = $precio_unitario_proceso * $cantidad_producida;
 
             $salario_total = $salario_base_dia + $pago_clasificacion_trabajo;
 
@@ -1734,6 +1761,153 @@ class ProduccionModel extends Mysql
                 'status' => false,
                 'message' => 'Error al actualizar registro: ' . $e->getMessage()
             ];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    // ============================================================
+    // CONFIGURACIÓN DINÁMICA DE PRECIOS POR PROCESO/PRODUCTO
+    // Tabla sugerida: configuracion_produccion_precios
+    //  - idprecio (PK), tipo_proceso ('CLASIFICACION'|'EMPAQUE'), idproducto (FK)
+    //  - unidad_base ('KG'|'UNIDAD'), precio_unitario (DECIMAL), moneda (VARCHAR),
+    //  - vigente_desde (DATE), vigente_hasta (DATE NULL), estatus ('activo')
+    // ============================================================
+
+    /**
+     * Devuelve el precio unitario vigente para un par (tipo_proceso, idproducto).
+     * Si no encuentra un precio activo, retorna 0 (para que el caller aplique fallback).
+     */
+    private function getPrecioProceso($db, string $tipo_proceso, int $idproducto): float
+    {
+        try {
+            $sql = "SELECT salario_unitario
+                    FROM configuracion_salarios_proceso
+                    WHERE tipo_proceso = ? AND idproducto = ? AND estatus = 'activo'
+                    LIMIT 1";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$tipo_proceso, $idproducto]);
+            $salario = $stmt->fetchColumn();
+            return $salario !== false ? floatval($salario) : 0.0;
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] getPrecioProceso error: " . $e->getMessage());
+            return 0.0;
+        }
+    }
+
+    /** Obtiene listado de salarios configurados por proceso/producto */
+    public function selectPreciosProceso()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $sql = "SELECT csp.idconfig_salario, csp.tipo_proceso, csp.idproducto, p.nombre AS producto_nombre,
+                           p.unidad_medida, csp.unidad_base, csp.salario_unitario, csp.moneda,
+                           csp.estatus, DATE_FORMAT(csp.fecha_creacion, '%d/%m/%Y %H:%i') AS fecha_creacion
+                    FROM configuracion_salarios_proceso csp
+                    INNER JOIN producto p ON p.idproducto = csp.idproducto
+                    ORDER BY csp.estatus DESC, csp.ultima_modificacion DESC";
+            $stmt = $db->prepare($sql);
+            $stmt->execute();
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ['status' => true, 'data' => $data, 'message' => 'Salarios obtenidos'];
+        } catch (Exception $e) {
+            return ['status' => false, 'data' => [], 'message' => 'Error al obtener salarios: ' . $e->getMessage()];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /** Crea un salario por proceso/producto */
+    public function createPrecioProceso(array $data)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            // Validaciones
+            $tipo = strtoupper($data['tipo_proceso'] ?? '');
+            $idproducto = intval($data['idproducto'] ?? 0);
+            $salario = floatval($data['salario_unitario'] ?? 0);
+            $unidad_base = $data['unidad_base'] ?? null;
+            $moneda = $data['moneda'] ?? 'USD';
+
+            error_log("[PRODUCCION] createPrecioProceso - Datos recibidos: " . json_encode($data));
+            error_log("[PRODUCCION] createPrecioProceso - Validados: tipo=$tipo, idproducto=$idproducto, salario=$salario");
+
+            if (!in_array($tipo, ['CLASIFICACION', 'EMPAQUE']) || $idproducto <= 0 || $salario <= 0) {
+                error_log("[PRODUCCION] createPrecioProceso - Validación fallida");
+                return ['status' => false, 'message' => 'Datos inválidos: tipo proceso, producto o salario incorrectos'];
+            }
+
+            // Si no se especifica unidad, usar la del producto
+            if (!$unidad_base) {
+                $q = $db->prepare("SELECT unidad_medida FROM producto WHERE idproducto = ?");
+                $q->execute([$idproducto]);
+                $unidad_base = $q->fetchColumn() ?: 'KG';
+                error_log("[PRODUCCION] createPrecioProceso - Unidad base obtenida: $unidad_base");
+            }
+
+            $sql = "INSERT INTO configuracion_salarios_proceso
+                    (tipo_proceso, idproducto, salario_unitario, unidad_base, moneda, estatus)
+                    VALUES (?, ?, ?, ?, ?, 'activo')";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$tipo, $idproducto, $salario, $unidad_base, $moneda]);
+            error_log("[PRODUCCION] createPrecioProceso - Registro insertado exitosamente");
+            return ['status' => true, 'message' => 'Salario configurado correctamente'];
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] createPrecioProceso - ERROR: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Error al crear salario: ' . $e->getMessage()];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /** Actualiza un salario por proceso/producto */
+    public function updatePrecioProceso(int $idconfig_salario, array $data)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            $campos = [];
+            $params = [];
+            foreach (['tipo_proceso','idproducto','unidad_base','salario_unitario','moneda','estatus'] as $c) {
+                if (isset($data[$c])) { 
+                    $campos[] = "$c = ?"; 
+                    $params[] = $data[$c]; 
+                }
+            }
+            if (empty($campos)) {
+                return ['status' => false, 'message' => 'Sin cambios'];
+            }
+            $sql = "UPDATE configuracion_salarios_proceso SET " . implode(', ', $campos) . ", ultima_modificacion = NOW() WHERE idconfig_salario = ?";
+            $params[] = $idconfig_salario;
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return ['status' => true, 'message' => 'Salario actualizado'];
+        } catch (Exception $e) {
+            return ['status' => false, 'message' => 'Error al actualizar salario: ' . $e->getMessage()];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /** Elimina (lógico) un salario por proceso/producto */
+    public function deletePrecioProceso(int $idconfig_salario)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            $sql = "UPDATE configuracion_salarios_proceso SET estatus = 'inactivo', ultima_modificacion = NOW() WHERE idconfig_salario = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$idconfig_salario]);
+            return ['status' => true, 'message' => 'Salario desactivado'];
+        } catch (Exception $e) {
+            return ['status' => false, 'message' => 'Error al desactivar salario: ' . $e->getMessage()];
         } finally {
             $conexion->disconnect();
         }

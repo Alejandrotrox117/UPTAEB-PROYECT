@@ -302,6 +302,58 @@
                             </button>
                         </div>
                     </form>
+
+                    <!-- Sección Salarios por Proceso-Producto (FUERA del form principal) -->
+                    <div class="mt-10">
+                        <h4 class="text-md font-semibold text-gray-800 mb-4"><i class="fas fa-dollar-sign mr-2"></i>Configuración de Salarios por Proceso</h4>
+                        <p class="text-xs text-gray-600 mb-4">Define cuánto se paga por kg/unidad según el tipo de proceso y producto. Esta configuración afecta el cálculo de salarios en producción.</p>
+                        
+                        <div class="bg-white border rounded-lg p-4 mb-4">
+                            <form id="formPrecioProceso">
+                                <input type="hidden" name="moneda" value="USD" />
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600">Tipo Proceso *</label>
+                                        <select name="tipo_proceso" id="tipo_proceso_salario" class="w-full border rounded px-2 py-1 text-sm" required>
+                                            <option value="">Seleccione...</option>
+                                            <option value="CLASIFICACION">Clasificación</option>
+                                            <option value="EMPAQUE">Empaque</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-medium text-gray-600">Producto *</label>
+                                        <select name="idproducto_precio" id="idproducto_precio" class="w-full border rounded px-2 py-1 text-sm" required>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600">Salario por Unidad *</label>
+                                        <input name="salario_unitario" id="salario_unitario_input" type="number" step="0.0001" min="0.0001" class="w-full border rounded px-2 py-1 text-sm" placeholder="0.0000" required />
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button type="button" id="btnAgregarSalario" class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                                            <i class="fas fa-plus mr-2"></i>Agregar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proceso</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Salario/Unidad</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Moneda</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estatus</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-precios-proceso-body" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
