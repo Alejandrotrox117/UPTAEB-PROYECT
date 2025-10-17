@@ -134,7 +134,7 @@ class editarVentaTest extends TestCase
         $this->assertNotNull($clienteActivo, "No se encontró un cliente activo.");
         $this->assertNotNull($clienteInactivo, "No se encontró un cliente inactivo.");
 
-        // Crear venta original con cliente activo
+        // Crear venta  con cliente activo
         $datosVentaOriginal = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
@@ -190,7 +190,7 @@ class editarVentaTest extends TestCase
         }
         $this->assertNotNull($clienteActivo);
 
-        // Crear venta original
+        // Crear venta 
         $datosVentaOriginal = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
