@@ -51,7 +51,6 @@ public/uploads/
 # Archivos de backup de base de datos
 *.sql
 *.sql.gz
-backup/
 backups/
 
 # Archivos de configuración específicos del servidor

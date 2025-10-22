@@ -104,6 +104,7 @@ class BackupModel {
     /**
      * Obtiene estadísticas generales de los backups
      */
+
     public function obtenerEstadisticasBackups()
     {
         try {
@@ -478,20 +479,32 @@ class BackupModel {
     }
 
     private function obtenerRutaBackups()
-    {
-        $ruta = __DIR__ . '/../../config/backups/';
-        $rutaAbsoluta = realpath($ruta);
-        
-        if ($rutaAbsoluta === false) {
-            // Si no existe, crear el directorio
-            if (!file_exists($ruta)) {
-                mkdir($ruta, 0755, true);
-            }
-            $rutaAbsoluta = realpath($ruta);
+{
+    // Usar BACKUP_DIR si está definida, sino usar ruta por defecto
+    $ruta = defined('BACKUP_DIR') ? BACKUP_DIR : __DIR__ . '/../../config/backups/';
+    $ruta = rtrim($ruta, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    
+    // Si el directorio no existe, intentar crearlo
+    if (!is_dir($ruta)) {
+        if (!@mkdir($ruta, 0775, true) && !is_dir($ruta)) {
+            throw new Exception("No se pudo crear el directorio de backups: permisos insuficientes.");
         }
-        
-        return $rutaAbsoluta . DIRECTORY_SEPARATOR;
     }
+    
+    // Intentar escribir un archivo de prueba para verificar permisos reales
+    $archivoTest = $ruta . '.test_permisos';
+    $puedeEscribir = @file_put_contents($archivoTest, 'test') !== false;
+    
+    if ($puedeEscribir) {
+        @unlink($archivoTest); // Eliminar archivo de prueba
+        return $ruta;
+    }
+    
+    throw new Exception("El directorio de backups no tiene permisos de escritura: " . $ruta);
+}
+
+
+
 
     private function crearDirectorioBackups()
     {
