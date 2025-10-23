@@ -4,8 +4,13 @@
             parent::__construct();
         }
 
+
         public function notFound(){
-            $this ->views->getView($this,"error");
+            $this->views->getView($this, "error");
+        }
+
+        public function index(){
+            $this->views->getView($this, "error");
         }
 
     }

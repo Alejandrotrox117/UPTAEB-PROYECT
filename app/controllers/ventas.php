@@ -39,7 +39,7 @@ class Ventas extends Controllers
 
 
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
@@ -54,7 +54,7 @@ class Ventas extends Controllers
     {
 
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
@@ -70,7 +70,7 @@ class Ventas extends Controllers
 
         if (!$idUsuario) {
             error_log("Ventas::index - No se pudo obtener ID de usuario");
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
@@ -134,32 +134,18 @@ class Ventas extends Controllers
 
         try {
             
-            // $_REQUEST contiene los datos de $_GET y $_POST, que es donde DataTables los envía.
-            $arrData = $this->model->getVentasDatatable($_REQUEST);
-
-
+                $idUsuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
+                $arrData = $this->model->getVentasDatatable($idUsuarioSesion);
             $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
             if ($idUsuario) {
                 $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_DATOS', $idUsuario);
             }
 
-            $response = [
-                "draw" => intval($_GET['draw'] ?? 0) + 1,
-                "recordsTotal" => count($arrData),
-                "recordsFiltered" => count($arrData),
-                "data" => $arrData ?: []
-            ];
-
-            // Devuelve los datos en formato JSON para que DataTables los entienda.
-            echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
+            echo json_encode(['data' => $arrData], JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getventasData: " . $e->getMessage());
             header('Content-Type: application/json');
-            echo json_encode([
-                "status" => false,
-                "message" => "Error al obtener los datos de ventas: " . $e->getMessage(),
-                "data" => []
-            ], JSON_UNESCAPED_UNICODE);
+            echo json_encode(['data' => []], JSON_UNESCAPED_UNICODE);
         }
         exit();
     }
@@ -933,7 +919,8 @@ class Ventas extends Controllers
         }
 
         try {
-            $ventasData = $this->model->getVentasDatatable();
+               $idUsuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
+            $ventasData = $this->model->getVentasDatatable($idUsuarioSesion);
 
 
             $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
@@ -1180,19 +1167,24 @@ class Ventas extends Controllers
      */
     public function notaDespacho($idventa)
     {
+        // Manejar el caso donde $idventa puede ser un array
+        if (is_array($idventa)) {
+            $idventa = isset($idventa[0]) ? $idventa[0] : '';
+        }
+        
         // Debug: verificar el ID recibido
         error_log("DEBUG notaDespacho: ID recibido = '$idventa'");
         
         // Validar que el ID sea un número válido
         if (empty($idventa) || !is_numeric($idventa) || $idventa <= 0) {
             error_log("DEBUG: ID inválido - '$idventa'");
-            header('Location: ' . base_url() . '/ventas?error=id_invalido');
+            header('Location: ' . base_url('ventas?error=id_invalido'));
             exit();
         }
         
         // Verificar permisos básicos
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 
@@ -1246,19 +1238,24 @@ class Ventas extends Controllers
      */
     public function reporteVenta($idventa)
     {
+        // Manejar el caso donde $idventa puede ser un array
+        if (is_array($idventa)) {
+            $idventa = isset($idventa[0]) ? $idventa[0] : '';
+        }
+        
         // Debug: verificar el ID recibido
         error_log("DEBUG reporteVenta: ID recibido = '$idventa'");
         
         // Validar que el ID sea un número válido
         if (empty($idventa) || !is_numeric($idventa) || $idventa <= 0) {
             error_log("DEBUG: ID inválido - '$idventa'");
-            header('Location: ' . base_url() . '/ventas?error=id_invalido');
+            header('Location: ' . base_url('ventas?error=id_invalido'));
             exit();
         }
         
         // Verificar permisos básicos
         if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
+            header('Location: ' . base_url('login'));
             die();
         }
 

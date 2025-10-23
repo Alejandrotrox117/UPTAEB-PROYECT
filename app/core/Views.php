@@ -6,8 +6,14 @@ class Views{
         if($controller=="Home"){
             $view = "app/views/home/home.php";
         }else{
+            // Handle special cases for folder names that don't match class names
+            if($controller == "Errors"){
+                $folder = "Errors";
+            }else{
+                $folder = strtolower($controller);
+            }
             //Si no es el inicio en el caso contrario sigue con otro controlador
-            $view = "app/views/".$controller."/".$view.".php";
+            $view = "app/views/".$folder."/".$view.".php";
         }
         //requerimos el archivo
         require_once($view);

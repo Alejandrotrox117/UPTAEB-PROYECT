@@ -3,18 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="shortcut icon" href="/project/app/assets/img/favicon.svg" type="image/x-icon">
+    <link rel="shortcut icon" href="<?= base_url('app/assets/img/favicon.svg') ?>" type="image/x-icon">
     <title>Recuperadora</title>
     <meta name="description" content="Recuperadora de materiales reciclables">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/project/app/assets/styles/styles.css">
+    <link rel="stylesheet" href="<?= base_url('app/assets/styles/styles.css') ?>">
 
-    <link href="/project/app/assets/fontawesome/css/all.min.css" rel="stylesheet">
-    <link href="/project/app/assets/fontawesome/css/solid.css" rel="stylesheet">
-    <link href="/project/app/assets/fontawesome/css/fontawesome.css" rel="stylesheet">
-    <link href="/project/app/assets/fontawesome/css/brands.css" rel="stylesheet">
-    <link href="/project/app/assets/DataTables/datatables.css" rel="stylesheet">
-    <link rel="stylesheet" href="/project/app/assets/sweetAlert/sweetalert2.min.css">
+    <link href="<?= base_url('app/assets/fontawesome/css/all.min.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('app/assets/fontawesome/css/solid.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('app/assets/fontawesome/css/fontawesome.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('app/assets/fontawesome/css/brands.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('app/assets/DataTables/datatables.css') ?>" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('app/assets/sweetAlert/sweetalert2.min.css') ?>">
     
     <!-- reCAPTCHA script -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -23,7 +23,7 @@
 <body id="bodyLogin" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-2">
     <div class="login-container w-full max-w-xs bg-white rounded-lg shadow-2xl p-3 space-y-2">
         <div class="text-center">
-            <img src="/project/app/assets/img/favicon.svg" class="mx-auto w-8 h-8 mb-1" alt="Logo Empresa">
+            <img src="<?= base_url('app/assets/img/favicon.svg') ?>" class="mx-auto w-8 h-8 mb-1" alt="Logo Empresa">
             <h2 class="text-base sm:text-lg font-bold text-gray-800">Bienvenido</h2>
         </div>
         
