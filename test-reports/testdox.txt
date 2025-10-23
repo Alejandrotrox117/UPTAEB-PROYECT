@@ -1,0 +1,4 @@
+Categoria Delete Exitoso
+ [x] Delete categoria existente
+ [x] Delete categoria ya eliminada
+
