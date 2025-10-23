@@ -1126,7 +1126,7 @@ function inicializarEventosLotes() {
       inicializarValidacionesRegistrosProduccion();
       
       // Cargar configuración para cálculos
-      cargarConfiguracionInicial();
+      cargarConfiguracionProduccion();
     });
   }
 
