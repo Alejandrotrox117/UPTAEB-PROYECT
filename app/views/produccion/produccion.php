@@ -302,6 +302,58 @@
                             </button>
                         </div>
                     </form>
+
+                    <!-- Sección Salarios por Proceso-Producto (FUERA del form principal) -->
+                    <div class="mt-10">
+                        <h4 class="text-md font-semibold text-gray-800 mb-4"><i class="fas fa-dollar-sign mr-2"></i>Configuración de Salarios por Proceso</h4>
+                        <p class="text-xs text-gray-600 mb-4">Define cuánto se paga por kg/unidad según el tipo de proceso y producto. Esta configuración afecta el cálculo de salarios en producción.</p>
+                        
+                        <div class="bg-white border rounded-lg p-4 mb-4">
+                            <form id="formPrecioProceso">
+                                <input type="hidden" name="moneda" value="USD" />
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600">Tipo Proceso *</label>
+                                        <select name="tipo_proceso" id="tipo_proceso_salario" class="w-full border rounded px-2 py-1 text-sm" required>
+                                            <option value="">Seleccione...</option>
+                                            <option value="CLASIFICACION">Clasificación</option>
+                                            <option value="EMPAQUE">Empaque</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-medium text-gray-600">Producto *</label>
+                                        <select name="idproducto_precio" id="idproducto_precio" class="w-full border rounded px-2 py-1 text-sm" required>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600">Salario por Unidad *</label>
+                                        <input name="salario_unitario" id="salario_unitario_input" type="number" step="0.0001" min="0.0001" class="w-full border rounded px-2 py-1 text-sm" placeholder="0.0000" required />
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button type="button" id="btnAgregarSalario" class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                                            <i class="fas fa-plus mr-2"></i>Agregar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proceso</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Salario/Unidad</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Moneda</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estatus</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-precios-proceso-body" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -312,92 +364,92 @@
 
 <!-- Modal Registrar Lote -->
 <div id="modalRegistrarLote"
-    class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 z-50 p-4">
-    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden w-full sm:w-11/12 max-w-6xl max-h-[95vh] transform transition-all duration-300 scale-95">
+    class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 z-50 p-2 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-5xl h-[90vh] flex flex-col transform transition-all duration-300 scale-95">
         
         <!-- Header Mejorado con Gradiente -->
-        <div class="bg-gradient-to-r from-green-600 to-emerald-700 px-6 md:px-8 py-5 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                    <i class="fas fa-boxes text-white text-2xl"></i>
+        <div class="bg-gradient-to-r from-green-600 to-emerald-700 px-4 md:px-6 py-3 flex justify-between items-center flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                    <i class="fas fa-boxes text-white text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-2xl md:text-3xl font-bold text-white">
+                    <h3 class="text-lg md:text-xl font-bold text-white">
                         Crear Lote de Producción
                     </h3>
-                    <p class="text-green-100 text-sm mt-1">
+                    <p class="text-green-100 text-xs hidden sm:block">
                         <i class="fas fa-info-circle mr-1"></i>
                         Registra un nuevo lote con sus procesos
                     </p>
                 </div>
             </div>
             <button id="btnCerrarModalRegistrarLote" type="button" 
-                class="text-white/80 hover:text-white hover:bg-white/20 transition-all p-2 rounded-full">
-                <svg class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+                class="text-white/80 hover:text-white hover:bg-white/20 transition-all p-1.5 rounded-full">
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
             </button>
         </div>
 
-        <form id="formRegistrarLote" class="px-6 md:px-8 py-6 max-h-[calc(95vh-200px)] overflow-y-auto custom-scrollbar">
+        <form id="formRegistrarLote" class="px-4 md:px-6 py-4 flex-1 overflow-y-auto custom-scrollbar">
             
             <!-- Sección Datos Generales del Lote -->
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200 mb-6">
-                <h4 class="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
-                    <div class="bg-green-500 p-2 rounded-lg">
-                        <i class="fas fa-clipboard-list text-white"></i>
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 md:p-5 border-2 border-green-200 mb-4">
+                <h4 class="text-base font-bold text-green-900 mb-3 flex items-center gap-2">
+                    <div class="bg-green-500 p-1.5 rounded-lg">
+                        <i class="fas fa-clipboard-list text-white text-sm"></i>
                     </div>
                     Datos Generales del Lote
                 </h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="lote_fecha_jornada" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label for="lote_fecha_jornada" class="block text-xs font-semibold text-gray-700 mb-1.5">
                             <i class="fas fa-calendar-alt text-green-600 mr-1"></i>
                             Fecha de Jornada <span class="text-red-500">*</span>
                         </label>
                         <input type="date" id="lote_fecha_jornada" name="fecha_jornada" 
-                            class="w-full border-2 border-green-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
+                            class="w-full border-2 border-green-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
                     </div>
                     <div>
-                        <label for="lote_volumen_estimado" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label for="lote_volumen_estimado" class="block text-xs font-semibold text-gray-700 mb-1.5">
                             <i class="fas fa-balance-scale text-green-600 mr-1"></i>
                             Volumen Estimado (kg) <span class="text-red-500">*</span>
                         </label>
                         <input type="number" step="0.01" id="lote_volumen_estimado" name="volumen_estimado" placeholder="Ej: 2500.00" 
-                            class="w-full border-2 border-green-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
+                            class="w-full border-2 border-green-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
                     </div>
                     <div>
-                        <label for="lote_supervisor" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label for="lote_supervisor" class="block text-xs font-semibold text-gray-700 mb-1.5">
                             <i class="fas fa-user-tie text-green-600 mr-1"></i>
                             Supervisor <span class="text-red-500">*</span>
                         </label>
                         <select id="lote_supervisor" name="idsupervisor" 
-                            class="w-full border-2 border-green-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
+                            class="w-full border-2 border-green-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm" required>
                             <option value="">Seleccionar supervisor...</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="lote_observaciones" class="block text-sm font-semibold text-gray-700 mb-2">
+                    <div class="sm:col-span-2">
+                        <label for="lote_observaciones" class="block text-xs font-semibold text-gray-700 mb-1.5">
                             <i class="fas fa-comment-alt text-green-600 mr-1"></i>
                             Observaciones
                         </label>
-                        <textarea id="lote_observaciones" name="observaciones" rows="3" placeholder="Observaciones adicionales..." 
-                            class="w-full border-2 border-green-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm"></textarea>
+                        <textarea id="lote_observaciones" name="observaciones" rows="2" placeholder="Observaciones adicionales..." 
+                            class="w-full border-2 border-green-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-sm"></textarea>
                     </div>
                 </div>
 
                 <!-- Información calculada -->
-                <div id="infoCalculada" class="bg-white/70 backdrop-blur-sm p-4 rounded-xl border border-green-300 mt-4 hidden">
-                    <h4 class="text-sm font-bold text-green-900 mb-3 flex items-center gap-2">
-                        <i class="fas fa-calculator text-green-600"></i>
+                <div id="infoCalculada" class="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-green-300 mt-3 hidden">
+                    <h4 class="text-xs font-bold text-green-900 mb-2 flex items-center gap-2">
+                        <i class="fas fa-calculator text-green-600 text-xs"></i>
                         Información Calculada Automáticamente
                     </h4>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div class="bg-green-100 p-3 rounded-lg">
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="bg-green-100 p-2 rounded-lg">
                             <span class="text-green-700 font-medium">Operarios Requeridos:</span>
                             <span id="operariosCalculados" class="font-bold ml-2 text-green-900">-</span>
                         </div>
-                        <div class="bg-green-100 p-3 rounded-lg">
+                        <div class="bg-green-100 p-2 rounded-lg">
                             <span class="text-green-700 font-medium">Capacidad Máxima:</span>
                             <span id="capacidadMaxima" class="font-bold ml-2 text-green-900">-</span>
                         </div>
@@ -406,15 +458,15 @@
             </div>
 
             <!-- Sección Agregar Registros de Producción al Lote -->
-            <div class="mt-6">
-                <h4 class="text-base font-semibold text-gray-700 mb-3 border-b pb-2 flex items-center">
-                    <i class="fas fa-industry text-green-600 mr-2"></i>
+            <div class="mt-4">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2 border-b pb-1.5 flex items-center">
+                    <i class="fas fa-industry text-green-600 mr-2 text-xs"></i>
                     Registros de Producción del Lote
                 </h4>
                 
                 <!-- Formulario para agregar registro de producción -->
-                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-lg border border-gray-200 mb-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200 mb-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <!-- Fila 1: Empleado, Fecha, Tipo -->
                         <div>
                             <label for="lote_prod_empleado" class="block text-xs font-medium text-gray-700 mb-1">
@@ -478,18 +530,18 @@
                         </div>
 
                         <!-- Salarios (calculados automáticamente) -->
-                        <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                        <div class="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-3 bg-yellow-50 p-2.5 rounded-lg border border-yellow-200">
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Salario Base</label>
-                                <input type="text" id="lote_prod_salario_base" readonly class="w-full bg-gray-100 border border-gray-200 rounded px-3 py-2 text-sm text-gray-700" value="$0.00">
+                                <input type="text" id="lote_prod_salario_base" readonly class="w-full bg-gray-100 border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-700" value="$0.00">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Pago por Trabajo</label>
-                                <input type="text" id="lote_prod_pago_trabajo" readonly class="w-full bg-gray-100 border border-gray-200 rounded px-3 py-2 text-sm text-gray-700" value="$0.00">
+                                <input type="text" id="lote_prod_pago_trabajo" readonly class="w-full bg-gray-100 border border-gray-200 rounded px-2.5 py-1.5 text-xs text-gray-700" value="$0.00">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Salario Total</label>
-                                <input type="text" id="lote_prod_salario_total" readonly class="w-full bg-green-100 border border-green-300 rounded px-3 py-2 text-sm font-bold text-green-700" value="$0.00">
+                                <input type="text" id="lote_prod_salario_total" readonly class="w-full bg-green-100 border border-green-300 rounded px-2.5 py-1.5 text-xs font-bold text-green-700" value="$0.00">
                             </div>
                         </div>
 
@@ -498,14 +550,14 @@
                             <label for="lote_prod_observaciones" class="block text-xs font-medium text-gray-700 mb-1">
                                 Observaciones
                             </label>
-                            <textarea id="lote_prod_observaciones" rows="2" placeholder="Observaciones del registro..." class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+                            <textarea id="lote_prod_observaciones" rows="2" placeholder="Observaciones del registro..." class="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
                         </div>
                     </div>
 
                     <!-- Botón Agregar -->
-                    <div class="mt-4 flex justify-end">
-                        <button type="button" id="btnAgregarRegistroProduccionLote" class="bg-green-500 hover:bg-green-600 text-white rounded-lg px-6 py-2.5 text-sm font-medium shadow-sm transition-all hover:shadow-md">
-                            <i class="fas fa-plus-circle mr-2"></i>Agregar Registro
+                    <div class="mt-3 flex justify-end">
+                        <button type="button" id="btnAgregarRegistroProduccionLote" class="bg-green-500 hover:bg-green-600 text-white rounded-lg px-4 py-2 text-xs font-medium shadow-sm transition-all hover:shadow-md">
+                            <i class="fas fa-plus-circle mr-1.5"></i>Agregar Registro
                         </button>
                     </div>
                 </div>
@@ -540,12 +592,12 @@
             <div id="mensajeErrorFormLote" class="text-red-600 text-xs mt-4 text-center font-medium"></div>
         </form>
 
-        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-            <button type="button" id="btnCancelarModalRegistrarLote" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
+        <div class="bg-gray-50 px-4 md:px-6 py-3 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0">
+            <button type="button" id="btnCancelarModalRegistrarLote" class="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium">
                 Cancelar
             </button>
-            <button type="button" id="btnGuardarLote" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm md:text-base font-medium">
-                <i class="fas fa-save mr-1 md:mr-2"></i> Crear Lote con Procesos
+            <button type="button" id="btnGuardarLote" class="w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-medium">
+                <i class="fas fa-save mr-2"></i> Crear Lote con Procesos
             </button>
         </div>
     </div>
@@ -554,17 +606,17 @@
 <!-- Modal Asignar Operarios -->
 <div id="modalAsignarOperarios"
     class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-6xl max-h-[95vh]">
-        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xl md:text-2xl font-bold text-gray-800">Asignar Operarios al Lote</h3>
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-6xl h-[85vh] flex flex-col">
+        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+            <h3 class="text-lg md:text-xl font-bold text-gray-800">Asignar Operarios al Lote</h3>
             <button id="btnCerrarModalAsignarOperarios" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
 
-        <div class="px-4 md:px-8 py-6 max-h-[calc(95vh-180px)] overflow-y-auto">
+        <div class="px-4 md:px-8 py-6 flex-1 overflow-y-auto custom-scrollbar">
             <input type="hidden" id="idLoteAsignar">
 
             <!-- Información del Lote -->
@@ -656,7 +708,7 @@
         </div>
 
         <!-- Footer del modal -->
-        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200">
+        <div class="bg-gray-50 px-4 md:px-6 py-3 border-t border-gray-200 flex-shrink-0">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <!-- Información de progreso -->
                 <div class="text-sm text-gray-600">
@@ -670,12 +722,12 @@
                 <!-- Botones de acción -->
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                     <button type="button" id="btnCancelarModalAsignarOperarios"
-                        class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
+                        class="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium">
                         <i class="fas fa-times mr-2"></i>Cancelar
                     </button>
                     <button type="button" id="btnGuardarAsignaciones"
-                        class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm md:text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-save mr-1 md:mr-2"></i>Guardar Asignaciones
+                        class="w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-save mr-2"></i>Guardar Asignaciones
                     </button>
                 </div>
             </div>
@@ -688,16 +740,16 @@
 <!-- Modal Registrar Producción Diaria -->
 <div id="modalRegistrarProduccionDiaria"
     class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-6xl max-h-[95vh]">
-        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xl md:text-2xl font-bold text-gray-800">Registrar Producción Diaria</h3>
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-6xl h-[85vh] flex flex-col">
+        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+            <h3 class="text-lg md:text-xl font-bold text-gray-800">Registrar Producción Diaria</h3>
             <button id="btnCerrarModalProduccionDiaria" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
-        <div class="px-4 md:px-8 py-6 max-h-[calc(70vh-120px)] overflow-y-auto">
+        <div class="px-4 md:px-8 py-6 flex-1 overflow-y-auto custom-scrollbar">
             <input type="hidden" id="idLoteProduccionDiaria">
 
             <div class="mb-6">
@@ -741,12 +793,12 @@
                 </table>
             </div>
         </div>
-        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-            <button type="button" id="btnCancelarModalProduccionDiaria" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
+        <div class="bg-gray-50 px-4 md:px-6 py-3 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0">
+            <button type="button" id="btnCancelarModalProduccionDiaria" class="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium">
                 Cancelar
             </button>
-            <button type="button" id="btnGuardarProduccionDiaria" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm md:text-base font-medium">
-                <i class="fas fa-save mr-1 md:mr-2"></i> Guardar Producción
+            <button type="button" id="btnGuardarProduccionDiaria" class="w-full sm:w-auto px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm font-medium">
+                <i class="fas fa-save mr-2"></i> Guardar Producción
             </button>
         </div>
     </div>
@@ -756,9 +808,9 @@
 <!-- MODAL: REGISTRAR PRODUCCIÓN -->
 <!-- ============================================= -->
 <div id="modalRegistrarProduccion" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] bg-opacity-30 z-50 opacity-0 pointer-events-none transition-opacity duration-300 p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full sm:w-11/12 max-w-4xl max-h-[95vh] overflow-hidden">
+    <div class="bg-white rounded-xl shadow-2xl w-full sm:w-11/12 max-w-4xl h-[85vh] flex flex-col overflow-hidden">
         <!-- Header -->
-        <div class="flex justify-between items-center px-4 md:px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 border-b">
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 border-b flex-shrink-0">
             <h3 class="text-lg md:text-xl font-bold text-white flex items-center">
                 <i class="fas fa-industry mr-2"></i>Registrar Producción
             </h3>
@@ -770,7 +822,7 @@
         </div>
 
         <!-- Formulario -->
-        <form id="formRegistrarProduccion" class="px-4 md:px-6 py-6 overflow-y-auto max-h-[calc(95vh-180px)]">
+        <form id="formRegistrarProduccion" class="px-4 md:px-6 py-6 flex-1 overflow-y-auto custom-scrollbar">
             
             <!-- Información del Lote y Fecha -->
             <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
@@ -912,7 +964,7 @@
         </form>
 
         <!-- Footer con botones -->
-        <div class="flex flex-col sm:flex-row justify-end gap-3 px-4 md:px-6 py-4 bg-gray-50 border-t border-gray-200">
+        <div class="flex flex-col sm:flex-row justify-end gap-3 px-4 md:px-6 py-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
             <button type="button" id="btnCancelarRegistrarProduccion" class="w-full sm:w-auto px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium">
                 <i class="fas fa-times mr-2"></i>Cancelar
             </button>
@@ -925,8 +977,8 @@
 
 <!-- Modal Ver Detalle del Lote -->
 <div id="modalVerLote" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] bg-opacity-30 z-50 opacity-0 pointer-events-none transition-opacity duration-300 p-4">
-    <div class="bg-white rounded-xl shadow-lg w-full sm:w-11/12 max-w-5xl max-h-[95vh]">
-        <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b">
+    <div class="bg-white rounded-xl shadow-lg w-full sm:w-11/12 max-w-5xl h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center px-4 md:px-6 py-4 border-b flex-shrink-0">
             <h3 class="text-lg md:text-xl font-bold text-gray-800">
                 <i class="fas fa-boxes mr-2 text-green-600"></i>Detalle del Lote de Producción
             </h3>
@@ -937,7 +989,7 @@
             </button>
         </div>
         
-        <div class="p-4 md:p-6 overflow-y-auto max-h-[calc(95vh-180px)] sm:max-h-[70vh]">
+        <div class="p-4 md:p-6 flex-1 overflow-y-auto custom-scrollbar">
             <!-- Información General del Lote -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
                 <div>
@@ -1060,9 +1112,9 @@
             </div>
         </div>
 
-        <div class="flex justify-end pt-4 md:pt-6 px-4 md:px-6 pb-4 border-t border-gray-200">
-            <button type="button" id="btnCerrarModalVerLote2" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 text-sm md:text-base">
-                <i class="fas fa-times mr-1 md:mr-2"></i>Cerrar
+        <div class="flex justify-end px-4 md:px-6 py-3 border-t border-gray-200 flex-shrink-0 bg-gray-50">
+            <button type="button" id="btnCerrarModalVerLote2" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 text-sm">
+                <i class="fas fa-times mr-2"></i>Cerrar
             </button>
         </div>
     </div>
@@ -1070,6 +1122,32 @@
 
 <!-- Estilos adicionales -->
 <style>
+    /* Scrollbar personalizado para modales */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* Para Firefox */
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f1f5f9;
+    }
+
     .operario-asignado {
         background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
         border: 1px solid #0ea5e9;

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="TestCategoriaDeleteExitoso" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" tests="2" assertions="4" errors="0" failures="0" skipped="0" time="0.011113">
+    <testcase name="testDeleteCategoriaExistente" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" line="36" class="TestCategoriaDeleteExitoso" classname="TestCategoriaDeleteExitoso" assertions="2" time="0.009315"/>
+    <testcase name="testDeleteCategoriaYaEliminada" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" line="60" class="TestCategoriaDeleteExitoso" classname="TestCategoriaDeleteExitoso" assertions="2" time="0.001798"/>
+  </testsuite>
+</testsuites>
