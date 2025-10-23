@@ -16,6 +16,7 @@ class VentasModel
     private $fecha_venta;
     private $total_venta;
     private $estatus;
+    const SUPER_USUARIO_ROL_ID = 1;
 
     public function __construct()
     {
@@ -143,7 +144,37 @@ class VentasModel
         $this->estatus = $estatus;
     }
 
-    // Método search implementado localmente para eliminar la dependencia de Mysql
+   private function esSuperUsuario(int $idusuario){
+    $conexion = new Conexion();
+    $conexion->connect();
+    $dbSeguridad = $conexion->get_conectSeguridad();
+    
+    try {
+        $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
+        $this->setArray([$idusuario]);
+        
+        $stmt = $dbSeguridad->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($usuario) {
+            $rolUsuario = intval($usuario['idrol']);
+            return $rolUsuario === self::SUPER_USUARIO_ROL_ID;
+        }
+        return false;
+    } catch (Exception $e) {
+        error_log("VentasModel::esSuperUsuario - Error: " . $e->getMessage());
+        return false;
+    } finally {
+        $conexion->disconnect();
+    }
+}
+
+private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
+    return $this->esSuperUsuario($idUsuarioSesion);
+}
+
+
     private function search(string $query, array $params = [])
     {
         $conexion = new Conexion();
@@ -164,40 +195,45 @@ class VentasModel
         return $result;
     }
 
-    private function ejecutarBusquedaTodasVentas()
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $this->setQuery("SELECT 
-                        v.idventa, 
-                        v.nro_venta, 
-                        v.fecha_venta,
-                        CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
-                        v.total_general, 
-                        v.estatus,
-                        v.observaciones,
-                        v.fecha_creacion, 
-                        v.ultima_modificacion
-                    FROM venta v
-                    LEFT JOIN cliente c ON v.idcliente = c.idcliente
-                    ORDER BY v.fecha_creacion DESC");
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute();
-            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
-            return $this->getResult();
-            
-        } catch (PDOException $e) {
-            error_log("VentasModel::ejecutarBusquedaTodasVentas - Error: " . $e->getMessage());
-            return [];
-        } finally {
-            $conexion->disconnect();
+    private function ejecutarBusquedaTodasVentas(int $idUsuarioSesion = 0){
+    $conexion = new Conexion();
+    $conexion->connect();
+    $db = $conexion->get_conectGeneral();
+    
+    try {
+        $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+        
+        $whereClause = "";
+        if (!$esSuperUsuarioActual) {
+            $whereClause = " WHERE v.estatus NOT IN ('Inactivo', 'ANULADA')";
         }
+        
+        $this->setQuery("SELECT
+            v.idventa,
+            v.nro_venta,
+            v.fecha_venta,
+            CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
+            v.total_general,
+            v.estatus,
+            v.observaciones,
+            v.fecha_creacion,
+            v.ultima_modificacion
+            FROM venta v
+            LEFT JOIN cliente c ON v.idcliente = c.idcliente" . $whereClause . "
+            ORDER BY v.fecha_creacion DESC");
+        
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute();
+        $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+        return $this->getResult();
+        
+    } catch (PDOException $e) {
+        error_log("VentasModel::ejecutarBusquedaTodasVentas - Error: " . $e->getMessage());
+        return [];
+    } finally {
+        $conexion->disconnect();
     }
+}
 
     private function ejecutarInsercionVenta(array $data, array $detalles, array $datosClienteNuevo = null)
     {
@@ -599,10 +635,10 @@ class VentasModel
         }
     }
 
-    public function getVentasDatatable()
-    {
-        return $this->ejecutarBusquedaTodasVentas();
+    public function getVentasDatatable(int $idUsuarioSesion = 0){
+        return $this->ejecutarBusquedaTodasVentas($idUsuarioSesion);
     }
+
 
     public function insertVenta(array $data, array $detalles, array $datosClienteNuevo = null)
     {
@@ -737,7 +773,6 @@ class VentasModel
         }
     }
 
-    // ...existing code...
 
     public function obtenerVentaPorId(int $idventa)
     {
@@ -830,6 +865,10 @@ class VentasModel
     {
         return $this->ejecutarBusquedaProductosParaFormulario();
     }
+
+    public function verificarEsSuperUsuario(int $idusuario){
+    return $this->esSuperUsuario($idusuario);
+}
 
     public function validarDatosCliente($datos)
     {
