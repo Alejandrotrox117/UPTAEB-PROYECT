@@ -66,11 +66,97 @@ class Peso extends Controllers
             exit();
         }
 
-        $resultado = $this->model->obtenerUltimoPeso();
+        // Leer directamente del archivo JSON que actualiza el script Python
+        $filePath = 'C:\com_data\peso_mysql.json';
+        
+        if (!file_exists($filePath)) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Archivo de peso no encontrado'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        $jsonData = file_get_contents($filePath);
+        $data = json_decode($jsonData, true);
+        
+        if ($data === null) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al leer datos de peso'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        echo json_encode([
+            'status' => true,
+            'data' => [
+                'peso' => $data["peso_numerico"],
+                'fecha' => $data["fecha_hora"],
+                'estado' => $data["estado"] ?? 'ACTIVO',
+                'variacion' => $data["variacion"] ?? '0',
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
 
-        if (!empty($resultado['data'])) {
-            $resultado['data']['fecha_formateada'] = $this->formatearFechaHora($resultado['data']['fecha']);
-            $resultado['data']['fecha_creacion_formateada'] = $this->formatearFechaHora($resultado['data']['fecha_creacion']);
+    public function guardarPesoRomana()
+    {
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Método no permitido'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion($this->moduloClave, 'crear')) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'No tiene permisos para guardar pesos.',
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        // Leer del archivo JSON
+        $filePath = 'C:\com_data\peso_mysql.json';
+        
+        if (!file_exists($filePath)) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Archivo de peso no encontrado'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        $jsonData = file_get_contents($filePath);
+        $data = json_decode($jsonData, true);
+        
+        if ($data === null) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al leer datos de peso'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+
+        $peso = $data["peso_numerico"];
+        $fecha = $data["fecha_hora"];
+
+        // Guardar en la base de datos
+        $resultado = $this->model->guardarPesoRomana($peso, $fecha);
+
+        // Registrar en bitácora
+        if ($resultado['status'] && !$resultado['duplicado']) {
+            $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+            $this->bitacoraModel->registrarAccion(
+                'Romana',
+                'GUARDAR_PESO',
+                $idusuario,
+                "Peso guardado: {$peso}kg - ID: {$resultado['idromana']}"
+            );
         }
 
         echo json_encode($resultado, JSON_UNESCAPED_UNICODE);

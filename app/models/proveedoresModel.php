@@ -318,7 +318,7 @@ class ProveedoresModel extends Mysql
                     DATE_FORMAT(fecha_cracion, ?) as fecha_creacion_formato,
                     DATE_FORMAT(fecha_modificacion, ?) as fecha_modificacion_formato
                 FROM proveedor" . $whereClause . " 
-                ORDER BY estatus DESC, nombre ASC, apellido ASC"
+                ORDER BY fecha_cracion DESC"
             );
             
             $this->setArray(['%d/%m/%Y', '%d/%m/%Y', '%d/%m/%Y']);

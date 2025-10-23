@@ -1079,6 +1079,10 @@ class Compras extends Controllers
     $data['page_title'] = "Factura de Compra <small>Sistema de Compras</small>";
     $data['page_name'] = "Factura de Compra";
     $data['arrCompra'] = $this->get_model()->selectCompra($idcompra);
+    
+    // Obtener tasa del día actual
+    $data['tasaDelDia'] = $this->get_model()->getTasaBcvDelDia();
+    
     $this->views->getView($this,"factura_compra",$data);
     }
 }

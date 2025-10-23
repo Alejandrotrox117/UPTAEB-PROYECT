@@ -208,7 +208,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Compras');
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div>
-                    <label for="proveedorApellido" class="block text-sm font-medium text-gray-700 mb-1">Apellido <span class="text-red-500">*</span></label>
+                    <label for="proveedorApellido" class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
                     <input type="text" id="proveedorApellido" name="apellido" placeholder="Apellido del proveedor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" >
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
@@ -468,7 +468,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Compras');
 </div>
 
 <!-- Cargar archivo de permisos antes que el archivo principal -->
-<script src="/project/app/assets/js/functions_compras_permisos.js"></script>
+<script src="<?= base_url('app/assets/js/functions_compras_permisos.js'); ?>"></script>
 <script>
 // Ejecutar obtenerPermisos inmediatamente cuando se carga el archivo de permisos
 document.addEventListener("DOMContentLoaded", function() {

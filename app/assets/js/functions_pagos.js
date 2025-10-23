@@ -21,7 +21,7 @@ let pagoEditando = null;
  * Formatea un monto con su moneda correspondiente
  */
 function formatearMontoConMoneda(monto, moneda, simbolo = '') {
-  const montoFormateado = parseFloat(monto).toFixed(2);
+  const montoFormateado = parseFloat(monto).toFixed(4);
   if (simbolo) {
     return `${simbolo}${montoFormateado}`;
   }
@@ -33,9 +33,9 @@ function formatearMontoConMoneda(monto, moneda, simbolo = '') {
  */
 function formatearConversionMoneda(montoOriginal, monedaOriginal, simboloOriginal, montoConvertido) {
   if (monedaOriginal === 'VES') {
-    return `Bs.${parseFloat(montoConvertido).toFixed(2)}`;
+    return `Bs.${parseFloat(montoConvertido).toFixed(4)}`;
   }
-  return `${simboloOriginal}${parseFloat(montoOriginal).toFixed(2)} (Bs.${parseFloat(montoConvertido).toFixed(2)})`;
+  return `${simboloOriginal}${parseFloat(montoOriginal).toFixed(4)} (Bs.${parseFloat(montoConvertido).toFixed(4)})`;
 }
 
 // ============================================
@@ -206,10 +206,10 @@ const camposFormularioPago = [
   {
     id: "pagoMonto",
     tipo: "input",
-    regex: /^\d+(\.\d{1,2})?$/,
+    regex: expresiones.decimal4,
     mensajes: {
       vacio: "El monto es obligatorio.",
-      formato: "El monto debe ser un número válido con hasta 2 decimales.",
+      formato: "El monto debe ser un número válido con hasta 4 decimales.",
     },
   },
   {
@@ -453,7 +453,7 @@ function inicializarTablaPagos() {
         render: function (data) {
           return `<span class="font-semibold text-green-600">Bs.${parseFloat(
             data
-          ).toFixed(2)}</span>`;
+          ).toFixed(4)}</span>`;
         },
       },
       {
@@ -1094,7 +1094,7 @@ function mostrarInformacionDestinatario(nombre, identificacion, monto) {
 
   if (nombreEl) nombreEl.textContent = nombre;
   if (identificacionEl) identificacionEl.textContent = identificacion;
-  if (totalEl) totalEl.textContent = `Bs.${parseFloat(monto).toFixed(2)}`;
+  if (totalEl) totalEl.textContent = `Bs.${parseFloat(monto).toFixed(4)}`;
   if (containerEl) containerEl.classList.remove("hidden");
 }
 
@@ -1648,7 +1648,7 @@ function mostrarModalVerPago(pago) {
     verPagoId: pago.idpago || "N/A",
     verPagoTipo: pago.tipo_pago_texto || "N/A",
     verPagoDestinatario: pago.destinatario || "N/A",
-    verPagoMonto: `Bs.${parseFloat(pago.monto || 0).toFixed(2)}`,
+    verPagoMonto: `Bs.${parseFloat(pago.monto || 0).toFixed(4)}`,
     verPagoMetodo: pago.metodo_pago || "N/A",
     verPagoReferencia: pago.referencia || "Sin referencia",
     verPagoFecha: pago.fecha_pago_formato || "N/A",
