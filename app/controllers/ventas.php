@@ -134,8 +134,8 @@ class Ventas extends Controllers
 
         try {
             
-            $arrData = $this->model->getVentasDatatable();
-
+                $idUsuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
+                $arrData = $this->model->getVentasDatatable($idUsuarioSesion);
             $idUsuario = $this->BitacoraHelper->obtenerUsuarioSesion();
             if ($idUsuario) {
                 $this->bitacoraModel->registrarAccion('ventas', 'CONSULTA_DATOS', $idUsuario);
@@ -919,7 +919,8 @@ class Ventas extends Controllers
         }
 
         try {
-            $ventasData = $this->model->getVentasDatatable();
+               $idUsuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
+            $ventasData = $this->model->getVentasDatatable($idUsuarioSesion);
 
 
             $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
