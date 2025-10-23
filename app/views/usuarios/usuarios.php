@@ -323,6 +323,6 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Usuarios');
 </div>
 
 <!-- Scripts específicos del módulo de usuarios -->
-<script src="/project/app/assets/js/ayuda/usuarios-tour.js"></script>
+<script src="<?= base_url('app/assets/js/ayuda/usuarios-tour.js'); ?>"></script>
 
 <?php footerAdmin($data); ?>

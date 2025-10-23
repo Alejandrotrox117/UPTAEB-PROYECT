@@ -6,8 +6,8 @@ import {
   registrarEntidad,
 } from "./validaciones.js";
 
-// Obtener base_url de la variable global
-const base_url = window.base_url || "/project";
+// Obtener base_url de la variable global o construirla dinámicamente como fallback
+const base_url = window.base_url || (window.location.protocol + "//" + window.location.host + "/project");
 
 let tablaSueldos;
 let esSuperUsuarioActual = false;
