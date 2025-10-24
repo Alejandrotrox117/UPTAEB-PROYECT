@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="TestVentaUtilidadesExitoso" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" tests="7" assertions="7" errors="0" failures="1" skipped="0" time="0.052480">
-    <testcase name="testGetVentasDatatable" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="19" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.016904"/>
-    <testcase name="testGetListaProductosParaFormulario" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="29" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.004455"/>
-    <testcase name="testGetMonedasActivas" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="38" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.002095"/>
-    <testcase name="testObtenerProductos" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="47" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.002461"/>
-    <testcase name="testValidarDatosCliente" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="56" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.000340"/>
-    <testcase name="testGetTasaPorCodigoYFecha" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="66" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.024112">
-      <failure type="PHPUnit\Framework\ExpectationFailedException">TestVentaUtilidadesExitoso::testGetTasaPorCodigoYFecha&#13;
-Failed asserting that '195.2491' is of type "array".
-&#13;
-C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php:72</failure>
-    </testcase>
-    <testcase name="testObtenerTasaActualMoneda" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="75" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.002114"/>
+  <testsuite name="TestProduccionClasificacion" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" tests="6" assertions="11" errors="0" failures="0" skipped="0" time="0.042285">
+    <testcase name="testRegistrarClasificacionConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="22" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="3" time="0.012044"/>
+    <testcase name="testClasificacionActualizaInventario" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="49" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="1" time="0.002600"/>
+    <testcase name="testConsultarProcesosClasificacionPorLote" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="75" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="1" time="0.002039"/>
+    <testcase name="testClasificacionConStockInsuficiente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="98" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="2" time="0.002894"/>
+    <testcase name="testClasificacionSumaIncorrecta" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="125" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="2" time="0.002458"/>
+    <testcase name="testClasificacionConProductoInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="150" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="2" time="0.020250"/>
   </testsuite>
 </testsuites>

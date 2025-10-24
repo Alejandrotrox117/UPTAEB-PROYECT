@@ -1,9 +1,8 @@
-Venta Utilidades Exitoso
- [x] Get ventas datatable
- [x] Get lista productos para formulario
- [x] Get monedas activas
- [x] Obtener productos
- [x] Validar datos cliente
- [ ] Get tasa por codigo y fecha
- [x] Obtener tasa actual moneda
+Produccion Clasificacion
+ [x] Registrar clasificacion con datos completos
+ [x] Clasificacion actualiza inventario
+ [x] Consultar procesos clasificacion por lote
+ [x] Clasificacion con stock insuficiente
+ [x] Clasificacion suma incorrecta
+ [x] Clasificacion con producto inexistente
 
