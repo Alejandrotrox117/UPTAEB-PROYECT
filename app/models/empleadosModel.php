@@ -261,126 +261,146 @@ class empleadosModel extends Mysql
     // Método para insertar un nuevo empleado
     public function insertEmpleado($data)
     {
-        $sql = "INSERT INTO empleado (
-                    nombre, 
-                    apellido, 
-                    identificacion,
-                    tipo_empleado,
-                    estatus,
-                    fecha_nacimiento, 
-                    direccion, 
-                    correo_electronico, 
-                    telefono_principal, 
-                    observaciones, 
-                    genero, 
-                    fecha_inicio, 
-                    fecha_fin, 
-                    puesto, 
-                    salario
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            $sql = "INSERT INTO empleado (
+                        nombre, 
+                        apellido, 
+                        identificacion,
+                        tipo_empleado,
+                        estatus,
+                        fecha_nacimiento, 
+                        direccion, 
+                        correo_electronico, 
+                        telefono_principal, 
+                        observaciones, 
+                        genero, 
+                        fecha_inicio, 
+                        fecha_fin, 
+                        puesto, 
+                        salario
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        $stmt = $this->db->prepare($sql);
-        $arrValues = [
-            $data['nombre'],
-            $data['apellido'],
-            $data['identificacion'],
-            $data['tipo_empleado'] ?? 'OPERARIO', // Por defecto OPERARIO
-            $data['estatus'] ?? 'activo',
-            !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null,
-            !empty($data['direccion']) ? $data['direccion'] : null,
-            !empty($data['correo_electronico']) ? $data['correo_electronico'] : null,
-            !empty($data['telefono_principal']) ? $data['telefono_principal'] : null,
-            !empty($data['observaciones']) ? $data['observaciones'] : null,
-            !empty($data['genero']) ? $data['genero'] : null,
-            !empty($data['fecha_inicio']) ? $data['fecha_inicio'] : null,
-            !empty($data['fecha_fin']) ? $data['fecha_fin'] : null,
-            !empty($data['puesto']) ? $data['puesto'] : null,
-            !empty($data['salario']) ? $data['salario'] : 0.00
-        ];
+            $stmt = $this->db->prepare($sql);
+            $arrValues = [
+                $data['nombre'],
+                $data['apellido'],
+                $data['identificacion'],
+                $data['tipo_empleado'] ?? 'OPERARIO', // Por defecto OPERARIO
+                $data['estatus'] ?? 'activo',
+                !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null,
+                !empty($data['direccion']) ? $data['direccion'] : null,
+                !empty($data['correo_electronico']) ? $data['correo_electronico'] : null,
+                !empty($data['telefono_principal']) ? $data['telefono_principal'] : null,
+                !empty($data['observaciones']) ? $data['observaciones'] : null,
+                !empty($data['genero']) ? $data['genero'] : null,
+                !empty($data['fecha_inicio']) ? $data['fecha_inicio'] : null,
+                !empty($data['fecha_fin']) ? $data['fecha_fin'] : null,
+                !empty($data['puesto']) ? $data['puesto'] : null,
+                !empty($data['salario']) ? $data['salario'] : 0.00
+            ];
 
-        return $stmt->execute($arrValues);
+            return $stmt->execute($arrValues);
+        } catch (PDOException $e) {
+            error_log("Error al insertar empleado: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Método para eliminar lógicamente un empleado
     public function deleteEmpleado($idempleado)
     {
-        $sql = "UPDATE empleado SET estatus = 'INACTIVO' WHERE idempleado = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$idempleado]);
+        try {
+            $sql = "UPDATE empleado SET estatus = 'INACTIVO' WHERE idempleado = ?";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$idempleado]);
+        } catch (PDOException $e) {
+            error_log("Error al eliminar empleado: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Método para actualizar un empleado
     public function updateEmpleado($data)
     {
-        $sql = "UPDATE empleado SET 
-                    nombre = ?, 
-                    apellido = ?, 
-                    identificacion = ?,
-                    tipo_empleado = ?,
-                    estatus = ?,
-                    fecha_nacimiento = ?, 
-                    direccion = ?, 
-                    correo_electronico = ?, 
-                    telefono_principal = ?, 
-                    observaciones = ?, 
-                    genero = ?, 
-                    fecha_inicio = ?, 
-                    fecha_fin = ?, 
-                    puesto = ?, 
-                    salario = ? 
-                WHERE idempleado = ?";
+        try {
+            $sql = "UPDATE empleado SET 
+                        nombre = ?, 
+                        apellido = ?, 
+                        identificacion = ?,
+                        tipo_empleado = ?,
+                        estatus = ?,
+                        fecha_nacimiento = ?, 
+                        direccion = ?, 
+                        correo_electronico = ?, 
+                        telefono_principal = ?, 
+                        observaciones = ?, 
+                        genero = ?, 
+                        fecha_inicio = ?, 
+                        fecha_fin = ?, 
+                        puesto = ?, 
+                        salario = ? 
+                    WHERE idempleado = ?";
 
-        $stmt = $this->db->prepare($sql);
-        $arrValues = [
-            $data['nombre'],
-            $data['apellido'],
-            $data['identificacion'],
-            $data['tipo_empleado'] ?? 'OPERARIO',
-            $data['estatus'] ?? 'activo',
-            !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null,
-            !empty($data['direccion']) ? $data['direccion'] : null,
-            !empty($data['correo_electronico']) ? $data['correo_electronico'] : null,
-            !empty($data['telefono_principal']) ? $data['telefono_principal'] : null,
-            !empty($data['observaciones']) ? $data['observaciones'] : null,
-            !empty($data['genero']) ? $data['genero'] : null,
-            !empty($data['fecha_inicio']) ? $data['fecha_inicio'] : null,
-            !empty($data['fecha_fin']) ? $data['fecha_fin'] : null,
-            !empty($data['puesto']) ? $data['puesto'] : null,
-            !empty($data['salario']) ? $data['salario'] : 0.00,
-            $data['idempleado']
-        ];
+            $stmt = $this->db->prepare($sql);
+            $arrValues = [
+                $data['nombre'],
+                $data['apellido'],
+                $data['identificacion'],
+                $data['tipo_empleado'] ?? 'OPERARIO',
+                $data['estatus'] ?? 'activo',
+                !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null,
+                !empty($data['direccion']) ? $data['direccion'] : null,
+                !empty($data['correo_electronico']) ? $data['correo_electronico'] : null,
+                !empty($data['telefono_principal']) ? $data['telefono_principal'] : null,
+                !empty($data['observaciones']) ? $data['observaciones'] : null,
+                !empty($data['genero']) ? $data['genero'] : null,
+                !empty($data['fecha_inicio']) ? $data['fecha_inicio'] : null,
+                !empty($data['fecha_fin']) ? $data['fecha_fin'] : null,
+                !empty($data['puesto']) ? $data['puesto'] : null,
+                !empty($data['salario']) ? $data['salario'] : 0.00,
+                $data['idempleado']
+            ];
 
-        return $stmt->execute($arrValues);
+            return $stmt->execute($arrValues);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar empleado: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Método para obtener un empleado por ID
     public function getEmpleadoById($idempleado)
     {
-        // Asegurar que $idempleado sea un entero
-        $idempleado = (int) $idempleado;
-        
-        $sql = "SELECT 
-                    idempleado, 
-                    nombre, 
-                    apellido, 
-                    identificacion, 
-                    tipo_empleado,
-                    fecha_nacimiento, 
-                    direccion, 
-                    correo_electronico, 
-                    estatus, 
-                    telefono_principal, 
-                    observaciones, 
-                    genero,  
-                    fecha_modificacion, 
-                    fecha_inicio, 
-                    fecha_fin, 
-                    puesto, 
-                    salario 
-                FROM empleado 
-                WHERE idempleado = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$idempleado]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            // Asegurar que $idempleado sea un entero
+            $idempleado = (int) $idempleado;
+            
+            $sql = "SELECT 
+                        idempleado, 
+                        nombre, 
+                        apellido, 
+                        identificacion, 
+                        tipo_empleado,
+                        fecha_nacimiento, 
+                        direccion, 
+                        correo_electronico, 
+                        estatus, 
+                        telefono_principal, 
+                        observaciones, 
+                        genero,  
+                        fecha_modificacion, 
+                        fecha_inicio, 
+                        fecha_fin, 
+                        puesto, 
+                        salario 
+                    FROM empleado 
+                    WHERE idempleado = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$idempleado]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error al obtener empleado por ID: " . $e->getMessage());
+            return false;
+        }
     }
 }

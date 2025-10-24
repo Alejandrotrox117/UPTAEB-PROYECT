@@ -1,4 +1,9 @@
-Categoria Delete Exitoso
- [x] Delete categoria existente
- [x] Delete categoria ya eliminada
+Venta Utilidades Exitoso
+ [x] Get ventas datatable
+ [x] Get lista productos para formulario
+ [x] Get monedas activas
+ [x] Obtener productos
+ [x] Validar datos cliente
+ [ ] Get tasa por codigo y fecha
+ [x] Obtener tasa actual moneda
 

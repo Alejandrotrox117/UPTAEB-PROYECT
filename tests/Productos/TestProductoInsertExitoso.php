@@ -20,51 +20,80 @@ class TestProductoInsertExitoso extends TestCase
     public function testInsertProductoConDatosCompletos()
     {
         $data = [
-            'nombre' => 'Producto Test ' . time(),
-            'descripcion' => 'Descripción del producto de prueba',
-            'unidad_medida' => 'kg',
-            'precio' => 25.50,
+            'nombre' => 'Cartón Corrugado Mixto ' . time(),
+            'descripcion' => 'Cartón corrugado recibido de recolectores, sin clasificar, contiene material mezclado',
+            'unidad_medida' => 'KG',
+            'precio' => 0.15,
             'idcategoria' => 1,
             'moneda' => 'USD'
         ];
 
         $result = $this->model->insertProducto($data);
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-        $this->assertArrayHasKey('message', $result);
-        $this->assertArrayHasKey('producto_id', $result);
+        $this->assertIsArray($result, 'El resultado debe ser un array');
+        $this->assertArrayHasKey('status', $result, 'Debe contener clave status');
+        $this->assertArrayHasKey('message', $result, 'Debe contener clave message');
+        $this->assertArrayHasKey('producto_id', $result, 'Debe contener clave producto_id');
         
         if ($result['status']) {
-            $this->assertTrue($result['status']);
-            $this->assertIsInt($result['producto_id']);
-            $this->assertGreaterThan(0, $result['producto_id']);
+            $this->assertTrue($result['status'], 'El estatus debe ser true para inserción exitosa');
+            $this->assertEquals('Producto registrado exitosamente.', $result['message'], 
+                'El mensaje debe ser exactamente el que retorna el modelo');
+            $this->assertIsInt($result['producto_id'], 'El ID del producto debe ser un entero');
+            $this->assertGreaterThan(0, $result['producto_id'], 'El ID debe ser mayor a 0');
         }
     }
 
     public function testInsertProductoConPrecioCero()
     {
         $data = [
-            'nombre' => 'Producto Precio Cero ' . time(),
-            'descripcion' => 'Producto gratuito',
-            'unidad_medida' => 'unidad',
+            'nombre' => 'Material Contaminante para Desecho ' . time(),
+            'descripcion' => 'Material separado durante clasificación que no tiene valor comercial',
+            'unidad_medida' => 'KG',
             'precio' => 0,
             'idcategoria' => 1,
-            'moneda' => 'BS'
+            'moneda' => 'USD'
         ];
 
         $result = $this->model->insertProducto($data);
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
+        $this->assertIsArray($result, 'El resultado debe ser un array');
+        $this->assertArrayHasKey('status', $result, 'Debe contener clave status');
+        
+        if ($result['status']) {
+            $this->assertEquals('Producto registrado exitosamente.', $result['message'],
+                'Debe retornar el mensaje exacto del modelo incluso con precio 0');
+        }
     }
 
     public function testInsertProductoConDescripcionVacia()
     {
         $data = [
-            'nombre' => 'Producto Sin Desc ' . time(),
+            'nombre' => 'Plástico PET Transparente ' . time(),
             'descripcion' => '',
-            'unidad_medida' => 'lt',
+            'unidad_medida' => 'KG',
+            'precio' => 0.35,
+            'idcategoria' => 1,
+            'moneda' => 'USD'
+        ];
+
+        $result = $this->model->insertProducto($data);
+
+        $this->assertIsArray($result, 'El resultado debe ser un array');
+        $this->assertArrayHasKey('status', $result, 'Debe contener clave status');
+        
+        if ($result['status']) {
+            $this->assertEquals('Producto registrado exitosamente.', $result['message'],
+                'Debe permitir descripción vacía y retornar mensaje del modelo');
+        }
+    }
+
+    public function testInsertProductoConNombreLargo()
+    {
+        $data = [
+            'nombre' => 'Paca de Cartón Corrugado Calidad Premium para Exportación Industrial Compactada 30kg ' . time(),
+            'descripcion' => 'Paca de cartón corrugado de alta calidad, limpio, libre de contaminantes, compactado según estándares internacionales',
+            'unidad_medida' => 'KG',
             'precio' => 10.00,
             'idcategoria' => 1,
             'moneda' => 'USD'
@@ -72,25 +101,13 @@ class TestProductoInsertExitoso extends TestCase
 
         $result = $this->model->insertProducto($data);
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-    }
-
-    public function testInsertProductoConNombreLargo()
-    {
-        $data = [
-            'nombre' => 'Producto con nombre muy extenso para probar límites ' . time(),
-            'descripcion' => 'Producto con nombre largo',
-            'unidad_medida' => 'kg',
-            'precio' => 15.75,
-            'idcategoria' => 1,
-            'moneda' => 'USD'
-        ];
-
-        $result = $this->model->insertProducto($data);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
+        $this->assertIsArray($result, 'El resultado debe ser un array');
+        $this->assertArrayHasKey('status', $result, 'Debe contener clave status');
+        
+        if ($result['status']) {
+            $this->assertEquals('Producto registrado exitosamente.', $result['message'],
+                'Debe insertar productos con nombres largos descriptivos del negocio');
+        }
     }
 
     protected function tearDown(): void

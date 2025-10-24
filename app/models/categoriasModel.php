@@ -67,64 +67,84 @@ class categoriasModel extends Mysql
 
     public function insertCategoria($data)
     {
-        $sql = "INSERT INTO categoria (
-                    nombre, descripcion, estatus
-                ) VALUES (?, ?, ?)";
-    
-        $stmt = $this->db->prepare($sql);
-        $arrValues = [
-            $data['nombre'],
-            $data['descripcion'],
-            $data['estatus']
-        ];
-    
-        return $stmt->execute($arrValues);
+        try {
+            $sql = "INSERT INTO categoria (
+                        nombre, descripcion, estatus
+                    ) VALUES (?, ?, ?)";
+        
+            $stmt = $this->db->prepare($sql);
+            $arrValues = [
+                $data['nombre'],
+                $data['descripcion'],
+                $data['estatus']
+            ];
+        
+            return $stmt->execute($arrValues);
+        } catch (PDOException $e) {
+            error_log("Error al insertar categoria: " . $e->getMessage());
+            return false;
+        }
     }
 
     
     public function deleteCategoria($idcategoria) {
-        $sql = "UPDATE categoria SET estatus = 'INACTIVO' WHERE idcategoria = ?";
-        $stmt = $this->db->prepare($sql); 
-        return $stmt->execute([$idcategoria]); 
+        try {
+            $sql = "UPDATE categoria SET estatus = 'INACTIVO' WHERE idcategoria = ?";
+            $stmt = $this->db->prepare($sql); 
+            return $stmt->execute([$idcategoria]);
+        } catch (PDOException $e) {
+            error_log("Error al eliminar categoria: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Método para actualizar un categoria
     public function updateCategoria($data)
     {
-        $sql = "UPDATE categoria SET 
-                    nombre = ?, 
-                    descripcion = ?, 
-                    estatus = ? 
-                WHERE idcategoria = ?";
-    
-        $stmt = $this->db->prepare($sql);
-        $arrValues = [
-            $data['nombre'],
-            $data['descripcion'],
-            $data['estatus'],
-            $data['idcategoria']
-        ];
-    
-        return $stmt->execute($arrValues);
+        try {
+            $sql = "UPDATE categoria SET 
+                        nombre = ?, 
+                        descripcion = ?, 
+                        estatus = ? 
+                    WHERE idcategoria = ?";
+        
+            $stmt = $this->db->prepare($sql);
+            $arrValues = [
+                $data['nombre'],
+                $data['descripcion'],
+                $data['estatus'],
+                $data['idcategoria']
+            ];
+        
+            return $stmt->execute($arrValues);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar categoria: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Método para obtener un categoria por ID
     public function getCategoriaById($idcategoria) {
-        $sql = "SELECT * FROM categoria WHERE idcategoria = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$idcategoria]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $sql = "SELECT * FROM categoria WHERE idcategoria = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$idcategoria]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($data) {
-            // Asignar los valores a las propiedades del objeto
-            $this->setIdcategoria($data['idcategoria']);
-            $this->setNombre($data['nombre']);
-            $this->setDescripcion($data['descripcion']);
-    
-            $this->setEstatus($data['estatus']);
+            if ($data) {
+                // Asignar los valores a las propiedades del objeto
+                $this->setIdcategoria($data['idcategoria']);
+                $this->setNombre($data['nombre']);
+                $this->setDescripcion($data['descripcion']);
+        
+                $this->setEstatus($data['estatus']);
+            }
+
+            return $data;
+        } catch (PDOException $e) {
+            error_log("Error al obtener categoria por ID: " . $e->getMessage());
+            return false;
         }
-
-        return $data; 
     }
    
 }

@@ -19,38 +19,48 @@ class TestEmpleadoInsertExitoso extends TestCase
     public function testInsertEmpleadoConDatosCompletos()
     {
         $data = [
-            'nombre' => 'Carlos',
-            'apellido' => 'López',
-            'identificacion' => 'V' . time(),
-            'fecha_nacimiento' => '1990-05-15',
-            'direccion' => 'Calle Principal',
-            'correo_electronico' => 'carlos' . time() . '@test.com',
-            'telefono_principal' => '04121234567',
-            'observaciones' => 'Empleado de prueba',
-            'estatus' => 'activo'
+            'nombre' => 'María',
+            'apellido' => 'González',
+            'identificacion' => 'V-' . (12000000 + time() % 10000000),
+            'tipo_empleado' => 'OPERARIO',
+            'puesto' => 'Operario de Clasificación',
+            'salario' => 30.00,
+            'fecha_nacimiento' => '1995-03-15',
+            'direccion' => 'Urbanización La Victoria, Calle 5',
+            'correo_electronico' => 'maria.gonzalez' . time() . '@recicladora.com',
+            'telefono_principal' => '0414-5551234',
+            'genero' => 'F',
+            'fecha_inicio' => date('Y-m-d'),
+            'observaciones' => 'Operaria especializada en clasificación de cartón y papel',
+            'estatus' => 'ACTIVO'
         ];
 
         $result = $this->model->insertEmpleado($data);
 
-        $this->assertIsBool($result);
+    $this->assertTrue($result);
     }
 
     public function testInsertEmpleadoSinObservaciones()
     {
         $data = [
-            'nombre' => 'Ana',
-            'apellido' => 'Ramírez',
-            'identificacion' => 'V' . (time() + 1),
-            'fecha_nacimiento' => '1995-08-20',
-            'direccion' => 'Avenida Central',
-            'correo_electronico' => 'ana' . time() . '@test.com',
-            'telefono_principal' => '04149876543',
-            'estatus' => 'activo'
+            'nombre' => 'Juan',
+            'apellido' => 'Pérez',
+            'identificacion' => 'V-' . (18000000 + time() % 10000000),
+            'tipo_empleado' => 'SUPERVISOR',
+            'puesto' => 'Supervisor de Producción',
+            'salario' => 50.00,
+            'fecha_nacimiento' => '1988-07-20',
+            'direccion' => 'Sector Industrial, Galpón 3',
+            'correo_electronico' => 'juan.perez' . time() . '@recicladora.com',
+            'telefono_principal' => '0424-7778899',
+            'genero' => 'M',
+            'fecha_inicio' => date('Y-m-d'),
+            'estatus' => 'ACTIVO'
         ];
 
         $result = $this->model->insertEmpleado($data);
 
-        $this->assertIsBool($result);
+    $this->assertTrue($result);
     }
 
     protected function tearDown(): void

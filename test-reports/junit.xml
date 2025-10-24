@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="TestCategoriaDeleteExitoso" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" tests="2" assertions="4" errors="0" failures="0" skipped="0" time="0.011113">
-    <testcase name="testDeleteCategoriaExistente" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" line="36" class="TestCategoriaDeleteExitoso" classname="TestCategoriaDeleteExitoso" assertions="2" time="0.009315"/>
-    <testcase name="testDeleteCategoriaYaEliminada" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" line="60" class="TestCategoriaDeleteExitoso" classname="TestCategoriaDeleteExitoso" assertions="2" time="0.001798"/>
+  <testsuite name="TestVentaUtilidadesExitoso" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" tests="7" assertions="7" errors="0" failures="1" skipped="0" time="0.052480">
+    <testcase name="testGetVentasDatatable" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="19" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.016904"/>
+    <testcase name="testGetListaProductosParaFormulario" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="29" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.004455"/>
+    <testcase name="testGetMonedasActivas" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="38" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.002095"/>
+    <testcase name="testObtenerProductos" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="47" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.002461"/>
+    <testcase name="testValidarDatosCliente" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="56" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.000340"/>
+    <testcase name="testGetTasaPorCodigoYFecha" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="66" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.024112">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">TestVentaUtilidadesExitoso::testGetTasaPorCodigoYFecha&#13;
+Failed asserting that '195.2491' is of type "array".
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php:72</failure>
+    </testcase>
+    <testcase name="testObtenerTasaActualMoneda" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaUtilidadesExitoso.php" line="75" class="TestVentaUtilidadesExitoso" classname="TestVentaUtilidadesExitoso" assertions="1" time="0.002114"/>
   </testsuite>
 </testsuites>

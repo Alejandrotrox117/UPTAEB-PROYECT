@@ -714,7 +714,7 @@ class MovimientosModel extends Mysql
             
             return $prefijo . $fecha . '-' . str_pad($consecutivo, 4, '0', STR_PAD_LEFT);
         } catch (Exception $e) {
-         
+            error_log("MovimientosModel::generarCodigoMovimiento - Error: " . $e->getMessage());
             return $prefijo . $fecha . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         }
     }

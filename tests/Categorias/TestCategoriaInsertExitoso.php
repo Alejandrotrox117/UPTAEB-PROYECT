@@ -20,42 +20,42 @@ class TestCategoriaInsertExitoso extends TestCase
     public function testInsertCategoriaConDatosValidos()
     {
         $data = [
-            'nombre' => 'Categoría Test ' . time(),
-            'descripcion' => 'Descripción de prueba para categoría',
+            'nombre' => 'Materiales Cartón - Por Clasificar ' . time(),
+            'descripcion' => 'Cartón corrugado recibido de recolectores, mezclado con contaminantes',
             'estatus' => 'activo'
         ];
 
         $result = $this->model->insertCategoria($data);
 
-        $this->assertTrue($result);
+    $this->assertTrue($result);
     }
 
     public function testInsertCategoriaConDescripcionVacia()
     {
         $data = [
-            'nombre' => 'Categoría Sin Desc ' . time(),
+            'nombre' => 'Materiales Plástico PET - Clasificado ' . time(),
             'descripcion' => '',
             'estatus' => 'activo'
         ];
 
         $result = $this->model->insertCategoria($data);
 
-        $this->assertTrue($result);
+    $this->assertTrue($result);
     }
 
     public function testInsertCategoriaConNombreLargo()
     {
-        $nombreLargo = str_repeat('A', 100);
+        $nombreLargo = 'Pacas de Plástico PET Transparente Calidad Premium para Exportación Industrial ' . time();
         
         $data = [
             'nombre' => $nombreLargo,
-            'descripcion' => 'Prueba con nombre extenso',
+            'descripcion' => 'Pacas de plástico PET de alta calidad, limpias y compactadas según estándares de exportación',
             'estatus' => 'activo'
         ];
 
         $result = $this->model->insertCategoria($data);
 
-        $this->assertTrue($result);
+    $this->assertTrue($result);
     }
 
     protected function tearDown(): void
