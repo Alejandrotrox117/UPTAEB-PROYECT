@@ -1,7 +1,7 @@
 <?php
 require_once("app/core/conexion.php");
 
-class VentasModel // Eliminamos "extends Mysql"
+class VentasModel 
 {
     // Propiedades privadas
     private $query;
@@ -16,6 +16,7 @@ class VentasModel // Eliminamos "extends Mysql"
     private $fecha_venta;
     private $total_venta;
     private $estatus;
+    const SUPER_USUARIO_ROL_ID = 1;
 
     public function __construct()
     {
@@ -143,7 +144,37 @@ class VentasModel // Eliminamos "extends Mysql"
         $this->estatus = $estatus;
     }
 
-    // Método search implementado localmente para eliminar la dependencia de Mysql
+   private function esSuperUsuario(int $idusuario){
+    $conexion = new Conexion();
+    $conexion->connect();
+    $dbSeguridad = $conexion->get_conectSeguridad();
+    
+    try {
+        $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
+        $this->setArray([$idusuario]);
+        
+        $stmt = $dbSeguridad->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($usuario) {
+            $rolUsuario = intval($usuario['idrol']);
+            return $rolUsuario === self::SUPER_USUARIO_ROL_ID;
+        }
+        return false;
+    } catch (Exception $e) {
+        error_log("VentasModel::esSuperUsuario - Error: " . $e->getMessage());
+        return false;
+    } finally {
+        $conexion->disconnect();
+    }
+}
+
+private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
+    return $this->esSuperUsuario($idUsuarioSesion);
+}
+
+
     private function search(string $query, array $params = [])
     {
         $conexion = new Conexion();
@@ -164,91 +195,45 @@ class VentasModel // Eliminamos "extends Mysql"
         return $result;
     }
 
-    // Métodos privados encapsulados
-    private function ejecutarBusquedaTodasVentas(array $params)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        // Parámetros de DataTables
-        $start = $params['start'] ?? 0;
-        $length = $params['length'] ?? 10;
-        $searchValue = $params['search']['value'] ?? '';
-        $orderColumnIndex = $params['order'][0]['column'] ?? 0;
-        $orderColumnName = $params['columns'][$orderColumnIndex]['data'] ?? 'v.fecha_venta';
-        $orderDir = $params['order'][0]['dir'] ?? 'desc';
-
-      
-        $columnasPermitidas = ['nro_venta', 'fecha_venta', 'cliente_nombre', 'total_general', 'estatus_formato'];
-        if (!in_array($orderColumnName, $columnasPermitidas)) {
-            $orderColumnName = 'v.fecha_venta'; // Columna segura por defecto
+    private function ejecutarBusquedaTodasVentas(int $idUsuarioSesion = 0){
+    $conexion = new Conexion();
+    $conexion->connect();
+    $db = $conexion->get_conectGeneral();
+    
+    try {
+        $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+        
+        $whereClause = "";
+        if (!$esSuperUsuarioActual) {
+            $whereClause = " WHERE v.estatus NOT IN ('Inactivo', 'ANULADA')";
         }
-
-        try {
-            $bindings = [];
-            $whereClause = " WHERE v.estatus NOT IN ('inactivo', 'eliminado')";
-
-            // Lógica de búsqueda
-            if (!empty($searchValue)) {
-                $whereClause .= " AND (v.nro_venta LIKE ? OR CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) LIKE ? OR v.estatus LIKE ?)";
-                $searchTerm = "%{$searchValue}%";
-                array_push($bindings, $searchTerm, $searchTerm, $searchTerm);
-            }
-
-            // Contar total de registros (sin filtrar)
-            $totalRecords = $db->query("SELECT COUNT(v.idventa) FROM venta v WHERE v.estatus NOT IN ('inactivo', 'eliminado')")->fetchColumn();
-
-            // Contar total de registros (con filtro de búsqueda)
-            $queryFiltered = "SELECT COUNT(v.idventa) FROM venta v LEFT JOIN cliente c ON v.idcliente = c.idcliente" . $whereClause;
-            $stmtFiltered = $db->prepare($queryFiltered);
-            $stmtFiltered->execute($bindings);
-            $totalFiltered = $stmtFiltered->fetchColumn();
-
-            // Consulta principal con paginación y orden
-            $query = "SELECT 
-                        v.idventa, v.nro_venta, v.fecha_venta,
-                        CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
-                        v.total_general, v.estatus,
-                        DATE_FORMAT(v.fecha_venta, '%d/%m/%Y') as fecha_formato,
-                        CASE 
-                            WHEN v.estatus = 'BORRADOR' THEN 'Borrador'
-                            WHEN v.estatus = 'POR_PAGAR' THEN 'Por Pagar'
-                            WHEN v.estatus = 'PAGADA' THEN 'Pagada'
-                            WHEN v.estatus = 'ANULADA' THEN 'Anulada'
-                            ELSE v.estatus
-                        END as estatus_formato
-                      FROM venta v
-                      LEFT JOIN cliente c ON v.idcliente = c.idcliente
-                      $whereClause
-                      ORDER BY $orderColumnName $orderDir
-                      LIMIT " . intval($start) . ", " . intval($length);
-            
-            $stmt = $db->prepare($query);
-            $stmt->execute($bindings);
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $resultado = [
-                "draw" => intval($params['draw'] ?? 0),
-                "recordsTotal" => intval($totalRecords),
-                "recordsFiltered" => intval($totalFiltered),
-                "data" => $data
-            ];
-
-        } catch (Exception $e) {
-            error_log("VentasModel::ejecutarBusquedaTodasVentas - Error: " . $e->getMessage());
-            $resultado = [
-                "draw" => intval($params['draw'] ?? 0),
-                "recordsTotal" => 0,
-                "recordsFiltered" => 0,
-                "data" => []
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-
-        return $resultado;
+        
+        $this->setQuery("SELECT
+            v.idventa,
+            v.nro_venta,
+            v.fecha_venta,
+            CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
+            v.total_general,
+            v.estatus,
+            v.observaciones,
+            v.fecha_creacion,
+            v.ultima_modificacion
+            FROM venta v
+            LEFT JOIN cliente c ON v.idcliente = c.idcliente" . $whereClause . "
+            ORDER BY v.fecha_creacion DESC");
+        
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute();
+        $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+        return $this->getResult();
+        
+    } catch (PDOException $e) {
+        error_log("VentasModel::ejecutarBusquedaTodasVentas - Error: " . $e->getMessage());
+        return [];
+    } finally {
+        $conexion->disconnect();
     }
+}
 
     private function ejecutarInsercionVenta(array $data, array $detalles, array $datosClienteNuevo = null)
     {
@@ -269,10 +254,26 @@ class VentasModel // Eliminamos "extends Mysql"
                 }
             }
 
-            // Validar que el cliente existe
-            $clienteExiste = $this->search("SELECT COUNT(*) as count FROM cliente WHERE idcliente = ?", [$idCliente]);
-            if ($clienteExiste['count'] == 0) {
-                throw new Exception("El cliente especificado no existe");
+            // Validar que se tenga un cliente válido
+            if (!$idCliente) {
+                throw new Exception("Cliente no existe");
+            }
+
+            $stmt = $db->prepare("SELECT estatus FROM cliente WHERE idcliente = ?");
+            $stmt->execute([$idCliente]);
+            $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$cliente || strtolower($cliente['estatus']) !== 'activo') {
+                throw new Exception($cliente ? "Cliente inactivo" : "Cliente no existe");
+            }
+
+            $stmt = $db->prepare("SELECT COUNT(*) as count FROM monedas WHERE idmoneda = ?");
+            $stmt->execute([$data['idmoneda_general']]);
+            if ($stmt->fetchColumn() == 0) {
+                throw new Exception("Moneda no existe");
+            }
+
+            if (floatval($data['monto_descuento_general']) > floatval($data['subtotal_general'])) {
+                throw new Exception("Descuento mayor al subtotal");
             }
 
             // Generar número de venta
@@ -349,8 +350,8 @@ class VentasModel // Eliminamos "extends Mysql"
 
         try {
             $this->setQuery(
-                "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idmoneda, v.subtotal_general, 
-                        v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.observaciones,
+                "SELECT v.idventa, v.nro_venta, v.fecha_venta, v.idcliente, v.idmoneda, v.subtotal_general, 
+                        v.descuento_porcentaje_general, v.monto_descuento_general, v.estatus, v.total_general, v.balance, v.observaciones,
                         v.tasa as tasa_usada,
                         CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre,
                         c.nombre as cliente_nombre,
@@ -597,7 +598,7 @@ class VentasModel // Eliminamos "extends Mysql"
                 throw new Exception("La cantidad debe ser mayor a 0 en el detalle #" . ($index + 1));
             }
 
-            if (!isset($detalle['precio_unitario_venta']) || floatval($detalle['precio_unitario_venta']) < 0) {
+            if (!isset($detalle['precio_unitario_venta']) || floatval($detalle['precio_unitario_venta']) <= 0) {
                 throw new Exception("El precio unitario debe ser válido en el detalle #" . ($index + 1));
             }
 
@@ -634,11 +635,10 @@ class VentasModel // Eliminamos "extends Mysql"
         }
     }
 
-    // Métodos públicos que usan las funciones privadas
-    public function getVentasDatatable(array $params)
-    {
-        return $this->ejecutarBusquedaTodasVentas($params);
+    public function getVentasDatatable(int $idUsuarioSesion = 0){
+        return $this->ejecutarBusquedaTodasVentas($idUsuarioSesion);
     }
+
 
     public function insertVenta(array $data, array $detalles, array $datosClienteNuevo = null)
     {
@@ -773,7 +773,6 @@ class VentasModel // Eliminamos "extends Mysql"
         }
     }
 
-    // ...existing code...
 
     public function obtenerVentaPorId(int $idventa)
     {
@@ -866,6 +865,10 @@ class VentasModel // Eliminamos "extends Mysql"
     {
         return $this->ejecutarBusquedaProductosParaFormulario();
     }
+
+    public function verificarEsSuperUsuario(int $idusuario){
+    return $this->esSuperUsuario($idusuario);
+}
 
     public function validarDatosCliente($datos)
     {

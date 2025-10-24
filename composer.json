@@ -19,10 +19,10 @@
         "setasign/fpdf": "1.8"
     },
     "require-dev": {
-        "phpunit/phpunit": "10.0"
+        "phpunit/phpunit": "^10.5"
     }
     ,
     "scripts": {
-        "test": "vendor\\bin\\phpunit --colors=always"
+         "test": "vendor/bin/phpunit --colors=always"
     }
 }

@@ -398,8 +398,8 @@ class ProveedoresModel extends Mysql
         $dbSeguridad = $conexion->get_conectSeguridad();
 
         try {
-            error_log("ProveedoresModel::esSuperUsuario - Verificando usuario ID: $idusuario");
-            error_log("ProveedoresModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
+            // error_log("ProveedoresModel::esSuperUsuario - Verificando usuario ID: $idusuario");
+            // error_log("ProveedoresModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
             
             $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
             $this->setArray([$idusuario]);
@@ -410,12 +410,12 @@ class ProveedoresModel extends Mysql
             
             if ($usuario) {
                 $rolUsuario = intval($usuario['idrol']);
-                error_log("ProveedoresModel::esSuperUsuario - Rol del usuario: $rolUsuario");
+                // error_log("ProveedoresModel::esSuperUsuario - Rol del usuario: $rolUsuario");
                 $esSuperUsuario = $rolUsuario === self::SUPER_USUARIO_ROL_ID;
-                error_log("ProveedoresModel::esSuperUsuario - Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
+                // error_log("ProveedoresModel::esSuperUsuario - Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
                 return $esSuperUsuario;
             } else {
-                error_log("ProveedoresModel::esSuperUsuario - Usuario no encontrado o inactivo");
+                // error_log("ProveedoresModel::esSuperUsuario - Usuario no encontrado o inactivo");
                 return false;
             }
         } catch (Exception $e) {

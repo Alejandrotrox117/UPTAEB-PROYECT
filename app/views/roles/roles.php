@@ -288,6 +288,6 @@ console.log('🔐 Permisos del usuario para módulo Roles:', window.PERMISOS_ROL
 </script>
 
 <!-- Scripts específicos del módulo de roles -->
-<script src="/project/app/assets/js/ayuda/roles-tour.js"></script>
+<script src="<?= base_url('app/assets/js/ayuda/roles-tour.js'); ?>"></script>
 
 <?php footerAdmin($data); ?>
