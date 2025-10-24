@@ -11,9 +11,7 @@ class ClientesModel extends Mysql
     private $result;
     private $clienteId;
     private $message;
-    private $status;
-
-    // Propiedades específicas del cliente (basadas en la tabla real)
+    private $status;   
     private $idcliente;
     private $nombre;
     private $apellido;
@@ -26,12 +24,14 @@ class ClientesModel extends Mysql
     private $ultima_modificacion;
     private $fecha_eliminacion;
 
+    const SUPER_USUARIO_ROL_ID = 1;
+
     public function __construct()
     {
-        // Constructor vacío como en UsuariosModel
+    
     }
 
-    //  GETTERS Y SETTERS GENERALES (igual que UsuariosModel)
+    //  GETTERS Y SETTERS GENERALES 
     public function getQuery(){
         return $this->query;
     }
@@ -88,7 +88,7 @@ class ClientesModel extends Mysql
         $this->status = $status;
     }
 
-    //  GETTERS Y SETTERS ESPECÍFICOS DEL CLIENTE (basados en tabla real)
+  
     public function getIdcliente(): ?int
     {
         return $this->idcliente;
@@ -199,7 +199,7 @@ class ClientesModel extends Mysql
         $this->fecha_eliminacion = $fecha_eliminacion;
     }
 
-    //  FUNCIONES PRIVADAS ENCAPSULADAS (corregidas según tabla real)
+   
 
     /**
      * Verificar si existe cliente por cédula
@@ -262,7 +262,7 @@ class ClientesModel extends Mysql
                 $data['apellido'],
                 $data['direccion'],
                 $data['telefono_principal'],
-                'activo', // Estado por defecto según la tabla
+                $data['estatus'] ?? 'activo',
                 $data['observaciones'] ?? ''
             ]);
             
@@ -293,7 +293,7 @@ class ClientesModel extends Mysql
             $conexion->disconnect();
             error_log("Error al insertar cliente: " . $e->getMessage());
             
-            // Manejar errores específicos de duplicación
+         
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                 if (strpos($e->getMessage(), 'cedula') !== false) {
                     $mensaje = 'La cédula ya está registrada.';
@@ -400,7 +400,6 @@ class ClientesModel extends Mysql
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
-
         try {
             $this->setQuery(
                 "SELECT 
@@ -412,21 +411,17 @@ class ClientesModel extends Mysql
                 FROM cliente 
                 WHERE idcliente = ?"
             );
-            
             $this->setArray([$idcliente]);
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
             $resultado = $this->getResult() ?: false;
-            
         } catch (Exception $e) {
             error_log("ClientesModel::ejecutarBusquedaClientePorId -> " . $e->getMessage());
             $resultado = false;
         } finally {
             $conexion->disconnect();
         }
-
         return $resultado;
     }
 
@@ -469,50 +464,100 @@ class ClientesModel extends Mysql
         return $resultado;
     }
 
-    /**
-     * Función privada para obtener todos los clientes
-     */
-    private function ejecutarBusquedaTodosClientes(){
+    
+   private function esSuperUsuario(int $idusuario){
         $conexion = new Conexion();
         $conexion->connect();
-        $db = $conexion->get_conectGeneral();
+        $dbSeguridad = $conexion->get_conectSeguridad();
 
         try {
-            $this->setQuery(
-                "SELECT 
-                    idcliente, cedula, nombre, apellido, direccion, 
-                    telefono_principal, estatus, observaciones,
-                    fecha_creacion, ultima_modificacion,
-                    DATE_FORMAT(fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato,
-                    DATE_FORMAT(ultima_modificacion, '%d/%m/%Y') as ultima_modificacion_formato
-                FROM cliente
-                ORDER BY nombre ASC"
-            );
+              error_log("ClientesModel::esSuperUsuario - Verificando usuario ID: $idusuario");
+             error_log("ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
+            $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
+            $this->setArray([$idusuario]);
             
-            $this->setArray([]);
-            $stmt = $db->prepare($this->getQuery());
+            $stmt = $dbSeguridad->prepare($this->getQuery());
             $stmt->execute($this->getArray());
-            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            $resultado = [
-                'status' => true,
-                'message' => 'Clientes obtenidos.',
-                'data' => $this->getResult()
-            ];
-            
+            if ($usuario) {
+                $rolUsuario = intval($usuario['idrol']);
+                  error_log("ClientesModel::esSuperUsuario - Rol del usuario: $rolUsuario");
+                $esSuperUsuario = $rolUsuario === self::SUPER_USUARIO_ROL_ID;
+                 error_log("ClientesModel::esSuperUsuario - Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
+                return $esSuperUsuario;
+            } else {
+                error_log("ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo");
+              
+                return false;
+            }
         } catch (Exception $e) {
-            error_log("ClientesModel::ejecutarBusquedaTodosClientes - Error: " . $e->getMessage());
-            $resultado = [
-                'status' => false,
-                'message' => 'Error al obtener clientes: ' . $e->getMessage(),
-                'data' => []
-            ];
+            error_log("ClientesModel::esSuperUsuario - Error: " . $e->getMessage());
+            return false;
         } finally {
             $conexion->disconnect();
         }
-
-        return $resultado;
     }
+
+     /**
+     * Verificar si el usuario actual es super usuario
+     */
+    private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
+        return $this->esSuperUsuario($idUsuarioSesion);
+    }
+
+   
+
+
+
+   private function ejecutarBusquedaTodosClientes(int $idUsuarioSesion = 0){
+    $conexion = new Conexion();
+    $conexion->connect();
+    $db = $conexion->get_conectGeneral();
+
+    try {
+        $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+        
+        $whereClause = "";
+        if (!$esSuperUsuarioActual) {
+            $whereClause = " WHERE estatus = 'activo'";
+        }
+
+        $this->setQuery(
+            "SELECT
+            idcliente, cedula, nombre, apellido, direccion,
+            telefono_principal, estatus, observaciones,
+            fecha_creacion, ultima_modificacion,
+            DATE_FORMAT(fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato,
+            DATE_FORMAT(ultima_modificacion, '%d/%m/%Y') as ultima_modificacion_formato
+            FROM cliente" . $whereClause . "
+            ORDER BY estatus DESC, nombre ASC"
+        );
+
+        $this->setArray([]);
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+
+        $resultado = [
+            'status' => true,
+            'message' => 'Clientes obtenidos.',
+            'data' => $this->getResult()
+        ];
+
+    } catch (Exception $e) {
+        error_log("ClientesModel::ejecutarBusquedaTodosClientes - Error: " . $e->getMessage());
+        $resultado = [
+            'status' => false,
+            'message' => 'Error al obtener clientes: ' . $e->getMessage(),
+            'data' => []
+        ];
+    } finally {
+        $conexion->disconnect();
+    }
+
+    return $resultado;
+}
 
     /**
      * Función privada para obtener clientes activos
@@ -660,12 +705,23 @@ class ClientesModel extends Mysql
         return $this->ejecutarEliminacionCliente($this->getClienteId());
     }
 
+
+     /**
+     * Verificar si un usuario es super usuario (método público)
+     */
+    public function verificarEsSuperUsuario(int $idusuario){
+        return $this->esSuperUsuario($idusuario);
+    }
+
+
+
     /**
      * Obtener todos los clientes
      */
-    public function selectAllClientes(){
-        return $this->ejecutarBusquedaTodosClientes();
-    }
+    public function selectAllClientes(int $idUsuarioSesion = 0){
+    return $this->ejecutarBusquedaTodosClientes($idUsuarioSesion);
+}
+
 
     /**
      * Obtener clientes activos solamente
@@ -825,5 +881,54 @@ class ClientesModel extends Mysql
         $conexion->disconnect();
         return $resultado;
     }
+    public function reactivarCliente(int $idcliente){
+    $conexion = new Conexion();
+    $conexion->connect();
+    $db = $conexion->get_conectGeneral();
+    try {
+        $this->setQuery("SELECT idcliente, estatus FROM cliente WHERE idcliente = ?");
+        $this->setArray([$idcliente]);
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$cliente) {
+            return [
+                'status' => false,
+                'message' => 'Cliente no encontrado'
+            ];
+        }
+        if ($cliente['estatus'] === 'activo') {
+            return [
+                'status' => false,
+                'message' => 'El cliente ya está activo'
+            ];
+        }
+        $this->setQuery("UPDATE cliente SET estatus = 'activo', ultima_modificacion = NOW() WHERE idcliente = ?");
+        $this->setArray([$idcliente]);
+        $stmt = $db->prepare($this->getQuery());
+        $resultado = $stmt->execute($this->getArray());
+        if ($resultado && $stmt->rowCount() > 0) {
+            $resultado = [
+                'status' => true,
+                'message' => 'Cliente reactivado exitosamente'
+            ];
+        } else {
+            $resultado = [
+                'status' => false,
+                'message' => 'No se pudo reactivar el cliente'
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("ClientesModel::reactivarCliente - Error: " . $e->getMessage());
+        $resultado = [
+            'status' => false,
+            'message' => 'Error al reactivar cliente: ' . $e->getMessage()
+        ];
+    } finally {
+        $conexion->disconnect();
+    }
+    return $resultado;
+}
+
 }
 ?>

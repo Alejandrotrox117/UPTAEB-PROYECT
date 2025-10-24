@@ -84,7 +84,7 @@ class Clientes extends Controllers
                 $datosLimpios = [
                     'nombre' => strClean($request['nombre'] ?? ''),
                     'apellido' => strClean($request['apellido'] ?? ''),
-                    'cedula' => strClean($request['cedula'] ?? ''),
+                    'cedula' => $request['cedula'] ?? '',
                     'telefono_principal' => strClean($request['telefono_principal'] ?? ''),
                     
                     'direccion' => strClean($request['direccion'] ?? ''),
@@ -165,8 +165,9 @@ class Clientes extends Controllers
                     die();
                 }
 
-                $arrResponse = $this->model->selectAllClientesActivos();
-
+            
+                $idUsuarioSesion = $this->BitacoraHelper->obtenerUsuarioSesion();
+            $arrResponse = $this->model->selectAllClientes($idUsuarioSesion);
                 if ($arrResponse['status']) {
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
                     $this->bitacoraModel->registrarAccion('clientes', 'CONSULTA_LISTADO', $idusuario);
@@ -246,11 +247,11 @@ class Clientes extends Controllers
                 $datosLimpios = [
                     'nombre' => strClean($request['nombre'] ?? ''),
                     'apellido' => strClean($request['apellido'] ?? ''),
-                    'cedula' => strClean($request['cedula'] ?? ''),
-                    'telefono_principal' => strClean($request['telefono_principal'] ?? ''),
+                    'cedula' =>$request['cedula'],
+                    'telefono_principal' => $request['telefono_principal'],
                 
                     'direccion' => strClean($request['direccion'] ?? ''),
-                    'estatus' => strClean($request['estatus'] ?? 'ACTIVO'),
+                    'estatus' => strClean($request['estatus'] ?? 'activo'),
                     'observaciones' => strClean($request['observaciones'] ?? '')
                 ];
 
