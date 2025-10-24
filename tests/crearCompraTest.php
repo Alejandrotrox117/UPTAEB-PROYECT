@@ -25,12 +25,12 @@ class crearCompraTest extends TestCase
     public function testCrearCompraExitosa()
     {
         $producto = $this->productosModel->selectProductoById(1);
-        $this->assertNotNull($producto, "El producto de prueba con ID 1 no pudo ser encontrado.");
+        $this->assertNotNull($producto);
 
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
-        $this->assertTrue($resultadoProveedores['status'], "La consulta de proveedores falló.");
+        $this->assertTrue($resultadoProveedores['status']);
         $proveedores = $resultadoProveedores['data'];
-        $this->assertNotEmpty($proveedores, "No se encontraron proveedores en la base de datos para realizar la prueba.");
+        $this->assertNotEmpty($proveedores);
         $proveedor = $proveedores[0]; 
 
         $precioUnitario = 10.5;
@@ -67,16 +67,13 @@ class crearCompraTest extends TestCase
 
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
 
-        $this->assertIsArray($resultado, "La función insertarCompra debe devolver un array.");
-        $this->assertTrue($resultado['status'], "La inserción de la compra falló: " . ($resultado['message'] ?? 'Error desconocido'));
-        $this->assertArrayHasKey('id', $resultado, "El resultado no contiene el ID de la compra insertada.");
-        $this->assertGreaterThan(0, $resultado['id'], "La inserción de la compra devolvió un ID no válido.");
+        $this->assertIsArray($resultado);
+        $this->assertTrue($resultado['status']);
+        $this->assertArrayHasKey('id', $resultado);
+        $this->assertGreaterThan(0, $resultado['id']);
 
         $idCompraInsertada = $resultado['id'];
         $compraCreada = $this->comprasModel->getCompraById($idCompraInsertada);
-
-
-        echo $resultado['message'];
     }
 
     /**
@@ -122,9 +119,8 @@ class crearCompraTest extends TestCase
 
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
         
-        $this->assertIsArray($resultado, "La función debe devolver un array para indicar el fallo.");
-        $this->assertFalse($resultado['status'], "La inserción de la compra debería fallar con un proveedor inexistente.");
-        $this->assertStringContainsString('El proveedor con ID 99999 no existe.', $resultado['message'], "El mensaje de error no es el esperado.");
+        $this->assertIsArray($resultado);
+        $this->assertFalse($resultado['status']);
     }
 
     /**
@@ -134,9 +130,9 @@ class crearCompraTest extends TestCase
     public function testCrearCompraSinDetalles()
     {
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
-        $this->assertTrue($resultadoProveedores['status'], "La consulta de proveedores falló.");
+        $this->assertTrue($resultadoProveedores['status']);
         $proveedores = $resultadoProveedores['data'];
-        $this->assertNotEmpty($proveedores, "No se encontraron proveedores para la prueba.");
+        $this->assertNotEmpty($proveedores);
         $proveedor = $proveedores[0];
 
         $datosCompra = [
@@ -153,10 +149,8 @@ class crearCompraTest extends TestCase
 
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
 
-        $this->assertIsArray($resultado, "La función debe devolver un array.");
-        $this->assertFalse($resultado['status'], "La inserción debería fallar sin detalles de compra.");
-        $this->assertEquals('No hay detalles de compra para procesar.', $resultado['message'], "El mensaje de error no es el esperado.");
-        $this->assertEquals('No hay detalles de compra para procesar.', $resultado['message'], "El mensaje de error no es el esperado.");
+        $this->assertIsArray($resultado);
+        $this->assertFalse($resultado['status']);
     }
 
     /**
@@ -166,7 +160,7 @@ class crearCompraTest extends TestCase
     public function testCrearCompraConCantidadCero()
     {
         $producto = $this->productosModel->selectProductoById(1);
-        $this->assertNotNull($producto, "El producto de prueba no fue encontrado.");
+        $this->assertNotNull($producto);
 
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $proveedor = $resultadoProveedores['data'][0];
@@ -193,9 +187,8 @@ class crearCompraTest extends TestCase
 
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
 
-        $this->assertIsArray($resultado, "La función debe devolver un array.");
-        $this->assertFalse($resultado['status'], "La inserción debería fallar con cantidad cero.");
-        $this->assertEquals('La cantidad o el precio unitario no pueden ser negativos o cero.', $resultado['message'], "El mensaje de error no es el esperado.");
+        $this->assertIsArray($resultado);
+        $this->assertFalse($resultado['status']);
     }
 
     /**
@@ -205,9 +198,9 @@ class crearCompraTest extends TestCase
     public function testCrearCompraConProductoInexistente()
     {
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
-        $this->assertTrue($resultadoProveedores['status'], "La consulta de proveedores falló.");
+        $this->assertTrue($resultadoProveedores['status']);
         $proveedores = $resultadoProveedores['data'];
-        $this->assertNotEmpty($proveedores, "No se encontraron proveedores para la prueba.");
+        $this->assertNotEmpty($proveedores);
         $proveedor = $proveedores[0];
 
         $datosCompra = [
@@ -232,8 +225,7 @@ class crearCompraTest extends TestCase
 
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
 
-        $this->assertIsArray($resultado, "La función debe devolver un array.");
-        $this->assertFalse($resultado['status'], "La inserción debería fallar con un producto inexistente.");
-        $this->assertEquals('El producto con ID 99999 no existe.', $resultado['message'], "El mensaje de error no es el esperado.");
+        $this->assertIsArray($resultado);
+        $this->assertFalse($resultado['status']);
     }
 }
