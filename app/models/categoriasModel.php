@@ -52,10 +52,10 @@ class categoriasModel extends Mysql
     public function setEstatus($estatus) {
         $this->estatus = $estatus;
     }
-    // Obtener todas las categorías activas
+    // Obtener todas las categorías
     public function SelectAllCategorias()
     {
-        $sql = "SELECT * FROM categoria WHERE estatus = 'activo'";
+        $sql = "SELECT * FROM categoria ORDER BY idcategoria ASC";
         try {
             $stmt = $this->db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -75,7 +75,7 @@ class categoriasModel extends Mysql
         $arrValues = [
             $data['nombre'],
             $data['descripcion'],
-            $data['estatus']
+            strtoupper($data['estatus'])  // Normalizar a mayúsculas
         ];
     
         return $stmt->execute($arrValues);
@@ -101,7 +101,7 @@ class categoriasModel extends Mysql
         $arrValues = [
             $data['nombre'],
             $data['descripcion'],
-            $data['estatus'],
+            strtoupper($data['estatus']),  // Normalizar a mayúsculas
             $data['idcategoria']
         ];
     
@@ -125,6 +125,13 @@ class categoriasModel extends Mysql
         }
 
         return $data; 
+    }
+
+    // Método para reactivar una categoría (cambiar estatus de INACTIVO a ACTIVO)
+    public function reactivarCategoria($idcategoria) {
+        $sql = "UPDATE categoria SET estatus = 'ACTIVO' WHERE idcategoria = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$idcategoria]);
     }
    
 }

@@ -1,189 +1,703 @@
-document.addEventListener("DOMContentLoaded", function () {
-  $("#TablaCategorias").DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: {
-      url: "categorias/getCategoriasData",
-      type: "GET",
-      dataSrc: "data",
-    },
-    columns: [
-      { data: "idcategoria", title: "Nro" },
-      { data: "nombre", title: "Nombre" },
-      { data: "descripcion", title: "descripcion" },
-      { data: "estatus", title: "Estado" },
+﻿import { abrirModal, cerrarModal } from "./exporthelpers.js";
+import {
+  expresiones,
+  inicializarValidaciones,
+  limpiarValidaciones,
+  registrarEntidad,
+} from "./validaciones.js";
 
-      {
-        data: null,
-        title: "Acciones",
-        orderable: false,
-        render: function (data, type, row) {
-          
-          return `
-                <button class="editar-btn text-blue-500 hover:text-blue-700 p-1 rounded-full" data-idcategoria="${row.idcategoria}">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="eliminar-btn text-red-500 hover:text-red-700 p-1 rounded-full ml-2" data-idcategoria="${row.idcategoria}">
-                  <i class="fas fa-trash"></i>
-                </button>
-              `;
+let tablaCategorias;
+let esSuperUsuarioActual = false;
+let idUsuarioActual = 0;
+
+// IDs de categorias del sistema que no se pueden eliminar
+const CATEGORIAS_SISTEMA = [1, 2, 3]; // 1=Pacas, 2=Materiales, 3=Consumibles
+
+const camposFormularioCategoria = [
+  {
+    id: "categoriaNombre",
+    tipo: "input",
+    regex: expresiones.nombre,
+    mensajes: {
+      vacio: "El nombre es obligatorio.",
+      formato: "El nombre solo puede contener letras y espacios.",
+    },
+  },
+  {
+    id: "categoriaDescripcion",
+    tipo: "textarea",
+    regex: expresiones.textoGeneral,
+    opcional: true,
+    mensajes: {
+      formato: "Descripción inválida.",
+    },
+  }
+];
+
+const camposFormularioActualizarCategoria = [
+  {
+    id: "categoriaNombreActualizar",
+    tipo: "input",
+    regex: expresiones.nombre,
+    mensajes: {
+      vacio: "El nombre es obligatorio.",
+      formato: "El nombre solo puede contener letras y espacios.",
+    },
+  },
+  {
+    id: "categoriaDescripcionActualizar",
+    tipo: "textarea",
+    regex: expresiones.textoGeneral,
+    opcional: true,
+    mensajes: {
+      formato: "Descripción inválida.",
+    },
+  }
+];
+
+function recargarTablaCategorias() {
+  try {
+    if (tablaCategorias && tablaCategorias.ajax && typeof tablaCategorias.ajax.reload === 'function') {
+      tablaCategorias.ajax.reload(null, false);
+      return true;
+    }
+
+    if ($.fn.DataTable.isDataTable('#TablaCategorias')) {
+      const tabla = $('#TablaCategorias').DataTable();
+      tabla.ajax.reload(null, false);
+      return true;
+    }
+
+    window.location.reload();
+    return true;
+
+  } catch (error) {
+    window.location.reload();
+    return false;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  $(document).ready(function () {
+    // Verificar si el usuario es super usuario antes de inicializar la tabla
+    fetch("./usuarios/verificarSuperUsuario")
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        esSuperUsuarioActual = data.esSuperUsuario || data.es_super_usuario || false;
+        idUsuarioActual = data.idUsuario || data.usuario_id || 0;
+
+        // Inicializar la tabla después de verificar el estado de super usuario
+        inicializarTablaCategorias();
+
+        // Forzar actualización después de inicializar
+        setTimeout(() => {
+          if (tablaCategorias && typeof tablaCategorias.draw === 'function') {
+            tablaCategorias.draw(false);
+          }
+        }, 500);
+      })
+      .catch((error) => {
+        console.error("Error en verificación de super usuario:", error);
+        esSuperUsuarioActual = false;
+        idUsuarioActual = 0;
+
+        // Aún así intentar inicializar la tabla en caso de error
+        inicializarTablaCategorias();
+      });
+  });
+});
+
+function inicializarTablaCategorias() {
+  if ($.fn.DataTable.isDataTable('#TablaCategorias')) {
+    $('#TablaCategorias').DataTable().destroy();
+  }
+  
+  tablaCategorias = $("#TablaCategorias").DataTable({
+      processing: true,
+      serverSide: false,
+      ajax: {
+        url: "./categorias/getCategoriasData",
+        type: "GET",
+        dataSrc: function (json) {
+          if (json && Array.isArray(json.data)) {
+            // Filtrar categorias según el rol del usuario
+            let categoriasFiltradas = json.data;
+            
+            if (!esSuperUsuarioActual) {
+              // Si NO es superusuario, filtrar solo las activas
+              categoriasFiltradas = json.data.filter(cat => {
+                return cat.estatus && cat.estatus.toLowerCase() !== 'inactivo';
+              });
+            }
+            
+            return categoriasFiltradas;
+          } else {
+            console.error("Respuesta del servidor no tiene la estructura esperada:", json);
+            $("#TablaCategorias_processing").css("display", "none");
+            Swal.fire({
+              icon: "error",
+              title: "Error de Datos",
+              text: "No se pudieron cargar los datos. Respuesta inválida.",
+            });
+            return [];
+          }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          console.error("Error AJAX:", textStatus, errorThrown, jqXHR.responseText);
+          $("#TablaCategorias_processing").css("display", "none");
+          Swal.fire({
+            icon: "error",
+            title: "Error de Comunicación",
+            text: "Error al cargar los datos. Por favor, intenta de nuevo.",
+          });
         },
       },
-    ],
-    language: {
-      decimal: "",
-      emptyTable: "No hay información",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
-      infoEmpty: "Mostrando 0 to 0 of 0 Entradas",
-      infoFiltered: "(Filtrado de _MAX_ total entradas)",
-      infoPostFix: "",
-      thousands: ",",
-      lengthMenu: "Mostrar _MENU_ Entradas",
-      loadingRecords: "Cargando...",
-      processing: "Procesando...",
-      search: "Buscar:",
-      zeroRecords: "Sin resultados encontrados",
-      paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior",
-      },
-    },
-    destroy: true,
-    responsive: true,
-    pageLength: 10,
-    order: [[0, "asc"]],
-  });
-  document.getElementById("CategoriaForm").addEventListener("submit", function (e) {
-    e.preventDefault(); 
-
-    
-    const formData = new FormData(this);
-    const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
-
-    console.log("Datos a enviar:", data); 
-
-    
-    const idcategoria = document.getElementById("idcategoria").value;
-    const url = idcategoria ? "categorias/actualizarCategoria" : "categorias/crearCategoria";
-    const method = idcategoria ? "PUT" : "POST";
-
-    fetch(url, {
-        method: method,
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(data), 
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
+      columns: [
+        { data: "idcategoria", title: "ID", className: "none" },
+        { data: "nombre", title: "Nombre", className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background" },
+        { data: "descripcion", title: "Descripción", className: "desktop whitespace-nowrap py-2 px-3 text-gray-700" },
+        {
+          data: "estatus",
+          title: "Estatus",
+          className: "min-tablet-p text-center py-2 px-3",
+          render: function (data, type, row) {
+            if (data) {
+              const estatusNormalizado = String(data).trim().toUpperCase();
+              let badgeClass = "bg-gray-200 text-gray-800";
+              if (estatusNormalizado === "ACTIVO") {
+                badgeClass = "bg-green-100 text-green-800";
+              } else if (estatusNormalizado === "INACTIVO") {
+                badgeClass = "bg-red-100 text-red-800";
+              }
+              return `<span class="${badgeClass} text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
             }
-            return response.json();
-        })
-        .then((result) => {
-            if (result.status) {
-                alert(result.message);
-                cerrarModalCategoria();
-                $('#TablaCategorias').DataTable().ajax.reload();
+            return '<span class="text-xs italic text-gray-500">N/A</span>';
+          },
+        },
+        {
+          data: null,
+          title: "Acciones",
+          orderable: false,
+          searchable: false,
+          className: "all text-center py-2 px-3 w-32",
+          render: function (data, type, row) {
+            if (!row) return "";
+            
+            const idCategoria = row.idcategoria || "";
+            const nombreCategoria = row.nombre || "";
+            const estatusCategoria = row.estatus || "";
+            
+            // Verificar si la categoria está inactiva
+            const esCategoriaInactiva = estatusCategoria.toUpperCase() === 'INACTIVO';
+            
+            // Verificar si es categoria protegida del sistema
+            const esCategoriaProtegida = CATEGORIAS_SISTEMA.includes(parseInt(idCategoria));
+            
+            let acciones = '<div class="flex justify-center items-center space-x-1">';
+            
+            // Botón Ver - siempre visible
+            acciones += `
+              <button class="ver-categoria-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                      data-idcategoria="${idCategoria}" 
+                      title="Ver detalles">
+                  <i class="fas fa-eye text-sm"></i>
+              </button>`;
+            
+            if (esCategoriaInactiva) {
+              // Para categorias inactivas, mostrar solo el botón de reactivar
+              acciones += `
+                <button class="reactivar-categoria-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                        data-idcategoria="${idCategoria}" 
+                        data-nombre="${nombreCategoria}" 
+                        title="Reactivar categoria">
+                    <i class="fas fa-undo text-sm"></i>
+                </button>`;
             } else {
-                alert(result.message);
+              // Para categorias activas
+              // Botón editar - siempre visible para categorias activas
+              acciones += `
+                <button class="editar-categoria-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                        data-idcategoria="${idCategoria}" 
+                        title="Editar categoria">
+                    <i class="fas fa-edit text-sm"></i>
+                </button>`;
+              
+              // Botón eliminar - solo si NO es categoria protegida
+              if (esCategoriaProtegida) {
+                acciones += `
+                  <button class="text-gray-400 p-1 cursor-not-allowed" 
+                          disabled
+                          title="Esta categoria del sistema no se puede eliminar">
+                      <i class="fas fa-lock text-sm"></i>
+                  </button>`;
+              } else {
+                acciones += `
+                  <button class="eliminar-categoria-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                          data-idcategoria="${idCategoria}" 
+                          data-nombre="${nombreCategoria}" 
+                          title="Eliminar categoria">
+                      <i class="fas fa-trash text-sm"></i>
+                  </button>`;
+              }
             }
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-            alert("Ocurrió un error al procesar la solicitud.");
-        });
-});
+            
+            acciones += '</div>';
+            return acciones;
+          },
+        },
+      ],
+      language: {
+        processing: `
+          <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]" style="margin-left:0;">
+              <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+                  <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+                  <span class="text-lg font-medium text-gray-700">Procesando...</span>
+              </div>
+          </div>`,
+        emptyTable: '<div class="text-center py-4"><i class="fas fa-info-circle fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No hay categorias disponibles.</p></div>',
+        info: "Mostrando _START_ a _END_ de _TOTAL_ categorias",
+        infoEmpty: "Mostrando 0 categorias",
+        infoFiltered: "(filtrado de _MAX_ categorias totales)",
+        lengthMenu: "Mostrar _MENU_ categorias",
+        search: "_INPUT_",
+        searchPlaceholder: "Buscar categoria...",
+        zeroRecords: '<div class="text-center py-4"><i class="fas fa-search fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No se encontraron coincidencias.</p></div>',
+        paginate: { 
+          first: '<i class="fas fa-angle-double-left"></i>', 
+          last: '<i class="fas fa-angle-double-right"></i>', 
+          next: '<i class="fas fa-angle-right"></i>', 
+          previous: '<i class="fas fa-angle-left"></i>' 
+        },
+      },
+      destroy: true,
+      responsive: {
+        details: {
+          type: "column",
+          target: -1,
+          renderer: function (api, rowIdx, columns) {
+            var data = $.map(columns, function (col, i) {
+              return col.hidden && col.title
+                ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
+                     <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                     <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                   </tr>`
+                : "";
+            }).join("");
+            return data
+              ? $('<table class="w-full table-fixed details-table border-t border-gray-200"/>').append(data)
+              : false;
+          },
+        },
+      },
+      autoWidth: false,
+      pageLength: 10,
+      lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "Todos"] ],
+      order: [[0, "asc"]],
+      scrollX: true,
+      fixedColumns: {
+          left: 1
+      },
+      initComplete: function (settings, json) {
+        window.tablaCategorias = this.api();
+        
+        setTimeout(() => {
+          this.api().draw(false);
+        }, 100);
+      },
+      drawCallback: function (settings) {
+        $(settings.nTableWrapper).find('.dataTables_filter input[type="search"]')
+          .addClass("py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white")
+          .removeClass("form-control-sm");
 
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".editar-btn")) {
-      const idcategoria = e.target
-        .closest(".editar-btn")
-        .getAttribute("data-idcategoria");
-      console.log("Botón de edición clicado. ID de categoria:", idcategoria); 
+        var api = new $.fn.dataTable.Api(settings); 
 
-      if (!idcategoria || isNaN(idcategoria)) {
-        alert("ID de persona no válido.");
-        return;
-      }
+        if (api.fixedColumns && typeof api.fixedColumns === 'function' && api.fixedColumns().relayout) {
+          api.fixedColumns().relayout();
+        }
+      },
+  });
 
-      abrirModalCategoriaParaEdicion(idcategoria);
+  configurarEventosTabla();
+  configurarModales();
+}
+
+function configurarEventosTabla() {
+  // Ver categoria
+  $(document).on("click", ".ver-categoria-btn", function () {
+    const idCategoria = $(this).data("idcategoria");
+    if (idCategoria) {
+      abrirModalVerCategoria(idCategoria);
     }
   });
-});
 
-function abrirModalCategoria() {
-  const modal = document.getElementById("categoriaModal");
-  modal.classList.remove("opacity-0", "pointer-events-none");
+  // Editar categoria
+  $(document).on("click", ".editar-categoria-btn", function () {
+    const idCategoria = $(this).data("idcategoria");
+    if (idCategoria) {
+      abrirModalEditarCategoria(idCategoria);
+    }
+  });
+
+  // Eliminar categoria
+  $(document).on("click", ".eliminar-categoria-btn", function () {
+    const idCategoria = $(this).data("idcategoria");
+    const nombreCategoria = $(this).data("nombre");
+    if (idCategoria) {
+      confirmarEliminarCategoria(idCategoria, nombreCategoria);
+    }
+  });
+
+  // Reactivar categoria
+  $(document).on("click", ".reactivar-categoria-btn", function () {
+    const idCategoria = $(this).data("idcategoria");
+    const nombreCategoria = $(this).data("nombre");
+    if (idCategoria) {
+      confirmarReactivarCategoria(idCategoria, nombreCategoria);
+    }
+  });
 }
 
-function cerrarModalCategoria() {
-  const modal = document.getElementById("categoriaModal");
-  modal.classList.add("opacity-0", "pointer-events-none");
-  document.getElementById("CategoriaForm").reset();
-}
+function configurarModales() {
+  // Modal Registrar
+  const btnAbrirModalRegistrar = document.getElementById("btnAbrirModalRegistrarCategoria");
+  const btnCerrarModalRegistrar = document.getElementById("btnCerrarModalRegistrar");
+  const btnCancelarModalRegistrar = document.getElementById("btnCancelarModalRegistrar");
+  const formRegistrar = document.getElementById("formRegistrarCategoria");
 
-function abrirModalCategoriaParaEdicion(idcategoria) {
-  console.log("ID de categoria recibido:", idcategoria); 
-
-  fetch(`categorias/getCategoriaById/${idcategoria}`)
-    .then((response) => {
-      console.log("Respuesta HTTP:", response); 
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      console.log("Datos recibidos del backend:", data); 
-
-      if (!data.status) {
-        throw new Error(data.message || "Error al cargar los datos.");
-      }
-
-      const categoria = data.data;
-
-      
-      document.getElementById("idcategoria").value = categoria.idcategoria || "";
-      document.getElementById("nombre").value = categoria.nombre || "";
-      document.getElementById("descripcion").value = categoria.descripcion || "";
-      
-      document.getElementById("estatus").value = categoria.estatus || "";
-     
-      
-      abrirModalCategoria();
-    })
-    .catch((error) => {
-      console.error("Error capturado:", error.message); 
-      alert(
-        "Ocurrió un error al cargar los datos. Por favor, intenta nuevamente."
-      );
+  if (btnAbrirModalRegistrar) {
+    btnAbrirModalRegistrar.addEventListener("click", () => {
+      abrirModal("modalRegistrarCategoria");
+      inicializarValidaciones(camposFormularioCategoria, "formRegistrarCategoria");
     });
-}
-
-
-function eliminarcategoria(idcategoria) {
-  if (!confirm("¿Estás seguro de que deseas eliminar este categoria?")) {
-    return;
   }
 
-  fetch(`categorias/deleteCategoria/${idcategoria}`, {
-    method: "DELETE",
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        alert(result.message); 
-        $("#Tablacategorias").DataTable().ajax.reload(); 
-      } else {
-        alert(result.message); 
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      alert("Ocurrió un error al eliminar el categoria.");
+  if (btnCerrarModalRegistrar) {
+    btnCerrarModalRegistrar.addEventListener("click", () => {
+      cerrarModal("modalRegistrarCategoria");
+      limpiarValidaciones(camposFormularioCategoria, "formRegistrarCategoria");
+      if (formRegistrar) formRegistrar.reset();
     });
+  }
+
+  if (btnCancelarModalRegistrar) {
+    btnCancelarModalRegistrar.addEventListener("click", () => {
+      cerrarModal("modalRegistrarCategoria");
+      limpiarValidaciones(camposFormularioCategoria, "formRegistrarCategoria");
+      if (formRegistrar) formRegistrar.reset();
+    });
+  }
+
+  if (formRegistrar) {
+    formRegistrar.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await registrarCategoria();
+    });
+  }
+
+  // Modal Actualizar
+  const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
+  const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
+  const formActualizar = document.getElementById("formActualizarCategoria");
+
+  if (btnCerrarModalActualizar) {
+    btnCerrarModalActualizar.addEventListener("click", () => {
+      cerrarModal("modalActualizarCategoria");
+      limpiarValidaciones(camposFormularioActualizarCategoria, "formActualizarCategoria");
+      if (formActualizar) formActualizar.reset();
+    });
+  }
+
+  if (btnCancelarModalActualizar) {
+    btnCancelarModalActualizar.addEventListener("click", () => {
+      cerrarModal("modalActualizarCategoria");
+      limpiarValidaciones(camposFormularioActualizarCategoria, "formActualizarCategoria");
+      if (formActualizar) formActualizar.reset();
+    });
+  }
+
+  if (formActualizar) {
+    formActualizar.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await actualizarCategoria();
+    });
+  }
+
+  // Modal Ver
+  const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
+  const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
+
+  if (btnCerrarModalVer) {
+    btnCerrarModalVer.addEventListener("click", () => {
+      cerrarModal("modalVerCategoria");
+    });
+  }
+
+  if (btnCerrarModalVer2) {
+    btnCerrarModalVer2.addEventListener("click", () => {
+      cerrarModal("modalVerCategoria");
+    });
+  }
+}
+
+async function registrarCategoria() {
+  const btnGuardar = document.getElementById("btnGuardarCategoria");
+  
+  if (btnGuardar) {
+    btnGuardar.disabled = true;
+    btnGuardar.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...`;
+  }
+
+  registrarEntidad({
+    formId: "formRegistrarCategoria",
+    endpoint: "./categorias/crearCategoria",
+    campos: camposFormularioCategoria,
+    mapeoNombres: {
+      "categoriaNombre": "nombre",
+      "categoriaDescripcion": "descripcion"
+    },
+    onSuccess: (result) => {
+      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+        cerrarModal("modalRegistrarCategoria");
+        const form = document.getElementById("formRegistrarCategoria");
+        if (form) {
+          form.reset();
+          limpiarValidaciones(camposFormularioCategoria, "formRegistrarCategoria");
+        }
+        recargarTablaCategorias();
+      });
+    },
+    onError: (result) => {
+      Swal.fire(
+        "Error",
+        result.message || "No se pudo registrar la categoria.",
+        "error"
+      );
+    }
+  }).finally(() => {
+    if (btnGuardar) {
+      btnGuardar.disabled = false;
+      btnGuardar.innerHTML = `<i class="fas fa-save mr-2"></i> Guardar categoria`;
+    }
+  });
+}
+
+async function abrirModalEditarCategoria(idCategoria) {
+  try {
+    const response = await fetch(`./categorias/getCategoriaById/${idCategoria}`);
+    const data = await response.json();
+
+    if (data.status && data.data) {
+      const categoria = data.data;
+      
+      document.getElementById("idCategoriaActualizar").value = categoria.idcategoria || "";
+      document.getElementById("categoriaNombreActualizar").value = categoria.nombre || "";
+      document.getElementById("categoriaDescripcionActualizar").value = categoria.descripcion || "";
+
+      abrirModal("modalActualizarCategoria");
+      inicializarValidaciones(camposFormularioActualizarCategoria, "formActualizarCategoria");
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: data.message || "No se pudo cargar la información de la categoria.",
+      });
+    }
+  } catch (error) {
+    console.error("Error al cargar categoria:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Error al cargar los datos de la categoria.",
+    });
+  }
+}
+
+async function actualizarCategoria() {
+  const idCategoria = document.getElementById("idCategoriaActualizar").value;
+  
+  const formData = new FormData(document.getElementById("formActualizarCategoria"));
+  const data = {
+    idcategoria: idCategoria,
+    nombre: formData.get("nombre"),
+    descripcion: formData.get("descripcion"),
+    estatus: "activo"
+  };
+
+  try {
+    const response = await fetch("./categorias/actualizarCategoria", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (result.status) {
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: result.message,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      const form = document.getElementById("formActualizarCategoria");
+      cerrarModal("modalActualizarCategoria");
+      limpiarValidaciones(camposFormularioActualizarCategoria, "formActualizarCategoria");
+      if (form) form.reset();
+      recargarTablaCategorias();
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: result.message,
+      });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Error al actualizar la categoria.",
+    });
+  }
+}
+
+async function abrirModalVerCategoria(idCategoria) {
+  try {
+    const response = await fetch(`./categorias/getCategoriaById/${idCategoria}`);
+    const data = await response.json();
+
+    if (data.status && data.data) {
+      const categoria = data.data;
+      
+      document.getElementById("verCategoriaId").textContent = categoria.idcategoria || "-";
+      document.getElementById("verCategoriaNombre").textContent = categoria.nombre || "-";
+      document.getElementById("verCategoriaDescripcion").textContent = categoria.descripcion || "-";
+      document.getElementById("verCategoriaEstatus").textContent = categoria.estatus || "-";
+
+      abrirModal("modalVerCategoria");
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: data.message || "No se pudo cargar la información de la categoria.",
+      });
+    }
+  } catch (error) {
+    console.error("Error al cargar categoria:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Error al cargar los datos de la categoria.",
+    });
+  }
+}
+
+function confirmarEliminarCategoria(idCategoria, nombreCategoria) {
+  Swal.fire({
+    title: "¿Estás seguro?",
+    html: `¿Deseas eliminar la categoria <strong>${nombreCategoria}</strong>?<br><small class="text-gray-500">Esta acción cambiará el estado a inactivo.</small>`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      eliminarCategoria(idCategoria);
+    }
+  });
+}
+
+async function eliminarCategoria(idCategoria) {
+  try {
+    const response = await fetch(`./categorias/deleteCategoria/${idCategoria}`, {
+      method: "DELETE",
+    });
+
+    const data = await response.json();
+
+    if (data.status) {
+      Swal.fire({
+        icon: "success",
+        title: "¡Eliminada!",
+        text: data.message,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      recargarTablaCategorias();
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: data.message,
+      });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Error al eliminar la categoria.",
+    });
+  }
+}
+
+function confirmarReactivarCategoria(idCategoria, nombreCategoria) {
+  Swal.fire({
+    title: "¿Reactivar categoria?",
+    html: `¿Deseas reactivar la categoria <strong>${nombreCategoria}</strong>?`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#10b981",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, reactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      reactivarCategoria(idCategoria);
+    }
+  });
+}
+
+async function reactivarCategoria(idCategoria) {
+  try {
+    const response = await fetch(`./categorias/reactivarCategoria`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ idcategoria: idCategoria }),
+    });
+
+    const data = await response.json();
+
+    if (data.status) {
+      Swal.fire({
+        icon: "success",
+        title: "¡Reactivada!",
+        text: data.message,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      recargarTablaCategorias();
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: data.message,
+      });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Error al reactivar la categoria.",
+    });
+  }
 }
