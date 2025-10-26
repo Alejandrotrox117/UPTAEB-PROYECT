@@ -130,7 +130,11 @@ class categoriasModel extends Mysql
                 $this->setEstatus($data['estatus']);
             }
 
-        return $data; 
+            return $data; 
+        } catch (PDOException $e) {
+            error_log("CategoriasModel: Error al obtener categoria por ID - " . $e->getMessage());
+            return null;
+        }
     }
 
     // Método para reactivar una categoría (cambiar estatus de INACTIVO a ACTIVO)
