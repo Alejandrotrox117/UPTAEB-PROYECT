@@ -84,8 +84,8 @@ const camposFormularioProveedor = [
     id: "proveedorApellido",
     tipo: "input",
     regex: expresiones.apellido,
+    opcional: true,
     mensajes: {
-      vacio: "El apellido es obligatorio.",
       formato: "El apellido solo puede contener letras y espacios.",
     },
   },
@@ -112,6 +112,7 @@ const camposFormularioProveedor = [
     id: "proveedorCorreo",
     tipo: "input",
     regex: expresiones.email,
+    opcional: true,
     mensajes: {
       formato: "Formato de correo electrónico inválido.",
     },
@@ -120,6 +121,7 @@ const camposFormularioProveedor = [
     id: "proveedorDireccion",
     tipo: "textarea",
     regex: expresiones.textoGeneral,
+    opcional: true,
     mensajes: {
       formato: "Dirección inválida.",
     },
@@ -128,6 +130,7 @@ const camposFormularioProveedor = [
     id: "proveedorGenero",
     tipo: "select",
     regex: expresiones.genero,
+    opcional: true,
     mensajes: {
       formato: "Género inválido.",
     },
@@ -135,8 +138,8 @@ const camposFormularioProveedor = [
   {
     id: "proveedorFechaNacimiento",
     tipo: "fechaNacimiento",
+    opcional: true,
     mensajes: {
-      vacio: "La fecha de nacimiento es obligatoria.",
       fechaPosterior: "La fecha de nacimiento no puede ser posterior a hoy.",
     },
   },

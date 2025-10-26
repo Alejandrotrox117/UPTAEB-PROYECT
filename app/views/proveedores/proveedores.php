@@ -53,7 +53,7 @@
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div>
-                    <label for="proveedorApellido" class="block text-sm font-medium text-gray-700 mb-1">Apellido <span class="text-red-500">*</span></label>
+                    <label for="proveedorApellido" class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
                     <input type="text" id="proveedorApellido" name="apellido" placeholder="Apellido del proveedor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" >
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
@@ -130,8 +130,8 @@
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div>
-                    <label for="proveedorApellidoActualizar" class="block text-sm font-medium text-gray-700 mb-1">Apellido <span class="text-red-500">*</span></label>
-                    <input type="text" id="proveedorApellidoActualizar" name="apellido" placeholder="Apellido del proveedor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
+                    <label for="proveedorApellidoActualizar" class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                    <input type="text" id="proveedorApellidoActualizar" name="apellido" placeholder="Apellido del proveedor" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm">
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 <div>
