@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", function () {
           className: "tablet-l whitespace-nowrap py-2 px-3 text-gray-700",
           render: function (data, type, row) {
             if (data && row.moneda) {
-              return `${row.moneda} ${parseFloat(data).toFixed(2)}`;
+              return `${row.moneda} ${parseFloat(data).toFixed(4)}`;
             }
             return "N/A";
           }
@@ -699,7 +699,7 @@ function mostrarModalVerProducto(producto) {
   document.getElementById("verProductoDescripcion").textContent = producto.descripcion || "Sin descripción";
   document.getElementById("verProductoCategoria").textContent = producto.categoria_nombre || "N/A";
   document.getElementById("verProductoUnidadMedida").textContent = producto.unidad_medida || "N/A";
-  document.getElementById("verProductoPrecio").textContent = producto.precio ? `${producto.moneda} ${parseFloat(producto.precio).toFixed(2)}` : "N/A";
+  document.getElementById("verProductoPrecio").textContent = producto.precio ? `${producto.moneda} ${parseFloat(producto.precio).toFixed(4)}` : "N/A";
   document.getElementById("verProductoExistencia").textContent = producto.existencia || "0";
   document.getElementById("verProductoEstatus").textContent = producto.estatus || "N/A";
 
