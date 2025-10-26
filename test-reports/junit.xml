@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="TestCategoriaDeleteExitoso" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" tests="2" assertions="4" errors="0" failures="0" skipped="0" time="0.011113">
-    <testcase name="testDeleteCategoriaExistente" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" line="36" class="TestCategoriaDeleteExitoso" classname="TestCategoriaDeleteExitoso" assertions="2" time="0.009315"/>
-    <testcase name="testDeleteCategoriaYaEliminada" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDeleteExitoso.php" line="60" class="TestCategoriaDeleteExitoso" classname="TestCategoriaDeleteExitoso" assertions="2" time="0.001798"/>
+  <testsuite name="TestProduccionClasificacion" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" tests="6" assertions="11" errors="0" failures="0" skipped="0" time="0.042285">
+    <testcase name="testRegistrarClasificacionConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="22" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="3" time="0.012044"/>
+    <testcase name="testClasificacionActualizaInventario" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="49" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="1" time="0.002600"/>
+    <testcase name="testConsultarProcesosClasificacionPorLote" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="75" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="1" time="0.002039"/>
+    <testcase name="testClasificacionConStockInsuficiente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="98" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="2" time="0.002894"/>
+    <testcase name="testClasificacionSumaIncorrecta" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="125" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="2" time="0.002458"/>
+    <testcase name="testClasificacionConProductoInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionClasificacion.php" line="150" class="TestProduccionClasificacion" classname="TestProduccionClasificacion" assertions="2" time="0.020250"/>
   </testsuite>
 </testsuites>

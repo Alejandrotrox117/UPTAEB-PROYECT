@@ -62,6 +62,7 @@ class DashboardModel extends mysql
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
             return $resultado;
         } catch (Exception $e) {
+            error_log("DashboardModel::getResumen - Error: " . $e->getMessage());
             return [
                 'ventas_hoy' => 0,
                 'ventas_ayer' => 0,
@@ -130,6 +131,7 @@ class DashboardModel extends mysql
 
             return $response;
         } catch (Exception $e) {
+            error_log("DashboardModel::getAnalisisInventario - Error: " . $e->getMessage());
             return [
                 'stock_critico' => 0,
                 'valor_por_categoria' => json_encode(['categorias' => []]),
@@ -163,13 +165,14 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getCategorias - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getVentasMensuales()
+    public function getMonedas()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -187,6 +190,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getUltimasVentas - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -204,6 +208,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getProveedoresActivos - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -220,13 +225,14 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getMonedas - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getEmpleadosActivos()
+    public function getProductosStockBajo()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -236,6 +242,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getProductosStockBajo - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -253,6 +260,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::ejecutarGetTiposDePago - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -276,9 +284,10 @@ class DashboardModel extends mysql
             $this->setQuery($baseSql);
 
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
+            $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::ejecutarGetIngresosReporte - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -302,9 +311,10 @@ class DashboardModel extends mysql
             $this->setQuery($baseSql);
 
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
+            $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::ejecutarGetIngresosDetallados - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -333,9 +343,10 @@ class DashboardModel extends mysql
             $this->setQuery($baseSql);
 
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
+            $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::ejecutarGetEgresosReporte - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -364,9 +375,10 @@ class DashboardModel extends mysql
             $this->setQuery($baseSql);
 
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
+            $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::ejecutarGetEgresosDetallados - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -413,9 +425,10 @@ class DashboardModel extends mysql
             $sql .= " ORDER BY c.fecha DESC, c.nro_compra DESC";
 
             $stmt = $db->prepare($sql);
-            $stmt->execute($params);
+            $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getProductos - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -423,7 +436,7 @@ class DashboardModel extends mysql
     }
 
 
-    public function getKPIsEjecutivos()
+    public function getEmpleadosActivos()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -455,6 +468,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getEmpleadosActivos (Métricas) - Error: " . $e->getMessage());
             return ['margen_ganancia' => 0, 'roi_mes' => 0, 'rotacion_inventario' => 0, 'productividad_general' => 0];
         } finally {
             $conexion->disconnect();
@@ -480,6 +494,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getTendenciasVentas - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -522,6 +537,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getRentabilidadProductos - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -567,6 +583,7 @@ class DashboardModel extends mysql
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getEficienciaEmpleados - Error: " . $e->getMessage());
             return [];
             return [];
         } finally {
@@ -596,9 +613,10 @@ class DashboardModel extends mysql
             $sql .= " GROUP BY estatus_lote ORDER BY cantidad DESC";
 
             $stmt = $db->prepare($sql);
-            $stmt->execute($params);
+            $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getEstadosProduccion - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -630,6 +648,7 @@ class DashboardModel extends mysql
             $stmt->execute($params);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getCumplimientoTareas - Error: " . $e->getMessage());
             return ['total_tareas' => 0, 'tareas_completadas' => 0, 'tareas_en_progreso' => 0, 'tareas_pendientes' => 0];
         } finally {
             $conexion->disconnect();
@@ -659,13 +678,14 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getTopClientes - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getTopProveedores()
+    public function getCategorias()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -676,6 +696,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getCategorias (segundo) - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -719,6 +740,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getKPIsTiempoReal - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -777,6 +799,7 @@ class DashboardModel extends mysql
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("DashboardModel::getMovimientosInventarioMes - Error: " . $e->getMessage());
             return ['entradas' => 0, 'salidas' => 0];
         } finally {
             $conexion->disconnect();
@@ -833,7 +856,7 @@ class DashboardModel extends mysql
             
             return $result;
         } catch (Exception $e) {
-            error_log("Error en getReporteSemanalEmpleados: " . $e->getMessage());
+            error_log("DashboardModel::getReporteSemanalEmpleados - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -887,7 +910,7 @@ class DashboardModel extends mysql
             
             return $result;
         } catch (Exception $e) {
-            error_log("Error en getReporteSemanalMateriales: " . $e->getMessage());
+            error_log("DashboardModel::getReporteSemanalMateriales - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -928,7 +951,7 @@ class DashboardModel extends mysql
             
             return $result;
         } catch (Exception $e) {
-            error_log("Error en getReporteSemanalTotalMateriales: " . $e->getMessage());
+            error_log("DashboardModel::getReporteSemanalTotalMateriales - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
