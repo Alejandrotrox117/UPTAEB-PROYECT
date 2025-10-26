@@ -786,6 +786,9 @@ function calcularSubtotalLineaItemActualizar(item) {
     );
   }
   
+  // Guardar la cantidad final con descuento aplicado
+  item.cantidad_final = cantidadConDescuento;
+  
   // Calcular subtotales
   const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
   const subtotalConDescuento = parseFloat((cantidadConDescuento * precioUnitario).toFixed(4));
@@ -1545,6 +1548,9 @@ function calcularSubtotalLineaItemModal(item) {
     );
   }
   
+  // Guardar la cantidad final con descuento aplicado
+  item.cantidad_final = cantidadConDescuento;
+  
   // Calcular subtotales
   const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
   const subtotalConDescuento = parseFloat((cantidadConDescuento * precioUnitario).toFixed(4));
@@ -1903,10 +1909,7 @@ async function guardarCompra(elements) {
   const productosDetalle = detalleCompraItemsModal.map((item) => ({
     idproducto: item.idproducto,
     nombre_producto: item.nombre,
-    cantidad:
-      item.idcategoria === 2
-        ? calcularPesoNetoItemModal(item)
-        : item.cantidad_unidad,
+    cantidad: item.cantidad_final || 0,
     precio_unitario_compra: item.precio_unitario,
     idmoneda_detalle: item.idmoneda_item,
     descuento: item.descuento || 0,
@@ -2472,10 +2475,7 @@ async function actualizarCompra(elements) {
   const productosDetalle = detalleCompraItemsActualizar.map((item) => ({
     idproducto: item.idproducto,
     nombre_producto: item.nombre,
-    cantidad:
-      item.idcategoria === 2
-        ? calcularPesoNetoItemActualizar(item)
-        : item.cantidad_unidad,
+    cantidad: item.cantidad_final || 0,
     precio_unitario_compra: item.precio_unitario,
     idmoneda_detalle: item.idmoneda_item,
     descuento: item.descuento || 0,
