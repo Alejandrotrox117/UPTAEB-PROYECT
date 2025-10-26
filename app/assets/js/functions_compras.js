@@ -766,20 +766,28 @@ function calcularSubtotalLineaItemActualizar(item) {
   } else {
     cantidadBase = parseFloat(item.cantidad_unidad) || 0;
   }
-  // Redondear el subtotal antes del descuento a 4 decimales
-  const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
+  
   const porcentajeDescuento = parseFloat(item.descuento) || 0;
-  let montoDescuento = 0;
-  let subtotalConDescuento = subtotalAntesDescuento;
+  let cantidadConDescuento = cantidadBase;
+  let cantidadDescontada = 0;
+  
+  // Aplicar descuento a la cantidad
   if (porcentajeDescuento > 0 && porcentajeDescuento <= 100) {
-    // Redondear el monto del descuento a 4 decimales
-    montoDescuento = parseFloat((subtotalAntesDescuento * (porcentajeDescuento / 100)).toFixed(4));
-    subtotalConDescuento = parseFloat((subtotalAntesDescuento - montoDescuento).toFixed(4));
+    // Calcular la cantidad que se descuenta
+    cantidadDescontada = parseFloat((cantidadBase * (porcentajeDescuento / 100)).toFixed(4));
+    // Calcular la cantidad final después del descuento
+    cantidadConDescuento = parseFloat((cantidadBase - cantidadDescontada).toFixed(4));
   } else if (porcentajeDescuento > 100) {
     console.warn(
       `Porcentaje de descuento (${porcentajeDescuento}%) es mayor a 100. Se aplicará 0% o el máximo permitido.`
     );
   }
+  
+  // Calcular subtotales
+  const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
+  const subtotalConDescuento = parseFloat((cantidadConDescuento * precioUnitario).toFixed(4));
+  const montoDescuento = parseFloat((subtotalAntesDescuento - subtotalConDescuento).toFixed(4));
+  
   item.subtotal_original_linea = subtotalAntesDescuento;
   item.monto_descuento_linea = montoDescuento;
   item.subtotal_linea = subtotalConDescuento;
@@ -906,9 +914,14 @@ function renderizarTablaDetalleActualizar() {
             item.descuento || ""
           }" placeholder="0.0000">
         </div>
-        Neto Calc: <strong class="peso_neto_calculado_display_actualizar">${calcularPesoNetoItemActualizar(
-          item
-        ).toFixed(4)}</strong>
+        Neto Calc: <strong class="peso_neto_calculado_display_actualizar">${(() => {
+          const pesoNeto = calcularPesoNetoItemActualizar(item);
+          const descuento = parseFloat(item.descuento) || 0;
+          const pesoConDescuento = descuento > 0 && descuento <= 100 
+            ? parseFloat((pesoNeto * (1 - descuento / 100)).toFixed(4))
+            : pesoNeto;
+          return pesoConDescuento.toFixed(4);
+        })()}</strong>
       </div>`;
     } else {
       infoEspecificaHtml = `
@@ -948,14 +961,15 @@ function addEventListenersToDetalleInputsActualizar() {
       if (isNaN(index) || index >= detalleCompraItemsActualizar.length) return;
       const item = detalleCompraItemsActualizar[index];
 
-      const btnUltimoPesoBruto = row.querySelector(
+      // Usar querySelectorAll para obtener TODOS los botones de peso bruto (puede haber 2: uno en peso_bruto y otro en peso_neto_directo)
+      const botonesUltimoPesoBruto = row.querySelectorAll(
         ".btnUltimoPesoRomanaBrutoActualizar"
       );
-      if (btnUltimoPesoBruto) {
+      botonesUltimoPesoBruto.forEach(btnUltimoPesoBruto => {
         btnUltimoPesoBruto.addEventListener("click", async function () {
           await manejarPesoRomanaActualizar(row, item, "bruto");
         });
-      }
+      });
 
       const btnUltimoPesoVehiculo = row.querySelector(
         ".btnUltimoPesoRomanaVehiculoActualizar"
@@ -1084,8 +1098,12 @@ function actualizarCalculosFilaActualizar(rowElement, item) {
     ".peso_neto_calculado_display_actualizar"
   );
   if (pesoNetoDisplay) {
-    pesoNetoDisplay.textContent =
-      calcularPesoNetoItemActualizar(item).toFixed(4);
+    const pesoNeto = calcularPesoNetoItemActualizar(item);
+    const descuento = parseFloat(item.descuento) || 0;
+    const pesoConDescuento = descuento > 0 && descuento <= 100 
+      ? parseFloat((pesoNeto * (1 - descuento / 100)).toFixed(4))
+      : pesoNeto;
+    pesoNetoDisplay.textContent = pesoConDescuento.toFixed(4);
   }
   rowElement.querySelector(
     ".subtotal_linea_display_actualizar"
@@ -1507,20 +1525,28 @@ function calcularSubtotalLineaItemModal(item) {
   } else {
     cantidadBase = parseFloat(item.cantidad_unidad) || 0;
   }
-  // Redondear el subtotal antes del descuento a 4 decimales
-  const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
+  
   const porcentajeDescuento = parseFloat(item.descuento) || 0;
-  let montoDescuento = 0;
-  let subtotalConDescuento = subtotalAntesDescuento;
+  let cantidadConDescuento = cantidadBase;
+  let cantidadDescontada = 0;
+  
+  // Aplicar descuento a la cantidad
   if (porcentajeDescuento > 0 && porcentajeDescuento <= 100) {
-    // Redondear el monto del descuento a 4 decimales
-    montoDescuento = parseFloat((subtotalAntesDescuento * (porcentajeDescuento / 100)).toFixed(4));
-    subtotalConDescuento = parseFloat((subtotalAntesDescuento - montoDescuento).toFixed(4));
+    // Calcular la cantidad que se descuenta
+    cantidadDescontada = parseFloat((cantidadBase * (porcentajeDescuento / 100)).toFixed(4));
+    // Calcular la cantidad final después del descuento
+    cantidadConDescuento = parseFloat((cantidadBase - cantidadDescontada).toFixed(4));
   } else if (porcentajeDescuento > 100) {
     console.warn(
       `Porcentaje de descuento (${porcentajeDescuento}%) es mayor a 100. Se aplicará 0% o el máximo permitido.`
     );
   }
+  
+  // Calcular subtotales
+  const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
+  const subtotalConDescuento = parseFloat((cantidadConDescuento * precioUnitario).toFixed(4));
+  const montoDescuento = parseFloat((subtotalAntesDescuento - subtotalConDescuento).toFixed(4));
+  
   item.subtotal_original_linea = subtotalAntesDescuento;
   item.monto_descuento_linea = montoDescuento;
   item.subtotal_linea = subtotalConDescuento;
@@ -1630,9 +1656,14 @@ function renderizarTablaDetalleModal() {
             item.descuento || ""
           }" placeholder="0.0000">
         </div>
-        Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(
-          item
-        ).toFixed(4)}</strong>
+        Neto Calc: <strong class="peso_neto_calculado_display_modal">${(() => {
+          const pesoNeto = calcularPesoNetoItemModal(item);
+          const descuento = parseFloat(item.descuento) || 0;
+          const pesoConDescuento = descuento > 0 && descuento <= 100 
+            ? parseFloat((pesoNeto * (1 - descuento / 100)).toFixed(4))
+            : pesoNeto;
+          return pesoConDescuento.toFixed(4);
+        })()}</strong>
       </div>`;
     } else {
       infoEspecificaHtml = `
@@ -1672,12 +1703,13 @@ function addEventListenersToDetalleInputsModal() {
       if (isNaN(index) || index >= detalleCompraItemsModal.length) return;
       const item = detalleCompraItemsModal[index];
 
-      const btnUltimoPesoBruto = row.querySelector(".btnUltimoPesoRomanaBruto");
-      if (btnUltimoPesoBruto) {
+      // Usar querySelectorAll para obtener TODOS los botones de peso bruto (puede haber 2: uno en peso_bruto y otro en peso_neto_directo)
+      const botonesUltimoPesoBruto = row.querySelectorAll(".btnUltimoPesoRomanaBruto");
+      botonesUltimoPesoBruto.forEach(btnUltimoPesoBruto => {
         btnUltimoPesoBruto.addEventListener("click", async function () {
           await manejarPesoRomana(row, item, "bruto");
         });
-      }
+      });
 
       const btnUltimoPesoVehiculo = row.querySelector(
         ".btnUltimoPesoRomanaVehiculo"
@@ -1802,7 +1834,12 @@ function actualizarCalculosFilaModal(rowElement, item) {
     ".peso_neto_calculado_display_modal"
   );
   if (pesoNetoDisplay) {
-    pesoNetoDisplay.textContent = calcularPesoNetoItemModal(item).toFixed(4);
+    const pesoNeto = calcularPesoNetoItemModal(item);
+    const descuento = parseFloat(item.descuento) || 0;
+    const pesoConDescuento = descuento > 0 && descuento <= 100 
+      ? parseFloat((pesoNeto * (1 - descuento / 100)).toFixed(4))
+      : pesoNeto;
+    pesoNetoDisplay.textContent = pesoConDescuento.toFixed(4);
   }
   rowElement.querySelector(
     ".subtotal_linea_display_modal"
