@@ -307,7 +307,7 @@ class PagosModel extends Mysql
                     p.idventa,
                     p.idcompra,
                     p.idsueldotemp,
-                    p.monto,
+                    CAST(p.monto AS DECIMAL(15,4)) as monto,
                     p.referencia,
                     p.fecha_pago,
                     DATE_FORMAT(p.fecha_pago, '%d/%m/%Y') as fecha_pago_formato,
@@ -418,7 +418,7 @@ class PagosModel extends Mysql
                 "SELECT 
                     p.idpago,
                     p.idsueldotemp,
-                    p.monto,
+                    CAST(p.monto AS DECIMAL(15,4)) as monto,
                     p.referencia,
                     p.fecha_pago,
                     DATE_FORMAT(p.fecha_pago, '%d/%m/%Y') as fecha_pago_formato,
@@ -553,8 +553,8 @@ class PagosModel extends Mysql
                 "SELECT
                     c.idcompra,
                     c.nro_compra,
-                    c.total_general as total,
-                    c.balance, 
+                    CAST(c.total_general AS DECIMAL(15,4)) as total,
+                    CAST(c.balance AS DECIMAL(15,4)) as balance, 
                     p.nombre AS proveedor,
                     p.identificacion AS proveedor_identificacion
                 FROM
@@ -605,8 +605,8 @@ class PagosModel extends Mysql
                 "SELECT 
                     v.idventa,
                     v.nro_venta,
-                    v.total_general as total,
-                    v.balance,
+                    CAST(v.total_general AS DECIMAL(15,4)) as total,
+                    CAST(v.balance AS DECIMAL(15,4)) as balance,
                     CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente,
                     c.cedula as cliente_identificacion
                 FROM venta v
@@ -663,12 +663,12 @@ class PagosModel extends Mysql
                         WHEN s.idempleado IS NOT NULL THEN CONCAT(e.nombre, ' ', COALESCE(e.apellido, ''))
                         ELSE 'Destinatario no encontrado'
                     END as nombre_completo,
-                    ROUND(s.monto, 2) as monto,
-                    ROUND(s.balance, 2) as balance,
+                    CAST(s.monto AS DECIMAL(15,4)) as monto,
+                    CAST(s.balance AS DECIMAL(15,4)) as balance,
                     s.idmoneda,
                     COALESCE(m.codigo_moneda, 'VES') as simbolo_moneda,
                     COALESCE(m.nombre_moneda, 'Bolívares') as nombre_moneda,
-                    ROUND(COALESCE(
+                    CAST(COALESCE(
                         (SELECT ht.tasa_a_bs 
                          FROM historial_tasas_bcv ht 
                          INNER JOIN monedas m2 ON ht.codigo_moneda = m2.codigo_moneda
@@ -677,8 +677,8 @@ class PagosModel extends Mysql
                          ORDER BY ht.fecha_publicacion_bcv DESC 
                          LIMIT 1), 
                         COALESCE(m.valor, 1)
-                    ), 2) AS tasa_actual,
-                    ROUND((s.monto * COALESCE(
+                    ) AS DECIMAL(15,4)) AS tasa_actual,
+                    CAST((s.monto * COALESCE(
                         (SELECT ht.tasa_a_bs 
                          FROM historial_tasas_bcv ht 
                          INNER JOIN monedas m2 ON ht.codigo_moneda = m2.codigo_moneda
@@ -687,7 +687,7 @@ class PagosModel extends Mysql
                          ORDER BY ht.fecha_publicacion_bcv DESC 
                          LIMIT 1), 
                         COALESCE(m.valor, 1)
-                    )), 2) as monto_bolivares,
+                    )) AS DECIMAL(15,4)) as monto_bolivares,
                     COALESCE(s.observacion, 'Sin descripción') as periodo,
                     s.observacion,
                     s.fecha_creacion

@@ -660,7 +660,20 @@ class ComprasModel
             $codigoMonedaDolar = 'USD';
 
             $this->setQuery("SELECT 
-                        c.*,
+                        c.idcompra,
+                        c.nro_compra,
+                        c.fecha,
+                        c.idproveedor,
+                        c.idmoneda_general,
+                        CAST(c.subtotal_general AS DECIMAL(15,4)) as subtotal_general,
+                        CAST(c.descuento_porcentaje_general AS DECIMAL(5,4)) as descuento_porcentaje_general,
+                        CAST(c.monto_descuento_general AS DECIMAL(15,4)) as monto_descuento_general,
+                        CAST(c.total_general AS DECIMAL(15,4)) as total_general,
+                        CAST(c.balance AS DECIMAL(15,4)) as balance,
+                        c.observaciones_compra,
+                        c.estatus_compra,
+                        c.fecha_creacion,
+                        c.fecha_modificacion,
                         CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as proveedor_nombre,
                         m.codigo_moneda AS moneda_general_compra_codigo,
                         (SELECT ht_eur.tasa_a_bs
@@ -704,8 +717,20 @@ class ComprasModel
 
         try {
             $this->setQuery("SELECT 
-                        dc.*,
+                        dc.iddetalle_compra,
+                        dc.idcompra,
+                        dc.idproducto,
+                        dc.descripcion_temporal_producto,
+                        CAST(dc.cantidad AS DECIMAL(15,4)) as cantidad,
+                        CAST(dc.descuento AS DECIMAL(15,4)) as descuento,
+                        CAST(dc.precio_unitario_compra AS DECIMAL(15,4)) as precio_unitario_compra,
+                        dc.idmoneda_detalle,
+                        CAST(dc.subtotal_linea AS DECIMAL(15,4)) as subtotal_linea,
+                        CAST(dc.peso_vehiculo AS DECIMAL(15,4)) as peso_vehiculo,
+                        CAST(dc.peso_bruto AS DECIMAL(15,4)) as peso_bruto,
+                        CAST(dc.peso_neto AS DECIMAL(15,4)) as peso_neto,
                         p.nombre as producto_nombre,
+                        p.nombre as nombre_producto,
                         m.codigo_moneda
                     FROM detalle_compra dc
                     LEFT JOIN producto p ON dc.idproducto = p.idproducto
@@ -1108,7 +1133,7 @@ class ComprasModel
                         c.idcompra,
                         c.nro_compra,
                         c.fecha,
-                        c.total_general,
+                        CAST(c.total_general AS DECIMAL(15,4)) as total_general,
                         c.observaciones_compra,
                         c.estatus_compra,
                         p.nombre as nombrePersona,
@@ -1131,9 +1156,9 @@ class ComprasModel
             }
 
             $this->setQuery("SELECT 
-                        dc.cantidad,
-                        dc.precio_unitario_compra as precio,
-                        dc.subtotal_linea,
+                        CAST(dc.cantidad AS DECIMAL(15,4)) as cantidad,
+                        CAST(dc.precio_unitario_compra AS DECIMAL(15,4)) as precio,
+                        CAST(dc.subtotal_linea AS DECIMAL(15,4)) as subtotal_linea,
                         dc.idproducto as productoId,
                         COALESCE(p.nombre, dc.descripcion_temporal_producto) as nombreProducto,
                         p.descripcion as modelo,
@@ -1398,6 +1423,35 @@ class ComprasModel
     public function reactivarCompra(int $idcompra)
     {
         return $this->ejecutarReactivacionCompra($idcompra);
+    }
+
+    public function getTasaBcvDelDia()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $sql = "SELECT 
+                        codigo_moneda, 
+                        CAST(tasa_a_bs AS DECIMAL(15,4)) as tasa_a_bs,
+                        fecha_publicacion_bcv
+                    FROM historial_tasas_bcv
+                    WHERE DATE(fecha_publicacion_bcv) = CURDATE()
+                    ORDER BY codigo_moneda";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute();
+            $tasas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return $tasas;
+
+        } catch (PDOException $e) {
+            error_log("ComprasModel::getTasaBcvDelDia - Error: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
     }
 }
 ?>

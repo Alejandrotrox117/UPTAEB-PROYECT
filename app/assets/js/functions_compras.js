@@ -279,10 +279,10 @@ function initializeDataTable() {
           return data
             ? "Bs. " +
                 parseFloat(data).toLocaleString("es-ES", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 4,
+                  maximumFractionDigits: 4,
                 })
-            : "Bs. 0.00";
+            : "Bs. 0.0000";
         },
       },
       {
@@ -766,13 +766,15 @@ function calcularSubtotalLineaItemActualizar(item) {
   } else {
     cantidadBase = parseFloat(item.cantidad_unidad) || 0;
   }
-  const subtotalAntesDescuento = cantidadBase * precioUnitario;
+  // Redondear el subtotal antes del descuento a 4 decimales
+  const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
   const porcentajeDescuento = parseFloat(item.descuento) || 0;
   let montoDescuento = 0;
   let subtotalConDescuento = subtotalAntesDescuento;
   if (porcentajeDescuento > 0 && porcentajeDescuento <= 100) {
-    montoDescuento = subtotalAntesDescuento * (porcentajeDescuento / 100);
-    subtotalConDescuento = subtotalAntesDescuento - montoDescuento;
+    // Redondear el monto del descuento a 4 decimales
+    montoDescuento = parseFloat((subtotalAntesDescuento * (porcentajeDescuento / 100)).toFixed(4));
+    subtotalConDescuento = parseFloat((subtotalAntesDescuento - montoDescuento).toFixed(4));
   } else if (porcentajeDescuento > 100) {
     console.warn(
       `Porcentaje de descuento (${porcentajeDescuento}%) es mayor a 100. Se aplicará 0% o el máximo permitido.`
@@ -793,11 +795,13 @@ function calcularSubtotalLineaItemActualizar(item) {
 function calcularPesoNetoItemActualizar(item) {
   if (item.idcategoria === 2) {
     if (item.no_usa_vehiculo) {
-      return parseFloat(item.peso_neto_directo) || 0;
+      // Redondear peso neto directo a 4 decimales
+      return parseFloat((parseFloat(item.peso_neto_directo) || 0).toFixed(4));
     } else {
       const bruto = parseFloat(item.peso_bruto) || 0;
       const vehiculo = parseFloat(item.peso_vehiculo) || 0;
-      return Math.max(0, bruto - vehiculo);
+      // Redondear el resultado del cálculo a 4 decimales
+      return parseFloat(Math.max(0, bruto - vehiculo).toFixed(4));
     }
   }
   return 0;
@@ -808,16 +812,17 @@ function convertirAMonedaBaseActualizar(monto, idmoneda) {
     return 0;
   }
   if (idmoneda == 3) {
-    return monto;
+    return parseFloat(monto.toFixed(4));
   }
   const tasa = tasasMonedasActualizar[idmoneda];
   if (!tasa) {
     console.warn(
       `No se encontró tasa para la moneda con ID: ${idmoneda}. Se usará tasa 1.`
     );
-    return monto; // O retornar 0 si se prefiere un fallo explícito
+    return parseFloat(monto.toFixed(4)); // O retornar 0 si se prefiere un fallo explícito
   }
-  return monto * tasa;
+  // Redondear la conversión a 4 decimales
+  return parseFloat((monto * tasa).toFixed(4));
 }
 
 function calcularTotalesGeneralesActualizar() {
@@ -828,7 +833,8 @@ function calcularTotalesGeneralesActualizar() {
     subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
   });
 
-  const totalGeneral = subtotalGeneralBs - totalDescuentosBs;
+  // Redondear el total general a 4 decimales
+  const totalGeneral = parseFloat((subtotalGeneralBs - totalDescuentosBs).toFixed(4));
   const totalGeneralDisplayActualizar = document.getElementById(
     "total_general_display_actualizar"
   );
@@ -839,11 +845,11 @@ function calcularTotalesGeneralesActualizar() {
   if (totalGeneralDisplayActualizar) {
     totalGeneralDisplayActualizar.value = `Bs. ${totalGeneral.toLocaleString(
       "es-VE",
-      { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+      { minimumFractionDigits: 4, maximumFractionDigits: 4 }
     )}`;
   }
   if (totalGeneralInputActualizar) {
-    totalGeneralInputActualizar.value = totalGeneral.toFixed(2);
+    totalGeneralInputActualizar.value = totalGeneral.toFixed(4);
   }
 }
 
@@ -874,40 +880,40 @@ function renderizarTablaDetalleActualizar() {
           item.no_usa_vehiculo ? "hidden" : ""
         }">
           P.Bru: 
-          <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_actualizar" value="${
+          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_actualizar" value="${
             item.peso_bruto || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           P.Veh: 
-          <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_actualizar" value="${
+          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_actualizar" value="${
             item.peso_vehiculo || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaVehiculoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           Descuento %: 
-          <input type="number" step="0.01" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_actualizar" value="${
+          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_actualizar" value="${
             item.descuento || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
         </div>
         <div class="campo_peso_neto_directo_actualizar ${
           !item.no_usa_vehiculo ? "hidden" : ""
         }">
-          P.Neto: <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_actualizar" value="${
+          P.Neto: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_actualizar" value="${
             item.peso_neto_directo || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           Descuento %: 
-          <input type="number" step="0.01" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_actualizar" value="${
+          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_actualizar" value="${
             item.descuento || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
         </div>
         Neto Calc: <strong class="peso_neto_calculado_display_actualizar">${calcularPesoNetoItemActualizar(
           item
-        ).toFixed(2)}</strong>
+        ).toFixed(4)}</strong>
       </div>`;
     } else {
       infoEspecificaHtml = `
         <div>
-          Cant: <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_actualizar" value="${
+          Cant: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_actualizar" value="${
             item.cantidad_unidad || "1"
           }" placeholder="1">
         </div>`;
@@ -919,13 +925,13 @@ function renderizarTablaDetalleActualizar() {
       <td class="py-0.5 px-0.5 text-xs">
           ${
             item.idmoneda_item
-          } <input type="number" step="0.01" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_actualizar" value="${item.precio_unitario.toFixed(
-      2
-    )}" placeholder="0.00" readonly>
+          } <input type="number" step="0.0001" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_actualizar" value="${item.precio_unitario.toFixed(
+      4
+    )}" placeholder="0.0000" readonly>
       </td>
       <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_actualizar">${
         item.idmoneda_item
-      } ${calcularSubtotalLineaItemActualizar(item).toFixed(2)}</td>
+      } ${calcularSubtotalLineaItemActualizar(item).toFixed(4)}</td>
       <td class="py-0.5 px-0.5 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleActualizar text-xs"></button></td>
     `;
     cuerpoTablaDetalleCompraActualizar.appendChild(tr);
@@ -1079,13 +1085,13 @@ function actualizarCalculosFilaActualizar(rowElement, item) {
   );
   if (pesoNetoDisplay) {
     pesoNetoDisplay.textContent =
-      calcularPesoNetoItemActualizar(item).toFixed(2);
+      calcularPesoNetoItemActualizar(item).toFixed(4);
   }
   rowElement.querySelector(
     ".subtotal_linea_display_actualizar"
   ).textContent = `${
     item.idmoneda_item
-  } ${calcularSubtotalLineaItemActualizar(item).toFixed(2)}`;
+  } ${calcularSubtotalLineaItemActualizar(item).toFixed(4)}`;
   calcularTotalesGeneralesActualizar();
 }
 
@@ -1371,7 +1377,7 @@ async function cargarProductosParaModal() {
       option.value = producto.idproducto;
       option.dataset.idcategoria = producto.idcategoria;
       option.dataset.nombre = producto.nombre_producto;
-      option.dataset.precio = producto.precio_referencia_compra || "0.00";
+      option.dataset.precio = producto.precio_referencia_compra || "0.0000";
       option.dataset.idmoneda = producto.codigo_moneda || "";
       option.dataset.moneda = producto.idmoneda_producto || "";
       option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria})`;
@@ -1501,13 +1507,15 @@ function calcularSubtotalLineaItemModal(item) {
   } else {
     cantidadBase = parseFloat(item.cantidad_unidad) || 0;
   }
-  const subtotalAntesDescuento = cantidadBase * precioUnitario;
+  // Redondear el subtotal antes del descuento a 4 decimales
+  const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
   const porcentajeDescuento = parseFloat(item.descuento) || 0;
   let montoDescuento = 0;
   let subtotalConDescuento = subtotalAntesDescuento;
   if (porcentajeDescuento > 0 && porcentajeDescuento <= 100) {
-    montoDescuento = subtotalAntesDescuento * (porcentajeDescuento / 100);
-    subtotalConDescuento = subtotalAntesDescuento - montoDescuento;
+    // Redondear el monto del descuento a 4 decimales
+    montoDescuento = parseFloat((subtotalAntesDescuento * (porcentajeDescuento / 100)).toFixed(4));
+    subtotalConDescuento = parseFloat((subtotalAntesDescuento - montoDescuento).toFixed(4));
   } else if (porcentajeDescuento > 100) {
     console.warn(
       `Porcentaje de descuento (${porcentajeDescuento}%) es mayor a 100. Se aplicará 0% o el máximo permitido.`
@@ -1528,20 +1536,23 @@ function calcularSubtotalLineaItemModal(item) {
 function calcularPesoNetoItemModal(item) {
   if (item.idcategoria === 2) {
     if (item.no_usa_vehiculo) {
-      return parseFloat(item.peso_neto_directo) || 0;
+      // Redondear peso neto directo a 4 decimales
+      return parseFloat((parseFloat(item.peso_neto_directo) || 0).toFixed(4));
     } else {
       const bruto = parseFloat(item.peso_bruto) || 0;
       const vehiculo = parseFloat(item.peso_vehiculo) || 0;
-      return Math.max(0, bruto - vehiculo);
+      // Redondear el resultado del cálculo a 4 decimales
+      return parseFloat(Math.max(0, bruto - vehiculo).toFixed(4));
     }
   }
   return 0;
 }
 
 function convertirAMonedaBase(monto, idmoneda) {
-  if (idmoneda == 3) return monto;
+  if (idmoneda == 3) return parseFloat(monto.toFixed(4));
   const tasa = tasasMonedas[idmoneda] || 1;
-  return monto * tasa;
+  // Redondear la conversión a 4 decimales
+  return parseFloat((monto * tasa).toFixed(4));
 }
 
 function calcularTotalesGeneralesModal() {
@@ -1552,7 +1563,8 @@ function calcularTotalesGeneralesModal() {
     subtotalGeneralBs += parseFloat(item.subtotal_linea_bs) || 0;
   });
 
-  const totalGeneral = subtotalGeneralBs - totalDescuentosBs;
+  // Redondear el total general a 4 decimales
+  const totalGeneral = parseFloat((subtotalGeneralBs - totalDescuentosBs).toFixed(4));
   const totalGeneralDisplayModal = document.getElementById(
     "total_general_display_modal"
   );
@@ -1562,9 +1574,9 @@ function calcularTotalesGeneralesModal() {
 
   totalGeneralDisplayModal.value = `Bs. ${totalGeneral.toLocaleString(
     "es-VE",
-    { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+    { minimumFractionDigits: 4, maximumFractionDigits: 4 }
   )}`;
-  totalGeneralInputModal.value = totalGeneral.toFixed(2);
+  totalGeneralInputModal.value = totalGeneral.toFixed(4);
 }
 
 function renderizarTablaDetalleModal() {
@@ -1592,40 +1604,40 @@ function renderizarTablaDetalleModal() {
           item.no_usa_vehiculo ? "hidden" : ""
         }">
           P.Bru: 
-          <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${
+          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${
             item.peso_bruto || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           P.Veh: 
-          <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${
+          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${
             item.peso_vehiculo || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           Descuento %: 
-          <input type="number" step="0.01" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${
+          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${
             item.descuento || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
         </div>
         <div class="campo_peso_neto_directo_modal ${
           !item.no_usa_vehiculo ? "hidden" : ""
         }">
-          P.Neto: <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${
+          P.Neto: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${
             item.peso_neto_directo || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           Descuento %: 
-          <input type="number" step="0.01" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${
+          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${
             item.descuento || ""
-          }" placeholder="0.00">
+          }" placeholder="0.0000">
         </div>
         Neto Calc: <strong class="peso_neto_calculado_display_modal">${calcularPesoNetoItemModal(
           item
-        ).toFixed(2)}</strong>
+        ).toFixed(4)}</strong>
       </div>`;
     } else {
       infoEspecificaHtml = `
         <div>
-          Cant: <input type="number" step="0.01" min="0.01" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${
+          Cant: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${
             item.cantidad_unidad || "1"
           }" placeholder="1">
         </div>`;
@@ -1637,13 +1649,13 @@ function renderizarTablaDetalleModal() {
       <td class="py-0.5 px-0.5 text-xs">
           ${
             item.idmoneda_item
-          } <input type="number" step="0.01" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(
-      2
-    )}" placeholder="0.00" readonly>
+          } <input type="number" step="0.0001" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(
+      4
+    )}" placeholder="0.0000" readonly>
       </td>
       <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_modal">${
         item.idmoneda_item
-      } ${calcularSubtotalLineaItemModal(item).toFixed(2)}</td>
+      } ${calcularSubtotalLineaItemModal(item).toFixed(4)}</td>
       <td class="py-0.5 px-0.5 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs"></button></td>
     `;
     cuerpoTablaDetalleCompraModal.appendChild(tr);
@@ -1790,13 +1802,13 @@ function actualizarCalculosFilaModal(rowElement, item) {
     ".peso_neto_calculado_display_modal"
   );
   if (pesoNetoDisplay) {
-    pesoNetoDisplay.textContent = calcularPesoNetoItemModal(item).toFixed(2);
+    pesoNetoDisplay.textContent = calcularPesoNetoItemModal(item).toFixed(4);
   }
   rowElement.querySelector(
     ".subtotal_linea_display_modal"
   ).textContent = `${
     item.idmoneda_item
-  } ${calcularSubtotalLineaItemModal(item).toFixed(2)}`;
+  } ${calcularSubtotalLineaItemModal(item).toFixed(4)}`;
   calcularTotalesGeneralesModal();
 }
 
@@ -2248,7 +2260,7 @@ async function cargarProductosParaActualizar() {
       option.value = producto.idproducto;
       option.dataset.idcategoria = producto.idcategoria;
       option.dataset.nombre = producto.nombre_producto;
-      option.dataset.precio = producto.precio_referencia_compra || "0.00";
+      option.dataset.precio = producto.precio_referencia_compra || "0.0000";
       option.dataset.idmoneda = producto.codigo_moneda || "";
       option.dataset.moneda = producto.idmoneda_producto || "";
       option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria})`;
@@ -2635,8 +2647,8 @@ function mostrarModalVerCompra(
     elTotalProductosEUR.textContent =
       "€ " +
       totalEuros.toLocaleString("es-ES", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4,
       });
     contTotalEUR.style.display = "block";
   } else if (contTotalEUR) {
@@ -2649,8 +2661,8 @@ function mostrarModalVerCompra(
     elTotalProductosUSD.textContent =
       "$ " +
       totalDolares.toLocaleString("es-ES", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4,
       });
     contTotalUSD.style.display = "block";
   } else if (contTotalUSD) {
@@ -2688,8 +2700,8 @@ function mostrarModalVerCompra(
     elSubtotalGeneralVES.textContent =
       "Bs. " +
       subtotalGeneralBolivares.toLocaleString("es-ES", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4,
       });
   }
 
@@ -2700,16 +2712,16 @@ function mostrarModalVerCompra(
     elMontoDescuentoVES.textContent =
       "Bs. " +
       montoDescuentoBolivares.toLocaleString("es-ES", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4,
       });
   }
 
   document.getElementById("verTotalGeneral").textContent =
     "Bs. " +
     montoTotalBolivares.toLocaleString("es-ES", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
     });
 
   const tbody = document.getElementById("verDetalleProductos");
@@ -2730,24 +2742,24 @@ function mostrarModalVerCompra(
           detalle.nombre_producto || detalle.producto_nombre || "N/A"
         }</td>
         <td class="px-4 py-2 text-right">${cantidad.toLocaleString("es-ES", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
+          minimumFractionDigits: 4,
+          maximumFractionDigits: 4,
         })}</td>
         <td class="px-4 py-2 text-right">${
           detalle.codigo_moneda || ""
         } ${precioUnitario.toLocaleString("es-ES", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4,
       })}</td>
         <td class="px-4 py-2 text-right">${descuentoValor.toLocaleString(
           "es-ES",
-          { minimumFractionDigits: 0, maximumFractionDigits: 2 }
+          { minimumFractionDigits: 2, maximumFractionDigits: 4 }
         )} %</td>
         <td class="px-4 py-2 text-right">${
           detalle.codigo_moneda || ""
         } ${subtotalLinea.toLocaleString("es-ES", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4,
       })}</td>
       `;
       tbody.appendChild(tr);

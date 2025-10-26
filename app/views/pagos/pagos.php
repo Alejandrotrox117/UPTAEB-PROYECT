@@ -166,7 +166,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('pagos');
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
                     <label for="pagoMonto" class="block text-sm font-medium text-gray-700 mb-1">Monto <span class="text-red-500">*</span></label>
-                    <div class="relative"><span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">Bs. </span><input type="text" id="pagoMonto" name="pagoMonto" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="0.00"></div>
+                    <div class="relative"><span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">Bs. </span><input type="text" id="pagoMonto" name="pagoMonto" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="0.0000"></div>
                     <div id="error-pagoMonto" class="text-red-500 text-sm mt-1 hidden"></div>
                 </div>
                 <div>
