@@ -1,4 +1,8 @@
-Categoria Delete Exitoso
- [x] Delete categoria existente
- [x] Delete categoria ya eliminada
+Produccion Clasificacion
+ [x] Registrar clasificacion con datos completos
+ [x] Clasificacion actualiza inventario
+ [x] Consultar procesos clasificacion por lote
+ [x] Clasificacion con stock insuficiente
+ [x] Clasificacion suma incorrecta
+ [x] Clasificacion con producto inexistente
 

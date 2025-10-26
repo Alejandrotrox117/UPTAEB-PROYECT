@@ -83,9 +83,14 @@ class categoriasModel extends Mysql
 
     
     public function deleteCategoria($idcategoria) {
-        $sql = "UPDATE categoria SET estatus = 'INACTIVO' WHERE idcategoria = ?";
-        $stmt = $this->db->prepare($sql); 
-        return $stmt->execute([$idcategoria]); 
+        try {
+            $sql = "UPDATE categoria SET estatus = 'INACTIVO' WHERE idcategoria = ?";
+            $stmt = $this->db->prepare($sql); 
+            return $stmt->execute([$idcategoria]);
+        } catch (PDOException $e) {
+            error_log("Error al eliminar categoria: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Método para actualizar un categoria
@@ -110,19 +115,20 @@ class categoriasModel extends Mysql
 
     // Método para obtener un categoria por ID
     public function getCategoriaById($idcategoria) {
-        $sql = "SELECT * FROM categoria WHERE idcategoria = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$idcategoria]);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $sql = "SELECT * FROM categoria WHERE idcategoria = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$idcategoria]);
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($data) {
-            // Asignar los valores a las propiedades del objeto
-            $this->setIdcategoria($data['idcategoria']);
-            $this->setNombre($data['nombre']);
-            $this->setDescripcion($data['descripcion']);
-    
-            $this->setEstatus($data['estatus']);
-        }
+            if ($data) {
+                // Asignar los valores a las propiedades del objeto
+                $this->setIdcategoria($data['idcategoria']);
+                $this->setNombre($data['nombre']);
+                $this->setDescripcion($data['descripcion']);
+        
+                $this->setEstatus($data['estatus']);
+            }
 
         return $data; 
     }
