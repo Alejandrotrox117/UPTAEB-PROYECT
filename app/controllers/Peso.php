@@ -66,14 +66,37 @@ class Peso extends Controllers
             exit();
         }
 
-        $resultado = $this->model->obtenerUltimoPeso();
-
-        if (!empty($resultado['data'])) {
-            $resultado['data']['fecha_formateada'] = $this->formatearFechaHora($resultado['data']['fecha']);
-            $resultado['data']['fecha_creacion_formateada'] = $this->formatearFechaHora($resultado['data']['fecha_creacion']);
+        // Leer directamente del archivo JSON que actualiza el script Python
+        $filePath = 'C:\com_data\peso_mysql.json';
+        
+        if (!file_exists($filePath)) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Archivo de peso no encontrado'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
         }
-
-        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+        
+        $jsonData = file_get_contents($filePath);
+        $data = json_decode($jsonData, true);
+        
+        if ($data === null) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error al leer datos de peso'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        echo json_encode([
+            'status' => true,
+            'data' => [
+                'peso' => $data["peso_numerico"],
+                'fecha' => $data["fecha_hora"],
+                'estado' => $data["estado"] ?? 'ACTIVO',
+                'variacion' => $data["variacion"] ?? '0',
+            ]
+        ], JSON_UNESCAPED_UNICODE);
         exit();
     }
 
