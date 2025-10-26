@@ -94,6 +94,10 @@
             const statusIndicator = document.getElementById('status-indicator');
             const statusText = document.getElementById('status-text');
             let currentWeight = 0.00;
+            let lastSavedWeight = null;
+            let lastFetchTime = null;
+            let pollInterval = 2000; // Intervalo base de 2 segundos
+            let consecutiveNoChanges = 0;
 
             function updateDateTime() {
                 const now = new Date();
@@ -116,6 +120,25 @@
             setInterval(updateDateTime, 1000);
             updateDateTime();
 
+            async function saveWeightToDatabase() {
+                try {
+                    const response = await fetch('./Peso/guardarPesoRomana', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.status) {
+                        console.log('Peso guardado en BD:', result);
+                        lastSavedWeight = currentWeight;
+                    }
+                } catch (error) {
+                    console.error('Error al guardar peso en BD:', error);
+                }
+            }
+
             async function fetchWeight() {
                 try {
                     const response = await fetch('./Peso/getUltimoPeso');
@@ -131,6 +154,23 @@
                             setTimeout(() => {
                                 weightDisplay.classList.remove('animate-weight-change');
                             }, 300);
+
+                            // Reiniciar contador de cambios y reducir intervalo
+                            consecutiveNoChanges = 0;
+                            pollInterval = 2000; // Volver a 2 segundos cuando hay cambios
+
+                            // Guardar en BD si el peso es diferente al último guardado y es mayor a 1kg
+                            if (newWeight > 1 && (lastSavedWeight === null || Math.abs(newWeight - lastSavedWeight) > 0.5)) {
+                                saveWeightToDatabase();
+                            }
+                        } else {
+                            // Incrementar contador si no hay cambios
+                            consecutiveNoChanges++;
+                            
+                            // Aumentar gradualmente el intervalo si no hay cambios (máximo 10 segundos)
+                            if (consecutiveNoChanges > 5) {
+                                pollInterval = Math.min(10000, pollInterval + 1000);
+                            }
                         }
 
                         // Update status to connected
@@ -148,9 +188,14 @@
                 }
             }
 
-            // Fetch weight immediately and then every 10 seconds
-            fetchWeight();
-            setInterval(fetchWeight, 10000);
+            // Sistema de polling adaptativo
+            async function continuousPolling() {
+                await fetchWeight();
+                setTimeout(continuousPolling, pollInterval);
+            }
+
+            // Iniciar polling inmediatamente
+            continuousPolling();
         });
     </script>
 </body>
