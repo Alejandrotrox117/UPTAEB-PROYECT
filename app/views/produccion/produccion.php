@@ -48,7 +48,7 @@
                 </div>
 
                 <div class="overflow-x-auto w-full relative">
-                    <table id="TablaLotes" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 1200px;">
+                    <table id="TablaLotes" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 900px;">
                         <thead>
                             <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
                                 <!-- Columnas inyectadas por JS -->
@@ -132,8 +132,8 @@
                 <!-- Lista de procesos recientes -->
                 <div class="mt-8">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4">Procesos de Hoy</h4>
-                    <div class="overflow-x-auto">
-                        <table id="TablaProcesos" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%;">
+                    <div class="overflow-x-auto w-full relative">
+                        <table id="TablaProcesos" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 600px;">
                             <thead>
                                 <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
                                     <!-- Columnas inyectadas por JS -->
@@ -180,7 +180,7 @@
                 </div>
 
                 <div class="overflow-x-auto w-full relative">
-                    <table id="TablaNomina" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 1000px;">
+                    <table id="TablaNomina" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 500px;">
                         <thead>
                             <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
                                 <!-- Columnas inyectadas por JS -->
@@ -364,11 +364,11 @@
 
 <!-- Modal Registrar Lote -->
 <div id="modalRegistrarLote"
-    class="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 z-50 p-2 sm:p-4">
-    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-5xl h-[90vh] flex flex-col transform transition-all duration-300 scale-95">
+    class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-5xl max-h-[95vh] flex flex-col">
         
-        <!-- Header Mejorado con Gradiente -->
-        <div class="bg-gradient-to-r from-green-600 to-emerald-700 px-4 md:px-6 py-3 flex justify-between items-center flex-shrink-0">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-green-600 to-emerald-700 px-4 md:px-6 py-4 flex justify-between items-center flex-shrink-0 border-b border-gray-200">
             <div class="flex items-center gap-2">
                 <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
                     <i class="fas fa-boxes text-white text-lg"></i>
@@ -385,13 +385,13 @@
             </div>
             <button id="btnCerrarModalRegistrarLote" type="button" 
                 class="text-white/80 hover:text-white hover:bg-white/20 transition-all p-1.5 rounded-full">
-                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <svg class="h-6 w-6 md:h-7 md:w-7" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
             </button>
         </div>
 
-        <form id="formRegistrarLote" class="px-4 md:px-6 py-4 flex-1 overflow-y-auto custom-scrollbar">
+        <form id="formRegistrarLote" class="px-4 md:px-6 py-4 flex-1 overflow-y-auto">
             
             <!-- Sección Datos Generales del Lote -->
             <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 md:p-5 border-2 border-green-200 mb-4">
@@ -606,17 +606,17 @@
 <!-- Modal Asignar Operarios -->
 <div id="modalAsignarOperarios"
     class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-6xl h-[85vh] flex flex-col">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-6xl max-h-[95vh] flex flex-col">
         <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
             <h3 class="text-lg md:text-xl font-bold text-gray-800">Asignar Operarios al Lote</h3>
             <button id="btnCerrarModalAsignarOperarios" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-7 md:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
 
-        <div class="px-4 md:px-8 py-6 flex-1 overflow-y-auto custom-scrollbar">
+        <div class="px-4 md:px-6 py-4 flex-1 overflow-y-auto">
             <input type="hidden" id="idLoteAsignar">
 
             <!-- Información del Lote -->
@@ -740,16 +740,16 @@
 <!-- Modal Registrar Producción Diaria -->
 <div id="modalRegistrarProduccionDiaria"
     class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-6xl h-[85vh] flex flex-col">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-6xl max-h-[95vh] flex flex-col">
         <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
             <h3 class="text-lg md:text-xl font-bold text-gray-800">Registrar Producción Diaria</h3>
             <button id="btnCerrarModalProduccionDiaria" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-7 md:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
-        <div class="px-4 md:px-8 py-6 flex-1 overflow-y-auto custom-scrollbar">
+        <div class="px-4 md:px-6 py-4 flex-1 overflow-y-auto">
             <input type="hidden" id="idLoteProduccionDiaria">
 
             <div class="mb-6">
@@ -793,7 +793,7 @@
                 </table>
             </div>
         </div>
-        <div class="bg-gray-50 px-4 md:px-6 py-3 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0">
+        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0">
             <button type="button" id="btnCancelarModalProduccionDiaria" class="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium">
                 Cancelar
             </button>
@@ -808,21 +808,21 @@
 <!-- MODAL: REGISTRAR PRODUCCIÓN -->
 <!-- ============================================= -->
 <div id="modalRegistrarProduccion" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] bg-opacity-30 z-50 opacity-0 pointer-events-none transition-opacity duration-300 p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full sm:w-11/12 max-w-4xl h-[85vh] flex flex-col overflow-hidden">
+    <div class="bg-white rounded-xl shadow-lg w-full sm:w-10/11 max-w-4xl max-h-[95vh] flex flex-col overflow-hidden">
         <!-- Header -->
         <div class="flex justify-between items-center px-4 md:px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 border-b flex-shrink-0">
             <h3 class="text-lg md:text-xl font-bold text-white flex items-center">
                 <i class="fas fa-industry mr-2"></i>Registrar Producción
             </h3>
             <button id="btnCerrarModalRegistrarProduccion" type="button" class="text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-green-700">
-                <svg class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                <svg class="h-6 w-6 md:h-7 md:w-7" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
             </button>
         </div>
 
         <!-- Formulario -->
-        <form id="formRegistrarProduccion" class="px-4 md:px-6 py-6 flex-1 overflow-y-auto custom-scrollbar">
+        <form id="formRegistrarProduccion" class="px-4 md:px-6 py-4 flex-1 overflow-y-auto">
             
             <!-- Información del Lote y Fecha -->
             <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
