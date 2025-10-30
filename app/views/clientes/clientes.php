@@ -79,8 +79,10 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
         <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-md">
             <!-- Encabezado -->
             <div class="px-4 py-4 border-b flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-800">Registrar cliente</h3>
-                <!--  BOTÓN X FALTANTE -->
+               <h3 class="text-xl font-bold text-gray-800">
+        <i class="mr-2 text-green-600 fas fa-user-plus"></i>
+        Registrar Nuevo Cliente
+      </h3>
                 <button type="button" id="cerrarModalBtnX" class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -91,38 +93,43 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
                 <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
                     <div class="">
                         <input type="hidden" id="idcliente" name="idcliente" value="">
-                        <label for="cedula" class="block font-medium mb-2">Cédula</label>
+                        <label for="cedula" class="block font-medium mb-2">Cédula <span class="text-red-500" >*</span> </label>
                         <input type="text" id="cedula" name="cedula"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400"
+                            placeholder="V-12345678" required>
                         <div id="error-cedula-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-cedula-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
                     <div class="">
-                        <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre</label>
+                        <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre<span class="text-red-500">*</span></label>
                         <input type="text" id="nombre" name="nombre"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                            placeholder="Ingrese el nombre" required>
                         <div id="error-nombre-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-nombre-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
                     <div class="">
-                        <label for="apellido" class="block text-gray-700 font-medium mb-2">Apellido</label>
+                        <label for="apellido" class="block text-gray-700 font-medium mb-2">Apellido<span class="text-red-500">*</span></label>
                         <input type="text" id="apellido" name="apellido"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                            placeholder="Ingrese el apellido" required>
                         <div id="error-apellido-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-apellido-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
                     <div class="">
-                        <label for="telefono_principal" class="block text-gray-700 font-medium mb-2">Teléfono Principal</label>
+                        <label for="telefono_principal" class="block text-gray-700 font-medium mb-2">Teléfono Principal<span class="text-red-500">*</span></label>
                         <input type="text" id="telefono_principal" name="telefono_principal"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                            placeholder="Ingrese el teléfono" required>
                         <div id="error-telefono_principal-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-telefono_principal-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
-                    <!--  ELIMINAR EL SELECT ESTATUS DEL MODAL DE REGISTRO -->
+                   
                     <div class="">
-                        <label for="direccion" class="block text-gray-700 font-medium mb-2">Dirección</label>
+                        <label for="direccion" class="block text-gray-700 font-medium mb-2">Dirección</span></label>
                         <input type="text" id="direccion" name="direccion"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                            placeholder="Ingrese la dirección" >
                         <div id="error-direccion-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-direccion-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
@@ -130,7 +137,8 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
                 <div class="grid-flow-row mt-4">
                     <label for="observaciones" class="block text-gray-700 font-medium mb-2">Observaciones</label>
                     <input type="text" id="observaciones" name="observaciones"
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                        placeholder="Ingrese las observaciones">
                     <div id="error-observaciones-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mt-4">
@@ -172,48 +180,53 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
                     <input type="hidden" id="idclienteActualizar" name="idcliente" value="">
 
                     <div class="">
-                        <label for="cedulaActualizar" class="block font-medium mb-2">Cédula</label>
+                        <label for="cedulaActualizar" class="block font-medium mb-2">Cédula<span class="text-red-500">*</span></label>
                         <input type="text" id="cedulaActualizar" name="cedula"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:ring-2 focus:ring-green-400"
+                            placeholder="V-12345678" required>
                         <div id="error-cedulaActualizar-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-cedulaActualizar-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
                     <div class="">
-                        <label for="nombreActualizar" class="block text-gray-700 font-medium mb-2">Nombre</label>
+                        <label for="nombreActualizar" class="block text-gray-700 font-medium mb-2">Nombre<span class="text-red-500">*</span></label>
                         <input type="text" id="nombreActualizar" name="nombre"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                            placeholder="Ingrese el nombre" required>
                         <div id="error-nombreActualizar-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-nombreActualizar-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
                     <div class="">
-                        <label for="apellidoActualizar" class="block text-gray-700 font-medium mb-2">Apellido</label>
+                        <label for="apellidoActualizar" class="block text-gray-700 font-medium mb-2">Apellido <span class="text-red-500">*</span></label>
                         <input type="text" id="apellidoActualizar" name="apellido"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                            placeholder="Ingrese el apellido" required>
                         <div id="error-apellidoActualizar-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-apellidoActualizar-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
                     <div class="">
-                        <label for="telefono_principalActualizar" class="block text-gray-700 font-medium mb-2">Teléfono Principal</label>
+                        <label for="telefono_principalActualizar" class="block text-gray-700 font-medium mb-2">Teléfono Principal<span class="text-red-500">*</span></label>
                         <input type="text" id="telefono_principalActualizar" name="telefono_principal"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                            placeholder="Ingrese el teléfono principal" required>
                         <div id="error-telefono_principalActualizar-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-telefono_principalActualizar-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
                     <div class="">
-                        <label for="direccionActualizar" class="block text-gray-700 font-medium mb-2">Dirección</label>
+                        <label for="direccionActualizar" class="block text-gray-700 font-medium mb-2">Dirección <span class="text-red-500">*</span></label>
                         <input type="text" id="direccionActualizar" name="direccion"
-                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                            class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                            placeholder="Ingrese la dirección" >
                         <div id="error-direccionActualizar-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-direccionActualizar-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
                
                     <div class="">
-                        <label for="estatusActualizar" class="block text-gray-700 font-medium mb-2">Estatus</label>
+                        <label for="estatusActualizar" class="block text-gray-700 font-medium mb-2">Estatus<span class="text-red-500">*</span></label>
                         <select id="estatusActualizar" name="estatus"
                             class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
                             <option value="activo">Activo</option>
@@ -226,7 +239,8 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
                 <div class="grid-flow-row mt-4">
                     <label for="observacionesActualizar" class="block text-gray-700 font-medium mb-2">Observaciones</label>
                     <input type="text" id="observacionesActualizar" name="observaciones"
-                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+                        class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                        placeholder="Ingrese las observaciones">
                     <div id="error-observacionesActualizar-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                 </div>
 
@@ -239,8 +253,8 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
                     </div>
                     <div class="flex justify-end">
                         <button type="submit" id="btnActualizarCliente"
-                            class="px-4 ml-10 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition text-lg">
-                            <i class="fas fa-save mr-2"></i> Actualizar Cliente
+                            class="px-4 ml-10 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition text-lg">
+                            <i class="fas fa-save mr-2"></i> Actualizar
                         </button>
                     </div>
                 </div>

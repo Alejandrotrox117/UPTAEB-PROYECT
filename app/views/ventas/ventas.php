@@ -209,8 +209,8 @@ $permisos = $data['permisos'] ?? []; ?>
 
 
 <!-- Modal Registrar Cliente -->
-<div id="modalRegistrarCliente" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300">
-  <div class="w-full max-w-lg mx-4 bg-white rounded-xl shadow-xl transform scale-95 transition-transform duration-300">
+<div id="modalRegistrarCliente" class="fixed inset-0 z-50 flex items-center justify-center bg-transparent backdrop-blur-[2px] bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300">
+  <div class="overflow-hidden w-11/12 max-w-md bg-white rounded-xl shadow-xl transform scale-95 transition-transform duration-300">
     <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-xl">
       <h3 class="text-xl font-bold text-gray-800">
         <i class="mr-2 text-green-600 fas fa-user-plus"></i>
@@ -223,7 +223,7 @@ $permisos = $data['permisos'] ?? []; ?>
       </button>
     </div>
     
-    <form id="formRegistrarCliente" class="px-6 py-6">
+    <form id="formRegistrarCliente" class="px-4 py-4">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <!-- Campo oculto para ID -->
         <input type="hidden" id="idcliente_modal" name="idcliente" value="">
