@@ -61,6 +61,12 @@
         </div>
     </div>
 
+    <!-- Definir base_url para JavaScript ANTES de cargar los scripts que lo usan -->
+    <script>
+        const base_url = "<?= rtrim(base_url(), '/'); ?>";
+        // También definir como propiedad global
+        window.base_url = base_url;
+    </script>
 
     <script src="<?= base_url() ?>/app/assets/js/functions_resetpassword.js"></script>
     <script type="text/javascript" src="<?= base_url('app/assets/sweetAlert/sweetalert2.all.min.js'); ?>"></script>

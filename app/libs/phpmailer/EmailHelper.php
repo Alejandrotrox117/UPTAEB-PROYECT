@@ -7,6 +7,9 @@ require_once "src/SMTP.php";
 // Incluir configuración - Ruta corregida
 require_once __DIR__ . "/../../../config/config.php";
 
+// Incluir helpers para tener acceso a base_url()
+require_once __DIR__ . "/../../../helpers/helpers.php";
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
