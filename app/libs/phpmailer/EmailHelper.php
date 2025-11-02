@@ -40,7 +40,8 @@ class EmailHelper
             $mail->isHTML(true);
             $mail->Subject = 'Recuperación de Contraseña - Recuperadora';
             
-            $resetUrl = base_url() . '/login/confirmarReset/' . $token;
+            // Generar URL sin doble barra
+            $resetUrl = rtrim(base_url(), '/') . '/login/confirmarReset/' . $token;
             
             $mail->Body = self::getTemplateRecuperacion($nombreUsuario, $resetUrl, $token);
             $mail->AltBody = "Hola " . ($nombreUsuario ?: '') . ",\n\n" .
