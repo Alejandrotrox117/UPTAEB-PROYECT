@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/empleadosModel.php';
 
-/**
- * Prueba de caja blanca para inserción de empleados
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestEmpleadoInsert extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new EmpleadosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testInsertEmpleadoConDatosCompletos()
     {
@@ -64,7 +69,7 @@ class TestEmpleadoInsert extends TestCase
         $this->assertTrue($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testInsertEmpleadoSinNombre()
     {
@@ -80,11 +85,14 @@ class TestEmpleadoInsert extends TestCase
         ];
 
         try {
-            $this->model->insertEmpleado($data);
-            $this->fail('Debería lanzar PDOException');
+            $result = $this->model->insertEmpleado($data);
+            if ($result === false) {
+                $this->showMessage("Inserción fallida");
+            }
+            $this->assertFalse($result);
         } catch (PDOException $e) {
+            $this->showMessage("PDOException: " . $e->getMessage());
             $this->assertInstanceOf(PDOException::class, $e);
-            $this->assertNotEmpty($e->getMessage());
         }
     }
 

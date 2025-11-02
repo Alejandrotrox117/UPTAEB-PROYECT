@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/UsuariosModel.php';
 
-/**
- * Prueba de caja blanca para eliminación de usuarios
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestUsuarioDelete extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new UsuariosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testEliminarUsuarioExistente()
     {
@@ -58,7 +63,7 @@ class TestUsuarioDelete extends TestCase
         $this->assertIsBool($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testEliminarUsuarioInexistente()
     {
@@ -67,6 +72,10 @@ class TestUsuarioDelete extends TestCase
         $result = $this->model->deleteUsuarioById($idInexistente);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarConIdNegativo()
@@ -74,6 +83,10 @@ class TestUsuarioDelete extends TestCase
         $result = $this->model->deleteUsuarioById(-1);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarConIdCero()
@@ -81,6 +94,10 @@ class TestUsuarioDelete extends TestCase
         $result = $this->model->deleteUsuarioById(0);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarUsuarioYaEliminado()

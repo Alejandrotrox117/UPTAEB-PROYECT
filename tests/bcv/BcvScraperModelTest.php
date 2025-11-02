@@ -9,6 +9,11 @@ class BcvScraperModelTest extends TestCase
 {
     private $scraper;
 
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
+
     protected function setUp(): void
     {
         $this->scraper = new BcvScraperModel();

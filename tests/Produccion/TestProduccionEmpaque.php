@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/produccionModel.php';
 
-/**
- * Prueba de caja blanca para proceso de empaque
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProduccionEmpaque extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProduccionModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testRegistrarEmpaqueConDatosCompletos()
     {
@@ -74,7 +79,7 @@ class TestProduccionEmpaque extends TestCase
         }
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testEmpaqueConStockInsuficiente()
     {
@@ -92,6 +97,10 @@ class TestProduccionEmpaque extends TestCase
 
             if (is_array($result)) {
                 $this->assertFalse($result['status']);
+                
+                if (array_key_exists('message', $result)) {
+                    $this->showMessage($result['message']);
+                }
             }
         } else {
             $this->markTestSkipped('Método registrarProcesoEmpaque no existe');
@@ -106,6 +115,10 @@ class TestProduccionEmpaque extends TestCase
             try {
                 $result = $this->model->registrarProcesoEmpaque($data);
                 $this->assertFalse($result['status']);
+                
+                if (is_array($result) && array_key_exists('message', $result)) {
+                    $this->showMessage($result['message']);
+                }
             } catch (Exception $e) {
                 $this->assertInstanceOf(Exception::class, $e);
             }

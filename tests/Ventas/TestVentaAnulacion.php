@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/ventasModel.php';
 
-/**
- * Prueba de caja blanca para anulación de ventas
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestVentaAnulacion extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new VentasModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testAnularVentaExistente()
     {
@@ -62,7 +67,7 @@ class TestVentaAnulacion extends TestCase
         }
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testAnularVentaInexistente()
     {
@@ -74,6 +79,10 @@ class TestVentaAnulacion extends TestCase
 
             $this->assertIsArray($result);
             $this->assertFalse($result['status']);
+            
+            if (array_key_exists('message', $result)) {
+                $this->showMessage($result['message']);
+            }
         } else {
             $this->markTestSkipped('Método anularVenta no existe');
         }

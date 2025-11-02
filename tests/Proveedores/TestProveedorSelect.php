@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/proveedoresModel.php';
 
-/**
- * Prueba de caja blanca para consultas de proveedores
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProveedorSelect extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProveedoresModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testSelectAllProveedoresRetornaArray()
     {
@@ -61,7 +66,7 @@ class TestProveedorSelect extends TestCase
         $this->assertEquals($idPrueba, $proveedor['idproveedor']);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testSelectProveedorByIdInexistente()
     {

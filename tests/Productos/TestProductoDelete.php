@@ -4,14 +4,19 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/productosModel.php';
 
-/**
- * Prueba de caja blanca para eliminación de productos
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProductoDelete extends TestCase
 {
     private $model;
     private $productoIdPrueba;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
@@ -33,7 +38,7 @@ class TestProductoDelete extends TestCase
         }
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testDeleteProductoExistente()
     {
@@ -70,7 +75,7 @@ class TestProductoDelete extends TestCase
         $this->assertIsArray($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testDeleteProductoInexistente()
     {
@@ -78,6 +83,10 @@ class TestProductoDelete extends TestCase
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -87,6 +96,10 @@ class TestProductoDelete extends TestCase
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -96,6 +109,10 @@ class TestProductoDelete extends TestCase
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 

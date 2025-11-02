@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/produccionModel.php';
 
-/**
- * Prueba de caja blanca para inicio de lotes de producción
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProduccionInicioLote extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProduccionModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testIniciarLotePlanificado()
     {
@@ -71,7 +76,7 @@ class TestProduccionInicioLote extends TestCase
         }
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testIniciarLoteInexistente()
     {
@@ -81,6 +86,10 @@ class TestProduccionInicioLote extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testIniciarLoteYaIniciado()
@@ -100,6 +109,10 @@ class TestProduccionInicioLote extends TestCase
             $segundoInicio = $this->model->iniciarLoteProduccion($idLote);
 
             $this->assertFalse($segundoInicio['status']);
+            
+            if (array_key_exists('message', $segundoInicio)) {
+                $this->showMessage($segundoInicio['message']);
+            }
         } else {
             $this->markTestSkipped('No se pudo crear el lote para la prueba');
         }

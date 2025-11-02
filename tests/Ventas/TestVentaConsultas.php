@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/ventasModel.php';
 
-/**
- * Prueba de caja blanca para consultas y operaciones de ventas
- * Incluye consultas, actualizaciones y cambio de estado
- */
+
+
+
+
 class TestVentaConsultas extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new VentasModel();
     }
 
-    // ========== CONSULTAS ==========
+    
 
     public function testBuscarTodasLasVentas()
     {
@@ -77,7 +82,7 @@ class TestVentaConsultas extends TestCase
         }
     }
 
-    // ========== ACTUALIZACIÓN ==========
+    
 
     public function testActualizarVentaExistente()
     {
@@ -97,7 +102,7 @@ class TestVentaConsultas extends TestCase
         }
     }
 
-    // ========== CAMBIO DE ESTADO ==========
+    
 
     public function testCambiarEstadoVenta()
     {
@@ -125,7 +130,7 @@ class TestVentaConsultas extends TestCase
         }
     }
 
-    // ========== UTILIDADES ==========
+    
 
     public function testCalcularTotalVentas()
     {

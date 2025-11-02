@@ -11,6 +11,11 @@ class crearCompraTest extends TestCase
     private $productosModel;
     private $proveedoresModel;
 
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
+
     public function setUp(): void
     {
         $this->comprasModel = new ComprasModel();
@@ -18,10 +23,10 @@ class crearCompraTest extends TestCase
         $this->proveedoresModel = new ProveedoresModel();
     }
 
-    /**
-     * * CASO DE PRUEBA: PRUEBA DE CAMINO BASE.
-     * Objetivo: Asegurar que el camino de ejecución independiente más típico (la inserción exitosa) funcione correctamente "camino feliz"
-     */
+    
+
+
+
     public function testCrearCompraExitosa()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -76,10 +81,10 @@ class crearCompraTest extends TestCase
         $compraCreada = $this->comprasModel->getCompraById($idCompraInsertada);
     }
 
-    /**
-     * CASO DE PRUEBA: PRUEBA DE CONDICIÓN / PRUEBA DE BIFURCACIÓN.
-     * Objetivo: Probar la rama o bifurcación 'falsa' de la condición de validación del proveedor.
-     */
+    
+
+
+
     public function testCrearCompraConProveedorInexistente()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -87,11 +92,11 @@ class crearCompraTest extends TestCase
         $cantidad = 5;
         $subtotal = $precioUnitario * $cantidad;
 
-        // Datos generales de la compra con un proveedor que no existe
+        
         $datosCompra = [
             'nro_compra' => $this->comprasModel->generarNumeroCompra(),
             'fecha_compra' => date('Y-m-d'),
-            'idproveedor' => 99999, // ID de proveedor inexistente
+            'idproveedor' => 99999, 
             'idmoneda_general' => 3,
             'subtotal_general_compra' => $subtotal,
             'descuento_porcentaje_compra' => 0,
@@ -123,10 +128,10 @@ class crearCompraTest extends TestCase
         $this->assertFalse($resultado['status']);
     }
 
-    /**
-     * CASO DE PRUEBA: PRUEBA DE BUCLES.
-     * Objetivo: Probar el límite inferior del ciclo (cero iteraciones) que procesa los detalles de la compra.
-     */
+    
+
+
+
     public function testCrearCompraSinDetalles()
     {
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
@@ -144,7 +149,7 @@ class crearCompraTest extends TestCase
             'observaciones_compra' => 'Prueba de compra sin detalles.',
         ];
 
-        // Array de detalles vacío
+        
         $detallesCompra = [];
 
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
@@ -153,10 +158,10 @@ class crearCompraTest extends TestCase
         $this->assertFalse($resultado['status']);
     }
 
-    /**
-     * CASO DE PRUEBA: PRUEBA DE FLUJO DE DATOS.
-     * Objetivo: Validar la integridad de los datos (`cantidad`) a medida que fluyen a través de la lógica de negocio.
-     */
+    
+
+
+
     public function testCrearCompraConCantidadCero()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -178,7 +183,7 @@ class crearCompraTest extends TestCase
             [
                 'idproducto' => $producto['idproducto'],
                 'descripcion_temporal_producto' => $producto['nombre'],
-                'cantidad' => 0, // Cantidad inválida, forzando un error de validación de datos
+                'cantidad' => 0, 
                 'precio_unitario_compra' => 10,
                 'idmoneda_detalle' => 3,
                 'subtotal_linea' => 0,
@@ -191,10 +196,10 @@ class crearCompraTest extends TestCase
         $this->assertFalse($resultado['status']);
     }
 
-    /**
-     * CASO DE PRUEBA: PRUEBA DE FLUJO DE DATOS.
-     * Objetivo: Validar la integridad de los datos (`idproducto`) contra la base de datos durante el flujo de procesamiento.
-     */
+    
+
+
+
     public function testCrearCompraConProductoInexistente()
     {
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
@@ -214,7 +219,7 @@ class crearCompraTest extends TestCase
 
         $detallesCompra = [
             [
-                'idproducto' => 99999, // ID de producto inexistente
+                'idproducto' => 99999, 
                 'descripcion_temporal_producto' => 'Producto Fantasma',
                 'cantidad' => 10,
                 'precio_unitario_compra' => 10,

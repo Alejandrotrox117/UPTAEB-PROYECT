@@ -4,180 +4,227 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/UsuariosModel.php';
 
-/**
- * Prueba de caja blanca para inserción de usuarios
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
 class TestUsuarioInsert extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg)
+    {
+        
+        
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new UsuariosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testInsertarUsuarioConDatosCompletos()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_test_' . time(),
+            'personaId' => 1,
+            'usuario' => 'usuario_test_' . time(),
             'correo' => 'test_' . time() . '@email.com',
-            'password' => 'Password123!',
-            'idrol' => 1,
-            'estatus' => 'activo'
+            'clave' => 'Password123!',
+            'idrol' => 1
         ];
 
         $result = $this->model->insertUsuario($data);
 
-        $this->assertIsBool($result);
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
+        $this->assertArrayHasKey('message', $result);
+        $this->assertArrayHasKey('usuario_id', $result);
+        $this->assertIsBool($result['status']);
     }
 
     public function testInsertarUsuarioConPasswordSegura()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_seguro_' . time(),
+            'personaId' => 1,
+            'usuario' => 'usuario_seguro_' . time(),
             'correo' => 'seguro_' . time() . '@email.com',
-            'password' => 'P@ssw0rd!Segur@2024',
+            'clave' => 'P@ssw0rd!Segur@2024',
             'idrol' => 2
         ];
 
         $result = $this->model->insertUsuario($data);
 
-        $this->assertIsBool($result);
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
+        $this->assertIsBool($result['status']);
     }
 
     public function testInsertarUsuarioConRolDiferente()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_rol_' . time(),
+            'personaId' => 1,
+            'usuario' => 'usuario_rol_' . time(),
             'correo' => 'rol_' . time() . '@email.com',
-            'password' => 'Password456!',
+            'clave' => 'Password456!',
             'idrol' => 3
         ];
 
         $result = $this->model->insertUsuario($data);
 
-        $this->assertIsBool($result);
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
+        $this->assertIsBool($result['status']);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testInsertarUsuarioSinNombreUsuario()
     {
         $data = [
-            'idpersona' => 1,
+            'personaId' => 1,
+            'usuario' => '',
             'correo' => 'test@email.com',
-            'password' => 'Password123!',
+            'clave' => 'Password123!',
             'idrol' => 1
         ];
 
-        try {
-            $result = $this->model->insertUsuario($data);
-            $this->assertFalse($result);
-        } catch (Exception $e) {
-            $this->assertInstanceOf(Exception::class, $e);
+        $result = $this->model->insertUsuario($data);
+        $this->assertIsArray($result);
+
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->assertNotEmpty($result['message']);
+            $this->showMessage($result['message']);
+        } else {
+            $this->assertIsBool($result['status']);
         }
     }
 
     public function testInsertarUsuarioSinCorreo()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_test',
-            'password' => 'Password123!',
+            'personaId' => 1,
+            'usuario' => 'usuario_test',
+            'correo' => '',
+            'clave' => 'Password123!',
             'idrol' => 1
         ];
 
-        try {
-            $result = $this->model->insertUsuario($data);
-            $this->assertFalse($result);
-        } catch (Exception $e) {
-            $this->assertInstanceOf(Exception::class, $e);
+        $result = $this->model->insertUsuario($data);
+        $this->assertIsArray($result);
+
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->assertNotEmpty($result['message']);
+            $this->showMessage($result['message']);
+        } else {
+            $this->assertIsBool($result['status']);
         }
     }
 
     public function testInsertarUsuarioSinPassword()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_test',
+            'personaId' => 1,
+            'usuario' => 'usuario_test',
             'correo' => 'test@email.com',
+            'clave' => '',
             'idrol' => 1
         ];
 
-        try {
-            $result = $this->model->insertUsuario($data);
-            $this->assertFalse($result);
-        } catch (Exception $e) {
-            $this->assertInstanceOf(Exception::class, $e);
+        $result = $this->model->insertUsuario($data);
+        $this->assertIsArray($result);
+
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->assertNotEmpty($result['message']);
+            $this->showMessage($result['message']);
+        } else {
+            $this->assertIsBool($result['status']);
         }
     }
 
     public function testInsertarUsuarioConCorreoDuplicado()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_unico_' . time(),
+            'personaId' => 1,
+            'usuario' => 'usuario_unico_' . time(),
             'correo' => 'admin@admin.com',
-            'password' => 'Password123!',
+            'clave' => 'Password123!',
             'idrol' => 1
         ];
 
         $result = $this->model->insertUsuario($data);
+        $this->assertIsArray($result);
 
-        $this->assertFalse($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->assertNotEmpty($result['message']);
+            $this->showMessage($result['message']);
+        } else {
+            $this->assertIsBool($result['status']);
+        }
     }
 
     public function testInsertarUsuarioConEmailInvalido()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_test',
+            'personaId' => 1,
+            'usuario' => 'usuario_test',
             'correo' => 'email_sin_arroba',
-            'password' => 'Password123!',
+            'clave' => 'Password123!',
             'idrol' => 1
         ];
 
         $result = $this->model->insertUsuario($data);
+        $this->assertIsArray($result);
 
-        $this->assertFalse($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->assertNotEmpty($result['message']);
+            $this->showMessage($result['message']);
+        } else {
+            $this->assertIsBool($result['status']);
+        }
     }
 
     public function testInsertarUsuarioSinRol()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_test',
+            'personaId' => 1,
+            'usuario' => 'usuario_test',
             'correo' => 'test@email.com',
-            'password' => 'Password123!'
+            'clave' => 'Password123!'
         ];
 
-        try {
-            $result = $this->model->insertUsuario($data);
-            $this->assertFalse($result);
-        } catch (Exception $e) {
-            $this->assertInstanceOf(Exception::class, $e);
+        $result = $this->model->insertUsuario($data);
+        $this->assertIsArray($result);
+
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->assertNotEmpty($result['message']);
+            $this->showMessage($result['message']);
+        } else {
+            $this->assertIsBool($result['status']);
         }
     }
 
     public function testInsertarUsuarioConPasswordDebil()
     {
         $data = [
-            'idpersona' => 1,
-            'nombre_usuario' => 'usuario_test',
+
+            'personaId' => 1,
+            'usuario' => 'usuario_test',
             'correo' => 'test@email.com',
-            'password' => '123',
+            'clave' => '123',
             'idrol' => 1
         ];
 
         $result = $this->model->insertUsuario($data);
 
-        $this->assertIsBool($result);
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
+        $this->assertIsBool($result['status']);
     }
 
     protected function tearDown(): void

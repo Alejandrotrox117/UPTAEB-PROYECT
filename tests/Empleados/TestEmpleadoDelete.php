@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/empleadosModel.php';
 
-/**
- * Prueba de caja blanca para eliminación de empleados
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestEmpleadoDelete extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new EmpleadosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testEliminarEmpleadoExistente()
     {
@@ -62,7 +67,7 @@ class TestEmpleadoDelete extends TestCase
         $this->assertIsBool($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testEliminarEmpleadoInexistente()
     {
@@ -71,6 +76,10 @@ class TestEmpleadoDelete extends TestCase
         $result = $this->model->deleteEmpleado($idInexistente);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarConIdNegativo()
@@ -78,6 +87,10 @@ class TestEmpleadoDelete extends TestCase
         $result = $this->model->deleteEmpleado(-1);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarConIdCero()
@@ -85,6 +98,10 @@ class TestEmpleadoDelete extends TestCase
         $result = $this->model->deleteEmpleado(0);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarEmpleadoYaEliminado()

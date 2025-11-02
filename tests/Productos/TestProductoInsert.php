@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/productosModel.php';
 
-/**
- * Prueba de caja blanca para inserción de productos
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProductoInsert extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProductosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testInsertProductoConDatosCompletos()
     {
@@ -100,7 +105,7 @@ class TestProductoInsert extends TestCase
         $this->assertArrayHasKey('status', $result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testInsertProductoSinNombre()
     {
@@ -116,6 +121,10 @@ class TestProductoInsert extends TestCase
         $result = $this->model->insertProducto($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
         $this->assertArrayHasKey('message', $result);
     }
@@ -151,6 +160,10 @@ class TestProductoInsert extends TestCase
         $result = $this->model->insertProducto($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -181,6 +194,10 @@ class TestProductoInsert extends TestCase
         $result = $this->model->insertProducto($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -201,6 +218,10 @@ class TestProductoInsert extends TestCase
         $result2 = $this->model->insertProducto($data);
 
         $this->assertIsArray($result2);
+        if (array_key_exists('status', $result2) && $result2['status'] === false) {
+            $this->assertArrayHasKey('message', $result2);
+            $this->showMessage($result2['message']);
+        }
         $this->assertFalse($result2['status']);
     }
 

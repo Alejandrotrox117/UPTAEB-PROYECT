@@ -4,14 +4,19 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/clientesModel.php';
 
-/**
- * Prueba de caja blanca para actualización de clientes
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestClienteUpdate extends TestCase
 {
     private $model;
     private $clienteIdPrueba;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
@@ -33,7 +38,7 @@ class TestClienteUpdate extends TestCase
         }
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testUpdateClienteDatosCompletos()
     {
@@ -114,7 +119,7 @@ class TestClienteUpdate extends TestCase
         $this->assertArrayHasKey('status', $result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testUpdateClienteInexistente()
     {
@@ -131,6 +136,10 @@ class TestClienteUpdate extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testUpdateClienteConCedulaVacia()
@@ -148,6 +157,10 @@ class TestClienteUpdate extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testUpdateClienteConNombreVacio()
@@ -165,6 +178,10 @@ class TestClienteUpdate extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testUpdateClienteConDatosIncompletos()
@@ -178,6 +195,10 @@ class TestClienteUpdate extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testUpdateClienteConIdNegativo()
@@ -195,6 +216,10 @@ class TestClienteUpdate extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testUpdateClienteConIdCero()
@@ -212,6 +237,10 @@ class TestClienteUpdate extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     protected function tearDown(): void

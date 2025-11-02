@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/proveedoresModel.php';
 
-/**
- * Prueba de caja blanca para inserción de proveedores
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProveedorInsert extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProveedoresModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testInsertProveedorConDatosCompletos()
     {
@@ -57,7 +62,7 @@ class TestProveedorInsert extends TestCase
         $this->assertArrayHasKey('status', $result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testInsertProveedorSinNombreEmpresa()
     {
@@ -74,6 +79,10 @@ class TestProveedorInsert extends TestCase
         $result = $this->model->insertProveedor($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -92,6 +101,10 @@ class TestProveedorInsert extends TestCase
         $result = $this->model->insertProveedor($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -116,6 +129,10 @@ class TestProveedorInsert extends TestCase
         $result2 = $this->model->insertProveedor($data);
 
         $this->assertIsArray($result2);
+        if (array_key_exists('status', $result2) && $result2['status'] === false) {
+            $this->assertArrayHasKey('message', $result2);
+            $this->showMessage($result2['message']);
+        }
         $this->assertFalse($result2['status']);
     }
 

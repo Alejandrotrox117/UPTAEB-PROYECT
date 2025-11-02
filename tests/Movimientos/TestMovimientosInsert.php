@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/movimientosModel.php';
 
-/**
- * RF06: Prueba de caja blanca para inserción de movimientos de existencia
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestMovimientosInsert extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new MovimientosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testInsertMovimientoEntradaConDatosCompletos()
     {
@@ -74,7 +79,7 @@ class TestMovimientosInsert extends TestCase
         $this->assertArrayHasKey('status', $result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testInsertMovimientoSinProducto()
     {
@@ -89,6 +94,10 @@ class TestMovimientosInsert extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testInsertMovimientoConCantidadNegativa()
@@ -105,6 +114,10 @@ class TestMovimientosInsert extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testInsertMovimientoConProductoInexistente()

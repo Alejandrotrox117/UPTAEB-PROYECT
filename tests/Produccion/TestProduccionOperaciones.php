@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/produccionModel.php';
 
-/**
- * Prueba de caja blanca para operaciones adicionales de producción
- * Incluye registro diario y cálculo de nómina
- */
+
+
+
+
 class TestProduccionOperaciones extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProduccionModel();
     }
 
-    // ========== REGISTRO DIARIO ==========
+    
 
     public function testRegistrarProduccionDiariaLote()
     {
@@ -60,7 +65,7 @@ class TestProduccionOperaciones extends TestCase
         }
     }
 
-    // ========== NÓMINA DE PRODUCCIÓN ==========
+    
 
     public function testCalcularNominaProduccion()
     {

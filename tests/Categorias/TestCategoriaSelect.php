@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/categoriasModel.php';
 
-/**
- * Prueba de caja blanca para consultas de categorías
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestCategoriaSelect extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new categoriasModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testSelectAllCategoriasRetornaArray()
     {
@@ -53,7 +58,7 @@ class TestCategoriaSelect extends TestCase
 
     public function testGetCategoriaByIdExistente()
     {
-        // Primero obtener todas las categorías
+        
         $categorias = $this->model->SelectAllCategorias();
         
         if (empty($categorias)) {
@@ -67,7 +72,7 @@ class TestCategoriaSelect extends TestCase
         $this->assertEquals($idPrueba, $categoria['idcategoria']);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testGetCategoriaByIdInexistente()
     {

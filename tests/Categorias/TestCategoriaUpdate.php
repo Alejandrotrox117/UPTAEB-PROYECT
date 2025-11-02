@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/categoriasModel.php';
 
-/**
- * Prueba de caja blanca para actualización de categorías
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestCategoriaUpdate extends TestCase
 {
     private $model;
     private $categoriaIdPrueba;
 
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
+
     protected function setUp(): void
     {
         $this->model = new categoriasModel();
         
-        // Crear una categoría de prueba para actualizar
+        
         $data = [
             'nombre' => 'Categoría Update Test ' . time(),
             'descripcion' => 'Para actualizar',
@@ -26,14 +31,14 @@ class TestCategoriaUpdate extends TestCase
         
         $this->model->insertCategoria($data);
         
-        // Obtener todas las categorías y tomar la última insertada
+        
         $categorias = $this->model->SelectAllCategorias();
         if (!empty($categorias)) {
             $this->categoriaIdPrueba = end($categorias)['idcategoria'];
         }
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testUpdateCategoriaDatosCompletos()
     {
@@ -93,7 +98,7 @@ class TestCategoriaUpdate extends TestCase
         $this->assertTrue($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testUpdateCategoriaInexistente()
     {
@@ -107,6 +112,10 @@ class TestCategoriaUpdate extends TestCase
         $result = $this->model->updateCategoria($dataUpdate);
 
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testUpdateCategoriaSinId()
@@ -153,11 +162,15 @@ class TestCategoriaUpdate extends TestCase
         $result = $this->model->updateCategoria($dataUpdate);
 
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     protected function tearDown(): void
     {
-        // Limpiar: eliminar la categoría de prueba
+        
         if ($this->categoriaIdPrueba) {
             $this->model->deleteCategoria($this->categoriaIdPrueba);
         }

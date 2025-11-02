@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/proveedoresModel.php';
 
-/**
- * Prueba de caja blanca para eliminación de proveedores
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProveedorDelete extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProveedoresModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testEliminarProveedorExistente()
     {
@@ -59,7 +64,7 @@ class TestProveedorDelete extends TestCase
         $this->assertIsBool($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testEliminarProveedorInexistente()
     {
@@ -68,6 +73,10 @@ class TestProveedorDelete extends TestCase
         $result = $this->model->deleteProveedorById($idInexistente);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarConIdNegativo()
@@ -75,6 +84,10 @@ class TestProveedorDelete extends TestCase
         $result = $this->model->deleteProveedorById(-1);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarConIdCero()
@@ -82,6 +95,10 @@ class TestProveedorDelete extends TestCase
         $result = $this->model->deleteProveedorById(0);
         
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testEliminarProveedorYaEliminado()

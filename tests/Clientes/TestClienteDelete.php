@@ -4,14 +4,19 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/clientesModel.php';
 
-/**
- * Prueba de caja blanca para eliminación de clientes
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestClienteDelete extends TestCase
 {
     private $model;
     private $clienteIdPrueba;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
@@ -33,7 +38,7 @@ class TestClienteDelete extends TestCase
         }
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testDeleteClienteExistente()
     {
@@ -70,7 +75,7 @@ class TestClienteDelete extends TestCase
         $this->assertIsArray($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testDeleteClienteInexistente()
     {
@@ -79,6 +84,10 @@ class TestClienteDelete extends TestCase
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testDeleteClienteConIdCero()
@@ -88,6 +97,10 @@ class TestClienteDelete extends TestCase
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testDeleteClienteConIdNegativo()
@@ -97,6 +110,10 @@ class TestClienteDelete extends TestCase
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     protected function tearDown(): void

@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/clientesModel.php';
 
-/**
- * Prueba de caja blanca para consultas de clientes
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestClienteSelect extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ClientesModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testSelectAllClientesRetornaArray()
     {
@@ -92,7 +97,7 @@ class TestClienteSelect extends TestCase
         $this->assertEquals($cedulaPrueba, $cliente['cedula']);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testSelectClienteByIdInexistente()
     {

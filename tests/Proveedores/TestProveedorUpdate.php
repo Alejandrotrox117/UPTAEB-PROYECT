@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/proveedoresModel.php';
 
-/**
- * Prueba de caja blanca para actualización de proveedores
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProveedorUpdate extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProveedoresModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testActualizarProveedorConDatosCompletos()
     {
@@ -70,7 +75,7 @@ class TestProveedorUpdate extends TestCase
         $this->assertIsBool($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testActualizarProveedorInexistente()
     {
@@ -81,6 +86,10 @@ class TestProveedorUpdate extends TestCase
         $result = $this->model->updateProveedor(99999, $data);
 
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testActualizarConEmailInvalido()
@@ -126,6 +135,10 @@ class TestProveedorUpdate extends TestCase
         $result = $this->model->updateProveedor(-1, $data);
 
         $this->assertFalse($result);
+        
+        if (is_array($result) && array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     protected function tearDown(): void

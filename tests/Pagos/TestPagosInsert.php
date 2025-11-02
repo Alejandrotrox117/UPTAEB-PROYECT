@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/pagosModel.php';
 
-/**
- * RF05: Prueba de caja blanca para inserción de pagos
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestPagosInsert extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new PagosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testInsertPagoConDatosCompletos()
     {
@@ -73,7 +78,7 @@ class TestPagosInsert extends TestCase
         $this->assertArrayHasKey('status', $result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testInsertPagoSinMonto()
     {
@@ -88,6 +93,10 @@ class TestPagosInsert extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testInsertPagoConMontoNegativo()
@@ -104,6 +113,10 @@ class TestPagosInsert extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testInsertPagoConCompraInexistente()

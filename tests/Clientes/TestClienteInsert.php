@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/clientesModel.php';
 
-/**
- * Prueba de caja blanca para inserción de clientes
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestClienteInsert extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ClientesModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testInsertClienteConDatosCompletos()
     {
@@ -102,7 +107,7 @@ class TestClienteInsert extends TestCase
         $this->assertArrayHasKey('status', $result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testInsertClienteSinCedula()
     {
@@ -117,6 +122,10 @@ class TestClienteInsert extends TestCase
         $result = $this->model->insertCliente($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -133,6 +142,10 @@ class TestClienteInsert extends TestCase
         $result = $this->model->insertCliente($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -149,6 +162,10 @@ class TestClienteInsert extends TestCase
         $result = $this->model->insertCliente($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -183,6 +200,10 @@ class TestClienteInsert extends TestCase
         $result = $this->model->insertCliente($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -209,6 +230,10 @@ class TestClienteInsert extends TestCase
         $result = $this->model->insertCliente($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 

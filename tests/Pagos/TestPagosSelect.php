@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/pagosModel.php';
 
-/**
- * RF05: Prueba de caja blanca para consultas de pagos
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestPagosSelect extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new PagosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testSelectAllPagosRetornaArray()
     {
@@ -52,7 +57,7 @@ class TestPagosSelect extends TestCase
         $this->assertEquals($idPrueba, $pago['idpago']);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testSelectPagoByIdInexistente()
     {

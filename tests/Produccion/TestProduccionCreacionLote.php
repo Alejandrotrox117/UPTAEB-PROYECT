@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/produccionModel.php';
 
-/**
- * Prueba de caja blanca para creación de lotes de producción
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProduccionCreacionLote extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProduccionModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testCrearLoteConDatosCompletos()
     {
@@ -94,7 +99,7 @@ class TestProduccionCreacionLote extends TestCase
         }
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testCrearLoteSinSupervisor()
     {
@@ -106,6 +111,10 @@ class TestProduccionCreacionLote extends TestCase
         $result = $this->model->insertLote($data);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('supervisor', strtolower($result['message']));
     }
@@ -120,6 +129,10 @@ class TestProduccionCreacionLote extends TestCase
 
         $result = $this->model->insertLote($data);
 
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('volumen', strtolower($result['message']));
     }
@@ -134,6 +147,10 @@ class TestProduccionCreacionLote extends TestCase
 
         $result = $this->model->insertLote($data);
 
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -146,6 +163,10 @@ class TestProduccionCreacionLote extends TestCase
 
         $result = $this->model->insertLote($data);
 
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('fecha', strtolower($result['message']));
     }

@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/produccionModel.php';
 
-/**
- * Prueba de caja blanca para cierre de lotes de producción
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProduccionCierreLote extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProduccionModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testCerrarLoteEnProceso()
     {
@@ -74,7 +79,7 @@ class TestProduccionCierreLote extends TestCase
         }
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testCerrarLoteInexistente()
     {
@@ -84,6 +89,10 @@ class TestProduccionCierreLote extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
+        
+        if (array_key_exists('message', $result)) {
+            $this->showMessage($result['message']);
+        }
     }
 
     public function testCerrarLoteYaCerrado()
@@ -109,6 +118,10 @@ class TestProduccionCierreLote extends TestCase
                 'finalizado',
                 strtolower($segundoCierre['message'])
             );
+            
+            if (array_key_exists('message', $segundoCierre)) {
+                $this->showMessage($segundoCierre['message']);
+            }
         } else {
             $this->markTestSkipped('No se pudo crear el lote para la prueba');
         }

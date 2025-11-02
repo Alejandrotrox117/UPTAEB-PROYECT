@@ -4,10 +4,10 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/UsuariosModel.php';
 
-/**
- * Prueba de caja blanca para consultas de usuarios
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestUsuarioSelect extends TestCase
 {
     private $model;
@@ -17,13 +17,17 @@ class TestUsuarioSelect extends TestCase
         $this->model = new UsuariosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testSeleccionarTodosUsuarios()
     {
         $result = $this->model->selectAllUsuarios();
 
+        
         $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
+        $this->assertArrayHasKey('data', $result);
+        $this->assertIsArray($result['data']);
     }
 
     public function testSeleccionarUsuariosActivos()
@@ -31,38 +35,47 @@ class TestUsuarioSelect extends TestCase
         $result = $this->model->selectAllUsuariosActivos();
 
         $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
+        $this->assertArrayHasKey('data', $result);
+        $this->assertIsArray($result['data']);
     }
 
     public function testObtenerUsuarioPorId()
     {
         $result = $this->model->selectUsuarioById(1);
 
-        $this->assertTrue(
-            is_array($result) || is_bool($result)
-        );
+        
+        $this->assertTrue(is_array($result) || $result === false);
+        if (is_array($result)) {
+            $this->assertArrayHasKey('idusuario', $result);
+            $this->assertArrayHasKey('usuario', $result);
+            $this->assertArrayHasKey('correo', $result);
+        }
     }
 
     public function testBuscarUsuarioPorEmail()
     {
         $result = $this->model->selectUsuarioByEmail('admin@admin.com');
 
-        $this->assertTrue(
-            is_array($result) || is_bool($result)
-        );
+        
+        $this->assertTrue($result === false || (is_array($result) && array_key_exists('correo', $result)));
     }
 
     public function testVerificarEstructuraUsuarios()
     {
         $result = $this->model->selectAllUsuarios();
 
-        if (is_array($result) && count($result) > 0) {
-            $primerUsuario = $result[0];
-            
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('data', $result);
+
+        $data = $result['data'];
+        if (is_array($data) && count($data) > 0) {
+            $primerUsuario = $data[0];
             $this->assertArrayHasKey('idusuario', $primerUsuario);
-            $this->assertArrayHasKey('nombre_usuario', $primerUsuario);
+            $this->assertArrayHasKey('usuario', $primerUsuario);
             $this->assertArrayHasKey('correo', $primerUsuario);
         } else {
-            $this->assertTrue(is_array($result));
+            $this->assertIsArray($data);
         }
     }
 
@@ -71,9 +84,12 @@ class TestUsuarioSelect extends TestCase
         $result = $this->model->selectAllUsuariosEliminados();
 
         $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
+        $this->assertArrayHasKey('data', $result);
+        $this->assertIsArray($result['data']);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testObtenerUsuarioInexistente()
     {

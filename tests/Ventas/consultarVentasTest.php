@@ -5,6 +5,11 @@ require_once __DIR__ . '/../app/models/ventasModel.php';
 
 class ConsultarVentasTest extends TestCase
 {
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
+
     public function testConsultarTodasVentas()
     {
         $ventasModel = new VentasModel();

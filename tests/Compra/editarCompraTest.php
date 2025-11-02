@@ -11,6 +11,11 @@ class editarCompraTest extends TestCase
     private $productosModel;
     private $proveedoresModel;
 
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
+
     public function setUp(): void
     {
         $this->comprasModel = new ComprasModel();
@@ -76,7 +81,7 @@ class editarCompraTest extends TestCase
 
     public function testEditarCompraConProveedorInexistente()
     {
-        // 1. Crear una compra válida inicial
+        
         $producto = $this->productosModel->selectProductoById(1);
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $proveedor = $resultadoProveedores['data'][0];
@@ -100,9 +105,9 @@ class editarCompraTest extends TestCase
         $this->assertTrue($resultadoInsercion['status'], "La inserción inicial de la compra falló.");
         $idCompra = $resultadoInsercion['id'];
 
-        // 2. Intentar editar con un proveedor inexistente
+        
         $datosEditados = $datosCompra;
-        $datosEditados['idproveedor'] = 99999; // ID de proveedor inexistente
+        $datosEditados['idproveedor'] = 99999; 
 
         $resultado = $this->comprasModel->actualizarCompra($idCompra, $datosEditados, $detallesCompra);
 
@@ -113,7 +118,7 @@ class editarCompraTest extends TestCase
 
     public function testEditarCompraConProductoInexistente()
     {
-        // 1. Crear una compra válida inicial
+        
         $producto = $this->productosModel->selectProductoById(1);
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $proveedor = $resultadoProveedores['data'][0];
@@ -133,9 +138,9 @@ class editarCompraTest extends TestCase
         $this->assertTrue($resultadoInsercion['status'], "La inserción inicial de la compra falló.");
         $idCompra = $resultadoInsercion['id'];
 
-        // 2. Intentar editar con un producto inexistente
+        
         $detallesEditados = $detallesCompra;
-        $detallesEditados[0]['idproducto'] = 99999; // ID de producto inexistente
+        $detallesEditados[0]['idproducto'] = 99999; 
 
         $resultado = $this->comprasModel->actualizarCompra($idCompra, $datosCompra, $detallesEditados);
 
@@ -146,7 +151,7 @@ class editarCompraTest extends TestCase
 
     public function testEditarCompraConValoresNegativos()
     {
-        // 1. Crear una compra válida inicial
+        
         $producto = $this->productosModel->selectProductoById(1);
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $proveedor = $resultadoProveedores['data'][0];
@@ -166,9 +171,9 @@ class editarCompraTest extends TestCase
         $this->assertTrue($resultadoInsercion['status'], "La inserción inicial de la compra falló.");
         $idCompra = $resultadoInsercion['id'];
 
-        // 2. Intentar editar con valores negativos
+        
         $detallesEditados = $detallesCompra;
-        $detallesEditados[0]['cantidad'] = -5; // Cantidad negativa
+        $detallesEditados[0]['cantidad'] = -5; 
 
         $resultado = $this->comprasModel->actualizarCompra($idCompra, $datosCompra, $detallesEditados);
 

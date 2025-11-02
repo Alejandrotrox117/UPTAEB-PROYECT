@@ -4,20 +4,22 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/produccionModel.php';
 
-/**
- * Prueba de caja blanca para procesos de clasificación
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
 class TestProduccionClasificacion extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new ProduccionModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testRegistrarClasificacionConDatosCompletos()
     {
@@ -93,7 +95,7 @@ class TestProduccionClasificacion extends TestCase
         }
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testClasificacionConStockInsuficiente()
     {
@@ -116,6 +118,10 @@ class TestProduccionClasificacion extends TestCase
                     'insuficiente',
                     strtolower($result['message'])
                 );
+                
+                if (array_key_exists('message', $result)) {
+                    $this->showMessage($result['message']);
+                }
             }
         } else {
             $this->markTestSkipped('Método registrarProcesoClasificacion no existe');
@@ -141,6 +147,7 @@ class TestProduccionClasificacion extends TestCase
             
             if (isset($result['status']) && !$result['status']) {
                 $this->assertArrayHasKey('message', $result);
+                $this->showMessage($result['message']);
             }
         } else {
             $this->markTestSkipped('Método registrarProcesoClasificacion no existe');
@@ -166,6 +173,10 @@ class TestProduccionClasificacion extends TestCase
                 if (is_array($result)) {
                     $this->assertFalse($result['status']);
                     $this->assertNotEmpty($result['message']);
+                    
+                    if (array_key_exists('message', $result)) {
+                        $this->showMessage($result['message']);
+                    }
                 }
             } catch (Exception $e) {
                 $this->assertInstanceOf(Exception::class, $e);

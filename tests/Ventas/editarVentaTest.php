@@ -11,6 +11,11 @@ class editarVentaTest extends TestCase
     private $productosModel;
     private $clientesModel;
 
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
+
     public function setUp(): void
     {
         $this->ventasModel = new VentasModel();
@@ -20,11 +25,11 @@ class editarVentaTest extends TestCase
 
     public function testEditarVentaExitosa()
     {
-        // Obtener un producto válido para la prueba
+        
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto, "Producto de prueba no encontrado.");
 
-        // Obtener un cliente activo para la prueba
+        
         $resultado = $this->clientesModel->selectAllClientes();
         $this->assertNotEmpty($resultado['data']);
         $clientes = $resultado['data'];
@@ -115,7 +120,7 @@ class editarVentaTest extends TestCase
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto, "Producto de prueba no encontrado.");
 
-        // Obtener clientes activos e inactivos
+        
         $resultado = $this->clientesModel->selectAllClientes();
         $clientes = $resultado['data'];
         
@@ -134,7 +139,7 @@ class editarVentaTest extends TestCase
         $this->assertNotNull($clienteActivo, "No se encontró un cliente activo.");
         $this->assertNotNull($clienteInactivo, "No se encontró un cliente inactivo.");
 
-        // Crear venta  con cliente activo
+        
         $datosVentaOriginal = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
@@ -160,7 +165,7 @@ class editarVentaTest extends TestCase
         $this->assertTrue($resultadoInsercion['success']);
         $idVenta = $resultadoInsercion['idventa'];
 
-        // Intentar editar con cliente inactivo
+        
         $datosVentaEditada = [
             'idcliente' => $clienteInactivo['idcliente'],
             'observaciones' => 'Test validación cliente inactivo en edición'
@@ -168,14 +173,14 @@ class editarVentaTest extends TestCase
 
         $resultadoEdicion = $this->ventasModel->updateVenta($idVenta, $datosVentaEditada);
         
-        // Verificar que la edición fue exitosa (el modelo updateVenta no valida estatus del cliente)
-        // Esto podría ser una mejora futura en el modelo
+        
+        
         $this->assertTrue($resultadoEdicion['success'], "La actualización debería ser exitosa.");
     }
 
     public function testEditarVentaConProductoInexistente()
     {
-        // Obtener un producto válido y un cliente activo
+        
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto);
 
@@ -190,7 +195,7 @@ class editarVentaTest extends TestCase
         }
         $this->assertNotNull($clienteActivo);
 
-        // Crear venta 
+        
         $datosVentaOriginal = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
@@ -216,11 +221,11 @@ class editarVentaTest extends TestCase
         $this->assertTrue($resultadoInsercion['success']);
         $idVenta = $resultadoInsercion['idventa'];
 
-        // Intentar editar con producto inexistente
+        
         $datosVentaEditada = [
             'observaciones' => 'Test validación producto inexistente en edición',
             'detalles' => [[
-                'idproducto' => 999999, // Producto que no existe
+                'idproducto' => 999999, 
                 'cantidad' => 1,
                 'precio_unitario_venta' => 100,
                 'subtotal_general' => 100,
@@ -230,14 +235,14 @@ class editarVentaTest extends TestCase
 
         $resultadoEdicion = $this->ventasModel->updateVenta($idVenta, $datosVentaEditada);
         
-        // Verificar que la validación funciona
+        
         $this->assertFalse($resultadoEdicion['success'], "La edición con producto inexistente no debería ser exitosa.");
         $this->assertStringContainsString('no existe', strtolower($resultadoEdicion['message']), "El mensaje de error debería mencionar que el producto no existe.");
     }
 
     public function testEditarVentaConCantidadNegativa()
     {
-        // Obtener un producto válido y un cliente activo
+        
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto);
 
@@ -252,7 +257,7 @@ class editarVentaTest extends TestCase
         }
         $this->assertNotNull($clienteActivo);
 
-        // Crear venta original
+        
         $datosVentaOriginal = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
@@ -278,12 +283,12 @@ class editarVentaTest extends TestCase
         $this->assertTrue($resultadoInsercion['success']);
         $idVenta = $resultadoInsercion['idventa'];
 
-        // Intentar editar con cantidad negativa
+        
         $datosVentaEditada = [
             'observaciones' => 'Test validación cantidad negativa en edición',
             'detalles' => [[
                 'idproducto' => $producto['idproducto'],
-                'cantidad' => -5, // Cantidad negativa
+                'cantidad' => -5, 
                 'precio_unitario_venta' => 10,
                 'subtotal_general' => -50,
                 'id_moneda_detalle' => 3
@@ -292,14 +297,14 @@ class editarVentaTest extends TestCase
 
         $resultadoEdicion = $this->ventasModel->updateVenta($idVenta, $datosVentaEditada);
         
-        // Verificar que la validación funciona
+        
         $this->assertFalse($resultadoEdicion['success'], "La edición con cantidad negativa no debería ser exitosa.");
         $this->assertStringContainsString('cantidad', strtolower($resultadoEdicion['message']), "El mensaje de error debería mencionar el problema con la cantidad.");
     }
 
     public function testEditarVentaConPrecioNegativo()
     {
-        // Obtener un producto válido y un cliente activo
+        
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto);
 
@@ -314,7 +319,7 @@ class editarVentaTest extends TestCase
         }
         $this->assertNotNull($clienteActivo);
 
-        // Crear venta original
+        
         $datosVentaOriginal = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
@@ -340,13 +345,13 @@ class editarVentaTest extends TestCase
         $this->assertTrue($resultadoInsercion['success']);
         $idVenta = $resultadoInsercion['idventa'];
 
-        // Intentar editar con precio negativo
+        
         $datosVentaEditada = [
             'observaciones' => 'Test validación precio negativo en edición',
             'detalles' => [[
                 'idproducto' => $producto['idproducto'],
                 'cantidad' => 1,
-                'precio_unitario_venta' => -100, // Precio negativo
+                'precio_unitario_venta' => -100, 
                 'subtotal_general' => -100,
                 'id_moneda_detalle' => 3
             ]]
@@ -354,28 +359,28 @@ class editarVentaTest extends TestCase
 
         $resultadoEdicion = $this->ventasModel->updateVenta($idVenta, $datosVentaEditada);
         
-        // Verificar que la validación funciona
+        
         $this->assertFalse($resultadoEdicion['success'], "La edición con precio negativo no debería ser exitosa.");
         $this->assertStringContainsString('precio', strtolower($resultadoEdicion['message']), "El mensaje de error debería mencionar el problema con el precio.");
     }
 
     public function testEditarVentaInexistente()
     {
-        // Intentar editar una venta que no existe
+        
         $datosVentaEditada = [
             'observaciones' => 'Test validación venta inexistente'
         ];
 
         $resultadoEdicion = $this->ventasModel->updateVenta(999999, $datosVentaEditada);
         
-        // Verificar que la validación funciona
+        
         $this->assertFalse($resultadoEdicion['success'], "La edición de una venta inexistente no debería ser exitosa.");
         $this->assertStringContainsString('no existe', strtolower($resultadoEdicion['message']), "El mensaje de error debería mencionar que la venta no existe.");
     }
 
     public function testEditarVentaSinDetalles()
     {
-        // Obtener un producto válido y un cliente activo
+        
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto);
 
@@ -390,7 +395,7 @@ class editarVentaTest extends TestCase
         }
         $this->assertNotNull($clienteActivo);
 
-        // Crear venta original
+        
         $datosVentaOriginal = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
@@ -416,7 +421,7 @@ class editarVentaTest extends TestCase
         $this->assertTrue($resultadoInsercion['success']);
         $idVenta = $resultadoInsercion['idventa'];
 
-        // Editar solo los datos generales sin detalles
+        
         $datosVentaEditada = [
             'observaciones' => 'Venta editada sin modificar detalles',
             'total_general' => 150
@@ -424,15 +429,15 @@ class editarVentaTest extends TestCase
 
         $resultadoEdicion = $this->ventasModel->updateVenta($idVenta, $datosVentaEditada);
         
-        // Verificar que la edición fue exitosa
+        
         $this->assertTrue($resultadoEdicion['success'], "La edición sin detalles debería ser exitosa.");
 
-        // Verificar que los datos generales fueron actualizados
+        
         $ventaEditada = $this->ventasModel->obtenerVentaPorId($idVenta);
         $this->assertEquals('Venta editada sin modificar detalles', $ventaEditada['observaciones']);
         $this->assertEquals(150, (float)$ventaEditada['total_general']);
 
-        // Verificar que los detalles originales se mantuvieron
+        
         $detallesEditados = $this->ventasModel->obtenerDetalleVenta($idVenta);
         $this->assertNotEmpty($detallesEditados, "Los detalles originales deberían mantenerse.");
         $this->assertEquals($producto['idproducto'], $detallesEditados[0]['idproducto']);

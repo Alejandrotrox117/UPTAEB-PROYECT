@@ -4,13 +4,18 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/romanaModel.php';
 
-/**
- * Prueba de caja blanca para casos de fallo en pesaje
- * Valida validaciones de peso y datos requeridos
- */
+
+
+
+
 class TestRomanaPesajeFallido extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
@@ -66,7 +71,7 @@ class TestRomanaPesajeFallido extends TestCase
 
             $result = $this->model->insertPesaje($data);
 
-            // Dependiendo de reglas de negocio, puede o no permitir peso cero
+            
             $this->assertIsBool($result);
         } else {
             $this->markTestSkipped('Método insertPesaje no existe');
@@ -118,14 +123,14 @@ class TestRomanaPesajeFallido extends TestCase
     {
         if (method_exists($this->model, 'insertPesaje')) {
             $data = [
-                'peso' => 999999.99, // Peso muy alto
+                'peso' => 999999.99, 
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
                 'idlote' => 1
             ];
 
             $result = $this->model->insertPesaje($data);
 
-            // Dependiendo de validaciones puede fallar o no
+            
             $this->assertIsBool($result);
         } else {
             $this->markTestSkipped('Método insertPesaje no existe');

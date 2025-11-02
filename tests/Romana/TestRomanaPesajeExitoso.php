@@ -4,13 +4,18 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/romanaModel.php';
 
-/**
- * Prueba de caja blanca para procesos exitosos de romana (pesaje)
- * Valida registro y gestión de pesajes
- */
+
+
+
+
 class TestRomanaPesajeExitoso extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {

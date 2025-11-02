@@ -4,14 +4,19 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/productosModel.php';
 
-/**
- * Prueba de caja blanca para actualización de productos
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestProductoUpdate extends TestCase
 {
     private $model;
     private $productoIdPrueba;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
@@ -33,7 +38,7 @@ class TestProductoUpdate extends TestCase
         }
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testUpdateProductoDatosCompletos()
     {
@@ -116,7 +121,7 @@ class TestProductoUpdate extends TestCase
         $this->assertArrayHasKey('status', $result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testUpdateProductoInexistente()
     {
@@ -132,6 +137,10 @@ class TestProductoUpdate extends TestCase
         $result = $this->model->updateProducto(99999, $dataUpdate);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -149,6 +158,10 @@ class TestProductoUpdate extends TestCase
         $result = $this->model->updateProducto(1, $dataUpdate);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -166,6 +179,10 @@ class TestProductoUpdate extends TestCase
         $result = $this->model->updateProducto(1, $dataUpdate);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 
@@ -195,6 +212,10 @@ class TestProductoUpdate extends TestCase
         $result = $this->model->updateProducto(1, $dataUpdate);
 
         $this->assertIsArray($result);
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
         $this->assertFalse($result['status']);
     }
 

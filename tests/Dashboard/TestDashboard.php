@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/dashboardModel.php';
 
-/**
- * RF09: Prueba de caja blanca para generación de estadísticas del dashboard
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestDashboard extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new DashboardModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testGetResumenRetornaArray()
     {
@@ -77,7 +82,7 @@ class TestDashboard extends TestCase
         $this->assertIsArray($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testGetUltimasVentasConLimiteCero()
     {

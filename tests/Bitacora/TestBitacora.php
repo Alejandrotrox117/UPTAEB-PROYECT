@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/bitacoraModel.php';
 
-/**
- * RF10: Prueba de caja blanca para el módulo de bitácora
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestBitacora extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new BitacoraModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testRegistrarAccionEnBitacora()
     {
@@ -28,7 +33,7 @@ class TestBitacora extends TestCase
             'idusuario' => 1
         ];
 
-        // Registrar acción -> el modelo devuelve el ID insertado o false
+        
         $result = $this->model->registrarAccion('PRODUCTOS', 'INSERT', 1, 'Registro de producto de prueba');
 
     $this->assertNotFalse($result);
@@ -84,11 +89,11 @@ class TestBitacora extends TestCase
         $this->assertIsArray($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testRegistrarAccionSinUsuario()
     {
-        // Llamada sin ID de usuario debe fallar
+        
         $result = $this->model->registrarAccion('PRODUCTOS', 'INSERT', null, 'Sin usuario');
 
         $this->assertFalse($result);
@@ -96,7 +101,7 @@ class TestBitacora extends TestCase
 
     public function testRegistrarAccionSinModulo()
     {
-        // Llamada sin módulo debe fallar
+        
         $result = $this->model->registrarAccion('', 'INSERT', 1, 'Sin módulo');
 
         $this->assertFalse($result);

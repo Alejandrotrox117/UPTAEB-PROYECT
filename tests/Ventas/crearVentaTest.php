@@ -11,6 +11,11 @@ class crearVentaTest extends TestCase
     private $productosModel;
     private $clientesModel;
 
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
+
     public function setUp(): void
     {
         $this->ventasModel = new VentasModel();
@@ -63,7 +68,7 @@ class crearVentaTest extends TestCase
 
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
 
-        // Verificar estructura de respuesta exitosa (lógica interna del modelo)
+        
         $this->assertTrue($resultado['success']);
         $this->assertArrayHasKey('idventa', $resultado);
         $this->assertArrayHasKey('idcliente', $resultado);
@@ -71,11 +76,11 @@ class crearVentaTest extends TestCase
         $this->assertArrayHasKey('message', $resultado);
         $this->assertGreaterThan(0, $resultado['idventa']);
         
-        // Verificar que el nro_venta fue generado (método generarNumeroVenta())
+        
         $this->assertNotEmpty($resultado['nro_venta']);
         $this->assertMatchesRegularExpression('/^VT\d+$/', $resultado['nro_venta']);
 
-        // Verificar que la venta se insertó correctamente en la BD (commit exitoso)
+        
         $ventaCreada = $this->ventasModel->obtenerVentaPorId($resultado['idventa']);
         $this->assertNotEmpty($ventaCreada);
         $this->assertEquals((float)$datosVenta['total_general'], (float)$ventaCreada['total_general']);
@@ -83,7 +88,7 @@ class crearVentaTest extends TestCase
         $this->assertEquals($clienteActivo['idcliente'], $ventaCreada['idcliente']);
         $this->assertEquals($resultado['nro_venta'], $ventaCreada['nro_venta']);
         
-        // Verificar que los detalles se insertaron (método insertarDetallesVenta())
+        
         $detalles = $this->ventasModel->obtenerDetalleVenta($resultado['idventa']);
         $this->assertNotEmpty($detalles);
         $this->assertCount(1, $detalles);
@@ -128,12 +133,12 @@ class crearVentaTest extends TestCase
         
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         
-        // Verificar que la validación de cliente inactivo funciona (rama de validación interna)
+        
         $this->assertFalse($resultado['success']);
         $this->assertArrayHasKey('message', $resultado);
         $this->assertStringContainsString('inactivo', strtolower($resultado['message']));
         
-        // Verificar que NO se insertó nada en la BD (rollback ejecutado)
+        
         $this->assertArrayNotHasKey('idventa', $resultado);
     }
 
@@ -197,22 +202,22 @@ class crearVentaTest extends TestCase
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $cliente['idcliente'],
             'idmoneda_general' => 3,
-            'subtotal_general' => 50,  // Subtotal positivo
+            'subtotal_general' => 50,  
             'descuento_porcentaje_general' => 0,
             'monto_descuento_general' => 0,
             'estatus' => 'BORRADOR',
-            'total_general' => 50,  // Total positivo
+            'total_general' => 50,  
             'observaciones' => 'Venta con cantidad negativa',
             'tasa_usada' => 1
         ];
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'descripcion_temporal_producto' => $producto['nombre'],
-            'cantidad' => -5,  // Cantidad negativa - esto debe fallar
+            'cantidad' => -5,  
             'descuento' => 0,
-            'precio_unitario_venta' => 10,  // Precio positivo
+            'precio_unitario_venta' => 10,  
             'idmoneda_detalle' => 3,
-            'subtotal_linea' => 50,  // Subtotal línea positivo
+            'subtotal_linea' => 50,  
             'subtotal_original_linea' => 50,
             'monto_descuento_linea' => 0,
             'peso_vehiculo' => null,
@@ -241,22 +246,22 @@ class crearVentaTest extends TestCase
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $cliente['idcliente'],
             'idmoneda_general' => 3,
-            'subtotal_general' => 100,  // Subtotal positivo
+            'subtotal_general' => 100,  
             'descuento_porcentaje_general' => 0,
             'monto_descuento_general' => 0,
             'estatus' => 'BORRADOR',
-            'total_general' => 100,  // Total positivo
+            'total_general' => 100,  
             'observaciones' => 'Venta con precio negativo',
             'tasa_usada' => 1
         ];
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'descripcion_temporal_producto' => $producto['nombre'],
-            'cantidad' => 1,  // Cantidad positiva
+            'cantidad' => 1,  
             'descuento' => 0,
-            'precio_unitario_venta' => -100,  // Precio negativo - esto debe fallar
+            'precio_unitario_venta' => -100,  
             'idmoneda_detalle' => 3,
-            'subtotal_linea' => 100,  // Subtotal línea positivo
+            'subtotal_linea' => 100,  
             'subtotal_original_linea' => 100,
             'monto_descuento_linea' => 0,
             'peso_vehiculo' => null,
@@ -362,7 +367,7 @@ class crearVentaTest extends TestCase
         $datosVenta = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $cliente['idcliente'],
-            'idmoneda_general' => 999999, // Moneda que no existe
+            'idmoneda_general' => 999999, 
             'subtotal_general' => 100,
             'descuento_porcentaje_general' => 0,
             'monto_descuento_general' => 0,
@@ -377,7 +382,7 @@ class crearVentaTest extends TestCase
             'cantidad' => 1,
             'descuento' => 0,
             'precio_unitario_venta' => 100,
-            'idmoneda_detalle' => 999999, // Moneda que no existe
+            'idmoneda_detalle' => 999999, 
             'subtotal_linea' => 100,
             'subtotal_original_linea' => 100,
             'monto_descuento_linea' => 0,
@@ -426,13 +431,13 @@ class crearVentaTest extends TestCase
             'precio_unitario_venta' => 100
         ]];
         
-        // Probar rama: cliente activo (debe pasar validación)
+        
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertTrue($resultado['success']);
         $this->assertArrayHasKey('idventa', $resultado);
         $this->assertEquals($clienteActivo['idcliente'], $resultado['idcliente']);
         
-        // Probar rama: cliente inactivo (debe fallar en validación específica)
+        
         $datosVenta['idcliente'] = $clienteInactivo['idcliente'];
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success']);
@@ -465,7 +470,7 @@ class crearVentaTest extends TestCase
             'tasa_usada' => 1
         ];
         
-        // Probar rama: producto válido (pasa validación en insertarDetallesVenta)
+        
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto);
         $detallesVenta = [[
@@ -477,7 +482,7 @@ class crearVentaTest extends TestCase
         $this->assertTrue($resultado['success']);
         $this->assertArrayHasKey('idventa', $resultado);
         
-        // Probar rama: producto inexistente (falla en validación específica)
+        
         $detallesVenta = [[
             'idproducto' => 999999,
             'cantidad' => 1,
@@ -486,7 +491,7 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success']);
         $this->assertStringContainsString('no existe', strtolower($resultado['message']));
-        $this->assertStringContainsString('#1', $resultado['message']); // Número de detalle
+        $this->assertStringContainsString('#1', $resultado['message']); 
     }
 
     public function testValidacionCantidadYPrecioEnModelo()
@@ -516,7 +521,7 @@ class crearVentaTest extends TestCase
             'tasa_usada' => 1
         ];
         
-        // Probar rama: cantidad negativa (validación en insertarDetallesVenta)
+        
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'cantidad' => -5,
@@ -527,7 +532,7 @@ class crearVentaTest extends TestCase
         $this->assertStringContainsString('cantidad', strtolower($resultado['message']));
         $this->assertStringContainsString('mayor a 0', strtolower($resultado['message']));
         
-        // Probar rama: precio negativo o inválido (validación específica de precio)
+        
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'cantidad' => 1,
@@ -537,7 +542,7 @@ class crearVentaTest extends TestCase
         $this->assertFalse($resultado['success']);
         $this->assertStringContainsString('precio', strtolower($resultado['message']));
         
-        // Probar rama: cantidad y precio válidos (debe pasar validación)
+        
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'cantidad' => 5,

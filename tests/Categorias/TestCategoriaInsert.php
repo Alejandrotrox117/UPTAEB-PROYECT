@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/categoriasModel.php';
 
-/**
- * Prueba de caja blanca para inserción de categorías
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestCategoriaInsert extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new categoriasModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testInsertCategoriaConDatosValidos()
     {
@@ -60,7 +65,7 @@ class TestCategoriaInsert extends TestCase
         $this->assertTrue($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testInsertCategoriaSinNombre()
     {
@@ -71,11 +76,11 @@ class TestCategoriaInsert extends TestCase
         ];
 
         try {
-            $this->model->insertCategoria($data);
+            $result = $this->model->insertCategoria($data);
             $this->fail('Debería lanzar PDOException');
         } catch (PDOException $e) {
+            $this->showMessage("PDOException: " . $e->getMessage());
             $this->assertInstanceOf(PDOException::class, $e);
-            $this->assertNotEmpty($e->getMessage());
         }
     }
 

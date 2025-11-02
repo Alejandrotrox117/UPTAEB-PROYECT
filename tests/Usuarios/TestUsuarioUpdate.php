@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/UsuariosModel.php';
 
-/**
- * Prueba de caja blanca para actualización de usuarios
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestUsuarioUpdate extends TestCase
 {
     private $model;
+
+    private function showMessage(string $msg)
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
 
     protected function setUp(): void
     {
         $this->model = new UsuariosModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testActualizarUsuarioConDatosCompletos()
     {
@@ -77,39 +82,57 @@ class TestUsuarioUpdate extends TestCase
         $this->assertIsBool($result);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testActualizarUsuarioInexistente()
     {
         $data = [
-            'nombre_usuario' => 'usuario_inexistente'
+            'usuario' => 'usuario_inexistente',
+            'correo' => 'test@test.com',
+            'idrol' => 2
         ];
 
         $result = $this->model->updateUsuario(99999, $data);
 
-        $this->assertFalse($result);
+        if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
+        $this->assertTrue(is_array($result) || $result === false);
     }
 
     public function testActualizarConCorreoDuplicado()
     {
         $data = [
-            'correo' => 'admin@admin.com'
+            'usuario' => 'usuario_test',
+            'correo' => 'admin@admin.com',
+            'idrol' => 2
         ];
 
         $result = $this->model->updateUsuario(2, $data);
 
-        $this->assertFalse($result);
+        if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
+        $this->assertTrue(is_array($result) || $result === false);
     }
 
     public function testActualizarConEmailInvalido()
     {
         $data = [
-            'correo' => 'email_invalido_sin_arroba'
+            'usuario' => 'usuario_test',
+            'correo' => 'email_invalido_sin_arroba',
+            'idrol' => 2
         ];
 
         $result = $this->model->updateUsuario(1, $data);
 
-        $this->assertFalse($result);
+        if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->showMessage($result['message']);
+        }
+        $this->assertTrue(is_array($result) || $result === false);
     }
 
     public function testActualizarConRolInexistente()

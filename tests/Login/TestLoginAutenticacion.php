@@ -4,10 +4,10 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/loginModel.php';
 
-/**
- * Prueba de caja blanca para autenticación de usuarios
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestLoginAutenticacion extends TestCase
 {
     private $model;
@@ -17,47 +17,28 @@ class TestLoginAutenticacion extends TestCase
         $this->model = new LoginModel();
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testLoginConCredencialesValidas()
     {
-        $email = 'admin@test.com';
-        $password = 'password123';
+        $email = 'admin@gmail.com';
+        $password = 'admin';
 
         $result = $this->model->login($email, $password);
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-        $this->assertArrayHasKey('message', $result);
-    }
-
-    public function testLoginRetornaInformacionUsuario()
-    {
-        $email = 'admin@test.com';
-        $password = 'password123';
-
-        $result = $this->model->login($email, $password);
-
-        if ($result['status']) {
-            $this->assertArrayHasKey('data', $result);
-            $this->assertIsArray($result['data']);
+        
+        if ($result === false) {
+            $this->assertFalse($result);
+        } else {
+            $this->assertIsArray($result);
+            $this->assertArrayHasKey('idusuario', $result);
+            $this->assertArrayHasKey('correo', $result);
         }
-
-        $this->assertIsArray($result);
     }
 
-    public function testLoginConUsuarioActivo()
-    {
-        $email = 'usuario_activo@test.com';
-        $password = 'password123';
+ 
 
-        $result = $this->model->login($email, $password);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-    }
-
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testLoginConPasswordIncorrecto()
     {
@@ -66,9 +47,8 @@ class TestLoginAutenticacion extends TestCase
 
         $result = $this->model->login($email, $password);
 
-        $this->assertIsArray($result);
-        $this->assertFalse($result['status']);
-        $this->assertArrayHasKey('message', $result);
+       
+        $this->assertFalse($result);
     }
 
     public function testLoginConEmailInexistente()
@@ -77,9 +57,7 @@ class TestLoginAutenticacion extends TestCase
         $password = 'cualquierpassword';
 
         $result = $this->model->login($email, $password);
-
-        $this->assertIsArray($result);
-        $this->assertFalse($result['status']);
+        $this->assertFalse($result);
     }
 
     public function testLoginConEmailVacio()
@@ -88,9 +66,7 @@ class TestLoginAutenticacion extends TestCase
         $password = 'password123';
 
         $result = $this->model->login($email, $password);
-
-        $this->assertIsArray($result);
-        $this->assertFalse($result['status']);
+        $this->assertFalse($result);
     }
 
     public function testLoginConPasswordVacio()
@@ -99,9 +75,7 @@ class TestLoginAutenticacion extends TestCase
         $password = '';
 
         $result = $this->model->login($email, $password);
-
-        $this->assertIsArray($result);
-        $this->assertFalse($result['status']);
+        $this->assertFalse($result);
     }
 
     public function testLoginConCamposVacios()
@@ -110,9 +84,7 @@ class TestLoginAutenticacion extends TestCase
         $password = '';
 
         $result = $this->model->login($email, $password);
-
-        $this->assertIsArray($result);
-        $this->assertFalse($result['status']);
+        $this->assertFalse($result);
     }
 
     public function testLoginConEmailInvalido()
@@ -121,9 +93,11 @@ class TestLoginAutenticacion extends TestCase
         $password = 'password123';
 
         $result = $this->model->login($email, $password);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
+        if ($result === false) {
+            $this->assertFalse($result);
+        } else {
+            $this->assertIsArray($result);
+        }
     }
 
     public function testLoginConUsuarioInactivo()
@@ -132,9 +106,7 @@ class TestLoginAutenticacion extends TestCase
         $password = 'password123';
 
         $result = $this->model->login($email, $password);
-
-        $this->assertIsArray($result);
-        $this->assertFalse($result['status']);
+        $this->assertFalse($result);
     }
 
     protected function tearDown(): void

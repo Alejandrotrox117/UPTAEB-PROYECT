@@ -4,20 +4,25 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/categoriasModel.php';
 
-/**
- * Prueba de caja blanca para eliminación de categorías
- * Incluye casos típicos (exitosos) y atípicos (fallidos)
- */
+
+
+
+
 class TestCategoriaDelete extends TestCase
 {
     private $model;
     private $categoriaIdPrueba;
 
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+    }
+
     protected function setUp(): void
     {
         $this->model = new categoriasModel();
         
-        // Crear una categoría de prueba para eliminar
+        
         $data = [
             'nombre' => 'Categoría Delete Test ' . time(),
             'descripcion' => 'Para eliminar',
@@ -26,14 +31,14 @@ class TestCategoriaDelete extends TestCase
         
         $this->model->insertCategoria($data);
         
-        // Obtener todas las categorías y tomar la última insertada
+        
         $categorias = $this->model->SelectAllCategorias();
         if (!empty($categorias)) {
             $this->categoriaIdPrueba = end($categorias)['idcategoria'];
         }
     }
 
-    // ========== CASOS TÍPICOS (EXITOSOS) ==========
+    
 
     public function testDeleteCategoriaExistente()
     {
@@ -45,7 +50,7 @@ class TestCategoriaDelete extends TestCase
 
         $this->assertTrue($result);
         
-        // Verificar que ya no aparezca en las categorías activas
+        
         $categorias = $this->model->SelectAllCategorias();
         $encontrada = false;
         
@@ -65,16 +70,16 @@ class TestCategoriaDelete extends TestCase
             $this->markTestSkipped('No se pudo crear categoría de prueba');
         }
 
-        // Primera eliminación
+        
         $result1 = $this->model->deleteCategoria($this->categoriaIdPrueba);
         $this->assertTrue($result1);
         
-        // Segunda eliminación (debería seguir siendo exitosa pero sin cambios)
+        
         $result2 = $this->model->deleteCategoria($this->categoriaIdPrueba);
         $this->assertTrue($result2);
     }
 
-    // ========== CASOS ATÍPICOS (FALLIDOS) ==========
+    
 
     public function testDeleteCategoriaInexistente()
     {
