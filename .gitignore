@@ -1,6 +1,8 @@
 # Ejecutables
 *.exe
-
+*.lock
+vendor/
+.lock
 # Variables de entorno - NUNCA subir al repositorio
 .env
 .env.local
@@ -49,7 +51,6 @@ public/uploads/
 # Archivos de backup de base de datos
 *.sql
 *.sql.gz
-backup/
 backups/
 
 # Archivos de configuración específicos del servidor

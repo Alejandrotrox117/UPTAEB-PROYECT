@@ -1,6 +1,6 @@
 <?php
-require_once "app/core/Conexion.php";
-require_once "app/core/Mysql.php";
+require_once "app/core/conexion.php";
+require_once "app/core/mysql.php";
 require_once "app/models/notificacionesModel.php";
 
 class ComprasModel
@@ -1269,6 +1269,12 @@ class ComprasModel
 
     public function insertarCompra(array $datosCompra, array $detallesCompra)
     {
+        if (empty($detallesCompra)) {
+            $errorMessage = 'No hay detalles de compra para procesar.';
+            error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
+            return ['status' => false, 'message' => $errorMessage];
+        }
+        
         // Validación de proveedor
         $proveedor = $this->getProveedorById($datosCompra['idproveedor']);
         if (!$proveedor) {

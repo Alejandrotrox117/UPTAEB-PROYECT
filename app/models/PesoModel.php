@@ -1,5 +1,5 @@
 <?php
-require_once "app/core/Conexion.php";
+require_once "app/core/conexion.php";
 
 class PesoModel
 {

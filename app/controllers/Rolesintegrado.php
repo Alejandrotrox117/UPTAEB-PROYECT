@@ -1,21 +1,33 @@
 <?php
 
 require_once "app/core/Controllers.php";
+require_once "app/models/RolesintegradoModel.php";
 require_once "helpers/helpers.php";
 
-class RolesIntegrado extends Controllers
+class Rolesintegrado extends Controllers
 {
     public function __construct()
     {
         parent::__construct();
+        $this->model = new RolesIntegradoModel();
     }
 
     public function index()
     {
-        $data['page_title'] = "Gestión Integral de Permisos";
-        $data['page_name'] = "Roles Integrado";
-        $data['page_functions_js'] = "functions_rolesintegrado.js";
-        $this->views->getView($this, "rolesintegrado", $data);
+        try {
+            error_log("RolesIntegrado::index - Iniciando");
+            
+            $data['page_title'] = "Gestión Integral de Permisos";
+            $data['page_name'] = "Roles Integrado";
+            $data['page_functions_js'] = "functions_rolesintegrado.js";
+            
+            error_log("RolesIntegrado::index - Datos preparados, cargando vista");
+            $this->views->getView($this, "rolesintegrado", $data);
+            
+        } catch (Exception $e) {
+            error_log("RolesIntegrado::index - Error: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function getRoles()

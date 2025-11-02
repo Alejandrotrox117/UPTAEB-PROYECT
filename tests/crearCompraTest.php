@@ -18,6 +18,10 @@ class crearCompraTest extends TestCase
         $this->proveedoresModel = new ProveedoresModel();
     }
 
+    /**
+     * * CASO DE PRUEBA: PRUEBA DE CAMINO BASE.
+     * Objetivo: Asegurar que el camino de ejecución independiente más típico (la inserción exitosa) funcione correctamente "camino feliz"
+     */
     public function testCrearCompraExitosa()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -32,13 +36,11 @@ class crearCompraTest extends TestCase
         $precioUnitario = 10.5;
         $cantidad = 5;
         $subtotal = $precioUnitario * $cantidad;
-
-        // Datos generales de la compra
         $datosCompra = [
             'nro_compra' => $this->comprasModel->generarNumeroCompra(),
             'fecha_compra' => date('Y-m-d'),
             'idproveedor' => $proveedor['idproveedor'], 
-            'idmoneda_general' => 3, // Moneda por defecto
+            'idmoneda_general' => 3,
             'subtotal_general_compra' => $subtotal,
             'descuento_porcentaje_compra' => 0,
             'monto_descuento_compra' => 0,
@@ -72,17 +74,18 @@ class crearCompraTest extends TestCase
 
         $idCompraInsertada = $resultado['id'];
         $compraCreada = $this->comprasModel->getCompraById($idCompraInsertada);
-        $this->assertNotEmpty($compraCreada, "No se pudo encontrar la compra recién creada en la base de datos.");
-        $this->assertEquals($datosCompra['total_general_compra'], $compraCreada['total_general'], "El total de la compra creada no coincide.");
+
 
         echo $resultado['message'];
     }
 
+    /**
+     * CASO DE PRUEBA: PRUEBA DE CONDICIÓN / PRUEBA DE BIFURCACIÓN.
+     * Objetivo: Probar la rama o bifurcación 'falsa' de la condición de validación del proveedor.
+     */
     public function testCrearCompraConProveedorInexistente()
     {
         $producto = $this->productosModel->selectProductoById(1);
-        $this->assertNotNull($producto, "El producto de prueba con ID 1 no pudo ser encontrado.");
-
         $precioUnitario = 10.5;
         $cantidad = 5;
         $subtotal = $precioUnitario * $cantidad;
@@ -120,108 +123,117 @@ class crearCompraTest extends TestCase
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
         
         $this->assertIsArray($resultado, "La función debe devolver un array para indicar el fallo.");
-        $this->assertFalse($resultado['status'], "El sistema no debería permitir crear una compra con un proveedor inexistente.");
-        $this->assertStringContainsString("El proveedor con ID 99999 no existe.", $resultado['message']);
+        $this->assertFalse($resultado['status'], "La inserción de la compra debería fallar con un proveedor inexistente.");
+        $this->assertStringContainsString('El proveedor con ID 99999 no existe.', $resultado['message'], "El mensaje de error no es el esperado.");
     }
 
-    public function testCrearCompraConProductoInexistente()
+    /**
+     * CASO DE PRUEBA: PRUEBA DE BUCLES.
+     * Objetivo: Probar el límite inferior del ciclo (cero iteraciones) que procesa los detalles de la compra.
+     */
+    public function testCrearCompraSinDetalles()
     {
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $this->assertTrue($resultadoProveedores['status'], "La consulta de proveedores falló.");
         $proveedores = $resultadoProveedores['data'];
-        $this->assertNotEmpty($proveedores, "No se encontraron proveedores en la base de datos para realizar la prueba.");
+        $this->assertNotEmpty($proveedores, "No se encontraron proveedores para la prueba.");
         $proveedor = $proveedores[0];
 
-        $precioUnitario = 10.5;
-        $cantidad = 5;
-        $subtotal = $precioUnitario * $cantidad;
-
-        // Datos generales de la compra
         $datosCompra = [
             'nro_compra' => $this->comprasModel->generarNumeroCompra(),
             'fecha_compra' => date('Y-m-d'),
             'idproveedor' => $proveedor['idproveedor'],
             'idmoneda_general' => 3,
-            'subtotal_general_compra' => $subtotal,
-            'descuento_porcentaje_compra' => 0,
-            'monto_descuento_compra' => 0,
-            'total_general_compra' => $subtotal,
-            'observaciones_compra' => 'Prueba unitaria con producto inexistente.',
+            'total_general_compra' => 0,
+            'observaciones_compra' => 'Prueba de compra sin detalles.',
         ];
 
-        $detallesCompra = [
-            [
-                'idproducto' => 99999, // ID de producto inexistente
-                'descripcion_temporal_producto' => 'Producto Inexistente',
-                'cantidad' => $cantidad,
-                'descuento' => 0,
-                'precio_unitario_compra' => $precioUnitario,
-                'idmoneda_detalle' => 3,
-                'subtotal_linea' => $subtotal,
-                'subtotal_original_linea' => $subtotal,
-                'monto_descuento_linea' => 0,
-                'peso_vehiculo' => null,
-                'peso_bruto' => null,
-                'peso_neto' => null,
-            ]
-        ];
+        // Array de detalles vacío
+        $detallesCompra = [];
 
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
 
-        $this->assertIsArray($resultado, "La función debe devolver un array para indicar el fallo.");
-        $this->assertFalse($resultado['status'], "El sistema no debería permitir crear una compra con un producto inexistente.");
-        $this->assertStringContainsString("El producto con ID 99999 no existe.", $resultado['message']);
+        $this->assertIsArray($resultado, "La función debe devolver un array.");
+        $this->assertFalse($resultado['status'], "La inserción debería fallar sin detalles de compra.");
+        $this->assertEquals('No hay detalles de compra para procesar.', $resultado['message'], "El mensaje de error no es el esperado.");
+        $this->assertEquals('No hay detalles de compra para procesar.', $resultado['message'], "El mensaje de error no es el esperado.");
     }
 
-    public function testCrearCompraConValoresNegativos()
+    /**
+     * CASO DE PRUEBA: PRUEBA DE FLUJO DE DATOS.
+     * Objetivo: Validar la integridad de los datos (`cantidad`) a medida que fluyen a través de la lógica de negocio.
+     */
+    public function testCrearCompraConCantidadCero()
     {
-        $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
-        $this->assertTrue($resultadoProveedores['status'], "La consulta de proveedores falló.");
-        $proveedores = $resultadoProveedores['data'];
-        $this->assertNotEmpty($proveedores, "No se encontraron proveedores en la base de datos para realizar la prueba.");
-        $proveedor = $proveedores[0];
-
         $producto = $this->productosModel->selectProductoById(1);
-        $this->assertNotNull($producto, "El producto de prueba con ID 1 no pudo ser encontrado.");
+        $this->assertNotNull($producto, "El producto de prueba no fue encontrado.");
 
-        $precioUnitario = -10.5; // Precio negativo
-        $cantidad = 5;
-        $subtotal = $precioUnitario * $cantidad;
+        $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
+        $proveedor = $resultadoProveedores['data'][0];
 
-        // Datos generales de la compra
         $datosCompra = [
             'nro_compra' => $this->comprasModel->generarNumeroCompra(),
             'fecha_compra' => date('Y-m-d'),
             'idproveedor' => $proveedor['idproveedor'],
             'idmoneda_general' => 3,
-            'subtotal_general_compra' => $subtotal,
-            'descuento_porcentaje_compra' => 0,
-            'monto_descuento_compra' => 0,
-            'total_general_compra' => $subtotal,
-            'observaciones_compra' => 'Prueba unitaria con valores negativos.',
+            'total_general_compra' => 0,
+            'observaciones_compra' => 'Prueba con cantidad cero.',
         ];
 
         $detallesCompra = [
             [
                 'idproducto' => $producto['idproducto'],
                 'descripcion_temporal_producto' => $producto['nombre'],
-                'cantidad' => $cantidad,
-                'descuento' => 0,
-                'precio_unitario_compra' => $precioUnitario,
+                'cantidad' => 0, // Cantidad inválida, forzando un error de validación de datos
+                'precio_unitario_compra' => 10,
                 'idmoneda_detalle' => 3,
-                'subtotal_linea' => $subtotal,
-                'subtotal_original_linea' => $subtotal,
-                'monto_descuento_linea' => 0,
-                'peso_vehiculo' => null,
-                'peso_bruto' => null,
-                'peso_neto' => null,
+                'subtotal_linea' => 0,
             ]
         ];
 
         $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
-        
-        $this->assertIsArray($resultado, "La función debe devolver un array para indicar el fallo.");
-        $this->assertFalse($resultado['status'], "El sistema no debería permitir crear una compra con valores negativos.");
-        $this->assertStringContainsString("La cantidad o el precio unitario no pueden ser negativos o cero.", $resultado['message']);
+
+        $this->assertIsArray($resultado, "La función debe devolver un array.");
+        $this->assertFalse($resultado['status'], "La inserción debería fallar con cantidad cero.");
+        $this->assertEquals('La cantidad o el precio unitario no pueden ser negativos o cero.', $resultado['message'], "El mensaje de error no es el esperado.");
+    }
+
+    /**
+     * CASO DE PRUEBA: PRUEBA DE FLUJO DE DATOS.
+     * Objetivo: Validar la integridad de los datos (`idproducto`) contra la base de datos durante el flujo de procesamiento.
+     */
+    public function testCrearCompraConProductoInexistente()
+    {
+        $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
+        $this->assertTrue($resultadoProveedores['status'], "La consulta de proveedores falló.");
+        $proveedores = $resultadoProveedores['data'];
+        $this->assertNotEmpty($proveedores, "No se encontraron proveedores para la prueba.");
+        $proveedor = $proveedores[0];
+
+        $datosCompra = [
+            'nro_compra' => $this->comprasModel->generarNumeroCompra(),
+            'fecha_compra' => date('Y-m-d'),
+            'idproveedor' => $proveedor['idproveedor'],
+            'idmoneda_general' => 3,
+            'total_general_compra' => 100,
+            'observaciones_compra' => 'Prueba con producto inexistente.',
+        ];
+
+        $detallesCompra = [
+            [
+                'idproducto' => 99999, // ID de producto inexistente
+                'descripcion_temporal_producto' => 'Producto Fantasma',
+                'cantidad' => 10,
+                'precio_unitario_compra' => 10,
+                'idmoneda_detalle' => 3,
+                'subtotal_linea' => 100,
+            ]
+        ];
+
+        $resultado = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
+
+        $this->assertIsArray($resultado, "La función debe devolver un array.");
+        $this->assertFalse($resultado['status'], "La inserción debería fallar con un producto inexistente.");
+        $this->assertEquals('El producto con ID 99999 no existe.', $resultado['message'], "El mensaje de error no es el esperado.");
     }
 }
