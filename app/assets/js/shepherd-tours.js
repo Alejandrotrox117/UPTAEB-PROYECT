@@ -89,7 +89,7 @@ function iniciarTourProductos() {
         title: 'Gestión de Productos',
         text: 'Desde aquí puedes agregar, editar y eliminar productos.',
         attachTo: {
-            element: '[href="/project/productos"]',
+            element: '[href*="productos"]',
             on: 'right'
         },
         buttons: [

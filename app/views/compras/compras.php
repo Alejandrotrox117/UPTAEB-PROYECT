@@ -468,7 +468,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Compras');
 </div>
 
 <!-- Cargar archivo de permisos antes que el archivo principal -->
-<script src="/project/app/assets/js/functions_compras_permisos.js"></script>
+<script src="<?= base_url('app/assets/js/functions_compras_permisos.js'); ?>"></script>
 <script>
 // Ejecutar obtenerPermisos inmediatamente cuando se carga el archivo de permisos
 document.addEventListener("DOMContentLoaded", function() {
