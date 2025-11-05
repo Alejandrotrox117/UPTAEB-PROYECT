@@ -52,10 +52,10 @@ class categoriasModel extends Mysql
     public function setEstatus($estatus) {
         $this->estatus = $estatus;
     }
-    // Obtener todas las categorías activas
+    // Obtener todas las categorías
     public function SelectAllCategorias()
     {
-        $sql = "SELECT * FROM categoria WHERE estatus = 'activo'";
+        $sql = "SELECT * FROM categoria ORDER BY idcategoria ASC";
         try {
             $stmt = $this->db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -67,23 +67,18 @@ class categoriasModel extends Mysql
 
     public function insertCategoria($data)
     {
-        try {
-            $sql = "INSERT INTO categoria (
-                        nombre, descripcion, estatus
-                    ) VALUES (?, ?, ?)";
-        
-            $stmt = $this->db->prepare($sql);
-            $arrValues = [
-                $data['nombre'],
-                $data['descripcion'],
-                $data['estatus']
-            ];
-        
-            return $stmt->execute($arrValues);
-        } catch (PDOException $e) {
-            error_log("Error al insertar categoria: " . $e->getMessage());
-            return false;
-        }
+        $sql = "INSERT INTO categoria (
+                    nombre, descripcion, estatus
+                ) VALUES (?, ?, ?)";
+    
+        $stmt = $this->db->prepare($sql);
+        $arrValues = [
+            $data['nombre'],
+            $data['descripcion'],
+            strtoupper($data['estatus'])  // Normalizar a mayúsculas
+        ];
+    
+        return $stmt->execute($arrValues);
     }
 
     
@@ -140,11 +135,18 @@ class categoriasModel extends Mysql
                 $this->setEstatus($data['estatus']);
             }
 
-            return $data;
+            return $data; 
         } catch (PDOException $e) {
-            error_log("Error al obtener categoria por ID: " . $e->getMessage());
-            return false;
+            error_log("CategoriasModel: Error al obtener categoria por ID - " . $e->getMessage());
+            return null;
         }
+    }
+
+    // Método para reactivar una categoría (cambiar estatus de INACTIVO a ACTIVO)
+    public function reactivarCategoria($idcategoria) {
+        $sql = "UPDATE categoria SET estatus = 'ACTIVO' WHERE idcategoria = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$idcategoria]);
     }
    
 }

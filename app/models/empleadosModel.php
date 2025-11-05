@@ -7,6 +7,9 @@ class empleadosModel extends Mysql
     private $db;
     private $conexion;
 
+    // Definir constante para el rol de super usuario
+    const SUPER_USUARIO_ROL_ID = 1; // ID del rol de super usuario/admin en la BD
+
     // Atributos de la tabla `empleado`
     private $idempleado;
     private $nombre;
@@ -235,27 +238,74 @@ class empleadosModel extends Mysql
     }
 
     // Método para seleccionar todos los empleados activos
-    public function SelectAllEmpleados()
+    /**
+     * Obtener todos los empleados (para super usuarios) o solo activos (para usuarios normales)
+     */
+    public function selectAllEmpleados(int $idUsuarioSesion = 0)
     {
-        $sql = "SELECT 
-            idempleado, 
-            nombre, 
-            apellido, 
-            identificacion, 
-            fecha_nacimiento, 
-            direccion, 
-            correo_electronico, 
-            estatus, 
-            telefono_principal, 
-            observaciones, 
-            genero, 
-            fecha_inicio, 
-            fecha_fin, 
-            puesto, 
-            salario 
-        FROM empleado 
-        WHERE estatus = 'ACTIVO'";
-        return $this->searchAll($sql);
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            error_log("=== selectAllEmpleados llamado con Usuario ID: $idUsuarioSesion ===");
+            
+            // Verificar si el usuario actual es super usuario
+            $esSuperUsuarioActual = $this->esSuperUsuario($idUsuarioSesion);
+            
+            error_log("Es Super Usuario: " . ($esSuperUsuarioActual ? 'SI' : 'NO'));
+            
+            $whereClause = "";
+            if (!$esSuperUsuarioActual) {
+                // Si no es super usuario, solo mostrar empleados activos
+                $whereClause = " WHERE estatus = 'ACTIVO'";
+                error_log("Aplicando filtro WHERE estatus = 'ACTIVO'");
+            } else {
+                error_log("Super Admin detectado - mostrando TODOS los empleados");
+            }
+            
+            $query = "SELECT 
+                    idempleado, nombre, apellido, identificacion, fecha_nacimiento,
+                    direccion, correo_electronico, estatus, telefono_principal,
+                    observaciones, genero, fecha_inicio, fecha_fin, puesto, salario,
+                    tipo_empleado,
+                    DATE_FORMAT(fecha_nacimiento, '%d/%m/%Y') as fecha_nacimiento_formato,
+                    DATE_FORMAT(fecha_inicio, '%d/%m/%Y') as fecha_inicio_formato,
+                    DATE_FORMAT(fecha_fin, '%d/%m/%Y') as fecha_fin_formato
+                FROM empleado" . $whereClause . " 
+                ORDER BY idempleado DESC";
+            
+            error_log("Query ejecutada: $query");
+            
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+            $empleados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Total empleados encontrados: " . count($empleados));
+            
+            // Log de empleados con estatus
+            foreach ($empleados as $emp) {
+                error_log("Empleado ID: {$emp['idempleado']}, Nombre: {$emp['nombre']}, Estatus: {$emp['estatus']}");
+            }
+            
+            $resultado = [
+                "status" => true,
+                "message" => "Empleados obtenidos.",
+                "data" => $empleados
+            ];
+            
+        } catch (Exception $e) {
+            error_log("EmpleadosModel::selectAllEmpleados - Error: " . $e->getMessage());
+            $resultado = [
+                "status" => false,
+                "message" => "Error al obtener empleados: " . $e->getMessage(),
+                "data" => []
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
+
+        return $resultado;
     }
 
     // Método para insertar un nuevo empleado
@@ -401,6 +451,124 @@ class empleadosModel extends Mysql
         } catch (PDOException $e) {
             error_log("Error al obtener empleado por ID: " . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Verificar si un usuario es super usuario
+     */
+    /**
+     * Verificar si un usuario es super usuario usando conexión independiente
+     */
+    private function esSuperUsuario(int $idusuario)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $dbSeguridad = $conexion->get_conectSeguridad();
+        
+        try {
+            error_log("EmpleadosModel::esSuperUsuario - Verificando usuario ID: $idusuario");
+            error_log("EmpleadosModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
+            
+            // Primero intentar por ID de rol
+            $sql = "SELECT u.idrol, r.nombre as rol_nombre 
+                    FROM usuario u
+                    LEFT JOIN roles r ON u.idrol = r.idrol
+                    WHERE u.idusuario = ? AND u.estatus = 'ACTIVO'";
+            $stmt = $dbSeguridad->prepare($sql);
+            $stmt->execute([$idusuario]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($usuario) {
+                $rolUsuario = intval($usuario['idrol']);
+                $nombreRol = strtolower($usuario['rol_nombre'] ?? '');
+                
+                error_log("EmpleadosModel::esSuperUsuario - Rol del usuario ID: $rolUsuario, Nombre: $nombreRol");
+                
+                // Verificar por ID (método primario)
+                $esSuperUsuarioPorId = $rolUsuario === self::SUPER_USUARIO_ROL_ID;
+                
+                // Verificar por nombre (método secundario/fallback)
+                $rolesSuper = ['super admin', 'super usuario', 'superadmin', 'superusuario', 'administrador', 'admin'];
+                $esSuperUsuarioPorNombre = in_array($nombreRol, $rolesSuper);
+                
+                $esSuperUsuario = $esSuperUsuarioPorId || $esSuperUsuarioPorNombre;
+                
+                error_log("EmpleadosModel::esSuperUsuario - Es super usuario (por ID): " . ($esSuperUsuarioPorId ? 'SÍ' : 'NO'));
+                error_log("EmpleadosModel::esSuperUsuario - Es super usuario (por nombre): " . ($esSuperUsuarioPorNombre ? 'SÍ' : 'NO'));
+                error_log("EmpleadosModel::esSuperUsuario - RESULTADO FINAL: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
+                
+                return $esSuperUsuario;
+            } else {
+                error_log("EmpleadosModel::esSuperUsuario - Usuario no encontrado o inactivo");
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log("EmpleadosModel::esSuperUsuario - Error: " . $e->getMessage());
+            error_log("EmpleadosModel::esSuperUsuario - Stack trace: " . $e->getTraceAsString());
+            return false;
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    /**
+     * Verificar si un usuario es super usuario (método público)
+     */
+    public function verificarEsSuperUsuario(int $idusuario)
+    {
+        return $this->esSuperUsuario($idusuario);
+    }
+
+    /**
+     * Reactivar un empleado (cambiar estatus a ACTIVO)
+     */
+    public function reactivarEmpleado(int $idempleado)
+    {
+        try {
+            // Verificar que el empleado existe
+            $sql = "SELECT idempleado, estatus FROM empleado WHERE idempleado = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$idempleado]);
+            $empleado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$empleado) {
+                return [
+                    'status' => false,
+                    'message' => 'Empleado no encontrado'
+                ];
+            }
+            
+            if (strtoupper($empleado['estatus']) === 'ACTIVO') {
+                return [
+                    'status' => false,
+                    'message' => 'El empleado ya está activo'
+                ];
+            }
+            
+            // Reactivar empleado
+            $sql = "UPDATE empleado SET estatus = 'ACTIVO', fecha_modificacion = NOW() WHERE idempleado = ?";
+            $stmt = $this->db->prepare($sql);
+            $resultado = $stmt->execute([$idempleado]);
+            
+            if ($resultado && $stmt->rowCount() > 0) {
+                return [
+                    'status' => true,
+                    'message' => 'Empleado reactivado exitosamente'
+                ];
+            } else {
+                return [
+                    'status' => false,
+                    'message' => 'No se pudo reactivar el empleado'
+                ];
+            }
+            
+        } catch (PDOException $e) {
+            error_log("empleadosModel::reactivarEmpleado - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al reactivar empleado: ' . $e->getMessage()
+            ];
         }
     }
 }

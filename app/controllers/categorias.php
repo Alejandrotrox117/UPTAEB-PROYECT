@@ -1,10 +1,13 @@
-<?php
+﻿<?php
 require_once "app/core/Controllers.php";
 require_once "helpers/helpers.php";
 
 
 class categorias extends Controllers
 {
+    // Categorias del sistema que no se pueden eliminar
+    const CATEGORIAS_SISTEMA = [1, 2, 3]; // 1=Pacas, 2=Materiales, 3=Consumibles
+
     public function set_model($model)
     {
         $this->model = $model;
@@ -23,7 +26,7 @@ class categorias extends Controllers
     
     public function index()
     {
-        $data['page_title'] = "Gestión de categorias";
+        $data['page_title'] = "Gestion de categorias";
         $data['page_name'] = "categorias";
         $data['page_functions_js'] = "functions_categorias.js";
         $this->views->getView($this, "categorias", $data);
@@ -54,7 +57,7 @@ class categorias extends Controllers
 
             
             if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
+                echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
                 exit();
             }
 
@@ -65,7 +68,7 @@ class categorias extends Controllers
 
             
             if (empty($nombre)) {
-                echo json_encode(["status" => false, "message" => "El nombre de la categoría es obligatorio."]);
+                echo json_encode(["status" => false, "message" => "El nombre de la categoria es obligatorio."]);
                 exit();
             }
 
@@ -78,9 +81,9 @@ class categorias extends Controllers
 
             
             if ($insertData) {
-                echo json_encode(["status" => true, "message" => "Categoría registrada correctamente."]);
+                echo json_encode(["status" => true, "message" => "Categoria registrada correctamente."]);
             } else {
-                echo json_encode(["status" => false, "message" => "Error al registrar la categoría. Intenta nuevamente."]);
+                echo json_encode(["status" => false, "message" => "Error al registrar la categoria. Intenta nuevamente."]);
             }
         } catch (Exception $e) {
             echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
@@ -97,7 +100,7 @@ class categorias extends Controllers
 
             
             if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos válidos."]);
+                echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
                 exit();
             }
 
@@ -123,9 +126,9 @@ class categorias extends Controllers
 
             
             if ($updateData) {
-                echo json_encode(["status" => true, "message" => "Categoría actualizada correctamente."]);
+                echo json_encode(["status" => true, "message" => "Categoria actualizada correctamente."]);
             } else {
-                echo json_encode(["status" => false, "message" => "Error al actualizar la categoría. Intenta nuevamente."]);
+                echo json_encode(["status" => false, "message" => "Error al actualizar la categoria. Intenta nuevamente."]);
             }
         } catch (Exception $e) {
             echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
@@ -139,7 +142,16 @@ class categorias extends Controllers
         try {
             
             if (empty($idcategoria)) {
-                echo json_encode(["status" => false, "message" => "ID de categoría no proporcionado."]);
+                echo json_encode(["status" => false, "message" => "ID de categoria no proporcionado."]);
+                return;
+            }
+
+            // Validar que no sea una categoria del sistema
+            if (in_array((int)$idcategoria, self::CATEGORIAS_SISTEMA)) {
+                echo json_encode([
+                    "status" => false, 
+                    "message" => "No se puede eliminar esta categoria porque es una categoria del sistema."
+                ]);
                 return;
             }
 
@@ -148,9 +160,9 @@ class categorias extends Controllers
 
             
             if ($deleteData) {
-                echo json_encode(["status" => true, "message" => "Categoría desactivada correctamente."]);
+                echo json_encode(["status" => true, "message" => "Categoria desactivada correctamente."]);
             } else {
-                echo json_encode(["status" => false, "message" => "Error al desactivar la categoría. Intenta nuevamente."]);
+                echo json_encode(["status" => false, "message" => "Error al desactivar la categoria. Intenta nuevamente."]);
             }
         } catch (Exception $e) {
             echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
@@ -167,7 +179,42 @@ class categorias extends Controllers
             if ($categoria) {
                 echo json_encode(["status" => true, "data" => $categoria]);
             } else {
-                echo json_encode(["status" => false, "message" => "Categoría no encontrada."]);
+                echo json_encode(["status" => false, "message" => "Categoria no encontrada."]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+        }
+        exit();
+    }
+
+    /**
+     * Reactivar una categoria inactiva
+     */
+    public function reactivarCategoria()
+    {
+        try {
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+
+            if (!$data || !is_array($data)) {
+                echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
+                exit();
+            }
+
+            $idcategoria = intval($data['idcategoria'] ?? 0);
+            
+            if ($idcategoria <= 0) {
+                echo json_encode(["status" => false, "message" => "ID de categoria invalido."]);
+                exit();
+            }
+
+            // Llamar al modelo para reactivar
+            $reactivarData = $this->model->reactivarCategoria($idcategoria);
+
+            if ($reactivarData) {
+                echo json_encode(["status" => true, "message" => "Categoria reactivada correctamente."]);
+            } else {
+                echo json_encode(["status" => false, "message" => "Error al reactivar la categoria. Intenta nuevamente."]);
             }
         } catch (Exception $e) {
             echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);

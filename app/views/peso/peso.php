@@ -1,155 +1,202 @@
-<?php
-headerAdmin($data);
-$ultimoPeso = $data['ultimo_peso'] ?? null;
-$ultimoPesoStatus = $data['ultimo_peso_status'] ?? false;
-$ultimoPesoMessage = $data['ultimo_peso_message'] ?? null;
-$gaugeMax = 1000;
-$gaugePeso = ($ultimoPesoStatus && $ultimoPeso && isset($ultimoPeso['peso'])) ? (float) $ultimoPeso['peso'] : null;
-$gaugeProgress = ($gaugePeso !== null && $gaugeMax > 0)
-    ? max(0, min(100, ($gaugePeso / $gaugeMax) * 100))
-    : 0;
-
-if ($gaugeProgress >= 70) {
-    $gaugeMessage = 'Carga elevada. Verificar estado de la romana.';
-} elseif ($gaugeProgress >= 35) {
-    $gaugeMessage = 'Carga en rango operativo normal.';
-} elseif ($gaugeProgress > 0) {
-    $gaugeMessage = 'Carga ligera registrada. Listo para siguiente lectura.';
-} else {
-    $gaugeMessage = 'Aún no hay lecturas activas.';
-}
-?>
-<main class="flex-1 bg-slate-100 min-h-screen p-6 md:p-8">
-    <div class="max-w-7xl mx-auto space-y-6">
-        <header>
-            <h1 class="text-3xl font-bold text-slate-800">Monitor de Romana</h1>
-            <p class="text-slate-500">Visualización en tiempo real del último peso registrado.</p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Romana</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'text-primary': '#111827',
+                        'text-secondary': '#6b7280',
+                    },
+                    fontFamily: {
+                        display: ["'Roboto Mono'", "monospace"],
+                        sans: ["'Inter'", "sans-serif"],
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': {
+                                opacity: '0.5',
+                                transform: 'translateY(10px) scale(0.98)'
+                            },
+                            '100%': {
+                                opacity: '1',
+                                transform: 'translateY(0) scale(1)'
+                            },
+                        },
+                        pulseIndicator: {
+                            '0%, 100%': {
+                                opacity: 1
+                            },
+                            '50%': {
+                                opacity: 0.5
+                            },
+                        }
+                    },
+                    animation: {
+                        fadeInUp: 'fadeInUp 0.3s ease-out forwards',
+                        pulseIndicator: 'pulseIndicator 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            },
+        };
+    </script>
+    <style>
+        .animate-weight-change {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-white font-sans text-text-primary antialiased">
+    <div class="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8 overflow-hidden">
+        <header class="w-full max-w-6xl mx-auto flex justify-between items-start text-text-secondary mb-16 md:mb-24">
+            <div class="text-left">
+                <p class="text-base sm:text-lg" id="date-display">-</p>
+                <p class="font-mono text-base sm:text-lg" id="time-display">-</p>
+            </div>
+            <div class="flex items-center gap-2 pt-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-300 animate-pulseIndicator" id="status-indicator"></div>
+                <span class="text-sm sm:text-base" id="status-text">Conectando...</span>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white rounded-xl shadow-sm p-8">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <p class="font-semibold text-slate-700">Lectura activa</p>
-                        </div>
-                        <button id="btnRefrescarPeso" type="button" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-                            <i class="fas fa-sync-alt"></i>
-                            Actualizar
-                        </button>
-                    </div>
-                    <div class="text-center my-12">
-                        <span id="pesoValorDisplay" class="text-9xl font-bold text-green-500">
-                            <?= $ultimoPesoStatus && $ultimoPeso ? number_format($ultimoPeso['peso'], 1, ',', '.') : '0,0' ?>
-                        </span>
-                        <span class="text-8xl font-bold text-green-500/80">kg</span>
-                        <p id="pesoGaugeMessage" class="mt-4 text-slate-500"><?= $gaugeMessage ?></p>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-sm p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-sm text-slate-500">Último peso registrado</p>
-                                <p class="text-xl font-semibold text-slate-800">
-                                    <span id="pesoDetalleValor">
-                                        <?= $ultimoPesoStatus && $ultimoPeso ? number_format($ultimoPeso['peso'], 2, ',', '.') : '--.--' ?>
-                                    </span> kg
-                                </p>
-                            </div>
-                            <div class="flex flex-col">
-                                <span id="pesoVariacionTexto" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600">
-                                    <span id="pesoTrendIcon" class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs">
-                                        <i class="fas fa-minus text-slate-400"></i>
-                                    </span>
-                                    <span id="pesoVariacionLabel">Variación estable</span>
-                                </span>
-                                <span class="text-xs text-slate-400 ml-8">Comparado con lectura anterior</span>
-                            </div>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-sm text-slate-500">Fecha reportada</p>
-                                <p id="pesoFechaDisplay" class="font-semibold text-slate-800">
-                                    <?= $ultimoPesoStatus && $ultimoPeso ? date('d/m/Y h:i:s A', strtotime($ultimoPeso['fecha'])) : 'No disponible' ?>
-                                </p>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm text-slate-500">Estado</p>
-                                    <div id="pesoEstadoBadge" class="inline-flex items-center gap-2 font-semibold text-green-700">
-                                        <span id="pesoEstadoIndicador" class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
-                                        <span id="pesoEstadoTexto">Activo</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-slate-500">ID registro</p>
-                                    <p id="pesoRegistroId" class="font-semibold text-slate-800"><?= $ultimoPeso['idromana'] ?? '—' ?></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                     <div class="pt-4 mt-4 border-t border-slate-200">
-                        <p class="text-sm text-slate-500">Última sincronización</p>
-                        <p id="pesoUltimaSincronizacion" class="font-semibold text-slate-800">—</p>
-                    </div>
-                </div>
+        <main class="text-center flex-grow flex flex-col items-center justify-center">
+            <div class="relative">
+                <p class="font-display font-bold text-8xl sm:text-9xl md:text-[12rem] lg:text-[15rem] leading-none text-text-primary tracking-tighter" id="weight-display">
+                    0.00
+                </p>
+                <span class="absolute -right-10 sm:-right-14 md:-right-20 lg:-right-24 bottom-2 sm:bottom-4 md:bottom-8 lg:bottom-10 font-sans font-medium text-2xl sm:text-3xl md:text-5xl text-text-secondary">kg</span>
             </div>
+        </main>
 
-            <div class="bg-white rounded-xl shadow-sm p-6 space-y-4">
-                <h2 class="text-lg font-bold text-slate-800">Panel Operativo</h2>
-                <div class="space-y-5">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-100 text-blue-500">
-                            <i class="fas fa-stopwatch"></i>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-slate-700">Frecuencia 10s</p>
-                            <p class="text-sm text-slate-500">Actualización automática constante.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-100 text-blue-500">
-                            <i class="fas fa-database"></i>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-slate-700">Fuente Directa</p>
-                            <p class="text-sm text-slate-500">Lectura desde historial de romana.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-100 text-blue-500">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-slate-700">Alertas Visuales</p>
-                            <p class="text-sm text-slate-500">Color dinámico según estado del sensor.</p>
-                        </div>
-                    </div>
-                    <div class="pt-4 mt-2 border-t border-slate-200">
-                         <div class="flex items-center gap-4">
-                            <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                                <i class="fas fa-hand-pointer"></i>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-slate-700">Última actualización manual</p>
-                                <p id="pesoUltimaActualizacion" class="text-sm text-slate-500">No se ha realizado.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <footer class="w-full max-w-6xl mx-auto text-center py-8">
+            <div class="flex flex-col items-center gap-6">
+                <img src="./app/assets/img/LOGO-COMPLETO.svg" alt="Logo Empresa" class="mt-12 h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 opacity-60 hover:opacity-80 transition-opacity duration-300">
             </div>
-        </div>
+        </footer>
     </div>
-</main>
-<div id="ultimoPesoDataset"
-     data-status="<?= $ultimoPesoStatus ? '1' : '0' ?>"
-     data-peso="<?= $ultimoPesoStatus && $ultimoPeso ? $ultimoPeso['peso'] : '' ?>"
-     data-fecha="<?= $ultimoPesoStatus && $ultimoPeso ? $ultimoPeso['fecha'] : '' ?>"
-     data-fecha-creacion="<?= $ultimoPesoStatus && $ultimoPeso ? $ultimoPeso['fecha_creacion'] : '' ?>"
-     data-estatus="<?= $ultimoPeso['estatus'] ?? '' ?>"
-     data-id="<?= $ultimoPeso['idromana'] ?? '' ?>"
-    data-gauge-max="<?= $gaugeMax ?>"
-     style="display:none"></div>
-<?php footerAdmin($data); ?>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const weightDisplay = document.getElementById('weight-display');
+            const timeDisplay = document.getElementById('time-display');
+            const dateDisplay = document.getElementById('date-display');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            let currentWeight = 0.00;
+            let lastSavedWeight = null;
+            let lastFetchTime = null;
+            let pollInterval = 2000; // Intervalo base de 2 segundos
+            let consecutiveNoChanges = 0;
+
+            function updateDateTime() {
+                const now = new Date();
+                const timeOptions = {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                };
+                const dateOptions = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                };
+                timeDisplay.textContent = now.toLocaleTimeString('es-ES', timeOptions);
+                dateDisplay.textContent = now.toLocaleDateString('es-ES', dateOptions);
+            }
+
+            setInterval(updateDateTime, 1000);
+            updateDateTime();
+
+            async function saveWeightToDatabase() {
+                try {
+                    const response = await fetch('./Peso/guardarPesoRomana', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.status) {
+                        console.log('Peso guardado en BD:', result);
+                        lastSavedWeight = currentWeight;
+                    }
+                } catch (error) {
+                    console.error('Error al guardar peso en BD:', error);
+                }
+            }
+
+            async function fetchWeight() {
+                try {
+                    const response = await fetch('./Peso/getUltimoPeso');
+                    const data = await response.json();
+                    
+                    if (data.status && data.data && data.data.peso !== undefined) {
+                        const newWeight = parseFloat(data.data.peso);
+                        
+                        if (!isNaN(newWeight) && newWeight !== currentWeight) {
+                            currentWeight = newWeight;
+                            weightDisplay.textContent = newWeight.toFixed(2);
+                            weightDisplay.classList.add('animate-weight-change');
+                            setTimeout(() => {
+                                weightDisplay.classList.remove('animate-weight-change');
+                            }, 300);
+
+                            // Reiniciar contador de cambios y reducir intervalo
+                            consecutiveNoChanges = 0;
+                            pollInterval = 2000; // Volver a 2 segundos cuando hay cambios
+
+                            // Guardar en BD si el peso es diferente al último guardado y es mayor a 1kg
+                            if (newWeight > 1 && (lastSavedWeight === null || Math.abs(newWeight - lastSavedWeight) > 0.5)) {
+                                saveWeightToDatabase();
+                            }
+                        } else {
+                            // Incrementar contador si no hay cambios
+                            consecutiveNoChanges++;
+                            
+                            // Aumentar gradualmente el intervalo si no hay cambios (máximo 10 segundos)
+                            if (consecutiveNoChanges > 5) {
+                                pollInterval = Math.min(10000, pollInterval + 1000);
+                            }
+                        }
+
+                        // Update status to connected
+                        if (statusIndicator.classList.contains('bg-slate-300')) {
+                            statusIndicator.classList.remove('bg-slate-300', 'animate-pulseIndicator');
+                            statusIndicator.classList.add('bg-green-500');
+                            statusText.textContent = 'Conectado';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al obtener peso:', error);
+                    statusIndicator.classList.remove('bg-green-500');
+                    statusIndicator.classList.add('bg-red-500');
+                    statusText.textContent = 'Error de conexión';
+                }
+            }
+
+            // Sistema de polling adaptativo
+            async function continuousPolling() {
+                await fetchWeight();
+                setTimeout(continuousPolling, pollInterval);
+            }
+
+            // Iniciar polling inmediatamente
+            continuousPolling();
+        });
+    </script>
+</body>
+</html>

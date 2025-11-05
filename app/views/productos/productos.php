@@ -88,7 +88,7 @@
                 
                 <div>
                     <label for="productoPrecio" class="block text-sm font-medium text-gray-700 mb-1">Precio <span class="text-red-500">*</span></label>
-                    <input type="number" id="productoPrecio" name="precio" step="0.01" min="0.01" placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
+                    <input type="number" id="productoPrecio" name="precio" step="0.0001" min="0.0001" placeholder="0.0000" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 
@@ -170,7 +170,7 @@
                 
                 <div>
                     <label for="productoPrecioActualizar" class="block text-sm font-medium text-gray-700 mb-1">Precio <span class="text-red-500">*</span></label>
-                    <input type="number" id="productoPrecioActualizar" name="precio" step="0.01" min="0.01" placeholder="0.00" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
+                    <input type="number" id="productoPrecioActualizar" name="precio" step="0.0001" min="0.0001" placeholder="0.0000" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm" required>
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
                 

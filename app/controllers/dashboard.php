@@ -3,7 +3,7 @@ require_once "app/core/Controllers.php";
 require_once "helpers/PermisosModuloVerificar.php";
 require_once "helpers/helpers.php";
 require_once "app/models/dashboardModel.php";
-// require_once "vendor/pdf/fpdf.php";
+//require_once "vendor/setasign/fpdf";
 class PDF extends FPDF
 {
     function Header()
@@ -163,6 +163,8 @@ class Dashboard extends Controllers
         }
         exit();
     }
+
+   
 
     /**
      * Obtiene los reportes semanales de producción

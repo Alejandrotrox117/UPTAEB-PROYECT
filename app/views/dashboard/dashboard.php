@@ -642,6 +642,6 @@ select::-ms-expand {
   </div>
 </main>
 
-<script src="/project/app/assets/js/ayuda/dashboard-tour.js"></script>
+<script src="<?= base_url('app/assets/js/ayuda/dashboard-tour.js'); ?>"></script>
 
 <?php footerAdmin($data); ?>

@@ -3,6 +3,25 @@
 if (!function_exists('generateCSPNonce')) {
     require_once __DIR__ . '/../../../helpers/helpers.php';
 }
+
+// Función para formatear números con decimales inteligentes
+// Si los últimos 2 decimales son 00, muestra solo 2 decimales, sino muestra 4
+function formatearDecimalesInteligente($numero) {
+    $numero = floatval($numero);
+    // Redondear a 4 decimales
+    $numero_redondeado = round($numero, 4);
+    
+    // Obtener los últimos 2 decimales
+    $ultimos_dos = round(($numero_redondeado - floor($numero_redondeado * 100) / 100) * 10000);
+    
+    // Si los últimos 2 decimales son 00, usar 2 decimales, sino usar 4
+    if ($ultimos_dos == 0) {
+        return number_format($numero_redondeado, 2, ',', '.');
+    } else {
+        return number_format($numero_redondeado, 4, ',', '.');
+    }
+}
+
 headerAdmin($data); 
 ?>
 
@@ -51,14 +70,14 @@ headerAdmin($data);
           
           <!-- LOGO (Columna 1) -->
           <div class="flex justify-start items-start print:border-0 print:p-3">
-            <img src="/project/app/assets/img/LOGO.png" alt="Logo" class="h-16 md:h-20 object-contain print:h-16">
+            <img src="<?= base_url('app/assets/img/LOGO.png'); ?>" alt="Logo" class="h-16 md:h-20 object-contain print:h-16">
           </div>
           
           <!-- INFO EMPRESA (Columna 2) -->
           <div class="text-center print:border-0 print:p-3">
             <h2 class="text-lg font-bold text-gray-800 mb-2 print:text-base print:mb-2 print:text-black print:font-bold">RECUPERADORA LA PRADERA DE PAVIA</h2>
             <div class="text-xs text-gray-600 space-y-1 print:text-sm print:text-black print:space-y-1">
-              <p><span class="font-semibold">RIF:</span> J-27.436.820-5</p>
+              <p><span class="font-semibold">RIF:</span> J-40.352.739-3</p>
               <p><span class="font-semibold">Dirección:</span></p>
               <p class="text-[10px] print:text-xs">Estado Lara, Municipio Iribarren, KM 12 Carretera Vieja Hacia Carora Pavía Barquisimeto.</p>
             </div>
@@ -128,7 +147,14 @@ headerAdmin($data);
                 <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Fecha Compra: </span>
                 <span class="text-gray-900 print:text-black"><?= date('d/m/Y', strtotime($compra['fecha'])) ?></span>
               </div>
-
+              <?php if(!empty($data['tasaDelDia'])): ?>
+              <div class="print:block mt-2 pt-2 border-t border-gray-300">
+                <span class="font-semibold text-gray-700 print:text-black print:font-semibold">Tasas BCV del día:   </span>
+                <?php foreach($data['tasaDelDia'] as $tasa): ?>
+                  <span class="font-medium ml-2"><?= htmlspecialchars($tasa['codigo_moneda']) ?>:</span> Bs. <?= formatearDecimalesInteligente($tasa['tasa_a_bs']) ?>
+                <?php endforeach; ?>
+              </div>
+              <?php endif; ?>
             </div>
           </div>
         </div>
@@ -171,13 +197,13 @@ headerAdmin($data);
                     <?= htmlspecialchars($producto['modelo'] ?: 'Sin detalles adicionales') ?>
                   </td>
                   <td class="px-6 py-3 text-center text-sm font-medium text-gray-900 border border-gray-400 print:px-4 print:py-2 print:text-sm print:text-black print:border print:border-gray-400">
-                    <?= number_format($producto['cantidad'], 2) ?>
+                    <?= formatearDecimalesInteligente($producto['cantidad']) ?>
                   </td>
                   <td class="px-6 py-3 text-center text-sm font-medium text-gray-900 border border-gray-400 print:px-4 print:py-2 print:text-sm print:text-black print:border print:border-gray-400">
-                    $ <?= number_format($producto['precio'], 2) ?>
+                    $ <?= formatearDecimalesInteligente($producto['precio']) ?>
                   </td>
                   <td class="px-6 py-3 text-center text-sm font-bold text-gray-900 border border-gray-400 print:px-4 print:py-2 print:text-sm print:text-black print:border print:border-gray-400 print:font-bold">
-                    $ <?= number_format($total_linea, 2) ?>
+                    $ <?= formatearDecimalesInteligente($total_linea) ?>
                   </td>
                 </tr>
                 <?php 
@@ -200,7 +226,7 @@ headerAdmin($data);
                     TOTAL GENERAL:
                   </th>
                   <td class="px-6 py-4 text-center text-xl font-bold text-green-700 border border-gray-400 print:px-4 print:py-3 print:text-base print:text-green-700 print:border print:border-gray-400 print:font-bold">
-                    Bs. <?= number_format(floatval($compra['total_general']), 2) ?>
+                    Bs. <?= formatearDecimalesInteligente($compra['total_general']) ?>
                   </td>
                 </tr>
               </tfoot>

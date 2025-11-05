@@ -385,7 +385,7 @@ function inicializarTablaLotes() {
             <div class="inline-flex items-center space-x-1">
               <button class="ver-lote-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
                       data-idlote="${idlote}" title="Ver detalles">
-                <i class="fas fa-eye fa-fw text-base"></i>
+                <i class="fas fa-eye text-sm"></i>
               </button>`;
 
           if (estatus === "PLANIFICADO") {
@@ -393,17 +393,17 @@ function inicializarTablaLotes() {
             acciones += `
               <button class="editar-lote-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
                       data-idlote="${idlote}" title="Editar lote">
-                <i class="fas fa-edit fa-fw text-base"></i>
+                <i class="fas fa-edit text-sm"></i>
               </button>
               <button class="eliminar-lote-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
                       data-idlote="${idlote}" data-numero="${numeroLote}" title="Eliminar lote">
-                <i class="fas fa-trash fa-fw text-base"></i>
+                <i class="fas fa-trash text-sm"></i>
               </button>`;
 
             acciones += `
               <button class="iniciar-lote-btn text-orange-600 hover:text-orange-700 p-1 transition-colors duration-150" 
                       data-idlote="${idlote}" title="Iniciar lote">
-                <i class="fas fa-play fa-fw text-base"></i>
+                <i class="fas fa-play text-sm"></i>
               </button>`;
           }
 
@@ -411,13 +411,19 @@ function inicializarTablaLotes() {
             acciones += `
               <button class="cerrar-lote-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
                       data-idlote="${idlote}" data-numero="${numeroLote}" title="Cerrar lote">
-                <i class="fas fa-stop fa-fw text-base"></i>
+                <i class="fas fa-stop text-sm"></i>
               </button>`;
           }
 
           acciones += `</div>`;
           return acciones;
         },
+      },
+      {
+        data: null,
+        className: "control",
+        orderable: false,
+        defaultContent: "",
       },
     ],
     language: {
@@ -452,7 +458,25 @@ function inicializarTablaLotes() {
       },
     },
     destroy: true,
-    responsive: true,
+    responsive: {
+      details: {
+        type: "column",
+        target: -1,
+        renderer: function (api, rowIdx, columns) {
+          var data = $.map(columns, function (col, i) {
+            return col.hidden && col.title
+              ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
+                   <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                   <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                 </tr>`
+              : "";
+          }).join("");
+          return data
+            ? $('<table class="w-full table-fixed details-table border-t border-gray-200"/>').append(data)
+            : false;
+        },
+      },
+    },
     autoWidth: false,
     pageLength: 10,
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
@@ -529,51 +553,34 @@ function inicializarTablaProcesos() {
       {
         data: "numero_lote",
         title: "Lote",
-        className: "all"
+        className: "all whitespace-nowrap py-2 px-2 text-gray-700 text-sm"
+      },
+      {
+        data: "fecha_jornada_formato",
+        title: "Fecha",
+        className: "min-tablet-p whitespace-nowrap py-2 px-2 text-gray-700 text-sm"
       },
       {
         data: "nombre_empleado",
         title: "Empleado",
-        className: "all",
+        className: "desktop whitespace-nowrap py-2 px-2 text-gray-700 text-sm",
         render: function(data) {
           return data || '<span class="text-gray-400 text-xs">Sin asignar</span>';
         }
       },
       {
-        data: "fecha_jornada_formato",
-        title: "Fecha",
-        className: "desktop"
-      },
-      {
         data: null,
-        title: "Producto Inicial",
-        className: "desktop",
+        title: "Proceso",
+        className: "all py-2 px-2",
         render: function(data, type, row) {
+          const tipo = row.tipo_movimiento === 'CLASIFICACION' 
+            ? '<i class="fas fa-filter text-blue-600 mr-1"></i>Clasif.' 
+            : '<i class="fas fa-cube text-purple-600 mr-1"></i>Empaq.';
+          
           return `
-            <div class="text-sm">
-              <div class="font-medium">${row.producto_producir_nombre}</div>
-              <div class="text-xs text-gray-500">${row.producto_producir_codigo}</div>
-            </div>
-          `;
-        }
-      },
-      {
-        data: "cantidad_producir",
-        title: "Cant. Inicial (kg)",
-        className: "tablet-l text-right",
-        render: function(data) {
-          return parseFloat(data).toFixed(2);
-        }
-      },
-      {
-        data: null,
-        title: "Producto Final",
-        className: "desktop",
-        render: function(data, type, row) {
-          return `
-            <div class="text-sm">
-              <div class="font-medium">${row.producto_terminado_nombre}</div>
-              <div class="text-xs text-gray-500">${row.producto_terminado_codigo}</div>
+            <div class="text-xs">
+              <div class="font-medium mb-1">${tipo}</div>
+              <div class="text-gray-600">${row.producto_terminado_nombre}</div>
             </div>
           `;
         }
@@ -581,35 +588,30 @@ function inicializarTablaProcesos() {
       {
         data: "cantidad_producida",
         title: "Producido (kg)",
-        className: "all text-right font-semibold text-green-600",
+        className: "all text-right font-semibold text-green-600 py-2 px-2 text-sm whitespace-nowrap",
         render: function(data) {
           return parseFloat(data).toFixed(2);
         }
       },
       {
-        data: "tipo_movimiento",
-        title: "Tipo",
-        className: "all text-center",
-        render: function(data) {
-          if (data === 'CLASIFICACION') {
-            return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-filter mr-1"></i>Clasificación</span>';
-          } else {
-            return '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800"><i class="fas fa-cube mr-1"></i>Empaque</span>';
-          }
-        }
-      },
-      {
-        data: "salario_total",
-        title: "Salario Total",
-        className: "desktop text-right font-bold text-green-700",
-        render: function(data) {
-          return '$' + parseFloat(data).toFixed(2);
+        data: null,
+        title: "Detalles",
+        className: "none",
+        render: function(data, type, row) {
+          return `
+            <div class="text-xs space-y-1">
+              <div><strong>Prod. Inicial:</strong> ${row.producto_producir_nombre} (${row.producto_producir_codigo})</div>
+              <div><strong>Cant. Inicial:</strong> ${parseFloat(row.cantidad_producir).toFixed(2)} kg</div>
+              <div><strong>Prod. Final:</strong> ${row.producto_terminado_nombre} (${row.producto_terminado_codigo})</div>
+              <div><strong>Salario:</strong> $${parseFloat(row.salario_total).toFixed(2)}</div>
+            </div>
+          `;
         }
       },
       {
         data: null,
         title: "Acciones",
-        className: "all text-center",
+        className: "all text-center py-1 px-2",
         orderable: false,
         render: function(data, type, row) {
           // Para PROCESOS verificar el estado del REGISTRO (no del lote)
@@ -620,9 +622,9 @@ function inicializarTablaProcesos() {
           if (estatusRegistro === 'BORRADOR') {
             acciones += `
               <button onclick="editarRegistroProduccion(${row.idregistro})" 
-                      class="btn-tabla-accion btn-editar" 
+                      class="text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
                       title="Editar registro">
-                <i class="fas fa-edit"></i>
+                <i class="fas fa-edit text-sm"></i>
               </button>
             `;
           }
@@ -631,9 +633,9 @@ function inicializarTablaProcesos() {
           if (estatusRegistro === 'BORRADOR') {
             acciones += `
               <button onclick="eliminarRegistroProduccion(${row.idregistro}, '${row.nombre_empleado || 'N/A'}', '${row.numero_lote}')" 
-                      class="btn-tabla-accion btn-eliminar ml-1" 
+                      class="text-red-600 hover:text-red-700 p-1 transition-colors duration-150 ml-1" 
                       title="Eliminar registro">
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash text-sm"></i>
               </button>
             `;
           }
@@ -645,27 +647,77 @@ function inicializarTablaProcesos() {
           
           return acciones || '<span class="text-gray-400 text-xs">-</span>';
         }
+      },
+      {
+        data: null,
+        className: "control",
+        orderable: false,
+        defaultContent: "",
       }
     ],
     language: {
-      emptyTable: "No hay registros de producción.",
-      processing: "Cargando registros...",
-      search: "Buscar:",
-      lengthMenu: "Mostrar _MENU_ registros",
+      processing: `
+        <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]">
+          <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+            <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+            <span class="text-lg font-medium text-gray-700">Cargando procesos...</span>
+          </div>
+        </div>`,
+      emptyTable: `
+        <div class="text-center py-4">
+          <i class="fas fa-clipboard-list fa-2x text-gray-400 mb-2"></i>
+          <p class="text-gray-600">No hay registros de producción.</p>
+        </div>`,
       info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-      infoEmpty: "Mostrando 0 a 0 de 0 registros",
+      infoEmpty: "Mostrando 0 registros",
       infoFiltered: "(filtrado de _MAX_ registros totales)",
+      lengthMenu: "Mostrar _MENU_ registros",
+      search: "_INPUT_",
+      searchPlaceholder: "Buscar proceso...",
+      zeroRecords: `
+        <div class="text-center py-4">
+          <i class="fas fa-search fa-2x text-gray-400 mb-2"></i>
+          <p class="text-gray-600">No se encontraron coincidencias.</p>
+        </div>`,
       paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior"
+        first: '<i class="fas fa-angle-double-left"></i>',
+        last: '<i class="fas fa-angle-double-right"></i>',
+        next: '<i class="fas fa-angle-right"></i>',
+        previous: '<i class="fas fa-angle-left"></i>',
       }
     },
+    destroy: true,
+    responsive: {
+      details: {
+        type: "column",
+        target: -1,
+        renderer: function (api, rowIdx, columns) {
+          var data = $.map(columns, function (col, i) {
+            return col.hidden && col.title
+              ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50">
+                   <td colspan="2" class="py-2 px-3 text-sm text-gray-900">${col.data}</td>
+                 </tr>`
+              : "";
+          }).join("");
+          return data
+            ? $('<table class="w-full border-t border-gray-200"/>').append(data)
+            : false;
+        },
+      },
+    },
+    autoWidth: false,
     pageLength: 10,
-    order: [[1, "desc"]], // Ordenar por fecha descendente
-    responsive: true,
-    dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"<"mb-2 sm:mb-0"l><"mb-2 sm:mb-0"f>>rtip'
+    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+    order: [[1, "desc"]],
+    scrollX: false,
+    drawCallback: function (settings) {
+      $(settings.nTableWrapper)
+        .find('.dataTables_filter input[type="search"]')
+        .addClass(
+          "py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+        )
+        .removeClass("form-control-sm");
+    },
   });
 }
 
@@ -890,26 +942,26 @@ function inicializarTablaNomina() {
         data: null,
         orderable: false,
         searchable: false,
-        className: "text-center all",
+        className: "text-center all py-2 px-2",
         render: function (data, type, row) {
           const estatus = row.estatus || 'BORRADOR';
           // Solo permitir checkbox para registros en BORRADOR
           if (estatus === 'BORRADOR') {
-            return `<input type="checkbox" class="nomina-checkbox" data-id="${row.idregistro || ''}">`;
+            return `<input type="checkbox" class="nomina-checkbox w-4 h-4" data-id="${row.idregistro || ''}">`;
           } else {
-            return `<input type="checkbox" disabled class="opacity-50 cursor-not-allowed" title="Solo registros en BORRADOR pueden ser seleccionados">`;
+            return `<input type="checkbox" disabled class="opacity-50 cursor-not-allowed w-4 h-4" title="Solo registros en BORRADOR pueden ser seleccionados">`;
           }
         }
       },
       { 
         data: "fecha_jornada_formato", 
         title: "Fecha", 
-        className: "all" 
+        className: "all whitespace-nowrap py-2 px-2 text-gray-700 text-xs" 
       },
       { 
         data: "nombre_empleado", 
         title: "Empleado", 
-        className: "all",
+        className: "all whitespace-nowrap py-2 px-2 text-gray-700 text-xs",
         render: function(data) {
           return data || '<span class="text-gray-400 text-xs">Sin asignar</span>';
         }
@@ -917,12 +969,12 @@ function inicializarTablaNomina() {
       { 
         data: "numero_lote", 
         title: "Lote", 
-        className: "desktop" 
+        className: "none whitespace-nowrap py-2 px-2 text-gray-700 text-xs" 
       },
       { 
         data: "tipo_movimiento", 
         title: "Tipo", 
-        className: "tablet-l",
+        className: "none py-2 px-2",
         render: function(data) {
           if (data === 'CLASIFICACION') {
             return '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">Clasificación</span>';
@@ -934,7 +986,7 @@ function inicializarTablaNomina() {
       { 
         data: "cantidad_producida", 
         title: "Cant. Producida (kg)", 
-        className: "desktop text-right",
+        className: "none text-right py-2 px-2 text-gray-700 text-xs",
         render: function(data) {
           return parseFloat(data).toFixed(2);
         }
@@ -942,7 +994,7 @@ function inicializarTablaNomina() {
       { 
         data: "salario_base_dia", 
         title: "Salario Base", 
-        className: "desktop text-right",
+        className: "none text-right py-2 px-2",
         render: function(data) {
           return `$${parseFloat(data).toFixed(2)}`;
         }
@@ -950,7 +1002,7 @@ function inicializarTablaNomina() {
       { 
         data: "pago_clasificacion_trabajo", 
         title: "Pago Trabajo", 
-        className: "desktop text-right",
+        className: "none text-right py-2 px-2",
         render: function(data) {
           return `$${parseFloat(data).toFixed(2)}`;
         }
@@ -958,7 +1010,7 @@ function inicializarTablaNomina() {
       { 
         data: "salario_total", 
         title: "Total", 
-        className: "all text-right font-bold text-green-700",
+        className: "all text-right font-bold text-green-700 py-2 px-2 text-xs whitespace-nowrap",
         render: function(data) {
           return `$${parseFloat(data).toFixed(2)}`;
         }
@@ -966,14 +1018,14 @@ function inicializarTablaNomina() {
       { 
         data: "estatus", 
         title: "Estado", 
-        className: "all text-center",
+        className: "all text-center py-2 px-2",
         render: function(data) {
           const estatus = data || 'BORRADOR';
           const badges = {
-            'BORRADOR': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"><i class="fas fa-edit mr-1"></i>Borrador</span>',
-            'ENVIADO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-paper-plane mr-1"></i>Enviado</span>',
-            'PAGADO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i>Pagado</span>',
-            'CANCELADO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-times-circle mr-1"></i>Cancelado</span>'
+            'BORRADOR': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"><i class="fas fa-edit"></i></span>',
+            'ENVIADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-paper-plane"></i></span>',
+            'PAGADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check-circle"></i></span>',
+            'CANCELADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-times-circle"></i></span>'
           };
           return badges[estatus] || badges['BORRADOR'];
         }
@@ -983,7 +1035,7 @@ function inicializarTablaNomina() {
         title: "Acciones", 
         orderable: false,
         searchable: false,
-        className: "all text-center",
+        className: "all text-center py-1 px-1",
         render: function(data, type, row) {
           const estatus = row.estatus || 'BORRADOR';
           const idregistro = row.idregistro || '';
@@ -992,52 +1044,72 @@ function inicializarTablaNomina() {
           
           let botones = '<div class="inline-flex items-center space-x-1">';
           
+          // Botón para ver detalles (siempre visible)
+          botones += `
+            <button class="btn-ver-detalle-nomina text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                    data-id="${idregistro}"
+                    title="Ver Detalles">
+              <i class="fas fa-eye text-sm"></i>
+            </button>`;
+          
           // Botón para marcar como PAGADO (solo si está ENVIADO)
           if (estatus === 'ENVIADO') {
             botones += `
-              <button class="btn-marcar-pagado text-green-600 hover:text-green-800 p-2 transition-colors duration-150 rounded hover:bg-green-50" 
+              <button class="btn-marcar-pagado text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
                       data-id="${idregistro}" 
                       data-empleado="${nombreEmpleado}" 
                       data-salario="${salarioTotal}"
                       title="Marcar como Pagado">
-                <i class="fas fa-check-circle fa-fw text-lg"></i>
+                <i class="fas fa-check-circle text-sm"></i>
               </button>`;
           }
-          
-          // Botón para ver detalles (siempre visible)
-          botones += `
-            <button class="btn-ver-detalle-nomina text-blue-600 hover:text-blue-800 p-2 transition-colors duration-150 rounded hover:bg-blue-50" 
-                    data-id="${idregistro}"
-                    title="Ver Detalles">
-              <i class="fas fa-eye fa-fw text-lg"></i>
-            </button>`;
           
           // Botón para cancelar (solo si está en BORRADOR o ENVIADO)
           if (estatus === 'BORRADOR' || estatus === 'ENVIADO') {
             botones += `
-              <button class="btn-cancelar-nomina text-red-600 hover:text-red-800 p-2 transition-colors duration-150 rounded hover:bg-red-50" 
+              <button class="btn-cancelar-nomina text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
                       data-id="${idregistro}" 
                       data-empleado="${nombreEmpleado}"
                       title="Cancelar Registro">
-                <i class="fas fa-times-circle fa-fw text-lg"></i>
+                <i class="fas fa-times-circle text-sm"></i>
               </button>`;
           }
           
           botones += '</div>';
           return botones;
         }
+      },
+      {
+        data: null,
+        className: "control",
+        orderable: false,
+        defaultContent: "",
       }
     ],
     language: {
-      emptyTable: "No hay registros de nómina.",
-      processing: "Cargando nómina...",
-      lengthMenu: "Mostrar _MENU_ registros por página",
+      processing: `
+        <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]">
+          <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+            <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+            <span class="text-lg font-medium text-gray-700">Cargando nómina...</span>
+          </div>
+        </div>`,
+      emptyTable: `
+        <div class="text-center py-4">
+          <i class="fas fa-file-invoice-dollar fa-2x text-gray-400 mb-2"></i>
+          <p class="text-gray-600">No hay registros de nómina.</p>
+        </div>`,
       info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
       infoEmpty: "Mostrando 0 registros",
       infoFiltered: "(filtrado de _MAX_ registros totales)",
+      lengthMenu: "Mostrar _MENU_ registros",
       search: "_INPUT_",
       searchPlaceholder: "Buscar...",
-      zeroRecords: "No se encontraron coincidencias.",
+      zeroRecords: `
+        <div class="text-center py-4">
+          <i class="fas fa-search fa-2x text-gray-400 mb-2"></i>
+          <p class="text-gray-600">No se encontraron coincidencias.</p>
+        </div>`,
       paginate: {
         first: '<i class="fas fa-angle-double-left"></i>',
         last: '<i class="fas fa-angle-double-right"></i>',
@@ -1045,8 +1117,39 @@ function inicializarTablaNomina() {
         previous: '<i class="fas fa-angle-left"></i>',
       },
     },
+    destroy: true,
+    responsive: {
+      details: {
+        type: "column",
+        target: -1,
+        renderer: function (api, rowIdx, columns) {
+          var data = $.map(columns, function (col, i) {
+            return col.hidden && col.title
+              ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50">
+                   <td class="font-semibold pr-2 py-1.5 text-xs text-gray-700">${col.title}:</td>
+                   <td class="py-1.5 text-xs text-gray-900">${col.data}</td>
+                 </tr>`
+              : "";
+          }).join("");
+          return data
+            ? $('<table class="w-full border-t border-gray-200"/>').append(data)
+            : false;
+        },
+      },
+    },
+    autoWidth: false,
     pageLength: 10,
-    order: [[1, "desc"]]
+    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+    order: [[1, "desc"]],
+    scrollX: false,
+    drawCallback: function (settings) {
+      $(settings.nTableWrapper)
+        .find('.dataTables_filter input[type="search"]')
+        .addClass(
+          "py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+        )
+        .removeClass("form-control-sm");
+    },
   });
 
   console.log('✅ Tabla de nómina inicializada correctamente');

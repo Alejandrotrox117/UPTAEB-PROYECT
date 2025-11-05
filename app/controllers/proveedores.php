@@ -71,7 +71,7 @@ class Proveedores extends Controllers
                 ];
 
         
-                $camposObligatorios = ['nombre', 'apellido', 'identificacion', 'telefono_principal'];
+                $camposObligatorios = ['nombre', 'identificacion', 'telefono_principal'];
                 foreach ($camposObligatorios as $campo) {
                     if (empty($datosLimpios[$campo])) {
                         $arrResponse = array('status' => false, 'message' => 'Todos los campos obligatorios deben ser completados');
@@ -82,10 +82,14 @@ class Proveedores extends Controllers
 
                 $reglasValidacion = [
                     'nombre' => 'nombre',
-                    'apellido' => 'apellido',
                     'identificacion' => 'cedula',
                     'telefono_principal' => 'telefono'
                 ];
+
+                
+                if (!empty($datosLimpios['apellido'])) {
+                    $reglasValidacion['apellido'] = 'apellido';
+                }
 
                 
                 if (!empty($datosLimpios['correo_electronico'])) {
@@ -337,7 +341,7 @@ class Proveedores extends Controllers
                 ];
 
 
-                $camposObligatorios = ['nombre', 'apellido', 'identificacion', 'telefono_principal'];
+                $camposObligatorios = ['nombre', 'identificacion', 'telefono_principal'];
                 foreach ($camposObligatorios as $campo) {
                     if (empty($datosLimpios[$campo])) {
                         $arrResponse = array('status' => false, 'message' => 'Todos los campos obligatorios deben ser completados');
@@ -348,10 +352,14 @@ class Proveedores extends Controllers
 
                 $reglasValidacion = [
                     'nombre' => 'nombre',
-                    'apellido' => 'apellido',
                     'identificacion' => 'cedula',
                     'telefono_principal' => 'telefono'
                 ];
+
+                
+                if (!empty($datosLimpios['apellido'])) {
+                    $reglasValidacion['apellido'] = 'apellido';
+                }
 
                 
                 if (!empty($datosLimpios['correo_electronico'])) {

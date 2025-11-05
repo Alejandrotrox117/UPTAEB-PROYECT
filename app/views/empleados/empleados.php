@@ -1,102 +1,89 @@
-<?php headerAdmin($data); ?>
-<!-- Main Content -->
-<main class="flex-1 p-6">
-  <div class="flex justify-between items-center">
-    <h2 class="text-xl font-semibold">Hola, Richard 👋</h2>
-    <input type="text" placeholder="Search" class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none">
-  </div>
+<?php headerAdmin($data);?>
 
-  <div class="min-h-screen mt-4">
-    <h1 class="text-3xl font-bold text-gray-900">Empleados</h1>
-    <p class="text-green-500 text-lg">empleados</p>
+<input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
+<input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
 
-    <div class="bg-white p-6 mt-6 rounded-2xl shadow-md">
-      <div class="flex justify-between items-center mb-4">
-        <!-- Botón para abrir el modal de Registro -->
-        <button id="abrirModalBtn" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
-          Registrar
-        </button>
-      </div>
-
-      <table id="TablaEmpleado" class="w-full text-left border-collapse mt-6">
-        <thead>
-          <tr class="text-gray-500 text-sm border-b">
-            <th class="py-2 px-3">Nr</th>
-            <th class="py-2 px-3">Nombre</th>
-            <th class="py-2 px-3">Apellido</th>
-            <th class="py-2 px-3">Identificación</th>
-            <th class="py-2 px-3">Teléfono</th>
-            <th class="py-2 px-3">Correo</th>
-            <th class="py-2 px-3">Estatus</th>
-            <th class="py-2 px-3">Puesto</th>
-            <th class="py-2 px-3">Salario</th>
-            <th class="py-2 px-3">Acciones</th>
-          </tr>
-        </thead>
-        <tbody class="text-gray-900">
-          <!-- Ejemplo de fila -->
-          <tr>
-
-          </tr>
-        </tbody>
-      </table>
+<main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Hola, <?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Usuario') ?> 👋</h2>
     </div>
-  </div>
+
+    <div class="mt-0 sm:mt-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
+        <p class="text-green-600 text-base md:text-lg">Listado de empleados registrados en el sistema</p>
+    </div>
+
+    <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <button id="abrirModalBtn"
+                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
+                <i class="mr-1 md:mr-2"></i> Registrar Empleado
+            </button>
+        </div>
+
+        <div class="overflow-x-auto w-full relative">
+            <table id="TablaEmpleado" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 900px;">
+                <thead>
+                    <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
-</div>
 
 
 
 <!-- Modal -->
-<div id="empleadoModal" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
-  <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-5xl">
-    <!-- Encabezado -->
-    <div class="px-8 py-6 border-b flex justify-between items-center bg-gradient-to-r from-blue-500 to-indigo-600">
-      <h3 class="text-2xl font-bold text-white">Registrar Empleado</h3>
-      <button onclick="cerrarModalEmpleado()" class="text-white hover:text-gray-200 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-
-    <!-- Formulario -->
-    <form id="empleadoForm" class="px-8 py-6">
+<div id="empleadoModal"
+    class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-10/11 max-w-4xl max-h-[95vh]">
+        <div class="px-4 md:px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 id="tituloModalRegistrar" class="text-xl md:text-2xl font-bold text-gray-800">Registrar Empleado</h3>
+            <button id="btnCerrarModalRegistrar" type="button" onclick="cerrarModalEmpleado()" class="text-gray-500 hover:text-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <form id="empleadoForm" class="px-4 md:px-8 py-6 max-h-[calc(70vh-120px)] sm:max-h-[60vh] overflow-y-auto">
       <!-- PASO 1: Selección de Tipo de Empleado -->
-      <div class="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border-l-4 border-indigo-500">
-        <h4 class="text-lg font-bold text-gray-800 mb-4">
+      <div class="mb-6 p-4 md:p-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border-l-4 border-indigo-500">
+        <h4 class="text-base md:text-lg font-bold text-gray-800 mb-4">
           <i class="fas fa-users mr-2 text-indigo-600"></i>
           Tipo de Empleado
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="cursor-pointer">
             <input type="radio" name="tipo_empleado" value="OPERARIO" id="tipo_operario" class="hidden peer" checked>
-            <div class="p-6 border-2 rounded-xl transition-all peer-checked:border-green-500 peer-checked:bg-green-50 peer-checked:shadow-lg hover:shadow-md">
+            <div class="p-4 md:p-6 border-2 rounded-xl transition-all peer-checked:border-green-500 peer-checked:bg-green-50 peer-checked:shadow-lg hover:shadow-md">
               <div class="flex items-center justify-between">
                 <div>
-                  <h5 class="font-bold text-gray-800 text-lg">
+                  <h5 class="font-bold text-gray-800 text-base md:text-lg">
                     <i class="fas fa-hard-hat mr-2 text-green-600"></i>
                     Operario
                   </h5>
-                  <p class="text-sm text-gray-600 mt-1">Personal de producción, clasificación y empaque</p>
+                  <p class="text-xs md:text-sm text-gray-600 mt-1">Personal de producción, clasificación y empaque</p>
                 </div>
-                <i class="fas fa-check-circle text-3xl text-green-500 hidden peer-checked:block"></i>
+                <i class="fas fa-check-circle text-2xl md:text-3xl text-green-500 hidden peer-checked:block"></i>
               </div>
             </div>
           </label>
           
           <label class="cursor-pointer">
             <input type="radio" name="tipo_empleado" value="ADMINISTRATIVO" id="tipo_administrativo" class="hidden peer">
-            <div class="p-6 border-2 rounded-xl transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:shadow-lg hover:shadow-md">
+            <div class="p-4 md:p-6 border-2 rounded-xl transition-all peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:shadow-lg hover:shadow-md">
               <div class="flex items-center justify-between">
                 <div>
-                  <h5 class="font-bold text-gray-800 text-lg">
+                  <h5 class="font-bold text-gray-800 text-base md:text-lg">
                     <i class="fas fa-briefcase mr-2 text-blue-600"></i>
                     Administrativo
                   </h5>
-                  <p class="text-sm text-gray-600 mt-1">Gerentes, supervisores, contadores, etc.</p>
+                  <p class="text-xs md:text-sm text-gray-600 mt-1">Gerentes, supervisores, contadores, etc.</p>
                 </div>
-                <i class="fas fa-check-circle text-3xl text-blue-500 hidden peer-checked:block"></i>
+                <i class="fas fa-check-circle text-2xl md:text-3xl text-blue-500 hidden peer-checked:block"></i>
               </div>
             </div>
           </label>
@@ -322,27 +309,16 @@
 
         <input type="hidden" id="idempleado" name="idempleado">
       </div>
-
-      <!-- Botones -->
-      <div class="flex justify-end space-x-4 mt-6 border-t pt-6">
-        <button type="button" id="cerrarModalBtn" 
-          class="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-semibold">
-          <i class="fas fa-times mr-2"></i>
-          Cancelar
-        </button>
-        <button type="button" id="registrarEmpleadoBtn" 
-          class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition font-semibold shadow-lg">
-          <i class="fas fa-save mr-2"></i>
-          Registrar
-        </button>
-      </div>
     </form>
+    <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+        <button type="button" id="cerrarModalBtn" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm md:text-base font-medium">
+            Cancelar
+        </button>
+        <button type="submit" id="registrarEmpleadoBtn" form="empleadoForm" class="w-full sm:w-auto px-4 py-2 md:px-6 md:py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm md:text-base font-medium">
+            <i class="fas fa-save mr-1 md:mr-2"></i> Guardar Empleado
+        </button>
+    </div>
   </div>
 </div>
-
-
-
-
-
 
 <?php footerAdmin($data); ?>
