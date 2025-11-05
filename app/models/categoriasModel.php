@@ -96,21 +96,26 @@ class categoriasModel extends Mysql
     // Método para actualizar un categoria
     public function updateCategoria($data)
     {
-        $sql = "UPDATE categoria SET 
-                    nombre = ?, 
-                    descripcion = ?, 
-                    estatus = ? 
-                WHERE idcategoria = ?";
-    
-        $stmt = $this->db->prepare($sql);
-        $arrValues = [
-            $data['nombre'],
-            $data['descripcion'],
-            strtoupper($data['estatus']),  // Normalizar a mayúsculas
-            $data['idcategoria']
-        ];
-    
-        return $stmt->execute($arrValues);
+        try {
+            $sql = "UPDATE categoria SET 
+                        nombre = ?, 
+                        descripcion = ?, 
+                        estatus = ? 
+                    WHERE idcategoria = ?";
+        
+            $stmt = $this->db->prepare($sql);
+            $arrValues = [
+                $data['nombre'],
+                $data['descripcion'],
+                $data['estatus'],
+                $data['idcategoria']
+            ];
+        
+            return $stmt->execute($arrValues);
+        } catch (PDOException $e) {
+            error_log("Error al actualizar categoria: " . $e->getMessage());
+            return false;
+        }
     }
 
     // Método para obtener un categoria por ID

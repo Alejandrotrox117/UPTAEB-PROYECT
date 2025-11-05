@@ -70,7 +70,7 @@ headerAdmin($data);
           
           <!-- LOGO (Columna 1) -->
           <div class="flex justify-start items-start print:border-0 print:p-3">
-            <img src="/project/app/assets/img/LOGO.png" alt="Logo" class="h-16 md:h-20 object-contain print:h-16">
+            <img src="<?= base_url('app/assets/img/LOGO.png'); ?>" alt="Logo" class="h-16 md:h-20 object-contain print:h-16">
           </div>
           
           <!-- INFO EMPRESA (Columna 2) -->

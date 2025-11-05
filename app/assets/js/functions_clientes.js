@@ -675,8 +675,7 @@ function editarCliente(idCliente) {
 }
 
 function mostrarModalEditarCliente(cliente) {
-  console.log("📋 Datos del cliente recibidos:", cliente); 
-  
+
   const formActualizar = document.getElementById("formActualizarCliente");
   if (formActualizar) formActualizar.reset();
   limpiarValidaciones(camposFormularioActualizarCliente, "formActualizarCliente");
@@ -724,7 +723,7 @@ function mostrarModalEditarCliente(cliente) {
     abrirModal("modalActualizarCliente");
     
   } catch (error) {
-    console.error("❌ Error al asignar valores:", error);
+  
     Swal.fire("Error", "Error al cargar datos en el formulario", "error");
   }
 }
@@ -908,8 +907,7 @@ function eliminarCliente(idCliente, nombreCliente) {
 
 
 function exportarClientes() {
-  console.log("🔄 Iniciando exportación de clientes..."); 
-  
+
   if (!tienePermiso('exportar')) {
     mostrarModalPermisosDenegados("No tienes permisos para exportar clientes.");
     return;

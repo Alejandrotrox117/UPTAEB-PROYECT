@@ -274,5 +274,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Función auxiliar para obtener base_url
 function base_url() {
-    return window.location.protocol + "//" + window.location.host + "/project";
+    return window.base_url || (window.location.protocol + "//" + window.location.host + "/project");
 }
