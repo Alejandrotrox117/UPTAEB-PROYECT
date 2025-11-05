@@ -1202,72 +1202,6 @@ function inicializarEventosLotes() {
 }
 
 function inicializarEventosProcesos() {
-  // Modal clasificación
-  const btnAbrirModalClasificacion = document.getElementById("btnAbrirModalClasificacion");
-  const btnCerrarModalClasificacion = document.getElementById("btnCerrarModalClasificacion");
-  const btnCancelarModalClasificacion = document.getElementById("btnCancelarModalClasificacion");
-  const formClasificacion = document.getElementById("formRegistrarClasificacion");
-
-  if (btnAbrirModalClasificacion) {
-    btnAbrirModalClasificacion.addEventListener("click", function () {
-      abrirModal("modalRegistrarClasificacion");
-      if (formClasificacion) formClasificacion.reset();
-      cargarDatosParaClasificacion();
-    });
-  }
-
-  if (btnCerrarModalClasificacion) {
-    btnCerrarModalClasificacion.addEventListener("click", function () {
-      cerrarModal("modalRegistrarClasificacion");
-    });
-  }
-
-  if (btnCancelarModalClasificacion) {
-    btnCancelarModalClasificacion.addEventListener("click", function () {
-      cerrarModal("modalRegistrarClasificacion");
-    });
-  }
-
-  if (formClasificacion) {
-    formClasificacion.addEventListener("submit", function (e) {
-      e.preventDefault();
-      registrarClasificacion();
-    });
-  }
-
-  // Modal empaque
-  const btnAbrirModalEmpaque = document.getElementById("btnAbrirModalEmpaque");
-  const btnCerrarModalEmpaque = document.getElementById("btnCerrarModalEmpaque");
-  const btnCancelarModalEmpaque = document.getElementById("btnCancelarModalEmpaque");
-  const formEmpaque = document.getElementById("formRegistrarEmpaque");
-
-  if (btnAbrirModalEmpaque) {
-    btnAbrirModalEmpaque.addEventListener("click", function () {
-      abrirModal("modalRegistrarEmpaque");
-      if (formEmpaque) formEmpaque.reset();
-      cargarDatosParaEmpaque();
-    });
-  }
-
-  if (btnCerrarModalEmpaque) {
-    btnCerrarModalEmpaque.addEventListener("click", function () {
-      cerrarModal("modalRegistrarEmpaque");
-    });
-  }
-
-  if (btnCancelarModalEmpaque) {
-    btnCancelarModalEmpaque.addEventListener("click", function () {
-      cerrarModal("modalRegistrarEmpaque");
-    });
-  }
-
-  if (formEmpaque) {
-    formEmpaque.addEventListener("submit", function (e) {
-      e.preventDefault();
-      registrarEmpaque();
-    });
-  }
-
   // ====================================================
   // MODAL REGISTRAR PRODUCCIÓN (NUEVO)
   // ====================================================
@@ -1321,8 +1255,8 @@ function inicializarEventosNomina() {
 
   if (btnCalcularNomina) {
     btnCalcularNomina.addEventListener("click", function () {
-      console.log('🔍 Botón Calcular Nómina clickeado');
-      abrirModalCalcularNomina();
+      console.log('🔍 Botón Consultar Registros por Fecha clickeado');
+      abrirModalConsultarPorFecha();
     });
     console.log('✅ Evento btnCalcularNomina configurado');
   } else {
@@ -2919,11 +2853,15 @@ function guardarConfiguracion() {
 }
 
 // ========================================
-// FUNCIONES DE NÓMINA
+// FUNCIONES DE CONSULTA DE NÓMINA
 // ========================================
-function abrirModalCalcularNomina() {
+
+/**
+ * Abre el modal para consultar registros de producción por fecha
+ */
+function abrirModalConsultarPorFecha() {
   Swal.fire({
-    title: "Calcular Nómina de Producción",
+    title: "Consultar Registros por Fecha",
     html: `
       <div class="text-left space-y-4">
         <div>
@@ -2947,7 +2885,7 @@ function abrirModalCalcularNomina() {
     showCancelButton: true,
     confirmButtonColor: "#059669",
     cancelButtonColor: "#6b7280",
-    confirmButtonText: "Consultar Nómina",
+    confirmButtonText: "Consultar Registros",
     cancelButtonText: "Cancelar",
     preConfirm: () => {
       const fechaInicio = document.getElementById("swal-fecha-inicio").value;
@@ -2967,13 +2905,16 @@ function abrirModalCalcularNomina() {
     }
   }).then((result) => {
     if (result.isConfirmed) {
-      consultarNomina(result.value.fechaInicio, result.value.fechaFin);
+      consultarRegistrosPorFecha(result.value.fechaInicio, result.value.fechaFin);
     }
   });
 }
 
-function consultarNomina(fechaInicio, fechaFin) {
-  console.log(`🔍 Consultando nómina desde ${fechaInicio} hasta ${fechaFin}`);
+/**
+ * Consulta los registros de producción por rango de fechas
+ */
+function consultarRegistrosPorFecha(fechaInicio, fechaFin) {
+  console.log(`🔍 Consultando registros desde ${fechaInicio} hasta ${fechaFin}`);
   
   // Verificar que la tabla exista
   if (!tablaNomina) {
@@ -2989,7 +2930,7 @@ function consultarNomina(fechaInicio, fechaFin) {
   console.log('✅ Tabla de nómina existe:', tablaNomina);
   
   Swal.fire({
-    title: "Consultando Nómina...",
+    title: "Consultando Registros...",
     html: `Buscando registros desde <strong>${fechaInicio}</strong> hasta <strong>${fechaFin}</strong>`,
     allowOutsideClick: false,
     didOpen: () => {
@@ -3024,7 +2965,7 @@ function consultarNomina(fechaInicio, fechaFin) {
         
         if (cantidadRegistros > 0) {
           Swal.fire({
-            title: "¡Nómina Consultada!",
+            title: "¡Registros Encontrados!",
             html: `Se encontraron <strong>${cantidadRegistros}</strong> registros<br>desde ${fechaInicio} hasta ${fechaFin}`,
             icon: "success",
             confirmButtonColor: "#059669"
@@ -3046,7 +2987,7 @@ function consultarNomina(fechaInicio, fechaFin) {
           }, 100);
         }
       }, function(xhr, error, thrown) {
-        console.error('❌ Error al cargar nómina:', error, thrown);
+        console.error('❌ Error al cargar registros:', error, thrown);
         console.error('📡 Status:', xhr.status);
         console.error('📝 Respuesta del servidor:', xhr.responseText);
         console.error('🔍 Estado de la petición:', xhr.readyState);
@@ -3054,7 +2995,7 @@ function consultarNomina(fechaInicio, fechaFin) {
         Swal.close();
         Swal.fire({
           title: "Error al Consultar",
-          html: `No se pudo cargar la nómina.<br>Error: ${error}<br><br>Revisa la consola (F12) para más detalles.`,
+          html: `No se pudo cargar los registros.<br>Error: ${error}<br><br>Revisa la consola (F12) para más detalles.`,
           icon: "error",
           confirmButtonColor: "#dc2626"
         });

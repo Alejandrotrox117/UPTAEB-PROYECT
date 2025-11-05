@@ -1,45 +1,13 @@
-Usuario Delete
- [ ] Eliminar usuario existente
- [x] Eliminar y verificar eliminacion
- [x] Eliminar usuario inexistente
- [x] Eliminar con id negativo
- [x] Eliminar con id cero
- [x] Eliminar usuario ya eliminado
-
-Usuario Insert
- [x] Insertar usuario con datos completos
- [x] Insertar usuario con password segura
- [x] Insertar usuario con rol diferente
- [x] Insertar usuario sin nombre usuario
- [x] Insertar usuario sin correo
- [x] Insertar usuario sin password
- [x] Insertar usuario con correo duplicado
- [x] Insertar usuario con email invalido
- [x] Insertar usuario sin rol
- [x] Insertar usuario con password debil
-
-Usuario Select
- [x] Seleccionar todos usuarios
- [x] Seleccionar usuarios activos
- [x] Obtener usuario por id
- [x] Buscar usuario por email
- [x] Verificar estructura usuarios
- [x] Obtener usuarios eliminados
- [x] Obtener usuario inexistente
- [x] Buscar usuario por email inexistente
- [x] Obtener usuario con id negativo
- [x] Obtener usuario con id cero
- [x] Buscar con email vacio
-
-Usuario Update
- [ ] Actualizar usuario con datos completos
- [ ] Actualizar solo rol
- [ ] Actualizar solo correo
- [ ] Actualizar password
- [ ] Cambiar estatus
- [x] Actualizar usuario inexistente
- [x] Actualizar con correo duplicado
- [x] Actualizar con email invalido
- [x] Actualizar con rol inexistente
- [x] Actualizar sin datos
+Produccion Creacion Lote
+ [x] Crear lote con datos completos
+ [x] Calculo operarios requeridos
+ [x] Crear lote sin observaciones
+ [x] Generacion numero lote unico
+ [x] Crear lote sin supervisor
+ [x] Crear lote con volumen cero
+ [x] Crear lote con volumen negativo
+ [x] Crear lote sin fecha jornada
+ [x] Crear lote con fecha invalida
+ [x] Crear lote excede capacidad maxima
+ [x] Crear lote con supervisor inexistente
 

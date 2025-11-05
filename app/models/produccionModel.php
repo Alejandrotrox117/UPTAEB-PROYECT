@@ -7,46 +7,262 @@ require_once "app/models/bitacoraModel.php";
 
 class ProduccionModel extends Mysql
 {
+    // ============================================================
+    // PROPIEDADES DE CONTROL
+    // ============================================================
     private $query;
     private $array;
     private $data;
     private $result;
+    private $message;
+    private $status;
+
+    // ============================================================
+    // PROPIEDADES DE LOTES
+    // ============================================================
+    private $idlote;
+    private $numero_lote;
+    private $fecha_jornada;
+    private $volumen_estimado;
+    private $operarios_requeridos;
+    private $operarios_asignados;
+    private $idsupervisor;
+    private $estatus_lote;
+    private $observaciones;
+    private $fecha_inicio_real;
+    private $fecha_fin_real;
+
+    // ============================================================
+    // PROPIEDADES DE REGISTROS DE PRODUCCIÓN
+    // ============================================================
+    private $idregistro;
+    private $idempleado;
+    private $idproducto_producir;
+    private $cantidad_producir;
+    private $idproducto_terminado;
+    private $cantidad_producida;
+    private $salario_base_dia;
+    private $pago_clasificacion_trabajo;
+    private $salario_total;
+    private $tipo_movimiento;
 
     public function __construct() {}
+
+    // ============================================================
+    // GETTERS Y SETTERS
+    // ============================================================
+    public function getQuery() {
+        return $this->query;
+    }
+    public function setQuery(string $query) {
+        $this->query = $query;
+    }
+    public function getArray() {
+        return $this->array ?? [];
+    }
+    public function setArray(array $array) {
+        $this->array = $array;
+    }
+    public function getData() {
+        return $this->data ?? [];
+    }
+    public function setData(array $data) {
+        $this->data = $data;
+    }
+    public function getResult() {
+        return $this->result;
+    }
+    public function setResult($result) {
+        $this->result = $result;
+    }
+    public function getMessage() {
+        return $this->message ?? '';
+    }
+    public function setMessage(string $message) {
+        $this->message = $message;
+    }
+    public function getStatus() {
+        return $this->status ?? false;
+    }
+    public function setStatus(bool $status) {
+        $this->status = $status;
+    }
+
+    // Getters/Setters de Lotes
+    public function getIdLote() {
+        return $this->idlote;
+    }
+    public function setIdLote($idlote) {
+        $this->idlote = $idlote;
+    }
+    public function getNumeroLote() {
+        return $this->numero_lote;
+    }
+    public function setNumeroLote($numero_lote) {
+        $this->numero_lote = $numero_lote;
+    }
+    public function getFechaJornada() {
+        return $this->fecha_jornada;
+    }
+    public function setFechaJornada($fecha_jornada) {
+        $this->fecha_jornada = $fecha_jornada;
+    }
+    public function getVolumenEstimado() {
+        return $this->volumen_estimado;
+    }
+    public function setVolumenEstimado($volumen_estimado) {
+        $this->volumen_estimado = $volumen_estimado;
+    }
+    public function getIdSupervisor() {
+        return $this->idsupervisor;
+    }
+    public function setIdSupervisor($idsupervisor) {
+        $this->idsupervisor = $idsupervisor;
+    }
+    public function getIdEmpleado() {
+        return $this->idempleado;
+    }
+    public function setIdEmpleado($idempleado) {
+        $this->idempleado = $idempleado;
+    }
+    public function getTipoMovimiento() {
+        return $this->tipo_movimiento;
+    }
+    public function setTipoMovimiento($tipo_movimiento) {
+        $this->tipo_movimiento = $tipo_movimiento;
+    }
+    public function getOperariosRequeridos() {
+        return $this->operarios_requeridos;
+    }
+    public function setOperariosRequeridos($operarios_requeridos) {
+        $this->operarios_requeridos = $operarios_requeridos;
+    }
+    public function getOperariosAsignados() {
+        return $this->operarios_asignados;
+    }
+    public function setOperariosAsignados($operarios_asignados) {
+        $this->operarios_asignados = $operarios_asignados;
+    }
+    public function getEstatusLote() {
+        return $this->estatus_lote;
+    }
+    public function setEstatusLote($estatus_lote) {
+        $this->estatus_lote = $estatus_lote;
+    }
+    public function getObservaciones() {
+        return $this->observaciones;
+    }
+    public function setObservaciones($observaciones) {
+        $this->observaciones = $observaciones;
+    }
+    public function getFechaInicioReal() {
+        return $this->fecha_inicio_real;
+    }
+    public function setFechaInicioReal($fecha_inicio_real) {
+        $this->fecha_inicio_real = $fecha_inicio_real;
+    }
+    public function getFechaFinReal() {
+        return $this->fecha_fin_real;
+    }
+    public function setFechaFinReal($fecha_fin_real) {
+        $this->fecha_fin_real = $fecha_fin_real;
+    }
+    public function getIdRegistro() {
+        return $this->idregistro;
+    }
+    public function setIdRegistro($idregistro) {
+        $this->idregistro = $idregistro;
+    }
+    public function getIdProductoProducir() {
+        return $this->idproducto_producir;
+    }
+    public function setIdProductoProducir($idproducto_producir) {
+        $this->idproducto_producir = $idproducto_producir;
+    }
+    public function getCantidadProducir() {
+        return $this->cantidad_producir;
+    }
+    public function setCantidadProducir($cantidad_producir) {
+        $this->cantidad_producir = $cantidad_producir;
+    }
+    public function getIdProductoTerminado() {
+        return $this->idproducto_terminado;
+    }
+    public function setIdProductoTerminado($idproducto_terminado) {
+        $this->idproducto_terminado = $idproducto_terminado;
+    }
+    public function getCantidadProducida() {
+        return $this->cantidad_producida;
+    }
+    public function setCantidadProducida($cantidad_producida) {
+        $this->cantidad_producida = $cantidad_producida;
+    }
+    public function getSalarioBaseDia() {
+        return $this->salario_base_dia;
+    }
+    public function setSalarioBaseDia($salario_base_dia) {
+        $this->salario_base_dia = $salario_base_dia;
+    }
+    public function getPagoClasificacionTrabajo() {
+        return $this->pago_clasificacion_trabajo;
+    }
+    public function setPagoClasificacionTrabajo($pago_clasificacion_trabajo) {
+        $this->pago_clasificacion_trabajo = $pago_clasificacion_trabajo;
+    }
+    public function getSalarioTotal() {
+        return $this->salario_total;
+    }
+    public function setSalarioTotal($salario_total) {
+        $this->salario_total = $salario_total;
+    }
 
 
     public function insertLote(array $data)
     {
         // VALIDACIONES
         if (empty($data['idsupervisor'])) {
+            $this->setStatus(false);
+            $this->setMessage('El supervisor es requerido');
             return [
-                'status' => false,
-                'message' => 'El supervisor es requerido'
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         }
 
         if (!isset($data['volumen_estimado']) || $data['volumen_estimado'] <= 0) {
+            $this->setStatus(false);
+            $this->setMessage('El volumen debe ser mayor a cero');
             return [
-                'status' => false,
-                'message' => 'El volumen debe ser mayor a cero'
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         }
 
         if (empty($data['fecha_jornada'])) {
+            $this->setStatus(false);
+            $this->setMessage('La fecha de jornada es requerida');
             return [
-                'status' => false,
-                'message' => 'La fecha de jornada es requerida'
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         }
 
         // Validar formato de fecha
         $d = DateTime::createFromFormat('Y-m-d', $data['fecha_jornada']);
         if (!$d || $d->format('Y-m-d') !== $data['fecha_jornada']) {
+            $this->setStatus(false);
+            $this->setMessage('Formato de fecha inválido. Use YYYY-MM-DD');
             return [
-                'status' => false,
-                'message' => 'Formato de fecha inválido. Use YYYY-MM-DD'
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         }
+
+        // Setear propiedades
+        $this->setFechaJornada($data['fecha_jornada']);
+        $this->setVolumenEstimado($data['volumen_estimado']);
+        $this->setIdSupervisor($data['idsupervisor']);
+        $this->setObservaciones($data['observaciones'] ?? '');
 
         $conexion = new Conexion();
         $conexion->connect();
@@ -57,53 +273,90 @@ class ProduccionModel extends Mysql
             
             // Validar que la configuración existe y tiene valores válidos
             if (!$config || !isset($config['productividad_clasificacion']) || $config['productividad_clasificacion'] <= 0) {
+                $this->setStatus(false);
+                $this->setMessage('Error en configuración de producción. Configure primero la productividad de clasificación.');
                 return [
-                    'status' => false,
-                    'message' => 'Error en configuración de producción. Configure primero la productividad de clasificación.'
+                    'status' => $this->getStatus(),
+                    'message' => $this->getMessage()
                 ];
             }
 
-            $operariosRequeridos = ceil($data['volumen_estimado'] / $config['productividad_clasificacion']);
+            $operariosRequeridos = ceil($this->getVolumenEstimado() / $config['productividad_clasificacion']);
+            $this->setOperariosRequeridos($operariosRequeridos);
 
-            if ($operariosRequeridos > $config['capacidad_maxima_planta']) {
+            if ($this->getOperariosRequeridos() > $config['capacidad_maxima_planta']) {
+                $this->setStatus(false);
+                $this->setMessage("Se requieren {$this->getOperariosRequeridos()} operarios pero la capacidad máxima es {$config['capacidad_maxima_planta']}");
                 return [
-                    'status' => false,
-                    'message' => "Se requieren {$operariosRequeridos} operarios pero la capacidad máxima es {$config['capacidad_maxima_planta']}"
+                    'status' => $this->getStatus(),
+                    'message' => $this->getMessage()
                 ];
             }
 
-            $numeroLote = $this->generarNumeroLote($data['fecha_jornada'], $db);
+            // Intentar crear el lote con reintentos en caso de duplicados
+            $maxIntentos = 3;
+            $intentoActual = 0;
+            $loteCreado = false;
 
-            $query = "INSERT INTO lotes_produccion (
-                numero_lote, fecha_jornada, volumen_estimado, 
-                operarios_requeridos, idsupervisor, observaciones
-            ) VALUES (?, ?, ?, ?, ?, ?)";
+            while ($intentoActual < $maxIntentos && !$loteCreado) {
+                try {
+                    $numeroLote = $this->generarNumeroLote($this->getFechaJornada(), $db);
+                    $this->setNumeroLote($numeroLote);
 
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                $numeroLote,
-                $data['fecha_jornada'],
-                $data['volumen_estimado'],
-                $operariosRequeridos,
-                $data['idsupervisor'],
-                $data['observaciones']
-            ]);
+                    $query = "INSERT INTO lotes_produccion (
+                        numero_lote, fecha_jornada, volumen_estimado, 
+                        operarios_requeridos, idsupervisor, observaciones
+                    ) VALUES (?, ?, ?, ?, ?, ?)";
 
-            $loteId = $db->lastInsertId();
+                    $stmt = $db->prepare($query);
+                    $stmt->execute([
+                        $this->getNumeroLote(),
+                        $this->getFechaJornada(),
+                        $this->getVolumenEstimado(),
+                        $this->getOperariosRequeridos(),
+                        $this->getIdSupervisor(),
+                        $this->getObservaciones()
+                    ]);
+
+                    $loteId = $db->lastInsertId();
+                    $this->setIdLote($loteId);
+                    $loteCreado = true;
+
+                } catch (PDOException $e) {
+                    // Si es error de duplicado (código 23000), reintentar
+                    if ($e->getCode() == '23000' && strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                        $intentoActual++;
+                        if ($intentoActual < $maxIntentos) {
+                            usleep(rand(50000, 100000)); // Esperar 50-100ms
+                            continue;
+                        }
+                    }
+                    throw $e; // Si no es duplicado o se acabaron los intentos, propagar error
+                }
+            }
+
+            if (!$loteCreado) {
+                throw new Exception("No se pudo generar un número de lote único después de varios intentos");
+            }
+
+            $this->setStatus(true);
+            $this->setMessage('Lote creado exitosamente.');
 
             return [
-                'status' => true,
-                'message' => 'Lote creado exitosamente.',
-                'idlote' => $loteId, // Agregado para compatibilidad
-                'lote_id' => $loteId,
-                'numero_lote' => $numeroLote,
-                'operarios_requeridos' => $operariosRequeridos
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage(),
+                'idlote' => $this->getIdLote(),
+                'lote_id' => $this->getIdLote(),
+                'numero_lote' => $this->getNumeroLote(),
+                'operarios_requeridos' => $this->getOperariosRequeridos()
             ];
         } catch (Exception $e) {
             error_log("Error al insertar lote: " . $e->getMessage());
+            $this->setStatus(false);
+            $this->setMessage('Error al crear lote: ' . $e->getMessage());
             return [
-                'status' => false,
-                'message' => 'Error al crear lote: ' . $e->getMessage()
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         } finally {
             $conexion->disconnect();
@@ -180,26 +433,42 @@ class ProduccionModel extends Mysql
 
     public function iniciarLoteProduccion(int $idlote)
     {
+        $this->setIdLote($idlote);
+        
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
+            $this->setEstatusLote('EN_PROCESO');
+            
             $query = "UPDATE lotes_produccion 
-                SET estatus_lote = 'EN_PROCESO', fecha_inicio_real = NOW() 
+                SET estatus_lote = ?, fecha_inicio_real = NOW() 
                 WHERE idlote = ? AND estatus_lote = 'PLANIFICADO'";
 
             $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
+            $stmt->execute([$this->getEstatusLote(), $this->getIdLote()]);
 
             if ($stmt->rowCount() > 0) {
-                return ['status' => true, 'message' => 'Lote iniciado exitosamente.'];
+                $this->setStatus(true);
+                $this->setMessage('Lote iniciado exitosamente.');
             } else {
-                return ['status' => false, 'message' => 'No se pudo iniciar el lote.'];
+                $this->setStatus(false);
+                $this->setMessage('No se pudo iniciar el lote.');
             }
+            
+            return [
+                'status' => $this->getStatus(), 
+                'message' => $this->getMessage()
+            ];
         } catch (Exception $e) {
             error_log("Error al iniciar lote: " . $e->getMessage());
-            return ['status' => false, 'message' => 'Error al iniciar lote.'];
+            $this->setStatus(false);
+            $this->setMessage('Error al iniciar lote.');
+            return [
+                'status' => $this->getStatus(), 
+                'message' => $this->getMessage()
+            ];
         } finally {
             $conexion->disconnect();
         }
@@ -207,6 +476,8 @@ class ProduccionModel extends Mysql
 
     public function cerrarLoteProduccion(int $idlote)
     {
+        $this->setIdLote($idlote);
+        
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -216,677 +487,53 @@ class ProduccionModel extends Mysql
 
             $query = "SELECT estatus_lote FROM lotes_produccion WHERE idlote = ?";
             $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
+            $stmt->execute([$this->getIdLote()]);
             $lote = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$lote) {
+                $this->setStatus(false);
+                $this->setMessage('El lote no existe.');
                 return [
-                    'status' => false,
-                    'message' => 'El lote no existe.'
+                    'status' => $this->getStatus(),
+                    'message' => $this->getMessage()
                 ];
             }
 
             if ($lote['estatus_lote'] === 'FINALIZADO') {
+                $this->setStatus(false);
+                $this->setMessage('El lote ya está finalizado.');
                 return [
-                    'status' => false,
-                    'message' => 'El lote ya está finalizado.'
+                    'status' => $this->getStatus(),
+                    'message' => $this->getMessage()
                 ];
             }
 
+            $this->setEstatusLote('FINALIZADO');
+            
             $query = "UPDATE lotes_produccion 
-                SET estatus_lote = 'FINALIZADO', fecha_fin_real = NOW() 
+                SET estatus_lote = ?, fecha_fin_real = NOW() 
                 WHERE idlote = ?";
 
             $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
+            $stmt->execute([$this->getEstatusLote(), $this->getIdLote()]);
 
             $db->commit();
 
+            $this->setStatus(true);
+            $this->setMessage('Lote cerrado exitosamente.');
+
             return [
-                'status' => true,
-                'message' => 'Lote cerrado exitosamente.'
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         } catch (Exception $e) {
             $db->rollback();
             error_log("Error al cerrar lote: " . $e->getMessage());
+            $this->setStatus(false);
+            $this->setMessage('Error al cerrar lote: ' . $e->getMessage());
             return [
-                'status' => false,
-                'message' => 'Error al cerrar lote: ' . $e->getMessage()
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-
-    public function registrarProcesoClasificacion(array $data)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $db->beginTransaction();
-
-            $query = "UPDATE producto 
-            SET existencia = existencia - ?
-            WHERE idproducto = ? AND existencia >= ?";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                $data['kg_procesados'],
-                $data['idproducto_origen'],
-                $data['kg_procesados']
-            ]);
-
-            if ($stmt->rowCount() == 0) {
-                throw new Exception("Stock insuficiente del producto origen");
-            }
-
-            $numeroMovimiento = 'CLA-' . date('YmdHis') . '-' . $data['idempleado'];
-            $observaciones = "Clasificación - Lote: {$data['idlote']}, Operario: {$data['idempleado']}, ";
-            $observaciones .= "Procesado: {$data['kg_procesados']} kg, Limpio: {$data['kg_limpios']} kg, ";
-            $observaciones .= "Contaminantes: {$data['kg_contaminantes']} kg";
-            if (!empty($data['observaciones'])) {
-                $observaciones .= " - " . $data['observaciones'];
-            }
-
-            $query = "INSERT INTO movimientos_existencia (
-            numero_movimiento, idproducto, idtipomovimiento, 
-            cantidad_salida, stock_anterior, stock_resultante, 
-            total, observaciones, estatus, fecha_creacion
-        ) VALUES (?, ?, 3, ?, ?, ?, ?, ?, 'activo', NOW())";
-
-            $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
-            $stmtStock = $db->prepare($queryStock);
-            $stmtStock->execute([$data['idproducto_origen']]);
-            $stockActual = $stmtStock->fetchColumn();
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                $numeroMovimiento,
-                $data['idproducto_origen'],
-                $data['kg_procesados'],
-                $stockActual + $data['kg_procesados'],
-                $stockActual,
-                $stockActual,
-                $observaciones
-            ]);
-
-            if ($data['kg_limpios'] > 0) {
-                $idProductoClasificado = $this->obtenerOCrearProductoClasificado($data['idproducto_origen'], $db);
-
-                $query = "UPDATE producto 
-                SET existencia = existencia + ?
-                WHERE idproducto = ?";
-
-                $stmt = $db->prepare($query);
-                $stmt->execute([$data['kg_limpios'], $idProductoClasificado]);
-
-                $numeroMovimientoEntrada = 'CLA-E-' . date('YmdHis') . '-' . $data['idempleado'];
-                $observacionesEntrada = "Material clasificado - Lote: {$data['idlote']}, ";
-                $observacionesEntrada .= "Material limpio obtenido: {$data['kg_limpios']} kg";
-
-                $query = "INSERT INTO movimientos_existencia (
-                numero_movimiento, idproducto, idtipomovimiento, 
-                cantidad_entrada, stock_anterior, stock_resultante,
-                total, observaciones, estatus, fecha_creacion
-            ) VALUES (?, ?, 3, ?, ?, ?, ?, ?, 'activo', NOW())";
-
-                $queryStockClasificado = "SELECT existencia FROM producto WHERE idproducto = ?";
-                $stmtStockClasificado = $db->prepare($queryStockClasificado);
-                $stmtStockClasificado->execute([$idProductoClasificado]);
-                $stockClasificado = $stmtStockClasificado->fetchColumn();
-
-                $stmt = $db->prepare($query);
-                $stmt->execute([
-                    $numeroMovimientoEntrada,
-                    $idProductoClasificado,
-                    $data['kg_limpios'],
-                    $stockClasificado - $data['kg_limpios'],
-                    $stockClasificado,
-                    $stockClasificado,
-                    $observacionesEntrada
-                ]);
-            }
-
-            $this->actualizarRegistroProduccionOperario([
-                'idlote' => $data['idlote'],
-                'idempleado' => $data['idempleado'],
-                'kg_clasificados_adicionales' => $data['kg_limpios'],
-                'kg_contaminantes_adicionales' => $data['kg_contaminantes']
-            ], $db);
-
-            $db->commit();
-
-            return [
-                'status' => true,
-                'message' => 'Proceso de clasificación registrado exitosamente.',
-                'movimiento' => $numeroMovimiento
-            ];
-        } catch (Exception $e) {
-            $db->rollback();
-            error_log("Error al registrar clasificación: " . $e->getMessage());
-            return [
-                'status' => false,
-                'message' => 'Error al registrar clasificación: ' . $e->getMessage()
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    public function registrarProcesoEmpaque(array $data)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $db->beginTransaction();
-
-            $config = $this->obtenerConfiguracion($db);
-            if (
-                $data['peso_paca'] < $config['peso_minimo_paca'] ||
-                $data['peso_paca'] > $config['peso_maximo_paca']
-            ) {
-                throw new Exception("El peso debe estar entre {$config['peso_minimo_paca']} y {$config['peso_maximo_paca']} kg");
-            }
-
-            $query = "UPDATE producto 
-            SET existencia = existencia - ?
-            WHERE idproducto = ? AND existencia >= ?";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                $data['peso_paca'],
-                $data['idproducto_clasificado'],
-                $data['peso_paca']
-            ]);
-
-            if ($stmt->rowCount() == 0) {
-                throw new Exception("Stock insuficiente del producto clasificado");
-            }
-
-            $numeroMovimientoSalida = 'EMP-S-' . date('YmdHis') . '-' . $data['idempleado'];
-            $observacionesSalida = "Empaque - Material usado - Lote: {$data['idlote']}, ";
-            $observacionesSalida .= "Operario: {$data['idempleado']}, Peso: {$data['peso_paca']} kg, ";
-            $observacionesSalida .= "Calidad: {$data['calidad']}";
-            if (!empty($data['observaciones'])) {
-                $observacionesSalida .= " - " . $data['observaciones'];
-            }
-
-            $query = "INSERT INTO movimientos_existencia (
-            numero_movimiento, idproducto, idtipomovimiento, 
-            cantidad_salida, stock_anterior, stock_resultante,
-            total, observaciones, estatus, fecha_creacion
-        ) VALUES (?, ?, 4, ?, ?, ?, ?, ?, 'activo', NOW())";
-
-            $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
-            $stmtStock = $db->prepare($queryStock);
-            $stmtStock->execute([$data['idproducto_clasificado']]);
-            $stockActual = $stmtStock->fetchColumn();
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                $numeroMovimientoSalida,
-                $data['idproducto_clasificado'],
-                $data['peso_paca'],
-                $stockActual + $data['peso_paca'],
-                $stockActual,
-                $stockActual,
-                $observacionesSalida
-            ]);
-
-            $idProductoPacas = $this->obtenerOCrearProductoPacas($data['idproducto_clasificado'], $data['calidad'], $db);
-
-            $query = "UPDATE producto 
-            SET existencia = existencia + ?
-            WHERE idproducto = ?";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$data['peso_paca'], $idProductoPacas]);
-
-            $codigoPaca = 'PACA-' . date('Ymd') . '-' . str_pad($data['idempleado'], 3, '0', STR_PAD_LEFT) . '-' . date('His');
-            $numeroMovimientoEntrada = 'EMP-E-' . date('YmdHis') . '-' . $data['idempleado'];
-
-            $observacionesEntrada = "Paca empacada - Código: {$codigoPaca}, Lote: {$data['idlote']}, ";
-            $observacionesEntrada .= "Operario: {$data['idempleado']}, Peso: {$data['peso_paca']} kg, ";
-            $observacionesEntrada .= "Calidad: {$data['calidad']}";
-            if (!empty($data['observaciones'])) {
-                $observacionesEntrada .= " - " . $data['observaciones'];
-            }
-
-            $query = "INSERT INTO movimientos_existencia (
-            numero_movimiento, idproducto, idtipomovimiento, 
-            cantidad_entrada, stock_anterior, stock_resultante,
-            total, observaciones, estatus, fecha_creacion
-        ) VALUES (?, ?, 4, ?, ?, ?, ?, ?, 'activo', NOW())";
-
-            $queryStockPacas = "SELECT existencia FROM producto WHERE idproducto = ?";
-            $stmtStockPacas = $db->prepare($queryStockPacas);
-            $stmtStockPacas->execute([$idProductoPacas]);
-            $stockPacas = $stmtStockPacas->fetchColumn();
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                $numeroMovimientoEntrada,
-                $idProductoPacas,
-                $data['peso_paca'],
-                $stockPacas - $data['peso_paca'],
-                $stockPacas,
-                $stockPacas,
-                $observacionesEntrada
-            ]);
-
-            $this->actualizarRegistroProduccionOperario([
-                'idlote' => $data['idlote'],
-                'idempleado' => $data['idempleado'],
-                'pacas_armadas_adicionales' => 1
-            ], $db);
-
-            $db->commit();
-
-            return [
-                'status' => true,
-                'message' => 'Paca empacada exitosamente.',
-                'codigo_paca' => $codigoPaca
-            ];
-        } catch (Exception $e) {
-            $db->rollback();
-            error_log("Error al registrar empaque: " . $e->getMessage());
-            return [
-                'status' => false,
-                'message' => 'Error al registrar empaque: ' . $e->getMessage()
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    // ========================================
-    // MÉTODOS PARA OBTENER PROCESOS POR LOTE
-    // ========================================
-    
-    public function obtenerProcesosClasificacionPorLote($idlote)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $query = "SELECT 
-                me.idmovimiento_existencia,
-                me.numero_movimiento,
-                me.cantidad_salida as kg_procesados,
-                me.observaciones,
-                me.fecha_creacion,
-                p.idproducto,
-                p.nombre as producto_nombre,
-                p.codigo as producto_codigo,
-                DATE_FORMAT(me.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_formato
-            FROM movimientos_existencia me
-            INNER JOIN producto p ON me.idproducto = p.idproducto
-            WHERE me.idtipomovimiento = 3 
-            AND me.observaciones LIKE CONCAT('%Lote: ', ?, '%')
-            AND me.observaciones LIKE '%Clasificación%'
-            AND me.cantidad_salida > 0
-            ORDER BY me.fecha_creacion DESC";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
-            $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $procesos = [];
-            foreach ($movimientos as $mov) {
-                // Extraer información de las observaciones
-                $obs = $mov['observaciones'];
-                
-                // Extraer operario
-                preg_match('/Operario: (\d+)/', $obs, $matchesOperario);
-                $idempleado = isset($matchesOperario[1]) ? $matchesOperario[1] : null;
-                
-                // Extraer kg procesados, limpios y contaminantes
-                preg_match('/Procesado: ([\d.]+) kg/', $obs, $matchesProcesado);
-                preg_match('/Limpio: ([\d.]+) kg/', $obs, $matchesLimpio);
-                preg_match('/Contaminantes: ([\d.]+) kg/', $obs, $matchesContaminantes);
-                
-                $kgProcesados = isset($matchesProcesado[1]) ? $matchesProcesado[1] : $mov['kg_procesados'];
-                $kgLimpios = isset($matchesLimpio[1]) ? $matchesLimpio[1] : 0;
-                $kgContaminantes = isset($matchesContaminantes[1]) ? $matchesContaminantes[1] : 0;
-                
-                // Obtener nombre del operario
-                $nombreOperario = '-';
-                if ($idempleado) {
-                    $queryEmpleado = "SELECT CONCAT(nombre, ' ', apellido) as nombre_completo 
-                                     FROM empleado WHERE idempleado = ?";
-                    $stmtEmpleado = $db->prepare($queryEmpleado);
-                    $stmtEmpleado->execute([$idempleado]);
-                    $empleado = $stmtEmpleado->fetch(PDO::FETCH_ASSOC);
-                    if ($empleado) {
-                        $nombreOperario = $empleado['nombre_completo'];
-                    }
-                }
-                
-                $procesos[] = [
-                    'idmovimiento' => $mov['idmovimiento_existencia'],
-                    'numero_movimiento' => $mov['numero_movimiento'],
-                    'idempleado' => $idempleado,
-                    'operario_nombre' => $nombreOperario,
-                    'empleado_nombre' => $nombreOperario,
-                    'idproducto_origen' => $mov['idproducto'],
-                    'producto_nombre' => $mov['producto_nombre'],
-                    'nombre_producto' => $mov['producto_nombre'],
-                    'producto_codigo' => $mov['producto_codigo'],
-                    'kg_procesados' => $kgProcesados,
-                    'kg_limpios' => $kgLimpios,
-                    'kg_contaminantes' => $kgContaminantes,
-                    'observaciones' => $obs,
-                    'fecha_creacion' => $mov['fecha_creacion'],
-                    'fecha_formato' => $mov['fecha_formato']
-                ];
-            }
-
-            return $procesos;
-
-        } catch (Exception $e) {
-            error_log("Error al obtener procesos de clasificación: " . $e->getMessage());
-            return [];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    public function obtenerProcesosEmpaquePorLote($idlote)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $query = "SELECT 
-                me.idmovimiento_existencia,
-                me.numero_movimiento,
-                me.cantidad_entrada as peso_paca,
-                me.observaciones,
-                me.fecha_creacion,
-                p.idproducto,
-                p.nombre as producto_nombre,
-                p.codigo as producto_codigo,
-                DATE_FORMAT(me.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_formato
-            FROM movimientos_existencia me
-            INNER JOIN producto p ON me.idproducto = p.idproducto
-            WHERE me.idtipomovimiento = 4 
-            AND me.observaciones LIKE CONCAT('%Lote: ', ?, '%')
-            AND me.observaciones LIKE '%Paca empacada%'
-            AND me.cantidad_entrada > 0
-            ORDER BY me.fecha_creacion DESC";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
-            $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $procesos = [];
-            foreach ($movimientos as $mov) {
-                // Extraer información de las observaciones
-                $obs = $mov['observaciones'];
-                
-                // Extraer operario
-                preg_match('/Operario: (\d+)/', $obs, $matchesOperario);
-                $idempleado = isset($matchesOperario[1]) ? $matchesOperario[1] : null;
-                
-                // Extraer peso
-                preg_match('/Peso: ([\d.]+) kg/', $obs, $matchesPeso);
-                $pesoPaca = isset($matchesPeso[1]) ? $matchesPeso[1] : $mov['peso_paca'];
-                
-                // Extraer calidad
-                preg_match('/Calidad: (\w+)/', $obs, $matchesCalidad);
-                $calidad = isset($matchesCalidad[1]) ? $matchesCalidad[1] : 'ESTANDAR';
-                
-                // Extraer código de paca
-                preg_match('/Código: (PACA-[\w-]+)/', $obs, $matchesCodigo);
-                $codigoPaca = isset($matchesCodigo[1]) ? $matchesCodigo[1] : '-';
-                
-                // Obtener nombre del operario
-                $nombreOperario = '-';
-                if ($idempleado) {
-                    $queryEmpleado = "SELECT CONCAT(nombre, ' ', apellido) as nombre_completo 
-                                     FROM empleado WHERE idempleado = ?";
-                    $stmtEmpleado = $db->prepare($queryEmpleado);
-                    $stmtEmpleado->execute([$idempleado]);
-                    $empleado = $stmtEmpleado->fetch(PDO::FETCH_ASSOC);
-                    if ($empleado) {
-                        $nombreOperario = $empleado['nombre_completo'];
-                    }
-                }
-                
-                // Extraer observaciones adicionales (después del último guion)
-                $observacionesAdicionales = '';
-                if (preg_match('/ - (.+)$/', $obs, $matchesObs)) {
-                    $observacionesAdicionales = $matchesObs[1];
-                }
-                
-                $procesos[] = [
-                    'idmovimiento' => $mov['idmovimiento_existencia'],
-                    'numero_movimiento' => $mov['numero_movimiento'],
-                    'codigo_paca' => $codigoPaca,
-                    'idempleado' => $idempleado,
-                    'operario_nombre' => $nombreOperario,
-                    'empleado_nombre' => $nombreOperario,
-                    'idproducto_clasificado' => $mov['idproducto'],
-                    'producto_nombre' => $mov['producto_nombre'],
-                    'nombre_producto' => $mov['producto_nombre'],
-                    'producto_codigo' => $mov['producto_codigo'],
-                    'peso_paca' => $pesoPaca,
-                    'calidad' => $calidad,
-                    'observaciones' => $observacionesAdicionales,
-                    'observaciones_completas' => $obs,
-                    'fecha_creacion' => $mov['fecha_creacion'],
-                    'fecha_formato' => $mov['fecha_formato']
-                ];
-            }
-
-            return $procesos;
-
-        } catch (Exception $e) {
-            error_log("Error al obtener procesos de empaque: " . $e->getMessage());
-            return [];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-
-    public function registrarProduccionDiariaLote(int $idlote, array $registros)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $db->beginTransaction();
-
-            foreach ($registros as $registro) {
-                $query = "INSERT INTO registro_produccion (
-                    fecha_jornada, idlote, idempleado, kg_clasificados,
-                    kg_contaminantes, pacas_armadas, observaciones
-                ) VALUES (
-                    (SELECT fecha_jornada FROM lotes_produccion WHERE idlote = ?),
-                    ?, ?, ?, ?, ?, ?
-                ) ON DUPLICATE KEY UPDATE
-                    kg_clasificados = VALUES(kg_clasificados),
-                    kg_contaminantes = VALUES(kg_contaminantes),
-                    pacas_armadas = VALUES(pacas_armadas),
-                    observaciones = VALUES(observaciones)";
-
-                $stmt = $db->prepare($query);
-                $stmt->execute([
-                    $idlote,
-                    $idlote,
-                    intval($registro['idempleado']),
-                    floatval($registro['kg_clasificados']),
-                    floatval($registro['kg_contaminantes']),
-                    intval($registro['pacas_armadas']),
-                    trim($registro['observaciones'] ?? '')
-                ]);
-            }
-
-            $db->commit();
-
-            return [
-                'status' => true,
-                'message' => 'Registros de producción guardados exitosamente.',
-                'registros_procesados' => count($registros)
-            ];
-        } catch (Exception $e) {
-            $db->rollback();
-            error_log("Error al registrar producción diaria: " . $e->getMessage());
-            return [
-                'status' => false,
-                'message' => 'Error al registrar producción diaria.'
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    public function calcularNominaProduccion(string $fechaInicio, string $fechaFin)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $db->beginTransaction();
-
-            $query = "UPDATE registro_produccion SET
-                estatus = 'CALCULADO'
-                WHERE fecha_jornada BETWEEN ? AND ? 
-                AND estatus = 'BORRADOR'";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$fechaInicio, $fechaFin]);
-            $registrosActualizados = $stmt->rowCount();
-
-            $db->commit();
-
-            return [
-                'status' => true,
-                'message' => "Nómina calculada exitosamente para {$registrosActualizados} registros.",
-                'registros_actualizados' => $registrosActualizados
-            ];
-        } catch (Exception $e) {
-            $db->rollback();
-            error_log("Error al calcular nómina: " . $e->getMessage());
-            return [
-                'status' => false,
-                'message' => 'Error al calcular nómina.'
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-
-    public function selectProcesosRecientes(string $fecha)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $query = "SELECT 
-                DATE_FORMAT(me.fecha_creacion, '%d/%m/%Y %H:%i') as fecha,
-                CASE 
-                    WHEN me.idtipomovimiento = 3 THEN 'CLASIFICACIÓN'
-                    WHEN me.idtipomovimiento = 4 THEN 'EMPAQUE'
-                    ELSE 'OTRO'
-                END as proceso,
-                CASE 
-                    WHEN me.cantidad_salida > 0 THEN CONCAT(me.cantidad_salida, ' kg procesados')
-                    WHEN me.cantidad_entrada > 0 THEN CONCAT(me.cantidad_entrada, ' kg producidos')
-                    ELSE 'N/A'
-                END as cantidad,
-                me.observaciones,
-                p.nombre as producto,
-                COALESCE(
-                    CONCAT(e.nombre, ' ', e.apellido),
-                    'No especificado'
-                ) as operario
-            FROM movimientos_existencia me
-            LEFT JOIN producto p ON me.idproducto = p.idproducto
-            LEFT JOIN empleado e ON e.idempleado = CAST(
-                SUBSTRING_INDEX(
-                    SUBSTRING_INDEX(me.observaciones, 'Operario: ', -1), 
-                    ',', 1
-                ) AS UNSIGNED
-            )
-            WHERE DATE(me.fecha_creacion) = ?
-            AND me.idtipomovimiento IN (3, 4)
-            AND me.observaciones LIKE '%Operario:%'
-            ORDER BY me.fecha_creacion DESC
-            LIMIT 20";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute([$fecha]);
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return [
-                "status" => true,
-                "message" => "Procesos recientes obtenidos.",
-                "data" => $result
-            ];
-        } catch (Exception $e) {
-            error_log("Error al obtener procesos recientes: " . $e->getMessage());
-            return [
-                "status" => false,
-                "message" => "Error al obtener procesos recientes.",
-                "data" => []
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-    public function selectRegistrosNomina()
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $query = "SELECT 
-                rp.idregistro,
-                DATE_FORMAT(rp.fecha_jornada, '%d/%m/%Y') as fecha,
-                CONCAT(e.nombre, ' ', e.apellido) as operario,
-                rp.kg_clasificados,
-                rp.kg_contaminantes,
-                rp.pacas_armadas,
-                rp.tasa_error,
-                rp.salario_total,
-                rp.estatus,
-                l.numero_lote
-            FROM registro_produccion rp
-            INNER JOIN empleado e ON rp.idempleado = e.idempleado
-            INNER JOIN lotes_produccion l ON rp.idlote = l.idlote
-           
-            ORDER BY rp.fecha_jornada DESC, e.nombre ASC";
-
-            $stmt = $db->prepare($query);
-            $stmt->execute();
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return [
-                "status" => true,
-                "message" => "Registros de nómina obtenidos.",
-                "data" => $result
-            ];
-        } catch (Exception $e) {
-            error_log("Error al obtener registros de nómina: " . $e->getMessage());
-            return [
-                "status" => false,
-                "message" => "Error al obtener registros de nómina.",
-                "data" => []
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         } finally {
             $conexion->disconnect();
@@ -1109,14 +756,46 @@ class ProduccionModel extends Mysql
     private function generarNumeroLote($fechaJornada, $db)
     {
         $fecha = date('Ymd', strtotime($fechaJornada));
+        $intentos = 0;
+        $maxIntentos = 10;
 
-        $query = "SELECT COUNT(*) as total FROM lotes_produccion WHERE fecha_jornada = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$fechaJornada]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        while ($intentos < $maxIntentos) {
+            // Buscar el último número de lote para esta fecha
+            $query = "SELECT numero_lote FROM lotes_produccion 
+                      WHERE numero_lote LIKE ? 
+                      ORDER BY numero_lote DESC 
+                      LIMIT 1";
+            $stmt = $db->prepare($query);
+            $stmt->execute(["LOTE-{$fecha}-%"]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $consecutivo = ($result['total'] ?? 0) + 1;
-        return "LOTE-{$fecha}-" . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
+            if ($result) {
+                // Extraer el consecutivo del último lote (ej: LOTE-20251102-011 -> 011)
+                preg_match('/-(\d+)$/', $result['numero_lote'], $matches);
+                $consecutivo = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
+            } else {
+                $consecutivo = 1;
+            }
+
+            $numeroLote = "LOTE-{$fecha}-" . str_pad($consecutivo, 3, '0', STR_PAD_LEFT);
+
+            // Verificar que no exista este número de lote (por si acaso)
+            $queryCheck = "SELECT COUNT(*) as existe FROM lotes_produccion WHERE numero_lote = ?";
+            $stmtCheck = $db->prepare($queryCheck);
+            $stmtCheck->execute([$numeroLote]);
+            $existe = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if ($existe['existe'] == 0) {
+                return $numeroLote;
+            }
+
+            $intentos++;
+            // Si ya existe, esperar un momento aleatorio y reintentar
+            usleep(rand(10000, 50000)); // 10-50 ms
+        }
+
+        // Si después de varios intentos no se pudo generar, usar timestamp
+        return "LOTE-{$fecha}-" . substr(microtime(true) * 10000, -3);
     }
 
     private function actualizarRegistroProduccionOperario(array $data, $db)
@@ -1357,6 +1036,17 @@ class ProduccionModel extends Mysql
      */
     public function insertarRegistroProduccion(array $data)
     {
+        // Setear propiedades desde el array de entrada
+        $this->setIdLote($data['idlote']);
+        $this->setIdEmpleado($data['idempleado'] ?? null);
+        $this->setFechaJornada($data['fecha_jornada']);
+        $this->setIdProductoProducir($data['idproducto_producir']);
+        $this->setCantidadProducir(floatval($data['cantidad_producir']));
+        $this->setIdProductoTerminado($data['idproducto_terminado']);
+        $this->setCantidadProducida(floatval($data['cantidad_producida']));
+        $this->setTipoMovimiento($data['tipo_movimiento']);
+        $this->setObservaciones($data['observaciones'] ?? '');
+        
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -1370,56 +1060,52 @@ class ProduccionModel extends Mysql
             // Validar que el lote existe
             $queryLote = "SELECT idlote FROM lotes_produccion WHERE idlote = ?";
             $stmtLote = $db->prepare($queryLote);
-            $stmtLote->execute([$data['idlote']]);
+            $stmtLote->execute([$this->getIdLote()]);
             if (!$stmtLote->fetch()) {
                 throw new Exception("El lote especificado no existe");
             }
 
             // Validar que el empleado existe
-            if (!empty($data['idempleado'])) {
+            if (!empty($this->getIdEmpleado())) {
                 $queryEmpleado = "SELECT idempleado FROM empleado WHERE idempleado = ?";
                 $stmtEmpleado = $db->prepare($queryEmpleado);
-                $stmtEmpleado->execute([$data['idempleado']]);
+                $stmtEmpleado->execute([$this->getIdEmpleado()]);
                 if (!$stmtEmpleado->fetch()) {
                     throw new Exception("El empleado especificado no existe");
                 }
             }
 
-            // Calcular salarios
+            // Calcular salarios usando getters
             $salario_base_dia = floatval($config['salario_base'] ?? 30.00);
-            $cantidad_producida = floatval($data['cantidad_producida']);
+            $this->setSalarioBaseDia($salario_base_dia);
             
             // Pago por trabajo según precio dinámico de proceso-producto
-            // Intentar obtener precio dinámico por proceso+producto; si no existe, usar beta/gamma de configuración.
             $precio_unitario_proceso = 0.0;
-            // Determinar el producto base para el precio según el tipo de movimiento
-            // CLASIFICACION: usar idproducto_producir (materia prima); EMPAQUE: usar idproducto_terminado
-            $productoBase = ($data['tipo_movimiento'] === 'CLASIFICACION') 
-                ? ($data['idproducto_producir'] ?? null) 
-                : ($data['idproducto_terminado'] ?? null);
+            $productoBase = ($this->getTipoMovimiento() === 'CLASIFICACION') 
+                ? $this->getIdProductoProducir()
+                : $this->getIdProductoTerminado();
 
             if ($productoBase) {
-                $precio_unitario_proceso = $this->getPrecioProceso($db, $data['tipo_movimiento'], intval($productoBase));
+                $precio_unitario_proceso = $this->getPrecioProceso($db, $this->getTipoMovimiento(), intval($productoBase));
             }
 
             if ($precio_unitario_proceso <= 0) {
                 // Fallback a configuración estática anterior
-                if ($data['tipo_movimiento'] === 'CLASIFICACION') {
-                    $precio_unitario_proceso = floatval($config['beta_clasificacion'] ?? 0.25); // $/kg
+                if ($this->getTipoMovimiento() === 'CLASIFICACION') {
+                    $precio_unitario_proceso = floatval($config['beta_clasificacion'] ?? 0.25);
                 } else { // EMPAQUE
-                    $precio_unitario_proceso = floatval($config['gamma_empaque'] ?? 5.00); // $/unidad/paca
+                    $precio_unitario_proceso = floatval($config['gamma_empaque'] ?? 5.00);
                 }
             }
 
-            // Ajustar cantidad a la unidad del producto (si aplica)
-            // Si el producto base usa KG, la cantidad_producida representa kg; si no, se toma como unidades.
-            // Nota: asume que los datos de entrada respetan las unidades del producto seleccionado.
-            $pago_clasificacion_trabajo = $precio_unitario_proceso * $cantidad_producida;
+            $pago_clasificacion_trabajo = $precio_unitario_proceso * $this->getCantidadProducida();
+            $this->setPagoClasificacionTrabajo($pago_clasificacion_trabajo);
 
             // Salario total
-            $salario_total = $salario_base_dia + $pago_clasificacion_trabajo;
+            $salario_total = $this->getSalarioBaseDia() + $this->getPagoClasificacionTrabajo();
+            $this->setSalarioTotal($salario_total);
 
-            // Insertar registro
+            // Insertar registro usando getters
             $query = "INSERT INTO registro_produccion (
                 idlote, idempleado, fecha_jornada, idproducto_producir, cantidad_producir,
                 idproducto_terminado, cantidad_producida, salario_base_dia,
@@ -1428,40 +1114,46 @@ class ProduccionModel extends Mysql
 
             $stmt = $db->prepare($query);
             $stmt->execute([
-                $data['idlote'],
-                $data['idempleado'] ?? null,
-                $data['fecha_jornada'],
-                $data['idproducto_producir'],
-                floatval($data['cantidad_producir']),
-                $data['idproducto_terminado'],
-                $cantidad_producida,
-                $salario_base_dia,
-                $pago_clasificacion_trabajo,
-                $salario_total,
-                $data['tipo_movimiento'],
-                $data['observaciones'] ?? ''
+                $this->getIdLote(),
+                $this->getIdEmpleado(),
+                $this->getFechaJornada(),
+                $this->getIdProductoProducir(),
+                $this->getCantidadProducir(),
+                $this->getIdProductoTerminado(),
+                $this->getCantidadProducida(),
+                $this->getSalarioBaseDia(),
+                $this->getPagoClasificacionTrabajo(),
+                $this->getSalarioTotal(),
+                $this->getTipoMovimiento(),
+                $this->getObservaciones()
             ]);
 
             $idregistro = $db->lastInsertId();
+            $this->setIdRegistro($idregistro);
             $db->commit();
 
+            $this->setStatus(true);
+            $this->setMessage('Registro de producción guardado exitosamente');
+
             return [
-                'status' => true,
-                'message' => 'Registro de producción guardado exitosamente',
-                'idregistro' => $idregistro,
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage(),
+                'idregistro' => $this->getIdRegistro(),
                 'salarios' => [
-                    'salario_base_dia' => $salario_base_dia,
-                    'pago_clasificacion_trabajo' => $pago_clasificacion_trabajo,
-                    'salario_total' => $salario_total
+                    'salario_base_dia' => $this->getSalarioBaseDia(),
+                    'pago_clasificacion_trabajo' => $this->getPagoClasificacionTrabajo(),
+                    'salario_total' => $this->getSalarioTotal()
                 ]
             ];
 
         } catch (Exception $e) {
             $db->rollBack();
             error_log("[PRODUCCION] Error al insertar registro de producción: " . $e->getMessage());
+            $this->setStatus(false);
+            $this->setMessage('Error al guardar registro: ' . $e->getMessage());
             return [
-                'status' => false,
-                'message' => 'Error al guardar registro: ' . $e->getMessage()
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         } finally {
             $conexion->disconnect();
@@ -2165,6 +1857,8 @@ class ProduccionModel extends Mysql
      */
     public function actualizarLote($idlote, array $data)
     {
+        $this->setIdLote($idlote);
+        
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -2175,34 +1869,53 @@ class ProduccionModel extends Mysql
             // Verificar que el lote existe y está en estado PLANIFICADO
             $query = "SELECT estatus_lote FROM lotes_produccion WHERE idlote = ?";
             $stmt = $db->prepare($query);
-            $stmt->execute([$idlote]);
+            $stmt->execute([$this->getIdLote()]);
             $lote = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$lote) {
+                $this->setStatus(false);
+                $this->setMessage('El lote no existe');
                 return [
-                    'status' => false,
-                    'message' => 'El lote no existe'
+                    'status' => $this->getStatus(),
+                    'message' => $this->getMessage()
                 ];
             }
 
             if ($lote['estatus_lote'] !== 'PLANIFICADO') {
+                $this->setStatus(false);
+                $this->setMessage('Solo se pueden editar lotes en estado PLANIFICADO');
                 return [
-                    'status' => false,
-                    'message' => 'Solo se pueden editar lotes en estado PLANIFICADO'
+                    'status' => $this->getStatus(),
+                    'message' => $this->getMessage()
                 ];
             }
 
             // Validar y recalcular operarios requeridos si cambió el volumen
             if (isset($data['volumen_estimado'])) {
+                $this->setVolumenEstimado($data['volumen_estimado']);
                 $config = $this->obtenerConfiguracion($db);
-                $operariosRequeridos = ceil($data['volumen_estimado'] / $config['productividad_clasificacion']);
+                $operariosRequeridos = ceil($this->getVolumenEstimado() / $config['productividad_clasificacion']);
+                $this->setOperariosRequeridos($operariosRequeridos);
 
-                if ($operariosRequeridos > $config['capacidad_maxima_planta']) {
+                if ($this->getOperariosRequeridos() > $config['capacidad_maxima_planta']) {
+                    $this->setStatus(false);
+                    $this->setMessage("Se requieren {$this->getOperariosRequeridos()} operarios pero la capacidad máxima es {$config['capacidad_maxima_planta']}");
                     return [
-                        'status' => false,
-                        'message' => "Se requieren {$operariosRequeridos} operarios pero la capacidad máxima es {$config['capacidad_maxima_planta']}"
+                        'status' => $this->getStatus(),
+                        'message' => $this->getMessage()
                     ];
                 }
+            }
+
+            // Setear propiedades desde data
+            if (isset($data['fecha_jornada'])) {
+                $this->setFechaJornada($data['fecha_jornada']);
+            }
+            if (isset($data['idsupervisor'])) {
+                $this->setIdSupervisor($data['idsupervisor']);
+            }
+            if (isset($data['observaciones'])) {
+                $this->setObservaciones($data['observaciones']);
             }
 
             // Construir la consulta de actualización dinámicamente
@@ -2211,34 +1924,36 @@ class ProduccionModel extends Mysql
 
             if (isset($data['fecha_jornada'])) {
                 $updateFields[] = "fecha_jornada = ?";
-                $updateValues[] = $data['fecha_jornada'];
+                $updateValues[] = $this->getFechaJornada();
             }
 
             if (isset($data['volumen_estimado'])) {
                 $updateFields[] = "volumen_estimado = ?";
-                $updateValues[] = $data['volumen_estimado'];
+                $updateValues[] = $this->getVolumenEstimado();
                 $updateFields[] = "operarios_requeridos = ?";
-                $updateValues[] = $operariosRequeridos;
+                $updateValues[] = $this->getOperariosRequeridos();
             }
 
             if (isset($data['idsupervisor'])) {
                 $updateFields[] = "idsupervisor = ?";
-                $updateValues[] = $data['idsupervisor'];
+                $updateValues[] = $this->getIdSupervisor();
             }
 
             if (isset($data['observaciones'])) {
                 $updateFields[] = "observaciones = ?";
-                $updateValues[] = $data['observaciones'];
+                $updateValues[] = $this->getObservaciones();
             }
 
             if (empty($updateFields)) {
+                $this->setStatus(false);
+                $this->setMessage('No hay campos para actualizar');
                 return [
-                    'status' => false,
-                    'message' => 'No hay campos para actualizar'
+                    'status' => $this->getStatus(),
+                    'message' => $this->getMessage()
                 ];
             }
 
-            $updateValues[] = $idlote;
+            $updateValues[] = $this->getIdLote();
             $query = "UPDATE lotes_produccion SET " . implode(", ", $updateFields) . " WHERE idlote = ?";
             
             $stmt = $db->prepare($query);
@@ -2246,17 +1961,21 @@ class ProduccionModel extends Mysql
 
             $db->commit();
 
-            return [
-                'status' => true,
-                'message' => 'Lote actualizado exitosamente'
-            ];
+            $this->setStatus(true);
+            $this->setMessage('Lote actualizado exitosamente');
 
-        } catch (Exception $e) {
-            $db->rollback();
-            error_log("[PRODUCCION] Error al actualizar lote: " . $e->getMessage());
             return [
-                'status' => false,
-                'message' => 'Error al actualizar lote: ' . $e->getMessage()
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
+            ];
+        } catch (Exception $e) {
+            $db->rollBack();
+            error_log("Error al actualizar lote: " . $e->getMessage());
+            $this->setStatus(false);
+            $this->setMessage('Error al actualizar lote: ' . $e->getMessage());
+            return [
+                'status' => $this->getStatus(),
+                'message' => $this->getMessage()
             ];
         } finally {
             $conexion->disconnect();

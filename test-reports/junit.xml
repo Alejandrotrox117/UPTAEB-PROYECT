@@ -1,97 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="CLI Arguments" tests="37" assertions="75" errors="1" failures="5" skipped="0" time="0.574577">
-    <testsuite name="TestUsuarioDelete" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" tests="6" assertions="5" errors="1" failures="0" skipped="0" time="0.254281">
-      <testcase name="testEliminarUsuarioExistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="27" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="0" time="0.046125">
-        <error type="TypeError">TestUsuarioDelete::testEliminarUsuarioExistente&#13;
-TypeError: UsuariosModel::ejecutarVerificacionUsuarioPorNombre(): Argument #1 ($usuario) must be of type string, null given, called in C:\xampp\htdocs\project\app\models\UsuariosModel.php on line 776
-&#13;
-C:\xampp\htdocs\project\app\models\UsuariosModel.php:173
-C:\xampp\htdocs\project\app\models\UsuariosModel.php:776
-C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php:37</error>
-      </testcase>
-      <testcase name="testEliminarYVerificarEliminacion" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="57" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="1" time="0.023463"/>
-      <testcase name="testEliminarUsuarioInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="68" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="1" time="0.028620"/>
-      <testcase name="testEliminarConIdNegativo" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="81" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="1" time="0.047520"/>
-      <testcase name="testEliminarConIdCero" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="92" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="1" time="0.031605"/>
-      <testcase name="testEliminarUsuarioYaEliminado" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="103" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="1" time="0.076949"/>
-    </testsuite>
-    <testsuite name="TestUsuarioInsert" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" tests="10" assertions="32" errors="0" failures="0" skipped="0" time="0.217632">
-      <testcase name="testInsertarUsuarioConDatosCompletos" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="26" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="5" time="0.065485"/>
-      <testcase name="testInsertarUsuarioConPasswordSegura" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="45" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.078210"/>
-      <testcase name="testInsertarUsuarioConRolDiferente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="62" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.038083"/>
-      <testcase name="testInsertarUsuarioSinNombreUsuario" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="81" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.004007"/>
-      <testcase name="testInsertarUsuarioSinCorreo" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="103" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.004563"/>
-      <testcase name="testInsertarUsuarioSinPassword" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="125" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.002505"/>
-      <testcase name="testInsertarUsuarioConCorreoDuplicado" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="147" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.002448"/>
-      <testcase name="testInsertarUsuarioConEmailInvalido" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="169" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.005071"/>
-      <testcase name="testInsertarUsuarioSinRol" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="191" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.015137"/>
-      <testcase name="testInsertarUsuarioConPasswordDebil" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="212" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.002122"/>
-    </testsuite>
-    <testsuite name="TestUsuarioSelect" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" tests="11" assertions="24" errors="0" failures="0" skipped="0" time="0.063100">
-      <testcase name="testSeleccionarTodosUsuarios" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="22" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="4" time="0.008711"/>
-      <testcase name="testSeleccionarUsuariosActivos" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="33" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="4" time="0.006879"/>
-      <testcase name="testObtenerUsuarioPorId" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="43" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.004332"/>
-      <testcase name="testBuscarUsuarioPorEmail" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="56" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.001966"/>
-      <testcase name="testVerificarEstructuraUsuarios" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="64" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="5" time="0.005734"/>
-      <testcase name="testObtenerUsuariosEliminados" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="82" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="4" time="0.003305"/>
-      <testcase name="testObtenerUsuarioInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="94" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.005019"/>
-      <testcase name="testBuscarUsuarioPorEmailInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="102" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.001839"/>
-      <testcase name="testObtenerUsuarioConIdNegativo" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="112" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.019260"/>
-      <testcase name="testObtenerUsuarioConIdCero" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="119" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.004475"/>
-      <testcase name="testBuscarConEmailVacio" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="126" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.001580"/>
-    </testsuite>
-    <testsuite name="TestUsuarioUpdate" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" tests="10" assertions="14" errors="0" failures="5" skipped="0" time="0.039563">
-      <testcase name="testActualizarUsuarioConDatosCompletos" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="27" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="1" time="0.004803">
-        <failure type="PHPUnit\Framework\ExpectationFailedException">TestUsuarioUpdate::testActualizarUsuarioConDatosCompletos&#13;
-Failed asserting that Array &amp;0 [
-    'status' =&gt; false,
-    'message' =&gt; 'No tienes permisos para editar este usuario.',
-] is of type bool.
-&#13;
-C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php:38</failure>
-      </testcase>
-      <testcase name="testActualizarSoloRol" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="41" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="1" time="0.003681">
-        <failure type="PHPUnit\Framework\ExpectationFailedException">TestUsuarioUpdate::testActualizarSoloRol&#13;
-Failed asserting that Array &amp;0 [
-    'status' =&gt; false,
-    'message' =&gt; 'No tienes permisos para editar este usuario.',
-] is of type bool.
-&#13;
-C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php:49</failure>
-      </testcase>
-      <testcase name="testActualizarSoloCorreo" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="52" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="1" time="0.003562">
-        <failure type="PHPUnit\Framework\ExpectationFailedException">TestUsuarioUpdate::testActualizarSoloCorreo&#13;
-Failed asserting that Array &amp;0 [
-    'status' =&gt; false,
-    'message' =&gt; 'No tienes permisos para editar este usuario.',
-] is of type bool.
-&#13;
-C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php:60</failure>
-      </testcase>
-      <testcase name="testActualizarPassword" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="63" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="1" time="0.003555">
-        <failure type="PHPUnit\Framework\ExpectationFailedException">TestUsuarioUpdate::testActualizarPassword&#13;
-Failed asserting that Array &amp;0 [
-    'status' =&gt; false,
-    'message' =&gt; 'No tienes permisos para editar este usuario.',
-] is of type bool.
-&#13;
-C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php:71</failure>
-      </testcase>
-      <testcase name="testCambiarEstatus" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="74" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="1" time="0.003380">
-        <failure type="PHPUnit\Framework\ExpectationFailedException">TestUsuarioUpdate::testCambiarEstatus&#13;
-Failed asserting that Array &amp;0 [
-    'status' =&gt; false,
-    'message' =&gt; 'No tienes permisos para editar este usuario.',
-] is of type bool.
-&#13;
-C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php:82</failure>
-      </testcase>
-      <testcase name="testActualizarUsuarioInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="87" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="1" time="0.007100"/>
-      <testcase name="testActualizarConCorreoDuplicado" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="104" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="2" time="0.004100"/>
-      <testcase name="testActualizarConEmailInvalido" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="121" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="2" time="0.002949"/>
-      <testcase name="testActualizarConRolInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="138" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="2" time="0.003307"/>
-      <testcase name="testActualizarSinDatos" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="152" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="2" time="0.003127"/>
-    </testsuite>
+  <testsuite name="TestProduccionCreacionLote" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" tests="11" assertions="25" errors="0" failures="0" skipped="0" time="0.116783">
+    <testcase name="testCrearLoteConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="27" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="5" time="0.046349"/>
+    <testcase name="testCalculoOperariosRequeridos" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="48" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.019612"/>
+    <testcase name="testCrearLoteSinObservaciones" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="63" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="2" time="0.004268"/>
+    <testcase name="testGeneracionNumeroLoteUnico" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="77" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.010689"/>
+    <testcase name="testCrearLoteSinSupervisor" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="104" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="4" time="0.001032"/>
+    <testcase name="testCrearLoteConVolumenCero" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="122" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="3" time="0.000249"/>
+    <testcase name="testCrearLoteConVolumenNegativo" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="140" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="2" time="0.000191"/>
+    <testcase name="testCrearLoteSinFechaJornada" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="157" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="3" time="0.000192"/>
+    <testcase name="testCrearLoteConFechaInvalida" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="174" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="2" time="0.000191"/>
+    <testcase name="testCrearLoteExcedeCapacidadMaxima" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="188" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.002242"/>
+    <testcase name="testCrearLoteConSupervisorInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="206" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.031769"/>
   </testsuite>
 </testsuites>
