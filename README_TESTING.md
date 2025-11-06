@@ -69,6 +69,73 @@ Salida esperada (ejemplo):
 
   OK (1 test, 1 assertion)
 
+---
+
+## Estructura de Pruebas del Proyecto
+
+Este proyecto cuenta con dos tipos de pruebas:
+
+### 1. Pruebas Unitarias (`tests/`)
+
+Las pruebas unitarias validan métodos individuales de cada modelo. Están organizadas por módulo:
+
+```
+tests/
+├── Compra/              # Pruebas de compras (crear, editar, eliminar, consultar)
+├── Ventas/              # Pruebas de ventas
+├── Produccion/          # Pruebas de producción (lotes, registros, cierre)
+├── Pagos/               # Pruebas de pagos
+├── Sueldos/             # Pruebas de sueldos
+├── Productos/           # Pruebas de productos
+├── Roles/               # Pruebas de roles y permisos
+└── ...                  # Otros módulos
+```
+
+**Ejecutar todas las pruebas unitarias:**
+```powershell
+.\vendor\bin\phpunit tests\ --exclude-group integration --testdox
+```
+
+**Ejecutar pruebas de un módulo específico:**
+```powershell
+.\vendor\bin\phpunit tests\Compra\ --testdox
+.\vendor\bin\phpunit tests\Produccion\ --testdox
+```
+
+### 2. Pruebas de Integración (`tests/Integration/`)
+
+Las pruebas de integración verifican que múltiples componentes funcionen correctamente juntos, simulando flujos completos de usuario.
+
+**Tests disponibles:**
+
+| Módulo | Archivo | Qué prueba |
+|--------|---------|-----------|
+| **Compras** | `CompraFlowIntegrationTest.php` | Flujo completo: Crear compra → Pago parcial → Pago total |
+| **Ventas** | `VentaFlowIntegrationTest.php` | Flujo completo: Crear venta → Pagos → Balance actualizado |
+| **Producción** | `ProduccionFlowIntegrationTest.php` | Ciclo de lote: PLANIFICADO → EN_PROCESO → FINALIZADO |
+
+**Ejecutar todas las pruebas de integración:**
+```powershell
+.\vendor\bin\phpunit tests\Integration\ --testdox --colors=always
+```
+
+**Ejecutar prueba específica:**
+```powershell
+.\vendor\bin\phpunit tests\Integration\CompraFlowIntegrationTest.php --testdox
+.\vendor\bin\phpunit tests\Integration\ProduccionFlowIntegrationTest.php --testdox
+```
+
+**Para más información sobre pruebas de integración**, consulta: `tests/Integration/README.md`
+
+### Estadísticas de Pruebas
+
+- **Pruebas Unitarias**: 100+ tests en 27 archivos
+- **Pruebas de Integración**: 7 tests en 3 archivos
+- **Total de Aserciones**: 150+ validaciones
+- **Cobertura**: Compras, Ventas, Producción, Pagos, Sueldos, Productos, Roles, y más
+
+---
+
 Buenas prácticas y notas adicionales
 - Añade tus tests bajo la carpeta `tests/` con nombres `*Test.php`.
 - Usa `phpunit.xml` para configurar bootstrap, cobertura y suites.

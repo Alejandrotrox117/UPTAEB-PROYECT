@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="RolesIntegradoTest" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" tests="3" assertions="4" errors="0" failures="0" skipped="1" time="0.146919">
-    <testcase name="testGuardarYRecuperarAsignaciones" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="15" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="0" time="0.086890">
-      <skipped/>
-    </testcase>
-    <testcase name="testGuardarAsignacionesConRolInvalido" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="61" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="2" time="0.014797"/>
-    <testcase name="testGuardarAsignacionesConModuloInvalido" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="77" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="2" time="0.045232"/>
+  <testsuite name="ProduccionFlowIntegrationTest" file="C:\xampp\htdocs\project\tests\Integration\ProduccionFlowIntegrationTest.php" tests="1" assertions="16" errors="0" failures="0" skipped="0" time="102.127668">
+    <testcase name="testFlujoCompletoProduccionLote" file="C:\xampp\htdocs\project\tests\Integration\ProduccionFlowIntegrationTest.php" line="28" class="ProduccionFlowIntegrationTest" classname="ProduccionFlowIntegrationTest" assertions="16" time="102.127668"/>
   </testsuite>
 </testsuites>

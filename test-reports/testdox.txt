@@ -1,5 +1,3 @@
-Roles Integrado
- [ ] Guardar y recuperar asignaciones
- [x] Guardar asignaciones con rol invalido
- [x] Guardar asignaciones con modulo invalido
+Produccion Flow Integration
+ [x] Flujo completo produccion lote
 
