@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="TestProduccionCreacionLote" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" tests="11" assertions="25" errors="0" failures="0" skipped="0" time="0.116783">
-    <testcase name="testCrearLoteConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="27" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="5" time="0.046349"/>
-    <testcase name="testCalculoOperariosRequeridos" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="48" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.019612"/>
-    <testcase name="testCrearLoteSinObservaciones" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="63" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="2" time="0.004268"/>
-    <testcase name="testGeneracionNumeroLoteUnico" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="77" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.010689"/>
-    <testcase name="testCrearLoteSinSupervisor" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="104" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="4" time="0.001032"/>
-    <testcase name="testCrearLoteConVolumenCero" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="122" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="3" time="0.000249"/>
-    <testcase name="testCrearLoteConVolumenNegativo" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="140" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="2" time="0.000191"/>
-    <testcase name="testCrearLoteSinFechaJornada" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="157" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="3" time="0.000192"/>
-    <testcase name="testCrearLoteConFechaInvalida" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="174" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="2" time="0.000191"/>
-    <testcase name="testCrearLoteExcedeCapacidadMaxima" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="188" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.002242"/>
-    <testcase name="testCrearLoteConSupervisorInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="206" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.031769"/>
+  <testsuite name="RolesIntegradoTest" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" tests="3" assertions="4" errors="0" failures="0" skipped="1" time="0.146919">
+    <testcase name="testGuardarYRecuperarAsignaciones" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="15" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="0" time="0.086890">
+      <skipped/>
+    </testcase>
+    <testcase name="testGuardarAsignacionesConRolInvalido" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="61" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="2" time="0.014797"/>
+    <testcase name="testGuardarAsignacionesConModuloInvalido" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="77" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="2" time="0.045232"/>
   </testsuite>
 </testsuites>

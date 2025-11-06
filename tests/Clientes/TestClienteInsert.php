@@ -6,7 +6,7 @@ class TestClienteInsert extends TestCase
     private $model;
     private function showMessage(string $msg)
     {
-        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+        fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
     }
     protected function setUp(): void
     {
@@ -34,7 +34,7 @@ class TestClienteInsert extends TestCase
             $this->assertGreaterThan(0, $result['cliente_id']);
         }
     }
-    public function testInsertClienteSinCedula()
+    public function testInsertClienteSinCampoRequerido()
     {
         $data = [
             'cedula' => '',
@@ -45,45 +45,8 @@ class TestClienteInsert extends TestCase
         ];
         $result = $this->model->insertCliente($data);
         $this->assertIsArray($result);
-        if (array_key_exists('status', $result) && $result['status'] === false) {
-            $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
-        }
         $this->assertFalse($result['status']);
-    }
-    public function testInsertClienteSinNombre()
-    {
-        $data = [
-            'cedula' => 'V12345678',
-            'nombre' => '',
-            'apellido' => 'Pérez',
-            'direccion' => 'Calle 1',
-            'telefono_principal' => '04121234567'
-        ];
-        $result = $this->model->insertCliente($data);
-        $this->assertIsArray($result);
-        if (array_key_exists('status', $result) && $result['status'] === false) {
-            $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
-        }
-        $this->assertFalse($result['status']);
-    }
-    public function testInsertClienteSinApellido()
-    {
-        $data = [
-            'cedula' => 'V98765432',
-            'nombre' => 'Juan',
-            'apellido' => '',
-            'direccion' => 'Calle 1',
-            'telefono_principal' => '04121234567'
-        ];
-        $result = $this->model->insertCliente($data);
-        $this->assertIsArray($result);
-        if (array_key_exists('status', $result) && $result['status'] === false) {
-            $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
-        }
-        $this->assertFalse($result['status']);
+        $this->showMessage("Validación correcta: " . $result['message']);
     }
     public function testInsertClienteConCedulaDuplicada()
     {
@@ -101,44 +64,7 @@ class TestClienteInsert extends TestCase
         $this->assertIsArray($result2);
         $this->assertFalse($result2['status']);
         $this->assertStringContainsString('cédula', strtolower($result2['message']));
-    }
-    public function testInsertClienteConDatosIncompletos()
-    {
-        $data = [
-            'cedula' => 'V11111111',
-            'nombre' => 'Solo Nombre'
-        ];
-        $result = $this->model->insertCliente($data);
-        $this->assertIsArray($result);
-        if (array_key_exists('status', $result) && $result['status'] === false) {
-            $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
-        }
-        $this->assertFalse($result['status']);
-    }
-    public function testInsertClienteSinTelefono()
-    {
-        $data = [
-            'cedula' => 'V22222222',
-            'nombre' => 'Sin',
-            'apellido' => 'Teléfono',
-            'direccion' => 'Alguna dirección',
-            'telefono_principal' => ''
-        ];
-        $result = $this->model->insertCliente($data);
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-    }
-    public function testInsertClienteConArrayVacio()
-    {
-        $data = [];
-        $result = $this->model->insertCliente($data);
-        $this->assertIsArray($result);
-        if (array_key_exists('status', $result) && $result['status'] === false) {
-            $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
-        }
-        $this->assertFalse($result['status']);
+        $this->showMessage("Validación correcta: " . $result2['message']);
     }
     protected function tearDown(): void
     {

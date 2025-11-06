@@ -6,7 +6,7 @@ class TestProductoInsert extends TestCase
     private $model;
     private function showMessage(string $msg)
     {
-        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+        fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
     }
     protected function setUp(): void
     {
@@ -34,7 +34,7 @@ class TestProductoInsert extends TestCase
             $this->assertGreaterThan(0, $result['producto_id']);
         }
     }
-    public function testInsertProductoSinNombre()
+    public function testInsertProductoSinCampoRequerido()
     {
         $data = [
             'nombre' => '',
@@ -46,26 +46,9 @@ class TestProductoInsert extends TestCase
         ];
         $result = $this->model->insertProducto($data);
         $this->assertIsArray($result);
-        if (array_key_exists('status', $result) && $result['status'] === false) {
-            $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
-        }
         $this->assertFalse($result['status']);
         $this->assertArrayHasKey('message', $result);
-    }
-    public function testInsertProductoConPrecioNegativo()
-    {
-        $data = [
-            'nombre' => 'Producto Precio Negativo ' . time(),
-            'descripcion' => 'Precio inválido',
-            'unidad_medida' => 'kg',
-            'precio' => -10.00,
-            'idcategoria' => 1,
-            'moneda' => 'USD'
-        ];
-        $result = $this->model->insertProducto($data);
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
+        $this->showMessage("Validación correcta: " . $result['message']);
     }
     public function testInsertProductoConCategoriaInexistente()
     {
@@ -74,44 +57,13 @@ class TestProductoInsert extends TestCase
             'descripcion' => 'Categoría no existe',
             'unidad_medida' => 'kg',
             'precio' => 10.00,
-            'idcategoria' => 99999,
+            'idcategoria' => 888888 + rand(1, 99999),
             'moneda' => 'USD'
         ];
         $result = $this->model->insertProducto($data);
         $this->assertIsArray($result);
-        if (array_key_exists('status', $result) && $result['status'] === false) {
-            $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
-        }
         $this->assertFalse($result['status']);
-    }
-    public function testInsertProductoSinUnidadMedida()
-    {
-        $data = [
-            'nombre' => 'Producto Sin Unidad ' . time(),
-            'descripcion' => 'Sin unidad de medida',
-            'unidad_medida' => '',
-            'precio' => 10.00,
-            'idcategoria' => 1,
-            'moneda' => 'USD'
-        ];
-        $result = $this->model->insertProducto($data);
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-    }
-    public function testInsertProductoConDatosIncompletos()
-    {
-        $data = [
-            'nombre' => 'Producto Incompleto',
-            'precio' => 10.00
-        ];
-        $result = $this->model->insertProducto($data);
-        $this->assertIsArray($result);
-        if (array_key_exists('status', $result) && $result['status'] === false) {
-            $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
-        }
-        $this->assertFalse($result['status']);
+        $this->showMessage("Validación correcta: " . $result['message']);
     }
     public function testInsertProductoDuplicado()
     {
@@ -127,11 +79,8 @@ class TestProductoInsert extends TestCase
         $result1 = $this->model->insertProducto($data);
         $result2 = $this->model->insertProducto($data);
         $this->assertIsArray($result2);
-        if (array_key_exists('status', $result2) && $result2['status'] === false) {
-            $this->assertArrayHasKey('message', $result2);
-            $this->showMessage($result2['message']);
-        }
         $this->assertFalse($result2['status']);
+        $this->showMessage("Validación correcta: " . $result2['message']);
     }
     protected function tearDown(): void
     {

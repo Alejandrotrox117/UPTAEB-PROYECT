@@ -1,11 +1,11 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../app/models/ventasModel.php';
+require_once __DIR__ . '/../../app/models/ventasModel.php';
 class ConsultarVentasTest extends TestCase
 {
     private function showMessage(string $msg): void
     {
-        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+        fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
     }
     public function testConsultarTodasVentas()
     {
