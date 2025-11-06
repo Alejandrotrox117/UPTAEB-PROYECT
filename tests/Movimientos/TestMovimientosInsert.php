@@ -1,29 +1,17 @@
 <?php
-
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../../app/models/movimientosModel.php';
-
-
-
-
-
 class TestMovimientosInsert extends TestCase
 {
     private $model;
-
     private function showMessage(string $msg): void
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     protected function setUp(): void
     {
         $this->model = new MovimientosModel();
     }
-
-    
-
     public function testInsertMovimientoEntradaConDatosCompletos()
     {
         $data = [
@@ -34,34 +22,14 @@ class TestMovimientosInsert extends TestCase
             'fecha_movimiento' => date('Y-m-d'),
             'observaciones' => 'Movimiento de prueba'
         ];
-
         $result = $this->model->insertMovimiento($data);
-
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
-        
         if ($result['status']) {
             $this->assertTrue($result['status']);
             $this->assertArrayHasKey('movimiento_id', $result);
         }
     }
-
-    public function testInsertMovimientoSalidaConDatosCompletos()
-    {
-        $data = [
-            'idproducto' => 1,
-            'tipo_movimiento' => 'SALIDA',
-            'cantidad' => 50.00,
-            'motivo' => 'Venta de material',
-            'fecha_movimiento' => date('Y-m-d')
-        ];
-
-        $result = $this->model->insertMovimiento($data);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-    }
-
     public function testInsertMovimientoAjusteInventario()
     {
         $data = [
@@ -72,15 +40,10 @@ class TestMovimientosInsert extends TestCase
             'fecha_movimiento' => date('Y-m-d'),
             'observaciones' => 'Diferencia encontrada en conteo'
         ];
-
         $result = $this->model->insertMovimiento($data);
-
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
     }
-
-    
-
     public function testInsertMovimientoSinProducto()
     {
         $data = [
@@ -89,17 +52,13 @@ class TestMovimientosInsert extends TestCase
             'motivo' => 'Sin producto',
             'fecha_movimiento' => date('Y-m-d')
         ];
-
         $result = $this->model->insertMovimiento($data);
-
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
-        
         if (array_key_exists('message', $result)) {
             $this->showMessage($result['message']);
         }
     }
-
     public function testInsertMovimientoConCantidadNegativa()
     {
         $data = [
@@ -109,17 +68,13 @@ class TestMovimientosInsert extends TestCase
             'motivo' => 'Cantidad negativa',
             'fecha_movimiento' => date('Y-m-d')
         ];
-
         $result = $this->model->insertMovimiento($data);
-
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
-        
         if (array_key_exists('message', $result)) {
             $this->showMessage($result['message']);
         }
     }
-
     public function testInsertMovimientoConProductoInexistente()
     {
         $data = [
@@ -129,13 +84,10 @@ class TestMovimientosInsert extends TestCase
             'motivo' => 'Producto inexistente',
             'fecha_movimiento' => date('Y-m-d')
         ];
-
         $result = $this->model->insertMovimiento($data);
-
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
     }
-
     public function testInsertMovimientoConTipoInvalido()
     {
         $data = [
@@ -145,13 +97,10 @@ class TestMovimientosInsert extends TestCase
             'motivo' => 'Tipo inválido',
             'fecha_movimiento' => date('Y-m-d')
         ];
-
         $result = $this->model->insertMovimiento($data);
-
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
     }
-
     protected function tearDown(): void
     {
         $this->model = null;

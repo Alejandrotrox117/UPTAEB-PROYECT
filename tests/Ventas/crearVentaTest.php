@@ -1,37 +1,30 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../app/models/ventasModel.php';
 require_once __DIR__ . '/../app/models/productosModel.php';
 require_once __DIR__ . '/../app/models/clientesModel.php';
-
 class crearVentaTest extends TestCase
 {
     private $ventasModel;
     private $productosModel;
     private $clientesModel;
-
     private function showMessage(string $msg): void
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     public function setUp(): void
     {
         $this->ventasModel = new VentasModel();
         $this->productosModel = new ProductosModel();
         $this->clientesModel = new ClientesModel();
     }
-
     public function testCrearVentaExitosa()
     {
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto);
-
         $resultado = $this->clientesModel->selectAllClientes();
         $this->assertNotEmpty($resultado['data']);
         $clientes = $resultado['data'];
-
         $clienteActivo = null;
         foreach ($clientes as $c) {
             if (isset($c['estatus']) && strtolower($c['estatus']) === 'activo') {
@@ -40,11 +33,9 @@ class crearVentaTest extends TestCase
             }
         }
         $this->assertNotNull($clienteActivo);
-
         $precioUnitario = 20.0;
         $cantidad = 3;
         $subtotal = $precioUnitario * $cantidad;
-
         $datosVenta = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
@@ -57,7 +48,6 @@ class crearVentaTest extends TestCase
             'observaciones' => 'Prueba de caja blanca',
             'tasa_usada' => 1
         ];
-
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'cantidad' => $cantidad,
@@ -65,30 +55,21 @@ class crearVentaTest extends TestCase
             'subtotal_general' => $subtotal,
             'id_moneda_detalle' => 3
         ]];
-
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
-
-        
         $this->assertTrue($resultado['success']);
         $this->assertArrayHasKey('idventa', $resultado);
         $this->assertArrayHasKey('idcliente', $resultado);
         $this->assertArrayHasKey('nro_venta', $resultado);
         $this->assertArrayHasKey('message', $resultado);
         $this->assertGreaterThan(0, $resultado['idventa']);
-        
-        
         $this->assertNotEmpty($resultado['nro_venta']);
         $this->assertMatchesRegularExpression('/^VT\d+$/', $resultado['nro_venta']);
-
-        
         $ventaCreada = $this->ventasModel->obtenerVentaPorId($resultado['idventa']);
         $this->assertNotEmpty($ventaCreada);
         $this->assertEquals((float)$datosVenta['total_general'], (float)$ventaCreada['total_general']);
         $this->assertEquals((float)$datosVenta['total_general'], (float)$ventaCreada['balance']);
         $this->assertEquals($clienteActivo['idcliente'], $ventaCreada['idcliente']);
         $this->assertEquals($resultado['nro_venta'], $ventaCreada['nro_venta']);
-        
-        
         $detalles = $this->ventasModel->obtenerDetalleVenta($resultado['idventa']);
         $this->assertNotEmpty($detalles);
         $this->assertCount(1, $detalles);
@@ -96,12 +77,10 @@ class crearVentaTest extends TestCase
         $this->assertEquals($cantidad, $detalles[0]['cantidad']);
         $this->assertEquals($precioUnitario, $detalles[0]['precio_unitario_venta']);
     }
-
     public function testCrearVentaConClienteInactivo()
     {
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto);
-
         $resultado = $this->clientesModel->selectAllClientes();
         $clientes = $resultado['data'];
         $clienteInactivo = null;
@@ -112,7 +91,6 @@ class crearVentaTest extends TestCase
             }
         }
         $this->assertNotNull($clienteInactivo);
-
         $datosVenta = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteInactivo['idcliente'],
@@ -130,18 +108,12 @@ class crearVentaTest extends TestCase
             'cantidad' => 1,
             'precio_unitario_venta' => 100
         ]];
-        
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
-        
-        
         $this->assertFalse($resultado['success']);
         $this->assertArrayHasKey('message', $resultado);
         $this->assertStringContainsString('inactivo', strtolower($resultado['message']));
-        
-        
         $this->assertArrayNotHasKey('idventa', $resultado);
     }
-
     public function testCrearVentaConProductoInexistente()
     {
         $resultado = $this->clientesModel->selectAllClientes();
@@ -154,7 +126,6 @@ class crearVentaTest extends TestCase
             }
         }
         $this->assertNotNull($cliente);
-
         $datosVenta = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $cliente['idcliente'],
@@ -172,18 +143,12 @@ class crearVentaTest extends TestCase
             'cantidad' => 1,
             'precio_unitario_venta' => 100
         ]];
-        
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
-        
-      
         $this->assertFalse($resultado['success']);
         $this->assertStringContainsString('no existe', strtolower($resultado['message']));
         $this->assertStringContainsString('999999', $resultado['message']);
-        
-      
         $this->assertArrayNotHasKey('idventa', $resultado);
     }
-
     public function testCrearVentaConCantidadNegativa()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -227,7 +192,6 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success'], "La venta con cantidad negativa no debe permitirse. Mensaje: " . ($resultado['message'] ?? ''));
     }
-
     public function testCrearVentaConPrecioNegativo()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -271,7 +235,6 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success'], "La venta con precio negativo no debe permitirse. Mensaje: " . ($resultado['message'] ?? ''));
     }
-
     public function testCrearVentaSinCliente()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -305,7 +268,6 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success'], "La venta sin cliente no debe permitirse. Mensaje: " . ($resultado['message'] ?? ''));
     }
-
     public function testCrearVentaConDescuentoMayorAlTotal()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -349,7 +311,6 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success'], "La venta con descuento mayor al total no debe permitirse. Mensaje: " . ($resultado['message'] ?? ''));
     }
-
     public function testCrearVentaConMonedaInvalida()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -393,7 +354,6 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success'], "La venta con moneda inválida no debe permitirse. Mensaje: " . ($resultado['message'] ?? ''));
     }
-
     public function testValidacionClienteActivoEnModelo()
     {
         $producto = $this->productosModel->selectProductoById(1);
@@ -412,7 +372,6 @@ class crearVentaTest extends TestCase
         }
         $this->assertNotNull($clienteActivo);
         $this->assertNotNull($clienteInactivo);
-        
         $datosVenta = [
             'fecha_venta' => date('Y-m-d'),
             'idcliente' => $clienteActivo['idcliente'],
@@ -430,21 +389,16 @@ class crearVentaTest extends TestCase
             'cantidad' => 1,
             'precio_unitario_venta' => 100
         ]];
-        
-        
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertTrue($resultado['success']);
         $this->assertArrayHasKey('idventa', $resultado);
         $this->assertEquals($clienteActivo['idcliente'], $resultado['idcliente']);
-        
-        
         $datosVenta['idcliente'] = $clienteInactivo['idcliente'];
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success']);
         $this->assertStringContainsString('inactivo', strtolower($resultado['message']));
         $this->assertArrayNotHasKey('idventa', $resultado);
     }
-
     public function testValidacionProductoExistenteEnModelo()
     {
         $resultado = $this->clientesModel->selectAllClientes();
@@ -469,8 +423,6 @@ class crearVentaTest extends TestCase
             'observaciones' => 'Test rama validación producto',
             'tasa_usada' => 1
         ];
-        
-        
         $producto = $this->productosModel->selectProductoById(1);
         $this->assertNotNull($producto);
         $detallesVenta = [[
@@ -481,8 +433,6 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertTrue($resultado['success']);
         $this->assertArrayHasKey('idventa', $resultado);
-        
-        
         $detallesVenta = [[
             'idproducto' => 999999,
             'cantidad' => 1,
@@ -493,7 +443,6 @@ class crearVentaTest extends TestCase
         $this->assertStringContainsString('no existe', strtolower($resultado['message']));
         $this->assertStringContainsString('#1', $resultado['message']); 
     }
-
     public function testValidacionCantidadYPrecioEnModelo()
     {
         $resultado = $this->clientesModel->selectAllClientes();
@@ -520,8 +469,6 @@ class crearVentaTest extends TestCase
             'observaciones' => 'Test rama validación cantidad/precio',
             'tasa_usada' => 1
         ];
-        
-        
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'cantidad' => -5,
@@ -531,8 +478,6 @@ class crearVentaTest extends TestCase
         $this->assertFalse($resultado['success']);
         $this->assertStringContainsString('cantidad', strtolower($resultado['message']));
         $this->assertStringContainsString('mayor a 0', strtolower($resultado['message']));
-        
-        
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'cantidad' => 1,
@@ -541,8 +486,6 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertFalse($resultado['success']);
         $this->assertStringContainsString('precio', strtolower($resultado['message']));
-        
-        
         $detallesVenta = [[
             'idproducto' => $producto['idproducto'],
             'cantidad' => 5,
@@ -551,6 +494,4 @@ class crearVentaTest extends TestCase
         $resultado = $this->ventasModel->insertVenta($datosVenta, $detallesVenta);
         $this->assertTrue($resultado['success']);
     }
-
-    
 }

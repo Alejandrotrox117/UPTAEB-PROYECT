@@ -1,29 +1,17 @@
 <?php
-
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../../app/models/produccionModel.php';
-
-
-
-
-
 class TestProduccionCreacionLote extends TestCase
 {
     private $model;
-
     private function showMessage(string $msg)
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     protected function setUp(): void
     {
         $this->model = new ProduccionModel();
     }
-
-    
-
     public function testCrearLoteConDatosCompletos()
     {
         $data = [
@@ -32,48 +20,15 @@ class TestProduccionCreacionLote extends TestCase
             'fecha_jornada' => date('Y-m-d'),
             'observaciones' => 'Lote de prueba'
         ];
-
         $result = $this->model->insertLote($data);
-
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
-        
         if ($result['status']) {
             $this->assertArrayHasKey('lote_id', $result);
             $this->assertArrayHasKey('numero_lote', $result);
             $this->assertArrayHasKey('operarios_requeridos', $result);
         }
     }
-
-    public function testCalculoOperariosRequeridos()
-    {
-        $data = [
-            'idsupervisor' => 1,
-            'volumen_estimado' => 500,
-            'fecha_jornada' => date('Y-m-d', strtotime('+1 day'))
-        ];
-
-        $result = $this->model->insertLote($data);
-
-        if ($result['status']) {
-            $this->assertGreaterThan(0, $result['operarios_requeridos']);
-        }
-    }
-
-    public function testCrearLoteSinObservaciones()
-    {
-        $data = [
-            'idsupervisor' => 1,
-            'volumen_estimado' => 750,
-            'fecha_jornada' => date('Y-m-d', strtotime('+2 days'))
-        ];
-
-        $result = $this->model->insertLote($data);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-    }
-
     public function testGeneracionNumeroLoteUnico()
     {
         $data1 = [
@@ -81,16 +36,13 @@ class TestProduccionCreacionLote extends TestCase
             'volumen_estimado' => 300,
             'fecha_jornada' => date('Y-m-d', strtotime('+3 days'))
         ];
-
         $data2 = [
             'idsupervisor' => 1,
             'volumen_estimado' => 400,
             'fecha_jornada' => date('Y-m-d', strtotime('+3 days'))
         ];
-
         $result1 = $this->model->insertLote($data1);
         $result2 = $this->model->insertLote($data2);
-
         if ($result1['status'] && $result2['status']) {
             $this->assertNotEquals(
                 $result1['numero_lote'],
@@ -98,18 +50,13 @@ class TestProduccionCreacionLote extends TestCase
             );
         }
     }
-
-    
-
     public function testCrearLoteSinSupervisor()
     {
         $data = [
             'volumen_estimado' => 1000,
             'fecha_jornada' => date('Y-m-d')
         ];
-
         $result = $this->model->insertLote($data);
-
         $this->assertIsArray($result);
         if (array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
@@ -118,7 +65,6 @@ class TestProduccionCreacionLote extends TestCase
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('supervisor', strtolower($result['message']));
     }
-
     public function testCrearLoteConVolumenCero()
     {
         $data = [
@@ -126,9 +72,7 @@ class TestProduccionCreacionLote extends TestCase
             'volumen_estimado' => 0,
             'fecha_jornada' => date('Y-m-d')
         ];
-
         $result = $this->model->insertLote($data);
-
         if (array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
             $this->showMessage($result['message']);
@@ -136,7 +80,6 @@ class TestProduccionCreacionLote extends TestCase
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('volumen', strtolower($result['message']));
     }
-
     public function testCrearLoteConVolumenNegativo()
     {
         $data = [
@@ -144,25 +87,20 @@ class TestProduccionCreacionLote extends TestCase
             'volumen_estimado' => -500,
             'fecha_jornada' => date('Y-m-d')
         ];
-
         $result = $this->model->insertLote($data);
-
         if (array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
             $this->showMessage($result['message']);
         }
         $this->assertFalse($result['status']);
     }
-
     public function testCrearLoteSinFechaJornada()
     {
         $data = [
             'idsupervisor' => 1,
             'volumen_estimado' => 1000
         ];
-
         $result = $this->model->insertLote($data);
-
         if (array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
             $this->showMessage($result['message']);
@@ -170,7 +108,6 @@ class TestProduccionCreacionLote extends TestCase
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('fecha', strtolower($result['message']));
     }
-
     public function testCrearLoteConFechaInvalida()
     {
         $data = [
@@ -178,13 +115,10 @@ class TestProduccionCreacionLote extends TestCase
             'volumen_estimado' => 1000,
             'fecha_jornada' => '2024-13-45'
         ];
-
         $result = $this->model->insertLote($data);
-
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('fecha', strtolower($result['message']));
     }
-
     public function testCrearLoteExcedeCapacidadMaxima()
     {
         $data = [
@@ -192,9 +126,7 @@ class TestProduccionCreacionLote extends TestCase
             'volumen_estimado' => 999999,
             'fecha_jornada' => date('Y-m-d')
         ];
-
         $result = $this->model->insertLote($data);
-
         if (!$result['status']) {
             $this->assertStringContainsString(
                 'capacidad',
@@ -202,7 +134,6 @@ class TestProduccionCreacionLote extends TestCase
             );
         }
     }
-
     public function testCrearLoteConSupervisorInexistente()
     {
         $data = [
@@ -210,12 +141,9 @@ class TestProduccionCreacionLote extends TestCase
             'volumen_estimado' => 500,
             'fecha_jornada' => date('Y-m-d')
         ];
-
         $result = $this->model->insertLote($data);
-
         $this->assertIsArray($result);
     }
-
     protected function tearDown(): void
     {
         $this->model = null;

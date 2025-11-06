@@ -1,34 +1,28 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../app/models/ComprasModel.php';
 require_once __DIR__ . '/../app/models/productosModel.php';
 require_once __DIR__ . '/../app/models/proveedoresModel.php';
-
 class editarCompraTest extends TestCase
 {
     private $comprasModel;
     private $productosModel;
     private $proveedoresModel;
-
     private function showMessage(string $msg): void
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     public function setUp(): void
     {
         $this->comprasModel = new ComprasModel();
         $this->productosModel = new ProductosModel();
         $this->proveedoresModel = new ProveedoresModel();
     }
-
     public function testEditarCompraExitosa()
     {
         $producto = $this->productosModel->selectProductoById(1);
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $proveedor = $resultadoProveedores['data'][0];
-
         $datosCompra = [
             'nro_compra' => $this->comprasModel->generarNumeroCompra(),
             'fecha_compra' => date('Y-m-d'),
@@ -59,7 +53,6 @@ class editarCompraTest extends TestCase
         $resultadoInsercion = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
         $this->assertTrue($resultadoInsercion['status'], "La inserción inicial de la compra falló.");
         $idCompra = $resultadoInsercion['id'];
-
         $datosEditados = $datosCompra;
         $datosEditados['observaciones_compra'] = 'Compra editada correctamente.';
         $detallesEditados = $detallesCompra;
@@ -67,25 +60,19 @@ class editarCompraTest extends TestCase
         $detallesEditados[0]['subtotal_linea'] = 100;
         $datosEditados['subtotal_general_compra'] = 100;
         $datosEditados['total_general_compra'] = 100;
-
         $resultado = $this->comprasModel->actualizarCompra($idCompra, $datosEditados, $detallesEditados);
-        
         $this->assertIsArray($resultado, "La función actualizarCompra debe devolver un array.");
         $this->assertTrue($resultado['status'], "La edición de la compra debería ser exitosa: " . ($resultado['message'] ?? 'Error desconocido'));
         echo $resultado['message'];
-
         $compraEditada = $this->comprasModel->getCompraById($idCompra);
         $this->assertEquals('Compra editada correctamente.', $compraEditada['observaciones_compra'], "La observación no fue actualizada correctamente.");
         $this->assertEquals(100, $compraEditada['total_general'], "El total de la compra editada no coincide.");
     }
-
     public function testEditarCompraConProveedorInexistente()
     {
-        
         $producto = $this->productosModel->selectProductoById(1);
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $proveedor = $resultadoProveedores['data'][0];
-
         $datosCompra = [
             'nro_compra' => $this->comprasModel->generarNumeroCompra(),
             'fecha_compra' => date('Y-m-d'),
@@ -104,21 +91,15 @@ class editarCompraTest extends TestCase
         $resultadoInsercion = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
         $this->assertTrue($resultadoInsercion['status'], "La inserción inicial de la compra falló.");
         $idCompra = $resultadoInsercion['id'];
-
-        
         $datosEditados = $datosCompra;
         $datosEditados['idproveedor'] = 99999; 
-
         $resultado = $this->comprasModel->actualizarCompra($idCompra, $datosEditados, $detallesCompra);
-
         $this->assertIsArray($resultado);
         $this->assertFalse($resultado['status'], "El sistema no debería permitir editar una compra con un proveedor inexistente.");
         $this->assertStringContainsString("El proveedor con ID 99999 no existe.", $resultado['message']);
     }
-
     public function testEditarCompraConProductoInexistente()
     {
-        
         $producto = $this->productosModel->selectProductoById(1);
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $proveedor = $resultadoProveedores['data'][0];
@@ -137,21 +118,15 @@ class editarCompraTest extends TestCase
         $resultadoInsercion = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
         $this->assertTrue($resultadoInsercion['status'], "La inserción inicial de la compra falló.");
         $idCompra = $resultadoInsercion['id'];
-
-        
         $detallesEditados = $detallesCompra;
         $detallesEditados[0]['idproducto'] = 99999; 
-
         $resultado = $this->comprasModel->actualizarCompra($idCompra, $datosCompra, $detallesEditados);
-
         $this->assertIsArray($resultado);
         $this->assertFalse($resultado['status'], "El sistema no debería permitir editar una compra con un producto inexistente.");
         $this->assertStringContainsString("El producto con ID 99999 no existe.", $resultado['message']);
     }
-
     public function testEditarCompraConValoresNegativos()
     {
-        
         $producto = $this->productosModel->selectProductoById(1);
         $resultadoProveedores = $this->proveedoresModel->selectAllProveedores(1);
         $proveedor = $resultadoProveedores['data'][0];
@@ -170,13 +145,9 @@ class editarCompraTest extends TestCase
         $resultadoInsercion = $this->comprasModel->insertarCompra($datosCompra, $detallesCompra);
         $this->assertTrue($resultadoInsercion['status'], "La inserción inicial de la compra falló.");
         $idCompra = $resultadoInsercion['id'];
-
-        
         $detallesEditados = $detallesCompra;
         $detallesEditados[0]['cantidad'] = -5; 
-
         $resultado = $this->comprasModel->actualizarCompra($idCompra, $datosCompra, $detallesEditados);
-
         $this->assertIsArray($resultado);
         $this->assertFalse($resultado['status'], "El sistema no debería permitir editar una compra con valores negativos.");
         $this->assertStringContainsString("La cantidad o el precio unitario no pueden ser negativos o cero.", $resultado['message']);

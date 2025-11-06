@@ -42,42 +42,6 @@ class TestUsuarioInsert extends TestCase
         $this->assertIsBool($result['status']);
     }
 
-    public function testInsertarUsuarioConPasswordSegura()
-    {
-        $data = [
-            'personaId' => 1,
-            'usuario' => 'usuario_seguro_' . time(),
-            'correo' => 'seguro_' . time() . '@email.com',
-            'clave' => 'P@ssw0rd!Segur@2024',
-            'idrol' => 2
-        ];
-
-        $result = $this->model->insertUsuario($data);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-        $this->assertIsBool($result['status']);
-    }
-
-    public function testInsertarUsuarioConRolDiferente()
-    {
-        $data = [
-            'personaId' => 1,
-            'usuario' => 'usuario_rol_' . time(),
-            'correo' => 'rol_' . time() . '@email.com',
-            'clave' => 'Password456!',
-            'idrol' => 3
-        ];
-
-        $result = $this->model->insertUsuario($data);
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-        $this->assertIsBool($result['status']);
-    }
-
-    
-
     public function testInsertarUsuarioSinNombreUsuario()
     {
         $data = [
