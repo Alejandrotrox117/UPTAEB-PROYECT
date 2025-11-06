@@ -1,15 +1,16 @@
 <?php
+namespace App\Controllers;
 
-require_once "app/core/Controllers.php";
-require_once "app/models/RolesintegradoModel.php";
-require_once "helpers/helpers.php";
+use App\Core\Controllers;
+use App\Models\RolesintegradoModel;
+use Exception;
 
 class Rolesintegrado extends Controllers
 {
     public function __construct()
     {
         parent::__construct();
-        $this->model = new RolesIntegradoModel();
+        $this->model = new RolesintegradoModel();
     }
 
     public function index()

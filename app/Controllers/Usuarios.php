@@ -3,6 +3,9 @@ namespace App\Controllers;
 
 use App\Core\Controllers;
 use App\Models\UsuariosModel;
+use App\Models\BitacoraModel;
+use App\Helpers\BitacoraHelper;
+use App\Helpers\PermisosModuloVerificar;
 
 class Usuarios extends Controllers
 {

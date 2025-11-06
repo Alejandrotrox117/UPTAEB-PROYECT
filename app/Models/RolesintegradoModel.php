@@ -1,5 +1,9 @@
 <?php
-require_once "app/core/conexion.php";
+namespace App\Models;
+
+use App\Core\Conexion;
+use PDO;
+use PDOException;
 
 class RolesintegradoModel
 {

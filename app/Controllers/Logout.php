@@ -1,8 +1,13 @@
 <?php
-require_once 'helpers/helpers.php';
-class Logout{
+namespace App\Controllers;
+
+use App\Core\Controllers;
+
+class Logout extends Controllers
+{
     public function __construct()
     {
+        parent::__construct();
         session_start();
         $_SESSION = array();
         if (ini_get("session.use_cookies")) {

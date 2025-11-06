@@ -1,12 +1,20 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const formNuevaPassword = document.getElementById('formNuevaPassword');
+(function() {
+    'use strict';
     
-    if (formNuevaPassword) {
-        formNuevaPassword.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const password = document.getElementById('txtPassword').value;
-            const confirmPassword = document.getElementById('txtConfirmPassword').value;
+    // Función auxiliar para obtener base_url
+    function base_url() {
+        return window.base_url || (window.location.protocol + "//" + window.location.host + "/project");
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const formNuevaPassword = document.getElementById('formNuevaPassword');
+        
+        if (formNuevaPassword) {
+            formNuevaPassword.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const password = document.getElementById('txtPassword').value;
+                const confirmPassword = document.getElementById('txtConfirmPassword').value;
             
             // Validar que las contraseñas coincidan
             if (password !== confirmPassword) {
@@ -228,10 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    }
-});
+        } // Cierre del if (formNuevaPassword)
+    }); // Cierre del DOMContentLoaded
 
-// Función auxiliar para obtener base_url (asumiendo que está definida globalmente)
-function base_url() {
-    return window.base_url || (window.location.protocol + "//" + window.location.host + "/project");
-}
+})(); // Fin de IIFE - Código protegido

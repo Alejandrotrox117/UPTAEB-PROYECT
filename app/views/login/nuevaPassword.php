@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="<?= base_url('app/assets/sweetAlert/sweetalert2.min.css'); ?>">
 
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 p-2">
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br p-2">
     <div class="w-full max-w-md bg-white rounded-lg shadow-2xl p-6">
         <div class="text-center mb-6">
             <img src="<?= base_url() ?>/app/assets/img/favicon.svg" class="mx-auto w-12 h-12 mb-4" alt="Logo">
@@ -28,7 +28,7 @@
         <form id="formNuevaPassword" action="<?= base_url() ?>/login/actualizarPassword" method="POST" class="space-y-4">
             <!-- Token CSRF -->
             <input type="hidden" name="csrf_token" value="<?= $data['csrf_token'] ?? '' ?>">
-            <input type="hidden" name="token" value="<?= $data['token'] ?>">>
+            <input type="hidden" name="token" value="<?= $data['token'] ?>">
             
             <div>
                 <label for="txtPassword" class="block text-sm font-medium text-gray-700 mb-2">
@@ -88,8 +88,11 @@
         window.base_url = base_url;
     </script>
 
-    <script src="<?= base_url() ?>/app/assets/js/functions_resetpass.js"></script>
+    <!-- Cargar SweetAlert2 PRIMERO -->
     <script type="text/javascript" src="<?= base_url('app/assets/sweetAlert/sweetalert2.all.min.js'); ?>"></script>
+    
+    <!-- Luego cargar el script personalizado que usa SweetAlert -->
+    <script src="<?= base_url() ?>/app/assets/js/functions_resetpass.js"></script>
    
 </body>
 </html>

@@ -1,23 +1,23 @@
-    <?php
-    namespace App\Models;
+<?php
+namespace App\Models;
 
-    use App\Core\Mysql;
-    use App\Core\Conexion;
-    use PDO;
-    use PDOException;
-    use Exception;
+use App\Core\Mysql;
+use App\Core\Conexion;
+use PDO;
+use PDOException;
+use Exception;
 
-    class UsuariosModel extends Mysql
-    {
-        private $query;
-        private $array;
-        private $data;
-        private $result;
-        private $usuarioId;
-        private $message;
-        private $status;
+class UsuariosModel extends Mysql
+{
+    private $query;
+    private $array;
+    private $data;
+    private $result;
+    private $usuarioId;
+    private $message;
+    private $status;
 
-        // Definir constante para el rol de super usuario
+    // Definir constante para el rol de super usuario
         const SUPER_USUARIO_ROL_ID = 1; 
 
         public function __construct()

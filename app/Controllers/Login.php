@@ -4,6 +4,9 @@ namespace App\Controllers;
 use App\Core\Controllers;
 use App\Models\LoginModel;
 
+// EmailHelper está en el namespace global (sin namespace)
+require_once __DIR__ . '/../libs/phpmailer/EmailHelper.php';
+
 class Login extends Controllers
 {
     public function __construct()
@@ -203,7 +206,7 @@ class Login extends Controllers
                     // Enviar email de recuperación
                     $nombreCompleto = $usuario['usuario'] ?? 'Usuario'; // Usar el campo correcto
                     
-                    $emailResult = EmailHelper::enviarEmailRecuperacion(
+                    $emailResult = \EmailHelper::enviarEmailRecuperacion(
                         $email, 
                         $token, 
                         $nombreCompleto

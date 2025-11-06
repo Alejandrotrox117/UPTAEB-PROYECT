@@ -1,6 +1,7 @@
 <?php
-require_once "app/core/Controllers.php";
-require_once "helpers/helpers.php";
+namespace App\Controllers;
+
+use App\Core\Controllers;
 
 class Modulos extends Controllers
 {

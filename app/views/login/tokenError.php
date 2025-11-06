@@ -1,4 +1,15 @@
-<?php headerAdmin($data); ?>
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="<?= base_url('app/assets/img/favicon.svg'); ?>" type="image/x-icon">
+    <title>Token Inválido - Recuperadora</title>
+    <meta name="description" content="Recuperadora de materiales reciclables">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="<?= base_url('app/assets/styles/styles.css'); ?>">
+    <link href="<?= base_url('app/assets/fontawesome/css/all.min.css'); ?>" rel="stylesheet">
+</head>
 
 <body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-500 to-red-700 p-2">
     <div class="w-full max-w-md bg-white rounded-lg shadow-2xl p-6">
@@ -78,7 +89,6 @@
             </a>
         </div>
     </div>
-
-    <?php footerAdmin($data); ?>
 </body>
+
 </html>

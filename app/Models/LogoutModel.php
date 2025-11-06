@@ -1,12 +1,10 @@
 <?php
+namespace App\Models;
 
+use App\Core\Mysql;
 
-require_once("app/core/conexion.php");
-require_once("app/core/mysql.php");
-
-class logoutModel extends Mysql
+class LogoutModel extends Mysql
 {
 
 }
-
 ?>
