@@ -1,4 +1,7 @@
-<?php headerAdmin($data); ?>
+<?php 
+use App\Helpers\PermisosModuloVerificar;
+
+headerAdmin($data); ?>
 
 <input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
 <input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">

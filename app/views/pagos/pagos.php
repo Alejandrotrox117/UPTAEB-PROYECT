@@ -1,4 +1,6 @@
 <?php 
+use App\Helpers\PermisosModuloVerificar;
+
 headerAdmin($data);
 //PERMISOS DEL USUARIO PARA EL MÓDULO 'PAGOS'
 $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('pagos');

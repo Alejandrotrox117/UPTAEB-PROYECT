@@ -1,6 +1,7 @@
 <?php
+namespace App\Helpers;
 
-require_once "app/models/PermisosModel.php";
+use App\Models\PermisosModel;
 
 class PermisosHelper
 {

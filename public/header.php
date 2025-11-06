@@ -14,7 +14,7 @@ if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['rol_id'])) {
     }
 }
 
-require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
+use App\Helpers\PermisosModuloVerificar;
 ?>
 <!DOCTYPE html>
 <html lang="es">

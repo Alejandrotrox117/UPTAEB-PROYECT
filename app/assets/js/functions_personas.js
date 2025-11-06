@@ -433,8 +433,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
+  const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
+  
   if (btnCerrarModalVer) {
     btnCerrarModalVer.addEventListener("click", function () {
+      cerrarModal("modalVerPersona");
+    });
+  }
+  
+  if (btnCerrarModalVer2) {
+    btnCerrarModalVer2.addEventListener("click", function () {
       cerrarModal("modalVerPersona");
     });
   }

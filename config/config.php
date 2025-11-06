@@ -1,7 +1,6 @@
 <?php
 
-// Cargar el loader de variables de entorno
-require_once __DIR__ . '/../app/core/EnvLoader.php';
+require_once __DIR__ . '/../app/Core/EnvLoader.php';
 
 // Configuración de Base de Datos
 define('DB_HOST', env('DB_HOST', 'localhost'));

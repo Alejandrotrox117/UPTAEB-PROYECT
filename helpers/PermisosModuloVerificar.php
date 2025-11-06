@@ -1,6 +1,9 @@
 <?php
+namespace App\Helpers;
 
-require_once "app/core/conexion.php";
+use App\Core\Conexion;
+use PDO;
+use PDOException;
 
 class PermisosModuloVerificar
 {

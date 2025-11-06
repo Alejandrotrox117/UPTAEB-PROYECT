@@ -4,12 +4,8 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-
 require_once "config/config.php"; 
-require_once "app/core/Controllers.php";
 require_once "vendor/autoload.php";
-require_once "helpers/helpers.php";
-
 
 $url = !empty($_GET['url']) ? $_GET['url'] : 'login'; 
 
@@ -35,27 +31,36 @@ if (!in_array($controller, $publicRoutes)) {
 }
 
 
-$controllerFile = "app/controllers/" . ucfirst($controller) . ".php";
+$controllerFile = "app/Controllers/" . ucfirst($controller) . ".php";
 if (!file_exists($controllerFile)) {
-    $controllerFile = "app/controllers/" . strtolower($controller) . ".php";
+    $controllerFile = "app/Controllers/" . strtolower($controller) . ".php";
 }
 
 if (file_exists($controllerFile)) {
-    require_once $controllerFile;
-    $controllerClassName = ucfirst($controller);
-    $controllerInstance = new $controllerClassName();
+    $controllerClassName = "App\\Controllers\\" . ucfirst(strtolower($controller));
+    
+    if (!class_exists($controllerClassName)) {
+        $controllerClassName = "App\\Controllers\\" . $controller;
+    }
+    
+    if (!class_exists($controllerClassName)) {
+        $controllerClassName = "App\\Controllers\\" . strtolower($controller);
+    }
+    
+    if (class_exists($controllerClassName)) {
+        $controllerInstance = new $controllerClassName();
 
-    if (method_exists($controllerInstance, $method)) {
-        call_user_func_array(array($controllerInstance, $method), $params);
+        if (method_exists($controllerInstance, $method)) {
+            call_user_func_array(array($controllerInstance, $method), $params);
+        } else {
+            $errorController = new \App\Controllers\Errors();
+            $errorController->index();
+        }
     } else {
-        
-        require_once "app/controllers/error.php";
-        $errorController = new Errors();
+        $errorController = new \App\Controllers\Errors();
         $errorController->index();
     }
 } else {
-   
-    require_once "app/controllers/error.php";
-    $errorController = new Errors();
+    $errorController = new \App\Controllers\Errors();
     $errorController->index();
 }

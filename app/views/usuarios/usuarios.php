@@ -1,4 +1,6 @@
 <?php 
+use App\Helpers\PermisosModuloVerificar;
+
 headerAdmin($data);
 
 //  OBTENER PERMISOS DEL USUARIO PARA EL MÓDULO
