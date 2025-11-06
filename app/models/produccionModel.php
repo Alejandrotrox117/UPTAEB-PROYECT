@@ -986,11 +986,14 @@ class ProduccionModel extends Mysql
                 if (!$idmoneda) {
                     $idmoneda = 2; // Valor por defecto si no se encuentra USD
                 }       try {
-                    $querySueldo = "INSERT INTO sueldos (idempleado, monto, idmoneda, observacion, estatus, fecha_creacion, fecha_modificacion) VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+                    // El balance siempre es igual al monto cuando se crea (no se ha pagado nada)
+                    $balance = $monto;
+                    $querySueldo = "INSERT INTO sueldos (idempleado, monto, balance, idmoneda, observacion, estatus, fecha_creacion, fecha_modificacion) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
                     $stmtSueldo = $db->prepare($querySueldo);
                     $stmtSueldo->execute([
                         $registro['idempleado'],
                         $monto,
+                        $balance,
                         $idmoneda,
                         'Nómina generada desde producción',
                         'POR_PAGAR'
