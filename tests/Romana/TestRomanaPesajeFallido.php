@@ -1,27 +1,17 @@
-ï»¿<?php
-
+<?php
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../../app/models/romanaModel.php';
-
-
-
-
-
 class TestRomanaPesajeFallido extends TestCase
 {
     private $model;
-
     private function showMessage(string $msg): void
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     protected function setUp(): void
     {
         $this->model = new RomanaModel();
     }
-
     public function testRegistrarPesajeSinPeso()
     {
         if (method_exists($this->model, 'insertPesaje')) {
@@ -30,19 +20,17 @@ class TestRomanaPesajeFallido extends TestCase
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
                 'idlote' => 1
             ];
-
             try {
                 $this->model->insertPesaje($data);
-                $this->fail('DeberÃ­a lanzar PDOException');
+                $this->fail('Debería lanzar PDOException');
             } catch (PDOException $e) {
                 $this->assertInstanceOf(PDOException::class, $e);
                 $this->assertNotEmpty($e->getMessage());
             }
         } else {
-            $this->markTestSkipped('MÃ©todo insertPesaje no existe');
+            $this->markTestSkipped('Método insertPesaje no existe');
         }
     }
-
     public function testRegistrarPesajeConPesoNegativo()
     {
         if (method_exists($this->model, 'insertPesaje')) {
@@ -51,15 +39,12 @@ class TestRomanaPesajeFallido extends TestCase
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
                 'idlote' => 1
             ];
-
             $result = $this->model->insertPesaje($data);
-
             $this->assertFalse($result);
         } else {
-            $this->markTestSkipped('MÃ©todo insertPesaje no existe');
+            $this->markTestSkipped('Método insertPesaje no existe');
         }
     }
-
     public function testRegistrarPesajeConPesoCero()
     {
         if (method_exists($this->model, 'insertPesaje')) {
@@ -68,16 +53,12 @@ class TestRomanaPesajeFallido extends TestCase
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
                 'idlote' => 1
             ];
-
             $result = $this->model->insertPesaje($data);
-
-            
             $this->assertIsBool($result);
         } else {
-            $this->markTestSkipped('MÃ©todo insertPesaje no existe');
+            $this->markTestSkipped('Método insertPesaje no existe');
         }
     }
-
     public function testRegistrarPesajeSinLote()
     {
         if (method_exists($this->model, 'insertPesaje')) {
@@ -85,19 +66,17 @@ class TestRomanaPesajeFallido extends TestCase
                 'peso' => 100.00,
                 'fecha_pesaje' => date('Y-m-d H:i:s')
             ];
-
             try {
                 $this->model->insertPesaje($data);
-                $this->fail('DeberÃ­a lanzar PDOException');
+                $this->fail('Debería lanzar PDOException');
             } catch (PDOException $e) {
                 $this->assertInstanceOf(PDOException::class, $e);
                 $this->assertNotEmpty($e->getMessage());
             }
         } else {
-            $this->markTestSkipped('MÃ©todo insertPesaje no existe');
+            $this->markTestSkipped('Método insertPesaje no existe');
         }
     }
-
     public function testRegistrarPesajeConLoteInexistente()
     {
         if (method_exists($this->model, 'insertPesaje')) {
@@ -106,19 +85,17 @@ class TestRomanaPesajeFallido extends TestCase
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
                 'idlote' => 99999
             ];
-
             try {
                 $this->model->insertPesaje($data);
-                $this->fail('DeberÃ­a lanzar PDOException');
+                $this->fail('Debería lanzar PDOException');
             } catch (PDOException $e) {
                 $this->assertInstanceOf(PDOException::class, $e);
                 $this->assertNotEmpty($e->getMessage());
             }
         } else {
-            $this->markTestSkipped('MÃ©todo insertPesaje no existe');
+            $this->markTestSkipped('Método insertPesaje no existe');
         }
     }
-
     public function testRegistrarPesajeConPesoExcesivo()
     {
         if (method_exists($this->model, 'insertPesaje')) {
@@ -127,27 +104,21 @@ class TestRomanaPesajeFallido extends TestCase
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
                 'idlote' => 1
             ];
-
             $result = $this->model->insertPesaje($data);
-
-            
             $this->assertIsBool($result);
         } else {
-            $this->markTestSkipped('MÃ©todo insertPesaje no existe');
+            $this->markTestSkipped('Método insertPesaje no existe');
         }
     }
-
     public function testConsultarPesajeInexistente()
     {
         if (method_exists($this->model, 'selectPesajeById')) {
             $result = $this->model->selectPesajeById(99999);
-
             $this->assertFalse($result);
         } else {
-            $this->markTestSkipped('MÃ©todo selectPesajeById no existe');
+            $this->markTestSkipped('Método selectPesajeById no existe');
         }
     }
-
     protected function tearDown(): void
     {
         $this->model = null;

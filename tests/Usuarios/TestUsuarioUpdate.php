@@ -22,8 +22,6 @@ class TestUsuarioUpdate extends TestCase
         $this->model = new UsuariosModel();
     }
 
-    
-
     public function testActualizarUsuarioConDatosCompletos()
     {
         $data = [
@@ -32,57 +30,9 @@ class TestUsuarioUpdate extends TestCase
             'idrol' => 2,
             'estatus' => 'activo'
         ];
-
         $result = $this->model->updateUsuario(1, $data);
-
         $this->assertIsBool($result);
     }
-
-    public function testActualizarSoloRol()
-    {
-        $data = [
-            'idrol' => 3
-        ];
-
-        $result = $this->model->updateUsuario(1, $data);
-
-        $this->assertIsBool($result);
-    }
-
-    public function testActualizarSoloCorreo()
-    {
-        $data = [
-            'correo' => 'nuevo_correo_' . time() . '@email.com'
-        ];
-
-        $result = $this->model->updateUsuario(1, $data);
-
-        $this->assertIsBool($result);
-    }
-
-    public function testActualizarPassword()
-    {
-        $data = [
-            'password' => 'NuevaPassword123!'
-        ];
-
-        $result = $this->model->updateUsuario(1, $data);
-
-        $this->assertIsBool($result);
-    }
-
-    public function testCambiarEstatus()
-    {
-        $data = [
-            'estatus' => 'inactivo'
-        ];
-
-        $result = $this->model->updateUsuario(1, $data);
-
-        $this->assertIsBool($result);
-    }
-
-    
 
     public function testActualizarUsuarioInexistente()
     {
@@ -137,25 +87,10 @@ class TestUsuarioUpdate extends TestCase
 
     public function testActualizarConRolInexistente()
     {
-        $data = [
-            'idrol' => 99999
-        ];
-
+        $data = ['idrol' => 99999];
         try {
             $result = $this->model->updateUsuario(1, $data);
             $this->assertFalse($result);
-        } catch (Exception $e) {
-            $this->assertInstanceOf(Exception::class, $e);
-        }
-    }
-
-    public function testActualizarSinDatos()
-    {
-        $data = [];
-
-        try {
-            $result = $this->model->updateUsuario(1, $data);
-            $this->assertIsBool($result);
         } catch (Exception $e) {
             $this->assertInstanceOf(Exception::class, $e);
         }

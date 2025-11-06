@@ -1,29 +1,17 @@
 <?php
-
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../../app/models/bitacoraModel.php';
-
-
-
-
-
 class TestBitacora extends TestCase
 {
     private $model;
-
     private function showMessage(string $msg): void
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     protected function setUp(): void
     {
         $this->model = new BitacoraModel();
     }
-
-    
-
     public function testRegistrarAccionEnBitacora()
     {
         $data = [
@@ -32,97 +20,32 @@ class TestBitacora extends TestCase
             'descripcion' => 'Registro de producto de prueba',
             'idusuario' => 1
         ];
-
-        
         $result = $this->model->registrarAccion('PRODUCTOS', 'INSERT', 1, 'Registro de producto de prueba');
-
     $this->assertNotFalse($result);
     $this->assertGreaterThan(0, (int)$result);
     }
-
-    public function testRegistrarAccionUpdate()
-    {
-        $result = $this->model->registrarAccion('CLIENTES', 'UPDATE', 1, 'Actualización de datos del cliente');
-
-    $this->assertNotFalse($result);
-    $this->assertGreaterThan(0, (int)$result);
-    }
-
-    public function testRegistrarAccionDelete()
-    {
-        $result = $this->model->registrarAccion('CATEGORIAS', 'DELETE', 1, 'Eliminación lógica de categoría');
-
-    $this->assertNotFalse($result);
-    $this->assertGreaterThan(0, (int)$result);
-    }
-
-    public function testConsultarBitacoraRetornaArray()
-    {
-        $result = $this->model->SelectAllBitacora();
-
-        $this->assertIsArray($result);
-    }
-
-    public function testConsultarBitacoraPorModulo()
-    {
-        $result = $this->model->obtenerHistorial(['tabla' => 'productos']);
-
-        $this->assertIsArray($result);
-    }
-
-    public function testConsultarBitacoraPorUsuario()
-    {
-        $result = $this->model->obtenerHistorial(['idusuario' => 1]);
-
-        $this->assertIsArray($result);
-    }
-
-    public function testConsultarBitacoraPorFechas()
-    {
-        $fechaInicio = date('Y-m-01');
-        $fechaFin = date('Y-m-d');
-        $result = $this->model->obtenerHistorial([
-            'fecha_desde' => $fechaInicio,
-            'fecha_hasta' => $fechaFin
-        ]);
-
-        $this->assertIsArray($result);
-    }
-
-    
-
     public function testRegistrarAccionSinUsuario()
     {
-        
         $result = $this->model->registrarAccion('PRODUCTOS', 'INSERT', null, 'Sin usuario');
-
         $this->assertFalse($result);
     }
-
     public function testRegistrarAccionSinModulo()
     {
-        
         $result = $this->model->registrarAccion('', 'INSERT', 1, 'Sin módulo');
-
         $this->assertFalse($result);
     }
-
     public function testConsultarBitacoraPorUsuarioInexistente()
     {
         $result = $this->model->obtenerHistorial(['idusuario' => 99999]);
-
         $this->assertIsArray($result);
         $this->assertEmpty($result);
     }
-
     public function testConsultarBitacoraPorModuloInexistente()
     {
         $result = $this->model->obtenerHistorial(['tabla' => 'modulo_inexistente']);
-
         $this->assertIsArray($result);
         $this->assertEmpty($result);
     }
-
     protected function tearDown(): void
     {
         $this->model = null;

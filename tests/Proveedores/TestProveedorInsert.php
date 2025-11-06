@@ -1,29 +1,17 @@
 <?php
-
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../../app/models/proveedoresModel.php';
-
-
-
-
-
 class TestProveedorInsert extends TestCase
 {
     private $model;
-
     private function showMessage(string $msg)
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     protected function setUp(): void
     {
         $this->model = new ProveedoresModel();
     }
-
-    
-
     public function testInsertProveedorConDatosCompletos()
     {
         $data = [
@@ -36,14 +24,11 @@ class TestProveedorInsert extends TestCase
             'telefono_contacto' => '04121234567',
             'observaciones' => 'Proveedor de prueba'
         ];
-
         $result = $this->model->insertProveedor($data);
-
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
         $this->assertArrayHasKey('message', $result);
     }
-
     public function testInsertProveedorSinObservaciones()
     {
         $data = [
@@ -55,15 +40,10 @@ class TestProveedorInsert extends TestCase
             'contacto_principal' => 'María García',
             'telefono_contacto' => '04149876543'
         ];
-
         $result = $this->model->insertProveedor($data);
-
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
     }
-
-    
-
     public function testInsertProveedorSinNombreEmpresa()
     {
         $data = [
@@ -75,9 +55,7 @@ class TestProveedorInsert extends TestCase
             'contacto_principal' => 'Juan Pérez',
             'telefono_contacto' => '04121234567'
         ];
-
         $result = $this->model->insertProveedor($data);
-
         $this->assertIsArray($result);
         if (array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
@@ -85,7 +63,6 @@ class TestProveedorInsert extends TestCase
         }
         $this->assertFalse($result['status']);
     }
-
     public function testInsertProveedorSinRif()
     {
         $data = [
@@ -97,9 +74,7 @@ class TestProveedorInsert extends TestCase
             'contacto_principal' => 'Juan Pérez',
             'telefono_contacto' => '04121234567'
         ];
-
         $result = $this->model->insertProveedor($data);
-
         $this->assertIsArray($result);
         if (array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
@@ -107,11 +82,9 @@ class TestProveedorInsert extends TestCase
         }
         $this->assertFalse($result['status']);
     }
-
     public function testInsertProveedorConRifDuplicado()
     {
         $rifUnico = 'J' . time();
-        
         $data = [
             'nombre_empresa' => 'Empresa Uno',
             'rif' => $rifUnico,
@@ -121,13 +94,10 @@ class TestProveedorInsert extends TestCase
             'contacto_principal' => 'Contacto Uno',
             'telefono_contacto' => '04121234567'
         ];
-
         $result1 = $this->model->insertProveedor($data);
-        
         $data['nombre_empresa'] = 'Empresa Dos';
         $data['correo'] = 'dos' . time() . '@test.com';
         $result2 = $this->model->insertProveedor($data);
-
         $this->assertIsArray($result2);
         if (array_key_exists('status', $result2) && $result2['status'] === false) {
             $this->assertArrayHasKey('message', $result2);
@@ -135,7 +105,6 @@ class TestProveedorInsert extends TestCase
         }
         $this->assertFalse($result2['status']);
     }
-
     public function testInsertProveedorConCorreoInvalido()
     {
         $data = [
@@ -147,13 +116,10 @@ class TestProveedorInsert extends TestCase
             'contacto_principal' => 'Juan Pérez',
             'telefono_contacto' => '04121234567'
         ];
-
         $result = $this->model->insertProveedor($data);
-
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
     }
-
     protected function tearDown(): void
     {
         $this->model = null;

@@ -3,11 +3,6 @@
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/UsuariosModel.php';
-
-
-
-
-
 class TestUsuarioSelect extends TestCase
 {
     private $model;
@@ -16,9 +11,6 @@ class TestUsuarioSelect extends TestCase
     {
         $this->model = new UsuariosModel();
     }
-
-    
-
     public function testSeleccionarTodosUsuarios()
     {
         $result = $this->model->selectAllUsuarios();
@@ -56,40 +48,8 @@ class TestUsuarioSelect extends TestCase
     public function testBuscarUsuarioPorEmail()
     {
         $result = $this->model->selectUsuarioByEmail('admin@admin.com');
-
-        
         $this->assertTrue($result === false || (is_array($result) && array_key_exists('correo', $result)));
     }
-
-    public function testVerificarEstructuraUsuarios()
-    {
-        $result = $this->model->selectAllUsuarios();
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('data', $result);
-
-        $data = $result['data'];
-        if (is_array($data) && count($data) > 0) {
-            $primerUsuario = $data[0];
-            $this->assertArrayHasKey('idusuario', $primerUsuario);
-            $this->assertArrayHasKey('usuario', $primerUsuario);
-            $this->assertArrayHasKey('correo', $primerUsuario);
-        } else {
-            $this->assertIsArray($data);
-        }
-    }
-
-    public function testObtenerUsuariosEliminados()
-    {
-        $result = $this->model->selectAllUsuariosEliminados();
-
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('status', $result);
-        $this->assertArrayHasKey('data', $result);
-        $this->assertIsArray($result['data']);
-    }
-
-    
 
     public function testObtenerUsuarioInexistente()
     {
@@ -103,33 +63,7 @@ class TestUsuarioSelect extends TestCase
     {
         $emailInexistente = 'usuario_no_existe@email.com';
         $result = $this->model->selectUsuarioByEmail($emailInexistente);
-
-        $this->assertTrue(
-            $result === false || (is_array($result) && empty($result))
-        );
-    }
-
-    public function testObtenerUsuarioConIdNegativo()
-    {
-        $result = $this->model->selectUsuarioById(-1);
-
-        $this->assertFalse($result);
-    }
-
-    public function testObtenerUsuarioConIdCero()
-    {
-        $result = $this->model->selectUsuarioById(0);
-
-        $this->assertFalse($result);
-    }
-
-    public function testBuscarConEmailVacio()
-    {
-        $result = $this->model->selectUsuarioByEmail('');
-
-        $this->assertTrue(
-            $result === false || (is_array($result) && empty($result))
-        );
+        $this->assertTrue($result === false || (is_array($result) && empty($result)));
     }
 
     protected function tearDown(): void

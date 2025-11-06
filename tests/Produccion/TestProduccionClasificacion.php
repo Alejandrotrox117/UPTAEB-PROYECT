@@ -1,26 +1,17 @@
 <?php
-
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../../app/models/produccionModel.php';
-
-
 class TestProduccionClasificacion extends TestCase
 {
     private $model;
-
     private function showMessage(string $msg): void
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     protected function setUp(): void
     {
         $this->model = new ProduccionModel();
     }
-
-    
-
     public function testRegistrarClasificacionConDatosCompletos()
     {
         if (method_exists($this->model, 'registrarProcesoClasificacion')) {
@@ -33,13 +24,10 @@ class TestProduccionClasificacion extends TestCase
                 'kg_contaminantes' => 12,
                 'observaciones' => 'Clasificación de cartón corrugado - Material de buena calidad'
             ];
-
             $result = $this->model->registrarProcesoClasificacion($data);
-
             $this->assertIsArray($result);
             $this->assertArrayHasKey('status', $result);
             $this->assertArrayHasKey('message', $result);
-            
             if ($result['status']) {
                 $this->assertEquals('Proceso de clasificación registrado exitosamente.', $result['message']);
             }
@@ -47,7 +35,6 @@ class TestProduccionClasificacion extends TestCase
             $this->markTestSkipped('Método registrarProcesoClasificacion no existe');
         }
     }
-
     public function testClasificacionActualizaInventario()
     {
         if (method_exists($this->model, 'registrarProcesoClasificacion')) {
@@ -60,11 +47,8 @@ class TestProduccionClasificacion extends TestCase
                 'kg_contaminantes' => 12,
                 'observaciones' => 'Papel periódico con contaminantes normales'
             ];
-
             $result = $this->model->registrarProcesoClasificacion($data);
-
             $this->assertIsArray($result);
-            
             if (isset($result['status']) && $result['status']) {
                 $this->assertStringContainsString('exitosamente', $result['message']);
                 $this->assertArrayHasKey('movimiento', $result);
@@ -73,16 +57,12 @@ class TestProduccionClasificacion extends TestCase
             $this->markTestSkipped('Método registrarProcesoClasificacion no existe');
         }
     }
-
     public function testConsultarProcesosClasificacionPorLote()
     {
         if (method_exists($this->model, 'obtenerProcesosClasificacionPorLote')) {
             $idLote = 1;
-            
             $result = $this->model->obtenerProcesosClasificacionPorLote($idLote);
-
             $this->assertIsArray($result);
-            
             if (!empty($result)) {
                 $primerProceso = $result[0];
                 $this->assertArrayHasKey('kg_procesados', $primerProceso);
@@ -94,9 +74,6 @@ class TestProduccionClasificacion extends TestCase
             $this->markTestSkipped('Método obtenerProcesosClasificacionPorLote no existe');
         }
     }
-
-    
-
     public function testClasificacionConStockInsuficiente()
     {
         if (method_exists($this->model, 'registrarProcesoClasificacion')) {
@@ -109,16 +86,13 @@ class TestProduccionClasificacion extends TestCase
                 'kg_contaminantes' => 999999,
                 'observaciones' => 'Prueba: intento de clasificar con stock insuficiente'
             ];
-
             $result = $this->model->registrarProcesoClasificacion($data);
-
             if (is_array($result)) {
                 $this->assertFalse($result['status']);
                 $this->assertStringContainsString(
                     'insuficiente',
                     strtolower($result['message'])
                 );
-                
                 if (array_key_exists('message', $result)) {
                     $this->showMessage($result['message']);
                 }
@@ -127,7 +101,6 @@ class TestProduccionClasificacion extends TestCase
             $this->markTestSkipped('Método registrarProcesoClasificacion no existe');
         }
     }
-
     public function testClasificacionSumaIncorrecta()
     {
         if (method_exists($this->model, 'registrarProcesoClasificacion')) {
@@ -140,11 +113,8 @@ class TestProduccionClasificacion extends TestCase
                 'kg_contaminantes' => 10,
                 'observaciones' => 'Prueba: clasificación con merma de material'
             ];
-
             $result = $this->model->registrarProcesoClasificacion($data);
-
             $this->assertIsArray($result);
-            
             if (isset($result['status']) && !$result['status']) {
                 $this->assertArrayHasKey('message', $result);
                 $this->showMessage($result['message']);
@@ -153,7 +123,6 @@ class TestProduccionClasificacion extends TestCase
             $this->markTestSkipped('Método registrarProcesoClasificacion no existe');
         }
     }
-
     public function testClasificacionConProductoInexistente()
     {
         if (method_exists($this->model, 'registrarProcesoClasificacion')) {
@@ -166,14 +135,11 @@ class TestProduccionClasificacion extends TestCase
                 'kg_contaminantes' => 5,
                 'observaciones' => 'Prueba: clasificación con producto inexistente'
             ];
-
             try {
                 $result = $this->model->registrarProcesoClasificacion($data);
-                
                 if (is_array($result)) {
                     $this->assertFalse($result['status']);
                     $this->assertNotEmpty($result['message']);
-                    
                     if (array_key_exists('message', $result)) {
                         $this->showMessage($result['message']);
                     }
@@ -186,7 +152,6 @@ class TestProduccionClasificacion extends TestCase
             $this->markTestSkipped('Método registrarProcesoClasificacion no existe');
         }
     }
-
     protected function tearDown(): void
     {
         $this->model = null;

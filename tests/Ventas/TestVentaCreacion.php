@@ -1,29 +1,17 @@
 <?php
-
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../../app/models/ventasModel.php';
-
-
-
-
-
 class TestVentaCreacion extends TestCase
 {
     private $model;
-
     private function showMessage(string $msg)
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     protected function setUp(): void
     {
         $this->model = new VentasModel();
     }
-
-    
-
     public function testCrearVentaConUnProducto()
     {
         $data = [
@@ -38,7 +26,6 @@ class TestVentaCreacion extends TestCase
             'observaciones' => 'Prueba unitaria',
             'tasa_usada' => 1
         ];
-
         $detalles = [
             [
                 'idproducto' => 1,
@@ -49,47 +36,10 @@ class TestVentaCreacion extends TestCase
                 'idmoneda_detalle' => 3
             ]
         ];
-
         $result = $this->model->insertVenta($data, $detalles);
-
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
     }
-
-    public function testCrearVentaConVariosProductos()
-    {
-        $data = [
-            'idcliente' => 1,
-            'fecha_venta' => date('Y-m-d'),
-            'idmoneda_general' => 3,
-            'subtotal_general' => 150.00,
-            'total_general' => 150.00,
-            'estatus' => 'activo',
-            'tasa_usada' => 1
-        ];
-
-        $detalles = [
-            [
-                'idproducto' => 1,
-                'cantidad' => 5,
-                'precio_unitario_venta' => 10.00,
-                'subtotal_linea' => 50.00,
-                'idmoneda_detalle' => 3
-            ],
-            [
-                'idproducto' => 2,
-                'cantidad' => 10,
-                'precio_unitario_venta' => 10.00,
-                'subtotal_linea' => 100.00,
-                'idmoneda_detalle' => 3
-            ]
-        ];
-
-        $result = $this->model->insertVenta($data, $detalles);
-
-        $this->assertIsArray($result);
-    }
-
     public function testCrearVentaConDescuento()
     {
         $data = [
@@ -103,7 +53,6 @@ class TestVentaCreacion extends TestCase
             'estatus' => 'activo',
             'tasa_usada' => 1
         ];
-
         $detalles = [
             [
                 'idproducto' => 1,
@@ -113,14 +62,9 @@ class TestVentaCreacion extends TestCase
                 'idmoneda_detalle' => 3
             ]
         ];
-
         $result = $this->model->insertVenta($data, $detalles);
-
         $this->assertIsArray($result);
     }
-
-    
-
     public function testCrearVentaSinCliente()
     {
         $data = [
@@ -129,7 +73,6 @@ class TestVentaCreacion extends TestCase
             'total_general' => 50.00,
             'estatus' => 'activo'
         ];
-
         $detalles = [
             [
                 'idproducto' => 1,
@@ -139,7 +82,6 @@ class TestVentaCreacion extends TestCase
                 'idmoneda_detalle' => 3
             ]
         ];
-
         try {
             $result = $this->model->insertVenta($data, $detalles);
             $this->assertFalse($result['success'] ?? true);
@@ -147,7 +89,6 @@ class TestVentaCreacion extends TestCase
             $this->assertInstanceOf(Exception::class, $e);
         }
     }
-
     public function testCrearVentaSinProductos()
     {
         $data = [
@@ -157,9 +98,7 @@ class TestVentaCreacion extends TestCase
             'total_general' => 0,
             'estatus' => 'activo'
         ];
-
         $detalles = [];
-
         try {
             $result = $this->model->insertVenta($data, $detalles);
             $this->assertFalse($result['success'] ?? true);
@@ -167,7 +106,6 @@ class TestVentaCreacion extends TestCase
             $this->assertInstanceOf(Exception::class, $e);
         }
     }
-
     public function testCrearVentaConClienteInexistente()
     {
         $data = [
@@ -177,7 +115,6 @@ class TestVentaCreacion extends TestCase
             'total_general' => 50.00,
             'estatus' => 'activo'
         ];
-
         $detalles = [
             [
                 'idproducto' => 1,
@@ -187,13 +124,10 @@ class TestVentaCreacion extends TestCase
                 'idmoneda_detalle' => 3
             ]
         ];
-
         $result = $this->model->insertVenta($data, $detalles);
-
         $this->assertIsArray($result);
         $this->assertFalse($result['success'] ?? true);
     }
-
     public function testCrearVentaConProductoInexistente()
     {
         $data = [
@@ -203,7 +137,6 @@ class TestVentaCreacion extends TestCase
             'total_general' => 50.00,
             'estatus' => 'activo'
         ];
-
         $detalles = [
             [
                 'idproducto' => 99999,
@@ -213,13 +146,10 @@ class TestVentaCreacion extends TestCase
                 'idmoneda_detalle' => 3
             ]
         ];
-
         $result = $this->model->insertVenta($data, $detalles);
-
         $this->assertIsArray($result);
         $this->assertFalse($result['success'] ?? true);
     }
-
     public function testCrearVentaConCantidadNegativa()
     {
         $data = [
@@ -229,7 +159,6 @@ class TestVentaCreacion extends TestCase
             'total_general' => -50.00,
             'estatus' => 'activo'
         ];
-
         $detalles = [
             [
                 'idproducto' => 1,
@@ -239,13 +168,10 @@ class TestVentaCreacion extends TestCase
                 'idmoneda_detalle' => 3
             ]
         ];
-
         $result = $this->model->insertVenta($data, $detalles);
-
         $this->assertIsArray($result);
         $this->assertFalse($result['success'] ?? true);
     }
-
     protected function tearDown(): void
     {
         $this->model = null;

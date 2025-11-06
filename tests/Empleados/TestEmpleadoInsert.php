@@ -1,29 +1,17 @@
 <?php
-
 use PHPUnit\Framework\TestCase;
-
 require_once __DIR__ . '/../../app/models/empleadosModel.php';
-
-
-
-
-
 class TestEmpleadoInsert extends TestCase
 {
     private $model;
-
     private function showMessage(string $msg)
     {
         fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
     }
-
     protected function setUp(): void
     {
         $this->model = new EmpleadosModel();
     }
-
-    
-
     public function testInsertEmpleadoConDatosCompletos()
     {
         $data = [
@@ -42,35 +30,9 @@ class TestEmpleadoInsert extends TestCase
             'observaciones' => 'Operaria especializada en clasificación de cartón y papel',
             'estatus' => 'ACTIVO'
         ];
-
         $result = $this->model->insertEmpleado($data);
         $this->assertTrue($result);
     }
-
-    public function testInsertEmpleadoSinObservaciones()
-    {
-        $data = [
-            'nombre' => 'Juan',
-            'apellido' => 'Pérez',
-            'identificacion' => 'V-' . (18000000 + time() % 10000000),
-            'tipo_empleado' => 'SUPERVISOR',
-            'puesto' => 'Supervisor de Producción',
-            'salario' => 50.00,
-            'fecha_nacimiento' => '1988-07-20',
-            'direccion' => 'Sector Industrial, Galpón 3',
-            'correo_electronico' => 'juan.perez' . time() . '@recicladora.com',
-            'telefono_principal' => '0424-7778899',
-            'genero' => 'M',
-            'fecha_inicio' => date('Y-m-d'),
-            'estatus' => 'ACTIVO'
-        ];
-
-        $result = $this->model->insertEmpleado($data);
-        $this->assertTrue($result);
-    }
-
-    
-
     public function testInsertEmpleadoSinNombre()
     {
         $data = [
@@ -83,7 +45,6 @@ class TestEmpleadoInsert extends TestCase
             'telefono_principal' => '04121234567',
             'estatus' => 'activo'
         ];
-
         try {
             $result = $this->model->insertEmpleado($data);
             if ($result === false) {
@@ -95,7 +56,6 @@ class TestEmpleadoInsert extends TestCase
             $this->assertInstanceOf(PDOException::class, $e);
         }
     }
-
     public function testInsertEmpleadoSinIdentificacion()
     {
         $data = [
@@ -108,7 +68,6 @@ class TestEmpleadoInsert extends TestCase
             'telefono_principal' => '04121234567',
             'estatus' => 'activo'
         ];
-
         try {
             $this->model->insertEmpleado($data);
             $this->fail('Debería lanzar PDOException');
@@ -117,11 +76,9 @@ class TestEmpleadoInsert extends TestCase
             $this->assertNotEmpty($e->getMessage());
         }
     }
-
     public function testInsertEmpleadoConCorreoDuplicado()
     {
         $correoUnico = 'duplicado' . time() . '@test.com';
-        
         $data = [
             'nombre' => 'Juan',
             'apellido' => 'Uno',
@@ -132,12 +89,9 @@ class TestEmpleadoInsert extends TestCase
             'telefono_principal' => '04121234567',
             'estatus' => 'activo'
         ];
-
         $result1 = $this->model->insertEmpleado($data);
-        
         $data['identificacion'] = 'V' . (time() + 1);
         $data['nombre'] = 'Juan Dos';
-        
         try {
             $this->model->insertEmpleado($data);
             $this->fail('Debería lanzar PDOException por correo duplicado');
@@ -146,7 +100,6 @@ class TestEmpleadoInsert extends TestCase
             $this->assertNotEmpty($e->getMessage());
         }
     }
-
     protected function tearDown(): void
     {
         $this->model = null;

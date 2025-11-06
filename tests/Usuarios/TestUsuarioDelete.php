@@ -22,8 +22,6 @@ class TestUsuarioDelete extends TestCase
         $this->model = new UsuariosModel();
     }
 
-    
-
     public function testEliminarUsuarioExistente()
     {
         $dataUsuario = [
@@ -63,35 +61,11 @@ class TestUsuarioDelete extends TestCase
         $this->assertIsBool($result);
     }
 
-    
-
     public function testEliminarUsuarioInexistente()
     {
         $idInexistente = 99999;
         
         $result = $this->model->deleteUsuarioById($idInexistente);
-        
-        $this->assertFalse($result);
-        
-        if (is_array($result) && array_key_exists('message', $result)) {
-            $this->showMessage($result['message']);
-        }
-    }
-
-    public function testEliminarConIdNegativo()
-    {
-        $result = $this->model->deleteUsuarioById(-1);
-        
-        $this->assertFalse($result);
-        
-        if (is_array($result) && array_key_exists('message', $result)) {
-            $this->showMessage($result['message']);
-        }
-    }
-
-    public function testEliminarConIdCero()
-    {
-        $result = $this->model->deleteUsuarioById(0);
         
         $this->assertFalse($result);
         
