@@ -1,12 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../app/models/BcvScraperModel.php';
+require_once __DIR__ . '/../../app/models/BcvScraperModel.php';
 class BcvScraperModelTest extends TestCase
 {
     private $scraper;
     private function showMessage(string $msg): void
     {
-        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+        fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
     }
     protected function setUp(): void
     {

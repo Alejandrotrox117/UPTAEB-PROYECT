@@ -4,6 +4,10 @@ require_once __DIR__ . '/../../app/models/loginModel.php';
 class TestLoginAutenticacion extends TestCase
 {
     private $model;
+    private function showMessage(string $msg): void
+    {
+        fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
+    }
     protected function setUp(): void
     {
         $this->model = new LoginModel();
@@ -27,6 +31,7 @@ class TestLoginAutenticacion extends TestCase
         $password = 'password_incorrecto';
         $result = $this->model->login($email, $password);
         $this->assertFalse($result);
+        $this->showMessage("Validación correcta: Login fallido con password incorrecto");
     }
     public function testLoginConEmailInexistente()
     {
@@ -34,6 +39,7 @@ class TestLoginAutenticacion extends TestCase
         $password = 'cualquierpassword';
         $result = $this->model->login($email, $password);
         $this->assertFalse($result);
+        $this->showMessage("Validación correcta: Login fallido con email inexistente");
     }
     public function testLoginConEmailVacio()
     {
@@ -41,6 +47,7 @@ class TestLoginAutenticacion extends TestCase
         $password = 'password123';
         $result = $this->model->login($email, $password);
         $this->assertFalse($result);
+        $this->showMessage("Validación correcta: Login fallido con email vacío");
     }
     public function testLoginConPasswordVacio()
     {
@@ -48,6 +55,7 @@ class TestLoginAutenticacion extends TestCase
         $password = '';
         $result = $this->model->login($email, $password);
         $this->assertFalse($result);
+        $this->showMessage("Validación correcta: Login fallido con password vacío");
     }
     public function testLoginConCamposVacios()
     {
@@ -55,6 +63,7 @@ class TestLoginAutenticacion extends TestCase
         $password = '';
         $result = $this->model->login($email, $password);
         $this->assertFalse($result);
+        $this->showMessage("Validación correcta: Login fallido con ambos campos vacíos");
     }
     public function testLoginConEmailInvalido()
     {

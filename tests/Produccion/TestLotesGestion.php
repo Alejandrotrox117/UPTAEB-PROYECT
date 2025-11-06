@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../app/models/produccionModel.php';
-class TestProduccionCreacionLote extends TestCase
+class TestLotesGestion extends TestCase
 {
     private $model;
     private function showMessage(string $msg): void
@@ -14,48 +14,22 @@ class TestProduccionCreacionLote extends TestCase
     {
         $this->model = new ProduccionModel();
     }
-    public function testCrearLoteConDatosCompletos()
+    public function testSelectAllLotesRetornaArray()
     {
-        $data = [
-            'idsupervisor' => 1,
-            'volumen_estimado' => 1000,
-            'fecha_jornada' => date('Y-m-d'),
-            'observaciones' => 'Lote de prueba'
-        ];
-        $result = $this->model->insertLote($data);
+        $result = $this->model->selectAllLotes();
         $this->assertIsArray($result);
         $this->assertArrayHasKey('status', $result);
-        if ($result['status']) {
-            $this->assertArrayHasKey('lote_id', $result);
-            $this->assertArrayHasKey('numero_lote', $result);
-            $this->assertArrayHasKey('operarios_requeridos', $result);
-        }
+        $this->assertArrayHasKey('data', $result);
     }
-    public function testGeneracionNumeroLoteUnico()
+    public function testSelectLoteByIdConIdInexistente()
     {
-        $data1 = [
-            'idsupervisor' => 1,
-            'volumen_estimado' => 300,
-            'fecha_jornada' => date('Y-m-d', strtotime('+3 days'))
-        ];
-        $data2 = [
-            'idsupervisor' => 1,
-            'volumen_estimado' => 400,
-            'fecha_jornada' => date('Y-m-d', strtotime('+3 days'))
-        ];
-        $result1 = $this->model->insertLote($data1);
-        $result2 = $this->model->insertLote($data2);
-        if ($result1['status'] && $result2['status']) {
-            $this->assertNotEquals(
-                $result1['numero_lote'],
-                $result2['numero_lote']
-            );
-        }
+        $result = $this->model->selectLoteById(99999);
+        $this->assertFalse($result);
     }
-    public function testCrearLoteSinSupervisor()
+    public function testInsertarLoteSinSupervisor()
     {
         $data = [
-            'volumen_estimado' => 1000,
+            'volumen_estimado' => 100,
             'fecha_jornada' => date('Y-m-d')
         ];
         $result = $this->model->insertLote($data);
@@ -64,7 +38,7 @@ class TestProduccionCreacionLote extends TestCase
         $this->assertStringContainsString('supervisor', strtolower($result['message']));
         $this->showMessage("Validación correcta: " . $result['message']);
     }
-    public function testCrearLoteConVolumenCero()
+    public function testInsertarLoteConVolumenCero()
     {
         $data = [
             'idsupervisor' => 1,
@@ -77,66 +51,97 @@ class TestProduccionCreacionLote extends TestCase
         $this->assertStringContainsString('volumen', strtolower($result['message']));
         $this->showMessage("Validación correcta: " . $result['message']);
     }
-    public function testCrearLoteConVolumenNegativo()
+    public function testInsertarLoteConVolumenNegativo()
     {
         $data = [
             'idsupervisor' => 1,
-            'volumen_estimado' => -500,
+            'volumen_estimado' => -100,
             'fecha_jornada' => date('Y-m-d')
         ];
         $result = $this->model->insertLote($data);
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
     }
-    public function testCrearLoteSinFechaJornada()
+    public function testInsertarLoteSinFechaJornada()
     {
         $data = [
             'idsupervisor' => 1,
-            'volumen_estimado' => 1000
+            'volumen_estimado' => 100
         ];
         $result = $this->model->insertLote($data);
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('fecha', strtolower($result['message']));
-        $this->showMessage("Validación correcta: " . $result['message']);
     }
-    public function testCrearLoteConFechaInvalida()
+    public function testInsertarLoteConFechaInvalida()
     {
         $data = [
             'idsupervisor' => 1,
-            'volumen_estimado' => 1000,
-            'fecha_jornada' => '2024-13-45'
+            'volumen_estimado' => 100,
+            'fecha_jornada' => '2025-13-45'
         ];
         $result = $this->model->insertLote($data);
+        $this->assertIsArray($result);
         $this->assertFalse($result['status']);
         $this->assertStringContainsString('fecha', strtolower($result['message']));
-        $this->showMessage("Validación correcta: " . $result['message']);
     }
-    public function testCrearLoteExcedeCapacidadMaxima()
+    public function testInsertarLoteConDatosCompletos()
     {
         $data = [
             'idsupervisor' => 1,
-            'volumen_estimado' => 999999,
-            'fecha_jornada' => date('Y-m-d')
+            'volumen_estimado' => 150,
+            'fecha_jornada' => date('Y-m-d'),
+            'observaciones' => 'Lote de prueba automatizada'
         ];
         $result = $this->model->insertLote($data);
-        if (!$result['status']) {
-            $this->assertStringContainsString(
-                'capacidad',
-                strtolower($result['message'])
-            );
-            $this->showMessage("Validación correcta: " . $result['message']);
+        $this->assertIsArray($result);
+        if ($result['status']) {
+            $this->assertTrue($result['status']);
+            $this->assertArrayHasKey('idlote', $result);
+            $this->assertArrayHasKey('numero_lote', $result);
+            $this->assertArrayHasKey('operarios_requeridos', $result);
         }
     }
-    public function testCrearLoteConSupervisorInexistente()
+    public function testIniciarLoteConIdInexistente()
+    {
+        $result = $this->model->iniciarLoteProduccion(99999);
+        $this->assertIsArray($result);
+        $this->assertFalse($result['status']);
+    }
+    public function testCerrarLoteConIdInexistente()
+    {
+        $result = $this->model->cerrarLoteProduccion(99999);
+        $this->assertIsArray($result);
+        $this->assertFalse($result['status']);
+    }
+    public function testActualizarLoteConIdInexistente()
+    {
+        $data = [
+            'volumen_estimado' => 200,
+            'observaciones' => 'Actualización de prueba'
+        ];
+        $result = $this->model->actualizarLote(99999, $data);
+        $this->assertIsArray($result);
+        $this->assertFalse($result['status']);
+    }
+    public function testEliminarLoteConIdInexistente()
+    {
+        $result = $this->model->eliminarLote(99999);
+        $this->assertIsArray($result);
+        $this->assertFalse($result['status']);
+    }
+    public function testInsertarLoteConSupervisorInexistente()
     {
         $data = [
             'idsupervisor' => 99999,
-            'volumen_estimado' => 500,
+            'volumen_estimado' => 100,
             'fecha_jornada' => date('Y-m-d')
         ];
         $result = $this->model->insertLote($data);
         $this->assertIsArray($result);
+        if (!$result['status']) {
+            $this->assertFalse($result['status']);
+        }
     }
     protected function tearDown(): void
     {

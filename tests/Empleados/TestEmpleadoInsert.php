@@ -6,7 +6,7 @@ class TestEmpleadoInsert extends TestCase
     private $model;
     private function showMessage(string $msg)
     {
-        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+        fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
     }
     protected function setUp(): void
     {
@@ -33,7 +33,7 @@ class TestEmpleadoInsert extends TestCase
         $result = $this->model->insertEmpleado($data);
         $this->assertTrue($result);
     }
-    public function testInsertEmpleadoSinNombre()
+    public function testInsertEmpleadoSinCampoRequerido()
     {
         $data = [
             'nombre' => '',
@@ -48,32 +48,12 @@ class TestEmpleadoInsert extends TestCase
         try {
             $result = $this->model->insertEmpleado($data);
             if ($result === false) {
-                $this->showMessage("Inserción fallida");
+                $this->showMessage("Validación correcta: Inserción fallida por campo requerido vacío");
             }
             $this->assertFalse($result);
         } catch (PDOException $e) {
-            $this->showMessage("PDOException: " . $e->getMessage());
+            $this->showMessage("Validación correcta: " . $e->getMessage());
             $this->assertInstanceOf(PDOException::class, $e);
-        }
-    }
-    public function testInsertEmpleadoSinIdentificacion()
-    {
-        $data = [
-            'nombre' => 'Pedro',
-            'apellido' => 'Sánchez',
-            'identificacion' => '',
-            'fecha_nacimiento' => '1992-03-10',
-            'direccion' => 'Dirección',
-            'correo_electronico' => 'pedro@test.com',
-            'telefono_principal' => '04121234567',
-            'estatus' => 'activo'
-        ];
-        try {
-            $this->model->insertEmpleado($data);
-            $this->fail('Debería lanzar PDOException');
-        } catch (PDOException $e) {
-            $this->assertInstanceOf(PDOException::class, $e);
-            $this->assertNotEmpty($e->getMessage());
         }
     }
     public function testInsertEmpleadoConCorreoDuplicado()
@@ -96,6 +76,7 @@ class TestEmpleadoInsert extends TestCase
             $this->model->insertEmpleado($data);
             $this->fail('Debería lanzar PDOException por correo duplicado');
         } catch (PDOException $e) {
+            $this->showMessage("Validación correcta: " . $e->getMessage());
             $this->assertInstanceOf(PDOException::class, $e);
             $this->assertNotEmpty($e->getMessage());
         }

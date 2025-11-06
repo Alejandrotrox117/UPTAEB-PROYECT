@@ -1,12 +1,14 @@
 <?php
+
 use PHPUnit\Framework\TestCase;
+
 require_once __DIR__ . '/../../app/models/produccionModel.php';
 class TestProduccionInicioLote extends TestCase
 {
     private $model;
     private function showMessage(string $msg): void
     {
-        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+        fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
     }
     protected function setUp(): void
     {
@@ -60,7 +62,7 @@ class TestProduccionInicioLote extends TestCase
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
         if (array_key_exists('message', $result)) {
-            $this->showMessage($result['message']);
+            $this->showMessage("Error esperado: " . $result['message']);
         }
     }
     public function testIniciarLoteYaIniciado()
@@ -77,7 +79,7 @@ class TestProduccionInicioLote extends TestCase
             $segundoInicio = $this->model->iniciarLoteProduccion($idLote);
             $this->assertFalse($segundoInicio['status']);
             if (array_key_exists('message', $segundoInicio)) {
-                $this->showMessage($segundoInicio['message']);
+                $this->showMessage("Error esperado (doble inicio): " . $segundoInicio['message']);
             }
         } else {
             $this->markTestSkipped('No se pudo crear el lote para la prueba');

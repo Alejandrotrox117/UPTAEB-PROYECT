@@ -1,13 +1,5 @@
-Produccion Creacion Lote
- [x] Crear lote con datos completos
- [x] Calculo operarios requeridos
- [x] Crear lote sin observaciones
- [x] Generacion numero lote unico
- [x] Crear lote sin supervisor
- [x] Crear lote con volumen cero
- [x] Crear lote con volumen negativo
- [x] Crear lote sin fecha jornada
- [x] Crear lote con fecha invalida
- [x] Crear lote excede capacidad maxima
- [x] Crear lote con supervisor inexistente
+Roles Integrado
+ [ ] Guardar y recuperar asignaciones
+ [x] Guardar asignaciones con rol invalido
+ [x] Guardar asignaciones con modulo invalido
 

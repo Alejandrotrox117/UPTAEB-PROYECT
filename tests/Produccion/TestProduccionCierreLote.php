@@ -6,7 +6,7 @@ class TestProduccionCierreLote extends TestCase
     private $model;
     private function showMessage(string $msg): void
     {
-        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
+        fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
     }
     protected function setUp(): void
     {
@@ -62,7 +62,7 @@ class TestProduccionCierreLote extends TestCase
         $this->assertIsArray($result);
         $this->assertFalse($result['status']);
         if (array_key_exists('message', $result)) {
-            $this->showMessage($result['message']);
+            $this->showMessage("Error esperado: " . $result['message']);
         }
     }
     public function testCerrarLoteYaCerrado()
@@ -84,7 +84,7 @@ class TestProduccionCierreLote extends TestCase
                 strtolower($segundoCierre['message'])
             );
             if (array_key_exists('message', $segundoCierre)) {
-                $this->showMessage($segundoCierre['message']);
+                $this->showMessage("Error esperado (doble cierre): " . $segundoCierre['message']);
             }
         } else {
             $this->markTestSkipped('No se pudo crear el lote para la prueba');
