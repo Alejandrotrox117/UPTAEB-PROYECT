@@ -1,3 +1,4 @@
-Produccion Flow Integration
- [x] Flujo completo produccion lote
+Venta Flow Integration
+ [x] Flujo completo venta con pagos
+ [x] Venta con descuento multiples productos
 

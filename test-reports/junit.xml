@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="ProduccionFlowIntegrationTest" file="C:\xampp\htdocs\project\tests\Integration\ProduccionFlowIntegrationTest.php" tests="1" assertions="16" errors="0" failures="0" skipped="0" time="102.127668">
-    <testcase name="testFlujoCompletoProduccionLote" file="C:\xampp\htdocs\project\tests\Integration\ProduccionFlowIntegrationTest.php" line="28" class="ProduccionFlowIntegrationTest" classname="ProduccionFlowIntegrationTest" assertions="16" time="102.127668"/>
+  <testsuite name="VentaFlowIntegrationTest" file="C:\xampp\htdocs\project\tests\Integration\VentaFlowIntegrationTest.php" tests="2" assertions="7" errors="0" failures="0" skipped="0" time="0.144470">
+    <testcase name="testFlujoCompletoVentaConPagos" file="C:\xampp\htdocs\project\tests\Integration\VentaFlowIntegrationTest.php" line="32" class="VentaFlowIntegrationTest" classname="VentaFlowIntegrationTest" assertions="5" time="0.084396"/>
+    <testcase name="testVentaConDescuentoMultiplesProductos" file="C:\xampp\htdocs\project\tests\Integration\VentaFlowIntegrationTest.php" line="147" class="VentaFlowIntegrationTest" classname="VentaFlowIntegrationTest" assertions="2" time="0.060074"/>
   </testsuite>
 </testsuites>

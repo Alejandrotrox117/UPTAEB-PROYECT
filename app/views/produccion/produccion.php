@@ -66,7 +66,7 @@
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800">Registros de Producción</h3>
-                        <p class="text-gray-600 text-sm">Sistema unificado de registro de procesos productivos</p>
+                       
                     </div>
                     <button id="btnAbrirModalRegistrarProduccion"
                         class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base transition-all hover:shadow-lg">
@@ -74,61 +74,9 @@
                     </button>
                 </div>
 
-                <!-- NOTA: Información sobre el registro -->
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-5 mb-6 rounded-r-lg shadow-sm">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-info-circle text-blue-500 text-2xl"></i>
-                        </div>
-                        <div class="ml-4">
-                            <h4 class="text-base font-bold text-blue-800 mb-1">
-                                Sistema Integrado de Producción
-                            </h4>
-                            <p class="text-sm text-blue-700 mb-2">
-                                <strong>Todo en un solo formulario:</strong> Registra cualquier proceso de producción (Clasificación o Empaque) desde el mismo formulario unificado.
-                            </p>
-                            <ul class="text-xs text-blue-600 space-y-1 ml-4">
-                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Selecciona empleado, lote, fecha y tipo de proceso</li>
-                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Define materia prima y producto terminado</li>
-                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Los salarios se calculan automáticamente según configuración</li>
-                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Visualiza todos los procesos del día en la tabla inferior</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+               
 
-                <!-- Los botones de registro individual están comentados
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-filter text-blue-600 text-2xl mr-3"></i>
-                            <div>
-                                <h4 class="text-lg font-semibold text-blue-800">Proceso de Clasificación</h4>
-                                <p class="text-blue-600 text-sm">Registra material clasificado y contaminantes</p>
-                            </div>
-                        </div>
-                        <button id="btnAbrirModalClasificacion"
-                            class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition">
-                            <i class="fas fa-plus mr-2"></i> Registrar Clasificación
-                        </button>
-                    </div>
-
-                    <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-cube text-purple-600 text-2xl mr-3"></i>
-                            <div>
-                                <h4 class="text-lg font-semibold text-purple-800">Proceso de Empaque</h4>
-                                <p class="text-purple-600 text-sm">Crea pacas desde material clasificado</p>
-                            </div>
-                        </div>
-                        <button id="btnAbrirModalEmpaque"
-                            class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-medium transition">
-                            <i class="fas fa-plus mr-2"></i> Registrar Empaque
-                        </button>
-                    </div>
-                </div>
-                -->
-
+           
                 <!-- Lista de procesos recientes -->
                 <div class="mt-8">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4">Procesos de Hoy</h4>
@@ -161,23 +109,7 @@
                     </div>
                 </div>
 
-                <!-- Información de uso -->
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-info-circle text-blue-500 text-xl"></i>
-                        </div>
-                        <div class="ml-3">
-                            <h4 class="text-sm font-bold text-blue-800">Cómo usar la nómina:</h4>
-                            <ol class="text-sm text-blue-700 mt-2 ml-4 list-decimal space-y-1">
-                                <li>Haz clic en "Consultar Registros por Fecha" y selecciona el rango de fechas</li>
-                                <li>Revisa los registros de producción con sus salarios calculados automáticamente</li>
-                                <li>Selecciona los registros que deseas enviar a pago usando los checkboxes</li>
-                                <li>Haz clic en "Registrar Salario" para enviarlos al módulo de pagos</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
+               
 
                 <div class="overflow-x-auto w-full relative">
                     <table id="TablaNomina" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 500px;">
