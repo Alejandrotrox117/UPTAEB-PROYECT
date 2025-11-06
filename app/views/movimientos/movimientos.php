@@ -187,7 +187,7 @@ $permisos = $data['permisos'];
 
 <!--  MODAL REGISTRAR MOVIMIENTO -->
 <?php if ($permisos['crear']): ?>
-<div id="modalRegistrarMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
+<div id="modalRegistrarMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center  bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
         <div class="px-6 py-4 border-b border-gray-200 bg-green-50 flex-shrink-0">
             <div class="flex items-center justify-between">
@@ -255,8 +255,8 @@ $permisos = $data['permisos'];
                             <i class="fas fa-history mr-1"></i>Stock Anterior
                         </label>
                         <input type="number" id="stock_anterior" name="stock_anterior" 
-                               step="0.01" min="0" placeholder="0.00"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                               step="0.01" min="0" placeholder="0.00" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-gray-600">
                         <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
                     </div>
 
@@ -266,8 +266,8 @@ $permisos = $data['permisos'];
                             <i class="fas fa-calculator mr-1"></i>Stock Resultante
                         </label>
                         <input type="number" id="stock_resultante" name="stock_resultante" 
-                               step="0.01" min="0" placeholder="0.00"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                               step="0.01" min="0" placeholder="0.00" readonly
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-gray-600">
                         <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
                     </div>
                 </div>
@@ -282,19 +282,6 @@ $permisos = $data['permisos'];
                     <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
                 </div>
 
-                <!-- Nota informativa -->
-                <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-info-circle text-blue-400"></i>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm text-blue-700">
-                                <strong>Nota:</strong> Debe especificar cantidad de entrada O salida, no ambas.
-                            </p>
-                        </div>
-                    </div>
-                </div>
             </form>
         </div>
         
@@ -312,13 +299,13 @@ $permisos = $data['permisos'];
 </div>
 <?php endif; ?>
 
-<!--  MODAL ACTUALIZAR MOVIMIENTO -->
+
 <?php if ($permisos['editar']): ?>
-<div id="modalActualizarMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
+<div id="modalActualizarMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center  bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
-        <div class="px-6 py-4 border-b border-gray-200 bg-blue-50 flex-shrink-0">
+        <div class="px-6 py-4 border-b border-gray-200 bg-green-50 flex-shrink-0">
             <div class="flex items-center justify-between">
-                <h3 class="text-xl font-bold text-blue-800">
+                <h3 class="text-xl font-bold text-green-800">
                     <i class="fas fa-edit mr-2"></i>Actualizar Movimiento
                 </h3>
                 <button type="button" id="btnCerrarModalActualizar" class="text-gray-400 hover:text-gray-600">
@@ -434,19 +421,7 @@ $permisos = $data['permisos'];
                     <div class="error-message text-red-500 text-sm mt-1 hidden"></div>
                 </div>
 
-                <!-- Nota informativa -->
-                <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-info-circle text-blue-400"></i>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm text-blue-700">
-                                <strong>Nota:</strong> Debe especificar cantidad de entrada O salida, no ambas.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                
             </form>
         </div>
         
@@ -456,7 +431,7 @@ $permisos = $data['permisos'];
                 <i class="fas fa-times mr-2"></i>Cancelar
             </button>
             <button type="submit" form="formActualizarMovimiento" id="btnActualizarMovimiento"
-                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium">
+                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium">
                 <i class="fas fa-save mr-2"></i>Actualizar Movimiento
             </button>
         </div>
