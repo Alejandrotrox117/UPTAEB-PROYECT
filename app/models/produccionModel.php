@@ -217,7 +217,11 @@ class ProduccionModel extends Mysql
     }
 
 
-    public function insertLote(array $data)
+    // ============================================================
+    // MÉTODOS PRIVADOS - OPERACIONES DE BASE DE DATOS
+    // ============================================================
+
+    private function ejecutarInsercionLote(array $data)
     {
         // VALIDACIONES
         if (empty($data['idsupervisor'])) {
@@ -363,7 +367,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    public function selectAllLotes()
+    private function ejecutarConsultaTodosLotes()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -403,7 +407,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    public function selectLoteById(int $idlote)
+    private function ejecutarConsultaLotePorId(int $idlote)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -431,7 +435,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    public function iniciarLoteProduccion(int $idlote)
+    private function ejecutarInicioLote(int $idlote)
     {
         $this->setIdLote($idlote);
         
@@ -474,7 +478,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    public function cerrarLoteProduccion(int $idlote)
+    private function ejecutarCierreLote(int $idlote)
     {
         $this->setIdLote($idlote);
         
@@ -540,8 +544,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-
-    public function selectConfiguracionProduccion()
+    private function ejecutarConsultaConfiguracionProduccion()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -581,7 +584,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    public function updateConfiguracionProduccion(array $data)
+    private function ejecutarActualizacionConfiguracionProduccion(array $data)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -634,8 +637,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-
-    public function selectEmpleadosActivos()
+    private function ejecutarConsultaEmpleadosActivos()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -674,7 +676,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    public function selectProductos(string $tipo = 'todos')
+    private function ejecutarConsultaProductos(string $tipo = 'todos')
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -726,7 +728,6 @@ class ProduccionModel extends Mysql
             $conexion->disconnect();
         }
     }
-
 
     private function obtenerConfiguracion($db)
     {
@@ -934,7 +935,8 @@ class ProduccionModel extends Mysql
 
         return $db->lastInsertId();
     }
-     public function registrarSolicitudPago(array $registros = [])
+
+    private function ejecutarRegistroSolicitudPago(array $registros = [])
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1026,15 +1028,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ============================================================
-    // MÉTODOS PARA REGISTRO_PRODUCCION
-    // ============================================================
-
-    /**
-     * Inserta un nuevo registro de producción
-     * Calcula automáticamente los salarios según configuración
-     */
-    public function insertarRegistroProduccion(array $data)
+    private function ejecutarInsercionRegistroProduccion(array $data)
     {
         // Setear propiedades desde el array de entrada
         $this->setIdLote($data['idlote']);
@@ -1160,10 +1154,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    /**
-     * Obtiene todos los registros de producción por lote
-     */
-    public function obtenerRegistrosPorLote($idlote)
+    private function ejecutarConsultaRegistrosPorLote($idlote)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1256,10 +1247,7 @@ class ProduccionModel extends Mysql
         }
     }
 
-    /**
-     * Obtiene todos los registros de producción con filtros opcionales
-     */
-    public function selectAllRegistrosProduccion($filtros = [])
+    private function ejecutarConsultaTodosRegistrosProduccion($filtros = [])
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1341,8 +1329,32 @@ class ProduccionModel extends Mysql
         }
     }
 
+    // ============================================================
+    // MÉTODOS PÚBLICOS - LLAMADOS DESDE EL CONTROLADOR
+    // ============================================================
+
+    public function registrarSolicitudPago(array $registros = [])
+    {
+        return $this->ejecutarRegistroSolicitudPago($registros);
+    }
+
+    public function insertarRegistroProduccion(array $data)
+    {
+        return $this->ejecutarInsercionRegistroProduccion($data);
+    }
+
+    public function obtenerRegistrosPorLote($idlote)
+    {
+        return $this->ejecutarConsultaRegistrosPorLote($idlote);
+    }
+
+    public function selectAllRegistrosProduccion($filtros = [])
+    {
+        return $this->ejecutarConsultaTodosRegistrosProduccion($filtros);
+    }
+
     /**
-     * Actualiza un registro de producción
+     * Obtiene todos los registros de producción con filtros opcionales
      */
     public function actualizarRegistroProduccion($idregistro, array $data)
     {
@@ -2052,6 +2064,55 @@ class ProduccionModel extends Mysql
             $conexion->disconnect();
         }
     }
-}
 
+    // ============================================================
+    // MÉTODOS PÚBLICOS - LLAMADOS DESDE EL CONTROLADOR
+    // ============================================================
+
+    public function insertLote(array $data)
+    {
+        return $this->ejecutarInsercionLote($data);
+    }
+
+    public function selectAllLotes()
+    {
+        return $this->ejecutarConsultaTodosLotes();
+    }
+
+    public function selectLoteById(int $idlote)
+    {
+        return $this->ejecutarConsultaLotePorId($idlote);
+    }
+
+    public function iniciarLoteProduccion(int $idlote)
+    {
+        return $this->ejecutarInicioLote($idlote);
+    }
+
+    public function cerrarLoteProduccion(int $idlote)
+    {
+        return $this->ejecutarCierreLote($idlote);
+    }
+
+    public function selectConfiguracionProduccion()
+    {
+        return $this->ejecutarConsultaConfiguracionProduccion();
+    }
+
+    public function updateConfiguracionProduccion(array $data)
+    {
+        return $this->ejecutarActualizacionConfiguracionProduccion($data);
+    }
+
+    public function selectEmpleadosActivos()
+    {
+        return $this->ejecutarConsultaEmpleadosActivos();
+    }
+
+    public function selectProductos(string $tipo = 'todos')
+    {
+        return $this->ejecutarConsultaProductos($tipo);
+    }
+
+}
 
