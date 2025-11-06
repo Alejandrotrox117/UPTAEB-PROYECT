@@ -494,21 +494,23 @@ document.addEventListener("DOMContentLoaded", function () {
         dataSrc: function (json) {
           console.log("📊 Respuesta del servidor:", json);
           
-          if (json && json.status && json.data) {
-            
+          if (json && json.status) {
+            // Respuesta exitosa - puede tener datos o estar vacío
             setTimeout(() => {
               actualizarContadoresSimples();
             }, 500);
             
-            return json.data;
+            return json.data || [];
           } else {
+            // Error real o sin permisos
             console.error("Error en respuesta:", json);
             $("#TablaMovimiento_processing").css("display", "none");
             
             if (json && json.message && json.message.includes('permisos')) {
               mostrarModalPermisosDenegados(json.message);
-            } else {
-              Swal.fire("Error", json?.message || "No se pudieron cargar los datos de movimientos.", "error");
+            } else if (json && json.message) {
+              // Solo mostrar alerta si hay un mensaje de error real
+              Swal.fire("Error", json.message, "error");
             }
             return [];
           }
@@ -1598,7 +1600,3 @@ function descargarCSV(csvContent, filename) {
     document.body.removeChild(link);
   }
 }
-
-
-window.obtenerTiposMovimientoActivos = obtenerTiposMovimientoActivos;
-window.actualizarContadoresTipos = actualizarContadoresTipos;

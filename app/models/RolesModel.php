@@ -1,8 +1,7 @@
 <?php
 require_once "app/core/conexion.php";
-require_once "app/core/mysql.php";
 
-class RolesModel extends mysql
+class RolesModel 
 {
     const SUPER_USUARIO_ROL_ID = 1;
 

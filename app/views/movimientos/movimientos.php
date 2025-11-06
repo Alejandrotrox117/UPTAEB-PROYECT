@@ -30,7 +30,7 @@ $permisos = $data['permisos'];
         </div>
     <?php else: ?>
 
-        <!-- ✅ ESTADÍSTICAS SIMPLES -->
+        <!--  ESTADÍSTICAS SIMPLES -->
         <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
             <div class="mb-4">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">
@@ -43,7 +43,7 @@ $permisos = $data['permisos'];
             </div>
         </div>
 
-        <!-- ✅ FILTROS Y BÚSQUEDA (SIMILAR A BITÁCORA) -->
+        <!--  FILTROS Y BÚSQUEDA (SIMILAR A BITÁCORA) -->
         <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
                 <div class="flex flex-col sm:flex-row gap-4 flex-1">
@@ -88,7 +88,7 @@ $permisos = $data['permisos'];
             </div>
         </div>
 
-        <!-- ✅ TABLA DE MOVIMIENTOS -->
+        <!--  TABLA DE MOVIMIENTOS -->
         <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div class="flex flex-col sm:flex-row gap-2">
@@ -131,7 +131,7 @@ $permisos = $data['permisos'];
     <?php endif; ?>
 </main>
 
-<!-- ✅ MODAL VER DETALLE MOVIMIENTO -->
+<!--  MODAL VER DETALLE MOVIMIENTO -->
 <?php if ($permisos['ver']): ?>
 <div id="modalVerDetalleMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-2xl">
@@ -185,7 +185,7 @@ $permisos = $data['permisos'];
 </div>
 <?php endif; ?>
 
-<!-- ✅ MODAL REGISTRAR MOVIMIENTO -->
+<!--  MODAL REGISTRAR MOVIMIENTO -->
 <?php if ($permisos['crear']): ?>
 <div id="modalRegistrarMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
@@ -312,7 +312,7 @@ $permisos = $data['permisos'];
 </div>
 <?php endif; ?>
 
-<!-- ✅ MODAL ACTUALIZAR MOVIMIENTO -->
+<!--  MODAL ACTUALIZAR MOVIMIENTO -->
 <?php if ($permisos['editar']): ?>
 <div id="modalActualizarMovimiento" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
@@ -464,7 +464,7 @@ $permisos = $data['permisos'];
 </div>
 <?php endif; ?>
 
-<!-- ✅ MODAL PERMISOS DENEGADOS -->
+
 <div id="modalPermisosDenegados" class="opacity-0 pointer-events-none fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity duration-300 z-[60]">
     <div class="bg-white rounded-xl shadow-2xl overflow-hidden w-11/12 max-w-md transform transition-transform duration-300">
         <div class="px-6 py-4 border-b border-gray-200 bg-red-50">

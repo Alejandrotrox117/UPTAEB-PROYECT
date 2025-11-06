@@ -1,9 +1,9 @@
 <?php
 require_once "app/core/conexion.php";
-require_once "app/core/mysql.php";
+
 require_once "app/models/bitacoraModel.php";
 
-class SueldosModel extends Mysql
+class SueldosModel 
 {
     private $query;
     private $array;
@@ -13,8 +13,8 @@ class SueldosModel extends Mysql
     private $message;
     private $status;
     
-    // Definir constante para el rol de super usuario
-    const SUPER_USUARIO_ROL_ID = 1; // IMPORTANTE: Ajustar según el ID real del rol de super usuario en tu BD
+   
+    const SUPER_USUARIO_ROL_ID = 1; 
  
     public function __construct()
     {

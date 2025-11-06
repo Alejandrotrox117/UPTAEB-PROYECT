@@ -219,19 +219,12 @@ class MovimientosModel extends Mysql
             $stmt->execute($this->getArray());
             $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            if ($movimientos) {
-                $resultado = [
-                    'status' => true,
-                    'message' => 'Movimientos obtenidos correctamente.',
-                    'data' => $movimientos
-                ];
-            } else {
-                $resultado = [
-                    'status' => false,
-                    'message' => 'No hay movimientos disponibles.',
-                    'data' => []
-                ];
-            }
+            // Siempre retornar status true si la consulta fue exitosa
+            $resultado = [
+                'status' => true,
+                'message' => $movimientos ? 'Movimientos obtenidos correctamente.' : 'No hay movimientos disponibles.',
+                'data' => $movimientos ? $movimientos : []
+            ];
             
         } catch (Exception $e) {
             error_log("MovimientosModel::ejecutarBusquedaTodosMovimientos - Error: " . $e->getMessage());
