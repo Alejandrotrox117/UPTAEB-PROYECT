@@ -148,5 +148,5 @@ class categoriasModel extends Mysql
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$idcategoria]);
     }
-   
+ 
 }

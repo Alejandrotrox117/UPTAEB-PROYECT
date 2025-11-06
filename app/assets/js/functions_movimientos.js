@@ -171,7 +171,7 @@ function validarFormularioMovimiento(camposArray, formId) {
     if (campo.tipo === "select") {
       esValido = validarSelect(campo.id, campo.mensajes, formId);
     } else if (["input", "textarea"].includes(campo.tipo)) {
-      if (inputElement.value.trim() === "" && campo.mensajes?.vacio) {
+      if (inputElement.value.trim() === "" && campo.mensajes && campo.mensajes.vacio) {
         esValido = false;
         mostrarErrorCampo(inputElement, campo.mensajes.vacio);
       }
@@ -258,14 +258,14 @@ function limpiarErroresCampo(inputElement) {
  * Cargar tipos de movimiento disponibles para filtros
  */
 function cargarTiposMovimientoParaFiltros() {
-  console.log("🔄 Cargando tipos de movimiento para select...");
+  console.log("Cargando tipos de movimiento para select...");
   
   fetch("movimientos/getTiposMovimiento")
     .then(response => response.json())
     .then(result => {
       if (result.status && result.data) {
         tiposMovimientoDisponibles = result.data;
-        console.log("📋 Tipos de movimiento cargados:", tiposMovimientoDisponibles);
+        console.log(" Tipos de movimiento cargados:", tiposMovimientoDisponibles);
         
         
         llenarSelectFiltroTipos();
@@ -291,51 +291,32 @@ function llenarSelectFiltroTipos() {
     return;
   }
 
-  
-  let optionsHTML = '<option value="">Todos los tipos de movimiento</option>';
-  
-  
-  tiposMovimientoDisponibles.forEach(tipo => {
-    const descripcion = tipo.descripcion ? ` - ${tipo.descripcion}` : '';
-    optionsHTML += `<option value="${tipo.idtipomovimiento}">${tipo.nombre}${descripcion}</option>`;
-  });
+  selectFiltro.innerHTML = '<option value="">Todos los tipos de movimiento</option>' + 
+    tiposMovimientoDisponibles.map(t => `<option value="${t.idtipomovimiento}">${t.nombre}${t.descripcion ? ` - ${t.descripcion}` : ''}</option>`).join('');
 
-  selectFiltro.innerHTML = optionsHTML;
-
-  
   selectFiltro.addEventListener('change', function() {
-    const tipoSeleccionado = this.value;
-    const nombreTipo = this.options[this.selectedIndex].text;
-    
-    filtrarMovimientosPorTipo(tipoSeleccionado, nombreTipo);
+    filtrarMovimientosPorTipo(this.value, this.options[this.selectedIndex].text);
   });
 }
 
 /**
- * Filtrar movimientos por tipo (simplificado)
+ * Filtrar movimientos por tipo
  */
 function filtrarMovimientosPorTipo(tipoId, nombreTipo) {
   console.log(`🔍 Filtrando por tipo: ${nombreTipo} (ID: ${tipoId})`);
   
-  
   const indicadorFiltro = document.getElementById('indicador-filtro-actual');
   if (indicadorFiltro) {
-    if (!tipoId) {
-      indicadorFiltro.innerHTML = '<i class="fas fa-list mr-1"></i>Mostrando todos los movimientos';
-      indicadorFiltro.className = 'text-sm text-gray-600 flex items-center';
-    } else {
-      indicadorFiltro.innerHTML = `<i class="fas fa-filter mr-1"></i>Filtrado por: ${nombreTipo}`;
-      indicadorFiltro.className = 'text-sm text-blue-600 font-medium flex items-center';
-    }
+    indicadorFiltro.innerHTML = tipoId 
+      ? `<i class="fas fa-filter mr-1"></i>Filtrado por: ${nombreTipo}`
+      : '<i class="fas fa-list mr-1"></i>Mostrando todos los movimientos';
+    indicadorFiltro.className = `text-sm ${tipoId ? 'text-blue-600 font-medium' : 'text-gray-600'} flex items-center`;
   }
 
-  
   if (tablaMovimientos) {
     if (!tipoId) {
-      
-      tablaMovimientos.column(3).search('').draw(); 
+      tablaMovimientos.column(3).search('').draw();
     } else {
-      
       const tipoMovimiento = tiposMovimientoDisponibles.find(t => t.idtipomovimiento == tipoId);
       if (tipoMovimiento) {
         tablaMovimientos.column(3).search('^' + tipoMovimiento.nombre + '$', true, false).draw();
@@ -343,7 +324,6 @@ function filtrarMovimientosPorTipo(tipoId, nombreTipo) {
     }
   }
 
-  
   actualizarContadoresSimples();
 }
 
@@ -416,50 +396,32 @@ function actualizarContadoresSimples() {
   if (!tablaMovimientos) return;
 
   const datos = tablaMovimientos.rows({ search: 'applied' }).data().toArray();
-  
-  
-  const totalMovimientos = datos.length;
-  
-  let totalEntradas = 0;
-  let totalSalidas = 0;
-  
-  datos.forEach(movimiento => {
-    const entrada = parseFloat(movimiento.cantidad_entrada || 0);
-    const salida = parseFloat(movimiento.cantidad_salida || 0);
-    
-    if (entrada > 0) totalEntradas++;
-    if (salida > 0) totalSalidas++;
-  });
+  const stats = datos.reduce((acc, mov) => {
+    if (parseFloat(mov.cantidad_entrada || 0) > 0) acc.entradas++;
+    if (parseFloat(mov.cantidad_salida || 0) > 0) acc.salidas++;
+    return acc;
+  }, { entradas: 0, salidas: 0 });
 
-  
   const statTotal = document.getElementById('stat-total');
   const statEntradas = document.getElementById('stat-entradas');
   const statSalidas = document.getElementById('stat-salidas');
   
-  if (statTotal) statTotal.textContent = totalMovimientos;
-  if (statEntradas) statEntradas.textContent = totalEntradas;
-  if (statSalidas) statSalidas.textContent = totalSalidas;
+  if (statTotal) statTotal.textContent = datos.length;
+  if (statEntradas) statEntradas.textContent = stats.entradas;
+  if (statSalidas) statSalidas.textContent = stats.salidas;
 
-  console.log(`📊 Estadísticas actualizadas: Total: ${totalMovimientos}, Entradas: ${totalEntradas}, Salidas: ${totalSalidas}`);
+  console.log(`📊 Estadísticas actualizadas: Total: ${datos.length}, Entradas: ${stats.entradas}, Salidas: ${stats.salidas}`);
 }
 
 /**
  * Buscar movimientos con input de búsqueda
  */
 function buscarMovimientosPersonalizado() {
-  const criterio = document.getElementById('busqueda-movimientos')?.value?.trim();
-  
-  if (!criterio) {
-    if (tablaMovimientos) {
-      tablaMovimientos.search('').draw();
-    }
-    return;
-  }
-
-  console.log(`🔍 Búsqueda personalizada: ${criterio}`);
-  
+  const inputBusqueda = document.getElementById('busqueda-movimientos');
+  const criterio = inputBusqueda ? inputBusqueda.value.trim() : '';
   if (tablaMovimientos) {
-    tablaMovimientos.search(criterio).draw();
+    tablaMovimientos.search(criterio || '').draw();
+    if (criterio) console.log(`🔍 Búsqueda personalizada: ${criterio}`);
   }
 }
 
@@ -494,21 +456,23 @@ document.addEventListener("DOMContentLoaded", function () {
         dataSrc: function (json) {
           console.log("📊 Respuesta del servidor:", json);
           
-          if (json && json.status && json.data) {
-            
+          if (json && json.status) {
+            // Respuesta exitosa - puede tener datos o estar vacío
             setTimeout(() => {
               actualizarContadoresSimples();
             }, 500);
             
-            return json.data;
+            return json.data || [];
           } else {
+            // Error real o sin permisos
             console.error("Error en respuesta:", json);
             $("#TablaMovimiento_processing").css("display", "none");
             
             if (json && json.message && json.message.includes('permisos')) {
               mostrarModalPermisosDenegados(json.message);
-            } else {
-              Swal.fire("Error", json?.message || "No se pudieron cargar los datos de movimientos.", "error");
+            } else if (json && json.message) {
+              // Solo mostrar alerta si hay un mensaje de error real
+              Swal.fire("Error", json.message, "error");
             }
             return [];
           }
@@ -608,6 +572,12 @@ document.addEventListener("DOMContentLoaded", function () {
           render: function (data, type, row) {
             let acciones = '<div class="inline-flex items-center space-x-1">';
             
+            const esAnulado = row.estatus === 'inactivo';
+            const esVinculado = row.idcompra || row.idventa || row.idproduccion;
+            const esMovimientoAutomatico = row.observaciones && (
+              row.observaciones.includes('[ANULACIÓN AUTOMÁTICA]') || 
+              row.observaciones.includes('[CORRECCIÓN AUTOMÁTICA]')
+            );
             
             if (tienePermiso('ver')) {
               acciones += `
@@ -618,26 +588,57 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            
-            if (tienePermiso('editar')) {
+            if (!esAnulado && tienePermiso('editar')) {
+              let tituloEditar = 'Editar';
+              let claseEditar = 'text-blue-600 hover:text-blue-700';
+              let deshabilitado = false;
+              
+              if (esMovimientoAutomatico) {
+                tituloEditar = 'No editable (movimiento de anulación/corrección automática)';
+                claseEditar = 'text-gray-400 cursor-not-allowed';
+                deshabilitado = true;
+              } else if (esVinculado) {
+                tituloEditar = 'No editable (vinculado a operación)';
+                claseEditar = 'text-gray-400 cursor-not-allowed';
+                deshabilitado = true;
+              }
+              
               acciones += `
-                <button class="editar-movimiento-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                <button class="editar-movimiento-btn ${claseEditar} p-1 transition-colors duration-150" 
                         data-idmovimiento="${row.idmovimiento}" 
-                        title="Editar">
+                        ${deshabilitado ? 'disabled' : ''}
+                        title="${tituloEditar}">
                     <i class="fas fa-edit fa-fw text-base"></i>
                 </button>`;
             }
             
-            
-            if (tienePermiso('eliminar')) {
+            if (!esAnulado && tienePermiso('eliminar')) {
+              let tituloEliminar = 'Anular movimiento';
+              let claseEliminar = 'text-red-600 hover:text-red-700';
+              let deshabilitado = false;
+              
+              if (esMovimientoAutomatico) {
+                tituloEliminar = 'No anulable (movimiento de anulación/corrección automática)';
+                claseEliminar = 'text-gray-400 cursor-not-allowed';
+                deshabilitado = true;
+              } else if (esVinculado) {
+                tituloEliminar = 'No anulable (vinculado a operación)';
+                claseEliminar = 'text-gray-400 cursor-not-allowed';
+                deshabilitado = true;
+              }
+              
               acciones += `
-                <button class="eliminar-movimiento-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                <button class="eliminar-movimiento-btn ${claseEliminar} p-1 transition-colors duration-150" 
                         data-idmovimiento="${row.idmovimiento}" 
-                        title="Eliminar">
+                        ${deshabilitado ? 'disabled' : ''}
+                        title="${tituloEliminar}">
                     <i class="fas fa-trash-alt fa-fw text-base"></i>
                 </button>`;
             }
             
+            if (esAnulado) {
+              acciones += '<span class="text-xs text-gray-500 italic px-2">Anulado</span>';
+            }
             
             if (!tienePermiso('ver') && !tienePermiso('editar') && !tienePermiso('eliminar')) {
               acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
@@ -680,7 +681,7 @@ document.addEventListener("DOMContentLoaded", function () {
       scrollX: true,
       initComplete: function (settings, json) {
         window.tablaMovimientos = this.api();
-        console.log("✅ DataTable inicializada correctamente");
+        console.log(" DataTable inicializada correctamente");
         
         
         setTimeout(() => {
@@ -711,6 +712,17 @@ document.addEventListener("DOMContentLoaded", function () {
     $("#TablaMovimiento tbody").on("click", ".editar-movimiento-btn", function (e) {
       e.preventDefault();
       
+      if ($(this).prop('disabled')) {
+        const titulo = $(this).attr('title');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Acción no permitida',
+          text: titulo || 'Este movimiento no puede ser editado.',
+          timer: 3000
+        });
+        return;
+      }
+      
       if (!tienePermiso('editar')) {
         mostrarModalPermisosDenegados("No tienes permisos para editar movimientos.");
         return;
@@ -724,6 +736,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     $("#TablaMovimiento tbody").on("click", ".eliminar-movimiento-btn", function (e) {
       e.preventDefault();
+      
+      if ($(this).prop('disabled')) {
+        const titulo = $(this).attr('title');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Acción no permitida',
+          text: titulo || 'Este movimiento no puede ser anulado.',
+          timer: 3000
+        });
+        return;
+      }
       
       if (!tienePermiso('eliminar')) {
         mostrarModalPermisosDenegados("No tienes permisos para eliminar movimientos.");
@@ -783,281 +806,157 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+/**
+ * Configurar listener para botón de modal con confirmación
+ */
+function configurarBotonCancelar(btnId, modalId, formId, campos) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
   
-  const btnCerrarModalDetalle = document.getElementById("btnCerrarModalDetalle");
-  const btnCerrarModalDetalle2 = document.getElementById("btnCerrarModalDetalle2");
-  
-  if (btnCerrarModalDetalle) {
-    btnCerrarModalDetalle.addEventListener("click", function(e) {
-      e.preventDefault();
-      console.log("🔒 Cerrando modal de detalle");
-      cerrarModal("modalVerDetalleMovimiento");
-    });
-  }
-  
-  if (btnCerrarModalDetalle2) {
-    btnCerrarModalDetalle2.addEventListener("click", function(e) {
-      e.preventDefault();
-      console.log("🔒 Cerrando modal de detalle (botón 2)");
-      cerrarModal("modalVerDetalleMovimiento");
-    });
-  }
-
-  
-  const btnCerrarModalRegistrar = document.getElementById("btnCerrarModalRegistrar");
-  const btnCancelarModalRegistrar = document.getElementById("btnCancelarModalRegistrar");
-  const formRegistrar = document.getElementById("formRegistrarMovimiento");
-
-  if (btnCerrarModalRegistrar) {
-    btnCerrarModalRegistrar.addEventListener("click", function(e) {
-      e.preventDefault();
-      console.log("🔒 Cerrando modal de registro");
-      cerrarModal("modalRegistrarMovimiento");
-    });
-  }
-
-  if (btnCancelarModalRegistrar) {
-    btnCancelarModalRegistrar.addEventListener("click", function(e) {
-      e.preventDefault();
-      console.log("❌ Cancelando registro de movimiento");
-      
-      Swal.fire({
-        title: '¿Cancelar registro?',
-        text: 'Se perderán los datos ingresados',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'Continuar editando'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          cerrarModal("modalRegistrarMovimiento");
-          
-          const form = document.getElementById("formRegistrarMovimiento");
-          if (form) {
-            form.reset();
-            limpiarValidaciones(camposFormularioMovimiento, "formRegistrarMovimiento");
-          }
+  btn.addEventListener("click", function(e) {
+    e.preventDefault();
+    
+    Swal.fire({
+      title: '¿Cancelar operación?',
+      text: 'Se perderán los datos ingresados',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'Continuar editando'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        cerrarModal(modalId);
+        const form = document.getElementById(formId);
+        if (form) {
+          form.reset();
+          limpiarValidaciones(campos, formId);
         }
-      });
+      }
     });
-  }
+  });
+}
 
+/**
+ * Configurar listeners para cerrar modal simple
+ */
+function configurarBotonesCerrar(btnIds, modalId) {
+  btnIds.forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        cerrarModal(modalId);
+      });
+    }
+  });
+}
+  
+  configurarBotonesCerrar(["btnCerrarModalDetalle", "btnCerrarModalDetalle2"], "modalVerDetalleMovimiento");
+  configurarBotonesCerrar(["btnCerrarModalRegistrar"], "modalRegistrarMovimiento");
+  configurarBotonesCerrar(["btnCerrarModalActualizar"], "modalActualizarMovimiento");
+  
+  configurarBotonCancelar("btnCancelarModalRegistrar", "modalRegistrarMovimiento", "formRegistrarMovimiento", camposFormularioMovimiento);
+  configurarBotonCancelar("btnCancelarModalActualizar", "modalActualizarMovimiento", "formActualizarMovimiento", camposFormularioActualizarMovimiento);
+  
+  const formRegistrar = document.getElementById("formRegistrarMovimiento");
+  const formActualizar = document.getElementById("formActualizarMovimiento");
+  
   if (formRegistrar) {
     formRegistrar.addEventListener("submit", function (e) {
       e.preventDefault();
-      
       if (!tienePermiso('crear')) {
         mostrarModalPermisosDenegados("No tienes permisos para crear movimientos.");
         return;
       }
-      
-      console.log("💾 Enviando formulario de registro");
       registrarMovimiento();
     });
   }
-
   
-  const btnCerrarModalActualizar = document.getElementById("btnCerrarModalActualizar");
-  const btnCancelarModalActualizar = document.getElementById("btnCancelarModalActualizar");
-  const formActualizar = document.getElementById("formActualizarMovimiento");
-
-  if (btnCerrarModalActualizar) {
-    btnCerrarModalActualizar.addEventListener("click", function(e) {
-      e.preventDefault();
-      console.log("🔒 Cerrando modal de actualización");
-      cerrarModal("modalActualizarMovimiento");
-    });
-  }
-
-  if (btnCancelarModalActualizar) {
-    btnCancelarModalActualizar.addEventListener("click", function(e) {
-      e.preventDefault();
-      console.log("❌ Cancelando actualización de movimiento");
-      
-      Swal.fire({
-        title: '¿Cancelar actualización?',
-        text: 'Se perderán los cambios realizados',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'Continuar editando'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          cerrarModal("modalActualizarMovimiento");
-          
-          const form = document.getElementById("formActualizarMovimiento");
-          if (form) {
-            form.reset();
-            limpiarValidaciones(camposFormularioActualizarMovimiento, "formActualizarMovimiento");
-          }
-        }
-      });
-    });
-  }
-
   if (formActualizar) {
     formActualizar.addEventListener("submit", function (e) {
       e.preventDefault();
-      
       if (!tienePermiso('editar')) {
         mostrarModalPermisosDenegados("No tienes permisos para editar movimientos.");
         return;
       }
-      
-      console.log("💾 Enviando formulario de actualización");
       actualizarMovimiento();
     });
   }
 
   
-  
-  
-  const cantidadEntradaReg = document.getElementById('cantidad_entrada');
-  const cantidadSalidaReg = document.getElementById('cantidad_salida');
-  
-  if (cantidadEntradaReg) {
-    cantidadEntradaReg.addEventListener('input', function() {
-      const valor = parseFloat(this.value) || 0;
-      if (valor > 0 && cantidadSalidaReg) {
-        cantidadSalidaReg.value = '';
-        limpiarErroresCampo(this);
-      }
-    });
-  }
-  
-  if (cantidadSalidaReg) {
-    cantidadSalidaReg.addEventListener('input', function() {
-      const valor = parseFloat(this.value) || 0;
-      if (valor > 0 && cantidadEntradaReg) {
-        cantidadEntradaReg.value = '';
-        limpiarErroresCampo(this);
-      }
-    });
-  }
-
-  
-  const cantidadEntradaAct = document.getElementById('cantidad_entradaActualizar');
-  const cantidadSalidaAct = document.getElementById('cantidad_salidaActualizar');
-  
-  if (cantidadEntradaAct) {
-    cantidadEntradaAct.addEventListener('input', function() {
-      const valor = parseFloat(this.value) || 0;
-      if (valor > 0 && cantidadSalidaAct) {
-        cantidadSalidaAct.value = '';
-        limpiarErroresCampo(this);
-      }
-    });
-  }
-  
-  if (cantidadSalidaAct) {
-    cantidadSalidaAct.addEventListener('input', function() {
-      const valor = parseFloat(this.value) || 0;
-      if (valor > 0 && cantidadEntradaAct) {
-        cantidadEntradaAct.value = '';
-        limpiarErroresCampo(this);
-      }
-    });
-  }
-
-  
-  
-  
-  const stockAnteriorReg = document.getElementById('stock_anterior');
-  const stockResultanteReg = document.getElementById('stock_resultante');
-  
-  if (stockAnteriorReg && stockResultanteReg) {
-    const calcularStockRegistro = function() {
-      const stockAnterior = parseFloat(stockAnteriorReg.value) || 0;
-      const entrada = parseFloat(cantidadEntradaReg?.value) || 0;
-      const salida = parseFloat(cantidadSalidaReg?.value) || 0;
-      
-      let nuevoStock = stockAnterior;
-      if (entrada > 0) {
-        nuevoStock = stockAnterior + entrada;
-      } else if (salida > 0) {
-        nuevoStock = stockAnterior - salida;
-      }
-      
-      stockResultanteReg.value = Math.max(0, nuevoStock).toFixed(2);
-    };
+  /**
+   * Configurar listeners de campos de cantidad (mutual exclusión entrada/salida)
+   */
+  const configurarCamposCantidad = (entradaId, salidaId) => {
+    const entrada = document.getElementById(entradaId);
+    const salida = document.getElementById(salidaId);
     
-    stockAnteriorReg.addEventListener('input', calcularStockRegistro);
-    if (cantidadEntradaReg) cantidadEntradaReg.addEventListener('input', calcularStockRegistro);
-    if (cantidadSalidaReg) cantidadSalidaReg.addEventListener('input', calcularStockRegistro);
-  }
-
-  
-  const stockAnteriorAct = document.getElementById('stock_anteriorActualizar');
-  const stockResultanteAct = document.getElementById('stock_resultanteActualizar');
-  
-  if (stockAnteriorAct && stockResultanteAct) {
-    const calcularStockActualizacion = function() {
-      const stockAnterior = parseFloat(stockAnteriorAct.value) || 0;
-      const entrada = parseFloat(cantidadEntradaAct?.value) || 0;
-      const salida = parseFloat(cantidadSalidaAct?.value) || 0;
-      
-      let nuevoStock = stockAnterior;
-      if (entrada > 0) {
-        nuevoStock = stockAnterior + entrada;
-      } else if (salida > 0) {
-        nuevoStock = stockAnterior - salida;
-      }
-      
-      stockResultanteAct.value = Math.max(0, nuevoStock).toFixed(2);
-    };
-    
-    stockAnteriorAct.addEventListener('input', calcularStockActualizacion);
-    if (cantidadEntradaAct) cantidadEntradaAct.addEventListener('input', calcularStockActualizacion);
-    if (cantidadSalidaAct) cantidadSalidaAct.addEventListener('input', calcularStockActualizacion);
-  }
-
-  
-  
-  
-  camposFormularioMovimiento.forEach(campo => {
-    const elemento = document.getElementById(campo.id);
-    if (elemento) {
-      elemento.addEventListener('input', function() {
-        if (this.value.trim() !== '') {
+    if (entrada && salida) {
+      entrada.addEventListener('input', function() {
+        if (parseFloat(this.value) > 0) {
+          salida.value = '';
           limpiarErroresCampo(this);
         }
       });
       
-      if (campo.tipo === 'select') {
-        elemento.addEventListener('change', function() {
-          if (this.value !== '') {
-            limpiarErroresCampo(this);
-          }
-        });
-      }
-    }
-  });
-
-  
-  camposFormularioActualizarMovimiento.forEach(campo => {
-    const elemento = document.getElementById(campo.id);
-    if (elemento) {
-      elemento.addEventListener('input', function() {
-        if (this.value.trim() !== '') {
+      salida.addEventListener('input', function() {
+        if (parseFloat(this.value) > 0) {
+          entrada.value = '';
           limpiarErroresCampo(this);
         }
       });
+    }
+  };
+  
+  configurarCamposCantidad('cantidad_entrada', 'cantidad_salida');
+  configurarCamposCantidad('cantidad_entradaActualizar', 'cantidad_salidaActualizar');
+  
+  /**
+   * Configurar cálculo automático de stock resultante
+   */
+  const configurarCalculoStock = (stockAnteriorId, stockResultanteId, entradaId, salidaId) => {
+    const stockAnterior = document.getElementById(stockAnteriorId);
+    const stockResultante = document.getElementById(stockResultanteId);
+    const entrada = document.getElementById(entradaId);
+    const salida = document.getElementById(salidaId);
+    
+    if (stockAnterior && stockResultante) {
+      const calcular = () => {
+        const anterior = parseFloat(stockAnterior.value) || 0;
+        const ent = entrada ? parseFloat(entrada.value) || 0 : 0;
+        const sal = salida ? parseFloat(salida.value) || 0 : 0;
+        stockResultante.value = Math.max(0, anterior + ent - sal).toFixed(2);
+      };
       
-      if (campo.tipo === 'select') {
-        elemento.addEventListener('change', function() {
-          if (this.value !== '') {
-            limpiarErroresCampo(this);
-          }
+      stockAnterior.addEventListener('input', calcular);
+      if (entrada) entrada.addEventListener('input', calcular);
+      if (salida) salida.addEventListener('input', calcular);
+    }
+  };
+  
+  configurarCalculoStock('stock_anterior', 'stock_resultante', 'cantidad_entrada', 'cantidad_salida');
+  configurarCalculoStock('stock_anteriorActualizar', 'stock_resultanteActualizar', 'cantidad_entradaActualizar', 'cantidad_salidaActualizar');
+  
+  /**
+   * Limpiar errores al escribir en campos
+   */
+  const configurarLimpiezaErrores = (campos) => {
+    campos.forEach(campo => {
+      const elemento = document.getElementById(campo.id);
+      if (elemento) {
+        elemento.addEventListener(campo.tipo === 'select' ? 'change' : 'input', function() {
+          if (this.value.trim() !== '') limpiarErroresCampo(this);
         });
       }
-    }
-  });
+    });
+  };
+  
+  configurarLimpiezaErrores(camposFormularioMovimiento);
+  configurarLimpiezaErrores(camposFormularioActualizarMovimiento);
 
-  console.log("✅ Todos los event listeners de movimientos han sido configurados");
+  console.log(" Todos los event listeners de movimientos han sido configurados");
 });
 
 
@@ -1066,12 +965,12 @@ document.addEventListener("DOMContentLoaded", function () {
  * Cargar datos para formularios (productos y tipos de movimiento)
  */
 function cargarDatosFormulario(modo = 'registrar') {
-  console.log(`🔄 Cargando datos para formulario en modo: ${modo}`);
+  console.log(`Cargando datos para formulario en modo: ${modo}`);
   
   fetch("movimientos/getDatosFormulario")
     .then(response => response.json())
     .then(result => {
-      console.log("📋 Datos del formulario recibidos:", result);
+      console.log(" Datos del formulario recibidos:", result);
       
       if (result.status && result.data) {
         const { productos, tipos_movimiento } = result.data;
@@ -1105,20 +1004,31 @@ function cargarDatosFormulario(modo = 'registrar') {
 }
 
 /**
- * Llenar select de productos - CORREGIDO
+ * Llenar select de productos con auto-completado de stock
  */
 function llenarSelectProductos(selectId, productos) {
   const select = document.getElementById(selectId);
-  if (select) {
-    select.innerHTML = '<option value="">Seleccione un producto</option>';
-    productos.forEach(producto => {
-      
-      select.innerHTML += `<option value="${producto.idproducto}">${producto.nombre} - Stock: ${producto.stock_actual || 0}</option>`;
-    });
-    console.log(`✅ Select ${selectId} poblado con ${productos.length} productos`);
-  } else {
-    console.error(`❌ No se encontró el select: ${selectId}`);
+  if (!select) {
+    console.error(`No se encontró el select: ${selectId}`);
+    return;
   }
+  
+  select.innerHTML = '<option value="">Seleccione un producto</option>' + 
+    productos.map(p => `<option value="${p.idproducto}" data-stock="${p.stock_actual || 0}">${p.nombre} - Stock: ${p.stock_actual || 0}</option>`).join('');
+  
+  select.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const stockActual = selectedOption ? selectedOption.getAttribute('data-stock') || 0 : 0;
+    const isRegistro = selectId === 'idproducto';
+    const stockAnteriorField = document.getElementById(isRegistro ? 'stock_anterior' : 'stock_anteriorActualizar');
+    
+    if (stockAnteriorField && this.value) {
+      stockAnteriorField.value = parseFloat(stockActual).toFixed(2);
+      stockAnteriorField.dispatchEvent(new Event('input'));
+    }
+  });
+  
+  console.log(`Select ${selectId} poblado con ${productos.length} productos`);
 }
 
 /**
@@ -1126,16 +1036,15 @@ function llenarSelectProductos(selectId, productos) {
  */
 function llenarSelectTiposMovimiento(selectId, tipos) {
   const select = document.getElementById(selectId);
-  if (select) {
-    select.innerHTML = '<option value="">Seleccione un tipo</option>';
-    tipos.forEach(tipo => {
-      const descripcion = tipo.descripcion ? ` - ${tipo.descripcion}` : '';
-      select.innerHTML += `<option value="${tipo.idtipomovimiento}">${tipo.nombre}${descripcion}</option>`;
-    });
-    console.log(`✅ Select ${selectId} poblado con ${tipos.length} tipos`);
-  } else {
-    console.error(`❌ No se encontró el select: ${selectId}`);
+  if (!select) {
+    console.error(`No se encontró el select: ${selectId}`);
+    return;
   }
+  
+  select.innerHTML = '<option value="">Seleccione un tipo</option>' + 
+    tipos.map(t => `<option value="${t.idtipomovimiento}">${t.nombre}${t.descripcion ? ` - ${t.descripcion}` : ''}</option>`).join('');
+  
+  console.log(`Select ${selectId} poblado con ${tipos.length} tipos`);
 }
 
 /**
@@ -1152,7 +1061,7 @@ function verDetalleMovimiento(idMovimiento) {
   fetch(`movimientos/getMovimientoById/${idMovimiento}`)
     .then(response => response.json())
     .then(result => {
-      console.log("📋 Detalle del movimiento:", result);
+      console.log(" Detalle del movimiento:", result);
       
       if (result.status && result.data) {
         const movimiento = result.data;
@@ -1191,22 +1100,24 @@ function verDetalleMovimiento(idMovimiento) {
 }
 
 /**
- * Registrar nuevo movimiento - CORREGIDO
+ * Registrar nuevo movimiento
  */
 function registrarMovimiento() {
-  const btnRegistrarMovimiento = document.getElementById("btnRegistrarMovimiento");
+  const btnRegistrar = document.getElementById("btnRegistrarMovimiento");
   
-  if (btnRegistrarMovimiento) {
-    btnRegistrarMovimiento.disabled = true;
-    btnRegistrarMovimiento.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...`;
-  }
-
-  
-  if (!validarFormularioMovimiento(camposFormularioMovimiento, "formRegistrarMovimiento")) {
-    if (btnRegistrarMovimiento) {
-      btnRegistrarMovimiento.disabled = false;
-      btnRegistrarMovimiento.innerHTML = `<i class="fas fa-save mr-2"></i> Registrar Movimiento`;
+  const toggleButton = (loading) => {
+    if (btnRegistrar) {
+      btnRegistrar.disabled = loading;
+      btnRegistrar.innerHTML = loading 
+        ? `<i class="fas fa-spinner fa-spin mr-2"></i> Registrando...`
+        : `<i class="fas fa-save mr-2"></i> Registrar Movimiento`;
     }
+  };
+  
+  toggleButton(true);
+
+  if (!validarFormularioMovimiento(camposFormularioMovimiento, "formRegistrarMovimiento")) {
+    toggleButton(false);
     return;
   }
 
@@ -1217,13 +1128,11 @@ function registrarMovimiento() {
     onSuccess: (result) => {
       Swal.fire("¡Éxito!", result.message, "success").then(() => {
         cerrarModal("modalRegistrarMovimiento");
-        if (tablaMovimientos && tablaMovimientos.ajax) {
-          tablaMovimientos.ajax.reload(null, false);
-        }
+        if (tablaMovimientos && tablaMovimientos.ajax) tablaMovimientos.ajax.reload(null, false);
 
-        const formRegistrar = document.getElementById("formRegistrarMovimiento");
-        if (formRegistrar) {
-          formRegistrar.reset();
+        const form = document.getElementById("formRegistrarMovimiento");
+        if (form) {
+          form.reset();
           limpiarValidaciones(camposFormularioMovimiento, "formRegistrarMovimiento");
         }
       });
@@ -1235,12 +1144,7 @@ function registrarMovimiento() {
         Swal.fire("Error", result.message || "No se pudo registrar el movimiento.", "error");
       }
     }
-  }).finally(() => {
-    if (btnRegistrarMovimiento) {
-      btnRegistrarMovimiento.disabled = false;
-      btnRegistrarMovimiento.innerHTML = `<i class="fas fa-save mr-2"></i> Registrar Movimiento`;
-    }
-  });
+  }).finally(() => toggleButton(false));
 }
 
 /**
@@ -1274,107 +1178,82 @@ function editarMovimiento(idMovimiento) {
 }
 
 /**
- * Mostrar modal de editar movimiento - CORREGIDO
+ * Mostrar modal de editar movimiento
  */
 function mostrarModalEditarMovimiento(movimiento) {
-  console.log("📋 Datos del movimiento recibidos:", movimiento);
-  
+  console.log(" Datos del movimiento recibidos:", movimiento);
   
   cargarDatosFormulario('actualizar');
   
-  
   setTimeout(() => {
-    const formActualizar = document.getElementById("formActualizarMovimiento");
-    if (formActualizar) formActualizar.reset();
+    const form = document.getElementById("formActualizarMovimiento");
+    if (form) form.reset();
     limpiarValidaciones(camposFormularioActualizarMovimiento, "formActualizarMovimiento");
 
-    
-    const elementos = {
-      idmovimientoActualizar: document.getElementById("idmovimientoActualizar"),
-      numeroMovimientoActualizar: document.getElementById("numeroMovimientoActualizar"),
-      idproductoActualizar: document.getElementById("idproductoActualizar"),
-      idtipomovimientoActualizar: document.getElementById("idtipomovimientoActualizar"),
-      cantidad_entradaActualizar: document.getElementById("cantidad_entradaActualizar"),
-      cantidad_salidaActualizar: document.getElementById("cantidad_salidaActualizar"),
-      stock_anteriorActualizar: document.getElementById("stock_anteriorActualizar"),
-      stock_resultanteActualizar: document.getElementById("stock_resultanteActualizar"),
-      observacionesActualizar: document.getElementById("observacionesActualizar"),
-      estatusActualizar: document.getElementById("estatusActualizar")
+    const camposMap = {
+      'idmovimientoActualizar': movimiento.idmovimiento,
+      'numeroMovimientoActualizar': movimiento.numero_movimiento,
+      'idproductoActualizar': movimiento.idproducto,
+      'idtipomovimientoActualizar': movimiento.idtipomovimiento,
+      'cantidad_entradaActualizar': movimiento.cantidad_entrada,
+      'cantidad_salidaActualizar': movimiento.cantidad_salida,
+      'stock_anteriorActualizar': movimiento.stock_anterior,
+      'stock_resultanteActualizar': movimiento.stock_resultante,
+      'observacionesActualizar': movimiento.observaciones,
+      'estatusActualizar': movimiento.estatus
     };
 
-    
     const elementosFaltantes = [];
-    for (const [nombre, elemento] of Object.entries(elementos)) {
+    for (const [id, valor] of Object.entries(camposMap)) {
+      const elemento = document.getElementById(id);
       if (!elemento) {
-        elementosFaltantes.push(nombre);
+        elementosFaltantes.push(id);
+      } else {
+        elemento.value = valor || "";
       }
     }
 
     if (elementosFaltantes.length > 0) {
-      console.error("❌ Elementos faltantes en el modal:", elementosFaltantes);
+      console.error(" Elementos faltantes:", elementosFaltantes);
       Swal.fire("Error", "Error en la estructura del formulario. Faltan elementos: " + elementosFaltantes.join(', '), "error");
       return;
     }
-
     
-    elementos.idmovimientoActualizar.value = movimiento.idmovimiento || "";
-    elementos.numeroMovimientoActualizar.value = movimiento.numero_movimiento || "";
-    elementos.cantidad_entradaActualizar.value = movimiento.cantidad_entrada || "";
-    elementos.cantidad_salidaActualizar.value = movimiento.cantidad_salida || "";
-    elementos.stock_anteriorActualizar.value = movimiento.stock_anterior || "";
-    elementos.stock_resultanteActualizar.value = movimiento.stock_resultante || "";
-    elementos.observacionesActualizar.value = movimiento.observaciones || "";
-    elementos.estatusActualizar.value = movimiento.estatus || "";
-
-    
-    if (movimiento.idproducto) {
-      elementos.idproductoActualizar.value = movimiento.idproducto;
-    }
-    if (movimiento.idtipomovimiento) {
-      elementos.idtipomovimientoActualizar.value = movimiento.idtipomovimiento;
-    }
-    
-    console.log("✅ Valores asignados al formulario de actualización");
-    
+    console.log(" Valores asignados al formulario de actualización");
     abrirModal("modalActualizarMovimiento");
     inicializarValidaciones(camposFormularioActualizarMovimiento, "formActualizarMovimiento");
-  }, 1000); 
+  }, 1000);
 }
 
 /**
- * Actualizar movimiento - CORREGIDO
+ * Actualizar movimiento
  */
 function actualizarMovimiento() {
-  const btnActualizarMovimiento = document.getElementById("btnActualizarMovimiento");
+  const btnActualizar = document.getElementById("btnActualizarMovimiento");
   
-  if (btnActualizarMovimiento) {
-    btnActualizarMovimiento.disabled = true;
-    btnActualizarMovimiento.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...`;
-  }
-
-  
-  if (!validarFormularioMovimiento(camposFormularioActualizarMovimiento, "formActualizarMovimiento")) {
-    if (btnActualizarMovimiento) {
-      btnActualizarMovimiento.disabled = false;
-      btnActualizarMovimiento.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Movimiento`;
+  const toggleButton = (loading) => {
+    if (btnActualizar) {
+      btnActualizar.disabled = loading;
+      btnActualizar.innerHTML = loading
+        ? `<i class="fas fa-spinner fa-spin mr-2"></i> Actualizando...`
+        : `<i class="fas fa-save mr-2"></i> Actualizar Movimiento`;
     }
+  };
+  
+  toggleButton(true);
+
+  if (!validarFormularioMovimiento(camposFormularioActualizarMovimiento, "formActualizarMovimiento")) {
+    toggleButton(false);
     return;
   }
 
   const form = document.getElementById("formActualizarMovimiento");
   if (!form) {
     console.error("Formulario de actualización no encontrado");
-    if (btnActualizarMovimiento) {
-      btnActualizarMovimiento.disabled = false;
-      btnActualizarMovimiento.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Movimiento`;
-    }
+    toggleButton(false);
     return;
   }
 
-  
-  const formData = new FormData(form);
-  const dataParaEnviar = {};
-  
   const mapeoNombres = {
     "idmovimientoActualizar": "idmovimiento",
     "numeroMovimientoActualizar": "numero_movimiento",
@@ -1388,43 +1267,37 @@ function actualizarMovimiento() {
     "estatusActualizar": "estatus"
   };
   
+  const formData = new FormData(form);
+  const dataParaEnviar = {};
   for (let [key, value] of formData.entries()) {
-    const nombreFinal = mapeoNombres[key] || key;
-    dataParaEnviar[nombreFinal] = value || "";
+    dataParaEnviar[mapeoNombres[key] || key] = value || "";
   }
 
-  console.log("📤 Datos a enviar:", dataParaEnviar);
+  const idmovimiento = dataParaEnviar.idmovimiento;
+  delete dataParaEnviar.idmovimiento;
 
-  
   fetch("movimientos/updateMovimiento", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-    body: JSON.stringify(dataParaEnviar),
+    headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+    body: JSON.stringify({ idmovimiento, nuevos_datos: dataParaEnviar }),
   })
-  .then((response) => {
-    if (!response.ok) {
-      return response.json().then((errData) => {
-        throw { status: response.status, data: errData };
-      });
-    }
-    return response.json();
-  })
+  .then((response) => response.ok ? response.json() : response.json().then(err => { throw { status: response.status, data: err }; }))
   .then((result) => {
-    console.log("📥 Respuesta del servidor:", result);
-    
     if (result.status) {
-      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+      Swal.fire({
+        icon: "success",
+        title: "¡Movimiento corregido!",
+        html: `
+          <p>${result.message}</p>
+          <p class="text-sm text-gray-600 mt-2">Movimiento anulación: ${result.data && result.data.numero_anulacion ? result.data.numero_anulacion : 'N/A'}</p>
+          <p class="text-sm text-gray-600">Nuevo movimiento: ${result.data && result.data.numero_nuevo ? result.data.numero_nuevo : 'N/A'}</p>
+        `,
+        timer: 4000
+      }).then(() => {
         cerrarModal("modalActualizarMovimiento");
-        if (tablaMovimientos && tablaMovimientos.ajax) {
-          tablaMovimientos.ajax.reload(null, false);
-        }
-
-        const formActualizar = document.getElementById("formActualizarMovimiento");
-        if (formActualizar) {
-          formActualizar.reset();
+        if (tablaMovimientos && tablaMovimientos.ajax) tablaMovimientos.ajax.reload(null, false);
+        if (form) {
+          form.reset();
           limpiarValidaciones(camposFormularioActualizarMovimiento, "formActualizarMovimiento");
         }
       });
@@ -1438,25 +1311,15 @@ function actualizarMovimiento() {
   })
   .catch((error) => {
     console.error("Error en actualización:", error);
-    let errorMessage = "Ocurrió un error de conexión.";
-    if (error.data?.message) {
-      errorMessage = error.data.message;
-    } else if (error.status) {
-      errorMessage = `Error del servidor: ${error.status}.`;
-    }
+    const errorMessage = (error.data && error.data.message) ? error.data.message : (error.status ? `Error del servidor: ${error.status}.` : "Ocurrió un error de conexión.");
     
-    if (error.data?.message && error.data.message.includes('permisos')) {
+    if (error.data && error.data.message && error.data.message.includes('permisos')) {
       mostrarModalPermisosDenegados(error.data.message);
     } else {
       Swal.fire("Error", errorMessage, "error");
     }
   })
-  .finally(() => {
-    if (btnActualizarMovimiento) {
-      btnActualizarMovimiento.disabled = false;
-      btnActualizarMovimiento.innerHTML = `<i class="fas fa-save mr-2"></i> Actualizar Movimiento`;
-    }
-  });
+  .finally(() => toggleButton(false));
 }
 
 /**
@@ -1464,45 +1327,56 @@ function actualizarMovimiento() {
  */
 function eliminarMovimiento(idMovimiento) {
   if (!tienePermiso('eliminar')) {
-    mostrarModalPermisosDenegados("No tienes permisos para eliminar movimientos.");
+    mostrarModalPermisosDenegados("No tienes permisos para anular movimientos.");
     return;
   }
   
   Swal.fire({
-    title: "¿Estás seguro?",
-    text: "¿Deseas eliminar este movimiento?",
+    title: "¿Anular movimiento?",
+    html: `
+      <p>Se creará un movimiento de anulación automático que revertirá este movimiento.</p>
+      <p class="text-sm text-gray-600 mt-2">Esta acción mantiene el historial completo para auditoría.</p>
+    `,
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#d33",
     cancelButtonColor: "#3085d6",
-    confirmButtonText: "Sí, eliminar",
+    confirmButtonText: "Sí, anular",
     cancelButtonText: "Cancelar",
   }).then((result) => {
     if (result.isConfirmed) {
-      console.log(`🗑️ Eliminando movimiento: ${idMovimiento}`);
+      console.log(`Anulando movimiento: ${idMovimiento}`);
       
-      fetch("movimientos/deleteMovimiento", {
+      fetch("movimientos/anularMovimiento", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
         body: JSON.stringify({ idmovimiento: idMovimiento }),
       })
         .then(response => response.json())
         .then(result => {
-          console.log("📥 Respuesta eliminación:", result);
+          console.log("Respuesta anulación:", result);
           
           if (result.status) {
-            Swal.fire("¡Eliminado!", result.message, "success");
+            Swal.fire({
+              icon: "success",
+              title: "¡Anulado!",
+              html: `
+                <p>${result.message}</p>
+                <p class="text-sm text-gray-600 mt-2">Movimiento de anulación: ${result.data && result.data.numero_anulacion ? result.data.numero_anulacion : 'N/A'}</p>
+              `,
+              timer: 3000
+            });
             if (tablaMovimientos && tablaMovimientos.ajax) tablaMovimientos.ajax.reload(null, false);
           } else {
             if (result.message && result.message.includes('permisos')) {
               mostrarModalPermisosDenegados(result.message);
             } else {
-              Swal.fire("Error", result.message || "No se pudo eliminar.", "error");
+              Swal.fire("Error", result.message || "No se pudo anular.", "error");
             }
           }
         })
         .catch(error => {
-          console.error("Error en eliminación:", error);
+          console.error("Error en anulación:", error);
           Swal.fire("Error", "Error de conexión.", "error");
         });
     }
@@ -1524,9 +1398,7 @@ function exportarMovimientos() {
     icon: 'info',
     allowOutsideClick: false,
     showConfirmButton: false,
-    willOpen: () => {
-      Swal.showLoading();
-    }
+    didOpen: () => Swal.showLoading()
   });
 
   fetch("movimientos/exportarMovimientos", {
@@ -1538,9 +1410,34 @@ function exportarMovimientos() {
       Swal.close();
       
       if (result.status && result.data) {
+        const headers = ['ID', 'Nro. Movimiento', 'Producto', 'Tipo', 'Entrada', 'Salida', 'Stock Resultante', 'Estatus', 'Fecha'];
+        const csvContent = [
+          headers.join(','),
+          ...result.data.map(m => [
+            m.idmovimiento || '',
+            `"${m.numero_movimiento || `MOV-${m.idmovimiento}`}"`,
+            `"${m.producto_nombre || ''}"`,
+            `"${m.tipo_movimiento || ''}"`,
+            m.cantidad_entrada || '',
+            m.cantidad_salida || '',
+            m.stock_resultante || '',
+            `"${m.estatus || ''}"`,
+            `"${m.fecha_creacion_formato || ''}"`
+          ].join(','))
+        ].join('\n');
         
-        const csvContent = generarCSVMovimientos(result.data);
-        descargarCSV(csvContent, 'movimientos_export.csv');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', 'movimientos_export.csv');
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
         
         Swal.fire("¡Éxito!", "Movimientos exportados correctamente.", "success");
       } else {
@@ -1557,48 +1454,3 @@ function exportarMovimientos() {
       Swal.fire("Error", "Error de conexión al exportar.", "error");
     });
 }
-
-/**
- * Generar CSV de movimientos
- */
-function generarCSVMovimientos(datos) {
-  const headers = ['ID', 'Nro. Movimiento', 'Producto', 'Tipo', 'Entrada', 'Salida', 'Stock Resultante', 'Estatus', 'Fecha'];
-  const csvContent = [
-    headers.join(','),
-    ...datos.map(movimiento => [
-      movimiento.idmovimiento || '',
-      `"${movimiento.numero_movimiento || `MOV-${movimiento.idmovimiento}`}"`,
-      `"${movimiento.producto_nombre || ''}"`,
-      `"${movimiento.tipo_movimiento || ''}"`,
-      movimiento.cantidad_entrada || '',
-      movimiento.cantidad_salida || '',
-      movimiento.stock_resultante || '',
-      `"${movimiento.estatus || ''}"`,
-      `"${movimiento.fecha_creacion_formato || ''}"`,
-    ].join(','))
-  ].join('\n');
-  
-  return csvContent;
-}
-
-/**
- * Descargar CSV
- */
-function descargarCSV(csvContent, filename) {
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  
-  if (link.download !== undefined) {
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-}
-
-
-window.obtenerTiposMovimientoActivos = obtenerTiposMovimientoActivos;
-window.actualizarContadoresTipos = actualizarContadoresTipos;

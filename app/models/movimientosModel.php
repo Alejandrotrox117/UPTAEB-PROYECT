@@ -219,19 +219,12 @@ class MovimientosModel extends Mysql
             $stmt->execute($this->getArray());
             $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            if ($movimientos) {
-                $resultado = [
-                    'status' => true,
-                    'message' => 'Movimientos obtenidos correctamente.',
-                    'data' => $movimientos
-                ];
-            } else {
-                $resultado = [
-                    'status' => false,
-                    'message' => 'No hay movimientos disponibles.',
-                    'data' => []
-                ];
-            }
+            // Siempre retornar status true si la consulta fue exitosa
+            $resultado = [
+                'status' => true,
+                'message' => $movimientos ? 'Movimientos obtenidos correctamente.' : 'No hay movimientos disponibles.',
+                'data' => $movimientos ? $movimientos : []
+            ];
             
         } catch (Exception $e) {
             error_log("MovimientosModel::ejecutarBusquedaTodosMovimientos - Error: " . $e->getMessage());
@@ -330,28 +323,35 @@ class MovimientosModel extends Mysql
             $this->setQuery(
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
-                 cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                 cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, total, observaciones, estatus)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
             );
             
-        
-            $cantidadEntrada = floatval($data['cantidad_entrada'] ?? 0);
-            $cantidadSalida = floatval($data['cantidad_salida'] ?? 0);
-            $stockAnterior = floatval($data['stock_anterior'] ?? 0);
-            $stockResultante = floatval($data['stock_resultante'] ?? 0);
+            // Usar setters con validación
+            $this->setIdproducto($data['idproducto']);
+            $this->setIdtipomovimiento($data['idtipomovimiento']);
+            $this->setIdcompra($data['idcompra'] ?? null);
+            $this->setIdventa($data['idventa'] ?? null);
+            $this->setIdproduccion($data['idproduccion'] ?? null);
+            $this->setCantidadEntrada($data['cantidad_entrada'] ?? 0);
+            $this->setCantidadSalida($data['cantidad_salida'] ?? 0);
+            $this->setStockAnterior($data['stock_anterior'] ?? 0);
+            $this->setStockResultante($data['stock_resultante'] ?? 0);
+            $this->setObservaciones($data['observaciones'] ?? '');
             
             $this->setArray([
                 $numeroMovimiento,
-                $data['idproducto'],
-                $data['idtipomovimiento'],
-                $data['idcompra'] ?? null,
-                $data['idventa'] ?? null,
-                $data['idproduccion'] ?? null,
-                $cantidadEntrada,
-                $cantidadSalida,
-                $stockAnterior,
-                $stockResultante,
-                $data['observaciones'] ?? ''
+                $this->getIdproducto(),
+                $this->getIdtipomovimiento(),
+                $this->getIdcompra(),
+                $this->getIdventa(),
+                $this->getIdproduccion(),
+                $this->getCantidadEntrada(),
+                $this->getCantidadSalida(),
+                $this->getStockAnterior(),
+                $this->getStockResultante(),
+                $this->getStockResultante(), 
+                $this->getObservaciones()
             ]);
             
             $stmt = $db->prepare($this->getQuery());
@@ -359,6 +359,18 @@ class MovimientosModel extends Mysql
             $this->setMovimientoId($db->lastInsertId());
             
             if ($this->getMovimientoId()) {
+                // Actualizar la existencia del producto
+                $updateProductoStmt = $db->prepare(
+                    "UPDATE producto 
+                    SET existencia = ?, 
+                        ultima_modificacion = NOW() 
+                    WHERE idproducto = ?"
+                );
+                $updateProductoStmt->execute([
+                    $this->getStockResultante(),
+                    $this->getIdproducto()
+                ]);
+                
                 $db->commit();
                 $this->setStatus(true);
                 $this->setMessage('Movimiento registrado correctamente.');
@@ -413,27 +425,36 @@ class MovimientosModel extends Mysql
                 "UPDATE movimientos_existencia 
                 SET idproducto = ?, idtipomovimiento = ?, idcompra = ?, idventa = ?, idproduccion = ?,
                     cantidad_entrada = ?, cantidad_salida = ?, stock_anterior = ?, stock_resultante = ?, 
-                    observaciones = ?, estatus = ?, fecha_modificacion = NOW()
+                    total = ?, observaciones = ?, estatus = ?, fecha_modificacion = NOW()
                 WHERE idmovimiento = ?"
             );
             
-            $cantidadEntrada = floatval($data['cantidad_entrada'] ?? 0);
-            $cantidadSalida = floatval($data['cantidad_salida'] ?? 0);
-            $stockAnterior = floatval($data['stock_anterior'] ?? 0);
-            $stockResultante = floatval($data['stock_resultante'] ?? 0);
+            // Usar setters con validación
+            $this->setIdproducto($data['idproducto']);
+            $this->setIdtipomovimiento($data['idtipomovimiento']);
+            $this->setIdcompra($data['idcompra'] ?? null);
+            $this->setIdventa($data['idventa'] ?? null);
+            $this->setIdproduccion($data['idproduccion'] ?? null);
+            $this->setCantidadEntrada($data['cantidad_entrada'] ?? 0);
+            $this->setCantidadSalida($data['cantidad_salida'] ?? 0);
+            $this->setStockAnterior($data['stock_anterior'] ?? 0);
+            $this->setStockResultante($data['stock_resultante'] ?? 0);
+            $this->setObservaciones($data['observaciones'] ?? '');
+            $this->setEstatusMovimiento($data['estatus'] ?? 'activo');
             
             $this->setArray([
-                $data['idproducto'],
-                $data['idtipomovimiento'],
-                $data['idcompra'] ?? null,
-                $data['idventa'] ?? null,
-                $data['idproduccion'] ?? null,
-                $cantidadEntrada,
-                $cantidadSalida,
-                $stockAnterior,
-                $stockResultante,
-                $data['observaciones'] ?? '',
-                $data['estatus'] ?? 'activo',
+                $this->getIdproducto(),
+                $this->getIdtipomovimiento(),
+                $this->getIdcompra(),
+                $this->getIdventa(),
+                $this->getIdproduccion(),
+                $this->getCantidadEntrada(),
+                $this->getCantidadSalida(),
+                $this->getStockAnterior(),
+                $this->getStockResultante(),
+                $this->getStockResultante(), // Campo 'total' = stock_resultante
+                $this->getObservaciones(),
+                $this->getEstatusMovimiento(),
                 $idmovimiento
             ]);
             
@@ -442,6 +463,18 @@ class MovimientosModel extends Mysql
             $rowCount = $stmt->rowCount();
             
             if ($rowCount > 0) {
+                // Actualizar la existencia del producto con el nuevo stock_resultante
+                $updateProductoStmt = $db->prepare(
+                    "UPDATE producto 
+                    SET existencia = ?, 
+                        ultima_modificacion = NOW() 
+                    WHERE idproducto = ?"
+                );
+                $updateProductoStmt->execute([
+                    $this->getStockResultante(),
+                    $this->getIdproducto()
+                ]);
+                
                 $db->commit();
                 $resultado = [
                     'status' => true,
@@ -475,42 +508,117 @@ class MovimientosModel extends Mysql
     }
 
     /**
-     * Función privada para eliminar (desactivar) movimiento
+     * Función privada para eliminar (desactivar) movimiento - OBSOLETO
+     * Usar anularMovimiento() en su lugar
      */
     private function ejecutarEliminacionMovimiento(int $idmovimiento){
+        return false;
+    }
+
+    /**
+     * Función privada para anular un movimiento
+     */
+    private function ejecutarAnulacionMovimiento(int $idmovimiento){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
             $db->beginTransaction();
-            
-            $this->setQuery("UPDATE movimientos_existencia SET estatus = 'eliminado' WHERE idmovimiento = ?");
-            $this->setArray([$idmovimiento]);
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $rowCount = $stmt->rowCount();
-            
-            if ($rowCount > 0) {
-                $db->commit();
-                $resultado = true;
-            } else {
-                $db->rollBack();
-                $resultado = false;
+
+            $movimientoOriginal = $this->selectMovimientoById($idmovimiento);
+            if (!$movimientoOriginal['status']) {
+                throw new Exception('Movimiento no encontrado.');
             }
+
+            $original = $movimientoOriginal['data'];
+
+            if ($original['idcompra'] || $original['idventa'] || $original['idproduccion']) {
+                throw new Exception('No se puede anular un movimiento vinculado a compra/venta/producción.');
+            }
+
+            if ($original['estatus'] === 'inactivo') {
+                throw new Exception('El movimiento ya está anulado.');
+            }
+
+            $stockActual = $this->obtenerStockActualProducto($original['idproducto']);
+            if ($stockActual === false) {
+                throw new Exception('No se pudo obtener el stock actual del producto.');
+            }
+
+            $numeroAnulacion = $this->generarNumeroMovimiento($db);
             
+            $cantidadAnulacion = 0;
+            $tipoAnulacion = '';
+            
+            if (floatval($original['cantidad_entrada']) > 0) {
+                $cantidadAnulacion = floatval($original['cantidad_entrada']);
+                $tipoAnulacion = 'salida';
+            } else {
+                $cantidadAnulacion = floatval($original['cantidad_salida']);
+                $tipoAnulacion = 'entrada';
+            }
+
+            $stockDespuesAnulacion = $tipoAnulacion === 'entrada' 
+                ? $stockActual + $cantidadAnulacion 
+                : $stockActual - $cantidadAnulacion;
+
+            if ($stockDespuesAnulacion < 0) {
+                throw new Exception('No se puede anular: resultaría en stock negativo.');
+            }
+
+            $stmtAnulacion = $db->prepare(
+                "INSERT INTO movimientos_existencia 
+                (numero_movimiento, idproducto, idtipomovimiento, cantidad_entrada, cantidad_salida, 
+                 stock_anterior, stock_resultante, total, observaciones, estatus)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+            );
+            
+            $stmtAnulacion->execute([
+                $numeroAnulacion,
+                $original['idproducto'],
+                $original['idtipomovimiento'],
+                $tipoAnulacion === 'entrada' ? $cantidadAnulacion : 0,
+                $tipoAnulacion === 'salida' ? $cantidadAnulacion : 0,
+                $stockActual,
+                $stockDespuesAnulacion,
+                $stockDespuesAnulacion,
+                '[ANULACIÓN AUTOMÁTICA] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
+            ]);
+
+            $idAnulacion = $db->lastInsertId();
+
+            $updateProducto = $db->prepare("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
+            $updateProducto->execute([$stockDespuesAnulacion, $original['idproducto']]);
+
+            $stmtMarcarAnulado = $db->prepare("UPDATE movimientos_existencia SET estatus = 'inactivo', fecha_modificacion = NOW() WHERE idmovimiento = ?");
+            $stmtMarcarAnulado->execute([$idmovimiento]);
+
+            $db->commit();
+
+            return [
+                'status' => true,
+                'message' => 'Movimiento anulado correctamente.',
+                'data' => [
+                    'idmovimiento_anulado' => $idmovimiento,
+                    'idmovimiento_anulacion' => $idAnulacion,
+                    'numero_anulacion' => $numeroAnulacion
+                ]
+            ];
+
         } catch (Exception $e) {
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            error_log("MovimientosModel::ejecutarEliminacionMovimiento - Error: " . $e->getMessage());
-            $resultado = false;
+            error_log("MovimientosModel::ejecutarAnulacionMovimiento - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al anular: ' . $e->getMessage(),
+                'data' => null
+            ];
         } finally {
             $conexion->disconnect();
         }
-
-        return $resultado;
     }
 
     /**
@@ -523,7 +631,7 @@ class MovimientosModel extends Mysql
 
         try {
           
-            $this->setQuery("SELECT idproducto, nombre, COALESCE(stock_actual, 0) as stock_actual FROM producto WHERE estatus = 'activo' ORDER BY nombre ASC");
+            $this->setQuery("SELECT idproducto, nombre, COALESCE(existencia, 0) as stock_actual FROM producto WHERE estatus = 'activo' ORDER BY nombre ASC");
             $this->setArray([]);
             
             $stmt = $db->prepare($this->getQuery());
@@ -662,7 +770,12 @@ class MovimientosModel extends Mysql
     /**
      * Función privada para validar datos de movimiento
      */
-    private function validarDatosMovimiento(array $data){
+    /**
+     * Validar datos del movimiento
+     * @param array $data Datos del movimiento
+     * @param float|null $stockEsperado Stock esperado (opcional, usado en anulación+corrección)
+     */
+    private function validarDatosMovimiento(array $data, $stockEsperado = null){
       
         if (empty($data['idproducto'])) {
             return ['valido' => false, 'mensaje' => 'El producto es obligatorio.'];
@@ -685,7 +798,57 @@ class MovimientosModel extends Mysql
             return ['valido' => false, 'mensaje' => 'No puede tener cantidad de entrada y salida al mismo tiempo.'];
         }
 
+        // Validar que stock_anterior coincida con la existencia real del producto
+        $stockAnteriorRecibido = floatval($data['stock_anterior'] ?? 0);
+        
+        // Si se proporciona un stock esperado (caso de anulación+corrección), usarlo
+        // De lo contrario, consultar el stock real del producto
+        $stockRealProducto = $stockEsperado !== null ? $stockEsperado : $this->obtenerStockActualProducto($data['idproducto']);
+        
+        if ($stockRealProducto === false) {
+            return ['valido' => false, 'mensaje' => 'No se pudo verificar el stock del producto.'];
+        }
+        
+        if (abs($stockAnteriorRecibido - $stockRealProducto) > 0.001) {
+            return ['valido' => false, 'mensaje' => 'El stock anterior no coincide con la existencia actual del producto. Stock actual: ' . $stockRealProducto];
+        }
+
+        // Validar que stock_resultante sea correcto según el cálculo
+        $stockResultanteRecibido = floatval($data['stock_resultante'] ?? 0);
+        $stockResultanteCalculado = $stockRealProducto + $cantidadEntrada - $cantidadSalida;
+        
+        if (abs($stockResultanteRecibido - $stockResultanteCalculado) > 0.001) {
+            return ['valido' => false, 'mensaje' => 'El stock resultante no es correcto. Debería ser: ' . $stockResultanteCalculado];
+        }
+
+        // Validar que no haya stock negativo
+        if ($stockResultanteCalculado < 0) {
+            return ['valido' => false, 'mensaje' => 'No hay suficiente stock. Stock disponible: ' . $stockRealProducto];
+        }
+
         return ['valido' => true, 'mensaje' => 'Datos válidos.'];
+    }
+
+    /**
+     * Función privada para obtener stock actual de un producto
+     */
+    private function obtenerStockActualProducto($idproducto){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $stmt = $db->prepare("SELECT COALESCE(existencia, 0) as stock FROM producto WHERE idproducto = ? AND estatus = 'activo'");
+            $stmt->execute([$idproducto]);
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            return $resultado ? floatval($resultado['stock']) : false;
+        } catch (Exception $e) {
+            error_log("MovimientosModel::obtenerStockActualProducto - Error: " . $e->getMessage());
+            return false;
+        } finally {
+            $conexion->disconnect();
+        }
     }
 
     /**
@@ -741,23 +904,175 @@ class MovimientosModel extends Mysql
     }
 
     /**
-     * Actualizar movimiento existente
+     * Actualizar movimiento existente - ELIMINADO
+     * Usar anularMovimiento() en su lugar
      */
     public function updateMovimiento(int $idmovimiento, array $data){
-        $this->setData($data);
-        $this->setMovimientoId($idmovimiento);
-        
-       
-        $validacion = $this->validarDatosMovimiento($this->getData());
-        if (!$validacion['valido']) {
+        return [
+            'status' => false,
+            'message' => 'La edición directa no está permitida. Use la función de anular y crear nuevo movimiento.',
+            'data' => null
+        ];
+    }
+
+    /**
+     * Anular movimiento y crear uno correctivo
+     */
+    public function anularYCorregirMovimiento(int $idmovimiento, array $datosNuevoMovimiento){
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
+            $movimientoOriginal = $this->selectMovimientoById($idmovimiento);
+            if (!$movimientoOriginal['status']) {
+                throw new Exception('Movimiento original no encontrado.');
+            }
+
+            $original = $movimientoOriginal['data'];
+
+            if ($original['idcompra'] || $original['idventa'] || $original['idproduccion']) {
+                throw new Exception('No se puede anular un movimiento vinculado a compra/venta/producción.');
+            }
+
+            if ($original['estatus'] === 'inactivo') {
+                throw new Exception('El movimiento ya está anulado.');
+            }
+
+            $stockActual = $this->obtenerStockActualProducto($original['idproducto']);
+            if ($stockActual === false) {
+                throw new Exception('No se pudo obtener el stock actual del producto.');
+            }
+
+            $numeroAnulacion = $this->generarNumeroMovimiento($db);
+            
+            $cantidadAnulacion = 0;
+            $tipoAnulacion = '';
+            
+            if (floatval($original['cantidad_entrada']) > 0) {
+                $cantidadAnulacion = floatval($original['cantidad_entrada']);
+                $tipoAnulacion = 'salida';
+            } else {
+                $cantidadAnulacion = floatval($original['cantidad_salida']);
+                $tipoAnulacion = 'entrada';
+            }
+
+            $stockDespuesAnulacion = $tipoAnulacion === 'entrada' 
+                ? $stockActual + $cantidadAnulacion 
+                : $stockActual - $cantidadAnulacion;
+
+            if ($stockDespuesAnulacion < 0) {
+                throw new Exception('No se puede anular: resultaría en stock negativo.');
+            }
+
+            $stmtAnulacion = $db->prepare(
+                "INSERT INTO movimientos_existencia 
+                (numero_movimiento, idproducto, idtipomovimiento, cantidad_entrada, cantidad_salida, 
+                 stock_anterior, stock_resultante, total, observaciones, estatus)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+            );
+            
+            $stmtAnulacion->execute([
+                $numeroAnulacion,
+                $original['idproducto'],
+                $original['idtipomovimiento'],
+                $tipoAnulacion === 'entrada' ? $cantidadAnulacion : 0,
+                $tipoAnulacion === 'salida' ? $cantidadAnulacion : 0,
+                $stockActual,
+                $stockDespuesAnulacion,
+                $stockDespuesAnulacion,
+                '[ANULACIÓN AUTOMÁTICA] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
+            ]);
+
+            $updateProducto1 = $db->prepare("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
+            $updateProducto1->execute([$stockDespuesAnulacion, $original['idproducto']]);
+
+            $stmtMarcarAnulado = $db->prepare("UPDATE movimientos_existencia SET estatus = 'inactivo', fecha_modificacion = NOW() WHERE idmovimiento = ?");
+            $stmtMarcarAnulado->execute([$idmovimiento]);
+
+            // Ajustar los datos del nuevo movimiento con el stock correcto después de la anulación
+            $datosNuevoMovimiento['stock_anterior'] = $stockDespuesAnulacion;
+            
+            // Recalcular stock resultante basado en el stock después de anulación
+            $cantidadEntradaNueva = floatval($datosNuevoMovimiento['cantidad_entrada'] ?? 0);
+            $cantidadSalidaNueva = floatval($datosNuevoMovimiento['cantidad_salida'] ?? 0);
+            $datosNuevoMovimiento['stock_resultante'] = $stockDespuesAnulacion + $cantidadEntradaNueva - $cantidadSalidaNueva;
+
+            // Validar datos del nuevo movimiento pasando el stock esperado después de anulación
+            $validacionNuevo = $this->validarDatosMovimiento($datosNuevoMovimiento, $stockDespuesAnulacion);
+            if (!$validacionNuevo['valido']) {
+                throw new Exception($validacionNuevo['mensaje']);
+            }
+
+            $this->setIdproducto($datosNuevoMovimiento['idproducto']);
+            $this->setIdtipomovimiento($datosNuevoMovimiento['idtipomovimiento']);
+            $this->setIdcompra($datosNuevoMovimiento['idcompra'] ?? null);
+            $this->setIdventa($datosNuevoMovimiento['idventa'] ?? null);
+            $this->setIdproduccion($datosNuevoMovimiento['idproduccion'] ?? null);
+            $this->setCantidadEntrada($datosNuevoMovimiento['cantidad_entrada'] ?? 0);
+            $this->setCantidadSalida($datosNuevoMovimiento['cantidad_salida'] ?? 0);
+            $this->setStockAnterior($datosNuevoMovimiento['stock_anterior'] ?? 0);
+            $this->setStockResultante($datosNuevoMovimiento['stock_resultante'] ?? 0);
+            $this->setObservaciones($datosNuevoMovimiento['observaciones'] ?? '');
+
+            $numeroNuevo = $this->generarNumeroMovimiento($db);
+
+            $stmtNuevo = $db->prepare(
+                "INSERT INTO movimientos_existencia 
+                (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
+                 cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, total, observaciones, estatus)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+            );
+
+            $stmtNuevo->execute([
+                $numeroNuevo,
+                $this->getIdproducto(),
+                $this->getIdtipomovimiento(),
+                $this->getIdcompra(),
+                $this->getIdventa(),
+                $this->getIdproduccion(),
+                $this->getCantidadEntrada(),
+                $this->getCantidadSalida(),
+                $this->getStockAnterior(),
+                $this->getStockResultante(),
+                $this->getStockResultante(),
+                $this->getObservaciones()
+            ]);
+
+            $idNuevoMovimiento = $db->lastInsertId();
+
+            $updateProducto2 = $db->prepare("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
+            $updateProducto2->execute([$this->getStockResultante(), $this->getIdproducto()]);
+
+            $db->commit();
+
+            return [
+                'status' => true,
+                'message' => 'Movimiento anulado y corregido exitosamente.',
+                'data' => [
+                    'idmovimiento_anulado' => $idmovimiento,
+                    'idmovimiento_anulacion' => $db->lastInsertId(),
+                    'idmovimiento_nuevo' => $idNuevoMovimiento,
+                    'numero_anulacion' => $numeroAnulacion,
+                    'numero_nuevo' => $numeroNuevo
+                ]
+            ];
+
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log("MovimientosModel::anularYCorregirMovimiento - Error: " . $e->getMessage());
             return [
                 'status' => false,
-                'message' => $validacion['mensaje'],
+                'message' => 'Error: ' . $e->getMessage(),
                 'data' => null
             ];
+        } finally {
+            $conexion->disconnect();
         }
-
-        return $this->ejecutarActualizacionMovimiento($this->getMovimientoId(), $this->getData());
     }
 
     /**
@@ -778,9 +1093,9 @@ class MovimientosModel extends Mysql
     }
 
     /**
-     * Eliminar movimiento por ID
+     * Anular movimiento por ID
      */
-    public function deleteMovimientoById(int $idmovimiento){
+    public function anularMovimientoById(int $idmovimiento){
         $this->setMovimientoId($idmovimiento);
         
         if (!$this->getMovimientoId()) {
@@ -791,12 +1106,18 @@ class MovimientosModel extends Mysql
             ];
         }
 
-        $resultado = $this->ejecutarEliminacionMovimiento($this->getMovimientoId());
-        
+        return $this->ejecutarAnulacionMovimiento($this->getMovimientoId());
+    }
+
+    /**
+     * Eliminar movimiento por ID - OBSOLETO
+     * Usar anularMovimientoById() en su lugar
+     */
+    public function deleteMovimientoById(int $idmovimiento){
         return [
-            'status' => $resultado,
-            'message' => $resultado ? 'Movimiento eliminado correctamente.' : 'No se pudo eliminar el movimiento.',
-            'data' => $resultado ? ['idmovimiento' => $this->getMovimientoId()] : null
+            'status' => false,
+            'message' => 'La eliminación directa no está permitida. Use la función de anular movimiento.',
+            'data' => null
         ];
     }
 

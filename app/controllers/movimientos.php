@@ -226,10 +226,10 @@ class Movimientos extends Controllers
                 $json = file_get_contents('php://input');
                 $data = json_decode($json, true);
 
-                if (!$data || !isset($data['idmovimiento'])) {
+                if (!$data || !isset($data['idmovimiento']) || !isset($data['nuevos_datos'])) {
                     $arr = array(
                         "status" => false,
-                        "message" => "Datos inválidos recibidos.",
+                        "message" => "Datos inválidos. Se requiere idmovimiento y nuevos_datos.",
                         "data" => null
                     );
                     echo json_encode($arr, JSON_UNESCAPED_UNICODE);
@@ -237,15 +237,13 @@ class Movimientos extends Controllers
                 }
 
                 $idmovimiento = intval($data['idmovimiento']);
-                unset($data['idmovimiento']); 
+                $nuevosDatos = $data['nuevos_datos'];
 
-                
-                $result = $this->model->updateMovimiento($idmovimiento, $data);
+                $result = $this->model->anularYCorregirMovimiento($idmovimiento, $nuevosDatos);
 
                 if ($result['status']) {
-                    
                     $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                    $this->bitacoraModel->registrarAccion('movimientos', 'ACTUALIZAR_MOVIMIENTO', $idusuario);
+                    $this->bitacoraModel->registrarAccion('movimientos', 'ANULAR_Y_CORREGIR_MOVIMIENTO', $idusuario);
                 }
 
                 echo json_encode($result, JSON_UNESCAPED_UNICODE);
@@ -253,7 +251,57 @@ class Movimientos extends Controllers
                 error_log("Error en updateMovimiento: " . $e->getMessage());
                 $arr = array(
                     "status" => false,
-                    "message" => "Error al actualizar movimiento: " . $e->getMessage(),
+                    "message" => "Error al anular y corregir movimiento: " . $e->getMessage(),
+                    "data" => null
+                );
+                echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
+    public function anularMovimiento()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('movimientos', 'eliminar')) {
+                $arr = array(
+                    "status" => false,
+                    "message" => "No tienes permisos para anular movimientos.",
+                    "data" => null
+                );
+                echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
+            try {
+                $json = file_get_contents('php://input');
+                $data = json_decode($json, true);
+
+                if (!$data || !isset($data['idmovimiento'])) {
+                    $arr = array(
+                        "status" => false,
+                        "message" => "ID de movimiento no proporcionado.",
+                        "data" => null
+                    );
+                    echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $idmovimiento = intval($data['idmovimiento']);
+
+                $result = $this->model->anularMovimientoById($idmovimiento);
+
+                if ($result['status']) {
+                    $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+                    $this->bitacoraModel->registrarAccion('movimientos', 'ANULAR_MOVIMIENTO', $idusuario);
+                }
+
+                echo json_encode($result, JSON_UNESCAPED_UNICODE);
+            } catch (Exception $e) {
+                error_log("Error en anularMovimiento: " . $e->getMessage());
+                $arr = array(
+                    "status" => false,
+                    "message" => "Error al anular movimiento: " . $e->getMessage(),
                     "data" => null
                 );
                 echo json_encode($arr, JSON_UNESCAPED_UNICODE);
@@ -275,41 +323,12 @@ class Movimientos extends Controllers
                 die();
             }
 
-            try {
-                $json = file_get_contents('php://input');
-                $data = json_decode($json, true);
-
-                if (!$data || !isset($data['idmovimiento'])) {
-                    $arr = array(
-                        "status" => false,
-                        "message" => "ID de movimiento no especificado.",
-                        "data" => null
-                    );
-                    echo json_encode($arr, JSON_UNESCAPED_UNICODE);
-                    die();
-                }
-
-                $idmovimiento = intval($data['idmovimiento']);
-
-                
-                $result = $this->model->deleteMovimientoById($idmovimiento);
-
-                if ($result['status']) {
-                    
-                    $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-                    $this->bitacoraModel->registrarAccion('movimientos', 'ELIMINAR_MOVIMIENTO', $idusuario);
-                }
-
-                echo json_encode($result, JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                error_log("Error en deleteMovimiento: " . $e->getMessage());
-                $arr = array(
-                    "status" => false,
-                    "message" => "Error al eliminar movimiento: " . $e->getMessage(),
-                    "data" => null
-                );
-                echo json_encode($arr, JSON_UNESCAPED_UNICODE);
-            }
+            $arr = array(
+                "status" => false,
+                "message" => "La eliminación directa no está disponible. Use la función de anular movimiento.",
+                "data" => null
+            );
+            echo json_encode($arr, JSON_UNESCAPED_UNICODE);
             die();
         }
     }
