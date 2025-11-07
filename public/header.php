@@ -178,7 +178,7 @@ use App\Helpers\PermisosModuloVerificar;
                 
                 <!-- Gestión Integral de Permisos (oculto pero disponible para URL directa) -->
                 <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver')): ?>
-                <li class="menu-item" style="display: none;">
+                <li class="menu-item">
                   <a href="<?= base_url('RolesIntegrado'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
                     <i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
                     <span class="nav-text ml-3">Gestión Integral de Permisos</span>
