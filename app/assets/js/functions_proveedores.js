@@ -552,8 +552,17 @@ function setupModalEventListeners() {
  * Detecta manipulación del DOM y restaura los selects a su estado original
  */
 const htmlOriginalesSelects = new Map();
+const selectsProtegidos = new Set();
 
 function validarYProtegerSelect(selectElement) {
+  // Si ya está protegido, no agregar listeners duplicados
+  if (selectsProtegidos.has(selectElement.id)) {
+    return;
+  }
+  
+  // Marcar como protegido
+  selectsProtegidos.add(selectElement.id);
+  
   // Guardar el HTML original completo del select
   htmlOriginalesSelects.set(selectElement.id, selectElement.innerHTML);
   
@@ -566,14 +575,15 @@ function validarYProtegerSelect(selectElement) {
     
     // Verificar si el valor actual está en las opciones válidas
     if (valorActual && !opcionesValidas.includes(valorActual)) {
+      // Restaurar el HTML original del select INMEDIATAMENTE
+      restablecerSelectOriginal(selectElement);
+      
+      // Mostrar el SweetAlert después de restaurar
       Swal.fire({
         icon: 'error',
         title: 'Valor inválido detectado',
-        text: 'Se detectó un valor no permitido en el campo. El valor será restaurado.',
+        text: 'Se detectó un valor no permitido en el campo. El valor ha sido restaurado.',
         confirmButtonText: 'Entendido'
-      }).then(() => {
-        // Restaurar el HTML original del select
-        restablecerSelectOriginal(selectElement);
       });
     }
   };
@@ -591,15 +601,21 @@ function restablecerSelectOriginal(selectElement) {
     // Restaurar todas las opciones originales
     selectElement.innerHTML = htmlOriginal;
     
-    // Seleccionar la primera opción válida (no vacía)
-    const primeraOpcionValida = Array.from(selectElement.options).find(
-      opt => opt.value !== '' && opt.value !== 'Seleccione'
-    );
+    // Restablecer a la opción vacía (Seleccionar...)
+    selectElement.value = '';
     
-    if (primeraOpcionValida) {
-      selectElement.value = primeraOpcionValida.value;
-    } else {
-      selectElement.selectedIndex = 0;
+    // Limpiar clases de error del select
+    selectElement.classList.remove('border-red-500', 'focus:ring-red-500');
+    selectElement.classList.add('border-gray-300');
+    
+    // Limpiar mensaje de error asociado
+    const contenedor = selectElement.closest('.mb-4, .mb-6, div');
+    if (contenedor) {
+      const mensajeError = contenedor.querySelector('.error-message, .text-red-500');
+      if (mensajeError) {
+        mensajeError.textContent = '';
+        mensajeError.style.display = 'none';
+      }
     }
     
     // Disparar evento change
