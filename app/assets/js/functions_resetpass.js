@@ -132,7 +132,7 @@
                             });
                         }
                     }).then(() => {
-                        window.location.href = base_url() + '/login';
+                        window.location.href = base_url + '/login';
                     });
                 } else {
                     Swal.fire({
@@ -168,7 +168,7 @@
                     cancelButtonColor: '#6b7280'
                 }).then((result) => {
                     if (!result.isConfirmed) {
-                        window.location.href = base_url() + '/login/resetPassword';
+                        window.location.href = base_url + '/login/resetPassword';
                     }
                 });
             })

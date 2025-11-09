@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\Controllers;
 use App\Models\LoginModel;
 
+
 // EmailHelper está en el namespace global (sin namespace)
 require_once __DIR__ . '/../libs/phpmailer/EmailHelper.php';
 
@@ -17,6 +18,12 @@ class Login extends Controllers
 
     public function index()
     {
+        // Si el usuario ya está logueado, redirigir a dashboard
+        if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
+            header('Location: ' . base_url('dashboard'));
+            exit();
+        }
+        
         $data['page_id'] = 5;
         $data["page_title"] = "Inicio de sesión";
         $data["page_tag"] = "Inicio";
