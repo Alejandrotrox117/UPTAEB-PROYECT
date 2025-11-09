@@ -166,6 +166,67 @@ class Compras extends Controllers
     }
 
     
+    public function validarProducto() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode([
+                'status' => false, 
+                'message' => 'Método no permitido.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        $idproducto = intval($_POST['idproducto'] ?? 0);
+        $nombreRecibido = trim($_POST['nombre'] ?? '');
+        
+        if ($idproducto <= 0) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'ID de producto inválido.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        $modelo = $this->get_model();
+        $productoInfo = $modelo->getProductoById($idproducto);
+        
+        if (!$productoInfo) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Producto no encontrado en el sistema.'
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        $nombreDB = trim($productoInfo['nombre'] ?? '');
+        
+        // Validar que el nombre coincida
+        if (strcasecmp($nombreRecibido, $nombreDB) !== 0) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Los datos del producto no coinciden con el sistema. Posible manipulación detectada.',
+                'esperado' => $nombreDB,
+                'recibido' => $nombreRecibido
+            ], JSON_UNESCAPED_UNICODE);
+            exit();
+        }
+        
+        // Devolver información validada del producto
+        echo json_encode([
+            'status' => true,
+            'message' => 'Producto validado correctamente.',
+            'producto' => [
+                'idproducto' => $productoInfo['idproducto'],
+                'nombre' => $productoInfo['nombre'],
+                'idcategoria' => $productoInfo['idcategoria'],
+                'precio' => $productoInfo['precio'] ?? 0
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+
+    
     public function setCompra(){
     header('Content-Type: application/json');
 
@@ -265,6 +326,16 @@ class Compras extends Controllers
         $response['message'] = 'Producto no encontrado: ID ' . $idProductoItem;
         echo json_encode($response);
         exit();
+        }
+
+        // Validar integridad de datos del producto
+        $nombreProductoRecibido = trim($item['nombre_producto'] ?? '');
+        $nombreProductoDB = trim($productoInfo['nombre'] ?? '');
+        
+        if (strcasecmp($nombreProductoRecibido, $nombreProductoDB) !== 0) {
+            $response['message'] = 'El nombre del producto no coincide con el registrado en el sistema. Posible manipulación detectada.';
+            echo json_encode($response);
+            exit();
         }
 
         $cantidad_final = floatval($item['cantidad'] ?? 0);
@@ -901,6 +972,16 @@ class Compras extends Controllers
             $productoInfo = $modelo->getProductoById($idProductoItem);
             if (!$productoInfo) {
                 $response['message'] = 'Producto no encontrado: ID ' . $idProductoItem;
+                echo json_encode($response, JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+
+            // Validar integridad de datos del producto
+            $nombreProductoRecibido = trim($item['nombre_producto'] ?? '');
+            $nombreProductoDB = trim($productoInfo['nombre'] ?? '');
+            
+            if (strcasecmp($nombreProductoRecibido, $nombreProductoDB) !== 0) {
+                $response['message'] = 'El nombre del producto no coincide con el registrado en el sistema. Posible manipulación detectada.';
                 echo json_encode($response, JSON_UNESCAPED_UNICODE);
                 exit();
             }
