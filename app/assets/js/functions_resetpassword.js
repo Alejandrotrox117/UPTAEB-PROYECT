@@ -1,10 +1,5 @@
 (function() {
     'use strict';
-    
-    // Función auxiliar para obtener base_url
-    function base_url() {
-        return window.base_url || (window.location.protocol + "/" + window.location.host + "/project");
-    }
 
     document.addEventListener('DOMContentLoaded', function() {
         const formResetPass = document.getElementById('formResetPass');
