@@ -476,6 +476,9 @@ function setupModalEventListeners() {
         camposFormularioProveedor,
         "formRegistrarProveedor"
       );
+      
+      // Inicializar protección de selects contra manipulación
+      inicializarProteccionSelects("formRegistrarProveedor");
     });
   }
 
@@ -542,6 +545,77 @@ function setupModalEventListeners() {
       cerrarModal("modalVerProveedor");
     });
   }
+}
+
+/**
+ * Sistema de validación de selects en tiempo real
+ * Detecta manipulación del DOM y restaura los selects a su estado original
+ */
+const htmlOriginalesSelects = new Map();
+
+function validarYProtegerSelect(selectElement) {
+  // Guardar el HTML original completo del select
+  htmlOriginalesSelects.set(selectElement.id, selectElement.innerHTML);
+  
+  // Guardar las opciones válidas originales
+  const opcionesValidas = Array.from(selectElement.options).map(opt => opt.value);
+  
+  // Validar cuando el select pierde el foco o cambia
+  const validar = () => {
+    const valorActual = selectElement.value;
+    
+    // Verificar si el valor actual está en las opciones válidas
+    if (valorActual && !opcionesValidas.includes(valorActual)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Valor inválido detectado',
+        text: 'Se detectó un valor no permitido en el campo. El valor será restaurado.',
+        confirmButtonText: 'Entendido'
+      }).then(() => {
+        // Restaurar el HTML original del select
+        restablecerSelectOriginal(selectElement);
+      });
+    }
+  };
+  
+  // Escuchar eventos
+  selectElement.addEventListener('change', validar);
+  selectElement.addEventListener('blur', validar);
+}
+
+function restablecerSelectOriginal(selectElement) {
+  // Restaurar el HTML original guardado
+  const htmlOriginal = htmlOriginalesSelects.get(selectElement.id);
+  
+  if (htmlOriginal) {
+    // Restaurar todas las opciones originales
+    selectElement.innerHTML = htmlOriginal;
+    
+    // Seleccionar la primera opción válida (no vacía)
+    const primeraOpcionValida = Array.from(selectElement.options).find(
+      opt => opt.value !== '' && opt.value !== 'Seleccione'
+    );
+    
+    if (primeraOpcionValida) {
+      selectElement.value = primeraOpcionValida.value;
+    } else {
+      selectElement.selectedIndex = 0;
+    }
+    
+    // Disparar evento change
+    const event = new Event('change', { bubbles: true });
+    selectElement.dispatchEvent(event);
+  }
+}
+
+function inicializarProteccionSelects(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  
+  const selects = form.querySelectorAll('select');
+  selects.forEach(select => {
+    validarYProtegerSelect(select);
+  });
 }
 
 function registrarProveedor() {
@@ -646,6 +720,9 @@ function mostrarModalEditarProveedor(proveedor) {
     camposFormularioActualizarProveedor,
     "formActualizarProveedor"
   );
+  
+  // Inicializar protección de selects contra manipulación
+  inicializarProteccionSelects("formActualizarProveedor");
 
   abrirModal("modalActualizarProveedor");
 }

@@ -108,6 +108,17 @@ class Proveedores extends Controllers
                 
                 if (!empty($datosLimpios['genero'])) {
                     $reglasValidacion['genero'] = 'genero';
+                    
+                    // VALIDACIÓN DE SEGURIDAD: Whitelist de géneros permitidos
+                    $generosPermitidos = ['MASCULINO', 'FEMENINO', 'OTRO'];
+                    if (!in_array($datosLimpios['genero'], $generosPermitidos, true)) {
+                        $arrResponse = array(
+                            'status' => false,
+                            'message' => 'Género inválido. Valor recibido: ' . htmlspecialchars($datosLimpios['genero']) . '. Los valores permitidos son: MASCULINO, FEMENINO, OTRO.'
+                        );
+                        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
                 }
 
                 $resultadosValidacion = ExpresionesRegulares::validarCampos($datosLimpios, $reglasValidacion);
@@ -378,6 +389,17 @@ class Proveedores extends Controllers
                 
                 if (!empty($datosLimpios['genero'])) {
                     $reglasValidacion['genero'] = 'genero';
+                    
+                    // VALIDACIÓN DE SEGURIDAD: Whitelist de géneros permitidos
+                    $generosPermitidos = ['MASCULINO', 'FEMENINO', 'OTRO'];
+                    if (!in_array($datosLimpios['genero'], $generosPermitidos, true)) {
+                        $arrResponse = array(
+                            'status' => false,
+                            'message' => 'Género inválido. Valor recibido: ' . htmlspecialchars($datosLimpios['genero']) . '. Los valores permitidos son: MASCULINO, FEMENINO, OTRO.'
+                        );
+                        echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
                 }
 
 
