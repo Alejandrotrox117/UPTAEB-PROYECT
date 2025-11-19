@@ -1,4 +1,7 @@
 <?php 
+use App\Helpers\PermisosModuloVerificar;
+use App\Models\RolesModel;
+
 headerAdmin($data);
 
 $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Roles');

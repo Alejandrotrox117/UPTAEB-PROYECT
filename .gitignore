@@ -47,7 +47,7 @@ tmp/
 uploads/
 storage/
 public/uploads/
-.env
+
 # Archivos de backup de base de datos
 *.sql
 *.sql.gz
@@ -77,3 +77,4 @@ api-docs/
 # Archivos de profiling
 xdebug/
 profile/
+config/config.php

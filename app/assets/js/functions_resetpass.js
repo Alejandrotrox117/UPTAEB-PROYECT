@@ -1,12 +1,15 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const formNuevaPassword = document.getElementById('formNuevaPassword');
-    
-    if (formNuevaPassword) {
-        formNuevaPassword.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const password = document.getElementById('txtPassword').value;
-            const confirmPassword = document.getElementById('txtConfirmPassword').value;
+(function() {
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const formNuevaPassword = document.getElementById('formNuevaPassword');
+        
+        if (formNuevaPassword) {
+            formNuevaPassword.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const password = document.getElementById('txtPassword').value;
+                const confirmPassword = document.getElementById('txtConfirmPassword').value;
             
             // Validar que las contraseñas coincidan
             if (password !== confirmPassword) {
@@ -129,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             });
                         }
                     }).then(() => {
-                        window.location.href = base_url() + '/login';
+                        window.location.href = base_url + '/login';
                     });
                 } else {
                     Swal.fire({
@@ -165,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     cancelButtonColor: '#6b7280'
                 }).then((result) => {
                     if (!result.isConfirmed) {
-                        window.location.href = base_url() + '/login/resetPassword';
+                        window.location.href = base_url + '/login/resetPassword';
                     }
                 });
             })
@@ -228,10 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    }
-});
+        } // Cierre del if (formNuevaPassword)
+    }); // Cierre del DOMContentLoaded
 
-// Función auxiliar para obtener base_url (asumiendo que está definida globalmente)
-function base_url() {
-    return window.base_url || (window.location.protocol + "//" + window.location.host + "/project");
-}
+})(); // Fin de IIFE - Código protegido

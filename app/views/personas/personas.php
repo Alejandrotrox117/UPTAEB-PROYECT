@@ -277,12 +277,12 @@
 </div>
 
 <!-- MODAL VER PERSONA -->
-<div id="modalVerPersona" class="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+<div id="modalVerPersona" class="fixed inset-0 text-black flex items-center justify-center bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-11/12 max-w-2xl max-h-[95vh]">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh]">
+        <div class="bg-white  rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh]">
             
             <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-xl font-semibold text-gray-900 ">
                     <i class="fas fa-eye mr-2 text-green-600"></i>
                     Detalles de la Persona
                 </h3>
@@ -293,75 +293,75 @@
 
             <div class="p-6 overflow-y-auto max-h-[70vh]">
                 <div class="mb-6">
-                    <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <h4 class="text-lg font-medium text-gray-900  mb-4">
                         <i class="fas fa-user mr-2 text-green-600"></i>
                         Información Personal
                     </h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Nombre</label>
-                            <p id="verNombre" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verNombre" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Apellido</label>
-                            <p id="verApellido" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verApellido" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Cédula</label>
-                            <p id="verCedula" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verCedula" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Género</label>
-                            <p id="verGenero" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verGenero" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Fecha de Nacimiento</label>
-                            <p id="verFechaNacimiento" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verFechaNacimiento" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Teléfono</label>
-                            <p id="verTelefono" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verTelefono" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Correo Personal</label>
-                            <p id="verCorreo" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verCorreo" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Estado</label>
-                            <p id="verEstado" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verEstado" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Observaciones</label>
-                            <p id="verObser" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verObser" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Dirección</label>
-                            <p id="verDire" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verDire" class="text-gray-900  font-medium">-</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-6">
-                    <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <h4 class="text-lg font-medium text-gray-900  mb-4">
                         <i class="fas fa-key mr-2 text-purple-600"></i>
                         Información de Usuario
                     </h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Tiene Usuario</label>
-                            <p id="verTieneUsuario" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verTieneUsuario" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Correo de Usuario</label>
-                            <p id="verUsuarioCorreo" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verUsuarioCorreo" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Rol</label>
-                            <p id="verUsuarioRol" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verUsuarioRol" class="text-gray-900  font-medium">-</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Estatus Usuario</label>
-                            <p id="verUsuarioEstatus" class="text-gray-900 dark:text-white font-medium">-</p>
+                            <p id="verUsuarioEstatus" class="text-gray-900  font-medium">-</p>
                         </div>
                     </div>
                 </div>

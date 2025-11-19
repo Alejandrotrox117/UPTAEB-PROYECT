@@ -14,7 +14,7 @@ if (!isset($_SESSION['usuario_id']) || !isset($_SESSION['rol_id'])) {
     }
 }
 
-require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
+use App\Helpers\PermisosModuloVerificar;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -94,8 +94,8 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
           <?php endif; ?>
 
           <!-- Gestionar Pagos -->
-           <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('pagos', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')): ?>
-          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-credit-card w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Pagos</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('pagos', 'ver')): ?><li class="menu-item"><a href="<?= base_url('pagos'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-credit-card w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Pagos</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver')): ?><li class="menu-item"><a href="<?= base_url('personas'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-shield w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Personas</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')): ?><li class="menu-item"><a href="<?= base_url('tasas'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fas fa-coins w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Historico de Tasas BCV</span></a></li><?php endif; ?></ul></details></li>
+           <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('pagos', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')): ?>
+          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-credit-card w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Pagos</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('pagos', 'ver')): ?><li class="menu-item"><a href="<?= base_url('pagos'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-credit-card w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Pagos</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('tasas', 'ver')): ?><li class="menu-item"><a href="<?= base_url('tasas'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fas fa-coins w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Historico de Tasas BCV</span></a></li><?php endif; ?></ul></details></li>
           <?php endif; ?>
 
           <!-- Movimientos de existencias -->
@@ -104,8 +104,8 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
           <?php endif; ?>
 
           <!-- Gestionar Sueldos -->
-          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos', 'ver')): ?>
-          <li class="menu-item"><a href="<?= base_url('sueldos'); ?>" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Sueldos</span></a></li>
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver')): ?>
+          <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-money-bill-wave w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Sueldos</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('sueldos', 'ver')): ?><li class="menu-item"><a href="<?= base_url('sueldos'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-money-bill-wave w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Sueldos</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'ver')): ?><li class="menu-item"><a href="<?= base_url('personas'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-user-shield w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Personas</span></a></li><?php endif; ?></ul></details></li>
           <?php endif; ?>
 
           <!-- Gestionar Ventas -->
@@ -113,19 +113,24 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
           <li class="menu-item-group"><details class="group"><summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><div class="flex items-center"><i class="nav-icon fa-solid fa-cash-register w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Gestionar Ventas</span></div><i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i></summary><ul class="ml-4 mt-1 space-y-1 pl-3 border-l border-gray-200"><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('ventas', 'ver')): ?><li class="menu-item"><a href="<?= base_url('ventas'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-file-invoice-dollar w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Ventas</span></a></li><?php endif; ?><?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('clientes', 'ver')): ?><li class="menu-item"><a href="<?= base_url('clientes'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group"><i class="nav-icon fa-solid fa-users w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i><span class="nav-text ml-3">Clientes</span></a></li><?php endif; ?></ul></details></li>
           <?php endif; ?>
 
-          <!-- Generar Reportes -->
-          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('reportes', 'ver')): ?>
-          <li class="menu-item"><a href="<?= base_url('reportes'); ?>" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group"><i class="nav-icon fa-solid fa-file-lines w-5 text-center text-gray-500 group-hover:text-green-600"></i><span class="nav-text ml-3 font-medium">Generar Reportes</span></a></li>
+          <!-- Bitácora -->
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
+          <li class="menu-item">
+            <a href="<?= base_url('bitacora'); ?>" class="nav-link flex items-center p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
+              <i class="nav-icon fa-solid fa-history w-5 text-center text-gray-500 group-hover:text-green-600"></i>
+              <span class="nav-text ml-3 font-medium">Bitácora</span>
+            </a>
+          </li>
           <?php endif; ?>
 
-          <!-- Seguridad -->
-          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
+          <!-- Gestionar Seguridad -->
+          <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver') || PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver') || PermisosModuloVerificar::verificarAccesoModulo('Backup')): ?>
           <li class="menu-item-group">
             <details class="group">
               <summary class="nav-link-summary flex cursor-pointer list-none items-center justify-between p-3 rounded-md text-gray-700 hover:bg-green-100 hover:text-green-700 group">
                 <div class="flex items-center">
                   <i class="nav-icon fa-solid fa-user-lock w-5 text-center text-gray-500 group-hover:text-green-600"></i>
-                  <span class="nav-text ml-3 font-medium">Seguridad</span>
+                  <span class="nav-text ml-3 font-medium">Gestionar Seguridad</span>
                 </div>
                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 group-open:rotate-180 text-gray-400 group-hover:text-green-500"></i>
               </summary>
@@ -136,7 +141,7 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
                 <li class="menu-item">
                   <a href="<?= base_url('usuarios'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
                     <i class="nav-icon fa-solid fa-user w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
-                    <span class="nav-text ml-3">Gestionar Usuarios</span>
+                    <span class="nav-text ml-3">Usuarios</span>
                   </a>
                 </li>
                 <?php endif; ?>
@@ -146,7 +151,27 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
                 <li class="menu-item">
                   <a href="<?= base_url('roles'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
                     <i class="nav-icon fa-solid fa-user-tag w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
-                    <span class="nav-text ml-3">Gestionar Roles</span>
+                    <span class="nav-text ml-3">Roles</span>
+                  </a>
+                </li>
+                <?php endif; ?>
+                
+                <!-- Gestionar Módulos -->
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver')): ?>
+                <li class="menu-item">
+                  <a href="<?= base_url('modulos'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-th-large w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Modulos</span>
+                  </a>
+                </li>
+                <?php endif; ?>
+
+                <!-- Gestión de Backups -->
+                <?php if (PermisosModuloVerificar::verificarAccesoModulo('Backup')): ?>
+                <li class="menu-item">
+                  <a href="<?= base_url('backup'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+                    <i class="nav-icon fa-solid fa-database w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+                    <span class="nav-text ml-3">Backups</span>
                   </a>
                 </li>
                 <?php endif; ?>
@@ -157,36 +182,6 @@ require_once __DIR__ . '/../helpers/PermisosModuloVerificar.php';
                   <a href="<?= base_url('RolesIntegrado'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
                     <i class="nav-icon fa-solid fa-cogs w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
                     <span class="nav-text ml-3">Gestión Integral de Permisos</span>
-                  </a>
-                </li>
-                <?php endif; ?>
-                
-                <!-- Gestionar Módulos -->
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('modulos', 'ver')): ?>
-                <li class="menu-item">
-                  <a href="<?= base_url('modulos'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
-                    <i class="nav-icon fa-solid fa-th-large w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
-                    <span class="nav-text ml-3">Gestionar Módulos</span>
-                  </a>
-                </li>
-                <?php endif; ?>
-                
-                <!-- Bitácora -->
-                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('bitacora', 'ver')): ?>
-                <li class="menu-item">
-                  <a href="<?= base_url('bitacora'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
-                    <i class="nav-icon fa-solid fa-history w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
-                    <span class="nav-text ml-3">Bitácora</span>
-                  </a>
-                </li>
-                <?php endif; ?>
-
-                <!-- Gestión de Backups -->
-                <?php if (PermisosModuloVerificar::verificarAccesoModulo('Backup')): ?>
-                <li class="menu-item">
-                  <a href="<?= base_url('backup'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
-                    <i class="nav-icon fa-solid fa-database w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
-                    <span class="nav-text ml-3">Gestión de Backups</span>
                   </a>
                 </li>
                 <?php endif; ?>

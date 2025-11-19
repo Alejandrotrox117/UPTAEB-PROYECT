@@ -476,6 +476,9 @@ function setupModalEventListeners() {
         camposFormularioProveedor,
         "formRegistrarProveedor"
       );
+      
+      // Inicializar protección de selects contra manipulación
+      inicializarProteccionSelects("formRegistrarProveedor");
     });
   }
 
@@ -542,6 +545,93 @@ function setupModalEventListeners() {
       cerrarModal("modalVerProveedor");
     });
   }
+}
+
+/**
+ * Sistema de validación de selects en tiempo real
+ * Detecta manipulación del DOM y restaura los selects a su estado original
+ */
+const htmlOriginalesSelects = new Map();
+const selectsProtegidos = new Set();
+
+function validarYProtegerSelect(selectElement) {
+  // Si ya está protegido, no agregar listeners duplicados
+  if (selectsProtegidos.has(selectElement.id)) {
+    return;
+  }
+  
+  // Marcar como protegido
+  selectsProtegidos.add(selectElement.id);
+  
+  // Guardar el HTML original completo del select
+  htmlOriginalesSelects.set(selectElement.id, selectElement.innerHTML);
+  
+  // Guardar las opciones válidas originales
+  const opcionesValidas = Array.from(selectElement.options).map(opt => opt.value);
+  
+  // Validar cuando el select pierde el foco o cambia
+  const validar = () => {
+    const valorActual = selectElement.value;
+    
+    // Verificar si el valor actual está en las opciones válidas
+    if (valorActual && !opcionesValidas.includes(valorActual)) {
+      // Restaurar el HTML original del select INMEDIATAMENTE
+      restablecerSelectOriginal(selectElement);
+      
+      // Mostrar el SweetAlert después de restaurar
+      Swal.fire({
+        icon: 'error',
+        title: 'Valor inválido detectado',
+        text: 'Se detectó un valor no permitido en el campo. El valor ha sido restaurado.',
+        confirmButtonText: 'Entendido'
+      });
+    }
+  };
+  
+  // Escuchar eventos
+  selectElement.addEventListener('change', validar);
+  selectElement.addEventListener('blur', validar);
+}
+
+function restablecerSelectOriginal(selectElement) {
+  // Restaurar el HTML original guardado
+  const htmlOriginal = htmlOriginalesSelects.get(selectElement.id);
+  
+  if (htmlOriginal) {
+    // Restaurar todas las opciones originales
+    selectElement.innerHTML = htmlOriginal;
+    
+    // Restablecer a la opción vacía (Seleccionar...)
+    selectElement.value = '';
+    
+    // Limpiar clases de error del select
+    selectElement.classList.remove('border-red-500', 'focus:ring-red-500');
+    selectElement.classList.add('border-gray-300');
+    
+    // Limpiar mensaje de error asociado
+    const contenedor = selectElement.closest('.mb-4, .mb-6, div');
+    if (contenedor) {
+      const mensajeError = contenedor.querySelector('.error-message, .text-red-500');
+      if (mensajeError) {
+        mensajeError.textContent = '';
+        mensajeError.style.display = 'none';
+      }
+    }
+    
+    // Disparar evento change
+    const event = new Event('change', { bubbles: true });
+    selectElement.dispatchEvent(event);
+  }
+}
+
+function inicializarProteccionSelects(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  
+  const selects = form.querySelectorAll('select');
+  selects.forEach(select => {
+    validarYProtegerSelect(select);
+  });
 }
 
 function registrarProveedor() {
@@ -646,6 +736,9 @@ function mostrarModalEditarProveedor(proveedor) {
     camposFormularioActualizarProveedor,
     "formActualizarProveedor"
   );
+  
+  // Inicializar protección de selects contra manipulación
+  inicializarProteccionSelects("formActualizarProveedor");
 
   abrirModal("modalActualizarProveedor");
 }

@@ -659,8 +659,8 @@ function bindModalEvents() {
   ) {
     elements.btnAgregarProductoDetalleModal.addEventListener(
       "click",
-      function () {
-        agregarProductoDetalle(elements);
+      async function () {
+        await agregarProductoDetalle(elements);
       }
     );
   }
@@ -1228,8 +1228,8 @@ function bindEditarModalEvents() {
   ) {
     elements.btnAgregarProductoDetalleActualizar.addEventListener(
       "click",
-      function () {
-        agregarProductoDetalleActualizar(elements);
+      async function () {
+        await agregarProductoDetalleActualizar(elements);
       }
     );
   }
@@ -1475,7 +1475,37 @@ async function buscarProveedor(elements) {
   }
 }
 
-function agregarProductoDetalle(elements) {
+async function recargarSelectProductos(selectElement) {
+  try {
+    const response = await fetch('Compras/getListaProductosParaFormulario');
+    if (!response.ok) throw new Error('Error en respuesta de productos');
+    const productos = await response.json();
+    
+    // Limpiar el select
+    selectElement.innerHTML = '<option value="">Seleccione producto...</option>';
+    
+    // Agregar productos desde el servidor (usando la misma estructura que la carga inicial)
+    productos.forEach(producto => {
+      const option = document.createElement('option');
+      option.value = producto.idproducto;
+      option.dataset.idcategoria = producto.idcategoria;
+      option.dataset.nombre = producto.nombre_producto;
+      option.dataset.precio = producto.precio_referencia_compra || '0.0000';
+      option.dataset.idmoneda = producto.codigo_moneda || '';
+      option.dataset.moneda = producto.idmoneda_producto || '';
+      option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria})`;
+      selectElement.appendChild(option);
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error al recargar productos:', error);
+    selectElement.innerHTML = '<option value="">Error al cargar productos</option>';
+    return false;
+  }
+}
+
+async function agregarProductoDetalle(elements) {
   const selectedOption =
     elements.selectProductoAgregarModal.options[
       elements.selectProductoAgregarModal.selectedIndex
@@ -1486,41 +1516,92 @@ function agregarProductoDetalle(elements) {
   }
 
   const idproducto = selectedOption.value;
-  if (detalleCompraItemsModal.find((item) => item.idproducto === idproducto)) {
-    Swal.fire("Atención", "Este producto ya ha sido agregado.", "warning");
-    return;
+  
+  // Validar el producto con el backend antes de agregarlo
+  const nombreProducto = selectedOption.dataset.nombre;
+  
+  try {
+    const formData = new FormData();
+    formData.append('idproducto', idproducto);
+    formData.append('nombre', nombreProducto);
+    
+    const response = await fetch('Compras/validarProducto', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (!data.status) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Validación',
+        text: data.message || 'No se pudo validar el producto.',
+        confirmButtonColor: '#d33'
+      });
+      // Resetear el select después del error para limpiar cualquier manipulación
+      elements.selectProductoAgregarModal.value = "";
+      await recargarSelectProductos(elements.selectProductoAgregarModal);
+      return;
+    }
+    
+    // Si la validación es exitosa, usar los datos validados del servidor
+    const productoValidado = data.producto;
+    
+    // Validar duplicados usando el ID validado del servidor
+    if (detalleCompraItemsModal.find((item) => item.idproducto == productoValidado.idproducto)) {
+      Swal.fire("Atención", "Este producto ya ha sido agregado al detalle.", "warning");
+      // Resetear el select después del error
+      elements.selectProductoAgregarModal.value = "";
+      await recargarSelectProductos(elements.selectProductoAgregarModal);
+      return;
+    }
+    
+    const selectMonedaGeneralModal = document.getElementById(
+      "idmoneda_general_compra_modal"
+    );
+    const monedaGeneralSeleccionada =
+      selectMonedaGeneralModal.options[selectMonedaGeneralModal.selectedIndex];
+    const simboloMonedaGeneral = monedaGeneralSeleccionada
+      ? monedaGeneralSeleccionada.dataset.simbolo
+      : "$";
+
+    const item = {
+      idproducto: productoValidado.idproducto,
+      nombre: productoValidado.nombre,
+      idcategoria: parseInt(productoValidado.idcategoria),
+      precio_unitario: parseFloat(productoValidado.precio) || 0,
+      idmoneda_item:
+        selectedOption.dataset.idmoneda || selectMonedaGeneralModal.value,
+      simbolo_moneda_item:
+        selectedOption.dataset.monedaSimbolo || simboloMonedaGeneral,
+      no_usa_vehiculo: false,
+      peso_vehiculo: 0,
+      peso_bruto: 0,
+      peso_neto_directo: 0,
+      cantidad_unidad: 1,
+      descuento: 0,
+      moneda: selectedOption.dataset.moneda,
+    };
+
+    detalleCompraItemsModal.push(item);
+    renderizarTablaDetalleModal();
+    elements.selectProductoAgregarModal.value = "";
+    // Recargar el select para asegurar datos limpios del servidor
+    await recargarSelectProductos(elements.selectProductoAgregarModal);
+    
+  } catch (error) {
+    console.error('Error al validar producto:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Conexión',
+      text: 'No se pudo validar el producto. Intente nuevamente.',
+      confirmButtonColor: '#d33'
+    });
+    // Resetear el select después del error de conexión
+    elements.selectProductoAgregarModal.value = "";
+    await recargarSelectProductos(elements.selectProductoAgregarModal);
   }
-
-  const selectMonedaGeneralModal = document.getElementById(
-    "idmoneda_general_compra_modal"
-  );
-  const monedaGeneralSeleccionada =
-    selectMonedaGeneralModal.options[selectMonedaGeneralModal.selectedIndex];
-  const simboloMonedaGeneral = monedaGeneralSeleccionada
-    ? monedaGeneralSeleccionada.dataset.simbolo
-    : "$";
-
-  const item = {
-    idproducto: idproducto,
-    nombre: selectedOption.dataset.nombre,
-    idcategoria: parseInt(selectedOption.dataset.idcategoria),
-    precio_unitario: parseFloat(selectedOption.dataset.precio) || 0,
-    idmoneda_item:
-      selectedOption.dataset.idmoneda || selectMonedaGeneralModal.value,
-    simbolo_moneda_item:
-      selectedOption.dataset.monedaSimbolo || simboloMonedaGeneral,
-    no_usa_vehiculo: false,
-    peso_vehiculo: 0,
-    peso_bruto: 0,
-    peso_neto_directo: 0,
-    cantidad_unidad: 1,
-    descuento: 0,
-    moneda: selectedOption.dataset.moneda,
-  };
-
-  detalleCompraItemsModal.push(item);
-  renderizarTablaDetalleModal();
-  elements.selectProductoAgregarModal.value = "";
 }
 
 function calcularSubtotalLineaItemModal(item) {
@@ -2377,7 +2458,7 @@ async function buscarProveedorActualizar(elements) {
   }
 }
 
-function agregarProductoDetalleActualizar(elements) {
+async function agregarProductoDetalleActualizar(elements) {
   const selectedOption =
     elements.selectProductoAgregarActualizar.options[
       elements.selectProductoAgregarActualizar.selectedIndex
@@ -2388,43 +2469,92 @@ function agregarProductoDetalleActualizar(elements) {
   }
 
   const idproducto = selectedOption.value;
-  if (
-    detalleCompraItemsActualizar.find((item) => item.idproducto === idproducto)
-  ) {
-    Swal.fire("Atención", "Este producto ya ha sido agregado.", "warning");
-    return;
+  
+  // Validar el producto con el backend antes de agregarlo
+  const nombreProducto = selectedOption.dataset.nombre;
+  
+  try {
+    const formData = new FormData();
+    formData.append('idproducto', idproducto);
+    formData.append('nombre', nombreProducto);
+    
+    const response = await fetch('Compras/validarProducto', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (!data.status) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de Validación',
+        text: data.message || 'No se pudo validar el producto.',
+        confirmButtonColor: '#d33'
+      });
+      // Resetear el select después del error para limpiar cualquier manipulación
+      elements.selectProductoAgregarActualizar.value = "";
+      await recargarSelectProductos(elements.selectProductoAgregarActualizar);
+      return;
+    }
+    
+    // Si la validación es exitosa, usar los datos validados del servidor
+    const productoValidado = data.producto;
+    
+    // Validar duplicados usando el ID validado del servidor
+    if (detalleCompraItemsActualizar.find((item) => item.idproducto == productoValidado.idproducto)) {
+      Swal.fire("Atención", "Este producto ya ha sido agregado al detalle.", "warning");
+      // Resetear el select después del error
+      elements.selectProductoAgregarActualizar.value = "";
+      await recargarSelectProductos(elements.selectProductoAgregarActualizar);
+      return;
+    }
+    
+    const monedaGeneralSeleccionada =
+      elements.selectMonedaGeneralActualizar.options[
+        elements.selectMonedaGeneralActualizar.selectedIndex
+      ];
+    const simboloMonedaGeneral = monedaGeneralSeleccionada
+      ? monedaGeneralSeleccionada.dataset.simbolo
+      : "$";
+
+    const item = {
+      idproducto: productoValidado.idproducto,
+      nombre: productoValidado.nombre,
+      idcategoria: parseInt(productoValidado.idcategoria),
+      precio_unitario: parseFloat(productoValidado.precio) || 0,
+      idmoneda_item:
+        selectedOption.dataset.idmoneda ||
+        elements.selectMonedaGeneralActualizar.value,
+      simbolo_moneda_item:
+        selectedOption.dataset.monedaSimbolo || simboloMonedaGeneral,
+      no_usa_vehiculo: false,
+      peso_vehiculo: 0,
+      peso_bruto: 0,
+      peso_neto_directo: 0,
+      cantidad_unidad: 1,
+      descuento: 0,
+      moneda: selectedOption.dataset.moneda,
+    };
+
+    detalleCompraItemsActualizar.push(item);
+    renderizarTablaDetalleActualizar();
+    elements.selectProductoAgregarActualizar.value = "";
+    // Recargar el select para asegurar datos limpios del servidor
+    await recargarSelectProductos(elements.selectProductoAgregarActualizar);
+    
+  } catch (error) {
+    console.error('Error al validar producto:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Conexión',
+      text: 'No se pudo validar el producto. Intente nuevamente.',
+      confirmButtonColor: '#d33'
+    });
+    // Resetear el select después del error de conexión
+    elements.selectProductoAgregarActualizar.value = "";
+    await recargarSelectProductos(elements.selectProductoAgregarActualizar);
   }
-
-  const monedaGeneralSeleccionada =
-    elements.selectMonedaGeneralActualizar.options[
-      elements.selectMonedaGeneralActualizar.selectedIndex
-    ];
-  const simboloMonedaGeneral = monedaGeneralSeleccionada
-    ? monedaGeneralSeleccionada.dataset.simbolo
-    : "$";
-
-  const item = {
-    idproducto: idproducto,
-    nombre: selectedOption.dataset.nombre,
-    idcategoria: parseInt(selectedOption.dataset.idcategoria),
-    precio_unitario: parseFloat(selectedOption.dataset.precio) || 0,
-    idmoneda_item:
-      selectedOption.dataset.idmoneda ||
-      elements.selectMonedaGeneralActualizar.value,
-    simbolo_moneda_item:
-      selectedOption.dataset.monedaSimbolo || simboloMonedaGeneral,
-    no_usa_vehiculo: false,
-    peso_vehiculo: 0,
-    peso_bruto: 0,
-    peso_neto_directo: 0,
-    cantidad_unidad: 1,
-    descuento: 0,
-    moneda: selectedOption.dataset.moneda,
-  };
-
-  detalleCompraItemsActualizar.push(item);
-  renderizarTablaDetalleActualizar();
-  elements.selectProductoAgregarActualizar.value = "";
 }
 
 async function actualizarCompra(elements) {

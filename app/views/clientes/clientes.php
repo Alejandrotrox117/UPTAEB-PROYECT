@@ -1,4 +1,6 @@
 <?php
+use App\Helpers\PermisosModuloVerificar;
+
 headerAdmin($data);
 $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
 ?>

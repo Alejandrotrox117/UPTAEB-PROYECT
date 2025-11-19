@@ -1,23 +1,26 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const formResetPass = document.getElementById('formResetPass');
-    
-    if (formResetPass) {
-        formResetPass.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('txtEmailReset').value.trim();
-            
-            // Validación básica
-            if (!email) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campo requerido',
-                    text: 'El correo electrónico es obligatorio',
-                    confirmButtonColor: '#3b82f6',
-                    confirmButtonText: 'Entendido'
-                });
-                return;
-            }
+(function() {
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const formResetPass = document.getElementById('formResetPass');
+        
+        if (formResetPass) {
+            formResetPass.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('txtEmailReset').value.trim();
+                
+                // Validación básica
+                if (!email) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Campo requerido',
+                        text: 'El correo electrónico es obligatorio',
+                        confirmButtonColor: '#3b82f6',
+                        confirmButtonText: 'Entendido'
+                    });
+                    return;
+                }
             
             // Validar formato de email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -82,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         cancelButtonColor: '#6b7280'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Intentar abrir Gmail
+                          
                             window.open('https://mail.google.com', '_blank');
                             setTimeout(() => {
                                 window.location.href = base_url() + '/login';
@@ -101,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Error: No se encontró el email
                     if (data.msg.includes('No encontramos una cuenta asociada')) {
                         errorIcon = 'warning';
-                        errorTitle = '📧 Email no encontrado';
+                        errorTitle = ' Email no encontrado';
                         errorHtml = `
                             <div style="text-align: left;">
                                 <p>No encontramos una cuenta asociada al correo:</p>
@@ -109,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <i class="fas fa-envelope"></i> ${email}
                                 </p>
                                 <div style="margin-top: 15px; padding: 10px; background: #fef3c7; border-radius: 5px;">
-                                    <strong>💡 ¿Qué puedes hacer?</strong>
+                                    <strong> ¿Qué puedes hacer?</strong>
                                     <ul style="margin: 5px 0; padding-left: 20px;">
                                         <li>Verifica que hayas escrito el <strong>correo correcto</strong></li>
                                         <li>Revisa si tienes <strong>otra cuenta</strong> con un email diferente</li>
@@ -124,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Error: Cuenta inactiva
                     else if (data.msg.includes('cuenta se encuentra inactiva')) {
                         errorIcon = 'warning';
-                        errorTitle = '⚠️ Cuenta Inactiva';
+                        errorTitle = ' Cuenta Inactiva';
                         errorHtml = `
                             <div style="text-align: left;">
                                 <p>Tu cuenta está temporalmente <strong>inactiva</strong>:</p>
@@ -147,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Error: Problema al enviar correo
                     else if (data.msg.includes('No pudimos enviar')) {
                         errorIcon = 'error';
-                        errorTitle = '📧 Error de Envío';
+                        errorTitle = ' Error de Envío';
                         errorHtml = `
                             <div style="text-align: left;">
                                 <p>Hubo un problema técnico al enviar el correo:</p>
@@ -269,10 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    }
-});
+        } // Cierre del if (formResetPass)
+    }); // Cierre del DOMContentLoaded
 
-// Función auxiliar para obtener base_url
-function base_url() {
-    return window.base_url || (window.location.protocol + "//" + window.location.host + "/project");
-}
+})(); // Fin de IIFE - Código protegido

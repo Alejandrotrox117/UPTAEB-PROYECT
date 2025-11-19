@@ -52,7 +52,7 @@ document.getElementById('formLogin').addEventListener('submit', function(e) {
             let icon = "error";
             let title = "Error de autenticación";
             
-            if (data.msg.includes("no está registrado")) {
+            if (data.msg.includes("no está registrado") || data.msg.includes("no existe")) {
                 icon = "warning";
                 title = "Correo no encontrado";
             } else if (data.msg.includes("contraseña") && data.msg.includes("incorrecta")) {
@@ -65,12 +65,16 @@ document.getElementById('formLogin').addEventListener('submit', function(e) {
                 icon = "warning";
                 title = "Verificación requerida";
             }
-              Swal.fire({
+            
+            Swal.fire({
                 title: title,
                 text: data.msg,
                 icon: icon,
                 confirmButtonText: "Entendido",
                 confirmButtonColor: "#3b82f6"
+            }).then(() => {
+                // Recargar la página después de cerrar el mensaje de error
+                window.location.reload();
             });
         }
     })
