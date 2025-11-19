@@ -96,7 +96,7 @@ $permisos = $data['permisos'] ?? []; ?>
               </div>
               <!-- Campo de moneda oculto con valor fijo VES -->
               <div style="display: none;">
-                <select id="idmoneda_general" data-codigo name="idmoneda_general" class="w-full px-4 py-2 text-sm bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                <select id="idmoneda_general" data-codigo name="idmoneda_general" class="w-full px-4 py-2 text-sm bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" >
                   <option value="">Seleccione...</option>
                 </select>
                 <div id="error-idmoneda_general-vacio" class="mt-1 hidden text-xs text-red-500"></div>
@@ -234,7 +234,7 @@ $permisos = $data['permisos'] ?? []; ?>
           </label>
           <input type="text" id="cedula_cliente_modal" name="cedula" 
                  class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                 placeholder="V-12345678" required>
+                 placeholder="V-12345678" >
           <div id="error-cedula_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
           <div id="error-cedula_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
@@ -245,7 +245,7 @@ $permisos = $data['permisos'] ?? []; ?>
           </label>
           <input type="text" id="nombre_cliente_modal" name="nombre" 
                  class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                 placeholder="Ingrese el nombre" required>
+                 placeholder="Ingrese el nombre" >
           <div id="error-nombre_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
           <div id="error-nombre_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
@@ -256,7 +256,7 @@ $permisos = $data['permisos'] ?? []; ?>
           </label>
           <input type="text" id="apellido_cliente_modal" name="apellido" 
                  class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                 placeholder="Ingrese el apellido" required>
+                 placeholder="Ingrese el apellido" >
           <div id="error-apellido_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
           <div id="error-apellido_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
@@ -267,7 +267,7 @@ $permisos = $data['permisos'] ?? []; ?>
           </label>
           <input type="text" id="telefono_principal_cliente_modal" name="telefono_principal" 
                  class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                 placeholder="04XX-XXXXXXX" required>
+                 placeholder="04XX-XXXXXXX" >
           <div id="error-telefono_principal_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
           <div id="error-telefono_principal_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
@@ -278,7 +278,7 @@ $permisos = $data['permisos'] ?? []; ?>
           </label>
           <input type="text" id="direccion_cliente_modal" name="direccion" 
                  class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                 placeholder="Ingrese la dirección completa" required>
+                 placeholder="Ingrese la dirección completa" >
           <div id="error-direccion_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
           <div id="error-direccion_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>

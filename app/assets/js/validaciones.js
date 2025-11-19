@@ -8,7 +8,7 @@ const expresiones = {
   email: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
   fecha: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
   fechaNacimiento: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
-  cedula: /^(V|E|J)?-?\d{8}$/i,
+  cedula: /^(V|E|J)-?\d{7,9}$/i,
   password: /^.{6,16}$/,
   textoGeneral: /^.{2,100}$/,
   genero: /^(MASCULINO|FEMENINO|OTRO)$/,

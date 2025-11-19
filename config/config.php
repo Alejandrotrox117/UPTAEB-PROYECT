@@ -1,7 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../app/Core/EnvLoader.php';
-
+use App\Core\EnvLoader;
 // Configuración de Base de Datos
 define('DB_HOST', env('DB_HOST', 'localhost'));
 define('DB_USERNAME', env('DB_USERNAME', 'root'));

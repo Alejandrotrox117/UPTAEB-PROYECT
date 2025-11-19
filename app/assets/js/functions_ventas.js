@@ -2065,12 +2065,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Validar formato de campos
       let todosValidos = true;
+      let camposConError = [];
       for (const campo of camposFormularioClienteModal) {
         const inputElement = document.getElementById(campo.id);
         if (inputElement) {
           const esValidoEsteCampo = validarCampo(inputElement, campo.regex, campo.mensajes);
           if (!esValidoEsteCampo) {
             todosValidos = false;
+            camposConError.push(campo.mensajes.vacio || campo.mensajes.formato);
           }
         }
       }
@@ -2078,7 +2080,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!todosValidos) {
         Swal.fire({
           title: 'Error de validación',
-          text: 'Por favor, corrija los errores en el formulario antes de continuar.',
+           html: `<ul style="text-align:left;">${camposConError.map(msg => `<li>• ${msg}</li>`).join('')}</ul>`,
           icon: 'error'
         });
         return;

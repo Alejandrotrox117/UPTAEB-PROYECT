@@ -122,7 +122,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
                         <label for="telefono_principal" class="block text-gray-700 font-medium mb-2">Teléfono Principal<span class="text-red-500">*</span></label>
                         <input type="text" id="telefono_principal" name="telefono_principal"
                             class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                            placeholder="Ingrese el teléfono" required>
+                        placeholder="04XX-XXXXXXX" required>
                         <div id="error-telefono_principal-vacio" class="text-red-500 text-sm mt-1 hidden"></div>
                         <div id="error-telefono_principal-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                     </div>
@@ -138,9 +138,9 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
                 </div>
                 <div class="grid-flow-row mt-4">
                     <label for="observaciones" class="block text-gray-700 font-medium mb-2">Observaciones</label>
-                    <input type="text" id="observaciones" name="observaciones"
+                    <textarea id="observaciones" name="observaciones"
                         class="w-full border rounded-lg px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                        placeholder="Ingrese las observaciones">
+                        placeholder="Observaciones adicionales"></textarea>
                     <div id="error-observaciones-formato" class="text-red-500 text-sm mt-1 hidden"></div>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-2 gap-4 mt-4">
