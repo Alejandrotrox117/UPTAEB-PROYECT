@@ -103,7 +103,7 @@ select::-ms-expand {
       <option value="reporteCompras"> Reporte de Compras Finalizadas</option>
       <option value="panelEjecutivo"> Panel Ejecutivo</option>
       <option value="tendenciasVentas"> Tendencias de Ventas</option>
-      <option value="produccion">🏭 Centro de Control de Producción</option>
+      <option value="produccion">Centro de Control de Producción</option>
       <option value="clientesProveedores"> Top Clientes y Proveedores</option>
       <option value="inventario"> Inventario</option>
       <option value="kpis"> KPIs</option>

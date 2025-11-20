@@ -102,8 +102,8 @@ window.eliminarPago = function (idPago, descripcion) {
     text: `¿Deseas eliminar el pago: ${descripcion}?`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, eliminar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -143,8 +143,8 @@ window.conciliarPago = function (idPago, descripcion) {
     text: `¿Deseas marcar como conciliado el pago: ${descripcion}?`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#28a745",
-    cancelButtonColor: "#6c757d",
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
     confirmButtonText: "Sí, conciliar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -184,7 +184,7 @@ function mostrarModalPermisosDenegados(
     icon: "warning",
     title: "Acceso Denegado",
     text: mensaje,
-    confirmButtonColor: "#d33",
+    confirmButtonColor: "#dc2626",
   });
 }
 
@@ -1268,7 +1268,7 @@ function registrarPago() {
         text: result.message || "Pago registrado exitosamente",
         icon: "success",
         confirmButtonText: "Aceptar",
-        confirmButtonColor: "#10B981",
+        confirmButtonColor: "#00c950",
       }).then(() => {
         limpiarValidaciones(camposCompletos, "formRegistrarPago");
         cerrarModal("modalRegistrarPago");
@@ -1283,7 +1283,7 @@ function registrarPago() {
         text: result.message || "Error al registrar el pago",
         icon: "error",
         confirmButtonText: "Aceptar",
-        confirmButtonColor: "#EF4444",
+        confirmButtonColor: "#dc2626",
       });
     },
   }).finally(() => {
@@ -1425,7 +1425,7 @@ function actualizarPago() {
           text: result.message || "Pago actualizado exitosamente",
           icon: "success",
           confirmButtonText: "Aceptar",
-          confirmButtonColor: "#10B981",
+          confirmButtonColor: "#00c950",
         }).then(() => {
           limpiarValidaciones(camposCompletos, "formRegistrarPago");
           cerrarModal("modalRegistrarPago");
@@ -1440,7 +1440,7 @@ function actualizarPago() {
           text: result.message || "Error al actualizar el pago",
           icon: "error",
           confirmButtonText: "Aceptar",
-          confirmButtonColor: "#EF4444",
+          confirmButtonColor: "#dc2626",
         });
       }
     })
@@ -1467,10 +1467,10 @@ function mostrarNotificacion(mensaje, tipo) {
     };
 
     const colores = {
-      success: "#10B981",
-      error: "#EF4444",
+      success: "#00c950",
+      error: "#dc2626",
       warning: "#F59E0B",
-      info: "#3B82F6",
+      info: "#00c950",
     };
 
     Swal.fire({
@@ -1485,7 +1485,7 @@ function mostrarNotificacion(mensaje, tipo) {
       text: mensaje,
       icon: iconos[tipo] || "info",
       confirmButtonText: "Aceptar",
-      confirmButtonColor: colores[tipo] || "#3B82F6",
+      confirmButtonColor: colores[tipo] || "#00c950",
     });
   } else {
     alert(mensaje);
@@ -1680,8 +1680,8 @@ window.eliminarPago = function (idPago, descripcion) {
     text: `¿Deseas desactivar el pago "${descripcion}"?`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#EF4444",
-    cancelButtonColor: "#6B7280",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#6b7280",
     confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -1701,7 +1701,7 @@ window.eliminarPago = function (idPago, descripcion) {
               text: result.message,
               icon: "success",
               confirmButtonText: "Aceptar",
-              confirmButtonColor: "#10B981",
+              confirmButtonColor: "#00c950",
             }).then(() => {
               tablaPagos.ajax.reload();
             });

@@ -208,7 +208,7 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para registrar compras.',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#00c950'
                 });
                 return false;
             }
@@ -219,7 +219,7 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para editar compras.',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#00c950'
                 });
                 return false;
             }
@@ -230,7 +230,7 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para eliminar compras.',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#00c950'
                 });
                 return false;
             }
@@ -241,7 +241,7 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para cambiar el estado de las compras.',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#00c950'
                 });
                 return false;
             }
@@ -252,7 +252,7 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para reactivar compras.',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#00c950'
                 });
                 return false;
             }
@@ -263,7 +263,7 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para ver las compras.',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#00c950'
                 });
                 return false;
             }
@@ -274,7 +274,7 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para exportar compras.',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#00c950'
                 });
                 return false;
             }
@@ -285,7 +285,7 @@ function verificarPermiso(accion) {
                     icon: 'warning',
                     title: 'Acceso Denegado',
                     text: 'No tiene permisos para ver facturas.',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#00c950'
                 });
                 return false;
             }

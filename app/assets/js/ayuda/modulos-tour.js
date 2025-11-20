@@ -182,7 +182,7 @@ function iniciarTourModulos() {
     // Paso 5: Tabla de Módulos
     tour.addStep({
         id: 'tabla-modulos',
-        title: 'Listado de Módulos 📊',
+        title: 'Listado de Módulos ',
         text: 'En esta tabla se muestran todos los módulos registrados en el sistema. Puedes ver información como el título, descripción, estado y opciones para gestionar cada módulo.',
         attachTo: {
             element: '#TablaModulos',

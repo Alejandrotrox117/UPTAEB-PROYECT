@@ -885,8 +885,8 @@ function eliminarPersona(idPersona, nombrePersona) {
     text: `¿Deseas eliminar a ${nombrePersona}? Esta acción no se puede deshacer.`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, eliminar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

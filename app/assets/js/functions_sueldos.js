@@ -923,8 +923,8 @@ function eliminarSueldo(idSueldo, nombreBeneficiario) {
     text: `¿Desea inactivar el sueldo de "${nombreBeneficiario}"?`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, inactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -959,8 +959,8 @@ function reactivarSueldo(idSueldo, nombreBeneficiario) {
     text: `¿Desea reactivar el sueldo de "${nombreBeneficiario}"?`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#28a745",
-    cancelButtonColor: "#6c757d",
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
     confirmButtonText: "Sí, reactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

@@ -653,7 +653,7 @@ function verEmpleado(idempleado) {
         showCloseButton: true,
         showCancelButton: false,
         confirmButtonText: 'Cerrar',
-        confirmButtonColor: '#10b981',
+        confirmButtonColor: '#00c950',
         customClass: {
           popup: 'text-left'
         }
@@ -772,8 +772,8 @@ function eliminarEmpleado(idempleado, nombreEmpleado) {
     text: `¿Deseas desactivar al empleado ${nombreEmpleado}?`,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
+    confirmButtonColor: '#00c950',
+    cancelButtonColor: '#dc2626',
     confirmButtonText: 'Sí, desactivar',
     cancelButtonText: 'Cancelar'
   }).then((result) => {
@@ -822,8 +822,8 @@ function reactivarEmpleado(idempleado, nombreEmpleado) {
     text: `¿Deseas reactivar al empleado ${nombreEmpleado}?`,
     icon: 'question',
     showCancelButton: true,
-    confirmButtonColor: '#10b981',
-    cancelButtonColor: '#d33',
+    confirmButtonColor: '#00c950',
+    cancelButtonColor: '#dc2626',
     confirmButtonText: 'Sí, reactivar',
     cancelButtonText: 'Cancelar'
   }).then((result) => {

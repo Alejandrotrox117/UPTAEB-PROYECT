@@ -499,7 +499,7 @@ async function ejecutarLimpieza(dias) {
                 title: '¡Limpieza Exitosa!',
                 text: result.message,
                 icon: 'success',
-                confirmButtonColor: '#10b981'
+                confirmButtonColor: '#00c950'
             });
             actualizarBitacora();
         } else {

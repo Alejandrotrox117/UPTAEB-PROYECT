@@ -103,7 +103,7 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
       icon: 'warning',
       title: 'Acceso Denegado',
       text: mensaje,
-      confirmButtonColor: '#d33'
+      confirmButtonColor: '#dc2626'
     });
   }
 }
@@ -719,7 +719,7 @@ function registrarUsuario() {
             icon: "error",
             title: "Error",
             text: result.message || "No se pudo registrar el usuario.",
-            confirmButtonColor: "#3085d6"
+            confirmButtonColor: "#00c950"
           });
         }
       }
@@ -1154,7 +1154,7 @@ function actualizarUsuario() {
             icon: "error",
             title: "Error",
             text: result.message || "No se pudo actualizar el usuario.",
-            confirmButtonColor: "#3085d6"
+            confirmButtonColor: "#00c950"
           });
         }
       }
@@ -1279,8 +1279,8 @@ function eliminarUsuario(idUsuario, nombreUsuario) {
     text: `¿Deseas desactivar al usuario ${nombreUsuario}? Esta acción cambiará su estatus a INACTIVO.`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -1330,8 +1330,8 @@ function reactivarUsuario(idUsuario, nombreUsuario) {
     text: `¿Deseas reactivar al usuario ${nombreUsuario}? Esta acción cambiará su estatus a ACTIVO.`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#28a745",
-    cancelButtonColor: "#6c757d",
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
     confirmButtonText: "Sí, reactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

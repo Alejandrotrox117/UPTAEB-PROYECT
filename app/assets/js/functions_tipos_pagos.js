@@ -487,8 +487,8 @@ function eliminarTipoPago(idTipoPago, nombreTipoPago) {
     text: `¿Deseas desactivar el tipo de pago "${nombreTipoPago}"? Esta acción cambiará su estatus a INACTIVO.`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

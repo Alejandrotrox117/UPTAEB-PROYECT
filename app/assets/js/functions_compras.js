@@ -1537,7 +1537,7 @@ async function agregarProductoDetalle(elements) {
         icon: 'error',
         title: 'Error de Validación',
         text: data.message || 'No se pudo validar el producto.',
-        confirmButtonColor: '#d33'
+        confirmButtonColor: '#dc2626'
       });
       // Resetear el select después del error para limpiar cualquier manipulación
       elements.selectProductoAgregarModal.value = "";
@@ -1596,7 +1596,7 @@ async function agregarProductoDetalle(elements) {
       icon: 'error',
       title: 'Error de Conexión',
       text: 'No se pudo validar el producto. Intente nuevamente.',
-      confirmButtonColor: '#d33'
+      confirmButtonColor: '#dc2626'
     });
     // Resetear el select después del error de conexión
     elements.selectProductoAgregarModal.value = "";
@@ -2490,7 +2490,7 @@ async function agregarProductoDetalleActualizar(elements) {
         icon: 'error',
         title: 'Error de Validación',
         text: data.message || 'No se pudo validar el producto.',
-        confirmButtonColor: '#d33'
+        confirmButtonColor: '#dc2626'
       });
       // Resetear el select después del error para limpiar cualquier manipulación
       elements.selectProductoAgregarActualizar.value = "";
@@ -2549,7 +2549,7 @@ async function agregarProductoDetalleActualizar(elements) {
       icon: 'error',
       title: 'Error de Conexión',
       text: 'No se pudo validar el producto. Intente nuevamente.',
-      confirmButtonColor: '#d33'
+      confirmButtonColor: '#dc2626'
     });
     // Resetear el select después del error de conexión
     elements.selectProductoAgregarActualizar.value = "";
@@ -2678,8 +2678,8 @@ function reactivarCompra(idCompra, nroCompra) {
     text: `¿Deseas reactivar la compra ${nroCompra}? Esta acción cambiará su estatus a BORRADOR.`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#10B981",
-    cancelButtonColor: "#6B7280",
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
     confirmButtonText: "Sí, Reactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -2969,8 +2969,8 @@ function eliminarCompra(idCompra, nroCompra) {
     text: `¿Deseas eliminar la compra ${nroCompra}? Esta acción no se puede deshacer.`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, eliminar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -3023,8 +3023,8 @@ function cambiarEstadoCompra(idCompra, nuevoEstado) {
     text: `¿Deseas ${mensaje} esta compra?`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#d33",
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#dc2626",
     confirmButtonText: "Sí, confirmar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

@@ -9,6 +9,70 @@ import {
 let tablaProductos;
 let categorias = [];
 
+// Arrays de validación de seguridad anti-manipulación
+let categoriasValidas = [];
+
+// Función de validación de seguridad anti-manipulación
+function validarElementoSeguro(elemento, arrayValidos, nombreCampo) {
+  const valor = elemento.value;
+  
+  if (!valor || valor === '') return true;
+  
+  const valorNumerico = parseInt(valor);
+  const esValido = arrayValidos.includes(valorNumerico);
+  
+  if (!esValido) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Elemento inválido detectado',
+      text: `El ${nombreCampo} seleccionado no es válido. La página se recargará por seguridad.`,
+      showConfirmButton: false,
+      timer: 2000
+    }).then(() => {
+      location.reload();
+    });
+    return false;
+  }
+  
+  return true;
+}
+
+// Validador específico para categorías
+function validarCategoria(event) {
+  return validarElementoSeguro(event.target, categoriasValidas, 'Categoría');
+}
+
+// Función para validar formulario completo antes de enviar
+function validarFormularioCompleto() {
+  const categoria = document.getElementById('productoCategoria');
+  
+  if (categoria && categoria.value && !validarElementoSeguro(categoria, categoriasValidas, 'Categoría')) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Función para validar formulario de actualización completo
+function validarFormularioActualizacionCompleto() {
+  const categoriaActualizar = document.getElementById('productoCategoriaActualizar');
+  
+  if (categoriaActualizar && categoriaActualizar.value && !validarElementoSeguro(categoriaActualizar, categoriasValidas, 'Categoría')) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Función para recargar elementos después de operaciones
+function recargarElementos() {
+  setTimeout(() => {
+    if (typeof llenarSelectCategorias === 'function') {
+      llenarSelectCategorias();
+    }
+  }, 500);
+}
+
 const camposFormularioProducto = [
   {
     id: "productoNombre",
@@ -165,14 +229,23 @@ function llenarSelectCategorias() {
   const selectCategoria = document.getElementById("productoCategoria");
   const selectCategoriaActualizar = document.getElementById("productoCategoriaActualizar");
   
+  // Limpiar y llenar el array de categorías válidas
+  categoriasValidas.length = 0;
+  
   if (selectCategoria) {
     selectCategoria.innerHTML = '<option value="">Seleccione una categoría</option>';
     categorias.forEach(categoria => {
+      // Agregar ID al array de válidos
+      categoriasValidas.push(parseInt(categoria.idcategoria));
       const option = document.createElement("option");
       option.value = categoria.idcategoria;
       option.textContent = categoria.nombre;
       selectCategoria.appendChild(option);
     });
+    
+    // Agregar listener para validación de seguridad
+    selectCategoria.removeEventListener('change', validarCategoria);
+    selectCategoria.addEventListener('change', validarCategoria);
   }
   
   if (selectCategoriaActualizar) {
@@ -183,6 +256,10 @@ function llenarSelectCategorias() {
       option.textContent = categoria.nombre;
       selectCategoriaActualizar.appendChild(option);
     });
+    
+    // Agregar listener para validación de seguridad
+    selectCategoriaActualizar.removeEventListener('change', validarCategoria);
+    selectCategoriaActualizar.addEventListener('change', validarCategoria);
   }
 }
 
@@ -537,6 +614,11 @@ function registrarProducto() {
       "productoMoneda": "moneda"
     },
     validacionPersonalizada: function(formData) {
+      // Validación de seguridad anti-manipulación
+      if (!validarFormularioCompleto()) {
+        return "Datos inválidos detectados";
+      }
+      
       const precio = parseFloat(formData.precio);
       if (precio <= 0) {
         return "El precio debe ser mayor a 0";
@@ -547,6 +629,7 @@ function registrarProducto() {
       Swal.fire("¡Éxito!", result.message, "success").then(() => {
         cerrarModal("modalRegistrarProducto");
         recargarTablaProductos();
+        recargarElementos(); // Recargar elementos para limpiar posibles manipulaciones
         
         const formRegistrar = document.getElementById("formRegistrarProducto");
         if (formRegistrar) {
@@ -633,6 +716,11 @@ function actualizarProducto() {
       "productoMonedaActualizar": "moneda"
     },
     validacionPersonalizada: function(formData) {
+      // Validación de seguridad anti-manipulación
+      if (!validarFormularioActualizacionCompleto()) {
+        return "Datos inválidos detectados";
+      }
+      
       const precio = parseFloat(formData.precio);
       if (precio <= 0) {
         return "El precio debe ser mayor a 0";
@@ -643,6 +731,7 @@ function actualizarProducto() {
       Swal.fire("¡Éxito!", result.message, "success").then(() => {
         cerrarModal("modalActualizarProducto");
         recargarTablaProductos();
+        recargarElementos(); // Recargar elementos para limpiar posibles manipulaciones
 
         const formActualizar = document.getElementById("formActualizarProducto");
         if (formActualizar) {
@@ -712,8 +801,8 @@ function eliminarProducto(idProducto, nombreProducto) {
     text: `¿Deseas desactivar el producto "${nombreProducto}"? Esta acción cambiará su estatus a INACTIVO.`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

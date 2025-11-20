@@ -720,8 +720,8 @@ function eliminarRolPermiso(idRolPermiso, nombreRol, nombrePermiso) {
     text: `¿Deseas eliminar la asignación del rol "${nombreRol}" al permiso "${nombrePermiso}"?`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, eliminar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

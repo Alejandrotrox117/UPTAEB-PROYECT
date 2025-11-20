@@ -66,7 +66,7 @@
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800">Registros de Producción</h3>
-                        <p class="text-gray-600 text-sm">Sistema unificado de registro de procesos productivos</p>
+                       
                     </div>
                     <button id="btnAbrirModalRegistrarProduccion"
                         class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base transition-all hover:shadow-lg">
@@ -74,61 +74,9 @@
                     </button>
                 </div>
 
-                <!-- NOTA: Información sobre el registro -->
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-5 mb-6 rounded-r-lg shadow-sm">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-info-circle text-blue-500 text-2xl"></i>
-                        </div>
-                        <div class="ml-4">
-                            <h4 class="text-base font-bold text-blue-800 mb-1">
-                                Sistema Integrado de Producción
-                            </h4>
-                            <p class="text-sm text-blue-700 mb-2">
-                                <strong>Todo en un solo formulario:</strong> Registra cualquier proceso de producción (Clasificación o Empaque) desde el mismo formulario unificado.
-                            </p>
-                            <ul class="text-xs text-blue-600 space-y-1 ml-4">
-                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Selecciona empleado, lote, fecha y tipo de proceso</li>
-                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Define materia prima y producto terminado</li>
-                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Los salarios se calculan automáticamente según configuración</li>
-                                <li class="flex items-center"><i class="fas fa-check-circle mr-2 text-green-600"></i>Visualiza todos los procesos del día en la tabla inferior</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+               
 
-                <!-- Los botones de registro individual están comentados
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-filter text-blue-600 text-2xl mr-3"></i>
-                            <div>
-                                <h4 class="text-lg font-semibold text-blue-800">Proceso de Clasificación</h4>
-                                <p class="text-blue-600 text-sm">Registra material clasificado y contaminantes</p>
-                            </div>
-                        </div>
-                        <button id="btnAbrirModalClasificacion"
-                            class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition">
-                            <i class="fas fa-plus mr-2"></i> Registrar Clasificación
-                        </button>
-                    </div>
-
-                    <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-cube text-purple-600 text-2xl mr-3"></i>
-                            <div>
-                                <h4 class="text-lg font-semibold text-purple-800">Proceso de Empaque</h4>
-                                <p class="text-purple-600 text-sm">Crea pacas desde material clasificado</p>
-                            </div>
-                        </div>
-                        <button id="btnAbrirModalEmpaque"
-                            class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-medium transition">
-                            <i class="fas fa-plus mr-2"></i> Registrar Empaque
-                        </button>
-                    </div>
-                </div>
-                -->
-
+           
                 <!-- Lista de procesos recientes -->
                 <div class="mt-8">
                     <h4 class="text-lg font-semibold text-gray-800 mb-4">Procesos de Hoy</h4>
@@ -161,23 +109,7 @@
                     </div>
                 </div>
 
-                <!-- Información de uso -->
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-info-circle text-blue-500 text-xl"></i>
-                        </div>
-                        <div class="ml-3">
-                            <h4 class="text-sm font-bold text-blue-800">Cómo usar la nómina:</h4>
-                            <ol class="text-sm text-blue-700 mt-2 ml-4 list-decimal space-y-1">
-                                <li>Haz clic en "Consultar Registros por Fecha" y selecciona el rango de fechas</li>
-                                <li>Revisa los registros de producción con sus salarios calculados automáticamente</li>
-                                <li>Selecciona los registros que deseas enviar a pago usando los checkboxes</li>
-                                <li>Haz clic en "Registrar Salario" para enviarlos al módulo de pagos</li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
+               
 
                 <div class="overflow-x-auto w-full relative">
                     <table id="TablaNomina" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 500px;">
@@ -192,166 +124,273 @@
                 </div>
             </div>
 
-            <!-- Pestaña Configuración -->
+            
             <div id="content-configuracion" class="tab-content hidden">
-                <div class="max-w-4xl">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-6">Configuración de Producción</h3>
-                    <form id="formConfiguracionProduccion" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Parámetros de Productividad -->
-                            <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                                <h4 class="text-md font-semibold text-blue-800 mb-4">
-                                    <i class="fas fa-tachometer-alt mr-2"></i>Productividad
-                                </h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            Productividad Clasificación (kg/operario/día)
-                                        </label>
-                                        <input type="number" step="0.01" id="productividad_clasificacion" name="productividad_clasificacion"
-                                            class="w-full border rounded-lg px-3 py-2 text-sm" value="150.00">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            Capacidad Máxima Planta (operarios)
-                                        </label>
-                                        <input type="number" id="capacidad_maxima_planta" name="capacidad_maxima_planta"
-                                            class="w-full border rounded-lg px-3 py-2 text-sm" value="50">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Parámetros Salariales -->
-                            <div class="bg-green-50 p-6 rounded-lg border border-green-200">
-                                <h4 class="text-md font-semibold text-green-800 mb-4">
-                                    <i class="fas fa-dollar-sign mr-2"></i>Salarios
-                                </h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            Salario Base Diario ($)
-                                        </label>
-                                        <input type="number" step="0.01" id="salario_base" name="salario_base"
-                                            class="w-full border rounded-lg px-3 py-2 text-sm" value="30.00">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            Beta - Bono Clasificación ($/kg)
-                                        </label>
-                                        <input type="number" step="0.0001" id="beta_clasificacion" name="beta_clasificacion"
-                                            class="w-full border rounded-lg px-3 py-2 text-sm" value="0.2500">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            Gamma - Bono Empaque ($/paca)
-                                        </label>
-                                        <input type="number" step="0.01" id="gamma_empaque" name="gamma_empaque"
-                                            class="w-full border rounded-lg px-3 py-2 text-sm" value="5.00">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Control de Calidad -->
-                            <div class="bg-orange-50 p-6 rounded-lg border border-orange-200">
-                                <h4 class="text-md font-semibold text-orange-800 mb-4">
-                                    <i class="fas fa-shield-alt mr-2"></i>Control de Calidad
-                                </h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            Umbral Máximo de Error (%)
-                                        </label>
-                                        <input type="number" step="0.01" id="umbral_error_maximo" name="umbral_error_maximo"
-                                            class="w-full border rounded-lg px-3 py-2 text-sm" value="5.00">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Especificaciones de Pacas -->
-                            <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
-                                <h4 class="text-md font-semibold text-purple-800 mb-4">
-                                    <i class="fas fa-cube mr-2"></i>Especificaciones de Pacas
-                                </h4>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            Peso Mínimo Paca (kg)
-                                        </label>
-                                        <input type="number" step="0.01" id="peso_minimo_paca" name="peso_minimo_paca"
-                                            class="w-full border rounded-lg px-3 py-2 text-sm" value="25.00">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                                            Peso Máximo Paca (kg)
-                                        </label>
-                                        <input type="number" step="0.01" id="peso_maximo_paca" name="peso_maximo_paca"
-                                            class="w-full border rounded-lg px-3 py-2 text-sm" value="35.00">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end pt-6 border-t border-gray-200">
-                            <button type="button" id="btnCargarConfiguracion"
-                                class="mr-3 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
-                                <i class="fas fa-sync-alt mr-2"></i> Recargar
-                            </button>
-                            <button type="submit" id="btnGuardarConfiguracion"
-                                class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-medium">
-                                <i class="fas fa-save mr-2"></i> Guardar Configuración
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- Sección Salarios por Proceso-Producto (FUERA del form principal) -->
-                    <div class="mt-10">
-                        <h4 class="text-md font-semibold text-gray-800 mb-4"><i class="fas fa-dollar-sign mr-2"></i>Configuración de Salarios por Proceso</h4>
-                        <p class="text-xs text-gray-600 mb-4">Define cuánto se paga por kg/unidad según el tipo de proceso y producto. Esta configuración afecta el cálculo de salarios en producción.</p>
+                <div class="max-w-7xl">
+                   
+                    <!-- Container principal con fondo blanco -->
+                    <div class="bg-white rounded-b-2xl shadow-lg border-x border-b border-gray-200">
                         
-                        <div class="bg-white border rounded-lg p-4 mb-4">
-                            <form id="formPrecioProceso">
-                                <input type="hidden" name="moneda" value="USD" />
-                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600">Tipo Proceso *</label>
-                                        <select name="tipo_proceso" id="tipo_proceso_salario" class="w-full border rounded px-2 py-1 text-sm" required>
-                                            <option value="">Seleccione...</option>
-                                            <option value="CLASIFICACION">Clasificación</option>
-                                            <option value="EMPAQUE">Empaque</option>
-                                        </select>
+                        <!-- Sección 1: Configuración General -->
+                        <div class="p-6 md:p-8 border-b border-gray-200">
+                            <div class="flex items-center mb-6">
+                                <div class="bg-green-100 p-2.5 rounded-lg mr-3">
+                                    <i class="fas fa-sliders-h text-green-600"></i>
+                                </div>
+                                <h4 class="text-lg font-bold text-gray-800">Configuración General del Sistema</h4>
+                            </div>
+
+                            <form id="formConfiguracionProduccion" class="space-y-6">
+                                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                                    <!-- Productividad -->
+                                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200 shadow-sm">
+                                        <div class="flex items-center mb-4">
+                                            <div class="bg-green-500 p-2 rounded-lg mr-3">
+                                                <i class="fas fa-tachometer-alt text-white text-sm"></i>
+                                            </div>
+                                            <h5 class="font-semibold text-green-800">Productividad</h5>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-700 mb-2">
+                                                    Clasificación (kg/operario/día)
+                                                </label>
+                                                <input type="number" step="0.01" id="productividad_clasificacion" name="productividad_clasificacion"
+                                                    class="w-full border-2 border-green-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" value="150.00">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-700 mb-2">
+                                                    Capacidad Máxima (operarios)
+                                                </label>
+                                                <input type="number" id="capacidad_maxima_planta" name="capacidad_maxima_planta"
+                                                    class="w-full border-2 border-green-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" value="50">
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="md:col-span-2">
-                                        <label class="block text-xs font-medium text-gray-600">Producto *</label>
-                                        <select name="idproducto_precio" id="idproducto_precio" class="w-full border rounded px-2 py-1 text-sm" required>
-                                        </select>
+
+                                    <!-- Salarios Base -->
+                                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 border border-green-200 shadow-sm">
+                                        <div class="flex items-center mb-4">
+                                            <div class="bg-green-500 p-2 rounded-lg mr-3">
+                                                <i class="fas fa-dollar-sign text-white text-sm"></i>
+                                            </div>
+                                            <h5 class="font-semibold text-green-800">Salarios Base</h5>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-700 mb-2">
+                                                    Salario Base Diario ($)
+                                                </label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                                                    <input type="number" step="0.01" id="salario_base" name="salario_base"
+                                                        class="w-full pl-8 border-2 border-green-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" value="30.00">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-700 mb-2">
+                                                    Beta - Clasificación ($/kg)
+                                                </label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                                                    <input type="number" step="0.0001" id="beta_clasificacion" name="beta_clasificacion"
+                                                        class="w-full pl-8 border-2 border-green-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" value="0.2500">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-700 mb-2">
+                                                    Gamma - Empaque ($/paca)
+                                                </label>
+                                                <div class="relative">
+                                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                                                    <input type="number" step="0.01" id="gamma_empaque" name="gamma_empaque"
+                                                        class="w-full pl-8 border-2 border-green-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" value="5.00">
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600">Salario por Unidad *</label>
-                                        <input name="salario_unitario" id="salario_unitario_input" type="number" step="0.0001" min="0.0001" class="w-full border rounded px-2 py-1 text-sm" placeholder="0.0000" required />
+
+                                    <!-- Control de Calidad -->
+                                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200 shadow-sm">
+                                        <div class="flex items-center mb-4">
+                                            <div class="bg-gray-600 p-2 rounded-lg mr-3">
+                                                <i class="fas fa-shield-alt text-white text-sm"></i>
+                                            </div>
+                                            <h5 class="font-semibold text-gray-700">Control de Calidad</h5>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-700 mb-2">
+                                                Umbral Máximo de Error (%)
+                                            </label>
+                                            <div class="relative">
+                                                <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
+                                                <input type="number" step="0.01" id="umbral_error_maximo" name="umbral_error_maximo"
+                                                    class="w-full pr-8 border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all" value="5.00">
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="flex items-end">
-                                        <button type="button" id="btnAgregarSalario" class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
-                                            <i class="fas fa-plus mr-2"></i>Agregar
-                                        </button>
+
+                                    <!-- Especificaciones de Pacas -->
+                                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200 shadow-sm">
+                                        <div class="flex items-center mb-4">
+                                            <div class="bg-gray-600 p-2 rounded-lg mr-3">
+                                                <i class="fas fa-cube text-white text-sm"></i>
+                                            </div>
+                                            <h5 class="font-semibold text-gray-700">Especif. Pacas</h5>
+                                        </div>
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-700 mb-2">
+                                                    Peso Mínimo (kg)
+                                                </label>
+                                                <input type="number" step="0.01" id="peso_minimo_paca" name="peso_minimo_paca"
+                                                    class="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all" value="25.00">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-700 mb-2">
+                                                    Peso Máximo (kg)
+                                                </label>
+                                                <input type="number" step="0.01" id="peso_maximo_paca" name="peso_maximo_paca"
+                                                    class="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all" value="35.00">
+                                            </div>
+                                        </div>
                                     </div>
+                                </div>
+
+                                <!-- Botones de acción -->
+                                <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
+                                    <button type="button" id="btnCargarConfiguracion"
+                                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium text-sm transition-all duration-200 shadow-md hover:shadow-lg">
+                                        <i class="fas fa-sync-alt mr-2"></i> Recargar Configuración
+                                    </button>
+                                    <button type="submit" id="btnGuardarConfiguracion"
+                                        class="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
+                                        <i class="fas fa-save mr-2"></i> Guardar Configuración
+                                    </button>
                                 </div>
                             </form>
                         </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Proceso</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Salario/Unidad</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Moneda</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Estatus</th>
-                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-precios-proceso-body" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
+                        <!-- Sección 2: Salarios por Proceso -->
+                        <div class="p-6 md:p-8">
+                            <div class="flex items-center mb-6">
+                                <div class="bg-green-100 p-2.5 rounded-lg mr-3">
+                                    <i class="fas fa-calculator text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-bold text-gray-800">Salarios por Proceso y Producto</h4>
+                                    <p class="text-gray-600 text-sm">Configura salarios específicos que sobrescriben los valores base</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Formulario de agregar salario -->
+                            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 shadow-sm mb-6">
+                                <div class="flex items-center mb-5">
+                                    <div class="bg-green-500 p-2 rounded-lg mr-3">
+                                        <i class="fas fa-plus text-white text-sm"></i>
+                                    </div>
+                                    <h5 class="font-semibold text-green-800">Agregar Nuevo Salario Específico</h5>
+                                </div>
+                                
+                                <form id="formPrecioProceso">
+                                    <input type="hidden" name="moneda" value="USD" />
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <i class="fas fa-cogs text-green-500 mr-1"></i>
+                                                Tipo Proceso <span class="text-red-500">*</span>
+                                            </label>
+                                            <select name="tipo_proceso" id="tipo_proceso_salario" 
+                                                class="w-full border-2 border-green-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" required>
+                                                <option value="">Seleccione proceso...</option>
+                                                <option value="CLASIFICACION">🔵 Clasificación</option>
+                                                <option value="EMPAQUE">🟣 Empaque</option>
+                                            </select>
+                                        </div>
+                                        <div class="lg:col-span-2">
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <i class="fas fa-box text-green-500 mr-1"></i>
+                                                Producto <span class="text-red-500">*</span>
+                                            </label>
+                                            <select name="idproducto_precio" id="idproducto_precio" 
+                                                class="w-full border-2 border-green-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" required>
+                                                <option value="">Seleccione producto...</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <i class="fas fa-money-bill-wave text-green-500 mr-1"></i>
+                                                Salario/Unidad <span class="text-red-500">*</span>
+                                            </label>
+                                            <div class="relative">
+                                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">$</span>
+                                                <input name="salario_unitario" id="salario_unitario_input" 
+                                                    type="number" step="0.0001" min="0.0001" 
+                                                    class="w-full pl-8 border-2 border-green-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all" 
+                                                    placeholder="0.0000" required />
+                                            </div>
+                                        </div>
+                                        <div class="flex items-end">
+                                            <button type="button" id="btnAgregarSalario" 
+                                                class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg px-4 py-2.5 text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                                                <i class="fas fa-plus-circle mr-2"></i>Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                           
+                            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                                    <h5 class="font-semibold text-gray-800 flex items-center">
+                                        <i class="fas fa-table text-green-500 mr-2"></i>
+                                        Salarios Específicos Configurados
+                                    </h5>
+                                </div>
+                                
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full">
+                                        <thead class="bg-gradient-to-r from-green-50 to-green-100">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <i class="fas fa-cogs text-green-500 mr-1"></i>Proceso
+                                                </th>
+                                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <i class="fas fa-box text-green-500 mr-1"></i>Producto
+                                                </th>
+                                                <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <i class="fas fa-dollar-sign text-green-500 mr-1"></i>Salario/Unidad
+                                                </th>
+                                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <i class="fas fa-coins text-green-500 mr-1"></i>Moneda
+                                                </th>
+                                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <i class="fas fa-toggle-on text-green-500 mr-1"></i>Estado
+                                                </th>
+                                                <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <i class="fas fa-tools text-green-500 mr-1"></i>Acciones
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-precios-proceso-body" class="bg-white divide-y divide-gray-100">
+                                            <!-- Mensaje cuando no hay datos -->
+                                            <tr class="empty-state" style="display: none;">
+                                                <td colspan="6" class="px-6 py-12 text-center">
+                                                    <div class="flex flex-col items-center justify-center">
+                                                        <div class="bg-gray-100 rounded-full p-4 mb-4">
+                                                            <i class="fas fa-calculator text-gray-400 text-2xl"></i>
+                                                        </div>
+                                                        <h3 class="text-lg font-medium text-gray-900 mb-2">No hay salarios específicos configurados</h3>
+                                                        <p class="text-gray-500 text-sm">Agrega salarios específicos por proceso y producto usando el formulario arriba</p>
+                                                        <p class="text-gray-400 text-xs mt-1">Se usarán los valores base de configuración general</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -34,17 +34,17 @@ class Notificaciones extends Controllers
     public function getNotificaciones()
     {
         // LOG DE DEPURACIÓN - INICIO
-        error_log("🔔 getNotificaciones - INICIADO");
+        error_log(" getNotificaciones - INICIADO");
         
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            error_log("🔔 getNotificaciones - Método GET verificado");
+            error_log(" getNotificaciones - Método GET verificado");
             
             try {
                 $usuarioId = $this->obtenerUsuarioSesion();
-                error_log("🔔 getNotificaciones - Usuario ID obtenido: " . ($usuarioId ?: 'NULL'));
+                error_log(" getNotificaciones - Usuario ID obtenido: " . ($usuarioId ?: 'NULL'));
                 
                 if (!$usuarioId) {
-                    error_log("🔔 getNotificaciones - ERROR: Usuario no autenticado");
+                    error_log(" getNotificaciones - ERROR: Usuario no autenticado");
                     $arrResponse = array(
                         'status' => false, 
                         'message' => 'Usuario no autenticado', 
@@ -55,10 +55,10 @@ class Notificaciones extends Controllers
                 }
 
                 $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
-                error_log("🔔 getNotificaciones - Rol ID obtenido: " . ($rolId ?: 'NULL'));
+                error_log(" getNotificaciones - Rol ID obtenido: " . ($rolId ?: 'NULL'));
                 
                 if (!$rolId) {
-                    error_log("🔔 getNotificaciones - ERROR: No se pudo obtener el rol del usuario");
+                    error_log(" getNotificaciones - ERROR: No se pudo obtener el rol del usuario");
                     $arrResponse = array(
                         'status' => false, 
                         'message' => 'No se pudo obtener el rol del usuario', 
@@ -72,14 +72,14 @@ class Notificaciones extends Controllers
                 $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 20;
                 $soloNoLeidas = isset($_GET['no_leidas']) ? (bool)$_GET['no_leidas'] : false;
 
-                error_log("🔔 getNotificaciones - Llamando al modelo para obtener notificaciones");
+                error_log(" getNotificaciones - Llamando al modelo para obtener notificaciones");
                 $arrResponse = $this->model->obtenerNotificacionesPorUsuario($usuarioId, $rolId);
-                error_log("🔔 getNotificaciones - Respuesta del modelo: " . json_encode($arrResponse));
+                error_log(" getNotificaciones - Respuesta del modelo: " . json_encode($arrResponse));
                 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                 
             } catch (Exception $e) {
-                error_log("🔔 getNotificaciones - EXCEPCIÓN: " . $e->getMessage());
+                error_log(" getNotificaciones - EXCEPCIÓN: " . $e->getMessage());
                 $response = array(
                     'status' => false, 
                     'message' => 'Error interno del servidor', 
@@ -89,7 +89,7 @@ class Notificaciones extends Controllers
             }
             die();
         } else {
-            error_log("🔔 getNotificaciones - ERROR: Método no es GET, es: " . $_SERVER['REQUEST_METHOD']);
+            error_log(" getNotificaciones - ERROR: Método no es GET, es: " . $_SERVER['REQUEST_METHOD']);
         }
     }
 
@@ -268,7 +268,7 @@ class Notificaciones extends Controllers
     // MÉTODO TEMPORAL DE PRUEBA - ELIMINAR DESPUÉS
     public function getNotificacionesSimple()
     {
-        error_log("🔔 getNotificacionesSimple - INICIADO");
+        error_log(" getNotificacionesSimple - INICIADO");
         
         // Respuesta de prueba
         $response = [
@@ -294,7 +294,7 @@ class Notificaciones extends Controllers
         
         header('Content-Type: application/json');
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        error_log("🔔 getNotificacionesSimple - RESPUESTA ENVIADA");
+        error_log(" getNotificacionesSimple - RESPUESTA ENVIADA");
         die();
     }
 }

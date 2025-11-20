@@ -319,8 +319,8 @@ function eliminarRol(idRol, nombreRol) {
     text: `¿Deseas desactivar el rol "${nombreRol}"?`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -349,8 +349,8 @@ function reactivarRol(idRol, nombreRol) {
     text: `¿Estás seguro de que deseas reactivar el rol "${nombreRol}"?`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#28a745",
-    cancelButtonColor: "#6c757d",
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
     confirmButtonText: "Sí, reactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

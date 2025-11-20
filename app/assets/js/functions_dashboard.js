@@ -512,7 +512,7 @@ function renderizarGraficoCumplimientoTareas(datos) {
             (datos.tareas_en_progreso / total) * 100,
             (datos.tareas_pendientes / total) * 100,
           ],
-          backgroundColor: ["#10B981", "#F59E0B", "#EF4444"],
+          backgroundColor: ["#00c950", "#F59E0B", "#EF4444"],
         },
       ],
     },
@@ -557,7 +557,7 @@ function renderizarAnalisisInventario(datos) {
       datasets: [
         {
           data: [datos.stock_critico, 100 - datos.stock_critico],
-          backgroundColor: ["#EF4444", "#10B981"],
+          backgroundColor: ["#EF4444", "#00c950"],
         },
       ],
     },
@@ -594,7 +594,7 @@ function renderizarAnalisisInventario(datos) {
             data: valorCategoria.categorias.map(c => c.valor),
             backgroundColor: [
               "#3B82F6",
-              "#10B981",
+              "#00c950",
               "#F59E0B",
               "#8B5CF6",
               "#EF4444",
@@ -644,7 +644,7 @@ function renderizarGraficoMovimientosInventario(datos, tipoGrafico) {
         {
           label: "Movimientos del Mes",
           data: valores,
-          backgroundColor: ["#10B981", "#EF4444"],
+          backgroundColor: ["#00c950", "#EF4444"],
         },
       ],
     },
@@ -714,10 +714,10 @@ function renderizarTablaKPIs(datos) {
   datos.forEach(kpi => {
     const tendencia =
       kpi.hoy > kpi.ayer
-        ? "📈 Creciendo"
+        ? " Creciendo"
         : kpi.hoy < kpi.ayer
-          ? "📉 Declinando"
-          : "➡️ Estable";
+          ? " Declinando"
+          : " Estable";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="p-3 font-medium">${kpi.metrica}</td>
@@ -964,14 +964,14 @@ function renderizarGraficoIngresosConTipo(datos, tipoGrafico) {
         label: "Ingresos por Tipo",
         data: valores,
         backgroundColor: [
-          "#10B981",
+          "#00c950",
           "#3B82F6",
           "#F59E0B",
           "#8B5CF6",
           "#EF4444",
         ],
         borderColor: [
-          "#059669",
+          "#00c950",
           "#2563EB",
           "#D97706",
           "#7C3AED",
@@ -1018,14 +1018,14 @@ function renderizarGraficoEgresosConTipo(datos, tipoGrafico) {
           "#F59E0B",
           "#6B7280",
           "#3B82F6",
-          "#10B981",
+          "#00c950",
         ],
         borderColor: [
           "#DC2626",
           "#D97706",
           "#4B5563",
           "#2563EB",
-          "#059669",
+          "#00c950",
         ],
         borderWidth: 1
       },
@@ -1064,7 +1064,7 @@ function renderizarGraficoTendenciasVentasConTipo(datos, tipoGrafico) {
         {
           label: "Número de Ventas",
           data: datos.map(d => d.num_ventas),
-          borderColor: "#10B981",
+          borderColor: "#00c950",
           backgroundColor: tipoGrafico === 'area' ? "rgba(16, 185, 129, 0.3)" : "rgba(16, 185, 129, 0.1)",
           tension: 0.4,
           yAxisID: "y1",
@@ -1108,7 +1108,7 @@ function renderizarGraficoRentabilidadProductosConTipo(datos, tipoGrafico) {
       {
         label: "Ingresos",
         data: datos.map(d => d.ingresos),
-        backgroundColor: "#10B981",
+        backgroundColor: "#00c950",
       },
       {
         label: "Costos",
@@ -1174,7 +1174,7 @@ function renderizarGraficoEstadosProduccionConTipo(datos, tipoGrafico) {
         backgroundColor: [
           "#3B82F6",
           "#F59E0B",
-          "#10B981",
+          "#00c950",
           "#EF4444",
           "#8B5CF6",
         ],
@@ -1202,7 +1202,7 @@ function renderizarGraficoTopClientesConTipo(datos, tipoGrafico) {
       {
         label: "Total Comprado",
         data: datos.map(d => d.total_comprado),
-        backgroundColor: "#10B981",
+        backgroundColor: "#00c950",
       },
     ],
   };
@@ -1529,7 +1529,7 @@ function renderizarGraficoMaterialesSemanal(datos, tipoGrafico) {
   const dataUsed = datos.map(d => parseFloat(d.total_material_usado_kg || 0));
   
   const colores = [
-    '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6',
+    '#8B5CF6', '#EC4899', '#F59E0B', '#00c950', '#3B82F6',
     '#6366F1', '#14B8A6', '#F97316', '#84CC16', '#06B6D4'
   ];
   
@@ -1608,8 +1608,8 @@ function renderizarGraficoTotalesSemanal(datos, tipoGrafico) {
       {
         label: 'Material Producido (kg)',
         data: dataProducido,
-        backgroundColor: '#10B981',
-        borderColor: '#059669',
+        backgroundColor: '#00c950',
+        borderColor: '#00c950',
         borderWidth: 1
       }
     ]

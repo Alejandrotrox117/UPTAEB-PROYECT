@@ -94,7 +94,7 @@ function iniciarTourRoles() {
 
     // Paso 4: Tabla de roles
     tour.addStep({
-        title: 'Lista de Roles 📊',
+        title: 'Lista de Roles ',
         text: 'Esta tabla muestra todos los roles registrados en el sistema. Puedes ver información como nombre del rol, descripción, estado (activo/inactivo) y fecha de creación.',
         attachTo: {
             element: '#TablaRoles',
@@ -241,7 +241,7 @@ function iniciarTourRoles() {
     const notificationBtn = document.querySelector('#desktop-notifications-toggle');
     if (notificationBtn) {
         tour.addStep({
-            title: 'Centro de Notificaciones 🔔',
+            title: 'Centro de Notificaciones ',
             text: 'Aquí recibirás notificaciones importantes del sistema, incluyendo alertas sobre cambios en roles, permisos y otros eventos de seguridad.',
             attachTo: {
                 element: '#desktop-notifications-toggle',

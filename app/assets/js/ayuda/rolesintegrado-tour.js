@@ -220,7 +220,7 @@ function iniciarTourRolesIntegrado() {
     // Paso 4: Resumen de asignaciones
     tour.addStep({
         id: 'resumen-asignaciones',
-        title: 'Resumen de Asignaciones 📊',
+        title: 'Resumen de Asignaciones ',
         text: 'Este panel muestra un resumen de los permisos asignados al rol seleccionado: el nombre del rol, cuántos módulos tiene acceso y cuántos permisos específicos están configurados.',
         attachTo: {
             element: '#resumenContainer',
@@ -523,7 +523,7 @@ function iniciarTourRolesIntegrado() {
     const notificationToast = document.querySelector('#notificationToast');
     if (notificationToast) {
         tour.addStep({
-            title: 'Sistema de Notificaciones 🔔',
+            title: 'Sistema de Notificaciones ',
             text: 'Recibirás notificaciones sobre el éxito o fallo de tus operaciones en este área. Te informará cuando los permisos se guarden correctamente o si ocurre algún error.',
             attachTo: {
                 element: '#notificationToast',

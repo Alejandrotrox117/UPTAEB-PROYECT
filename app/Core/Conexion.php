@@ -4,8 +4,6 @@ namespace App\Core;
 use PDO;
 use PDOException;
 
-require_once __DIR__ . '/../../config/config.php';
-
 class Conexion
 {
     private $servidor;
@@ -23,12 +21,11 @@ class Conexion
         $databaseGeneral = null,
         $databaseSeguridad = null
     ) {
-        // Usar variables de entorno si no se proporcionan parámetros
-        $this->servidor = $servidor ?? DB_HOST;
-        $this->username = $username ?? DB_USERNAME;
-        $this->password = $password ?? DB_PASSWORD;
-        $this->databaseGeneral = $databaseGeneral ?? DB_NAME_GENERAL;
-        $this->databaseSeguridad = $databaseSeguridad ?? DB_NAME_SEGURIDAD;
+        $this->servidor = $servidor ?? \DB_HOST;
+        $this->username = $username ?? \DB_USERNAME;
+        $this->password = $password ?? \DB_PASSWORD;
+        $this->databaseGeneral = $databaseGeneral ?? \DB_NAME_GENERAL;
+        $this->databaseSeguridad = $databaseSeguridad ?? \DB_NAME_SEGURIDAD;
     }
 
     // Getters
