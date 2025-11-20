@@ -6,7 +6,7 @@ use App\Core\Conexion;
 use PDO;
 use PDOException;
 
-class MovimientosModel extends Mysql
+class MovimientosModel 
 {
   
     private $query;

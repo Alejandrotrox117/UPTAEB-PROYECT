@@ -146,7 +146,7 @@ use App\Helpers\PermisosModuloVerificar;
                 </li>
                 <?php endif; ?>
                 
-                <!-- Gestionar Roles (Básico) -->
+           
                 <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
                 <li class="menu-item">
                   <a href="<?= base_url('roles'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
@@ -176,7 +176,7 @@ use App\Helpers\PermisosModuloVerificar;
                 </li>
                 <?php endif; ?>
                 
-                <!-- Gestión Integral de Permisos -->
+                <!-- Gestión Integral de Permisos (oculto pero disponible para URL directa) -->
                 <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('RolesIntegrado', 'ver')): ?>
                 <li class="menu-item">
                   <a href="<?= base_url('RolesIntegrado'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
