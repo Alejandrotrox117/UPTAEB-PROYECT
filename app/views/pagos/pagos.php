@@ -233,4 +233,5 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('pagos');
 </div>
 <?php endif; ?>
 
+<script src="<?= base_url('app/assets/js/ayuda/pagos-tour.js'); ?>"></script>
 <?php footerAdmin($data); ?>

@@ -83,4 +83,5 @@
 </main>
 </div>
 
+<script src="<?= base_url('app/assets/js/ayuda/tasas-tour.js'); ?>"></script>
 <?php footerAdmin($data); ?>

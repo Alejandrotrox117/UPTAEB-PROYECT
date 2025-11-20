@@ -332,6 +332,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('clientes');
     </div>
 </div>
 
-
+<!-- Scripts específicos para el tour de ayuda -->
+<script src="<?= base_url('app/assets/js/ayuda/clientes-tour.js'); ?>"></script>
 
 <?php footerAdmin($data); ?>

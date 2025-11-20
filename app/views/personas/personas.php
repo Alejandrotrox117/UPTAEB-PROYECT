@@ -402,6 +402,5 @@
   </div>
 </div>
 
-
-
+<script src="<?= base_url('app/assets/js/ayuda/personas-tour.js'); ?>"></script>
 <?php footerAdmin($data); // Asumo que $data se pasa desde el controlador ?>

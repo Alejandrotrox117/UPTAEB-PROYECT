@@ -263,4 +263,5 @@
     </div>
 </div>
 
+<script src="<?= base_url('app/assets/js/ayuda/sueldos-tour.js'); ?>"></script>
 <?php footerAdmin($data); ?>
