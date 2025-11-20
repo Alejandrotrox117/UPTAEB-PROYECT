@@ -106,5 +106,5 @@ function actualizarResumenNomina() {
   }
   
   resumenContainer.innerHTML = resumenHTML;
-  console.log('📊 Resumen de nómina actualizado:', resumen);
+  console.log(' Resumen de nómina actualizado:', resumen);
 }

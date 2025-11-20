@@ -1060,8 +1060,8 @@ document.addEventListener("DOMContentLoaded", function () {
       text: "Esta acción cambiará el estatus de la venta a inactivo.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#00c950",
+      cancelButtonColor: "#dc2626",
       confirmButtonText: "Sí, desactivar",
       cancelButtonText: "Cancelar",
     }).then(async (result) => {
@@ -1351,8 +1351,8 @@ document.addEventListener("DOMContentLoaded", function () {
       text: textoConfirmacion,
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
+      confirmButtonColor: "#00c950",
+      cancelButtonColor: "#dc2626",
       confirmButtonText: "Sí, confirmar",
       cancelButtonText: "Cancelar",
     }).then((result) => {

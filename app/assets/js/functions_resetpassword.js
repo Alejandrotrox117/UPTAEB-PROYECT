@@ -16,7 +16,7 @@
                         icon: 'warning',
                         title: 'Campo requerido',
                         text: 'El correo electrónico es obligatorio',
-                        confirmButtonColor: '#3b82f6',
+                        confirmButtonColor: '#00c950',
                         confirmButtonText: 'Entendido'
                     });
                     return;
@@ -29,7 +29,7 @@
                     icon: 'error',
                     title: 'Email inválido',
                     text: 'Por favor, ingresa un formato de correo electrónico válido',
-                    confirmButtonColor: '#3b82f6',
+                    confirmButtonColor: '#00c950',
                     confirmButtonText: 'Corregir',
                     footer: '<small>Ejemplo: usuario@dominio.com</small>'
                 });
@@ -66,7 +66,7 @@
                                 <p style="background: #f0f9ff; padding: 10px; border-radius: 5px; color: #0369a1;">
                                     <i class="fas fa-envelope"></i> ${email}
                                 </p>
-                                <div style="margin-top: 15px; padding: 10px; background: #fef3c7; border-radius: 5px; border-left: 4px solid #f59e0b;">
+                                <div style="margin-top: 15px; padding: 10px; background: #fef3c7; border-radius: 5px; border-left: 4px solid #00c950;">
                                     <strong>⚠️ Importante:</strong>
                                     <ul style="margin: 5px 0; padding-left: 20px;">
                                         <li>Revisa tu <strong>bandeja de entrada</strong></li>
@@ -76,7 +76,7 @@
                                 </div>
                             </div>
                         `,
-                        confirmButtonColor: '#10b981',
+                        confirmButtonColor: '#00c950',
                         confirmButtonText: 'Ir a mi correo',
                         allowOutsideClick: false,
                         allowEscapeKey: false,
@@ -191,7 +191,7 @@
                         icon: errorIcon,
                         title: errorTitle,
                         html: errorHtml,
-                        confirmButtonColor: '#ef4444',
+                        confirmButtonColor: '#dc2626',
                         confirmButtonText: 'Intentar nuevamente'
                     };
 
@@ -226,7 +226,7 @@
                             </ul>
                         </div>
                     `,
-                    confirmButtonColor: '#ef4444',
+                    confirmButtonColor: '#dc2626',
                     confirmButtonText: 'Reintentar',
                     showCancelButton: true,
                     cancelButtonText: 'Volver al login',

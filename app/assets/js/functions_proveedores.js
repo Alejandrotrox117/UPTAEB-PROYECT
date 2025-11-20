@@ -847,8 +847,8 @@ function eliminarProveedor(idProveedor, nombreProveedor) {
     text: `¿Deseas desactivar al proveedor "${nombreProveedor}"? Esta acción cambiará su estatus a INACTIVO.`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -897,8 +897,8 @@ function reactivarProveedor(idProveedor, nombreProveedor) {
     text: `¿Deseas reactivar al proveedor "${nombreProveedor}"? Esta acción cambiará su estatus a ACTIVO.`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#10B981",
-    cancelButtonColor: "#6B7280",
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
     confirmButtonText: "Sí, Reactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

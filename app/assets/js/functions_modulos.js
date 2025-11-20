@@ -679,8 +679,8 @@ function eliminarModulo(idModulo, tituloModulo) {
     text: `¿Deseas desactivar el módulo "${tituloModulo}"? Esta acción cambiará su estatus a INACTIVO.`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {

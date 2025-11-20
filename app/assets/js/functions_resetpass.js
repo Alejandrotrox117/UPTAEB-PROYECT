@@ -29,7 +29,7 @@
                             </div>
                         </div>
                     `,
-                    confirmButtonColor: '#ef4444',
+                    confirmButtonColor: '#dc2626',
                     confirmButtonText: 'Corregir',
                     didOpen: () => {
                         // Enfocar el campo de contraseña
@@ -58,7 +58,7 @@
                             </div>
                         </div>
                     `,
-                    confirmButtonColor: '#f59e0b',
+                    confirmButtonColor: '#00c950',
                     confirmButtonText: 'Mejorar contraseña',
                     didOpen: () => {
                         document.getElementById('txtPassword').focus();
@@ -99,7 +99,7 @@
                                         <p style="margin: 0; font-weight: bold;">Tu contraseña ha sido actualizada exitosamente</p>
                                     </div>
                                 </div>
-                                <div style="background: #f0f9ff; padding: 15px; border-radius: 5px; border-left: 4px solid #3b82f6;">
+                                <div style="background: #f0f9ff; padding: 15px; border-radius: 5px; border-left: 4px solid #00c950;">
                                     <p style="margin: 0;"><strong>✅ Ahora puedes:</strong></p>
                                     <ul style="margin: 10px 0; padding-left: 20px; text-align: left;">
                                         <li>Iniciar sesión con tu nueva contraseña</li>
@@ -109,7 +109,7 @@
                                 </div>
                             </div>
                         `,
-                        confirmButtonColor: '#10b981',
+                        confirmButtonColor: '#00c950',
                         confirmButtonText: '🚀 Ir al Login',
                         allowOutsideClick: false,
                         allowEscapeKey: false,
@@ -139,7 +139,7 @@
                         icon: 'error',
                         title: 'Error al actualizar',
                         text: data.msg,
-                        confirmButtonColor: '#ef4444',
+                        confirmButtonColor: '#dc2626',
                         confirmButtonText: 'Intentar nuevamente',
                         footer: '<small>Si el problema persiste, solicita un nuevo enlace de recuperación</small>'
                     });
@@ -161,7 +161,7 @@
                             </ul>
                         </div>
                     `,
-                    confirmButtonColor: '#ef4444',
+                    confirmButtonColor: '#dc2626',
                     confirmButtonText: 'Reintentar',
                     showCancelButton: true,
                     cancelButtonText: 'Solicitar nuevo enlace',

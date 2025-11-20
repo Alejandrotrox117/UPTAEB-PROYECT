@@ -832,7 +832,7 @@ function inicializarTablaNomina() {
           title: "Sin Registros",
           text: "No hay registros de producción para procesar. Primero consulta los registros por fecha.",
           icon: "warning",
-          confirmButtonColor: "#059669"
+          confirmButtonColor: "#00c950"
         });
         return;
       }
@@ -853,7 +853,7 @@ function inicializarTablaNomina() {
        
         icon: "question",
         showCancelButton: true,
-        confirmButtonColor: "#059669",
+        confirmButtonColor: "#00c950",
         cancelButtonColor: "#6b7280",
         confirmButtonText: 'Sí, registrar',
         cancelButtonText: 'Cancelar',
@@ -898,7 +898,7 @@ function inicializarTablaNomina() {
                     </div>
                   `,
                   icon: "success",
-                  confirmButtonColor: "#059669"
+                  confirmButtonColor: "#00c950"
                 }).then(() => {
                   if (tablaNomina) {
                     tablaNomina.ajax.reload(null, false);
@@ -1053,10 +1053,10 @@ function inicializarTablaNomina() {
         render: function(data) {
           const estatus = data || 'BORRADOR';
           const badges = {
-            'BORRADOR': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"><i class="fas fa-edit"></i></span>',
-            'ENVIADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-paper-plane"></i></span>',
-            'PAGADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check-circle"></i></span>',
-            'CANCELADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-times-circle"></i></span>'
+            'BORRADOR': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Borrador</span>',
+            'ENVIADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Enviado</span>',
+            'PAGADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Pagado</span>',
+            'CANCELADO': '<span class="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Cancelado</span>'
           };
           return badges[estatus] || badges['BORRADOR'];
         }
@@ -1804,7 +1804,7 @@ async function registrarLote() {
           <p><strong>Registros de producción:</strong> ${registrosExitosos} de ${registrosProduccionLote.length} guardados</p>
           ${registrosConError > 0 ? `<p class="text-orange-600"><strong>Advertencia:</strong> ${registrosConError} registros con error</p>` : ''}
         `,
-        confirmButtonColor: "#059669"
+        confirmButtonColor: "#00c950"
       }).then(() => {
         cerrarModal("modalRegistrarLote");
         
@@ -1829,7 +1829,7 @@ async function registrarLote() {
         icon: "success",
         title: "¡Lote creado!",
         text: resultLote.msg || resultLote.message || "El lote se creó correctamente",
-        confirmButtonColor: "#059669"
+        confirmButtonColor: "#00c950"
       }).then(() => {
         cerrarModal("modalRegistrarLote");
         if (typeof tablaLotes !== "undefined" && tablaLotes.ajax) {
@@ -2279,7 +2279,7 @@ function iniciarLote(idlote) {
     text: "Esta acción cambiará el estado del lote a 'EN PROCESO'.",
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#059669",
+    confirmButtonColor: "#00c950",
     cancelButtonColor: "#6b7280",
     confirmButtonText: "Sí, iniciar",
     cancelButtonText: "Cancelar",
@@ -2556,7 +2556,7 @@ function editarLote(idlote) {
                 title: "¡Actualizado!",
                 text: result.value.message || "El lote ha sido actualizado exitosamente",
                 icon: "success",
-                confirmButtonColor: "#10b981",
+                confirmButtonColor: "#00c950",
               }).then(() => {
                 recargarTablaLotes();
               });
@@ -2628,7 +2628,7 @@ function eliminarLote(idlote, numeroLote) {
         title: "¡Eliminado!",
         text: result.value.message || "El lote ha sido eliminado exitosamente",
         icon: "success",
-        confirmButtonColor: "#10b981",
+        confirmButtonColor: "#00c950",
       }).then(() => {
         recargarTablaLotes();
       });
@@ -2846,7 +2846,7 @@ function abrirModalConsultarPorFecha() {
       </div>
     `,
     showCancelButton: true,
-    confirmButtonColor: "#059669",
+    confirmButtonColor: "#00c950",
     cancelButtonColor: "#6b7280",
     confirmButtonText: "Consultar Registros",
     cancelButtonText: "Cancelar",
@@ -2915,14 +2915,14 @@ function consultarRegistrosPorFecha(fechaInicio, fechaFin) {
             title: "¡Registros Encontrados!",
             html: `Se encontraron <strong>${cantidadRegistros}</strong> registros<br>desde ${fechaInicio} hasta ${fechaFin}`,
             icon: "success",
-            confirmButtonColor: "#059669"
+            confirmButtonColor: "#00c950"
           });
         } else {
           Swal.fire({
             title: "Sin Resultados",
             html: `No se encontraron registros<br>desde ${fechaInicio} hasta ${fechaFin}.<br><br>Verifica que existan producciones registradas en ese rango de fechas.`,
             icon: "info",
-            confirmButtonColor: "#059669"
+            confirmButtonColor: "#00c950"
           });
         }
         
@@ -2976,7 +2976,7 @@ function marcarComoPagado(idregistro, empleado, salario) {
     `,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#059669",
+    confirmButtonColor: "#00c950",
     cancelButtonColor: "#6b7280",
     confirmButtonText: 'Sí, marcar como pagado',
     cancelButtonText: 'Cancelar'
@@ -3016,7 +3016,7 @@ function marcarComoPagado(idregistro, empleado, salario) {
                 </div>
               `,
               icon: "success",
-              confirmButtonColor: "#059669"
+              confirmButtonColor: "#00c950"
             }).then(() => {
               if (tablaNomina) {
                 tablaNomina.ajax.reload(null, false);
@@ -3121,7 +3121,7 @@ function verDetalleRegistroNomina(idregistro) {
       </div>
     `,
     icon: "info",
-    confirmButtonColor: "#059669",
+    confirmButtonColor: "#00c950",
     confirmButtonText: 'Cerrar',
     width: '600px'
   });
@@ -3178,7 +3178,7 @@ function cancelarRegistroNomina(idregistro, empleado) {
               title: "¡Registro Cancelado!",
               text: result.message,
               icon: "success",
-              confirmButtonColor: "#059669"
+              confirmButtonColor: "#00c950"
             }).then(() => {
               if (tablaNomina) {
                 tablaNomina.ajax.reload(null, false);
@@ -3299,7 +3299,7 @@ function mostrarExito(mensaje) {
     icon: "success",
     title: "¡Éxito!",
     text: mensaje,
-    confirmButtonColor: "#059669"
+    confirmButtonColor: "#00c950"
   });
 }
 
@@ -3701,7 +3701,7 @@ async function guardarRegistroProduccion() {
         icon: "success",
         title: "¡Éxito!",
         text: result.msg || result.message || "Registro de producción guardado correctamente",
-        confirmButtonColor: "#059669"
+        confirmButtonColor: "#00c950"
       }).then(() => {
         cerrarModal("modalRegistrarProduccion");
         
@@ -3889,7 +3889,7 @@ async function editarRegistroProduccion(idregistro) {
         icon: 'success',
         title: '¡Actualizado!',
         text: updateResult.message || 'Registro actualizado correctamente',
-        confirmButtonColor: '#059669'
+        confirmButtonColor: '#00c950'
       });
       
       if (typeof tablaProcesos !== 'undefined' && tablaProcesos.ajax) {
@@ -3954,7 +3954,7 @@ async function eliminarRegistroProduccion(idregistro, nombreEmpleado, numeroLote
         icon: 'success',
         title: '¡Eliminado!',
         text: result.message || 'Registro eliminado correctamente',
-        confirmButtonColor: '#059669'
+        confirmButtonColor: '#00c950'
       });
       
       if (typeof tablaProcesos !== 'undefined' && tablaProcesos.ajax) {

@@ -159,7 +159,7 @@ function iniciarTourBitacora() {
     // Paso 4: Filtro por Módulo
     tour.addStep({
         id: 'filtro-modulo',
-        title: 'Filtro por Módulo 📊',
+        title: 'Filtro por Módulo ',
         text: 'Selecciona un módulo específico para ver solo las acciones relacionadas con él. Por ejemplo, puedes filtrar para ver solo cambios en usuarios o productos.',
         attachTo: {
             element: '#filtroModulo',
@@ -261,7 +261,7 @@ function iniciarTourBitacora() {
     if (btnEstadisticas) {
         tour.addStep({
             id: 'btn-estadisticas',
-            title: 'Estadísticas 📊',
+            title: 'Estadísticas ',
             text: 'Este botón abre un resumen visual de la actividad del sistema. Podrás ver gráficos que muestran las acciones más frecuentes, los módulos más activos y otros datos útiles para el análisis.',
             attachTo: {
                 element: '#btnEstadisticas',

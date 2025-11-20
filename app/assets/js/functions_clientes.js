@@ -139,7 +139,7 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
       icon: 'warning',
       title: 'Acceso Denegado',
       text: mensaje,
-      confirmButtonColor: '#d33'
+      confirmButtonColor: '#dc2626'
     });
   }
 }
@@ -623,7 +623,7 @@ function registrarCliente() {
             icon: "error",
             title: "Error",
             text: result.message || "No se pudo registrar el cliente.",
-            confirmButtonColor: "#3085d6"
+            confirmButtonColor: "#00c950"
           });
         }
       }
@@ -797,7 +797,7 @@ function actualizarCliente() {
             icon: "error",
             title: "Error",
             text: result.message || "No se pudo actualizar el cliente.",
-            confirmButtonColor: "#3085d6"
+            confirmButtonColor: "#00c950"
           });
         }
       }
@@ -869,8 +869,8 @@ function eliminarCliente(idCliente, nombreCliente) {
     text: `¿Deseas desactivar al cliente ${nombreCliente}? Esta acción cambiará su estatus a INACTIVO.`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
@@ -939,7 +939,7 @@ function exportarClientes() {
       
       if (result.status && result.data) {
      
-        console.log("📊 Datos para exportar:", result.data);
+        console.log(" Datos para exportar:", result.data);
         
         
         const csvContent = generarCSV(result.data);

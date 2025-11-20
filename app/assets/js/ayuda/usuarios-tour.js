@@ -96,7 +96,7 @@ function iniciarTourUsuarios() {
     const btnExportar = document.querySelector('#btnExportarUsuarios');
     if (btnExportar) {
         tour.addStep({
-            title: 'Exportar Datos 📄',
+            title: 'Exportar Datos ',
             text: 'Con este botón puedes exportar la lista de usuarios a diferentes formatos como PDF o Excel para reportes o respaldos.',
             attachTo: {
                 element: '#btnExportarUsuarios',
@@ -119,7 +119,7 @@ function iniciarTourUsuarios() {
 
     // Paso 4: Tabla de usuarios
     tour.addStep({
-        title: 'Lista de Usuarios 📊',
+        title: 'Lista de Usuarios ',
         text: 'Esta tabla muestra todos los usuarios registrados en el sistema. Puedes ver información como nombre, email, rol, estado y fecha de registro. También puedes buscar, filtrar y ordenar los usuarios.',
         attachTo: {
             element: '#TablaUsuarios',
@@ -248,7 +248,7 @@ function iniciarTourUsuarios() {
     const notificationBtn = document.querySelector('#desktop-notifications-toggle');
     if (notificationBtn) {
         tour.addStep({
-            title: 'Centro de Notificaciones 🔔',
+            title: 'Centro de Notificaciones ',
             text: 'Aquí recibirás notificaciones importantes del sistema, incluyendo alertas sobre actividades de usuarios, intentos de acceso y otros eventos de seguridad.',
             attachTo: {
                 element: '#desktop-notifications-toggle',

@@ -1,4 +1,4 @@
-﻿import { abrirModal, cerrarModal } from "./exporthelpers.js";
+import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import {
   expresiones,
   inicializarValidaciones,
@@ -29,7 +29,7 @@ const camposFormularioCategoria = [
     regex: expresiones.textoGeneral,
     opcional: true,
     mensajes: {
-      formato: "Descripción inválida.",
+      formato: "Descripci�n inv�lida.",
     },
   }
 ];
@@ -50,7 +50,7 @@ const camposFormularioActualizarCategoria = [
     regex: expresiones.textoGeneral,
     opcional: true,
     mensajes: {
-      formato: "Descripción inválida.",
+      formato: "Descripci�n inv�lida.",
     },
   }
 ];
@@ -88,10 +88,10 @@ document.addEventListener("DOMContentLoaded", function () {
         esSuperUsuarioActual = data.esSuperUsuario || data.es_super_usuario || false;
         idUsuarioActual = data.idUsuario || data.usuario_id || 0;
 
-        // Inicializar la tabla después de verificar el estado de super usuario
+        // Inicializar la tabla despu�s de verificar el estado de super usuario
         inicializarTablaCategorias();
 
-        // Forzar actualización después de inicializar
+        // Forzar actualizaci�n despu�s de inicializar
         setTimeout(() => {
           if (tablaCategorias && typeof tablaCategorias.draw === 'function') {
             tablaCategorias.draw(false);
@@ -99,11 +99,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 500);
       })
       .catch((error) => {
-        console.error("Error en verificación de super usuario:", error);
+        console.error("Error en verificaci�n de super usuario:", error);
         esSuperUsuarioActual = false;
         idUsuarioActual = 0;
 
-        // Aún así intentar inicializar la tabla en caso de error
+        // A�n as� intentar inicializar la tabla en caso de error
         inicializarTablaCategorias();
       });
   });
@@ -122,7 +122,7 @@ function inicializarTablaCategorias() {
         type: "GET",
         dataSrc: function (json) {
           if (json && Array.isArray(json.data)) {
-            // Filtrar categorias según el rol del usuario
+            // Filtrar categorias seg�n el rol del usuario
             let categoriasFiltradas = json.data;
             
             if (!esSuperUsuarioActual) {
@@ -139,7 +139,7 @@ function inicializarTablaCategorias() {
             Swal.fire({
               icon: "error",
               title: "Error de Datos",
-              text: "No se pudieron cargar los datos. Respuesta inválida.",
+              text: "No se pudieron cargar los datos. Respuesta inv�lida.",
             });
             return [];
           }
@@ -149,7 +149,7 @@ function inicializarTablaCategorias() {
           $("#TablaCategorias_processing").css("display", "none");
           Swal.fire({
             icon: "error",
-            title: "Error de Comunicación",
+            title: "Error de Comunicaci�n",
             text: "Error al cargar los datos. Por favor, intenta de nuevo.",
           });
         },
@@ -157,7 +157,7 @@ function inicializarTablaCategorias() {
       columns: [
         { data: "idcategoria", title: "ID", className: "none" },
         { data: "nombre", title: "Nombre", className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background" },
-        { data: "descripcion", title: "Descripción", className: "desktop whitespace-nowrap py-2 px-3 text-gray-700" },
+        { data: "descripcion", title: "Descripci�n", className: "desktop whitespace-nowrap py-2 px-3 text-gray-700" },
         {
           data: "estatus",
           title: "Estatus",
@@ -189,7 +189,7 @@ function inicializarTablaCategorias() {
             const nombreCategoria = row.nombre || "";
             const estatusCategoria = row.estatus || "";
             
-            // Verificar si la categoria está inactiva
+            // Verificar si la categoria est� inactiva
             const esCategoriaInactiva = estatusCategoria.toUpperCase() === 'INACTIVO';
             
             // Verificar si es categoria protegida del sistema
@@ -197,7 +197,7 @@ function inicializarTablaCategorias() {
             
             let acciones = '<div class="flex justify-center items-center space-x-1">';
             
-            // Botón Ver - siempre visible
+            // Bot�n Ver - siempre visible
             acciones += `
               <button class="ver-categoria-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
                       data-idcategoria="${idCategoria}" 
@@ -206,7 +206,7 @@ function inicializarTablaCategorias() {
               </button>`;
             
             if (esCategoriaInactiva) {
-              // Para categorias inactivas, mostrar solo el botón de reactivar
+              // Para categorias inactivas, mostrar solo el bot�n de reactivar
               acciones += `
                 <button class="reactivar-categoria-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
                         data-idcategoria="${idCategoria}" 
@@ -216,7 +216,7 @@ function inicializarTablaCategorias() {
                 </button>`;
             } else {
               // Para categorias activas
-              // Botón editar - siempre visible para categorias activas
+              // Bot�n editar - siempre visible para categorias activas
               acciones += `
                 <button class="editar-categoria-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
                         data-idcategoria="${idCategoria}" 
@@ -224,7 +224,7 @@ function inicializarTablaCategorias() {
                     <i class="fas fa-edit text-sm"></i>
                 </button>`;
               
-              // Botón eliminar - solo si NO es categoria protegida
+              // Bot�n eliminar - solo si NO es categoria protegida
               if (esCategoriaProtegida) {
                 acciones += `
                   <button class="text-gray-400 p-1 cursor-not-allowed" 
@@ -458,7 +458,7 @@ async function registrarCategoria() {
       "categoriaDescripcion": "descripcion"
     },
     onSuccess: (result) => {
-      Swal.fire("¡Éxito!", result.message, "success").then(() => {
+      Swal.fire("��xito!", result.message, "success").then(() => {
         cerrarModal("modalRegistrarCategoria");
         const form = document.getElementById("formRegistrarCategoria");
         if (form) {
@@ -501,7 +501,7 @@ async function abrirModalEditarCategoria(idCategoria) {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: data.message || "No se pudo cargar la información de la categoria.",
+        text: data.message || "No se pudo cargar la informaci�n de la categoria.",
       });
     }
   } catch (error) {
@@ -537,7 +537,7 @@ async function actualizarCategoria() {
     if (result.status) {
       Swal.fire({
         icon: "success",
-        title: "¡Éxito!",
+        title: "��xito!",
         text: result.message,
         timer: 2000,
         showConfirmButton: false,
@@ -583,7 +583,7 @@ async function abrirModalVerCategoria(idCategoria) {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: data.message || "No se pudo cargar la información de la categoria.",
+        text: data.message || "No se pudo cargar la informaci�n de la categoria.",
       });
     }
   } catch (error) {
@@ -598,13 +598,13 @@ async function abrirModalVerCategoria(idCategoria) {
 
 function confirmarEliminarCategoria(idCategoria, nombreCategoria) {
   Swal.fire({
-    title: "¿Estás seguro?",
-    html: `¿Deseas eliminar la categoria <strong>${nombreCategoria}</strong>?<br><small class="text-gray-500">Esta acción cambiará el estado a inactivo.</small>`,
+    title: "�Est�s seguro?",
+    html: `�Deseas eliminar la categoria <strong>${nombreCategoria}</strong>?<br><small class="text-gray-500">Esta acci�n cambiar� el estado a inactivo.</small>`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
-    confirmButtonText: "Sí, eliminar",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
+    confirmButtonText: "S�, eliminar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
     if (result.isConfirmed) {
@@ -624,7 +624,7 @@ async function eliminarCategoria(idCategoria) {
     if (data.status) {
       Swal.fire({
         icon: "success",
-        title: "¡Eliminada!",
+        title: "�Eliminada!",
         text: data.message,
         timer: 2000,
         showConfirmButton: false,
@@ -649,13 +649,13 @@ async function eliminarCategoria(idCategoria) {
 
 function confirmarReactivarCategoria(idCategoria, nombreCategoria) {
   Swal.fire({
-    title: "¿Reactivar categoria?",
-    html: `¿Deseas reactivar la categoria <strong>${nombreCategoria}</strong>?`,
+    title: "�Reactivar categoria?",
+    html: `�Deseas reactivar la categoria <strong>${nombreCategoria}</strong>?`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonColor: "#10b981",
+    confirmButtonColor: "#00c950",
     cancelButtonColor: "#6b7280",
-    confirmButtonText: "Sí, reactivar",
+    confirmButtonText: "S�, reactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
     if (result.isConfirmed) {
@@ -679,7 +679,7 @@ async function reactivarCategoria(idCategoria) {
     if (data.status) {
       Swal.fire({
         icon: "success",
-        title: "¡Reactivada!",
+        title: "�Reactivada!",
         text: data.message,
         timer: 2000,
         showConfirmButton: false,

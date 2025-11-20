@@ -133,7 +133,7 @@ function mostrarModalPermisosDenegados(mensaje = "No tienes permisos para realiz
       icon: 'warning',
       title: 'Acceso Denegado',
       text: mensaje,
-      confirmButtonColor: '#d33'
+      confirmButtonColor: '#dc2626'
     });
   }
 }
@@ -410,7 +410,7 @@ function actualizarContadoresSimples() {
   if (statEntradas) statEntradas.textContent = stats.entradas;
   if (statSalidas) statSalidas.textContent = stats.salidas;
 
-  console.log(`📊 Estadísticas actualizadas: Total: ${datos.length}, Entradas: ${stats.entradas}, Salidas: ${stats.salidas}`);
+  console.log(` Estadísticas actualizadas: Total: ${datos.length}, Entradas: ${stats.entradas}, Salidas: ${stats.salidas}`);
 }
 
 /**
@@ -454,7 +454,7 @@ document.addEventListener("DOMContentLoaded", function () {
         url: "movimientos/getMovimientos",
         type: "GET",
         dataSrc: function (json) {
-          console.log("📊 Respuesta del servidor:", json);
+          console.log(" Respuesta del servidor:", json);
           
           if (json && json.status) {
             // Respuesta exitosa - puede tener datos o estar vacío
@@ -821,8 +821,8 @@ function configurarBotonCancelar(btnId, modalId, formId, campos) {
       text: 'Se perderán los datos ingresados',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#00c950',
       confirmButtonText: 'Sí, cancelar',
       cancelButtonText: 'Continuar editando'
     }).then((result) => {
@@ -1339,8 +1339,8 @@ function eliminarMovimiento(idMovimiento) {
     `,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: "#dc2626",
+    cancelButtonColor: "#00c950",
     confirmButtonText: "Sí, anular",
     cancelButtonText: "Cancelar",
   }).then((result) => {

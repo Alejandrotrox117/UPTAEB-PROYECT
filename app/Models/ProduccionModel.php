@@ -10,9 +10,7 @@ use DateTime;
 
 class ProduccionModel extends Mysql
 {
-    // ============================================================
-    // PROPIEDADES DE CONTROL
-    // ============================================================
+    
     private $query;
     private $array;
     private $data;
@@ -20,9 +18,7 @@ class ProduccionModel extends Mysql
     private $message;
     private $status;
 
-    // ============================================================
-    // PROPIEDADES DE LOTES
-    // ============================================================
+    
     private $idlote;
     private $numero_lote;
     private $fecha_jornada;
@@ -35,9 +31,7 @@ class ProduccionModel extends Mysql
     private $fecha_inicio_real;
     private $fecha_fin_real;
 
-    // ============================================================
-    // PROPIEDADES DE REGISTROS DE PRODUCCIÓN
-    // ============================================================
+
     private $idregistro;
     private $idempleado;
     private $idproducto_producir;
@@ -51,9 +45,7 @@ class ProduccionModel extends Mysql
 
     public function __construct() {}
 
-    // ============================================================
-    // GETTERS Y SETTERS
-    // ============================================================
+    
     public function getQuery() {
         return $this->query;
     }
@@ -310,10 +302,11 @@ class ProduccionModel extends Mysql
                     $numeroLote = $this->generarNumeroLote($this->getFechaJornada(), $db);
                     $this->setNumeroLote($numeroLote);
 
+
                     $query = "INSERT INTO lotes_produccion (
                         numero_lote, fecha_jornada, volumen_estimado, 
-                        operarios_requeridos, idsupervisor, observaciones
-                    ) VALUES (?, ?, ?, ?, ?, ?)";
+                        operarios_requeridos, operarios_asignados, idsupervisor, observaciones
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
                     $stmt = $db->prepare($query);
                     $stmt->execute([
@@ -321,6 +314,7 @@ class ProduccionModel extends Mysql
                         $this->getFechaJornada(),
                         $this->getVolumenEstimado(),
                         $this->getOperariosRequeridos(),
+                        0, // Al crear el lote, no hay empleados asignados aún
                         $this->getIdSupervisor(),
                         $this->getObservaciones()
                     ]);
@@ -1243,7 +1237,17 @@ class ProduccionModel extends Mysql
                 $this->getIdProductoTerminado(), 
                 $this->getCantidadProducida()
             );
-            
+
+            // Actualizar operarios_asignados en el lote
+            $queryUpdateOperarios = "UPDATE lotes_produccion SET operarios_asignados = (
+                SELECT COUNT(DISTINCT idempleado) FROM registro_produccion WHERE idlote = ?
+            ) WHERE idlote = ?";
+            $stmtUpdateOperarios = $db->prepare($queryUpdateOperarios);
+            $stmtUpdateOperarios->execute([
+                $this->getIdLote(),
+                $this->getIdLote()
+            ]);
+
             $db->commit();
 
             $this->setStatus(true);
@@ -2262,15 +2266,7 @@ class ProduccionModel extends Mysql
         return $this->ejecutarConsultaProductos($tipo);
     }
 
-    /**
-     * Actualiza las cantidades de productos en el inventario
-     * @param PDO $db Conexión a la base de datos (debe estar en transacción)
-     * @param int $idProductoProducir ID del producto a producir
-     * @param float $ajusteProducir Cantidad a ajustar (negativo para restar, positivo para sumar)
-     * @param int $idProductoTerminado ID del producto terminado
-     * @param float $ajusteTerminado Cantidad a ajustar (positivo para sumar, negativo para restar)
-     * @throws Exception Si el stock resultante es negativo
-     */
+
     private function actualizarInventarioProductos($db, $idProductoProducir, $ajusteProducir, $idProductoTerminado, $ajusteTerminado)
     {
         try {

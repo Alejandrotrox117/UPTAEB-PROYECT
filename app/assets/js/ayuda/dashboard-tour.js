@@ -69,7 +69,7 @@ function iniciarTourDashboard() {
 
     // Paso 3: Tarjetas de métricas
     tour.addStep({
-        title: 'Métricas Principales 📊',
+        title: 'Métricas Principales ',
         text: 'Estas tarjetas muestran un resumen de las métricas más importantes: ventas del día, compras, inventario y producciones activas. Se actualizan en tiempo real.',
         attachTo: {
             element: '#dashboard-metrics',
@@ -91,7 +91,7 @@ function iniciarTourDashboard() {
 
     // Paso 4: Selector de reportes
     tour.addStep({
-        title: 'Selector de Reportes 📊',
+        title: 'Selector de Reportes ',
         text: 'Este nuevo selector te permite elegir entre diferentes tipos de reportes disponibles. Simplemente selecciona el que necesitas y se mostrará automáticamente.',
         attachTo: {
             element: '#selectorReporte',
@@ -159,7 +159,7 @@ function iniciarTourDashboard() {
     const notificationBtn = document.querySelector('#desktop-notifications-toggle');
     if (notificationBtn) {
         tour.addStep({
-            title: 'Centro de Notificaciones 🔔',
+            title: 'Centro de Notificaciones ',
             text: 'Aquí recibirás alertas importantes del sistema: productos con stock bajo, tareas pendientes, y actualizaciones importantes.',
             attachTo: {
                 element: '#desktop-notifications-toggle',
@@ -204,7 +204,7 @@ function iniciarTourDashboard() {
     
     // Paso 9: Tendencias de Ventas
     tour.addStep({
-        title: 'Análisis de Tendencias 📊',
+        title: 'Análisis de Tendencias ',
         text: 'Aquí puedes analizar las tendencias de ventas de los últimos 6 meses y la rentabilidad por producto para tomar decisiones informadas sobre tu negocio.',
         attachTo: {
             element: '#tendenciasVentas',

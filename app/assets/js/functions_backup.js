@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     icon: 'success',
                     title: '¡Backup Creado!',
                     text: data.mensaje || 'El backup completo se ha creado exitosamente',
-                    confirmButtonColor: '#10B981'
+                    confirmButtonColor: '#00c950'
                 });
                 cargarListaBackups();
                 cargarEstadisticas();
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'error',
                 title: 'Error',
                 text: error.message || 'Error al crear el backup completo',
-                confirmButtonColor: '#EF4444'
+                confirmButtonColor: '#dc2626'
             });
         } finally {
             btn.disabled = false;
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'warning',
                 title: 'Seleccione una tabla',
                 text: 'Debe seleccionar una tabla para crear el backup',
-                confirmButtonColor: '#F59E0B'
+                confirmButtonColor: '#00c950'
             });
             return;
         }
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     icon: 'success',
                     title: '¡Backup Creado!',
                     text: `Backup de la tabla "${tabla}" creado exitosamente`,
-                    confirmButtonColor: '#10B981'
+                    confirmButtonColor: '#00c950'
                 });
                 ocultarModalBackupTabla();
                 cargarListaBackups();
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'error',
                 title: 'Error',
                 text: error.message || 'Error al crear el backup de la tabla',
-                confirmButtonColor: '#EF4444'
+                confirmButtonColor: '#dc2626'
             });
         } finally {
             btn.disabled = false;
@@ -280,8 +280,8 @@ document.addEventListener('DOMContentLoaded', function() {
             text: `¿Está seguro de eliminar el archivo "${archivo}"?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#EF4444',
-            cancelButtonColor: '#6B7280',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar'
         });
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         icon: 'success',
                         title: '¡Eliminado!',
                         text: 'El backup ha sido eliminado exitosamente',
-                        confirmButtonColor: '#10B981'
+                        confirmButtonColor: '#00c950'
                     });
                     cargarListaBackups();
                     cargarEstadisticas();
@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     icon: 'error',
                     title: 'Error',
                     text: error.message || 'Error al eliminar el backup',
-                    confirmButtonColor: '#EF4444'
+                    confirmButtonColor: '#dc2626'
                 });
             }
         }
@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'warning',
                 title: 'Seleccione un archivo',
                 text: 'Debe seleccionar un archivo SQL para importar',
-                confirmButtonColor: '#F59E0B'
+                confirmButtonColor: '#00c950'
             });
             return;
         }
@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'error',
                 title: 'Archivo inválido',
                 text: 'Solo se permiten archivos con extensión .sql',
-                confirmButtonColor: '#EF4444'
+                confirmButtonColor: '#dc2626'
             });
             return;
         }
@@ -375,8 +375,8 @@ document.addEventListener('DOMContentLoaded', function() {
             `,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#EF4444',
-            cancelButtonColor: '#6B7280',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
             confirmButtonText: 'Sí, importar',
             cancelButtonText: 'Cancelar'
         });
@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     icon: 'success',
                     title: '¡Importación Completada!',
                     text: mensaje,
-                    confirmButtonColor: '#10B981'
+                    confirmButtonColor: '#00c950'
                 });
                 ocultarModalImportar();
                 cargarListaBackups();
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'error',
                 title: 'Error en la Importación',
                 text: error.message || 'Error al importar la base de datos',
-                confirmButtonColor: '#EF4444'
+                confirmButtonColor: '#dc2626'
             });
         } finally {
             btn.disabled = false;
@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'error',
                 title: 'Error',
                 text: 'Error al cargar la lista de backups',
-                confirmButtonColor: '#EF4444'
+                confirmButtonColor: '#dc2626'
             });
         } finally {
             if (loader) {
