@@ -166,7 +166,7 @@ function mostrarModulosConPermisos() {
                 <div id="permisos_${modulo.idmodulo}" class="permisos-container ${tieneAcceso ? '' : 'hidden'}">
                     <div class="border-t pt-3">
                         <label class="block text-xs font-medium text-gray-700 mb-2">
-                            <i class="fas fa-key mr-1"></i>Permisos específicos:
+                            <i class="fas fa-key mr-1"></i>Selecciona un permiso específico:
                         </label>
                         <div class="space-y-2 max-h-32 overflow-y-auto">
                             ${crearCheckboxesPermisos(modulo.idmodulo, permisosAsignados)}
@@ -203,10 +203,10 @@ function crearCheckboxesPermisos(idmodulo, permisosAsignados = []) {
         const checked = permisosAsignados.includes(permiso.idpermiso) ? 'checked' : '';
         return `
             <label class="flex items-center text-sm">
-                <input type="checkbox" 
-                       name="permisos_modulo_${idmodulo}[]" 
+                <input type="radio" 
+                       name="permisos_modulo_${idmodulo}" 
                        value="${permiso.idpermiso}" 
-                       class="permiso-checkbox mr-2 h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" 
+                       class="permiso-checkbox mr-2 h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300" 
                        data-modulo="${idmodulo}"
                        ${checked}>
                 <span class="text-gray-700">${permiso.nombre_permiso}</span>
@@ -217,7 +217,7 @@ function crearCheckboxesPermisos(idmodulo, permisosAsignados = []) {
 
 function toggleModulo(idmodulo, activo) {
     const permisosContainer = document.getElementById(`permisos_${idmodulo}`);
-    const checkboxesPermisos = document.querySelectorAll(`input[name="permisos_modulo_${idmodulo}[]"]`);
+    const checkboxesPermisos = document.querySelectorAll(`input[name="permisos_modulo_${idmodulo}"]`);
     const moduloCard = document.querySelector(`#modulo_${idmodulo}`).closest('.border');
     
     if (activo) {
@@ -245,10 +245,19 @@ function actualizarResumen() {
 
 function actualizarContadores() {
     const modulosActivos = document.querySelectorAll('.modulo-checkbox:checked').length;
-    const permisosActivos = document.querySelectorAll('.permiso-checkbox:checked').length;
+    
+    // Contar cuántos módulos tienen un permiso seleccionado
+    let modulosConPermisos = 0;
+    document.querySelectorAll('.modulo-checkbox:checked').forEach(checkbox => {
+        const idmodulo = checkbox.value;
+        const permisoSeleccionado = document.querySelector(`input[name="permisos_modulo_${idmodulo}"]:checked`);
+        if (permisoSeleccionado) {
+            modulosConPermisos++;
+        }
+    });
     
     document.getElementById('contadorModulos').textContent = modulosActivos;
-    document.getElementById('contadorPermisosEspecificos').textContent = permisosActivos;
+    document.getElementById('contadorPermisosEspecificos').textContent = modulosConPermisos;
 }
 
 async function guardarAsignaciones() {
@@ -266,13 +275,13 @@ async function guardarAsignaciones() {
 
     modulosSeleccionados.forEach(checkbox => {
         const idmodulo = parseInt(checkbox.value);
-        const checkboxesPermisos = document.querySelectorAll(`input[name="permisos_modulo_${idmodulo}[]"]:checked`);
+        const radioPermisoSeleccionado = document.querySelector(`input[name="permisos_modulo_${idmodulo}"]:checked`);
         
-        if (checkboxesPermisos.length > 0) {
-            const permisosSeleccionados = Array.from(checkboxesPermisos).map(cb => parseInt(cb.value));
+        if (radioPermisoSeleccionado) {
+            const permisoSeleccionado = parseInt(radioPermisoSeleccionado.value);
             asignaciones.push({
                 idmodulo: idmodulo,
-                permisos_especificos: permisosSeleccionados
+                permisos_especificos: [permisoSeleccionado]
             });
         }
     });
