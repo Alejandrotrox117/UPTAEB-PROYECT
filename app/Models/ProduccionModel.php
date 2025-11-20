@@ -481,6 +481,86 @@ class ProduccionModel extends Mysql
         }
     }
 
+
+    private function generarNumeroMovimiento(int $idregistro): string
+    {
+        $fecha = date('Ymd-His');
+        return "MOV-PROD-{$fecha}-{$idregistro}";
+    }
+
+
+    private function registrarMovimientosProduccion($db, array $registro): bool
+    {
+        try {
+            $idregistro = $registro['idregistro'];
+            $idproductoProducir = $registro['idproducto_producir'];
+            $cantidadProducir = floatval($registro['cantidad_producir']);
+            $idproductoTerminado = $registro['idproducto_terminado'];
+            $cantidadProducida = floatval($registro['cantidad_producida']);
+            
+            // Obtener el stock actual del producto a producir
+            $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
+            $stmtStock = $db->prepare($queryStock);
+            
+            // Primer movimiento: SALIDA del producto a producir
+            $stmtStock->execute([$idproductoProducir]);
+            $stockAnteriorProducir = floatval($stmtStock->fetchColumn());
+            $stockResultanteProducir = $stockAnteriorProducir;
+            
+            $numeroMovimiento1 = $this->generarNumeroMovimiento($idregistro) . '-S';
+            $queryMovimientoSalida = "INSERT INTO movimientos_existencia 
+                (numero_movimiento, idproducto, idtipomovimiento, idproduccion, 
+                cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, 
+                observaciones, total, estatus) 
+                VALUES (?, ?, 5, ?, NULL, ?, ?, ?, ?, ?, 'activo')";
+            
+            $stmtMovimiento = $db->prepare($queryMovimientoSalida);
+            $observacion1 = "Consumo de material para producción - Lote: {$registro['idlote']}, Registro: {$idregistro}";
+            $stmtMovimiento->execute([
+                $numeroMovimiento1,
+                $idproductoProducir,
+                $idregistro,
+                $cantidadProducir,
+                $stockAnteriorProducir,
+                $stockResultanteProducir,
+                $observacion1,
+                $stockResultanteProducir
+            ]);
+            
+            // Segundo movimiento: ENTRADA del producto terminado
+            $stmtStock->execute([$idproductoTerminado]);
+            $stockAnteriorTerminado = floatval($stmtStock->fetchColumn());
+            $stockResultanteTerminado = $stockAnteriorTerminado;
+            
+            $numeroMovimiento2 = $this->generarNumeroMovimiento($idregistro) . '-E';
+            $queryMovimientoEntrada = "INSERT INTO movimientos_existencia 
+                (numero_movimiento, idproducto, idtipomovimiento, idproduccion, 
+                cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, 
+                observaciones, total, estatus) 
+                VALUES (?, ?, 5, ?, ?, NULL, ?, ?, ?, ?, 'activo')";
+            
+            $stmtMovimiento2 = $db->prepare($queryMovimientoEntrada);
+            $observacion2 = "Entrada de producto terminado - Lote: {$registro['idlote']}, Registro: {$idregistro}";
+            $stmtMovimiento2->execute([
+                $numeroMovimiento2,
+                $idproductoTerminado,
+                $idregistro,
+                $cantidadProducida,
+                $stockAnteriorTerminado,
+                $stockResultanteTerminado,
+                $observacion2,
+                $stockResultanteTerminado
+            ]);
+            
+            error_log("Movimientos registrados para registro {$idregistro}: {$numeroMovimiento1}, {$numeroMovimiento2}");
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("Error al registrar movimientos: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     private function ejecutarCierreLote(int $idlote)
     {
         $this->setIdLote($idlote);
@@ -515,6 +595,31 @@ class ProduccionModel extends Mysql
                 ];
             }
 
+            // Obtener todos los registros de producción del lote
+            $queryRegistros = "SELECT 
+                idregistro, 
+                idlote,
+                idproducto_producir, 
+                cantidad_producir,
+                idproducto_terminado, 
+                cantidad_producida
+            FROM registro_produccion 
+            WHERE idlote = ?";
+            
+            $stmtRegistros = $db->prepare($queryRegistros);
+            $stmtRegistros->execute([$this->getIdLote()]);
+            $registros = $stmtRegistros->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("[PRODUCCION] Cierre de lote {$this->getIdLote()}: " . count($registros) . " registros encontrados");
+            
+            // Generar movimientos para cada registro de producción
+            foreach ($registros as $registro) {
+                // Solo generar movimientos si hay cantidades válidas
+                if ($registro['cantidad_producir'] > 0 || $registro['cantidad_producida'] > 0) {
+                    $this->registrarMovimientosProduccion($db, $registro);
+                }
+            }
+
             $this->setEstatusLote('FINALIZADO');
             
             $query = "UPDATE lotes_produccion 
@@ -527,7 +632,7 @@ class ProduccionModel extends Mysql
             $db->commit();
 
             $this->setStatus(true);
-            $this->setMessage('Lote cerrado exitosamente.');
+            $this->setMessage('Lote cerrado exitosamente. Se generaron ' . count($registros) . ' movimientos de inventario.');
 
             return [
                 'status' => $this->getStatus(),
@@ -1506,18 +1611,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ============================================================
-    // CONFIGURACIÓN DINÁMICA DE PRECIOS POR PROCESO/PRODUCTO
-    // Tabla sugerida: configuracion_produccion_precios
-    //  - idprecio (PK), tipo_proceso ('CLASIFICACION'|'EMPAQUE'), idproducto (FK)
-    //  - unidad_base ('KG'|'UNIDAD'), precio_unitario (DECIMAL), moneda (VARCHAR),
-    //  - vigente_desde (DATE), vigente_hasta (DATE NULL), estatus ('activo')
-    // ============================================================
-
-    /**
-     * Devuelve el precio unitario vigente para un par (tipo_proceso, idproducto).
-     * Si no encuentra un precio activo, retorna 0 (para que el caller aplique fallback).
-     */
     private function getPrecioProceso($db, string $tipo_proceso, int $idproducto): float
     {
         try {

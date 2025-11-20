@@ -14,7 +14,161 @@ import {
 let tablaLotes, tablaProcesos, tablaNomina;
 let configuracionActual = {};
 let preciosProceso = [];
-let registrosProduccionLote = []; 
+let registrosProduccionLote = [];
+
+
+let empleadosValidos = [];
+let productosValidos = [];
+let lotesValidos = [];
+let supervisoresValidos = [];
+
+function validarElementoSeguro(elemento, arrayValidos, nombreCampo) {
+  const valor = elemento.value;
+  
+  if (!valor || valor === '') return true;
+  
+  const id = parseInt(valor);
+  
+  if (isNaN(id) || id <= 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Valor Inválido',
+      text: `Valor inválido detectado en ${nombreCampo}. Solo se permiten números positivos.`,
+      confirmButtonColor: '#dc2626'
+    }).then(() => {
+      elemento.value = '';
+      recargarElementos();
+    });
+    return false;
+  }
+  
+  if (!arrayValidos.includes(id)) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Elemento No Válido',
+      text: `El ${nombreCampo} seleccionado no existe o fue manipulado.`,
+      confirmButtonColor: '#dc2626'
+    }).then(() => {
+      elemento.value = '';
+      recargarElementos();
+    });
+    return false;
+  }
+  
+  return true;
+}
+
+// Función para recargar elementos después de operaciones
+function recargarElementos() {
+  setTimeout(() => {
+    if (typeof cargarEmpleadosParaProduccion === 'function') {
+      cargarEmpleadosParaProduccion();
+    }
+    if (typeof cargarProductosParaProduccion === 'function') {
+      cargarProductosParaProduccion();
+    }
+  }, 500);
+}
+
+// Función para recargar elementos del modal de lotes
+function recargarElementosLote() {
+  setTimeout(() => {
+    if (typeof cargarEmpleadosParaRegistrosLote === 'function') {
+      cargarEmpleadosParaRegistrosLote();
+    }
+    if (typeof cargarProductosParaRegistrosLote === 'function') {
+      cargarProductosParaRegistrosLote();
+    }
+    if (typeof cargarEmpleadosActivos === 'function') {
+      cargarEmpleadosActivos('lote_supervisor');
+    }
+  }, 500);
+}
+
+// Validadores específicos
+function validarEmpleado(event) {
+  return validarElementoSeguro(event.target, empleadosValidos, 'Empleado');
+}
+
+function validarProducto(event) {
+  const nombreCampo = event.target.id.includes('producir') ? 'Producto a Producir' : 'Producto Terminado';
+  return validarElementoSeguro(event.target, productosValidos, nombreCampo);
+}
+
+// Validador específico para productos en modal de lotes
+function validarProductoLote(event) {
+  const nombreCampo = event.target.id.includes('inicial') ? 'Producto Inicial' : 'Producto Final';
+  return validarElementoSeguro(event.target, productosValidos, nombreCampo);
+}
+
+// Función para validar formulario completo antes de enviar
+function validarFormularioCompleto() {
+  const empleado = document.getElementById('prod_empleado');
+  const producir = document.getElementById('prod_producto_producir');
+  const terminado = document.getElementById('prod_producto_terminado');
+  
+  if (empleado && empleado.value && !validarElementoSeguro(empleado, empleadosValidos, 'Empleado')) {
+    return false;
+  }
+  
+  if (producir && producir.value && !validarElementoSeguro(producir, productosValidos, 'Producto a Producir')) {
+    return false;
+  }
+  
+  if (terminado && terminado.value && !validarElementoSeguro(terminado, productosValidos, 'Producto Terminado')) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Función para validar formulario de lotes completo
+function validarFormularioLoteCompleto() {
+  const empleado = document.getElementById('lote_prod_empleado');
+  const productoInicial = document.getElementById('lote_prod_producto_inicial');
+  const productoFinal = document.getElementById('lote_prod_producto_final');
+  const supervisor = document.getElementById('lote_supervisor');
+  
+  if (empleado && empleado.value && !validarElementoSeguro(empleado, empleadosValidos, 'Empleado de Lote')) {
+    return false;
+  }
+  
+  if (productoInicial && productoInicial.value && !validarElementoSeguro(productoInicial, productosValidos, 'Producto Inicial')) {
+    return false;
+  }
+  
+  if (productoFinal && productoFinal.value && !validarElementoSeguro(productoFinal, productosValidos, 'Producto Final')) {
+    return false;
+  }
+  
+  if (supervisor && supervisor.value && !validarElementoSeguro(supervisor, supervisoresValidos, 'Supervisor')) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Función de prueba
+window.probarSeguridad = function() {
+  const empleado = document.getElementById('prod_empleado');
+  const producto = document.getElementById('prod_producto_producir');
+  
+  if (empleado && empleadosValidos.length > 0) {
+    empleado.value = '99999';
+    empleado.dispatchEvent(new Event('change'));
+  }
+  
+  if (producto && productosValidos.length > 0) {
+    setTimeout(() => {
+      producto.value = '88888';
+      producto.dispatchEvent(new Event('change'));
+    }, 2000);
+  }
+};
+
+window.verificarArrays = function() {
+  console.log('Empleados:', empleadosValidos.length, 'Productos:', productosValidos.length);
+}; 
 
 
 const camposFormularioLote = [
@@ -347,7 +501,7 @@ function inicializarTablaLotes() {
 
           if (estatus === "PLANIFICADO") {
             acciones += `
-              <button class="editar-lote-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+              <button class="editar-lote-btn text-green-500 hover:text-blue-700 p-1 transition-colors duration-150" 
                       data-idlote="${idlote}" title="Editar lote">
                 <i class="fas fa-edit text-sm"></i>
               </button>
@@ -521,7 +675,7 @@ function inicializarTablaProcesos() {
         className: "all py-2 px-2",
         render: function(data, type, row) {
           const tipo = row.tipo_movimiento === 'CLASIFICACION' 
-            ? '<i class="fas fa-filter text-blue-600 mr-1"></i>Clasif.' 
+            ? '<i class="fas fa-filter text-green-500 mr-1"></i>Clasif.' 
             : '<i class="fas fa-cube text-purple-600 mr-1"></i>Empaq.';
           
           return `
@@ -567,7 +721,7 @@ function inicializarTablaProcesos() {
           if (estatusRegistro === 'BORRADOR') {
             acciones += `
               <button onclick="editarRegistroProduccion(${row.idregistro})" 
-                      class="text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                      class="text-green-500 hover:text-blue-700 p-1 transition-colors duration-150" 
                       title="Editar registro">
                 <i class="fas fa-edit text-sm"></i>
               </button>
@@ -1303,13 +1457,22 @@ async function cargarEmpleadosParaRegistrosLote() {
     select.innerHTML = '<option value="">Seleccionar empleado...</option>';
     
     if (data.status && Array.isArray(data.data)) {
+      // Cargar IDs válidos para validación
       data.data.forEach(empleado => {
+        empleadosValidos.push(parseInt(empleado.idempleado));
+        
         const option = document.createElement("option");
         option.value = empleado.idempleado;
         option.textContent = empleado.nombre_completo;
         option.dataset.nombre = empleado.nombre_completo;
         select.appendChild(option);
       });
+      
+      // Agregar validador de seguridad
+      if (!select.hasAttribute('data-validador-agregado')) {
+        select.addEventListener('change', validarEmpleado);
+        select.setAttribute('data-validador-agregado', 'true');
+      }
     }
   } catch (error) {
   }
@@ -1331,20 +1494,34 @@ async function cargarProductosParaRegistrosLote() {
     
     if (data.status && Array.isArray(data.data)) {
       data.data.forEach(producto => {
+        // Cargar IDs válidos para validación
+        productosValidos.push(parseInt(producto.idproducto));
+        
         const option1 = document.createElement("option");
         option1.value = producto.idproducto;
-        option1.textContent = producto.descripcion || producto.nombre;
-        option1.dataset.nombre = producto.descripcion || producto.nombre;
+        option1.textContent = producto.nombre || producto.descripcion;
+        option1.dataset.nombre = producto.nombre || producto.descripcion;
         option1.dataset.codigo = producto.codigo || '';
         selectInicial.appendChild(option1);
         
         const option2 = document.createElement("option");
         option2.value = producto.idproducto;
-        option2.textContent = producto.descripcion || producto.nombre;
-        option2.dataset.nombre = producto.descripcion || producto.nombre;
+        option2.textContent = producto.nombre || producto.descripcion;
+        option2.dataset.nombre = producto.nombre || producto.descripcion;
         option2.dataset.codigo = producto.codigo || '';
         selectFinal.appendChild(option2);
       });
+      
+      // Agregar validadores de seguridad
+      if (!selectInicial.hasAttribute('data-validador-agregado')) {
+        selectInicial.addEventListener('change', validarProductoLote);
+        selectInicial.setAttribute('data-validador-agregado', 'true');
+      }
+      
+      if (!selectFinal.hasAttribute('data-validador-agregado')) {
+        selectFinal.addEventListener('change', validarProductoLote);
+        selectFinal.setAttribute('data-validador-agregado', 'true');
+      }
     }
   } catch (error) {
   }
@@ -1533,6 +1710,11 @@ function limpiarFormularioRegistroLote() {
 
 async function registrarLote() {
   
+  // Validar seguridad antes de procesar
+  if (!validarFormularioLoteCompleto()) {
+    return;
+  }
+  
   const btnGuardarLote = document.getElementById("btnGuardarLote");
 
   if (btnGuardarLote) {
@@ -1641,6 +1823,10 @@ async function registrarLote() {
         confirmButtonColor: "#059669"
       }).then(() => {
         cerrarModal("modalRegistrarLote");
+        
+        // Recargar elementos para limpiar manipulaciones
+        recargarElementosLote();
+        
         if (typeof tablaLotes !== "undefined" && tablaLotes.ajax) {
           tablaLotes.ajax.reload();
         }
@@ -1930,7 +2116,7 @@ function cargarDatosLoteEnModal(lote) {
   if (estado === 'ACTIVO' || estado === 'EN PROCESO') {
     estadoElement.classList.add('text-green-600');
   } else if (estado === 'FINALIZADO' || estado === 'COMPLETADO') {
-    estadoElement.classList.add('text-blue-600');
+    estadoElement.classList.add('text-green-500');
   } else if (estado === 'CANCELADO') {
     estadoElement.classList.add('text-red-600');
   } else if (estado === 'PENDIENTE') {
@@ -2218,6 +2404,9 @@ function editarLote(idlote) {
           }
 
           const supervisores = empleadosResult.data;
+          
+          // Llenar array de supervisores válidos para validación de seguridad
+          const supervisoresValidosEdicion = supervisores.map(emp => parseInt(emp.idempleado));
 
           let optionsSupervisores = supervisores
             .map((emp) => {
@@ -2296,6 +2485,26 @@ function editarLote(idlote) {
             confirmButtonText: 'Guardar Cambios',
             cancelButtonText: 'Cancelar',
             showLoaderOnConfirm: true,
+            didOpen: () => {
+              // Agregar validación de seguridad al select de supervisor
+              const supervisorSelect = document.getElementById("edit-supervisor");
+              if (supervisorSelect) {
+                supervisorSelect.addEventListener('change', function() {
+                  const valorSeleccionado = parseInt(this.value);
+                  if (valorSeleccionado && !supervisoresValidosEdicion.includes(valorSeleccionado)) {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Elemento inválido detectado',
+                      text: 'El supervisor seleccionado no es válido. La página se recargará por seguridad.',
+                      showConfirmButton: false,
+                      timer: 2000
+                    }).then(() => {
+                      location.reload();
+                    });
+                  }
+                });
+              }
+            },
             preConfirm: () => {
               const fechaJornada = document.getElementById("edit-fecha-jornada").value;
               const volumenEstimado = document.getElementById("edit-volumen-estimado").value;
@@ -2314,6 +2523,13 @@ function editarLote(idlote) {
 
               if (!idsupervisor) {
                 Swal.showValidationMessage("Debe seleccionar un supervisor");
+                return false;
+              }
+
+              // Validación de seguridad para evitar manipulación de IDs
+              if (idsupervisor && !supervisoresValidosEdicion.includes(parseInt(idsupervisor))) {
+                Swal.showValidationMessage("El supervisor seleccionado no es válido");
+                setTimeout(() => location.reload(), 2000);
                 return false;
               }
 
@@ -3055,20 +3271,34 @@ function cargarEmpleadosActivos(selectId = "lote_supervisor") {
     .then((response) => response.json())
     .then((result) => {
       if (result.status && result.data) {
+        // Limpiar y llenar el array de supervisores válidos
+        supervisoresValidos.length = 0;
+        
         const select = document.getElementById(selectId);
         if (select) {
           let options = '<option value="">Seleccionar empleado...</option>';
           
           result.data.forEach(empleado => {
+            // Agregar ID al array de válidos
+            supervisoresValidos.push(parseInt(empleado.idempleado));
             options += `<option value="${empleado.idempleado}">${empleado.nombre_completo}</option>`;
           });
           
           select.innerHTML = options;
+          
+          // Agregar listener para validación de seguridad
+          select.removeEventListener('change', validarSupervisorChange);
+          select.addEventListener('change', validarSupervisorChange);
         }
       }
     })
     .catch((error) => {
     });
+}
+
+// Función específica para validar cambio de supervisor
+function validarSupervisorChange(event) {
+  return validarElementoSeguro(event.target, supervisoresValidos, 'Supervisor');
 }
 
 function mostrarError(mensaje) {
@@ -3218,9 +3448,15 @@ async function cargarEmpleadosParaProduccion() {
 
     let empleadosActivos = 0;
     
+    // Limpiar y cargar IDs válidos para validación
+    empleadosValidos = [];
+    
     data.data.forEach((empleado, index) => {
       
       empleadosActivos++;
+      
+      // Guardar ID válido
+      empleadosValidos.push(parseInt(empleado.idempleado));
       
       const option = document.createElement("option");
       option.value = empleado.idempleado;
@@ -3229,6 +3465,12 @@ async function cargarEmpleadosParaProduccion() {
       
       selectEmpleado.appendChild(option);
     });
+    
+    // Agregar validador de seguridad
+    if (selectEmpleado && !selectEmpleado.hasAttribute('data-validador-agregado')) {
+      selectEmpleado.addEventListener('change', validarEmpleado);
+      selectEmpleado.setAttribute('data-validador-agregado', 'true');
+    }
     
     
     if (empleadosActivos === 0) {
@@ -3275,6 +3517,9 @@ async function cargarProductosParaProduccion() {
 
     let productosActivos = 0;
     
+    // Limpiar y cargar IDs válidos para validación
+    productosValidos = [];
+    
     data.data.forEach((producto, index) => {
       
       const estaActivo = producto.estatus == 'ACTIVO' || 
@@ -3285,37 +3530,50 @@ async function cargarProductosParaProduccion() {
       if (estaActivo) {
         productosActivos++;
         
+        // Guardar ID válido
+        productosValidos.push(parseInt(producto.idproducto));
+        
         const option1 = document.createElement("option");
         option1.value = producto.idproducto;
-        option1.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        option1.textContent = producto.nombre || producto.descripcion || 'Sin nombre';
         selectProducir.appendChild(option1);
 
         const option2 = document.createElement("option");
         option2.value = producto.idproducto;
-        option2.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        option2.textContent = producto.nombre || producto.descripcion || 'Sin nombre';
         selectTerminado.appendChild(option2);
       }
     });
     
-    
+    // TAMBIÉN cargar productos inactivos si no hay activos
     if (productosActivos === 0) {
-      
-      selectProducir.innerHTML = '<option value="">Seleccionar producto...</option>';
-      selectTerminado.innerHTML = '<option value="">Seleccionar producto...</option>';
-      
       data.data.forEach(producto => {
+        // Guardar ID válido incluso si está inactivo
+        productosValidos.push(parseInt(producto.idproducto));
+        
         const option1 = document.createElement("option");
         option1.value = producto.idproducto;
-        option1.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        option1.textContent = producto.nombre || producto.descripcion || 'Sin nombre';
         selectProducir.appendChild(option1);
 
         const option2 = document.createElement("option");
         option2.value = producto.idproducto;
-        option2.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        option2.textContent = producto.nombre || producto.descripcion || 'Sin nombre';
         selectTerminado.appendChild(option2);
       });
-      
     }
+    
+    // Agregar validadores de seguridad
+    if (selectProducir && !selectProducir.hasAttribute('data-validador-agregado')) {
+      selectProducir.addEventListener('change', validarProducto);
+      selectProducir.setAttribute('data-validador-agregado', 'true');
+    }
+    
+    if (selectTerminado && !selectTerminado.hasAttribute('data-validador-agregado')) {
+      selectTerminado.addEventListener('change', validarProducto);
+      selectTerminado.setAttribute('data-validador-agregado', 'true');
+    }
+    
     
   } catch (error) {
     mostrarError("Error al cargar productos: " + error.message);
@@ -3373,6 +3631,11 @@ function limpiarCamposSalarios() {
 
 async function guardarRegistroProduccion() {
   try {
+    // Validar seguridad antes de procesar
+    if (!validarFormularioCompleto()) {
+      return; // La validación ya mostró el error
+    }
+    
     const idlote = document.getElementById("prod_lote").value;
     const idempleado = document.getElementById("prod_empleado").value;
     const fecha_jornada = document.getElementById("prod_fecha_jornada").value;
@@ -3458,6 +3721,9 @@ async function guardarRegistroProduccion() {
       }).then(() => {
         cerrarModal("modalRegistrarProduccion");
         
+        // Recargar elementos para limpiar manipulaciones
+        recargarElementos();
+        
         if (typeof tablaRegistrosProcesos !== "undefined" && tablaRegistrosProcesos.ajax) {
           tablaRegistrosProcesos.ajax.reload(null, false);
         }
@@ -3516,55 +3782,76 @@ async function editarRegistroProduccion(idregistro) {
     
     const { value: formValues } = await Swal.fire({
       title: `<div class="text-left">
-                <i class="fas fa-edit text-blue-600 mr-2"></i>
+                <i class="fas fa-edit text-emerald-600 mr-2"></i>
                 Editar Registro de Producción
               </div>`,
       html: `
-        <div class="text-left space-y-4 max-h-96 overflow-y-auto px-2">
-          <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4">
-            <p class="text-sm"><strong>Lote:</strong> ${registro.numero_lote}</p>
-            <p class="text-sm"><strong>Empleado:</strong> ${registro.nombre_empleado || 'Sin asignar'}</p>
-            <p class="text-sm"><strong>Estado:</strong> ${registro.estatus}</p>
+        <div class="text-left space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-2 sm:px-3">
+          <div class="bg-emerald-50 border-l-4 border-emerald-500 p-2 sm:p-3 mb-3 sm:mb-4 rounded-r">
+            <p class="text-xs sm:text-sm"><strong>Lote:</strong> ${registro.numero_lote}</p>
+            <p class="text-xs sm:text-sm"><strong>Empleado:</strong> ${registro.nombre_empleado || 'Sin asignar'}</p>
+            <p class="text-xs sm:text-sm"><strong>Estado:</strong> <span class="text-emerald-700 font-semibold">${registro.estatus}</span></p>
           </div>
           
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Jornada:</label>
-            <input id="edit_fecha_jornada" type="date" value="${registro.fecha_jornada_input}" 
-                   class="swal2-input w-full m-0">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-calendar-alt text-green-500 mr-1"></i>Fecha de Jornada:
+              </label>
+              <input id="edit_fecha_jornada" type="date" value="${registro.fecha_jornada_input}" 
+                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+            </div>
+            
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-tasks text-green-500 mr-1"></i>Tipo de Movimiento:
+              </label>
+              <select id="edit_tipo_movimiento" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                <option value="CLASIFICACION" ${registro.tipo_movimiento === 'CLASIFICACION' ? 'selected' : ''}> Clasificación</option>
+                <option value="EMPAQUE" ${registro.tipo_movimiento === 'EMPAQUE' ? 'selected' : ''}>Empaque</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-box text-green-500 mr-1"></i>Cantidad a Producir (kg):
+              </label>
+              <input id="edit_cantidad_producir" type="number" step="0.01" value="${registro.cantidad_producir}" 
+                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
+                     placeholder="0.00">
+            </div>
+            
+            <div>
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-check-circle text-green-500 mr-1"></i>Cantidad Producida (kg):
+              </label>
+              <input id="edit_cantidad_producida" type="number" step="0.01" value="${registro.cantidad_producida}" 
+                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
+                     placeholder="0.00">
+            </div>
+            
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-comment-alt text-green-500 mr-1"></i>Observaciones:
+              </label>
+              <textarea id="edit_observaciones" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none" 
+                        rows="3" placeholder="Observaciones opcionales...">${registro.observaciones || ''}</textarea>
+            </div>
           </div>
           
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Movimiento:</label>
-            <select id="edit_tipo_movimiento" class="swal2-input w-full m-0">
-              <option value="CLASIFICACION" ${registro.tipo_movimiento === 'CLASIFICACION' ? 'selected' : ''}>Clasificación</option>
-              <option value="EMPAQUE" ${registro.tipo_movimiento === 'EMPAQUE' ? 'selected' : ''}>Empaque</option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad a Producir (kg):</label>
-            <input id="edit_cantidad_producir" type="number" step="0.01" value="${registro.cantidad_producir}" 
-                   class="swal2-input w-full m-0" placeholder="Cantidad inicial">
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad Producida (kg):</label>
-            <input id="edit_cantidad_producida" type="number" step="0.01" value="${registro.cantidad_producida}" 
-                   class="swal2-input w-full m-0" placeholder="Cantidad final producida">
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones:</label>
-            <textarea id="edit_observaciones" class="swal2-textarea w-full m-0" rows="3" 
-                      placeholder="Observaciones opcionales">${registro.observaciones || ''}</textarea>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3 mt-3">
+            <p class="text-xs text-blue-800 flex items-start">
+              <i class="fas fa-info-circle mt-0.5 mr-2 text-green-500"></i>
+              <span>Los salarios se calcularán automáticamente al guardar los cambios</span>
+            </p>
           </div>
         </div>
       `,
-      width: '600px',
+      width: window.innerWidth < 640 ? '95%' : window.innerWidth < 768 ? '85%' : '650px',
       showCancelButton: true,
-      confirmButtonText: 'Guardar Cambios',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#059669',
+      confirmButtonText: '<i class="fas fa-save mr-2"></i>Guardar Cambios',
+      cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+      confirmButtonColor: '#00ca54',
       cancelButtonColor: '#6b7280',
       focusConfirm: false,
       preConfirm: () => {
