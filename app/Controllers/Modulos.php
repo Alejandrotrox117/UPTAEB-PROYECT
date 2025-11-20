@@ -18,6 +18,7 @@ class Modulos extends Controllers
     public function __construct()
     {
         parent::__construct();
+        $this->model = new \App\Models\ModulosModel();
     }
 
     public function index()

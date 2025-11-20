@@ -1,8 +1,12 @@
 <?php
-require_once "app/core/conexion.php";
-require_once "app/core/mysql.php";
+namespace App\Models;
 
-class ModulosModel extends mysql
+use App\Core\Conexion;
+use PDO;
+use PDOException;
+
+
+class ModulosModel 
 {
     private $query;
     private $array;
@@ -18,7 +22,7 @@ class ModulosModel extends mysql
 
     public function __construct()
     {
-        parent::__construct();
+        
     }
 
     // GETTERS Y SETTERS DE CONTROL

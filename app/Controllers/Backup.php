@@ -6,6 +6,7 @@ use App\Models\BackupModel;
 use App\Models\BitacoraModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
+use PDO;
 
 class Backup extends Controllers
 {
@@ -307,7 +308,7 @@ class Backup extends Controllers
                     die();
                 }
 
-                $rutaCompleta = realpath(dirname(__FILE__) . '/../../config/backups/') . '/' . $nombreArchivo;
+                $rutaCompleta = dirname(__FILE__) . '/../../config/backups/' . $nombreArchivo;
                 
                 if (!file_exists($rutaCompleta)) {
                     http_response_code(404);

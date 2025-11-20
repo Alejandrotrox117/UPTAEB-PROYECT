@@ -42,11 +42,11 @@
                     Backup por Tabla
                 </button>
                 
-                <button id="btnImportarDB" 
+                <!-- <button id="btnImportarDB" 
                         class="px-6 py-3 bg-orange-500 text-black rounded-lg hover:bg-orange-600 transition-colors duration-200 flex items-center text-sm font-medium shadow-md">
                     <i class="fas fa-upload mr-2"></i>
                     Importar DB
-                </button>
+                </button> -->
                 
                 <button id="btnActualizarLista" 
                         class="px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 flex items-center text-sm" 
@@ -128,7 +128,7 @@
 
 <!-- MODAL BACKUP POR TABLA -->
 <div id="modalBackupTabla" 
-     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
+     class="fixed inset-0 flex items-center justify-center  bg-opacity-50 bg-transparent backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform duration-300">
         
         <!-- Header del Modal -->

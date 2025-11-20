@@ -191,6 +191,7 @@ class BackupModel {
             $backupContent .= $this->generarBackupBD('seguridad');
 
             if (file_put_contents($rutaBackup, $backupContent) !== false) {
+                chmod($rutaBackup, 0644); // Asegurar que el archivo sea legible por el servidor web
                 $this->registrarBackupEnBD($nombreArchivo, 'COMPLETO', filesize($rutaBackup));
                 $this->registrarAccionBitacora('CREAR_BACKUP_COMPLETO', $nombreArchivo);
                 
@@ -227,6 +228,7 @@ class BackupModel {
             $backupContent = $this->generarBackupTabla($tabla, $database);
 
             if (file_put_contents($rutaBackup, $backupContent) !== false) {
+                chmod($rutaBackup, 0644); // Asegurar que el archivo sea legible por el servidor web
                 $this->registrarBackupEnBD($nombreArchivo, 'TABLA', filesize($rutaBackup));
                 $this->registrarAccionBitacora('CREAR_BACKUP_TABLA', $nombreArchivo);
                 
