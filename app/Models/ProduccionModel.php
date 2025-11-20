@@ -506,7 +506,7 @@ class ProduccionModel extends Mysql
                 (numero_movimiento, idproducto, idtipomovimiento, idproduccion, 
                 cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, 
                 observaciones, total, estatus) 
-                VALUES (?, ?, 5, ?, NULL, ?, ?, ?, ?, ?, 'activo')";
+                VALUES (?, ?, 6, ?, NULL, ?, ?, ?, ?, ?, 'activo')";
             
             $stmtMovimiento = $db->prepare($queryMovimientoSalida);
             $observacion1 = "Consumo de material para producción - Lote: {$registro['idlote']}, Registro: {$idregistro}";
