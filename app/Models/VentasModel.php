@@ -601,10 +601,13 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
                 throw new Exception("El producto en el detalle #" . ($index + 1) . " tiene un ID inválido: " . $detalle['idproducto']);
             }
 
-            // Validar que el producto existe
-            $productoExiste = $this->search("SELECT COUNT(*) as count FROM producto WHERE idproducto = ?", [$idproducto]);
-            if (!$productoExiste || $productoExiste['count'] == 0) {
+            // Validar que el producto existe y está activo
+            $producto = $this->search("SELECT nombre, estatus FROM producto WHERE idproducto = ?", [$idproducto]);
+            if (!$producto) {
                 throw new Exception("El producto con ID " . $idproducto . " no existe en el detalle #" . ($index + 1));
+            }
+            if (strtolower($producto['estatus']) !== 'activo') {
+                throw new Exception("El producto '{$producto['nombre']}' no está activo (detalle #" . ($index + 1) . ")");
             }
 
             // Validar otros campos requeridos
@@ -677,8 +680,8 @@ private function registrarMovimientosInventario($db, $idventa, array $detalles) 
             $idproducto = intval($detalle['idproducto']);
             $cantidad = floatval($detalle['cantidad']);
             
-            // Obtener stock actual
-            $this->setQuery("SELECT COALESCE(existencia, 0) as stock FROM producto WHERE idproducto = ?");
+            // Obtener stock actual y nombre del producto
+            $this->setQuery("SELECT COALESCE(existencia, 0) as stock, nombre FROM producto WHERE idproducto = ?");
             $this->setArray([$idproducto]);
             $stmtStock = $db->prepare($this->getQuery());
             $stmtStock->execute($this->getArray());
@@ -688,7 +691,8 @@ private function registrarMovimientosInventario($db, $idventa, array $detalles) 
             
             // Validar stock suficiente
             if ($stockResultante < 0) {
-                throw new Exception("Stock insuficiente para producto ID: $idproducto");
+                $nombreProducto = $producto['nombre'] ?? 'Producto desconocido';
+                throw new Exception("Stock insuficiente para el producto: $nombreProducto");
             }
             
             // Preparar datos para MovimientosModel usando sus setters

@@ -568,6 +568,8 @@ document.addEventListener("DOMContentLoaded", function () {
       actualizarEventosDetalle();
       calcularTotalesGenerales();
       selectProductoEl.value = "";
+      // Recargar productos para limpiar manipulaciones después de cada operación
+      cargarProductosSelect();
     });
   }
 
@@ -600,6 +602,8 @@ document.addEventListener("DOMContentLoaded", function () {
           if (detalleVentaBody.rows.length === 0 && noDetallesMsg) {
             noDetallesMsg.classList.remove("hidden");
           }
+        
+          cargarProductosSelect();
         };
       });
   }
@@ -695,6 +699,26 @@ document.addEventListener("DOMContentLoaded", function () {
         placeholder: "Seleccione producto...",
         onLoaded: (prods) => {
           listaProductosCargadosSelect = prods || [];
+          // Validación en tiempo real para prevenir manipulación
+          const selectProducto = document.getElementById("select_producto_agregar_modal");
+          if (selectProducto) {
+            selectProducto.addEventListener("change", function () {
+              const idSeleccionado = this.value;
+              const productoValido = listaProductosCargadosSelect.find(
+                (p) => String(p.idproducto || p.id) === String(idSeleccionado)
+              );
+              if (idSeleccionado && !productoValido) {
+                Swal.fire({
+                  title: "Producto inválido",
+                  text: "El producto seleccionado no existe.",
+                  icon: "error"
+                });
+                // Recargar productos para limpiar manipulaciones
+                cargarProductosSelect();
+                this.value = "";
+              }
+            });
+          }
         },
       });
 
@@ -845,14 +869,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
         console.log('Calculando tasa_usada - Moneda de venta:', codigoMonedaVenta);
 
-        // Si la venta es en VES, guardar la tasa del USD (moneda de referencia)
-        // Si la venta es en moneda extranjera, guardar la tasa de esa moneda
+
         if (codigoMonedaVenta === 'VES') {
-          // Para ventas en VES, guardar la tasa del USD como referencia
           datosVentaFinal.tasa_usada = await obtenerTasaMoneda('USD', datosVentaFinal.fecha_venta);
           console.log('Venta en VES - Guardando tasa USD:', datosVentaFinal.tasa_usada);
         } else {
-          // Para ventas en moneda extranjera, guardar su tasa
           datosVentaFinal.tasa_usada = await obtenerTasaMoneda(codigoMonedaVenta, datosVentaFinal.fecha_venta);
           console.log('Venta en', codigoMonedaVenta, '- Guardando tasa:', datosVentaFinal.tasa_usada);
         }
