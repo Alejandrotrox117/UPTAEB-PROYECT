@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use App\Core\Conexion;
+use App\Models\MovimientosModel;
 use PDO;
 use PDOException;
 use Exception;
@@ -25,7 +26,7 @@ class VentasModel
 
     public function __construct()
     {
-        // parent::__construct(); // Ya no es necesario
+        
     }
 
     // Getters y Setters
@@ -241,111 +242,119 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
 }
 
     private function ejecutarInsercionVenta(array $data, array $detalles, array $datosClienteNuevo = null)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
+{
+    $conexion = new Conexion();
+    $conexion->connect();
+    $db = $conexion->get_conectGeneral();
 
-        try {
-            $db->beginTransaction();
+    try {
+        $db->beginTransaction();
 
-            $idCliente = $data['idcliente'];
+        $idCliente = $data['idcliente'];
 
-            // Crear cliente nuevo si es necesario
-            if (!$idCliente && $datosClienteNuevo) {
-                $idCliente = $this->crearClienteNuevo($db, $datosClienteNuevo);
-                if (!$idCliente) {
-                    throw new Exception("No se pudo crear el cliente nuevo");
-                }
-            }
-
-            // Validar que se tenga un cliente válido
+        // Crear cliente nuevo si es necesario
+        if (!$idCliente && $datosClienteNuevo) {
+            $idCliente = $this->crearClienteNuevo($db, $datosClienteNuevo);
             if (!$idCliente) {
-                throw new Exception("Cliente no existe");
+                throw new Exception("No se pudo crear el cliente nuevo");
             }
-
-            $stmt = $db->prepare("SELECT estatus FROM cliente WHERE idcliente = ?");
-            $stmt->execute([$idCliente]);
-            $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (!$cliente || strtolower($cliente['estatus']) !== 'activo') {
-                throw new Exception($cliente ? "Cliente inactivo" : "Cliente no existe");
-            }
-
-            $stmt = $db->prepare("SELECT COUNT(*) as count FROM monedas WHERE idmoneda = ?");
-            $stmt->execute([$data['idmoneda_general']]);
-            if ($stmt->fetchColumn() == 0) {
-                throw new Exception("Moneda no existe");
-            }
-
-            if (floatval($data['monto_descuento_general']) > floatval($data['subtotal_general'])) {
-                throw new Exception("Descuento mayor al subtotal");
-            }
-
-            // Generar número de venta
-            $nro_venta = $this->generarNumeroVenta();
-            if (!$nro_venta) {
-                throw new Exception('No se pudo generar el número de venta');
-            }
-
-            // Insertar venta
-            $this->setQuery(
-                "INSERT INTO venta 
-                (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, 
-                 monto_descuento_general, estatus, total_general, balance, observaciones, tasa, fecha_creacion, ultima_modificacion)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
-            );
-
-            $this->setArray([
-                $nro_venta,
-                $idCliente,
-                $data['fecha_venta'],
-                $data['idmoneda_general'],
-                $data['subtotal_general'],
-                $data['descuento_porcentaje_general'],
-                $data['monto_descuento_general'],
-                $data['estatus'],
-                $data['total_general'],
-                $data['total_general'], // balance inicial igual al total
-                $data['observaciones'] ?? '',
-                $data['tasa_usada'] ?? 1
-            ]);
-
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $idventa = $db->lastInsertId();
-
-            if (!$idventa) {
-                throw new Exception("No se pudo crear la venta");
-            }
-
-            // Insertar detalles
-            $this->insertarDetallesVenta($db, $idventa, $detalles, $data['idmoneda_general']);
-
-            $db->commit();
-
-            $this->setStatus(true);
-            $this->setMessage('Venta registrada exitosamente');
-            $this->setVentaId($idventa);
-
-            return [
-                'success' => true,
-                'message' => $this->getMessage(),
-                'idventa' => $this->getVentaId(),
-                'idcliente' => $idCliente,
-                'nro_venta' => $nro_venta
-            ];
-        } catch (Exception $e) {
-            $db->rollBack();
-            error_log("VentasModel::ejecutarInsercionVenta - Error: " . $e->getMessage());
-
-            return [
-                'success' => false,
-                'message' => 'Error al registrar venta: ' . $e->getMessage()
-            ];
-        } finally {
-            $conexion->disconnect();
         }
+
+        // Validar que se tenga un cliente válido
+        if (!$idCliente) {
+            throw new Exception("Cliente no existe");
+        }
+
+        $this->setQuery("SELECT estatus FROM cliente WHERE idcliente = ?");
+        $this->setArray([$idCliente]);
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$cliente || strtolower($cliente['estatus']) !== 'activo') {
+            throw new Exception($cliente ? "Cliente inactivo" : "Cliente no existe");
+        }
+
+        $this->setQuery("SELECT COUNT(*) as count FROM monedas WHERE idmoneda = ?");
+        $this->setArray([$data['idmoneda_general']]);
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        if ($stmt->fetchColumn() == 0) {
+            throw new Exception("Moneda no existe");
+        }
+
+        if (floatval($data['monto_descuento_general']) > floatval($data['subtotal_general'])) {
+            throw new Exception("Descuento mayor al subtotal");
+        }
+
+        // Generar número de venta
+        $nro_venta = $this->generarNumeroVenta();
+        if (!$nro_venta) {
+            throw new Exception('No se pudo generar el número de venta');
+        }
+
+        // Insertar venta
+        $this->setQuery(
+            "INSERT INTO venta 
+            (nro_venta, idcliente, fecha_venta, idmoneda, subtotal_general, descuento_porcentaje_general, 
+             monto_descuento_general, estatus, total_general, balance, observaciones, tasa, fecha_creacion, ultima_modificacion)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+        );
+
+        $this->setArray([
+            $nro_venta,
+            $idCliente,
+            $data['fecha_venta'],
+            $data['idmoneda_general'],
+            $data['subtotal_general'],
+            $data['descuento_porcentaje_general'],
+            $data['monto_descuento_general'],
+            $data['estatus'],
+            $data['total_general'],
+            $data['total_general'], // balance inicial igual al total
+            $data['observaciones'] ?? '',
+            $data['tasa_usada'] ?? 1
+        ]);
+
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        $idventa = $db->lastInsertId();
+
+        if (!$idventa) {
+            throw new Exception("No se pudo crear la venta");
+        }
+
+        // Insertar detalles
+        $this->insertarDetallesVenta($db, $idventa, $detalles, $data['idmoneda_general']);
+
+        // *** REGISTRAR MOVIMIENTOS DE INVENTARIO ***
+        $this->registrarMovimientosInventario($db, $idventa, $detalles);
+
+        $db->commit();
+
+        $this->setStatus(true);
+        $this->setMessage('Venta registrada exitosamente');
+        $this->setVentaId($idventa);
+
+        return [
+            'success' => true,
+            'message' => $this->getMessage(),
+            'idventa' => $this->getVentaId(),
+            'idcliente' => $idCliente,
+            'nro_venta' => $nro_venta
+        ];
+    } catch (Exception $e) {
+        $db->rollBack();
+        error_log("VentasModel::ejecutarInsercionVenta - Error: " . $e->getMessage());
+
+        return [
+            'success' => false,
+            'message' => 'Error al registrar venta: ' . $e->getMessage()
+        ];
+    } finally {
+        $conexion->disconnect();
     }
+}
+
 
     private function ejecutarBusquedaVentaPorId(int $idventa)
     {
@@ -592,10 +601,13 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
                 throw new Exception("El producto en el detalle #" . ($index + 1) . " tiene un ID inválido: " . $detalle['idproducto']);
             }
 
-            // Validar que el producto existe
-            $productoExiste = $this->search("SELECT COUNT(*) as count FROM producto WHERE idproducto = ?", [$idproducto]);
-            if (!$productoExiste || $productoExiste['count'] == 0) {
+            // Validar que el producto existe y está activo
+            $producto = $this->search("SELECT nombre, estatus FROM producto WHERE idproducto = ?", [$idproducto]);
+            if (!$producto) {
                 throw new Exception("El producto con ID " . $idproducto . " no existe en el detalle #" . ($index + 1));
+            }
+            if (strtolower($producto['estatus']) !== 'activo') {
+                throw new Exception("El producto '{$producto['nombre']}' no está activo (detalle #" . ($index + 1) . ")");
             }
 
             // Validar otros campos requeridos
@@ -639,6 +651,138 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
             return false;
         }
     }
+
+    /**
+ * Registra movimientos de inventario usando MovimientosModel
+ */
+private function registrarMovimientosInventario($db, $idventa, array $detalles) {
+    try {
+        // Instanciar el modelo de movimientos
+        $movimientosModel = new MovimientosModel();
+        
+        // Obtener tipo de movimiento para ventas
+        $this->setQuery("SELECT idtipomovimiento FROM tipo_movimiento WHERE nombre = 'Venta' LIMIT 1");
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute();
+        $tipoMovimiento = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$tipoMovimiento) {
+            $this->setQuery("INSERT INTO tipo_movimiento (nombre, descripcion, estatus) VALUES ('Venta', 'Salida por venta', 'activo')");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute();
+            $idtipomovimiento = $db->lastInsertId();
+        } else {
+            $idtipomovimiento = $tipoMovimiento['idtipomovimiento'];
+        }
+
+        // Registrar movimiento por cada producto vendido
+        foreach ($detalles as $detalle) {
+            $idproducto = intval($detalle['idproducto']);
+            $cantidad = floatval($detalle['cantidad']);
+            
+            // Obtener stock actual y nombre del producto
+            $this->setQuery("SELECT COALESCE(existencia, 0) as stock, nombre FROM producto WHERE idproducto = ?");
+            $this->setArray([$idproducto]);
+            $stmtStock = $db->prepare($this->getQuery());
+            $stmtStock->execute($this->getArray());
+            $producto = $stmtStock->fetch(PDO::FETCH_ASSOC);
+            $stockAnterior = floatval($producto['stock']);
+            $stockResultante = $stockAnterior - $cantidad;
+            
+            // Validar stock suficiente
+            if ($stockResultante < 0) {
+                $nombreProducto = $producto['nombre'] ?? 'Producto desconocido';
+                throw new Exception("Stock insuficiente para el producto: $nombreProducto");
+            }
+            
+            // Preparar datos para MovimientosModel usando sus setters
+            $movimientosModel->setIdproducto($idproducto);
+            $movimientosModel->setIdtipomovimiento($idtipomovimiento);
+            $movimientosModel->setIdventa($idventa);
+            $movimientosModel->setIdcompra(null);
+            $movimientosModel->setIdproduccion(null);
+            $movimientosModel->setCantidadEntrada(0);
+            $movimientosModel->setCantidadSalida($cantidad);
+            $movimientosModel->setStockAnterior($stockAnterior);
+            $movimientosModel->setStockResultante($stockResultante);
+            $movimientosModel->setObservaciones('Salida por venta');
+            
+            // Generar número de movimiento
+            $numeroMovimiento = $this->generarNumeroMovimientoVenta($db);
+            
+            // Insertar usando el modelo (con validación incluida)
+            $this->setQuery("
+                INSERT INTO movimientos_existencia 
+                (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
+                cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, 
+                total, observaciones, estatus)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')
+            ");
+            
+            $this->setArray([
+                $numeroMovimiento,
+                $movimientosModel->getIdproducto(),
+                $movimientosModel->getIdtipomovimiento(),
+                $movimientosModel->getIdcompra(),
+                $movimientosModel->getIdventa(),
+                $movimientosModel->getIdproduccion(),
+                $movimientosModel->getCantidadEntrada(),
+                $movimientosModel->getCantidadSalida(),
+                $movimientosModel->getStockAnterior(),
+                $movimientosModel->getStockResultante(),
+                $movimientosModel->getStockResultante(),
+                $movimientosModel->getObservaciones()
+            ]);
+            
+            $stmtMovimiento = $db->prepare($this->getQuery());
+            $stmtMovimiento->execute($this->getArray());
+            
+            // Actualizar existencia en producto
+            $this->setQuery("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
+            $this->setArray([$movimientosModel->getStockResultante(), $movimientosModel->getIdproducto()]);
+            $stmtUpdate = $db->prepare($this->getQuery());
+            $stmtUpdate->execute($this->getArray());
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("VentasModel::registrarMovimientosInventario - Error: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+private function generarNumeroMovimientoVenta($db) {
+    $prefijo = 'MOV-VENTA-';
+    $fecha = date('Ymd');
+    
+    try {
+        $this->setQuery("
+            SELECT numero_movimiento 
+            FROM movimientos_existencia 
+            WHERE numero_movimiento LIKE ? 
+            ORDER BY idmovimiento DESC LIMIT 1
+        ");
+        $this->setArray([$prefijo . $fecha . '-%']);
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        $ultimo = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($ultimo) {
+            $partes = explode('-', $ultimo['numero_movimiento']);
+            $consecutivo = intval(end($partes)) + 1;
+        } else {
+            $consecutivo = 1;
+        }
+        
+        return $prefijo . $fecha . '-' . str_pad($consecutivo, 4, '0', STR_PAD_LEFT);
+    } catch (Exception $e) {
+        return $prefijo . $fecha . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+    }
+}
+
+
+
+
 
     public function getVentasDatatable(int $idUsuarioSesion = 0){
         return $this->ejecutarBusquedaTodasVentas($idUsuarioSesion);

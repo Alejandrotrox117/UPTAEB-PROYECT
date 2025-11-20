@@ -113,7 +113,7 @@
         <h3 class="text-lg font-semibold text-gray-900">Módulos y Permisos Específicos</h3>
       </div>
       <p class="text-sm text-gray-600 mb-6">
-        Para cada módulo, selecciona los permisos específicos que tendrá el rol
+        Para cada módulo, selecciona un único permiso específico que tendrá el rol
       </p>
       
       <div id="listaModulosPermisos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

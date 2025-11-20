@@ -8,39 +8,39 @@ const expresiones = {
   email: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
   fecha: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
   fechaNacimiento: /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
-  cedula: /^(V|E|J)?-?\d{8}$/i,
+  cedula: /^(V|E|J)-\d{7,9}$/i,
   password: /^.{6,16}$/,
   textoGeneral: /^.{2,100}$/,
   genero: /^(MASCULINO|FEMENINO|OTRO)$/,
   usuario: /^[a-zA-Z0-9_.-]{3,15}$/,
-  
-  precio: /^\d+(\.\d{1,4})?$/,                    
-  cantidad: /^\d+(\.\d{1,3})?$/,                  
-  porcentajeDescuento: /^(0|[1-9]\d?|100)(\.\d{1,2})?$/, 
-  subtotal: /^\d+(\.\d{1,2})?$/,                  
-  total: /^\d+(\.\d{1,2})?$/,                     
-  peso: /^\d+(\.\d{1,3})?$/,                      
-  tasa: /^\d+(\.\d{1,4})?$/,                      
-  montoDescuento: /^\d+(\.\d{1,2})?$/,            
-  
-  
-  cantidadMinima: /^([1-9]\d*(\.\d{1,3})?|0\.[0-9]{1,3})$/, 
-  precioMinimo: /^([1-9]\d*(\.\d{1,4})?|0\.[0-9]{1,4})$/,   
-  
-  
-  codigoMoneda: /^[A-Z]{3}$/,                     
-  
-  
-  numeroVenta: /^VT\d{6}$/,                       
-  
-  
-  decimal2: /^\d+(\.\d{1,2})?$/,                  
-  decimal3: /^\d+(\.\d{1,3})?$/,                  
-  decimal4: /^\d+(\.\d{1,4})?$/,                  
-  
-  
-  enteroPositivo: /^[1-9]\d*$/,                   
-  enteroNoNegativo: /^(0|[1-9]\d*)$/              
+
+  precio: /^\d+(\.\d{1,4})?$/,
+  cantidad: /^\d+(\.\d{1,3})?$/,
+  porcentajeDescuento: /^(0|[1-9]\d?|100)(\.\d{1,2})?$/,
+  subtotal: /^\d+(\.\d{1,2})?$/,
+  total: /^\d+(\.\d{1,2})?$/,
+  peso: /^\d+(\.\d{1,3})?$/,
+  tasa: /^\d+(\.\d{1,4})?$/,
+  montoDescuento: /^\d+(\.\d{1,2})?$/,
+
+
+  cantidadMinima: /^([1-9]\d*(\.\d{1,3})?|0\.[0-9]{1,3})$/,
+  precioMinimo: /^([1-9]\d*(\.\d{1,4})?|0\.[0-9]{1,4})$/,
+
+
+  codigoMoneda: /^[A-Z]{3}$/,
+
+
+  numeroVenta: /^VT\d{6}$/,
+
+
+  decimal2: /^\d+(\.\d{1,2})?$/,
+  decimal3: /^\d+(\.\d{1,3})?$/,
+  decimal4: /^\d+(\.\d{1,4})?$/,
+
+
+  enteroPositivo: /^[1-9]\d*$/,
+  enteroNoNegativo: /^(0|[1-9]\d*)$/
 };
 
 
@@ -53,7 +53,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
   const valor = parseFloat(input.value.trim());
   const valorTexto = input.value.trim();
 
-  
+
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -61,7 +61,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  
+
   if (valorTexto === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -75,7 +75,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
     return true;
   }
 
-  
+
   const regex = expresiones[tipo];
   if (regex && !regex.test(valorTexto)) {
     if (mensajes.formato) {
@@ -89,7 +89,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
     }
   }
 
-  
+
   switch (tipo) {
     case 'precio':
     case 'precioMinimo':
@@ -164,7 +164,7 @@ function validarCampoNumerico(input, tipo, mensajes) {
       break;
   }
 
-  
+
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -184,7 +184,7 @@ function validarRango(input, min, max, mensajes) {
   const errorDiv = input.nextElementSibling;
 
   if (isNaN(valor)) {
-    return true; 
+    return true;
   }
 
   if (valor < min || valor > max) {
@@ -206,7 +206,7 @@ function validarRango(input, min, max, mensajes) {
 function validarCampo(input, regex, mensajes = {}, esOpcional = false) {
   // Si no hay input o no está visible, retornar verdadero
   if (!input || input.offsetParent === null) {
-    return true; 
+    return true;
   }
 
   const errorDiv = input.nextElementSibling;
@@ -226,7 +226,7 @@ function validarCampo(input, regex, mensajes = {}, esOpcional = false) {
     if (esOpcional) {
       return true;
     }
-    
+
     if (mensajes.vacio) {
       if (errorDiv) {
         errorDiv.textContent = mensajes.vacio;
@@ -263,7 +263,7 @@ function validarCampo(input, regex, mensajes = {}, esOpcional = false) {
 
 function validarSelect(select, mensajes, formId = null) {
   let input = select;
-  
+
   if (formId && typeof select === "string") {
     const form = document.getElementById(formId);
     input = form ? form.querySelector(`#${select}`) : null;
@@ -278,7 +278,7 @@ function validarSelect(select, mensajes, formId = null) {
   const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
-  
+
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -286,7 +286,7 @@ function validarSelect(select, mensajes, formId = null) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  
+
   if (valor === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -299,7 +299,7 @@ function validarSelect(select, mensajes, formId = null) {
     }
   }
 
-  
+
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -312,7 +312,7 @@ function validarFecha(input, mensajes) {
   const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
-  
+
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -320,7 +320,7 @@ function validarFecha(input, mensajes) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  
+
   if (valor === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -331,10 +331,10 @@ function validarFecha(input, mensajes) {
       input.classList.remove("border-gray-300", "focus:ring-green-400");
       return false;
     }
-    return true; 
+    return true;
   }
 
-  
+
   const fechaSeleccionada = new Date(valor);
   if (isNaN(fechaSeleccionada.getTime())) {
     if (mensajes.formato || mensajes.fechaInvalida) {
@@ -348,15 +348,15 @@ function validarFecha(input, mensajes) {
     }
   }
 
-  
-  const fechaHoy = new Date();
-  fechaHoy.setHours(23, 59, 59, 999); 
-  
-  const fechaAyer = new Date();
-  fechaAyer.setDate(fechaAyer.getDate() - 1); 
-  fechaAyer.setHours(0, 0, 0, 0); 
 
-  
+  const fechaHoy = new Date();
+  fechaHoy.setHours(23, 59, 59, 999);
+
+  const fechaAyer = new Date();
+  fechaAyer.setDate(fechaAyer.getDate() - 1);
+  fechaAyer.setHours(0, 0, 0, 0);
+
+
   if (fechaSeleccionada < fechaAyer || fechaSeleccionada > fechaHoy) {
     if (mensajes.fechaPosterior) {
       if (errorDiv) {
@@ -369,7 +369,7 @@ function validarFecha(input, mensajes) {
     }
   }
 
-  
+
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -383,7 +383,7 @@ export function validarFechaNacimiento(input, mensajes) {
   const errorDiv = input.nextElementSibling;
   const valor = input.value.trim();
 
-  
+
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -391,7 +391,7 @@ export function validarFechaNacimiento(input, mensajes) {
   input.classList.remove("border-red-500", "focus:ring-red-500");
   input.classList.add("border-gray-300", "focus:ring-green-400");
 
-  
+
   if (valor === "") {
     if (mensajes.vacio) {
       if (errorDiv) {
@@ -402,10 +402,10 @@ export function validarFechaNacimiento(input, mensajes) {
       input.classList.remove("border-gray-300", "focus:ring-green-400");
       return false;
     }
-    return true; 
+    return true;
   }
 
-  
+
   const fechaSeleccionada = new Date(valor);
   if (isNaN(fechaSeleccionada.getTime())) {
     if (mensajes.formato || mensajes.fechaInvalida) {
@@ -419,9 +419,9 @@ export function validarFechaNacimiento(input, mensajes) {
     }
   }
 
-  
+
   const fechaHoy = new Date();
-  fechaHoy.setHours(23, 59, 59, 999); 
+  fechaHoy.setHours(23, 59, 59, 999);
 
   if (fechaSeleccionada > fechaHoy) {
     if (mensajes.fechaPosterior) {
@@ -435,10 +435,10 @@ export function validarFechaNacimiento(input, mensajes) {
     }
   }
 
-  
+
   const fechaMinima = new Date();
   fechaMinima.setFullYear(fechaMinima.getFullYear() - 120);
-  
+
   if (fechaSeleccionada < fechaMinima) {
     if (mensajes.fechaMuyAntigua) {
       if (errorDiv) {
@@ -451,7 +451,7 @@ export function validarFechaNacimiento(input, mensajes) {
     }
   }
 
-  
+
   if (errorDiv) {
     errorDiv.textContent = "";
     errorDiv.classList.add("hidden");
@@ -471,7 +471,7 @@ const inicializarValidaciones = (campos, formId = null) => {
       input = document.getElementById(campo.id);
     }
     if (input) {
-      
+
       if (campo.tipo === "fecha") {
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
@@ -489,7 +489,7 @@ const inicializarValidaciones = (campos, formId = null) => {
           }
         });
       } else if (campo.tipo === "fechaNacimiento") {
-        
+
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
             validarFechaNacimiento(input, campo.mensajes);
@@ -511,7 +511,7 @@ const inicializarValidaciones = (campos, formId = null) => {
           }
         });
       } else if (campo.tipoNumerico) {
-        
+
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
             validarCampoNumerico(input, campo.tipoNumerico, campo.mensajes);
@@ -529,7 +529,7 @@ const inicializarValidaciones = (campos, formId = null) => {
           }
         });
       } else {
-        
+
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
             validarCampo(input, campo.regex, campo.mensajes, campo.opcional || false);
@@ -565,12 +565,12 @@ export function validarCamposVacios(campos, formId = null) {
 
     // Si el input no existe o no está visible, continuar
     if (!input || input.offsetParent === null) {
-      continue; 
+      continue;
     }
 
     let valor = input.value.trim();
     let nombreCampo = campo.id;
-    
+
     const label = document.querySelector(`label[for="${campo.id}"]`);
     if (label) {
       nombreCampo = label.textContent.replace(/[*:]/g, "").trim();
@@ -585,7 +585,7 @@ export function validarCamposVacios(campos, formId = null) {
       });
       formularioValido = false;
       input.classList.add("border-red-500");
-      break; 
+      break;
     } else {
       input.classList.remove("border-red-500");
     }
@@ -644,13 +644,13 @@ export function validarDetalleVenta() {
 
 
 
-export function registrarEntidad({ 
-  formId, 
-  endpoint, 
-  campos, 
+export function registrarEntidad({
+  formId,
+  endpoint,
+  campos,
   mapeoNombres = {},
-  onSuccess, 
-  onError 
+  onSuccess,
+  onError
 }) {
   const form = document.getElementById(formId);
   if (!form) {
@@ -658,12 +658,12 @@ export function registrarEntidad({
     return Promise.reject("Formulario no encontrado");
   }
 
-  
+
   if (!validarCamposVacios(campos, formId)) {
     return Promise.reject("Validación de campos vacíos falló");
   }
 
-  
+
   let formularioConErrores = false;
   for (const campo of campos) {
     const inputElement = form.querySelector(`#${campo.id}`);
@@ -675,12 +675,12 @@ export function registrarEntidad({
         esValido = validarSelect(campo.id, campo.mensajes, formId);
       }
     } else if (campo.tipo === "fecha") {
-      
+
       if (inputElement.value.trim() !== "" || campo.mensajes?.vacio) {
         esValido = validarFecha(inputElement, campo.mensajes);
       }
     } else if (campo.tipo === "fechaNacimiento") {
-      
+
       if (inputElement.value.trim() !== "" || campo.mensajes?.vacio) {
         esValido = validarFechaNacimiento(inputElement, campo.mensajes);
       }
@@ -697,17 +697,17 @@ export function registrarEntidad({
     return Promise.reject("Errores de validación");
   }
 
-  
+
   const formData = new FormData(form);
   const dataParaEnviar = {};
-  
-  
+
+
   for (let [key, value] of formData.entries()) {
     const nombreFinal = mapeoNombres[key] || key;
     dataParaEnviar[nombreFinal] = value || "";
   }
 
-  
+
   return fetch(endpoint, {
     method: "POST",
     headers: {
@@ -716,41 +716,41 @@ export function registrarEntidad({
     },
     body: JSON.stringify(dataParaEnviar),
   })
-  .then((response) => {
-    if (!response.ok) {
-      return response.json().then((errData) => {
-        throw { status: response.status, data: errData };
-      });
-    }
-    return response.json();
-  })
-  .then((result) => {
-    if (result.status) {
-      if (onSuccess) onSuccess(result);
-    } else {
-      if (onError) onError(result);
-    }
-    return result;
-  })
-  .catch((error) => {
-    console.error("Error en fetch:", error);
-    let errorMessage = "Ocurrió un error de conexión.";
-    if (error.data?.message) {
-      errorMessage = error.data.message;
-    } else if (error.status) {
-      errorMessage = `Error del servidor: ${error.status}.`;
-    }
-    
-    if (onError) {
-      onError({ message: errorMessage });
-    } else {
-      Swal.fire("Error", errorMessage, "error");
-    }
-    throw error;
-  });
+    .then((response) => {
+      if (!response.ok) {
+        return response.json().then((errData) => {
+          throw { status: response.status, data: errData };
+        });
+      }
+      return response.json();
+    })
+    .then((result) => {
+      if (result.status) {
+        if (onSuccess) onSuccess(result);
+      } else {
+        if (onError) onError(result);
+      }
+      return result;
+    })
+    .catch((error) => {
+      console.error("Error en fetch:", error);
+      let errorMessage = "Ocurrió un error de conexión.";
+      if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.status) {
+        errorMessage = `Error del servidor: ${error.status}.`;
+      }
+
+      if (onError) {
+        onError({ message: errorMessage });
+      } else {
+        Swal.fire("Error", errorMessage, "error");
+      }
+      throw error;
+    });
 }
 
-export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, placeholder = "Seleccione...", onLoaded = null}) {
+export function cargarSelect({ selectId, endpoint, optionTextFn, optionValueFn, placeholder = "Seleccione...", onLoaded = null }) {
   const select = document.getElementById(selectId);
   if (!select) return;
 
@@ -759,7 +759,7 @@ export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, p
   fetch(endpoint)
     .then(response => response.json())
     .then(items => {
-      
+
       if (items && typeof items === "object" && Array.isArray(items.data)) {
         items = items.data;
       }
@@ -781,12 +781,12 @@ export function cargarSelect({selectId, endpoint, optionTextFn, optionValueFn, p
 
 
 
-export { 
-  expresiones, 
-  validarCampo, 
-  validarCampoNumerico, 
-  validarRango, 
-  inicializarValidaciones, 
-  validarFecha, 
-  validarSelect 
+export {
+  expresiones,
+  validarCampo,
+  validarCampoNumerico,
+  validarRango,
+  inicializarValidaciones,
+  validarFecha,
+  validarSelect
 };

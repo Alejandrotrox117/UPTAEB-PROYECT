@@ -307,11 +307,13 @@ class Backup extends Controllers
                     die();
                 }
 
-                $rutaCompleta = realpath(dirname(__FILE__) . '/../../config/backups/') . '/' . $nombreArchivo;
+                $rutaDirectorio = dirname(__FILE__) . '/../../config/backups/';
+                $rutaCompleta = $rutaDirectorio . $nombreArchivo;
                 
+             
                 if (!file_exists($rutaCompleta)) {
                     http_response_code(404);
-                    echo "Archivo no encontrado";
+                    echo "Archivo no encontrado: " . $rutaCompleta;
                     die();
                 }
 

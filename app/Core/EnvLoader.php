@@ -168,11 +168,12 @@ class EnvLoader
  * @param mixed $default
  * @return mixed
  */
-function env($key, $default = null)
-{
-    return EnvLoader::env($key, $default);
+if (!function_exists('env')) {
+    function env($key, $default = null)
+    {
+        return EnvLoader::env($key, $default);
+    }
 }
-
 // Cargar automáticamente las variables de entorno
 try {
     EnvLoader::load();

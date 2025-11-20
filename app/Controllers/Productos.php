@@ -7,6 +7,7 @@ use App\Models\BitacoraModel;
 use App\Models\NotificacionesModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
+use App\Helpers\ExpresionesRegulares;
 
 class Productos extends Controllers
 {
