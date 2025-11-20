@@ -749,11 +749,12 @@ class DashboardModel extends Mysql
             $rotacion_inventario = $inventario['dias_promedio'] ?? 0;
             
             // Productividad general (kg/día del mes)
-            $stmt = $db->prepare("SELECT COALESCE(SUM(cantidad_producida) / DAY(LAST_DAY(CURDATE())), 0) as kg_por_dia
-                FROM lotes_produccion 
-                WHERE MONTH(fecha_inicio) = MONTH(CURDATE()) 
-                AND YEAR(fecha_inicio) = YEAR(CURDATE())
-                AND estatus_lote = 'FINALIZADO'");
+            $stmt = $db->prepare("SELECT COALESCE(SUM(rp.cantidad_producida) / DAY(LAST_DAY(CURDATE())), 0) as kg_por_dia
+                FROM registro_produccion rp
+                INNER JOIN lotes_produccion lp ON rp.idlote = lp.idlote
+                WHERE MONTH(lp.fecha_jornada) = MONTH(CURDATE()) 
+                AND YEAR(lp.fecha_jornada) = YEAR(CURDATE())
+                AND lp.estatus_lote = 'FINALIZADO'");
             $stmt->execute();
             $produccion = $stmt->fetch(PDO::FETCH_ASSOC);
             $productividad_general = $produccion['kg_por_dia'] ?? 0;
