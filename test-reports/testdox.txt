@@ -1,5 +1,4 @@
-Roles Integrado
- [ ] Guardar y recuperar asignaciones
- [x] Guardar asignaciones con rol invalido
- [x] Guardar asignaciones con modulo invalido
+Venta Flow Integration
+ [x] Flujo completo venta con pagos
+ [x] Venta con descuento multiples productos
 

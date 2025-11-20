@@ -481,6 +481,86 @@ class ProduccionModel extends Mysql
         }
     }
 
+
+    private function generarNumeroMovimiento(int $idregistro): string
+    {
+        $fecha = date('Ymd-His');
+        return "MOV-PROD-{$fecha}-{$idregistro}";
+    }
+
+
+    private function registrarMovimientosProduccion($db, array $registro): bool
+    {
+        try {
+            $idregistro = $registro['idregistro'];
+            $idproductoProducir = $registro['idproducto_producir'];
+            $cantidadProducir = floatval($registro['cantidad_producir']);
+            $idproductoTerminado = $registro['idproducto_terminado'];
+            $cantidadProducida = floatval($registro['cantidad_producida']);
+            
+            // Obtener el stock actual del producto a producir
+            $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
+            $stmtStock = $db->prepare($queryStock);
+            
+            // Primer movimiento: SALIDA del producto a producir
+            $stmtStock->execute([$idproductoProducir]);
+            $stockAnteriorProducir = floatval($stmtStock->fetchColumn());
+            $stockResultanteProducir = $stockAnteriorProducir;
+            
+            $numeroMovimiento1 = $this->generarNumeroMovimiento($idregistro) . '-S';
+            $queryMovimientoSalida = "INSERT INTO movimientos_existencia 
+                (numero_movimiento, idproducto, idtipomovimiento, idproduccion, 
+                cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, 
+                observaciones, total, estatus) 
+                VALUES (?, ?, 5, ?, NULL, ?, ?, ?, ?, ?, 'activo')";
+            
+            $stmtMovimiento = $db->prepare($queryMovimientoSalida);
+            $observacion1 = "Consumo de material para producción - Lote: {$registro['idlote']}, Registro: {$idregistro}";
+            $stmtMovimiento->execute([
+                $numeroMovimiento1,
+                $idproductoProducir,
+                $idregistro,
+                $cantidadProducir,
+                $stockAnteriorProducir,
+                $stockResultanteProducir,
+                $observacion1,
+                $stockResultanteProducir
+            ]);
+            
+            // Segundo movimiento: ENTRADA del producto terminado
+            $stmtStock->execute([$idproductoTerminado]);
+            $stockAnteriorTerminado = floatval($stmtStock->fetchColumn());
+            $stockResultanteTerminado = $stockAnteriorTerminado;
+            
+            $numeroMovimiento2 = $this->generarNumeroMovimiento($idregistro) . '-E';
+            $queryMovimientoEntrada = "INSERT INTO movimientos_existencia 
+                (numero_movimiento, idproducto, idtipomovimiento, idproduccion, 
+                cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, 
+                observaciones, total, estatus) 
+                VALUES (?, ?, 5, ?, ?, NULL, ?, ?, ?, ?, 'activo')";
+            
+            $stmtMovimiento2 = $db->prepare($queryMovimientoEntrada);
+            $observacion2 = "Entrada de producto terminado - Lote: {$registro['idlote']}, Registro: {$idregistro}";
+            $stmtMovimiento2->execute([
+                $numeroMovimiento2,
+                $idproductoTerminado,
+                $idregistro,
+                $cantidadProducida,
+                $stockAnteriorTerminado,
+                $stockResultanteTerminado,
+                $observacion2,
+                $stockResultanteTerminado
+            ]);
+            
+            error_log("Movimientos registrados para registro {$idregistro}: {$numeroMovimiento1}, {$numeroMovimiento2}");
+            return true;
+            
+        } catch (Exception $e) {
+            error_log("Error al registrar movimientos: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     private function ejecutarCierreLote(int $idlote)
     {
         $this->setIdLote($idlote);
@@ -515,6 +595,31 @@ class ProduccionModel extends Mysql
                 ];
             }
 
+            // Obtener todos los registros de producción del lote
+            $queryRegistros = "SELECT 
+                idregistro, 
+                idlote,
+                idproducto_producir, 
+                cantidad_producir,
+                idproducto_terminado, 
+                cantidad_producida
+            FROM registro_produccion 
+            WHERE idlote = ?";
+            
+            $stmtRegistros = $db->prepare($queryRegistros);
+            $stmtRegistros->execute([$this->getIdLote()]);
+            $registros = $stmtRegistros->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("[PRODUCCION] Cierre de lote {$this->getIdLote()}: " . count($registros) . " registros encontrados");
+            
+            // Generar movimientos para cada registro de producción
+            foreach ($registros as $registro) {
+                // Solo generar movimientos si hay cantidades válidas
+                if ($registro['cantidad_producir'] > 0 || $registro['cantidad_producida'] > 0) {
+                    $this->registrarMovimientosProduccion($db, $registro);
+                }
+            }
+
             $this->setEstatusLote('FINALIZADO');
             
             $query = "UPDATE lotes_produccion 
@@ -527,7 +632,7 @@ class ProduccionModel extends Mysql
             $db->commit();
 
             $this->setStatus(true);
-            $this->setMessage('Lote cerrado exitosamente.');
+            $this->setMessage('Lote cerrado exitosamente. Se generaron ' . count($registros) . ' movimientos de inventario.');
 
             return [
                 'status' => $this->getStatus(),
@@ -1130,6 +1235,15 @@ class ProduccionModel extends Mysql
 
             $idregistro = $db->lastInsertId();
             $this->setIdRegistro($idregistro);
+            
+            // Actualizar inventario: restar producto a producir, sumar producto terminado
+            $this->actualizarInventarioProductos($db, 
+                $this->getIdProductoProducir(), 
+                -$this->getCantidadProducir(), 
+                $this->getIdProductoTerminado(), 
+                $this->getCantidadProducida()
+            );
+            
             $db->commit();
 
             $this->setStatus(true);
@@ -1373,7 +1487,9 @@ class ProduccionModel extends Mysql
             error_log("ID Registro: " . $idregistro);
             
             // Verificar que el registro existe y su estado
-            $queryVerificar = "SELECT rp.idregistro, rp.estatus, rp.idlote 
+            $queryVerificar = "SELECT rp.*, rp.idregistro, rp.estatus, rp.idlote,
+                                      rp.idproducto_producir, rp.cantidad_producir,
+                                      rp.idproducto_terminado, rp.cantidad_producida
                               FROM registro_produccion rp
                               WHERE rp.idregistro = ?";
             $stmtVerificar = $db->prepare($queryVerificar);
@@ -1396,6 +1512,16 @@ class ProduccionModel extends Mysql
             }
             
             $db->beginTransaction();
+            
+            // PASO 1: Revertir las cantidades anteriores
+            // Sumar lo que se había restado (producto a producir)
+            // Restar lo que se había sumado (producto terminado)
+            $this->actualizarInventarioProductos($db,
+                intval($registro['idproducto_producir']),
+                floatval($registro['cantidad_producir']), // Sumar (revertir la resta anterior)
+                intval($registro['idproducto_terminado']),
+                -floatval($registro['cantidad_producida']) // Restar (revertir la suma anterior)
+            );
 
             // Obtener configuración para recalcular salarios
             $config = $this->obtenerConfiguracion($db);
@@ -1452,6 +1578,15 @@ class ProduccionModel extends Mysql
                 $data['observaciones'] ?? '',
                 $idregistro
             ]);
+            
+            // PASO 2: Aplicar las nuevas cantidades
+            // Restar nuevo producto a producir, sumar nuevo producto terminado
+            $this->actualizarInventarioProductos($db,
+                intval($data['idproducto_producir']),
+                -floatval($data['cantidad_producir']), // Restar
+                intval($data['idproducto_terminado']),
+                floatval($data['cantidad_producida']) // Sumar
+            );
 
             $db->commit();
             
@@ -1476,18 +1611,6 @@ class ProduccionModel extends Mysql
         }
     }
 
-    // ============================================================
-    // CONFIGURACIÓN DINÁMICA DE PRECIOS POR PROCESO/PRODUCTO
-    // Tabla sugerida: configuracion_produccion_precios
-    //  - idprecio (PK), tipo_proceso ('CLASIFICACION'|'EMPAQUE'), idproducto (FK)
-    //  - unidad_base ('KG'|'UNIDAD'), precio_unitario (DECIMAL), moneda (VARCHAR),
-    //  - vigente_desde (DATE), vigente_hasta (DATE NULL), estatus ('activo')
-    // ============================================================
-
-    /**
-     * Devuelve el precio unitario vigente para un par (tipo_proceso, idproducto).
-     * Si no encuentra un precio activo, retorna 0 (para que el caller aplique fallback).
-     */
     private function getPrecioProceso($db, string $tipo_proceso, int $idproducto): float
     {
         try {
@@ -1638,7 +1761,9 @@ class ProduccionModel extends Mysql
             error_log("ID Registro: " . $idregistro);
             
             // Verificar que el registro existe y su estado
-            $queryVerificar = "SELECT rp.idregistro, rp.estatus, rp.idlote 
+            $queryVerificar = "SELECT rp.*, rp.idregistro, rp.estatus, rp.idlote,
+                                      rp.idproducto_producir, rp.cantidad_producir,
+                                      rp.idproducto_terminado, rp.cantidad_producida
                               FROM registro_produccion rp
                               WHERE rp.idregistro = ?";
             $stmtVerificar = $db->prepare($queryVerificar);
@@ -1660,9 +1785,23 @@ class ProduccionModel extends Mysql
                 ];
             }
             
+            $db->beginTransaction();
+            
+            // Revertir las cantidades antes de eliminar
+            // Sumar lo que se había restado (producto a producir)
+            // Restar lo que se había sumado (producto terminado)
+            $this->actualizarInventarioProductos($db,
+                intval($registro['idproducto_producir']),
+                floatval($registro['cantidad_producir']), // Sumar (revertir la resta)
+                intval($registro['idproducto_terminado']),
+                -floatval($registro['cantidad_producida']) // Restar (revertir la suma)
+            );
+            
             $query = "DELETE FROM registro_produccion WHERE idregistro = ?";
             $stmt = $db->prepare($query);
             $stmt->execute([$idregistro]);
+            
+            $db->commit();
             
             error_log("Registro eliminado exitosamente");
 
@@ -1673,6 +1812,9 @@ class ProduccionModel extends Mysql
             ];
 
         } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             error_log("[PRODUCCION] Error al eliminar registro: " . $e->getMessage());
             error_log("[PRODUCCION] Stack trace: " . $e->getTraceAsString());
             return [
@@ -2118,6 +2260,58 @@ class ProduccionModel extends Mysql
     public function selectProductos(string $tipo = 'todos')
     {
         return $this->ejecutarConsultaProductos($tipo);
+    }
+
+    /**
+     * Actualiza las cantidades de productos en el inventario
+     * @param PDO $db Conexión a la base de datos (debe estar en transacción)
+     * @param int $idProductoProducir ID del producto a producir
+     * @param float $ajusteProducir Cantidad a ajustar (negativo para restar, positivo para sumar)
+     * @param int $idProductoTerminado ID del producto terminado
+     * @param float $ajusteTerminado Cantidad a ajustar (positivo para sumar, negativo para restar)
+     * @throws Exception Si el stock resultante es negativo
+     */
+    private function actualizarInventarioProductos($db, $idProductoProducir, $ajusteProducir, $idProductoTerminado, $ajusteTerminado)
+    {
+        try {
+            // Actualizar producto a producir
+            $queryStockProducir = "SELECT existencia FROM producto WHERE idproducto = ?";
+            $stmt = $db->prepare($queryStockProducir);
+            $stmt->execute([$idProductoProducir]);
+            $stockActualProducir = floatval($stmt->fetchColumn());
+            
+            $nuevoStockProducir = $stockActualProducir + $ajusteProducir;
+            
+            if ($nuevoStockProducir < 0) {
+                throw new Exception("Stock insuficiente del producto a producir. Disponible: {$stockActualProducir}, Ajuste: {$ajusteProducir}");
+            }
+            
+            $queryUpdateProducir = "UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?";
+            $stmt = $db->prepare($queryUpdateProducir);
+            $stmt->execute([$nuevoStockProducir, $idProductoProducir]);
+            
+            // Actualizar producto terminado
+            $queryStockTerminado = "SELECT existencia FROM producto WHERE idproducto = ?";
+            $stmt = $db->prepare($queryStockTerminado);
+            $stmt->execute([$idProductoTerminado]);
+            $stockActualTerminado = floatval($stmt->fetchColumn());
+            
+            $nuevoStockTerminado = $stockActualTerminado + $ajusteTerminado;
+            
+            if ($nuevoStockTerminado < 0) {
+                throw new Exception("Stock insuficiente del producto terminado. Disponible: {$stockActualTerminado}, Ajuste: {$ajusteTerminado}");
+            }
+            
+            $queryUpdateTerminado = "UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?";
+            $stmt = $db->prepare($queryUpdateTerminado);
+            $stmt->execute([$nuevoStockTerminado, $idProductoTerminado]);
+            
+            error_log("[PRODUCCION] Inventario actualizado - Producto a producir ID:{$idProductoProducir} ({$stockActualProducir} -> {$nuevoStockProducir}), Producto terminado ID:{$idProductoTerminado} ({$stockActualTerminado} -> {$nuevoStockTerminado})");
+            
+        } catch (Exception $e) {
+            error_log("[PRODUCCION] Error al actualizar inventario: " . $e->getMessage());
+            throw $e;
+        }
     }
 
 }

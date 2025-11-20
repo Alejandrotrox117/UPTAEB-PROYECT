@@ -1,6 +1,4 @@
-// ========================================
-// IMPORTACIONES
-// ========================================
+
 import { abrirModal, cerrarModal } from "./exporthelpers.js";
 import {
   expresiones,
@@ -12,22 +10,151 @@ import {
   validarRango
 } from "./validaciones.js";
 
-// ========================================
-// VARIABLES GLOBALES
-// ========================================
+
 let tablaLotes, tablaProcesos, tablaNomina;
 let configuracionActual = {};
 let preciosProceso = [];
-let registrosProduccionLote = []; // Array para almacenar registros de producción del lote
+let registrosProduccionLote = [];
 
-// ========================================
-// CONFIGURACIÓN DE CAMPOS DE FORMULARIO
-// ========================================
 
-/**
- * Validaciones para el formulario de creación de lote (datos generales)
- * Campos: lote_fecha_jornada, lote_volumen_estimado, lote_supervisor, lote_observaciones
- */
+let empleadosValidos = [];
+let productosValidos = [];
+let lotesValidos = [];
+let supervisoresValidos = [];
+
+function validarElementoSeguro(elemento, arrayValidos, nombreCampo) {
+  const valor = elemento.value;
+  
+  if (!valor || valor === '') return true;
+  
+  const id = parseInt(valor);
+  
+  if (isNaN(id) || id <= 0) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Valor Inválido',
+      text: `Valor inválido detectado en ${nombreCampo}. Solo se permiten números positivos.`,
+      confirmButtonColor: '#dc2626'
+    }).then(() => {
+      elemento.value = '';
+      recargarElementos();
+    });
+    return false;
+  }
+  
+  if (!arrayValidos.includes(id)) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Elemento No Válido',
+      text: `El ${nombreCampo} seleccionado no existe o fue manipulado.`,
+      confirmButtonColor: '#dc2626'
+    }).then(() => {
+      elemento.value = '';
+      recargarElementos();
+    });
+    return false;
+  }
+  
+  return true;
+}
+
+// Función para recargar elementos después de operaciones
+function recargarElementos() {
+  setTimeout(() => {
+    if (typeof cargarEmpleadosParaProduccion === 'function') {
+      cargarEmpleadosParaProduccion();
+    }
+    if (typeof cargarProductosParaProduccion === 'function') {
+      cargarProductosParaProduccion();
+    }
+  }, 500);
+}
+
+// Función para recargar elementos del modal de lotes
+function recargarElementosLote() {
+  setTimeout(() => {
+    if (typeof cargarEmpleadosParaRegistrosLote === 'function') {
+      cargarEmpleadosParaRegistrosLote();
+    }
+    if (typeof cargarProductosParaRegistrosLote === 'function') {
+      cargarProductosParaRegistrosLote();
+    }
+    if (typeof cargarEmpleadosActivos === 'function') {
+      cargarEmpleadosActivos('lote_supervisor');
+    }
+  }, 500);
+}
+
+// Validadores específicos
+function validarEmpleado(event) {
+  return validarElementoSeguro(event.target, empleadosValidos, 'Empleado');
+}
+
+function validarProducto(event) {
+  const nombreCampo = event.target.id.includes('producir') ? 'Producto a Producir' : 'Producto Terminado';
+  return validarElementoSeguro(event.target, productosValidos, nombreCampo);
+}
+
+// Validador específico para productos en modal de lotes
+function validarProductoLote(event) {
+  const nombreCampo = event.target.id.includes('inicial') ? 'Producto Inicial' : 'Producto Final';
+  return validarElementoSeguro(event.target, productosValidos, nombreCampo);
+}
+
+// Función para validar formulario completo antes de enviar
+function validarFormularioCompleto() {
+  const empleado = document.getElementById('prod_empleado');
+  const producir = document.getElementById('prod_producto_producir');
+  const terminado = document.getElementById('prod_producto_terminado');
+  
+  if (empleado && empleado.value && !validarElementoSeguro(empleado, empleadosValidos, 'Empleado')) {
+    return false;
+  }
+  
+  if (producir && producir.value && !validarElementoSeguro(producir, productosValidos, 'Producto a Producir')) {
+    return false;
+  }
+  
+  if (terminado && terminado.value && !validarElementoSeguro(terminado, productosValidos, 'Producto Terminado')) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Función para validar formulario de lotes
+function validarFormularioLoteCompleto() {
+  const empleado = document.getElementById('lote_prod_empleado');
+  const productoInicial = document.getElementById('lote_prod_producto_inicial');
+  const productoFinal = document.getElementById('lote_prod_producto_final');
+  const supervisor = document.getElementById('lote_supervisor');
+  
+  if (empleado && empleado.value && !validarElementoSeguro(empleado, empleadosValidos, 'Empleado de Lote')) {
+    return false;
+  }
+  
+  if (productoInicial && productoInicial.value && !validarElementoSeguro(productoInicial, productosValidos, 'Producto Inicial')) {
+    return false;
+  }
+  
+  if (productoFinal && productoFinal.value && !validarElementoSeguro(productoFinal, productosValidos, 'Producto Final')) {
+    return false;
+  }
+  
+  if (supervisor && supervisor.value && !validarElementoSeguro(supervisor, supervisoresValidos, 'Supervisor')) {
+    return false;
+  }
+  
+  return true;
+}
+
+
+
+window.verificarArrays = function() {
+  console.log('Empleados:', empleadosValidos.length, 'Productos:', productosValidos.length);
+}; 
+
+
 const camposFormularioLote = [
   {
     id: "lote_fecha_jornada",
@@ -66,11 +193,7 @@ const camposFormularioLote = [
   }
 ];
 
-/**
- * Validaciones para el sub-formulario de REGISTROS DE PRODUCCIÓN dentro del lote
- * Campos: lote_prod_empleado, lote_prod_fecha, lote_prod_tipo, lote_prod_producto_inicial,
- * lote_prod_cantidad_inicial, lote_prod_producto_final, lote_prod_cantidad_producida
- */
+
 const camposRegistroProduccionLote = [
   {
     id: "lote_prod_empleado",
@@ -144,20 +267,12 @@ const camposRegistroProduccionLote = [
   }
 ];
 
-// ========================================
-// FUNCIONES DE VALIDACIÓN PERSONALIZADA
-// ========================================
 
-/**
- * Valida que la cantidad producida no exceda la cantidad inicial
- * Aplica para el sub-formulario de registros de producción del lote
- */
 function validarCantidadProducida() {
   const cantidadInicial = parseFloat(document.getElementById("lote_prod_cantidad_inicial")?.value) || 0;
   const cantidadProducida = parseFloat(document.getElementById("lote_prod_cantidad_producida")?.value) || 0;
   const errorDiv = document.getElementById("error-cantidad-producida");
   
-  // Crear div de error si no existe
   if (!errorDiv && cantidadProducida > cantidadInicial) {
     const inputProducida = document.getElementById("lote_prod_cantidad_producida");
     if (inputProducida) {
@@ -172,9 +287,8 @@ function validarCantidadProducida() {
   const inputElement = document.getElementById("lote_prod_cantidad_producida");
   
   if (cantidadProducida > cantidadInicial && cantidadInicial > 0) {
-    // Warning: la cantidad producida excede la inicial (puede ser válido en algunos procesos)
     if (errorElement) {
-      errorElement.textContent = `⚠️ La cantidad producida (${cantidadProducida.toFixed(2)} kg) excede la inicial (${cantidadInicial.toFixed(2)} kg)`;
+      errorElement.textContent = `La cantidad producida (${cantidadProducida.toFixed(2)} kg) excede la inicial (${cantidadInicial.toFixed(2)} kg)`;
       errorElement.classList.remove("hidden");
     }
     
@@ -183,9 +297,9 @@ function validarCantidadProducida() {
       inputElement.classList.remove("border-green-300");
     }
     
-    return true; // No bloquear, solo advertir
+    return true; 
   } else if (cantidadProducida > 0) {
-    // Cantidad válida
+   
     if (errorElement) {
       errorElement.classList.add("hidden");
     }
@@ -201,13 +315,9 @@ function validarCantidadProducida() {
   return true;
 }
 
-/**
- * Inicializa las validaciones para el sub-formulario de registros de producción
- * Campos con prefijo lote_prod_*
- */
+
 function inicializarValidacionesRegistrosProduccion() {
-  // No usamos el sistema automático porque estos campos no están en un form tradicional
-  // Los validamos manualmente en los event listeners
+ 
   
   const cantidadInicial = document.getElementById("lote_prod_cantidad_inicial");
   const cantidadProducida = document.getElementById("lote_prod_cantidad_producida");
@@ -218,19 +328,12 @@ function inicializarValidacionesRegistrosProduccion() {
   }
 }
 
-// ========================================
-// INICIALIZACIÓN GENERAL
-// ========================================
 
-// ========================================
-// INICIALIZACIÓN GENERAL
-// ========================================
 document.addEventListener("DOMContentLoaded", function () {
   inicializarPestañas();
   inicializarTablas();
   inicializarEventos();
   cargarConfiguracionInicial();
-  // Poblar select de productos para precios
   fetch("Productos/getProductosData").then(r=>r.json()).then((data)=>{
     const sel = document.getElementById('idproducto_precio');
     if (sel && data.status && Array.isArray(data.data)){
@@ -254,9 +357,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             });
         });
-// ========================================
-// INICIALIZACIÓN DE COMPONENTES
-// ========================================
 function inicializarPestañas() { const botonesPestaña = document.querySelectorAll(".tab-button");
   const contenidoPestañas = document.querySelectorAll(".tab-content");
 
@@ -264,19 +364,16 @@ function inicializarPestañas() { const botonesPestaña = document.querySelector
     boton.addEventListener("click", function () {
       const pestañaId = this.id.replace("tab-", "content-");
 
-      // Remover clase activa de todos los botones y contenidos
       botonesPestaña.forEach((b) => {
         b.classList.remove("active", "border-green-500", "text-green-600");
         b.classList.add("border-transparent", "text-gray-500");
       });
       contenidoPestañas.forEach((c) => c.classList.add("hidden"));
 
-      // Activar pestaña seleccionada
       this.classList.add("active", "border-green-500", "text-green-600");
       this.classList.remove("border-transparent", "text-gray-500");
       document.getElementById(pestañaId).classList.remove("hidden");
 
-      // Recargar tabla específica si es necesario
       if (pestañaId === "content-lotes" && tablaLotes) {
         setTimeout(() => tablaLotes.columns.adjust().draw(), 100);
       } else if (pestañaId === "content-nomina" && tablaNomina) {
@@ -308,13 +405,11 @@ function inicializarTablaLotes() {
         if (json && Array.isArray(json.data)) {
           return json.data;
         } else {
-          console.error("Respuesta del servidor no válida:", json);
           mostrarError("No se pudieron cargar los datos de lotes.");
           return [];
         }
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        console.error("Error AJAX:", textStatus, errorThrown);
         mostrarError("Error al cargar los lotes. Intente más tarde.");
       },
     },
@@ -389,9 +484,8 @@ function inicializarTablaLotes() {
               </button>`;
 
           if (estatus === "PLANIFICADO") {
-            // Botones de editar y eliminar solo para PLANIFICADO
             acciones += `
-              <button class="editar-lote-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+              <button class="editar-lote-btn text-green-500 hover:text-blue-700 p-1 transition-colors duration-150" 
                       data-idlote="${idlote}" title="Editar lote">
                 <i class="fas fa-edit text-sm"></i>
               </button>
@@ -492,7 +586,6 @@ function inicializarTablaLotes() {
     },
   });
 
-  // Event listeners para acciones de la tabla
   $("#TablaLotes tbody").on("click", ".ver-lote-btn", function () {
     const idlote = $(this).data("idlote");
     verDetallesLote(idlote);
@@ -526,9 +619,6 @@ function inicializarTablaProcesos() {
     $("#TablaProcesos").DataTable().destroy();
   }
 
-  // Cargar TODOS los registros sin filtro de fecha
-  console.log(`📅 Cargando TODOS los registros de producción`);
-
   tablaProcesos = $("#TablaProcesos").DataTable({
     processing: true,
     serverSide: false,
@@ -536,17 +626,12 @@ function inicializarTablaProcesos() {
       url: `./Produccion/getRegistrosProduccion`,
       type: "GET",
       dataSrc: function (json) {
-        console.log("📊 Datos de procesos recibidos:", json);
         if (json && json.status && Array.isArray(json.data)) {
-          console.log(`✅ ${json.data.length} registros de producción cargados`);
           return json.data;
         }
-        console.warn("⚠️ No se recibieron datos válidos");
         return [];
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        console.error("❌ Error cargando registros de producción:", textStatus, errorThrown);
-        console.error("Respuesta:", jqXHR.responseText);
       }
     },
     columns: [
@@ -574,7 +659,7 @@ function inicializarTablaProcesos() {
         className: "all py-2 px-2",
         render: function(data, type, row) {
           const tipo = row.tipo_movimiento === 'CLASIFICACION' 
-            ? '<i class="fas fa-filter text-blue-600 mr-1"></i>Clasif.' 
+            ? '<i class="fas fa-filter text-green-500 mr-1"></i>Clasif.' 
             : '<i class="fas fa-cube text-purple-600 mr-1"></i>Empaq.';
           
           return `
@@ -614,22 +699,19 @@ function inicializarTablaProcesos() {
         className: "all text-center py-1 px-2",
         orderable: false,
         render: function(data, type, row) {
-          // Para PROCESOS verificar el estado del REGISTRO (no del lote)
           const estatusRegistro = row.estatus || 'BORRADOR';
           let acciones = '';
           
-          // Botón Editar - Solo visible si el REGISTRO está en BORRADOR
           if (estatusRegistro === 'BORRADOR') {
             acciones += `
               <button onclick="editarRegistroProduccion(${row.idregistro})" 
-                      class="text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                      class="text-green-500 hover:text-blue-700 p-1 transition-colors duration-150" 
                       title="Editar registro">
                 <i class="fas fa-edit text-sm"></i>
               </button>
             `;
           }
           
-          // Botón Eliminar - Solo visible si el REGISTRO está en BORRADOR
           if (estatusRegistro === 'BORRADOR') {
             acciones += `
               <button onclick="eliminarRegistroProduccion(${row.idregistro}, '${row.nombre_empleado || 'N/A'}', '${row.numero_lote}')" 
@@ -640,7 +722,6 @@ function inicializarTablaProcesos() {
             `;
           }
           
-          // Si el registro no está en BORRADOR, mostrar badge informativo
           if (estatusRegistro !== 'BORRADOR') {
             acciones = `<span class="text-xs text-gray-500 italic">No editable (${estatusRegistro})</span>`;
           }
@@ -721,29 +802,20 @@ function inicializarTablaProcesos() {
   });
 }
 
-// ========================================
-// INICIALIZACIÓN DE TABLA DE NÓMINA CON CHECKBOX Y BOTÓN REGISTRAR SALARIO
-// ========================================
 function inicializarTablaNomina() {
-  console.log('🔧 Inicializando tabla de nómina...');
   
   if ($.fn.DataTable.isDataTable("#TablaNomina")) {
-    console.log('⚠️ Tabla ya existe, destruyendo...');
     $("#TablaNomina").DataTable().destroy();
   }
 
-  // Insertar el botón "Registrar Salario" arriba de la tabla si no existe
   if (!document.getElementById("btnRegistrarSalario")) {
-    console.log('➕ Creando botón Registrar Salario...');
     const btn = document.createElement("button");
     btn.id = "btnRegistrarSalario";
     btn.className = "mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition";
     btn.innerHTML = '<i class="fas fa-money-check-alt mr-2"></i>Registrar Salario';
     btn.disabled = true;
     btn.style.display = "block";
-    // Asignar el evento click de forma CSP-compliant
     const handleRegistrarSalario = function () {
-      console.log('💰 Botón Registrar Salario clickeado');
       
       const seleccionados = [];
       $('#TablaNomina tbody input.nomina-checkbox:checked').each(function () {
@@ -753,12 +825,7 @@ function inicializarTablaNomina() {
         }
       });
 
-      console.log('📋 Registros seleccionados:', seleccionados);
-      console.log('📊 Cantidad seleccionada:', seleccionados.length);
-
-      // Validar que hay registros en la tabla
       const totalRegistros = tablaNomina ? tablaNomina.rows().count() : 0;
-      console.log('📈 Total de registros en tabla:', totalRegistros);
 
       if (totalRegistros === 0) {
         Swal.fire({
@@ -770,7 +837,6 @@ function inicializarTablaNomina() {
         return;
       }
 
-      // Mensaje según selección
       let mensaje = "";
       let cantidadAProcesar = 0;
       
@@ -784,31 +850,19 @@ function inicializarTablaNomina() {
 
       Swal.fire({
         title: "¿Registrar Solicitud de Pago?",
-        html: `
-          <p class="mb-4">${mensaje}</p>
-          <div class="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-left">
-            <p class="font-semibold text-blue-800 mb-2">📌 Se realizará lo siguiente:</p>
-            <ul class="list-disc list-inside text-blue-700 space-y-1">
-              <li>Se crearán ${cantidadAProcesar} registros en la tabla de <strong>Sueldos</strong></li>
-              <li>El estado cambiará de <strong>BORRADOR</strong> → <strong>ENVIADO</strong></li>
-              <li>Los registros aparecerán en el módulo de <strong>Pagos</strong></li>
-            </ul>
-          </div>
-        `,
+       
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: "#059669",
         cancelButtonColor: "#6b7280",
-        confirmButtonText: '<i class="fas fa-check mr-2"></i>Sí, registrar',
-        cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+        confirmButtonText: 'Sí, registrar',
+        cancelButtonText: 'Cancelar',
         customClass: {
           popup: 'text-left'
         }
       }).then((result) => {
         if (result.isConfirmed) {
-          console.log('✅ Usuario confirmó registro de salarios');
           
-          // Mostrar loading
           Swal.fire({
             title: 'Procesando...',
             html: `Registrando ${cantidadAProcesar} solicitudes de pago...`,
@@ -817,10 +871,6 @@ function inicializarTablaNomina() {
               Swal.showLoading();
             }
           });
-
-          console.log('📤 Enviando petición al servidor...');
-          console.log('🔗 URL:', base_url + "Produccion/registrarSolicitudPago");
-          console.log('📦 Payload:', { registros: seleccionados });
 
           fetch(base_url + "Produccion/registrarSolicitudPago", {
             method: "POST",
@@ -831,11 +881,9 @@ function inicializarTablaNomina() {
             body: JSON.stringify({ registros: seleccionados }),
           })
             .then((response) => {
-              console.log('📨 Respuesta recibida, status:', response.status);
               return response.json();
             })
             .then((result) => {
-              console.log('📊 Resultado del servidor:', result);
               
               if (result.status) {
                 Swal.fire({
@@ -852,27 +900,22 @@ function inicializarTablaNomina() {
                   icon: "success",
                   confirmButtonColor: "#059669"
                 }).then(() => {
-                  console.log('🔄 Recargando tabla de nómina...');
                   if (tablaNomina) {
                     tablaNomina.ajax.reload(null, false);
                   }
                   
-                  // Recargar tabla de sueldos si existe
                   if (window.tablaSueldo && typeof window.tablaSueldo.ajax?.reload === "function") {
-                    console.log('🔄 Recargando tabla de sueldos...');
                     window.tablaSueldo.ajax.reload(null, false);
                   }
                   
-                  console.log('✅ Proceso completado exitosamente');
                 });
               } else {
-                console.error('❌ Error del servidor:', result.message);
                 Swal.fire({
                   title: "Error al Registrar",
                   html: `
                     <p class="mb-3">${result.message || "No se pudo registrar la solicitud de pago."}</p>
                     <div class="bg-red-50 border border-red-200 rounded p-3 text-sm text-left">
-                      <p class="font-semibold text-red-800 mb-1">💡 Posibles causas:</p>
+                      <p class="font-semibold text-red-800 mb-1">Posibles causas:</p>
                       <ul class="list-disc list-inside text-red-700 space-y-1">
                         <li>Los registros ya fueron enviados anteriormente</li>
                         <li>No hay registros en estado BORRADOR</li>
@@ -886,7 +929,6 @@ function inicializarTablaNomina() {
               }
             })
             .catch((error) => {
-              console.error("❌ Error de conexión:", error);
               Swal.fire({
                 title: "Error de Conexión",
                 html: `
@@ -900,41 +942,31 @@ function inicializarTablaNomina() {
               });
             });
         } else {
-          console.log('❌ Usuario canceló el registro');
         }
       });
     };
-    // Insertar el botón y asignar el evento
     const tabla = document.getElementById("TablaNomina");
     if (tabla) {
       tabla.parentNode.insertBefore(btn, tabla);
-      console.log('✅ Botón Registrar Salario insertado');
     }
     btn.addEventListener("click", handleRegistrarSalario);
   }
 
-  console.log('📊 Creando DataTable de nómina...');
   tablaNomina = $("#TablaNomina").DataTable({
     processing: true,
     ajax: {
       url: "./Produccion/getRegistrosProduccion",
       type: "GET",
       dataSrc: function (json) {
-        console.log("📊 Datos de nómina recibidos:", json);
         if (json && json.status && Array.isArray(json.data)) {
-          console.log(`✅ ${json.data.length} registros de nómina cargados`);
           
-          // Calcular resumen rápido
           setTimeout(() => actualizarContadorEstados(json.data), 100);
           
           return json.data;
         }
-        console.warn("⚠️ No se recibieron datos válidos para nómina");
         return [];
       },
       error: function (jqXHR, textStatus, errorThrown) {
-        console.error("❌ Error cargando nómina:", textStatus, errorThrown);
-        console.error("Respuesta:", jqXHR.responseText);
       }
     },
     columns: [
@@ -945,7 +977,6 @@ function inicializarTablaNomina() {
         className: "text-center all py-2 px-2",
         render: function (data, type, row) {
           const estatus = row.estatus || 'BORRADOR';
-          // Solo permitir checkbox para registros en BORRADOR
           if (estatus === 'BORRADOR') {
             return `<input type="checkbox" class="nomina-checkbox w-4 h-4" data-id="${row.idregistro || ''}">`;
           } else {
@@ -1044,7 +1075,6 @@ function inicializarTablaNomina() {
           
           let botones = '<div class="inline-flex items-center space-x-1">';
           
-          // Botón para ver detalles (siempre visible)
           botones += `
             <button class="btn-ver-detalle-nomina text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
                     data-id="${idregistro}"
@@ -1052,7 +1082,6 @@ function inicializarTablaNomina() {
               <i class="fas fa-eye text-sm"></i>
             </button>`;
           
-          // Botón para marcar como PAGADO (solo si está ENVIADO)
           if (estatus === 'ENVIADO') {
             botones += `
               <button class="btn-marcar-pagado text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
@@ -1064,7 +1093,6 @@ function inicializarTablaNomina() {
               </button>`;
           }
           
-          // Botón para cancelar (solo si está en BORRADOR o ENVIADO)
           if (estatus === 'BORRADOR' || estatus === 'ENVIADO') {
             botones += `
               <button class="btn-cancelar-nomina text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
@@ -1152,10 +1180,7 @@ function inicializarTablaNomina() {
     },
   });
 
-  console.log('✅ Tabla de nómina inicializada correctamente');
-  console.log('📌 Tabla:', tablaNomina);
 
-  // Evento para habilitar/deshabilitar el botón según selección
   $('#TablaNomina tbody').on('change', 'input.nomina-checkbox', function () {
     const seleccionados = $('#TablaNomina tbody input.nomina-checkbox:checked').length;
     const btn = document.getElementById("btnRegistrarSalario");
@@ -1166,7 +1191,6 @@ function inicializarTablaNomina() {
     }
   });
 
-  // Eventos para botones de acciones en la tabla
   $('#TablaNomina tbody').on('click', '.btn-marcar-pagado', function () {
     const idregistro = $(this).data('id');
     const empleado = $(this).data('empleado');
@@ -1185,12 +1209,8 @@ function inicializarTablaNomina() {
     cancelarRegistroNomina(idregistro, empleado);
   });
   
-  console.log('🎯 Eventos de nómina configurados');
 }
 
-// ========================================
-// INICIALIZACIÓN DE EVENTOS
-// ========================================
 function inicializarEventos() {
   inicializarEventosLotes();
   inicializarEventosProcesos();
@@ -1198,7 +1218,6 @@ function inicializarEventos() {
   inicializarEventosConfiguracion();
 }
 function inicializarEventosLotes() {
-  // Modal registrar lote
   const btnAbrirModalLote = document.getElementById("btnAbrirModalRegistrarLote");
   const btnCerrarModalLote = document.getElementById("btnCerrarModalRegistrarLote");
   const btnCancelarModalLote = document.getElementById("btnCancelarModalRegistrarLote");
@@ -1209,26 +1228,20 @@ function inicializarEventosLotes() {
       abrirModal("modalRegistrarLote");
       if (formLote) formLote.reset();
       
-      // Limpiar array de registros
       registrosProduccionLote = [];
       actualizarTablaRegistrosProduccionLote();
       
-      // Cargar datos necesarios
       cargarEmpleadosActivos();
       cargarEmpleadosParaRegistrosLote();
       cargarProductosParaRegistrosLote();
       
-      // Setear fecha actual
       document.getElementById("lote_fecha_jornada").value = new Date().toISOString().split('T')[0];
       document.getElementById("lote_prod_fecha").value = new Date().toISOString().split('T')[0];
       
-      // Inicializar validaciones para datos generales del lote
       inicializarValidaciones(camposFormularioLote, "formRegistrarLote");
       
-      // Inicializar validaciones para el sub-formulario de registros de producción
       inicializarValidacionesRegistrosProduccion();
       
-      // Cargar configuración para cálculos
       cargarConfiguracionProduccion();
     });
   }
@@ -1252,7 +1265,6 @@ function inicializarEventosLotes() {
     });
   }
 
-  // Evento directo al botón de guardar lote
   const btnGuardarLote = document.getElementById("btnGuardarLote");
   if (btnGuardarLote) {
     btnGuardarLote.addEventListener("click", function (e) {
@@ -1261,7 +1273,6 @@ function inicializarEventosLotes() {
     });
   }
 
-  // Calcular operarios requeridos en tiempo real
   const volumenInput = document.getElementById("lote_volumen_estimado");
   if (volumenInput) {
     volumenInput.addEventListener("input", function () {
@@ -1269,13 +1280,11 @@ function inicializarEventosLotes() {
     });
   }
 
-  // Event listeners para registros de producción en el lote
   const btnAgregarRegistroProd = document.getElementById("btnAgregarRegistroProduccionLote");
   if (btnAgregarRegistroProd) {
     btnAgregarRegistroProd.addEventListener("click", agregarRegistroProduccionLote);
   }
 
-  // Calcular salarios automáticamente al cambiar cantidad o tipo
   const cantidadProducidaInput = document.getElementById("lote_prod_cantidad_producida");
   const tipoMovimientoSelect = document.getElementById("lote_prod_tipo");
   
@@ -1287,7 +1296,6 @@ function inicializarEventosLotes() {
     tipoMovimientoSelect.addEventListener("change", calcularSalariosRegistroLote);
   }
 
-  // Modal ver detalle de lote
   const btnCerrarModalVerLote = document.getElementById("btnCerrarModalVerLote");
   const btnCerrarModalVerLote2 = document.getElementById("btnCerrarModalVerLote2");
 
@@ -1305,9 +1313,6 @@ function inicializarEventosLotes() {
 }
 
 function inicializarEventosProcesos() {
-  // ====================================================
-  // MODAL REGISTRAR PRODUCCIÓN (NUEVO)
-  // ====================================================
   const btnAbrirModalRegistrarProduccion = document.getElementById("btnAbrirModalRegistrarProduccion");
   const btnCerrarModalRegistrarProduccion = document.getElementById("btnCerrarModalRegistrarProduccion");
   const btnCancelarRegistrarProduccion = document.getElementById("btnCancelarRegistrarProduccion");
@@ -1338,7 +1343,6 @@ function inicializarEventosProcesos() {
     });
   }
 
-  // Calcular salarios automáticamente al cambiar cantidad producida o tipo
   const prod_cantidad_producida = document.getElementById("prod_cantidad_producida");
   const prod_tipo_movimiento = document.getElementById("prod_tipo_movimiento");
 
@@ -1352,18 +1356,14 @@ function inicializarEventosProcesos() {
 }
 
 function inicializarEventosNomina() {
-  console.log('🔧 Inicializando eventos de nómina...');
   
   const btnCalcularNomina = document.getElementById("btnCalcularNomina");
 
   if (btnCalcularNomina) {
     btnCalcularNomina.addEventListener("click", function () {
-      console.log('🔍 Botón Consultar Registros por Fecha clickeado');
       abrirModalConsultarPorFecha();
     });
-    console.log('✅ Evento btnCalcularNomina configurado');
   } else {
-    console.warn('⚠️ Botón btnCalcularNomina no encontrado');
   }
 }
 
@@ -1391,21 +1391,16 @@ function inicializarEventosConfiguracion() {
     });
   }
 
-  // Botón para agregar salario por proceso
   const btnAgregarSalario = document.getElementById("btnAgregarSalario");
   if (btnAgregarSalario) {
     btnAgregarSalario.addEventListener("click", function(e) {
       e.preventDefault();
       e.stopPropagation();
-      console.log("🔘 Click en btnAgregarSalario");
       crearPrecioProceso();
     });
   }
 }
 
-// ========================================
-// FUNCIONES DE LOTES
-// ========================================
 function calcularOperariosRequeridos() {
   const volumen = parseFloat(document.getElementById("lote_volumen_estimado").value || 0);
   const infoCalculada = document.getElementById("infoCalculada");
@@ -1419,7 +1414,6 @@ function calcularOperariosRequeridos() {
     
     infoCalculada.classList.remove("hidden");
     
-    // Mostrar alerta si excede capacidad
     if (operariosRequeridos > capacidadMaxima) {
       infoCalculada.classList.add("bg-red-50", "border-red-200");
       infoCalculada.classList.remove("bg-blue-50", "border-blue-200");
@@ -1434,13 +1428,8 @@ function calcularOperariosRequeridos() {
   }
 }
 
-// ========================================
-// FUNCIONES PARA REGISTROS DE PRODUCCIÓN EN LOTE
-// ========================================
 
-/**
- * Carga empleados en el selector de registros de producción del lote
- */
+
 async function cargarEmpleadosParaRegistrosLote() {
   try {
     const response = await fetch("Produccion/getEmpleadosActivos");
@@ -1452,22 +1441,28 @@ async function cargarEmpleadosParaRegistrosLote() {
     select.innerHTML = '<option value="">Seleccionar empleado...</option>';
     
     if (data.status && Array.isArray(data.data)) {
+      // Cargar IDs válidos para validación
       data.data.forEach(empleado => {
+        empleadosValidos.push(parseInt(empleado.idempleado));
+        
         const option = document.createElement("option");
         option.value = empleado.idempleado;
         option.textContent = empleado.nombre_completo;
         option.dataset.nombre = empleado.nombre_completo;
         select.appendChild(option);
       });
+      
+      // Agregar validador de seguridad
+      if (!select.hasAttribute('data-validador-agregado')) {
+        select.addEventListener('change', validarEmpleado);
+        select.setAttribute('data-validador-agregado', 'true');
+      }
     }
   } catch (error) {
-    console.error("Error al cargar empleados:", error);
   }
 }
 
-/**
- * Carga productos en los selectores de registros de producción del lote
- */
+
 async function cargarProductosParaRegistrosLote() {
   try {
     const response = await fetch("Productos/getProductosData");
@@ -1483,29 +1478,40 @@ async function cargarProductosParaRegistrosLote() {
     
     if (data.status && Array.isArray(data.data)) {
       data.data.forEach(producto => {
+        // Cargar IDs válidos para validación
+        productosValidos.push(parseInt(producto.idproducto));
+        
         const option1 = document.createElement("option");
         option1.value = producto.idproducto;
-        option1.textContent = producto.descripcion || producto.nombre;
-        option1.dataset.nombre = producto.descripcion || producto.nombre;
+        option1.textContent = producto.nombre || producto.descripcion;
+        option1.dataset.nombre = producto.nombre || producto.descripcion;
         option1.dataset.codigo = producto.codigo || '';
         selectInicial.appendChild(option1);
         
         const option2 = document.createElement("option");
         option2.value = producto.idproducto;
-        option2.textContent = producto.descripcion || producto.nombre;
-        option2.dataset.nombre = producto.descripcion || producto.nombre;
+        option2.textContent = producto.nombre || producto.descripcion;
+        option2.dataset.nombre = producto.nombre || producto.descripcion;
         option2.dataset.codigo = producto.codigo || '';
         selectFinal.appendChild(option2);
       });
+      
+      // Agregar validadores de seguridad
+      if (!selectInicial.hasAttribute('data-validador-agregado')) {
+        selectInicial.addEventListener('change', validarProductoLote);
+        selectInicial.setAttribute('data-validador-agregado', 'true');
+      }
+      
+      if (!selectFinal.hasAttribute('data-validador-agregado')) {
+        selectFinal.addEventListener('change', validarProductoLote);
+        selectFinal.setAttribute('data-validador-agregado', 'true');
+      }
     }
   } catch (error) {
-    console.error("Error al cargar productos:", error);
   }
 }
 
-/**
- * Calcula salarios automáticamente al cambiar cantidad o tipo
- */
+
 function calcularSalariosRegistroLote() {
   const cantidadProducida = parseFloat(document.getElementById("lote_prod_cantidad_producida").value) || 0;
   const tipoMovimiento = document.getElementById("lote_prod_tipo").value;
@@ -1518,7 +1524,6 @@ function calcularSalariosRegistroLote() {
   const salarioBase = parseFloat(configuracionActual.salario_base || 30);
   let precioUnit = 0;
   
-  // Buscar precio configurado según proceso y producto
   const productoBaseId = tipoMovimiento === 'CLASIFICACION'
     ? parseInt(document.getElementById('lote_prod_producto_inicial')?.value || 0)
     : parseInt(document.getElementById('lote_prod_producto_final')?.value || 0);
@@ -1532,7 +1537,6 @@ function calcularSalariosRegistroLote() {
     if (match) precioUnit = parseFloat(match.salario_unitario || 0);
   }
   
-  // Fallback a configuración estática si no existe precio configurado
   if (precioUnit <= 0) {
     precioUnit = tipoMovimiento === 'CLASIFICACION'
       ? parseFloat(configuracionActual.beta_clasificacion || 0.25)
@@ -1553,13 +1557,9 @@ function limpiarSalariosRegistroLote() {
   document.getElementById("lote_prod_salario_total").value = '$0.00';
 }
 
-/**
- * Agrega un registro de producción al array temporal
- */
+
 function agregarRegistroProduccionLote() {
-  console.log('➕ Iniciando agregar registro de producción al lote...');
   
-  // Obtener valores
   const idempleado = document.getElementById("lote_prod_empleado").value;
   const fecha = document.getElementById("lote_prod_fecha").value;
   const tipo = document.getElementById("lote_prod_tipo").value;
@@ -1569,25 +1569,16 @@ function agregarRegistroProduccionLote() {
   const cantidadProducida = parseFloat(document.getElementById("lote_prod_cantidad_producida").value);
   const observaciones = document.getElementById("lote_prod_observaciones").value;
   
-  console.log('📝 Datos del formulario:', {
-    idempleado, fecha, tipo, idproductoInicial, cantidadInicial,
-    idproductoFinal, cantidadProducida, observaciones
-  });
-  
-  // Validaciones
   if (!idempleado || !fecha || !tipo || !idproductoInicial || !idproductoFinal) {
-    console.warn('⚠️ Faltan campos obligatorios');
     mostrarAdvertencia("Por favor completa todos los campos obligatorios");
     return;
   }
   
   if (isNaN(cantidadInicial) || cantidadInicial <= 0 || isNaN(cantidadProducida) || cantidadProducida <= 0) {
-    console.warn('⚠️ Cantidades inválidas');
     mostrarAdvertencia("Las cantidades deben ser mayores a cero");
     return;
   }
   
-  // Obtener nombres para mostrar en la tabla
   const empleadoSelect = document.getElementById("lote_prod_empleado");
   const nombreEmpleado = empleadoSelect.options[empleadoSelect.selectedIndex].dataset.nombre;
   
@@ -1597,7 +1588,6 @@ function agregarRegistroProduccionLote() {
   const productoFinalSelect = document.getElementById("lote_prod_producto_final");
   const nombreProductoFinal = productoFinalSelect.options[productoFinalSelect.selectedIndex].dataset.nombre;
   
-  // Calcular salarios
   const salarioBase = parseFloat(configuracionActual.salario_base || 30);
   let precioUnit = 0;
   const productoBaseId = tipo === 'CLASIFICACION'
@@ -1616,7 +1606,6 @@ function agregarRegistroProduccionLote() {
   
   const salarioTotal = salarioBase + pagoTrabajo;
   
-  // Crear objeto de registro
   const registro = {
     idempleado,
     nombreEmpleado,
@@ -1635,23 +1624,16 @@ function agregarRegistroProduccionLote() {
     observaciones: observaciones || ''
   };
   
-  // Agregar al array
   registrosProduccionLote.push(registro);
-  console.log(`✅ Registro agregado. Total en array: ${registrosProduccionLote.length}`);
-  console.log('📦 Array completo:', registrosProduccionLote);
   
-  // Actualizar tabla
   actualizarTablaRegistrosProduccionLote();
   
-  // Limpiar formulario
   limpiarFormularioRegistroLote();
   
   mostrarExito("Registro agregado correctamente");
 }
 
-/**
- * Actualiza la tabla visual de registros de producción
- */
+
 function actualizarTablaRegistrosProduccionLote() {
   const tbody = document.getElementById("cuerpoTablaRegistrosProduccionLote");
   const mensaje = document.getElementById("noRegistrosProdMensaje");
@@ -1690,18 +1672,14 @@ function actualizarTablaRegistrosProduccionLote() {
   `).join('');
 }
 
-/**
- * Elimina un registro del array temporal
- */
+
 window.eliminarRegistroProduccionLote = function(index) {
   registrosProduccionLote.splice(index, 1);
   actualizarTablaRegistrosProduccionLote();
   mostrarExito("Registro eliminado");
 }
 
-/**
- * Limpia el formulario de registro de producción
- */
+
 function limpiarFormularioRegistroLote() {
   document.getElementById("lote_prod_empleado").value = '';
   document.getElementById("lote_prod_tipo").value = '';
@@ -1713,14 +1691,13 @@ function limpiarFormularioRegistroLote() {
   limpiarSalariosRegistroLote();
 }
 
-// ========================================
-// FIN FUNCIONES REGISTROS DE PRODUCCIÓN EN LOTE
-// ========================================
 
 async function registrarLote() {
-  console.log('🚀 Iniciando registro de lote...');
-  console.log('📦 Registros en array:', registrosProduccionLote);
-  console.log('📊 Total de registros a guardar:', registrosProduccionLote.length);
+  
+  // Validar seguridad antes de procesar
+  if (!validarFormularioLoteCompleto()) {
+    return;
+  }
   
   const btnGuardarLote = document.getElementById("btnGuardarLote");
 
@@ -1730,7 +1707,6 @@ async function registrarLote() {
   }
 
   try {
-    // Obtener datos del formulario
     const formLote = document.getElementById("formRegistrarLote");
     
     const formData = {
@@ -1740,9 +1716,7 @@ async function registrarLote() {
       observaciones: document.getElementById("lote_observaciones").value || ''
     };
 
-    console.log('📝 Datos del formulario:', formData);
 
-    // Validar campos obligatorios en el cliente
     if (!formData.fecha_jornada || !formData.volumen_estimado || !formData.idsupervisor) {
       Swal.fire({
         icon: "error",
@@ -1753,7 +1727,6 @@ async function registrarLote() {
       return;
     }
 
-    // Mostrar loading
     Swal.fire({
       title: 'Creando lote...',
       text: 'Por favor espera',
@@ -1763,8 +1736,6 @@ async function registrarLote() {
       }
     });
 
-    // 1. Crear el lote
-    console.log('📤 Enviando solicitud para crear lote...');
     const responseLote = await fetch(base_url + "Produccion/createLote", {
       method: "POST",
       headers: {
@@ -1774,18 +1745,14 @@ async function registrarLote() {
     });
 
     const resultLote = await responseLote.json();
-    console.log('📨 Respuesta del servidor:', resultLote);
 
     if (!resultLote.status) {
       throw new Error(resultLote.msg || resultLote.message || "Error al crear el lote");
     }
 
     const idlote = resultLote.idlote || resultLote.lote_id;
-    console.log("✅ Lote creado con ID:", idlote);
 
-    // 2. Si hay registros de producción, crearlos
     if (registrosProduccionLote.length > 0) {
-      console.log(`📋 Creando ${registrosProduccionLote.length} registros de producción...`);
       
       Swal.update({
         title: 'Guardando registros de producción...',
@@ -1797,7 +1764,6 @@ async function registrarLote() {
 
       for (let i = 0; i < registrosProduccionLote.length; i++) {
         const registro = registrosProduccionLote[i];
-        console.log(`🔄 Procesando registro ${i + 1}/${registrosProduccionLote.length}:`, registro);
         
         try {
           const formDataRegistro = new FormData();
@@ -1818,24 +1784,18 @@ async function registrarLote() {
           });
 
           const resultRegistro = await responseRegistro.json();
-          console.log(`📨 Respuesta registro ${i + 1}:`, resultRegistro);
 
           if (resultRegistro.status) {
             registrosExitosos++;
-            console.log(`✅ Registro ${i + 1} guardado correctamente`);
           } else {
             registrosConError++;
-            console.error(`❌ Error en registro ${i + 1}:`, resultRegistro.msg || resultRegistro.message);
           }
         } catch (error) {
           registrosConError++;
-          console.error(`❌ Error al procesar registro ${i + 1}:`, error);
         }
       }
 
-      console.log(`📊 Resumen: ${registrosExitosos} exitosos, ${registrosConError} con error`);
 
-      // Mostrar mensaje de éxito
       Swal.fire({
         icon: registrosConError === 0 ? "success" : "warning",
         title: "¡Lote creado exitosamente!",
@@ -1847,6 +1807,10 @@ async function registrarLote() {
         confirmButtonColor: "#059669"
       }).then(() => {
         cerrarModal("modalRegistrarLote");
+        
+        // Recargar elementos para limpiar manipulaciones
+        recargarElementosLote();
+        
         if (typeof tablaLotes !== "undefined" && tablaLotes.ajax) {
           tablaLotes.ajax.reload();
         }
@@ -1854,7 +1818,6 @@ async function registrarLote() {
           tablaRegistrosProcesos.ajax.reload();
         }
         
-        // Limpiar formulario y array
         formLote.reset();
         registrosProduccionLote = [];
         actualizarTablaRegistrosProduccionLote();
@@ -1862,8 +1825,6 @@ async function registrarLote() {
       });
 
     } else {
-      // No hay registros, solo mostrar éxito del lote
-      console.log('ℹ️ Lote creado sin registros de producción');
       Swal.fire({
         icon: "success",
         title: "¡Lote creado!",
@@ -1880,7 +1841,6 @@ async function registrarLote() {
     }
 
   } catch (error) {
-    console.error("❌ Error al crear lote:", error);
     Swal.fire({
       icon: "error",
       title: "Error",
@@ -1895,14 +1855,8 @@ async function registrarLote() {
   }
 }
 
-// ========================================
-// VER DETALLE DEL LOTE CON PROCESOS
-// ========================================
-// ========================================
 function verDetallesLote(idlote) {
-  console.log('verDetallesLote llamado con idlote:', idlote);
   
-  // Abrir modal
   const modalAbierto = abrirModal("modalVerLote");
   
   if (!modalAbierto) {
@@ -1910,36 +1864,26 @@ function verDetallesLote(idlote) {
     return;
   }
   
-  console.log('Modal abierto correctamente');
   
-  // Mostrar loading
   mostrarLoadingEnModalVerDetalle();
   
-  // Cargar información básica del lote
   cargarInfoBasicaLote(idlote);
   
-  // Cargar registros de producción del lote
   cargarRegistrosProduccionLote(idlote);
 }
 
-/**
- * Muestra indicador de carga en modal ver detalle
- */
+
 function mostrarLoadingEnModalVerDetalle() {
-  // Limpiar tabla de registros
   const tbody = document.getElementById('verRegistrosProduccion');
   if (tbody) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i><p class="text-gray-500 mt-2">Cargando...</p></td></tr>';
   }
   
-  // Ocultar mensaje de no registros
   const mensaje = document.getElementById('mensajeNoRegistros');
   if (mensaje) mensaje.style.display = 'none';
 }
 
-/**
- * Carga información básica del lote
- */
+
 async function cargarInfoBasicaLote(idlote) {
   try {
     const response = await fetch(`Produccion/getLotesData`);
@@ -1959,34 +1903,20 @@ async function cargarInfoBasicaLote(idlote) {
       }
     }
   } catch (error) {
-    console.error('Error al cargar info del lote:', error);
   }
 }
 
-/**
- * Carga registros de producción del lote
- */
+
 async function cargarRegistrosProduccionLote(idlote) {
   try {
-    console.log('🔍 Cargando registros para lote:', idlote);
     const response = await fetch(`Produccion/getRegistrosPorLote/${idlote}`);
-    console.log('📡 Response status:', response.status);
-    console.log('📡 Response headers:', response.headers.get('content-type'));
     
-    // Primero obtener el texto para ver qué devuelve
     const responseText = await response.text();
-    console.log('📄 Response text (primeros 500 chars):', responseText.substring(0, 500));
     
-    // Intentar parsear como JSON
     let result;
     try {
       result = JSON.parse(responseText);
-      console.log('📦 Result completo:', result);
-      console.log('📊 Totales recibidos:', result.totales);
-      console.log('📋 Cantidad de registros:', result.data?.length || 0);
     } catch (parseError) {
-      console.error('❌ Error al parsear JSON:', parseError);
-      console.error('📄 Respuesta completa del servidor:', responseText);
       throw new Error('El servidor no devolvió JSON válido. Ver consola para más detalles.');
     }
     
@@ -1995,16 +1925,13 @@ async function cargarRegistrosProduccionLote(idlote) {
     const mensajeNoRegistros = document.getElementById('mensajeNoRegistros');
     
     if (!tbody) {
-      console.error('❌ No se encontró el tbody con id "verRegistrosProduccion"');
       return;
     }
     
     if (result.status && result.data && result.data.length > 0) {
-      // Mostrar tabla
       if (seccionRegistros) seccionRegistros.style.display = 'block';
       if (mensajeNoRegistros) mensajeNoRegistros.style.display = 'none';
       
-      // Llenar tabla
       tbody.innerHTML = result.data.map(registro => `
         <tr class="hover:bg-gray-50">
           <td class="px-3 py-2">${registro.fecha_jornada_formato}</td>
@@ -2031,11 +1958,9 @@ async function cargarRegistrosProduccionLote(idlote) {
         </tr>
       `).join('');
       
-      // Actualizar totales
       actualizarTotalesRegistros(result.totales);
       
     } else {
-      // No hay registros
       if (seccionRegistros) seccionRegistros.style.display = 'none';
       if (mensajeNoRegistros) mensajeNoRegistros.style.display = 'block';
       tbody.innerHTML = '';
@@ -2043,7 +1968,6 @@ async function cargarRegistrosProduccionLote(idlote) {
     }
     
   } catch (error) {
-    console.error('Error al cargar registros:', error);
     const tbody = document.getElementById('verRegistrosProduccion');
     if (tbody) {
       tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">Error al cargar registros</td></tr>';
@@ -2051,18 +1975,13 @@ async function cargarRegistrosProduccionLote(idlote) {
   }
 }
 
-/**
- * Actualiza los totales en el modal
- */
+
 function actualizarTotalesRegistros(totales) {
-  console.log('🔢 Actualizando totales con:', totales);
   
   if (!totales) {
-    console.warn('⚠️ No se recibieron totales');
     return;
   }
   
-  // Verificar que existan los elementos
   const elementos = {
     verTotalRegistros: document.getElementById('verTotalRegistros'),
     verTotalProducido: document.getElementById('verTotalProducido'),
@@ -2074,34 +1993,27 @@ function actualizarTotalesRegistros(totales) {
     verTotalKgEmpaque: document.getElementById('verTotalKgEmpaque')
   };
   
-  // Verificar elementos faltantes
   for (const [key, elemento] of Object.entries(elementos)) {
     if (!elemento) {
-      console.error(`❌ Elemento "${key}" no encontrado en el DOM`);
     }
   }
   
   if (elementos.verTotalRegistros) {
     elementos.verTotalRegistros.textContent = totales.total_registros || 0;
-    console.log('✅ Total registros:', totales.total_registros);
   }
   
   if (elementos.verTotalProducido) {
     elementos.verTotalProducido.textContent = `${parseFloat(totales.total_cantidad_producida || 0).toFixed(2)} kg`;
-    console.log('✅ Total producido:', totales.total_cantidad_producida);
   }
   
   if (elementos.verTotalSalariosBase) {
     elementos.verTotalSalariosBase.textContent = `$${parseFloat(totales.total_salario_base || 0).toFixed(2)}`;
-    console.log('✅ Total salarios base:', totales.total_salario_base);
   }
   
   if (elementos.verTotalSalariosGeneral) {
     elementos.verTotalSalariosGeneral.textContent = `$${parseFloat(totales.total_salario_general || 0).toFixed(2)}`;
-    console.log('✅ Total salarios general:', totales.total_salario_general);
   }
   
-  // Desglose por tipo
   if (elementos.verCantidadClasificacion) {
     elementos.verCantidadClasificacion.textContent = totales.registros_clasificacion || 0;
   }
@@ -2110,7 +2022,6 @@ function actualizarTotalesRegistros(totales) {
     elementos.verCantidadEmpaque.textContent = totales.registros_empaque || 0;
   }
   
-  // Calcular kg por tipo (necesitarás agregar esto al backend si quieres el desglose exacto)
   if (elementos.verTotalKgClasificacion) {
     elementos.verTotalKgClasificacion.textContent = '0.00 kg'; // Placeholder
   }
@@ -2119,12 +2030,9 @@ function actualizarTotalesRegistros(totales) {
     elementos.verTotalKgEmpaque.textContent = '0.00 kg'; // Placeholder
   }
   
-  console.log('✅ Totales actualizados correctamente');
 }
 
-/**
- * Limpia los totales
- */
+
 function limpiarTotalesRegistros() {
   document.getElementById('verTotalRegistros').textContent = '0';
   document.getElementById('verTotalProducido').textContent = '0.00 kg';
@@ -2136,9 +2044,7 @@ function limpiarTotalesRegistros() {
   document.getElementById('verTotalKgEmpaque').textContent = '0.00 kg';
 }
 
-/**
- * Obtiene badge HTML según estado del lote
- */
+
 function obtenerBadgeEstado(estatus) {
   const badges = {
     'ACTIVO': '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Activo</span>',
@@ -2151,25 +2057,18 @@ function obtenerBadgeEstado(estatus) {
 }
 
 function mostrarLoadingEnModal() {
-  console.log('mostrarLoadingEnModal - Iniciando...');
   
-  // Limpiar datos previos
   limpiarModalVerLote();
   
-  // Verificar que los elementos existan
   const numeroElement = document.getElementById('verLoteNumero');
   const mensajeElement = document.getElementById('mensajeNoProcesos');
   
-  console.log('Elemento verLoteNumero:', numeroElement);
 
-  console.log('Elemento mensajeNoProcesos:', mensajeElement);
   
   if (!numeroElement || !mensajeElement) {
-    console.error('ERROR: Elementos del modal no encontrados');
     return;
   }
   
-  // Mostrar loading en las secciones principales
   numeroElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
   mensajeElement.style.display = 'block';
   mensajeElement.innerHTML = `
@@ -2179,13 +2078,10 @@ function mostrarLoadingEnModal() {
     </div>
   `;
   
-  console.log('Loading mostrado correctamente');
 }
 
 function cargarDatosLoteEnModal(lote) {
-  console.log('cargarDatosLoteEnModal - Lote recibido:', lote);
   
-  // Datos generales
   document.getElementById('verLoteNumero').textContent = lote.numero_lote || '-';
   document.getElementById('verLoteFecha').textContent = lote.fecha_jornada_formato || '-';
   document.getElementById('verLoteVolumen').textContent = lote.volumen_estimado 
@@ -2195,19 +2091,16 @@ function cargarDatosLoteEnModal(lote) {
   document.getElementById('verLoteOperarios').textContent = lote.operarios_asignados || '0';
   document.getElementById('verLoteObservaciones').textContent = lote.observaciones || 'Sin observaciones';
   
-  // Estado con color
   const estadoElement = document.getElementById('verLoteEstado');
   const estado = lote.estatus_lote || lote.estado || '-';
   estadoElement.textContent = estado;
   
-  // Limpiar clases previas
   estadoElement.className = 'text-sm sm:text-base md:text-lg font-semibold';
   
-  // Aplicar color según estado
   if (estado === 'ACTIVO' || estado === 'EN PROCESO') {
     estadoElement.classList.add('text-green-600');
   } else if (estado === 'FINALIZADO' || estado === 'COMPLETADO') {
-    estadoElement.classList.add('text-blue-600');
+    estadoElement.classList.add('text-green-500');
   } else if (estado === 'CANCELADO') {
     estadoElement.classList.add('text-red-600');
   } else if (estado === 'PENDIENTE') {
@@ -2225,7 +2118,6 @@ function cargarProcesosEnModal(procesos) {
   const seccionEmpaque = document.getElementById('seccionEmpaque');
   const mensajeNoProcesos = document.getElementById('mensajeNoProcesos');
   
-  // Si no hay procesos, mostrar mensaje
   if (clasificacion.length === 0 && empaque.length === 0) {
     mensajeNoProcesos.style.display = 'block';
     mensajeNoProcesos.innerHTML = `
@@ -2250,7 +2142,6 @@ function cargarProcesosEnModal(procesos) {
   
   mensajeNoProcesos.style.display = 'none';
   
-  // Cargar Procesos de Clasificación
   if (clasificacion.length > 0) {
     seccionClasificacion.style.display = 'block';
     const tbodyClasificacion = document.getElementById('verDetalleClasificacion');
@@ -2285,7 +2176,6 @@ function cargarProcesosEnModal(procesos) {
     seccionClasificacion.style.display = 'none';
   }
   
-  // Cargar Procesos de Empaque
   if (empaque.length > 0) {
     seccionEmpaque.style.display = 'block';
     const tbodyEmpaque = document.getElementById('verDetalleEmpaque');
@@ -2322,7 +2212,6 @@ function calcularResumenProduccion(procesos) {
   const clasificacion = procesos.clasificacion || [];
   const empaque = procesos.empaque || [];
   
-  // Totales de Clasificación
   if (clasificacion.length > 0) {
     const totalClasificado = clasificacion.reduce((sum, p) => sum + (parseFloat(p.kg_limpios) || 0), 0);
     const totalContaminantes = clasificacion.reduce((sum, p) => sum + (parseFloat(p.kg_contaminantes) || 0), 0);
@@ -2335,7 +2224,6 @@ function calcularResumenProduccion(procesos) {
     document.getElementById('verTotalContaminantes').textContent = 
       `${totalContaminantes.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} kg`;
     
-    // Calcular eficiencia general
     const eficienciaGeneral = totalProcesado > 0 ? ((totalClasificado / totalProcesado) * 100).toFixed(2) : 0;
     document.getElementById('verEficienciaGeneral').textContent = `${eficienciaGeneral}%`;
   } else {
@@ -2344,7 +2232,6 @@ function calcularResumenProduccion(procesos) {
     document.getElementById('verEficienciaGeneral').textContent = 'N/A';
   }
   
-  // Totales de Empaque
   if (empaque.length > 0) {
     const totalPacas = empaque.length;
     const pesoTotalPacas = empaque.reduce((sum, p) => sum + (parseFloat(p.peso_paca) || 0), 0);
@@ -2361,7 +2248,6 @@ function calcularResumenProduccion(procesos) {
 }
 
 function limpiarModalVerLote() {
-  // Limpiar datos generales
   document.getElementById('verLoteNumero').textContent = '-';
   document.getElementById('verLoteFecha').textContent = '-';
   document.getElementById('verLoteVolumen').textContent = '-';
@@ -2370,16 +2256,13 @@ function limpiarModalVerLote() {
   document.getElementById('verLoteOperarios').textContent = '-';
   document.getElementById('verLoteObservaciones').textContent = '-';
   
-  // Limpiar tablas
   document.getElementById('verDetalleClasificacion').innerHTML = '';
   document.getElementById('verDetalleEmpaque').innerHTML = '';
   
-  // Ocultar secciones
   document.getElementById('seccionClasificacion').style.display = 'none';
   document.getElementById('seccionEmpaque').style.display = 'none';
   document.getElementById('mensajeNoProcesos').style.display = 'none';
   
-  // Ocultar contenedores de resumen
   document.getElementById('contenedorTotalClasificado').style.display = 'none';
   document.getElementById('contenedorTotalContaminantes').style.display = 'none';
   document.getElementById('contenedorTotalPacas').style.display = 'none';
@@ -2387,8 +2270,6 @@ function limpiarModalVerLote() {
 }
 
 function mostrarDetallesLote(lote) {
-  // Esta función ahora está deprecated, se usa verDetallesLote con el modal
-  console.warn('mostrarDetallesLote está deprecated, usar verDetallesLote');
   verDetallesLote(lote.idlote);
 }
 
@@ -2423,7 +2304,6 @@ function iniciarLote(idlote) {
           }
         })
         .catch((error) => {
-          console.error("Error:", error);
           Swal.fire("Error", "Error de conexión.", "error");
         });
     }
@@ -2460,21 +2340,15 @@ function cerrarLote(idlote, numeroLote) {
           }
         })
         .catch((error) => {
-          console.error("Error:", error);
           Swal.fire("Error", "Error de conexión.", "error");
         });
     }
   });
 }
 
-/**
- * Edita un lote de producción
- * Solo permite editar lotes en estado PLANIFICADO
- */
-function editarLote(idlote) {
-  console.log("📝 Editando lote:", idlote);
 
-  // Obtener datos del lote
+function editarLote(idlote) {
+
   fetch(`Produccion/getLoteById/${idlote}`, {
     method: "GET",
     headers: {
@@ -2490,7 +2364,6 @@ function editarLote(idlote) {
 
       const lote = result.data;
 
-      // Verificar que esté en estado PLANIFICADO
       if (lote.estatus_lote !== "PLANIFICADO") {
         Swal.fire({
           title: "No editable",
@@ -2501,7 +2374,6 @@ function editarLote(idlote) {
         return;
       }
 
-      // Cargar lista de supervisores
       fetch("Produccion/getEmpleadosActivos", {
         method: "GET",
         headers: {
@@ -2516,8 +2388,10 @@ function editarLote(idlote) {
           }
 
           const supervisores = empleadosResult.data;
+          
+          // Llenar array de supervisores válidos para validación de seguridad
+          const supervisoresValidosEdicion = supervisores.map(emp => parseInt(emp.idempleado));
 
-          // Construir opciones de select
           let optionsSupervisores = supervisores
             .map((emp) => {
               const selected = emp.idempleado == lote.idsupervisor ? "selected" : "";
@@ -2525,7 +2399,6 @@ function editarLote(idlote) {
             })
             .join("");
 
-          // Mostrar modal de edición con SweetAlert2
           Swal.fire({
             title: `<h3 class="text-xl font-bold text-gray-800">Editar Lote ${lote.numero_lote}</h3>`,
             html: `
@@ -2593,16 +2466,35 @@ function editarLote(idlote) {
             showCancelButton: true,
             confirmButtonColor: "#3b82f6",
             cancelButtonColor: "#6b7280",
-            confirmButtonText: '<i class="fas fa-save mr-2"></i>Guardar Cambios',
-            cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+            confirmButtonText: 'Guardar Cambios',
+            cancelButtonText: 'Cancelar',
             showLoaderOnConfirm: true,
+            didOpen: () => {
+              // Agregar validación de seguridad al select de supervisor
+              const supervisorSelect = document.getElementById("edit-supervisor");
+              if (supervisorSelect) {
+                supervisorSelect.addEventListener('change', function() {
+                  const valorSeleccionado = parseInt(this.value);
+                  if (valorSeleccionado && !supervisoresValidosEdicion.includes(valorSeleccionado)) {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Elemento inválido detectado',
+                      text: 'El supervisor seleccionado no es válido. La página se recargará por seguridad.',
+                      showConfirmButton: false,
+                      timer: 2000
+                    }).then(() => {
+                      location.reload();
+                    });
+                  }
+                });
+              }
+            },
             preConfirm: () => {
               const fechaJornada = document.getElementById("edit-fecha-jornada").value;
               const volumenEstimado = document.getElementById("edit-volumen-estimado").value;
               const idsupervisor = document.getElementById("edit-supervisor").value;
               const observaciones = document.getElementById("edit-observaciones").value;
 
-              // Validaciones
               if (!fechaJornada) {
                 Swal.showValidationMessage("La fecha de jornada es obligatoria");
                 return false;
@@ -2618,7 +2510,13 @@ function editarLote(idlote) {
                 return false;
               }
 
-              // Preparar datos
+              // Validación de seguridad para evitar manipulación de IDs
+              if (idsupervisor && !supervisoresValidosEdicion.includes(parseInt(idsupervisor))) {
+                Swal.showValidationMessage("El supervisor seleccionado no es válido");
+                setTimeout(() => location.reload(), 2000);
+                return false;
+              }
+
               const datos = {
                 fecha_jornada: fechaJornada,
                 volumen_estimado: parseFloat(volumenEstimado),
@@ -2626,9 +2524,7 @@ function editarLote(idlote) {
                 observaciones: observaciones.trim(),
               };
 
-              console.log("📤 Datos a enviar:", datos);
 
-              // Enviar actualización
               return fetch(`Produccion/actualizarLote/${idlote}`, {
                 method: "POST",
                 headers: {
@@ -2644,14 +2540,12 @@ function editarLote(idlote) {
                   return response.json();
                 })
                 .then((data) => {
-                  console.log("✅ Respuesta del servidor:", data);
                   if (!data.status) {
                     throw new Error(data.message || "Error al actualizar el lote");
                   }
                   return data;
                 })
                 .catch((error) => {
-                  console.error("❌ Error:", error);
                   Swal.showValidationMessage(`Error: ${error.message}`);
                 });
             },
@@ -2670,22 +2564,16 @@ function editarLote(idlote) {
           });
         })
         .catch((error) => {
-          console.error("Error al cargar supervisores:", error);
           Swal.fire("Error", "Error al cargar la lista de supervisores", "error");
         });
     })
     .catch((error) => {
-      console.error("Error al obtener lote:", error);
       Swal.fire("Error", "Error al cargar los datos del lote", "error");
     });
 }
 
-/**
- * Elimina un lote de producción
- * Solo permite eliminar lotes en estado PLANIFICADO
- */
+
 function eliminarLote(idlote, numeroLote) {
-  console.log("🗑️ Eliminando lote:", idlote, numeroLote);
 
   Swal.fire({
     title: "¿Eliminar lote?",
@@ -2706,8 +2594,8 @@ function eliminarLote(idlote, numeroLote) {
     showCancelButton: true,
     confirmButtonColor: "#dc2626",
     cancelButtonColor: "#6b7280",
-    confirmButtonText: '<i class="fas fa-trash mr-2"></i>Sí, eliminar',
-    cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
     showLoaderOnConfirm: true,
     preConfirm: () => {
       return fetch(`Produccion/eliminarLote/${idlote}`, {
@@ -2724,14 +2612,12 @@ function eliminarLote(idlote, numeroLote) {
           return response.json();
         })
         .then((data) => {
-          console.log("✅ Respuesta del servidor:", data);
           if (!data.status) {
             throw new Error(data.message || "Error al eliminar el lote");
           }
           return data;
         })
         .catch((error) => {
-          console.error("❌ Error:", error);
           Swal.showValidationMessage(`Error: ${error.message}`);
         });
     },
@@ -2750,14 +2636,8 @@ function eliminarLote(idlote, numeroLote) {
   });
 }
 
-// ========================================
-// FUNCIONES DE ASIGNACIÓN DE OPERARIOS
-// ========================================
 
 
-// ========================================
-// FUNCIONES DE CONFIGURACIÓN
-// ========================================
 function cargarConfiguracionInicial() {
   fetch("Produccion/getConfiguracionProduccion")
     .then((response) => response.json())
@@ -2771,14 +2651,10 @@ function cargarConfiguracionInicial() {
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
       mostrarError("Error al cargar configuración.");
     });
 }
 
-// ================================
-// CONFIG - Precios por proceso
-// ================================
 async function cargarPreciosProceso() {
   try {
     const resp = await fetch("Produccion/getPreciosProceso");
@@ -2788,7 +2664,6 @@ async function cargarPreciosProceso() {
       renderTablaPreciosProceso();
     }
   } catch(e) {
-    console.error("Error al cargar precios de proceso:", e);
   }
 }
 
@@ -2814,7 +2689,6 @@ function renderTablaPreciosProceso() {
 }
 
 async function crearPrecioProceso() {
-  console.log("🎯 crearPrecioProceso - Iniciando");
   
   const tipo = document.getElementById("tipo_proceso_salario")?.value || '';
   const idproducto = parseInt(document.getElementById("idproducto_precio")?.value || 0);
@@ -2828,29 +2702,23 @@ async function crearPrecioProceso() {
     unidad_base: null
   };
   
-  console.log("📝 Datos a enviar:", data);
   
   if (!data.tipo_proceso || !data.idproducto || data.salario_unitario <= 0) {
-    console.warn("⚠️ Validación fallida");
     Swal.fire("Datos inválidos", "Completa tipo de proceso, producto y salario válido.", "warning");
     return;
   }
   
   try {
-    console.log("🚀 Enviando solicitud a Produccion/createPrecioProceso");
     const resp = await fetch("Produccion/createPrecioProceso", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
-    console.log("📡 Respuesta HTTP:", resp.status, resp.statusText);
     const json = await resp.json();
-    console.log("📦 Respuesta JSON:", json);
     
     if (json.status) {
       await cargarPreciosProceso();
       Swal.fire("Creado", json.message || "Salario configurado", "success");
-      // Limpiar formulario
       document.getElementById("tipo_proceso_salario").value = '';
       document.getElementById("idproducto_precio").value = '';
       document.getElementById("salario_unitario_input").value = '';
@@ -2858,7 +2726,6 @@ async function crearPrecioProceso() {
       Swal.fire("Error", json.message || "No se pudo crear", "error");
     }
   } catch (e) {
-    console.error("❌ Error en crearPrecioProceso:", e);
     Swal.fire("Error", "Fallo de red: " + e.message, "error");
   }
 }
@@ -2886,7 +2753,6 @@ document.addEventListener("click", async (e) => {
         Swal.fire("Error", json.message || "No se pudo desactivar", "error");
       }
     } catch (e2) {
-      console.error(e2);
       Swal.fire("Error", "Fallo de red", "error");
     }
   }
@@ -2944,7 +2810,6 @@ function guardarConfiguracion() {
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
       Swal.fire("Error", "Error de conexión.", "error");
     })
     .finally(() => {
@@ -2955,13 +2820,8 @@ function guardarConfiguracion() {
     });
 }
 
-// ========================================
-// FUNCIONES DE CONSULTA DE NÓMINA
-// ========================================
 
-/**
- * Abre el modal para consultar registros de producción por fecha
- */
+
 function abrirModalConsultarPorFecha() {
   Swal.fire({
     title: "Consultar Registros por Fecha",
@@ -3013,15 +2873,10 @@ function abrirModalConsultarPorFecha() {
   });
 }
 
-/**
- * Consulta los registros de producción por rango de fechas
- */
+
 function consultarRegistrosPorFecha(fechaInicio, fechaFin) {
-  console.log(`🔍 Consultando registros desde ${fechaInicio} hasta ${fechaFin}`);
   
-  // Verificar que la tabla exista
   if (!tablaNomina) {
-    console.error('❌ tablaNomina no está inicializada');
     Swal.fire({
       title: "Error",
       text: "La tabla de nómina no está inicializada. Por favor, recarga la página.",
@@ -3030,7 +2885,6 @@ function consultarRegistrosPorFecha(fechaInicio, fechaFin) {
     return;
   }
 
-  console.log('✅ Tabla de nómina existe:', tablaNomina);
   
   Swal.fire({
     title: "Consultando Registros...",
@@ -3041,28 +2895,18 @@ function consultarRegistrosPorFecha(fechaInicio, fechaFin) {
     }
   });
 
-  // Asegurarse de que la pestaña de nómina esté visible
   const tabNomina = document.getElementById("tab-nomina");
   if (tabNomina) {
-    console.log('📑 Cambiando a pestaña de nómina...');
     tabNomina.click();
   }
 
-  // Esperar un momento para que la pestaña se active
   setTimeout(() => {
-    // Recargar la tabla de nómina con el rango de fechas
     if (tablaNomina && tablaNomina.ajax) {
       const urlConFiltros = `./Produccion/getRegistrosProduccion?fecha_desde=${fechaInicio}&fecha_hasta=${fechaFin}`;
-      console.log('📡 URL de consulta:', urlConFiltros);
       
       tablaNomina.ajax.url(urlConFiltros).load(function(json) {
-        console.log('📦 Respuesta completa del servidor:', json);
-        console.log('📊 Tipo de respuesta:', typeof json);
-        console.log('✅ Status:', json?.status);
-        console.log('📋 Data:', json?.data);
         
         const cantidadRegistros = json && json.data ? json.data.length : 0;
-        console.log(`📈 Cantidad de registros: ${cantidadRegistros}`);
         
         Swal.close();
         
@@ -3082,18 +2926,12 @@ function consultarRegistrosPorFecha(fechaInicio, fechaFin) {
           });
         }
         
-        // Ajustar columnas de la tabla
         if (tablaNomina.columns) {
           setTimeout(() => {
             tablaNomina.columns.adjust().draw();
-            console.log('🎨 Columnas ajustadas');
           }, 100);
         }
       }, function(xhr, error, thrown) {
-        console.error('❌ Error al cargar registros:', error, thrown);
-        console.error('📡 Status:', xhr.status);
-        console.error('📝 Respuesta del servidor:', xhr.responseText);
-        console.error('🔍 Estado de la petición:', xhr.readyState);
         
         Swal.close();
         Swal.fire({
@@ -3104,9 +2942,6 @@ function consultarRegistrosPorFecha(fechaInicio, fechaFin) {
         });
       });
     } else {
-      console.error('❌ Tabla de nómina no tiene ajax configurado');
-      console.error('🔍 tablaNomina:', tablaNomina);
-      console.error('🔍 tablaNomina.ajax:', tablaNomina?.ajax);
       
       Swal.close();
       Swal.fire({
@@ -3118,15 +2953,9 @@ function consultarRegistrosPorFecha(fechaInicio, fechaFin) {
   }, 300);
 }
 
-// ========================================
-// FUNCIONES PARA ACCIONES DE NÓMINA
-// ========================================
 
-/**
- * Marca un registro de nómina como PAGADO
- */
+
 function marcarComoPagado(idregistro, empleado, salario) {
-  console.log(`💰 Marcando registro ${idregistro} como PAGADO`);
   
   Swal.fire({
     title: "¿Marcar como Pagado?",
@@ -3149,11 +2978,10 @@ function marcarComoPagado(idregistro, empleado, salario) {
     showCancelButton: true,
     confirmButtonColor: "#059669",
     cancelButtonColor: "#6b7280",
-    confirmButtonText: '<i class="fas fa-check mr-2"></i>Sí, marcar como pagado',
-    cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar'
+    confirmButtonText: 'Sí, marcar como pagado',
+    cancelButtonText: 'Cancelar'
   }).then((result) => {
     if (result.isConfirmed) {
-      // Mostrar loading
       Swal.fire({
         title: 'Procesando...',
         text: 'Marcando registro como pagado...',
@@ -3163,7 +2991,6 @@ function marcarComoPagado(idregistro, empleado, salario) {
         }
       });
 
-      console.log('📤 Enviando petición para marcar como pagado...');
 
       fetch(base_url + "Produccion/marcarComoPagado", {
         method: "POST",
@@ -3175,7 +3002,6 @@ function marcarComoPagado(idregistro, empleado, salario) {
       })
         .then((response) => response.json())
         .then((result) => {
-          console.log('📊 Resultado:', result);
           
           if (result.status) {
             Swal.fire({
@@ -3192,7 +3018,6 @@ function marcarComoPagado(idregistro, empleado, salario) {
               icon: "success",
               confirmButtonColor: "#059669"
             }).then(() => {
-              // Recargar tabla
               if (tablaNomina) {
                 tablaNomina.ajax.reload(null, false);
               }
@@ -3207,7 +3032,6 @@ function marcarComoPagado(idregistro, empleado, salario) {
           }
         })
         .catch((error) => {
-          console.error("❌ Error:", error);
           Swal.fire({
             title: "Error de Conexión",
             text: "No se pudo conectar con el servidor.",
@@ -3219,13 +3043,9 @@ function marcarComoPagado(idregistro, empleado, salario) {
   });
 }
 
-/**
- * Muestra los detalles de un registro de nómina
- */
+
 function verDetalleRegistroNomina(idregistro) {
-  console.log(`👁️ Viendo detalles del registro ${idregistro}`);
   
-  // Obtener datos del registro desde la tabla
   const datos = tablaNomina.rows().data().toArray();
   const registro = datos.find(r => r.idregistro == idregistro);
   
@@ -3302,16 +3122,13 @@ function verDetalleRegistroNomina(idregistro) {
     `,
     icon: "info",
     confirmButtonColor: "#059669",
-    confirmButtonText: '<i class="fas fa-times mr-2"></i>Cerrar',
+    confirmButtonText: 'Cerrar',
     width: '600px'
   });
 }
 
-/**
- * Cancela un registro de nómina
- */
+
 function cancelarRegistroNomina(idregistro, empleado) {
-  console.log(`🚫 Cancelando registro ${idregistro}`);
   
   Swal.fire({
     title: "¿Cancelar Registro?",
@@ -3333,11 +3150,10 @@ function cancelarRegistroNomina(idregistro, empleado) {
     showCancelButton: true,
     confirmButtonColor: "#dc2626",
     cancelButtonColor: "#6b7280",
-    confirmButtonText: '<i class="fas fa-ban mr-2"></i>Sí, cancelar',
-    cancelButtonText: '<i class="fas fa-times mr-2"></i>No cancelar'
+    confirmButtonText: 'Sí, cancelar',
+    cancelButtonText: 'No cancelar'
   }).then((result) => {
     if (result.isConfirmed) {
-      // Mostrar loading
       Swal.fire({
         title: 'Procesando...',
         text: 'Cancelando registro...',
@@ -3378,7 +3194,6 @@ function cancelarRegistroNomina(idregistro, empleado) {
           }
         })
         .catch((error) => {
-          console.error("❌ Error:", error);
           Swal.fire({
             title: "Error de Conexión",
             text: "No se pudo conectar con el servidor.",
@@ -3390,12 +3205,8 @@ function cancelarRegistroNomina(idregistro, empleado) {
   });
 }
 
-// ========================================
-// FUNCIÓN PARA ACTUALIZAR CONTADOR DE ESTADOS EN NÓMINA
-// ========================================
 function actualizarContadorEstados(datos) {
   if (!datos || !Array.isArray(datos)) {
-    console.warn('⚠️ No hay datos para actualizar contador');
     return;
   }
 
@@ -3424,18 +3235,13 @@ function actualizarContadorEstados(datos) {
     }
   });
 
-  console.log('📊 Contador de estados:', contador);
 
-  // Actualizar el texto del botón "Registrar Salario" con la cantidad de borradores
   const btnRegistrarSalario = document.getElementById('btnRegistrarSalario');
   if (btnRegistrarSalario && contador.borrador > 0) {
     btnRegistrarSalario.innerHTML = `<i class="fas fa-money-check-alt mr-2"></i>Registrar Salario (${contador.borrador} disponibles)`;
   }
 }
 
-// ========================================
-// FUNCIONES AUXILIARES
-// ========================================
 function recargarTablaLotes() {
   if (tablaLotes && tablaLotes.ajax && typeof tablaLotes.ajax.reload === 'function') {
     tablaLotes.ajax.reload(null, false);
@@ -3449,21 +3255,34 @@ function cargarEmpleadosActivos(selectId = "lote_supervisor") {
     .then((response) => response.json())
     .then((result) => {
       if (result.status && result.data) {
+        // Limpiar y llenar el array de supervisores válidos
+        supervisoresValidos.length = 0;
+        
         const select = document.getElementById(selectId);
         if (select) {
           let options = '<option value="">Seleccionar empleado...</option>';
           
           result.data.forEach(empleado => {
+            // Agregar ID al array de válidos
+            supervisoresValidos.push(parseInt(empleado.idempleado));
             options += `<option value="${empleado.idempleado}">${empleado.nombre_completo}</option>`;
           });
           
           select.innerHTML = options;
+          
+          // Agregar listener para validación de seguridad
+          select.removeEventListener('change', validarSupervisorChange);
+          select.addEventListener('change', validarSupervisorChange);
         }
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
     });
+}
+
+// Función específica para validar cambio de supervisor
+function validarSupervisorChange(event) {
+  return validarElementoSeguro(event.target, supervisoresValidos, 'Supervisor');
 }
 
 function mostrarError(mensaje) {
@@ -3501,10 +3320,8 @@ async function manejarPesoRomanaClasificacion(campo) {
                 const data = await response.json();
                 
                 if (data.status) {
-                    // Asignar el peso al campo correspondiente
                     document.getElementById(campo).value = data.peso;
                     
-                    // Guardar el peso en la base de datos
                     await fetch("Compras/guardarPesoRomana", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -3514,7 +3331,6 @@ async function manejarPesoRomanaClasificacion(campo) {
                         }),
                     });
 
-                    // Mostrar mensaje de éxito
                     Swal.fire({
                         title: 'Éxito',
                         text: `Peso actualizado: ${data.peso} kg`,
@@ -3530,18 +3346,12 @@ async function manejarPesoRomanaClasificacion(campo) {
                     );
                 }
             } catch (e) {
-                console.error("Error completo:", e);
                 Swal.fire("Error", "Error al consultar la romana: " + e.message, "error");
             }
         }
 
-// ============================================================
-// FUNCIONES PARA REGISTRO DE PRODUCCIÓN
-// ============================================================
 
-/**
- * Abre el modal de registrar producción y carga datos iniciales
- */
+
 function abrirModalRegistrarProduccion() {
   const modal = abrirModal("modalRegistrarProduccion");
   
@@ -3550,26 +3360,21 @@ function abrirModalRegistrarProduccion() {
     return;
   }
 
-  // Limpiar formulario
   const form = document.getElementById("formRegistrarProduccion");
   if (form) form.reset();
 
-  // Establecer fecha actual
   const fechaInput = document.getElementById("prod_fecha_jornada");
   if (fechaInput) {
     fechaInput.value = new Date().toISOString().split('T')[0];
   }
 
-  // Cargar datos necesarios
   cargarLotesActivos();
   cargarEmpleadosParaProduccion();
   cargarProductosParaProduccion();
   limpiarCamposSalarios();
 }
 
-/**
- * Carga lotes activos en el selector
- */
+
 async function cargarLotesActivos() {
   try {
     const response = await fetch("Produccion/getLotesData");
@@ -3582,7 +3387,6 @@ async function cargarLotesActivos() {
 
     if (data.status && Array.isArray(data.data)) {
       data.data.forEach(lote => {
-        // Solo lotes activos o en proceso
         if (lote.estatus_lote === 'ACTIVO' || lote.estatus_lote === 'EN_PROCESO') {
           const option = document.createElement("option");
           option.value = lote.idlote;
@@ -3592,17 +3396,13 @@ async function cargarLotesActivos() {
       });
     }
   } catch (error) {
-    console.error("Error al cargar lotes:", error);
     mostrarError("Error al cargar lotes activos");
   }
 }
 
-/**
- * Carga empleados activos en el selector del formulario de producción
- */
+
 async function cargarEmpleadosParaProduccion() {
   try {
-    console.log("🔍 Iniciando carga de empleados...");
     const response = await fetch("Produccion/getEmpleadosActivos");
     
     if (!response.ok) {
@@ -3610,68 +3410,65 @@ async function cargarEmpleadosParaProduccion() {
     }
     
     const data = await response.json();
-    console.log("📦 Respuesta de empleados:", data);
 
     const selectEmpleado = document.getElementById("prod_empleado");
 
     if (!selectEmpleado) {
-      console.error("❌ No se encontró el selector de empleados");
       return;
     }
 
     selectEmpleado.innerHTML = '<option value="">Seleccionar empleado...</option>';
 
-    // Verificar si hay datos
     if (!data || !data.data) {
-      console.error("❌ Respuesta sin datos:", data);
       mostrarAdvertencia("No se recibieron empleados del servidor");
       return;
     }
 
     if (!Array.isArray(data.data)) {
-      console.error("❌ data.data no es un array:", data.data);
       mostrarAdvertencia("Formato de datos incorrecto");
       return;
     }
 
-    console.log(`📊 Total de empleados recibidos: ${data.data.length}`);
 
     let empleadosActivos = 0;
     
+    // Limpiar y cargar IDs válidos para validación
+    empleadosValidos = [];
+    
     data.data.forEach((empleado, index) => {
-      console.log(`Empleado ${index}:`, empleado);
       
       empleadosActivos++;
+      
+      // Guardar ID válido
+      empleadosValidos.push(parseInt(empleado.idempleado));
       
       const option = document.createElement("option");
       option.value = empleado.idempleado;
       
-      // Mostrar nombre completo del empleado
       option.textContent = empleado.nombre_completo || `${empleado.nombre || ''} ${empleado.apellido || ''}`.trim() || `Empleado ${empleado.idempleado}`;
       
       selectEmpleado.appendChild(option);
     });
     
-    console.log(`✅ ${empleadosActivos} empleados activos cargados correctamente`);
+    // Agregar validador de seguridad
+    if (selectEmpleado && !selectEmpleado.hasAttribute('data-validador-agregado')) {
+      selectEmpleado.addEventListener('change', validarEmpleado);
+      selectEmpleado.setAttribute('data-validador-agregado', 'true');
+    }
+    
     
     if (empleadosActivos === 0) {
-      console.warn("⚠️ No hay empleados activos");
       mostrarAdvertencia("No hay empleados activos disponibles");
     }
     
   } catch (error) {
-    console.error("❌ Error al cargar empleados:", error);
-    console.error("Detalles del error:", error.message);
     mostrarError("Error al cargar empleados: " + error.message);
   }
 }
 
-/**
- * Carga productos en los selectores
- */
+
 async function cargarProductosParaProduccion() {
   try {
-    console.log("🔍 Iniciando carga de productos...");
     
     const response = await fetch("Productos/getProductosData");
     
@@ -3680,41 +3477,35 @@ async function cargarProductosParaProduccion() {
     }
     
     const data = await response.json();
-    console.log("📦 Respuesta de productos:", data);
 
     const selectProducir = document.getElementById("prod_producto_producir");
     const selectTerminado = document.getElementById("prod_producto_terminado");
 
     if (!selectProducir || !selectTerminado) {
-      console.error("❌ No se encontraron los selectores de productos");
       return;
     }
 
     selectProducir.innerHTML = '<option value="">Seleccionar producto...</option>';
     selectTerminado.innerHTML = '<option value="">Seleccionar producto...</option>';
 
-    // Verificar si hay datos
     if (!data || !data.data) {
-      console.error("❌ Respuesta sin datos:", data);
       mostrarAdvertencia("No se recibieron productos del servidor");
       return;
     }
 
     if (!Array.isArray(data.data)) {
-      console.error("❌ data.data no es un array:", data.data);
       mostrarAdvertencia("Formato de datos incorrecto");
       return;
     }
 
-    console.log(`📊 Total de productos recibidos: ${data.data.length}`);
 
     let productosActivos = 0;
     
+    // Limpiar y cargar IDs válidos para validación
+    productosValidos = [];
+    
     data.data.forEach((producto, index) => {
-      console.log(`Producto ${index}:`, producto);
       
-      // Intentar cargar todos los productos primero (sin filtro de estatus)
-      // Luego filtraremos por estatus si es necesario
       const estaActivo = producto.estatus == 'ACTIVO' || 
                         producto.estatus == 1 || 
                         producto.estatus == '1' ||
@@ -3723,52 +3514,57 @@ async function cargarProductosParaProduccion() {
       if (estaActivo) {
         productosActivos++;
         
+        // Guardar ID válido
+        productosValidos.push(parseInt(producto.idproducto));
+        
         const option1 = document.createElement("option");
         option1.value = producto.idproducto;
-        option1.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        option1.textContent = producto.nombre || producto.descripcion || 'Sin nombre';
         selectProducir.appendChild(option1);
 
         const option2 = document.createElement("option");
         option2.value = producto.idproducto;
-        option2.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        option2.textContent = producto.nombre || producto.descripcion || 'Sin nombre';
         selectTerminado.appendChild(option2);
       }
     });
     
-    console.log(`✅ ${productosActivos} productos activos cargados correctamente`);
-    
+    // TAMBIÉN cargar productos inactivos si no hay activos
     if (productosActivos === 0) {
-      console.warn("⚠️ No hay productos activos. Mostrando todos los productos...");
-      
-      // Si no hay productos activos, cargar TODOS los productos
-      selectProducir.innerHTML = '<option value="">Seleccionar producto...</option>';
-      selectTerminado.innerHTML = '<option value="">Seleccionar producto...</option>';
-      
       data.data.forEach(producto => {
+        // Guardar ID válido incluso si está inactivo
+        productosValidos.push(parseInt(producto.idproducto));
+        
         const option1 = document.createElement("option");
         option1.value = producto.idproducto;
-        option1.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        option1.textContent = producto.nombre || producto.descripcion || 'Sin nombre';
         selectProducir.appendChild(option1);
 
         const option2 = document.createElement("option");
         option2.value = producto.idproducto;
-        option2.textContent = producto.descripcion || producto.nombre || 'Sin nombre';
+        option2.textContent = producto.nombre || producto.descripcion || 'Sin nombre';
         selectTerminado.appendChild(option2);
       });
-      
-      console.log(`✅ ${data.data.length} productos cargados (todos)`);
     }
     
+    // Agregar validadores de seguridad
+    if (selectProducir && !selectProducir.hasAttribute('data-validador-agregado')) {
+      selectProducir.addEventListener('change', validarProducto);
+      selectProducir.setAttribute('data-validador-agregado', 'true');
+    }
+    
+    if (selectTerminado && !selectTerminado.hasAttribute('data-validador-agregado')) {
+      selectTerminado.addEventListener('change', validarProducto);
+      selectTerminado.setAttribute('data-validador-agregado', 'true');
+    }
+    
+    
   } catch (error) {
-    console.error("❌ Error al cargar productos:", error);
-    console.error("Detalles del error:", error.message);
     mostrarError("Error al cargar productos: " + error.message);
   }
 }
 
-/**
- * Calcula salarios automáticamente según configuración
- */
+
 async function calcularSalariosAutomaticamente() {
   try {
     const cantidadProducida = parseFloat(document.getElementById("prod_cantidad_producida").value) || 0;
@@ -3779,14 +3575,12 @@ async function calcularSalariosAutomaticamente() {
       return;
     }
 
-    // Obtener configuración actual
     if (!configuracionActual || Object.keys(configuracionActual).length === 0) {
       await cargarConfiguracionInicial();
     }
 
     const salarioBase = parseFloat(configuracionActual.salario_base || 30.00);
     let precioUnit = 0;
-    // Elegir producto base según tipo
     const productoBaseId = tipoMovimiento === 'CLASIFICACION'
       ? parseInt(document.getElementById('prod_producto_producir')?.value || 0)
       : parseInt(document.getElementById('prod_producto_terminado')?.value || 0);
@@ -3795,7 +3589,6 @@ async function calcularSalariosAutomaticamente() {
       if (match) precioUnit = parseFloat(match.salario_unitario || 0);
     }
     if (precioUnit <= 0) {
-      // Fallback a configuración anterior
       precioUnit = tipoMovimiento === 'CLASIFICACION'
         ? parseFloat(configuracionActual.beta_clasificacion || 0.25)
         : parseFloat(configuracionActual.gamma_empaque || 5.00);
@@ -3804,31 +3597,29 @@ async function calcularSalariosAutomaticamente() {
 
     const salarioTotal = salarioBase + pagoTrabajo;
 
-    // Actualizar campos
     document.getElementById("prod_salario_base_dia").value = salarioBase.toFixed(2);
     document.getElementById("prod_pago_clasificacion").value = pagoTrabajo.toFixed(2);
     document.getElementById("prod_salario_total").value = salarioTotal.toFixed(2);
 
   } catch (error) {
-    console.error("Error al calcular salarios:", error);
   }
 }
 
-/**
- * Limpia los campos de salarios
- */
+
 function limpiarCamposSalarios() {
   document.getElementById("prod_salario_base_dia").value = "0.00";
   document.getElementById("prod_pago_clasificacion").value = "0.00";
   document.getElementById("prod_salario_total").value = "0.00";
 }
 
-/**
- * Guarda el registro de producción
- */
+
 async function guardarRegistroProduccion() {
   try {
-    // Obtener datos del formulario
+    // Validar seguridad antes de procesar
+    if (!validarFormularioCompleto()) {
+      return; // La validación ya mostró el error
+    }
+    
     const idlote = document.getElementById("prod_lote").value;
     const idempleado = document.getElementById("prod_empleado").value;
     const fecha_jornada = document.getElementById("prod_fecha_jornada").value;
@@ -3839,7 +3630,6 @@ async function guardarRegistroProduccion() {
     const tipo_movimiento = document.getElementById("prod_tipo_movimiento").value;
     const observaciones = document.getElementById("prod_observaciones").value.trim();
 
-    // Validaciones
     if (!idlote) {
       mostrarAdvertencia("Debe seleccionar un lote");
       return;
@@ -3880,7 +3670,6 @@ async function guardarRegistroProduccion() {
       return;
     }
 
-    // Mostrar loading
     Swal.fire({
       title: "Guardando...",
       text: "Por favor espere",
@@ -3890,7 +3679,6 @@ async function guardarRegistroProduccion() {
       }
     });
 
-    // Crear FormData para enviar
     const formData = new FormData();
     formData.append("idlote", idlote);
     formData.append("idempleado", idempleado);
@@ -3901,7 +3689,6 @@ async function guardarRegistroProduccion() {
     formData.append("cantidad_producida", cantidad_producida);
     formData.append("observaciones", observaciones);
 
-    // Enviar datos
     const response = await fetch(base_url + "Produccion/crearRegistroProduccion", {
       method: "POST",
       body: formData
@@ -3918,7 +3705,9 @@ async function guardarRegistroProduccion() {
       }).then(() => {
         cerrarModal("modalRegistrarProduccion");
         
-        // Recargar tabla si existe
+        // Recargar elementos para limpiar manipulaciones
+        recargarElementos();
+        
         if (typeof tablaRegistrosProcesos !== "undefined" && tablaRegistrosProcesos.ajax) {
           tablaRegistrosProcesos.ajax.reload(null, false);
         }
@@ -3936,7 +3725,6 @@ async function guardarRegistroProduccion() {
     }
 
   } catch (error) {
-    console.error("Error al guardar registro:", error);
     Swal.fire({
       icon: "error",
       title: "Error",
@@ -3946,18 +3734,11 @@ async function guardarRegistroProduccion() {
   }
 }
 
-// ========================================
-// EDITAR Y ELIMINAR REGISTROS
-// ========================================
 
-/**
- * Edita un registro de producción (solo si está en BORRADOR)
- */
+
 async function editarRegistroProduccion(idregistro) {
   try {
-    console.log('📝 Editando registro:', idregistro);
     
-    // Obtener datos del registro
     const response = await fetch(`Produccion/getRegistroById/${idregistro}`);
     const result = await response.json();
     
@@ -3973,7 +3754,6 @@ async function editarRegistroProduccion(idregistro) {
     
     const registro = result.data;
     
-    // Verificar que el REGISTRO está en BORRADOR
     if (registro.estatus !== 'BORRADOR') {
       Swal.fire({
         icon: 'warning',
@@ -3984,58 +3764,78 @@ async function editarRegistroProduccion(idregistro) {
       return;
     }
     
-    // Crear formulario en SweetAlert con todos los campos
     const { value: formValues } = await Swal.fire({
       title: `<div class="text-left">
-                <i class="fas fa-edit text-blue-600 mr-2"></i>
+                <i class="fas fa-edit text-emerald-600 mr-2"></i>
                 Editar Registro de Producción
               </div>`,
       html: `
-        <div class="text-left space-y-4 max-h-96 overflow-y-auto px-2">
-          <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4">
-            <p class="text-sm"><strong>Lote:</strong> ${registro.numero_lote}</p>
-            <p class="text-sm"><strong>Empleado:</strong> ${registro.nombre_empleado || 'Sin asignar'}</p>
-            <p class="text-sm"><strong>Estado:</strong> ${registro.estatus}</p>
+        <div class="text-left space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-2 sm:px-3">
+          <div class="bg-emerald-50 border-l-4 border-emerald-500 p-2 sm:p-3 mb-3 sm:mb-4 rounded-r">
+            <p class="text-xs sm:text-sm"><strong>Lote:</strong> ${registro.numero_lote}</p>
+            <p class="text-xs sm:text-sm"><strong>Empleado:</strong> ${registro.nombre_empleado || 'Sin asignar'}</p>
+            <p class="text-xs sm:text-sm"><strong>Estado:</strong> <span class="text-emerald-700 font-semibold">${registro.estatus}</span></p>
           </div>
           
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Jornada:</label>
-            <input id="edit_fecha_jornada" type="date" value="${registro.fecha_jornada_input}" 
-                   class="swal2-input w-full m-0">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-calendar-alt text-green-500 mr-1"></i>Fecha de Jornada:
+              </label>
+              <input id="edit_fecha_jornada" type="date" value="${registro.fecha_jornada_input}" 
+                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+            </div>
+            
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-tasks text-green-500 mr-1"></i>Tipo de Movimiento:
+              </label>
+              <select id="edit_tipo_movimiento" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
+                <option value="CLASIFICACION" ${registro.tipo_movimiento === 'CLASIFICACION' ? 'selected' : ''}> Clasificación</option>
+                <option value="EMPAQUE" ${registro.tipo_movimiento === 'EMPAQUE' ? 'selected' : ''}>Empaque</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-box text-green-500 mr-1"></i>Cantidad a Producir (kg):
+              </label>
+              <input id="edit_cantidad_producir" type="number" step="0.01" value="${registro.cantidad_producir}" 
+                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
+                     placeholder="0.00">
+            </div>
+            
+            <div>
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-check-circle text-green-500 mr-1"></i>Cantidad Producida (kg):
+              </label>
+              <input id="edit_cantidad_producida" type="number" step="0.01" value="${registro.cantidad_producida}" 
+                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" 
+                     placeholder="0.00">
+            </div>
+            
+            <div class="sm:col-span-2">
+              <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                <i class="fas fa-comment-alt text-green-500 mr-1"></i>Observaciones:
+              </label>
+              <textarea id="edit_observaciones" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none" 
+                        rows="3" placeholder="Observaciones opcionales...">${registro.observaciones || ''}</textarea>
+            </div>
           </div>
           
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Movimiento:</label>
-            <select id="edit_tipo_movimiento" class="swal2-input w-full m-0">
-              <option value="CLASIFICACION" ${registro.tipo_movimiento === 'CLASIFICACION' ? 'selected' : ''}>Clasificación</option>
-              <option value="EMPAQUE" ${registro.tipo_movimiento === 'EMPAQUE' ? 'selected' : ''}>Empaque</option>
-            </select>
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad a Producir (kg):</label>
-            <input id="edit_cantidad_producir" type="number" step="0.01" value="${registro.cantidad_producir}" 
-                   class="swal2-input w-full m-0" placeholder="Cantidad inicial">
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad Producida (kg):</label>
-            <input id="edit_cantidad_producida" type="number" step="0.01" value="${registro.cantidad_producida}" 
-                   class="swal2-input w-full m-0" placeholder="Cantidad final producida">
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones:</label>
-            <textarea id="edit_observaciones" class="swal2-textarea w-full m-0" rows="3" 
-                      placeholder="Observaciones opcionales">${registro.observaciones || ''}</textarea>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3 mt-3">
+            <p class="text-xs text-blue-800 flex items-start">
+              <i class="fas fa-info-circle mt-0.5 mr-2 text-green-500"></i>
+              <span>Los salarios se calcularán automáticamente al guardar los cambios</span>
+            </p>
           </div>
         </div>
       `,
-      width: '600px',
+      width: window.innerWidth < 640 ? '95%' : window.innerWidth < 768 ? '85%' : '650px',
       showCancelButton: true,
       confirmButtonText: '<i class="fas fa-save mr-2"></i>Guardar Cambios',
       cancelButtonText: '<i class="fas fa-times mr-2"></i>Cancelar',
-      confirmButtonColor: '#059669',
+      confirmButtonColor: '#00ca54',
       cancelButtonColor: '#6b7280',
       focusConfirm: false,
       preConfirm: () => {
@@ -4045,7 +3845,6 @@ async function editarRegistroProduccion(idregistro) {
         const cantidad_producida = document.getElementById('edit_cantidad_producida').value;
         const observaciones = document.getElementById('edit_observaciones').value;
         
-        // Validaciones
         if (!fecha_jornada) {
           Swal.showValidationMessage('La fecha es requerida');
           return false;
@@ -4075,7 +3874,6 @@ async function editarRegistroProduccion(idregistro) {
     
     if (!formValues) return; // Usuario canceló
     
-    // Enviar actualización
     const updateResponse = await fetch(`Produccion/actualizarRegistroProduccion/${idregistro}`, {
       method: 'POST',
       headers: {
@@ -4094,7 +3892,6 @@ async function editarRegistroProduccion(idregistro) {
         confirmButtonColor: '#059669'
       });
       
-      // Recargar tabla
       if (typeof tablaProcesos !== 'undefined' && tablaProcesos.ajax) {
         tablaProcesos.ajax.reload(null, false);
       }
@@ -4108,7 +3905,6 @@ async function editarRegistroProduccion(idregistro) {
     }
     
   } catch (error) {
-    console.error('Error al editar registro:', error);
     Swal.fire({
       icon: 'error',
       title: 'Error',
@@ -4118,14 +3914,10 @@ async function editarRegistroProduccion(idregistro) {
   }
 }
 
-/**
- * Elimina un registro de producción (solo si está en BORRADOR)
- */
+
 async function eliminarRegistroProduccion(idregistro, nombreEmpleado, numeroLote) {
   try {
-    console.log('🗑️ Eliminando registro:', idregistro);
     
-    // Confirmación con SweetAlert
     const confirmacion = await Swal.fire({
       title: '¿Eliminar Registro?',
       html: `
@@ -4151,7 +3943,6 @@ async function eliminarRegistroProduccion(idregistro, nombreEmpleado, numeroLote
     
     if (!confirmacion.isConfirmed) return;
     
-    // Enviar solicitud de eliminación
     const response = await fetch(`Produccion/eliminarRegistroProduccion/${idregistro}`, {
       method: 'POST' // Usamos POST porque DELETE puede tener problemas en algunos servidores
     });
@@ -4166,7 +3957,6 @@ async function eliminarRegistroProduccion(idregistro, nombreEmpleado, numeroLote
         confirmButtonColor: '#059669'
       });
       
-      // Recargar tabla
       if (typeof tablaProcesos !== 'undefined' && tablaProcesos.ajax) {
         tablaProcesos.ajax.reload(null, false);
       }
@@ -4180,7 +3970,6 @@ async function eliminarRegistroProduccion(idregistro, nombreEmpleado, numeroLote
     }
     
   } catch (error) {
-    console.error('Error al eliminar registro:', error);
     Swal.fire({
       icon: 'error',
       title: 'Error',
@@ -4190,9 +3979,6 @@ async function eliminarRegistroProduccion(idregistro, nombreEmpleado, numeroLote
   }
 }
 
-// ========================================
-// EXPOSICIÓN GLOBAL
-// ========================================
 window.editarRegistroProduccion = editarRegistroProduccion;
 window.eliminarRegistroProduccion = eliminarRegistroProduccion;
 window.editarLote = editarLote;
