@@ -87,19 +87,19 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
         <form id="formRegistrarRol" class="px-4 md:px-8 py-6 max-h-[calc(70vh-120px)] sm:max-h-[60vh] overflow-y-auto">
             <div class="mb-4">
                 <label for="nombreRol" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol <span class="text-red-500">*</span></label>
-                <input type="text" id="nombreRol" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                <input type="text" id="nombreRol" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
                 <div class="text-red-500 text-xs mt-1 error-message"></div>
             </div>
 
             <div class="mb-4">
                 <label for="descripcionRol" class="block text-sm font-medium text-gray-700 mb-1">Descripción <span class="text-red-500">*</span></label>
-                <textarea id="descripcionRol" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required></textarea>
+                <textarea id="descripcionRol" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" ></textarea>
                 <div class="text-red-500 text-xs mt-1 error-message"></div>
             </div>
 
             <div class="mb-4">
                 <label for="estatusRol" class="block text-sm font-medium text-gray-700 mb-1">Estatus <span class="text-red-500">*</span></label>
-                <select id="estatusRol" name="estatus" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                <select id="estatusRol" name="estatus" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
                     <option value="">Seleccione un estatus</option>
                     <option value="ACTIVO">ACTIVO</option>
                     <option value="INACTIVO">INACTIVO</option>
@@ -139,19 +139,19 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
             
             <div class="mb-4">
                 <label for="nombreActualizar" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol <span class="text-red-500">*</span></label>
-                <input type="text" id="nombreActualizar" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                <input type="text" id="nombreActualizar" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
                 <div class="text-red-500 text-xs mt-1 error-message"></div>
             </div>
 
             <div class="mb-4">
                 <label for="descripcionActualizar" class="block text-sm font-medium text-gray-700 mb-1">Descripción <span class="text-red-500">*</span></label>
-                <textarea id="descripcionActualizar" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required></textarea>
+                <textarea id="descripcionActualizar" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" ></textarea>
                 <div class="text-red-500 text-xs mt-1 error-message"></div>
             </div>
 
             <div class="mb-4">
                 <label for="estatusActualizar" class="block text-sm font-medium text-gray-700 mb-1">Estatus <span class="text-red-500">*</span></label>
-                <select id="estatusActualizar" name="estatus" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                <select id="estatusActualizar" name="estatus" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
                     <option value="">Seleccione un estatus</option>
                     <option value="ACTIVO">ACTIVO</option>
                     <option value="INACTIVO">INACTIVO</option>

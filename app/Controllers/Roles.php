@@ -103,7 +103,7 @@ class Roles extends Controllers
                 $rolData = [
                     'nombre' => trim($data['nombre']),
                     'descripcion' => trim($data['descripcion'] ?? ''),
-                    'estatus' => $data['estatus'] ?? 'ACTIVO'
+                    'estatus' => strtolower($data['estatus'] ?? 'activo')
                 ];
 
                 $request = $this->model->insertRol($rolData);

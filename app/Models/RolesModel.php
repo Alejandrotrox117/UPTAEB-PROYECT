@@ -91,7 +91,7 @@ class RolesModel
         } catch (PDOException $e) {
             if (isset($db) && $db->inTransaction()) $db->rollBack();
             error_log("Error en ejecutarInsercionRol: " . $e->getMessage());
-            return ['status' => false, 'message' => 'Error de base de datos al registrar el rol.'];
+            return ['status' => false, 'message' => 'Error de base de datos al registrar el rol: ' . $e->getMessage()];
         } finally {
             $conexion->disconnect();
         }
@@ -113,7 +113,7 @@ class RolesModel
             return ['status' => true, 'message' => 'No se realizaron cambios (datos idénticos).'];
         } catch (PDOException $e) {
             error_log("Error en ejecutarActualizacionRol: " . $e->getMessage());
-            return ['status' => false, 'message' => 'Error de base de datos al actualizar el rol.'];
+            return ['status' => false, 'message' => 'Error de base de datos al actualizar el rol: ' . $e->getMessage()];
         } finally {
             $conexion->disconnect();
         }

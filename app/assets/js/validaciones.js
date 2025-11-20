@@ -547,14 +547,25 @@ const inicializarValidaciones = (campos, formId = null) => {
 
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
-            validarCampo(input, campo.regex, campo.mensajes, campo.opcional || false);
+            validarCampo(input, campo.expresion, campo.mensajes, campo.opcional || false);
           }
         });
         input.addEventListener("blur", () => {
           if (input.offsetParent !== null) {
-            validarCampo(input, campo.regex, campo.mensajes, campo.opcional || false);
+            validarCampo(input, campo.expresion, campo.mensajes, campo.opcional || false);
           }
         });
+
+        // Prevenir escritura de caracteres inválidos para campos de nombre
+        if (campo.expresion === expresiones.nombre) {
+          input.addEventListener("keypress", (e) => {
+            const char = String.fromCharCode(e.which);
+            const allowed = /[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/;
+            if (!allowed.test(char)) {
+              e.preventDefault();
+            }
+          });
+        }
       }
     }
   });

@@ -769,6 +769,47 @@ private function registrarMovimientosInventario($db, $idventa, array $detalles) 
 }
 
 /**
+ * Elimina movimientos de existencia asociados a una venta y revierte el stock
+ */
+private function eliminarMovimientosVenta($db, $idventa) {
+    try {
+        error_log("VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: $idventa");
+        
+        // Obtener movimientos asociados a la venta
+        $this->setQuery("SELECT idmovimiento, idproducto, cantidad_salida FROM movimientos_existencia WHERE idventa = ? AND estatus = 'activo'");
+        $this->setArray([$idventa]);
+        $stmt = $db->prepare($this->getQuery());
+        $stmt->execute($this->getArray());
+        $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (!empty($movimientos)) {
+            foreach ($movimientos as $movimiento) {
+                // Revertir el stock del producto
+                $this->setQuery("UPDATE producto SET existencia = existencia + ?, ultima_modificacion = NOW() WHERE idproducto = ?");
+                $this->setArray([$movimiento['cantidad_salida'], $movimiento['idproducto']]);
+                $stmtUpdate = $db->prepare($this->getQuery());
+                $stmtUpdate->execute($this->getArray());
+                
+                // Marcar movimiento como inactivo con observación de anulación
+                $this->setQuery("UPDATE movimientos_existencia SET estatus = 'inactivo', observaciones = CONCAT(observaciones, ' - Anulado por actualización de venta'), fecha_modificacion = NOW() WHERE idmovimiento = ?");
+                $this->setArray([$movimiento['idmovimiento']]);
+                $stmtMov = $db->prepare($this->getQuery());
+                $stmtMov->execute($this->getArray());
+            }
+            
+            error_log("VentasModel::eliminarMovimientosVenta - Eliminados " . count($movimientos) . " movimientos para venta ID: $idventa");
+        } else {
+            error_log("VentasModel::eliminarMovimientosVenta - No se encontraron movimientos para venta ID: $idventa");
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("VentasModel::eliminarMovimientosVenta - Error: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+/**
  * Registra movimientos de devolución de inventario cuando se cancela una venta
  */
 private function registrarMovimientosDevolucion($db, $idventa) {
@@ -1043,6 +1084,9 @@ private function generarNumeroMovimientoDevolucion($db) {
                 $stmtEliminar = $db->prepare($sqlEliminarDetalles);
                 $stmtEliminar->execute([$idventa]);
 
+                // Eliminar movimientos de existencia asociados a la venta
+                $this->eliminarMovimientosVenta($db, $idventa);
+
                 // Insertar nuevos detalles solo si hay detalles válidos
                 if (!empty($data['detalles'])) {
                     // Validar que los detalles tienen estructura correcta
@@ -1053,6 +1097,9 @@ private function generarNumeroMovimientoDevolucion($db) {
                     }
                     
                     $this->insertarDetallesVenta($db, $idventa, $data['detalles'], $data['idmoneda_general'] ?? $ventaExistente['idmoneda']);
+                    
+                    // Registrar nuevos movimientos de inventario
+                    $this->registrarMovimientosInventario($db, $idventa, $data['detalles']);
                 }
             } else {
                 error_log("VentasModel::updateVenta - No se recibieron detalles para actualizar (mantener existentes)");
