@@ -191,6 +191,7 @@ class BackupModel {
             $backupContent .= $this->generarBackupBD('seguridad');
 
             if (file_put_contents($rutaBackup, $backupContent) !== false) {
+                chmod($rutaBackup, 0644); // Asegurar que el archivo sea legible por el servidor web
                 $this->registrarBackupEnBD($nombreArchivo, 'COMPLETO', filesize($rutaBackup));
                 $this->registrarAccionBitacora('CREAR_BACKUP_COMPLETO', $nombreArchivo);
                 
@@ -227,6 +228,7 @@ class BackupModel {
             $backupContent = $this->generarBackupTabla($tabla, $database);
 
             if (file_put_contents($rutaBackup, $backupContent) !== false) {
+                chmod($rutaBackup, 0644); // Asegurar que el archivo sea legible por el servidor web
                 $this->registrarBackupEnBD($nombreArchivo, 'TABLA', filesize($rutaBackup));
                 $this->registrarAccionBitacora('CREAR_BACKUP_TABLA', $nombreArchivo);
                 
@@ -266,9 +268,22 @@ class BackupModel {
             $stmt->execute();
             $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Filtrar solo archivos que existen físicamente
+            $archivosExistentes = [];
+            $directorioBackups = $this->obtenerRutaBackups();
+            foreach ($resultado as $backup) {
+                $rutaArchivo = $directorioBackups . $backup['nombre_archivo'];
+                if (file_exists($rutaArchivo)) {
+                    $archivosExistentes[] = $backup;
+                } else {
+                    // Opcional: marcar como inactivo en BD si no existe
+                    // $this->marcarBackupInactivo($backup['id']);
+                }
+            }
+
             return [
                 'status' => true,
-                'data' => $resultado,
+                'data' => $archivosExistentes,
                 'message' => 'Backups obtenidos exitosamente'
             ];
 
