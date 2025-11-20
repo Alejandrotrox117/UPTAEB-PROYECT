@@ -463,6 +463,13 @@ class Pagos extends Controllers
         if (empty($datosLimpios['idtipo_pago'])) {
             throw new Exception('Debe seleccionar un método de pago');
         }
+        
+        // Validar que el idtipo_pago existe en la base de datos
+        $tipoPagoValido = $this->model->verificarTipoPagoExiste($datosLimpios['idtipo_pago']);
+        if (!$tipoPagoValido) {
+            throw new Exception('El método de pago seleccionado no es válido. Posible manipulación detectada.');
+        }
+        
         if (!$this->validarFecha($datosLimpios['fecha_pago'])) {
             throw new Exception('Fecha de pago inválida');
         }

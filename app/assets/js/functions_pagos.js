@@ -231,17 +231,19 @@ const camposFormularioPago = [
   {
     id: "pagoReferencia",
     tipo: "input",
-    regex: expresiones.textoGeneral,
+    regex: /^.{0,100}$/,
+    opcional: true,
     mensajes: {
-      formato: "La referencia debe tener entre 2 y 100 caracteres.",
+      formato: "La referencia no puede exceder 100 caracteres.",
     },
   },
   {
     id: "pagoObservaciones",
     tipo: "textarea",
-    regex: /^.{0,200}$/,
+    regex: /^.{0,500}$/,
+    opcional: true,
     mensajes: {
-      formato: "Las observaciones no pueden exceder 200 caracteres.",
+      formato: "Las observaciones no pueden exceder 500 caracteres.",
     },
   },
 ];
@@ -813,7 +815,17 @@ function cargarMetodosPago() {
           const option = document.createElement("option");
           option.value = tipo.idtipo_pago;
           option.textContent = tipo.nombre;
+          // Guardar el nombre como data attribute para validación
+          option.setAttribute('data-nombre', tipo.nombre);
           select.appendChild(option);
+        });
+        
+        // Agregar evento de validación cuando se selecciona un tipo de pago
+        select.addEventListener('change', function() {
+          const idSeleccionado = this.value;
+          if (idSeleccionado) {
+            validarTipoPagoSeleccionado(idSeleccionado);
+          }
         });
       }
       return result;
@@ -823,6 +835,44 @@ function cargarMetodosPago() {
       mostrarNotificacion("Error al cargar métodos de pago", "error");
       return { status: false };
     });
+}
+
+// Función para validar que el tipo de pago seleccionado es válido
+function validarTipoPagoSeleccionado(idTipoPago) {
+  const select = document.getElementById("pagoMetodoPago");
+  const opcionSeleccionada = select.options[select.selectedIndex];
+  const nombreEsperado = opcionSeleccionada.getAttribute('data-nombre');
+  
+  // Buscar el tipo de pago en el array cargado
+  const tipoPagoValido = tiposPago.find(t => t.idtipo_pago == idTipoPago);
+  
+  if (!tipoPagoValido) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Validación',
+      text: 'El método de pago seleccionado no es válido. Posible manipulación detectada.',
+      confirmButtonColor: '#d33'
+    });
+    select.value = '';
+    // Recargar los métodos de pago para limpiar manipulaciones
+    cargarMetodosPago();
+    return false;
+  }
+  
+  // Verificar que el nombre coincida
+  if (tipoPagoValido.nombre !== nombreEsperado) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de Validación',
+      text: 'El método de pago no coincide con el registrado. Posible manipulación detectada.',
+      confirmButtonColor: '#d33'
+    });
+    select.value = '';
+    cargarMetodosPago();
+    return false;
+  }
+  
+  return true;
 }
 
 function resetearFormulario() {
@@ -1136,6 +1186,16 @@ function registrarPago() {
   if (!validarCamposVacios(camposCompletos, "formRegistrarPago")) {
     return;
   }
+  
+  // Validar el tipo de pago seleccionado antes de continuar
+  const idTipoPago = document.getElementById("pagoMetodoPago")?.value;
+  if (idTipoPago && !validarTipoPagoSeleccionado(idTipoPago)) {
+    if (btnGuardar) {
+      btnGuardar.disabled = false;
+      btnGuardar.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Pago';
+    }
+    return;
+  }
 
   let formularioConErrores = false;
   for (const campo of camposCompletos) {
@@ -1213,6 +1273,8 @@ function registrarPago() {
         limpiarValidaciones(camposCompletos, "formRegistrarPago");
         cerrarModal("modalRegistrarPago");
         tablaPagos.ajax.reload();
+        // Recargar métodos de pago para limpiar posibles manipulaciones
+        cargarMetodosPago();
       });
     },
     onError: (result) => {
@@ -1261,6 +1323,16 @@ function actualizarPago() {
   ];
 
   if (!validarCamposVacios(camposCompletos, "formRegistrarPago")) {
+    return;
+  }
+  
+  // Validar el tipo de pago seleccionado antes de continuar
+  const idTipoPago = document.getElementById("pagoMetodoPago")?.value;
+  if (idTipoPago && !validarTipoPagoSeleccionado(idTipoPago)) {
+    if (btnGuardar) {
+      btnGuardar.disabled = false;
+      btnGuardar.innerHTML = '<i class="fas fa-save mr-2"></i>Actualizar Pago';
+    }
     return;
   }
 
@@ -1359,6 +1431,8 @@ function actualizarPago() {
           cerrarModal("modalRegistrarPago");
           tablaPagos.ajax.reload();
           pagoEditando = null;
+          // Recargar métodos de pago para limpiar posibles manipulaciones
+          cargarMetodosPago();
         });
       } else {
         Swal.fire({
