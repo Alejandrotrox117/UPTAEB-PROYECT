@@ -188,6 +188,61 @@ class Movimientos extends Controllers
                     die();
                 }
 
+                // Validación de seguridad: verificar que los IDs sean válidos
+                if (!isset($data['idproducto']) || !isset($data['idtipomovimiento'])) {
+                    $arr = array(
+                        "status" => false,
+                        "message" => "Datos incompletos: se requieren producto y tipo de movimiento.",
+                        "data" => null
+                    );
+                    echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Validar que el producto existe y está activo
+                $productosActivos = $this->model->getProductosActivos();
+                $productoValido = false;
+                if ($productosActivos['status'] && $productosActivos['data']) {
+                    foreach ($productosActivos['data'] as $producto) {
+                        if ($producto['idproducto'] == $data['idproducto']) {
+                            $productoValido = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!$productoValido) {
+                    $arr = array(
+                        "status" => false,
+                        "message" => "El producto seleccionado no es válido o no está disponible.",
+                        "data" => null
+                    );
+                    echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Validar que el tipo de movimiento existe y está activo
+                $tiposActivos = $this->model->getTiposMovimientoActivos();
+                $tipoValido = false;
+                if ($tiposActivos['status'] && $tiposActivos['data']) {
+                    foreach ($tiposActivos['data'] as $tipo) {
+                        if ($tipo['idtipomovimiento'] == $data['idtipomovimiento']) {
+                            $tipoValido = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!$tipoValido) {
+                    $arr = array(
+                        "status" => false,
+                        "message" => "El tipo de movimiento seleccionado no es válido.",
+                        "data" => null
+                    );
+                    echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
                 
                 $result = $this->model->insertMovimiento($data);
 
@@ -240,6 +295,53 @@ class Movimientos extends Controllers
 
                 $idmovimiento = intval($data['idmovimiento']);
                 $nuevosDatos = $data['nuevos_datos'];
+
+                // Validación de seguridad: verificar que los IDs sean válidos si están presentes
+                if (isset($nuevosDatos['idproducto'])) {
+                    $productosActivos = $this->model->getProductosActivos();
+                    $productoValido = false;
+                    if ($productosActivos['status'] && $productosActivos['data']) {
+                        foreach ($productosActivos['data'] as $producto) {
+                            if ($producto['idproducto'] == $nuevosDatos['idproducto']) {
+                                $productoValido = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!$productoValido) {
+                        $arr = array(
+                            "status" => false,
+                            "message" => "El producto seleccionado no es válido o no está disponible.",
+                            "data" => null
+                        );
+                        echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+                }
+
+                if (isset($nuevosDatos['idtipomovimiento'])) {
+                    $tiposActivos = $this->model->getTiposMovimientoActivos();
+                    $tipoValido = false;
+                    if ($tiposActivos['status'] && $tiposActivos['data']) {
+                        foreach ($tiposActivos['data'] as $tipo) {
+                            if ($tipo['idtipomovimiento'] == $nuevosDatos['idtipomovimiento']) {
+                                $tipoValido = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!$tipoValido) {
+                        $arr = array(
+                            "status" => false,
+                            "message" => "El tipo de movimiento seleccionado no es válido.",
+                            "data" => null
+                        );
+                        echo json_encode($arr, JSON_UNESCAPED_UNICODE);
+                        die();
+                    }
+                }
 
                 $result = $this->model->anularYCorregirMovimiento($idmovimiento, $nuevosDatos);
 

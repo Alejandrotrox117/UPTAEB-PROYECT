@@ -11,6 +11,8 @@ import {
 
 let tablaMovimientos;
 let tiposMovimientoDisponibles = []; 
+let listaProductosCargados = [];
+let listaTiposMovimientoCargados = [];
 
 
 const expresionesMovimientos = {
@@ -24,12 +26,12 @@ const camposFormularioMovimiento = [
   {
     id: "idproducto",
     tipo: "select",
-    mensajes: { vacio: "Seleccione un producto." },
+    mensajes: { vacio: "Seleccione un producto.", invalido: "Producto seleccionado inválido." },
   },
   {
     id: "idtipomovimiento",
     tipo: "select",
-    mensajes: { vacio: "Seleccione un tipo de movimiento." },
+    mensajes: { vacio: "Seleccione un tipo de movimiento.", invalido: "Tipo de movimiento seleccionado inválido." },
   },
   {
     id: "cantidad_entrada",
@@ -71,12 +73,12 @@ const camposFormularioActualizarMovimiento = [
   {
     id: "idproductoActualizar",
     tipo: "select",
-    mensajes: { vacio: "Seleccione un producto." },
+    mensajes: { vacio: "Seleccione un producto.", invalido: "Producto seleccionado inválido." },
   },
   {
     id: "idtipomovimientoActualizar",
     tipo: "select",
-    mensajes: { vacio: "Seleccione un tipo de movimiento." },
+    mensajes: { vacio: "Seleccione un tipo de movimiento.", invalido: "Tipo de movimiento seleccionado inválido." },
   },
   {
     id: "cantidad_entradaActualizar",
@@ -115,7 +117,7 @@ const camposFormularioActualizarMovimiento = [
   {
     id: "estatusActualizar",
     tipo: "select",
-    mensajes: { vacio: "Seleccione un estatus." },
+    mensajes: { vacio: "Seleccione un estatus.", invalido: "Estatus seleccionado inválido." },
   }
 ];
 
@@ -955,6 +957,89 @@ function configurarBotonesCerrar(btnIds, modalId) {
   
   configurarLimpiezaErrores(camposFormularioMovimiento);
   configurarLimpiezaErrores(camposFormularioActualizarMovimiento);
+  
+  /**
+   * Configurar validación en tiempo real para prevenir manipulación desde dev tools
+   */
+  const configurarValidacionTiempoReal = () => {
+    // Validar select de producto en registrar
+    const selectProducto = document.getElementById('idproducto');
+    if (selectProducto) {
+      selectProducto.addEventListener('change', function() {
+        const idSeleccionado = this.value;
+        const productoValido = listaProductosCargados.find(p => String(p.idproducto) === String(idSeleccionado));
+        if (idSeleccionado && !productoValido) {
+          Swal.fire({
+            title: "Producto inválido",
+            text: "El producto seleccionado no existe.",
+            icon: "error"
+          });
+          // Recargar productos para limpiar manipulaciones
+          llenarSelectProductos('idproducto', listaProductosCargados);
+          this.value = "";
+        }
+      });
+    }
+    
+    // Validar select de tipo movimiento en registrar
+    const selectTipo = document.getElementById('idtipomovimiento');
+    if (selectTipo) {
+      selectTipo.addEventListener('change', function() {
+        const idSeleccionado = this.value;
+        const tipoValido = listaTiposMovimientoCargados.find(t => String(t.idtipomovimiento) === String(idSeleccionado));
+        if (idSeleccionado && !tipoValido) {
+          Swal.fire({
+            title: "Tipo de movimiento inválido",
+            text: "El tipo de movimiento seleccionado no existe.",
+            icon: "error"
+          });
+          // Recargar tipos de movimiento para limpiar manipulaciones
+          llenarSelectTiposMovimiento('idtipomovimiento', listaTiposMovimientoCargados);
+          this.value = "";
+        }
+      });
+    }
+    
+    // Validar select de producto en actualizar
+    const selectProductoActualizar = document.getElementById('idproductoActualizar');
+    if (selectProductoActualizar) {
+      selectProductoActualizar.addEventListener('change', function() {
+        const idSeleccionado = this.value;
+        const productoValido = listaProductosCargados.find(p => String(p.idproducto) === String(idSeleccionado));
+        if (idSeleccionado && !productoValido) {
+          Swal.fire({
+            title: "Producto inválido",
+            text: "El producto seleccionado no existe.",
+            icon: "error"
+          });
+          // Recargar productos para limpiar manipulaciones
+          llenarSelectProductos('idproductoActualizar', listaProductosCargados);
+          this.value = "";
+        }
+      });
+    }
+    
+    // Validar select de tipo movimiento en actualizar
+    const selectTipoActualizar = document.getElementById('idtipomovimientoActualizar');
+    if (selectTipoActualizar) {
+      selectTipoActualizar.addEventListener('change', function() {
+        const idSeleccionado = this.value;
+        const tipoValido = listaTiposMovimientoCargados.find(t => String(t.idtipomovimiento) === String(idSeleccionado));
+        if (idSeleccionado && !tipoValido) {
+          Swal.fire({
+            title: "Tipo de movimiento inválido",
+            text: "El tipo de movimiento seleccionado no existe.",
+            icon: "error"
+          });
+          // Recargar tipos de movimiento para limpiar manipulaciones
+          llenarSelectTiposMovimiento('idtipomovimientoActualizar', listaTiposMovimientoCargados);
+          this.value = "";
+        }
+      });
+    }
+  };
+  
+  configurarValidacionTiempoReal();
 
   console.log(" Todos los event listeners de movimientos han sido configurados");
 });
@@ -975,6 +1060,9 @@ function cargarDatosFormulario(modo = 'registrar') {
       if (result.status && result.data) {
         const { productos, tipos_movimiento } = result.data;
         
+        // Guardar listas para validación en tiempo real
+        listaProductosCargados = productos || [];
+        listaTiposMovimientoCargados = tipos_movimiento || [];
         
         if (modo === 'registrar') {
           llenarSelectProductos('idproducto', productos);

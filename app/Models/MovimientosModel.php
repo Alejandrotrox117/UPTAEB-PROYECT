@@ -214,7 +214,7 @@ class MovimientosModel
                 FROM movimientos_existencia m
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
-                WHERE m.estatus != 'eliminado'
+                WHERE m.estatus = 'activo'
                 ORDER BY COALESCE(m.fecha_creacion, m.idmovimiento) DESC"
             );
             
@@ -728,7 +728,7 @@ class MovimientosModel
                 FROM movimientos_existencia m
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
-                WHERE m.estatus != 'eliminado' 
+                WHERE m.estatus = 'activo' 
                 AND (COALESCE(m.numero_movimiento, CONCAT('MOV-', m.idmovimiento)) LIKE ? 
                      OR p.nombre LIKE ? 
                      OR tm.nombre LIKE ? 

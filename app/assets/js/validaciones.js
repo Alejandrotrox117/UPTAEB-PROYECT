@@ -299,6 +299,21 @@ function validarSelect(select, mensajes, formId = null) {
     }
   }
 
+  // Verificar si el valor existe en las opciones del select
+  const options = Array.from(input.options);
+  const optionExists = options.some(option => option.value === valor);
+  if (valor !== "" && !optionExists) {
+    if (mensajes.invalido || mensajes.formato) {
+      if (errorDiv) {
+        errorDiv.textContent = mensajes.invalido || mensajes.formato || "Valor seleccionado inválido.";
+        errorDiv.classList.remove("hidden");
+      }
+      input.classList.add("border-red-500", "focus:ring-red-500");
+      input.classList.remove("border-gray-300", "focus:ring-green-400");
+      return false;
+    }
+  }
+
 
   if (errorDiv) {
     errorDiv.textContent = "";
