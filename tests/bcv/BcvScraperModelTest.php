@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/BcvScraperModel.php';
+use App\Models\BcvScraperModel;
 class BcvScraperModelTest extends TestCase
 {
     private $scraper;

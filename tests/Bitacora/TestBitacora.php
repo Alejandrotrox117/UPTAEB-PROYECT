@@ -1,6 +1,7 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/bitacoraModel.php';
+use App\Models\BitacoraModel;
+
 class TestBitacora extends TestCase
 {
     private $model;

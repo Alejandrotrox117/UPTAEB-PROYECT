@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/movimientosModel.php';
+use App\Models\MovimientosModel;
 class TestMovimientosInsert extends TestCase
 {
     private $model;

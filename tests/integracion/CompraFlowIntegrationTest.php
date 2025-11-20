@@ -1,10 +1,9 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../app/models/ComprasModel.php';
-require_once __DIR__ . '/../../app/models/productosModel.php';
-require_once __DIR__ . '/../../app/models/proveedoresModel.php';
-require_once __DIR__ . '/../../app/models/pagosModel.php';
+use App\Models\ComprasModel;
+use App\Models\ProductosModel;
+use App\Models\ProveedoresModel;
+use App\Models\PagosModel;
 
 class CompraFlowIntegrationTest extends TestCase
 {

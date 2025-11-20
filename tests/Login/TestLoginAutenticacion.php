@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/loginModel.php';
+use App\Models\LoginModel;
 class TestLoginAutenticacion extends TestCase
 {
     private $model;

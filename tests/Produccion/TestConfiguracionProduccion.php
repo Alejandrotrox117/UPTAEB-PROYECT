@@ -1,8 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../app/models/produccionModel.php';
+use App\Models\ProduccionModel;
 class TestConfiguracionProduccion extends TestCase
 {
     private $model;

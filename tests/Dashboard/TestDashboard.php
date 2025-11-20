@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/dashboardModel.php';
+use App\Models\DashboardModel;
 class TestDashboard extends TestCase
 {
     private $model;

@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/empleadosModel.php';
+use App\Models\EmpleadosModel;
 class TestEmpleadoUpdate extends TestCase
 {
     private $model;

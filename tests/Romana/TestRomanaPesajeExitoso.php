@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/romanaModel.php';
+use App\Models\RomanaModel;
 class TestRomanaPesajeExitoso extends TestCase
 {
     private $model;
@@ -24,7 +24,7 @@ class TestRomanaPesajeExitoso extends TestCase
             $result = $this->model->insertPesaje($data);
             $this->assertIsBool($result);
         } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
+            $this->markTestSkipped('Mï¿½todo insertPesaje no existe');
         }
     }
     public function testRegistrarPesajeConPesoDecimal()
@@ -38,7 +38,7 @@ class TestRomanaPesajeExitoso extends TestCase
             $result = $this->model->insertPesaje($data);
             $this->assertIsBool($result);
         } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
+            $this->markTestSkipped('Mï¿½todo insertPesaje no existe');
         }
     }
     public function testConsultarTodosPesajes()
@@ -52,10 +52,10 @@ class TestRomanaPesajeExitoso extends TestCase
             $result = $this->model->selectPesajeById(1);
             $this->assertTrue(
                 is_array($result) || is_bool($result),
-                "Debería retornar array o false"
+                "Deberï¿½a retornar array o false"
             );
         } else {
-            $this->markTestSkipped('Método selectPesajeById no existe');
+            $this->markTestSkipped('Mï¿½todo selectPesajeById no existe');
         }
     }
     public function testConsultarPesajesPorLote()
@@ -65,7 +65,7 @@ class TestRomanaPesajeExitoso extends TestCase
             $result = $this->model->selectPesajesByLote($idLote);
             $this->assertIsArray($result);
         } else {
-            $this->markTestSkipped('Método selectPesajesByLote no existe');
+            $this->markTestSkipped('Mï¿½todo selectPesajesByLote no existe');
         }
     }
     public function testCalcularPesoTotal()
@@ -73,10 +73,10 @@ class TestRomanaPesajeExitoso extends TestCase
         if (method_exists($this->model, 'calcularPesoTotal')) {
             $idLote = 1;
             $pesoTotal = $this->model->calcularPesoTotal($idLote);
-            $this->assertIsNumeric($pesoTotal, "Debería retornar un número");
+            $this->assertIsNumeric($pesoTotal, "Deberï¿½a retornar un nï¿½mero");
             $this->assertGreaterThanOrEqual(0, $pesoTotal, "El peso total no puede ser negativo");
         } else {
-            $this->markTestSkipped('Método calcularPesoTotal no existe');
+            $this->markTestSkipped('Mï¿½todo calcularPesoTotal no existe');
         }
     }
     public function testCalcularPromedioPeso()
@@ -84,9 +84,9 @@ class TestRomanaPesajeExitoso extends TestCase
         if (method_exists($this->model, 'calcularPromedioPeso')) {
             $idLote = 1;
             $promedio = $this->model->calcularPromedioPeso($idLote);
-            $this->assertIsNumeric($promedio, "Debería retornar un número");
+            $this->assertIsNumeric($promedio, "Deberï¿½a retornar un nï¿½mero");
         } else {
-            $this->markTestSkipped('Método calcularPromedioPeso no existe');
+            $this->markTestSkipped('Mï¿½todo calcularPromedioPeso no existe');
         }
     }
     protected function tearDown(): void

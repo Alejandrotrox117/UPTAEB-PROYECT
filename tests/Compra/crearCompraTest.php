@@ -1,8 +1,8 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/ComprasModel.php';
-require_once __DIR__ . '/../../app/models/productosModel.php';
-require_once __DIR__ . '/../../app/models/proveedoresModel.php';
+use App\Models\ComprasModel;
+use App\Models\ProductosModel;
+use App\Models\ProveedoresModel;
 class crearCompraTest extends TestCase
 {
     private $comprasModel;

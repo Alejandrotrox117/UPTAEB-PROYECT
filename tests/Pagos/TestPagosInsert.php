@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/pagosModel.php';
+use App\Models\PagosModel;
 class TestPagosInsert extends TestCase
 {
     private $model;

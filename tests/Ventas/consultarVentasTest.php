@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/ventasModel.php';
+use App\Models\VentasModel;
 class ConsultarVentasTest extends TestCase
 {
     private function showMessage(string $msg): void

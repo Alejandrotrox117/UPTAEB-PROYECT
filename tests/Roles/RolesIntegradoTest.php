@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/RolesIntegradoModel.php';
+use App\Models\RolesIntegradoModel;
 class RolesIntegradoTest extends TestCase
 {
     private $rolesIntegradoModel;

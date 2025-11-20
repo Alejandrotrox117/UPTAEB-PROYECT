@@ -1,9 +1,8 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../app/models/produccionModel.php';
-require_once __DIR__ . '/../../app/models/productosModel.php';
-require_once __DIR__ . '/../../app/models/empleadosModel.php';
+use App\Models\ProduccionModel;
+use App\Models\ProductosModel;
+use App\Models\EmpleadosModel;
 
 class ProduccionFlowIntegrationTest extends TestCase
 {

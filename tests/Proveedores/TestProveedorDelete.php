@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/proveedoresModel.php';
+use App\Models\ProveedoresModel;
 class TestProveedorDelete extends TestCase
 {
     private $model;

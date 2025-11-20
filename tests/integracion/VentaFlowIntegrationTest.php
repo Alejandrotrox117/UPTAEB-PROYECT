@@ -1,10 +1,9 @@
 <?php
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../app/models/VentasModel.php';
-require_once __DIR__ . '/../../app/models/productosModel.php';
-require_once __DIR__ . '/../../app/models/clientesModel.php';
-require_once __DIR__ . '/../../app/models/pagosModel.php';
+use App\Models\VentasModel;
+use App\Models\ProductosModel;
+use App\Models\ClientesModel;
+use App\Models\PagosModel;
 
 class VentaFlowIntegrationTest extends TestCase
 {

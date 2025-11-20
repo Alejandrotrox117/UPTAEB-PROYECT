@@ -1,6 +1,6 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/clientesModel.php';
+use App\Models\ClientesModel;
 class TestClienteSelect extends TestCase
 {
     private $model;
