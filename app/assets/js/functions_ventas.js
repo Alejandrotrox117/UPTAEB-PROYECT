@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (divInfoCliente) divInfoCliente.classList.add("hidden");
     if (listaResultados) listaResultados.classList.add("hidden");
     if (btnLimpiarCliente) btnLimpiarCliente.classList.add("hidden");
-    
+
     // Limpiar validaciones relacionadas con el cliente si las hay
     const errorClienteDiv = document.getElementById("error-idcliente-vacio");
     if (errorClienteDiv) errorClienteDiv.classList.add("hidden");
@@ -191,10 +191,10 @@ document.addEventListener("DOMContentLoaded", function () {
       limpiarValidaciones(camposCabeceraVenta, "ventaForm");
     }
     resetYDeshabilitarFormClienteEmbebido();
-    
+
     // Limpiar selección de cliente
     limpiarSeleccionClienteCompleta();
-    
+
     if (detalleVentaBody) detalleVentaBody.innerHTML = "";
     if (noDetallesMsg) noDetallesMsg.classList.remove("hidden");
 
@@ -371,7 +371,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const itemDiv = document.createElement("div");
             itemDiv.className = "p-2 text-xs hover:bg-gray-100 cursor-pointer";
             itemDiv.textContent = `${cli.nombre || ""} ${cli.apellido || ""} (C.I.: ${cli.cedula || ""})`.trim();
-            
+
             // Usar los nombres de campos correctos del modelo
             itemDiv.dataset.idcliente = cli.idcliente || cli.id;
             itemDiv.dataset.nombre = cli.nombre || "";
@@ -428,7 +428,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Evento para el botón limpiar en el buscador
     if (btnLimpiarCliente && !btnLimpiarCliente.dataset.listenerAttached) {
       btnLimpiarCliente.dataset.listenerAttached = "true";
-      btnLimpiarCliente.addEventListener("click", function() {
+      btnLimpiarCliente.addEventListener("click", function () {
         limpiarSeleccionClienteCompleta();
       });
     }
@@ -436,7 +436,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Evento para el botón eliminar en la información del cliente seleccionado
     if (btnEliminarClienteSeleccionado && !btnEliminarClienteSeleccionado.dataset.listenerAttached) {
       btnEliminarClienteSeleccionado.dataset.listenerAttached = "true";
-      btnEliminarClienteSeleccionado.addEventListener("click", function() {
+      btnEliminarClienteSeleccionado.addEventListener("click", function () {
         limpiarSeleccionClienteCompleta();
       });
     }
@@ -444,7 +444,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Mostrar el botón limpiar cuando hay texto en el input
     if (inputCriterio && !inputCriterio.dataset.inputListenerAttached) {
       inputCriterio.dataset.inputListenerAttached = "true";
-      inputCriterio.addEventListener("input", function() {
+      inputCriterio.addEventListener("input", function () {
         if (btnLimpiarCliente) {
           if (this.value.trim().length > 0) {
             btnLimpiarCliente.classList.remove("hidden");
@@ -505,10 +505,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const idProd = productoData.idproducto || productoData.id;
-      const nombreProd = `${productoData.nombre_producto} (${
-        productoData.nombre_categoria || "N/A"
-      })`;
-      
+      const nombreProd = `${productoData.nombre_producto} (${productoData.nombre_categoria || "N/A"
+        })`;
+
       // Mostrar loading mientras se calcula el precio
       Swal.fire({
         title: 'Calculando precio...',
@@ -523,7 +522,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Convertir precio según moneda
       const precioConvertido = await convertirPrecioSegunMoneda(productoData);
       const precioUnit = precioConvertido.toFixed(2);
-      
+
       // Cerrar loading
       Swal.close();
 
@@ -676,7 +675,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const option = select.options[i + 1];
             if (option) option.dataset.codigo = m.codigo_moneda;
           });
-          
+
           // Buscar y seleccionar automáticamente VES
           const vesMoneda = monedas.find(m => m.codigo_moneda === 'VES');
           if (vesMoneda) {
@@ -777,12 +776,12 @@ document.addEventListener("DOMContentLoaded", function () {
           (inputEl.offsetParent !== null || inputEl.type === "hidden")
         ) {
           let esValido = true;
-          
-       
+
+
           if (campo.opcional && (!inputEl.value || inputEl.value.trim() === "")) {
-            return; 
+            return;
           }
-          
+
           if (campo.tipo === "select") {
             esValido = validarSelect(inputEl, campo.mensajes);
           } else if (campo.tipo === "date") {
@@ -839,12 +838,26 @@ document.addEventListener("DOMContentLoaded", function () {
         datosVentaFinal.idventa = parseInt(idVentaEditar);
       }
 
+      // Obtener la tasa de cambio a usar
       try {
-        datosVentaFinal.tasa_usada = await obtenerTasaActualSeleccionada(
-          datosVentaFinal.idmoneda_general,
-          datosVentaFinal.fecha_venta
-        );
+        const selectMoneda = document.getElementById("idmoneda_general");
+        const codigoMonedaVenta = selectMoneda?.selectedOptions[0]?.dataset.codigo || 'VES';
+
+        console.log('Calculando tasa_usada - Moneda de venta:', codigoMonedaVenta);
+
+        // Si la venta es en VES, guardar la tasa del USD (moneda de referencia)
+        // Si la venta es en moneda extranjera, guardar la tasa de esa moneda
+        if (codigoMonedaVenta === 'VES') {
+          // Para ventas en VES, guardar la tasa del USD como referencia
+          datosVentaFinal.tasa_usada = await obtenerTasaMoneda('USD', datosVentaFinal.fecha_venta);
+          console.log('Venta en VES - Guardando tasa USD:', datosVentaFinal.tasa_usada);
+        } else {
+          // Para ventas en moneda extranjera, guardar su tasa
+          datosVentaFinal.tasa_usada = await obtenerTasaMoneda(codigoMonedaVenta, datosVentaFinal.fecha_venta);
+          console.log('Venta en', codigoMonedaVenta, '- Guardando tasa:', datosVentaFinal.tasa_usada);
+        }
       } catch (error) {
+        console.error('Error al obtener tasa_usada:', error);
         datosVentaFinal.tasa_usada = 1;
       }
 
@@ -893,18 +906,18 @@ document.addEventListener("DOMContentLoaded", function () {
       const btnRegistrar = document.getElementById("registrarVentaBtn");
       const textoOriginal = btnRegistrar.innerHTML;
       btnRegistrar.disabled = true;
-      
+
       // Texto diferente para edición
-      const textoLoading = mode === 'edit' 
+      const textoLoading = mode === 'edit'
         ? '<i class="fas fa-spinner fa-spin mr-2"></i>Actualizando...'
         : '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
-      
+
       btnRegistrar.innerHTML = textoLoading;
 
       try {
         // URL diferente para edición
         const url = mode === 'edit' ? "ventas/updateVenta" : "ventas/setVenta";
-        
+
         const response = await fetch(url, {
           method: "POST",
           headers: {
@@ -929,7 +942,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const { nro_venta, idventa, idcliente } = result.data;
 
             if (nro_venta) {
-              mensajeCompleto = mode === 'edit' 
+              mensajeCompleto = mode === 'edit'
                 ? `Venta ${nro_venta} actualizada correctamente.`
                 : `Venta ${nro_venta} registrada correctamente.`;
             }
@@ -943,12 +956,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
           cerrarModal("ventaModal");
           limpiarFormularioVentaCompleto();
-          
+
           // Restablecer el modo del botón
           btnRegistrar.removeAttribute('data-mode');
           btnRegistrar.removeAttribute('data-idventa');
           btnRegistrar.innerHTML = '<i class="fas fa-save mr-2"></i>Registrar Venta';
-          
+
           // Restablecer el título del modal
           const modalTitle = document.querySelector("#ventaModal h3");
           if (modalTitle) {
@@ -980,29 +993,42 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const selectMoneda = document.getElementById("idmoneda_general");
       if (!selectMoneda || selectMoneda.selectedIndex === -1) {
+        console.warn('obtenerTasaActualSeleccionada: No se encontró select de moneda o no hay selección');
         return 1;
       }
 
       const option = selectMoneda.options[selectMoneda.selectedIndex];
       const codigoMoneda = option.dataset.codigo || option.text.split(" ")[0];
 
+      console.log('obtenerTasaActualSeleccionada - codigoMoneda:', codigoMoneda);
+      console.log('obtenerTasaActualSeleccionada - fechaVenta:', fechaVenta);
+
       if (!codigoMoneda) {
+        console.warn('obtenerTasaActualSeleccionada: No se pudo extraer código de moneda');
         return 1;
       }
 
-      const response = await fetch(
-        `ventas/getTasa?codigo_moneda=${encodeURIComponent(
-          codigoMoneda
-        )}&fecha=${encodeURIComponent(fechaVenta)}`
-      );
+      const url = `ventas/getTasa?codigo_moneda=${encodeURIComponent(
+        codigoMoneda
+      )}&fecha=${encodeURIComponent(fechaVenta)}`;
+
+      console.log('obtenerTasaActualSeleccionada - URL:', url);
+
+      const response = await fetch(url);
 
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
 
       const data = await response.json();
-      return parseFloat(data.tasa) || 1;
+      console.log('obtenerTasaActualSeleccionada - Respuesta:', data);
+
+      const tasa = parseFloat(data.tasa) || 1;
+      console.log('obtenerTasaActualSeleccionada - Tasa final:', tasa);
+
+      return tasa;
     } catch (error) {
+      console.error('obtenerTasaActualSeleccionada - Error:', error);
       return 1;
     }
   }
@@ -1106,7 +1132,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (cambiarEstadoBtn) {
       const idVenta = cambiarEstadoBtn.getAttribute("data-idventa");
       const nuevoEstado = cambiarEstadoBtn.getAttribute("data-nuevo-estado");
-      
+
       if (idVenta && nuevoEstado) {
         cambiarEstadoVenta(idVenta, nuevoEstado);
       }
@@ -1194,11 +1220,10 @@ document.addEventListener("DOMContentLoaded", function () {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div><b>Nro Venta:</b> ${venta.nro_venta || "N/A"}</div>
                 <div><b>Fecha:</b> ${venta.fecha_venta || "N/A"}</div>
-                <div><b>Cliente:</b> ${
-                  (venta.cliente_nombre || "") +
-                  " " +
-                  (venta.cliente_apellido || "")
-                }</div>
+                <div><b>Cliente:</b> ${(venta.cliente_nombre || "") +
+            " " +
+            (venta.cliente_apellido || "")
+            }</div>
                 <div><b>Cédula:</b> ${venta.cliente_cedula || "N/A"}</div>
                 <div><b>Tasa usada:</b> ${venta.tasa_usada || "-"}</div>
                 <div><b>Estatus:</b> ${venta.estatus || "N/A"}</div>
@@ -1218,51 +1243,44 @@ document.addEventListener("DOMContentLoaded", function () {
                   </tr>
                 </thead>
                 <tbody>
-                  ${
-                    Array.isArray(detalle)
-                      ? detalle
-                          .map(
-                            (d) => `
+                  ${Array.isArray(detalle)
+              ? detalle
+                .map(
+                  (d) => `
                     <tr>
-                      <td class="px-2 py-1 border">${
-                        d.nombre_producto || "N/A"
-                      }</td>
+                      <td class="px-2 py-1 border">${d.nombre_producto || "N/A"
+                    }</td>
                       <td class="px-2 py-1 border">${d.cantidad || "0"}</td>
-                      <td class="px-2 py-1 border">${
-                        d.precio_unitario_venta || "0.00"
-                      }</td>
-                      <td class="px-2 py-1 border">${
-                        d.subtotal_general || d.subtotal || "0.00"
-                      }</td>
-                      <td class="px-2 py-1 border">${
-                        d.codigo_moneda ||  "N/A"
-                      }</td>
+                      <td class="px-2 py-1 border">${d.precio_unitario_venta || "0.00"
+                    }</td>
+                      <td class="px-2 py-1 border">${d.subtotal_general || d.subtotal || "0.00"
+                    }</td>
+                      <td class="px-2 py-1 border">${d.codigo_moneda || "N/A"
+                    }</td>
                     </tr>
                   `
-                          )
-                          .join("")
-                      : '<tr><td colspan="5" class="px-2 py-1 border text-center">No hay detalles</td></tr>'
-                  }
+                )
+                .join("")
+              : '<tr><td colspan="5" class="px-2 py-1 border text-center">No hay detalles</td></tr>'
+            }
                 </tbody>
               </table>
             </div>
             <div class="mb-2">
               <b>Subtotal:</b> ${venta.subtotal_general || "0.00"} <br>
-              <b>Descuento:</b> ${
-                venta.descuento_porcentaje_general || "0"
-              }% <br>
-              <b>Monto Descuento:</b> ${
-                venta.monto_descuento_general || "0.00"
-              } <br>
+              <b>Descuento:</b> ${venta.descuento_porcentaje_general || "0"
+            }% <br>
+              <b>Monto Descuento:</b> ${venta.monto_descuento_general || "0.00"
+            } <br>
               <b>Total General:</b> ${venta.total_general || "0.00"}
             </div>
           `;
         }
-        
+
         // Debug para ver qué datos llegan
         console.log('Datos completos recibidos:', data);
         console.log('Detalle específico:', detalle);
-        
+
       } catch (error) {
         console.error('Error al cargar detalle:', error);
         if (contenido) {
@@ -1300,7 +1318,7 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     const mensaje = mensajesEstado[nuevoEstado] || "cambiar estado de";
-    
+
     // Mensaje especial para marcar como pagada
     let textoConfirmacion = `¿Deseas ${mensaje} esta venta?`;
     if (nuevoEstado === "PAGADA") {
@@ -1361,18 +1379,18 @@ document.addEventListener("DOMContentLoaded", function () {
       const modal = document.getElementById("ventaModal");
       const modalTitle = modal.querySelector("h3");
       const submitBtn = document.getElementById("registrarVentaBtn");
-      
+
       // Cambiar el título del modal
       modalTitle.innerHTML = '<i class="mr-1 text-blue-600 fas fa-edit"></i>Editar Venta';
-      
+
       // Cambiar el texto del botón
       submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Actualizar Venta';
       submitBtn.setAttribute('data-mode', 'edit');
       submitBtn.setAttribute('data-idventa', idVenta);
-      
+
       // Abrir el modal
       abrirModal("ventaModal");
-      
+
       // Mostrar mensaje de carga
       Swal.fire({
         title: 'Cargando...',
@@ -1387,7 +1405,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Obtener los datos de la venta
       const response = await fetch(`ventas/getVentaDetalle?idventa=${encodeURIComponent(idVenta)}`);
-      
+
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`);
       }
@@ -1421,11 +1439,11 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       // Almacenar el cliente original
       clienteOriginalEdicion = venta.cliente_id || null;
-      
+
       // Llenar campos básicos
       document.getElementById("fecha_venta_modal").value = venta.fecha_venta || "";
       document.getElementById("observaciones").value = venta.observaciones || "";
-      
+
       // Seleccionar cliente
       if (venta.cliente_cedula) {
         const clienteInfo = {
@@ -1438,7 +1456,7 @@ document.addEventListener("DOMContentLoaded", function () {
           observaciones: venta.cliente_observaciones || "",
           estatus: venta.cliente_estatus || "1"
         };
-        
+
         // Llenar la información del cliente seleccionado
         const clienteInfoDiv = document.getElementById("cliente_seleccionado_info_modal");
         if (clienteInfoDiv) {
@@ -1451,7 +1469,7 @@ document.addEventListener("DOMContentLoaded", function () {
           clienteInfoDiv.classList.remove("hidden");
           clienteInfoDiv.setAttribute("data-cliente-id", clienteInfo.id);
         }
-        
+
         // Establecer el ID del cliente en el campo oculto
         const idClienteField = document.getElementById("idcliente");
         if (idClienteField) {
@@ -1467,7 +1485,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Limpiar detalles actuales
       const detalleBody = document.getElementById("detalleVentaBody");
       const noDetallesMsg = document.getElementById("noDetallesMensaje");
-      
+
       if (detalleBody) {
         detalleBody.innerHTML = "";
       }
@@ -1513,7 +1531,7 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(`Error HTTP: ${response.status}`);
       }
       const data = await response.json();
-      
+
       if (data.status && data.data) {
         listaProductosCargadosSelect = data.data;
         // Actualizar el select de productos
@@ -1587,10 +1605,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var botones = [];
 
     // Botón Ver (disponible si tiene permisos de ver, editar o eliminar)
-    if (window.PERMISOS_USUARIO && 
-        (window.PERMISOS_USUARIO.puede_ver || 
-         window.PERMISOS_USUARIO.puede_editar || 
-         window.PERMISOS_USUARIO.puede_eliminar)) {
+    if (window.PERMISOS_USUARIO &&
+      (window.PERMISOS_USUARIO.puede_ver ||
+        window.PERMISOS_USUARIO.puede_editar ||
+        window.PERMISOS_USUARIO.puede_eliminar)) {
       botones.push(`
         <button
           class="ver-detalle-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150"
@@ -1603,8 +1621,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Botón Nota de Despacho (disponible solo para ventas en estado PAGADA)
-    if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver && 
-        estadoActual.toUpperCase() === "PAGADA") {
+    if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver &&
+      estadoActual.toUpperCase() === "PAGADA") {
       botones.push(`
         <button
           class="nota-despacho-btn text-purple-600 hover:text-purple-700 p-1 transition-colors duration-150"
@@ -1617,8 +1635,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Botón Editar (en estado BORRADOR y POR_PAGAR)
-    if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_editar) && 
-        (estadoActual.toUpperCase() === "BORRADOR" || estadoActual.toUpperCase() === "POR_PAGAR")) {
+    if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_editar) &&
+      (estadoActual.toUpperCase() === "BORRADOR" || estadoActual.toUpperCase() === "POR_PAGAR")) {
       botones.push(`
         <button
           class="editar-venta-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
@@ -1677,8 +1695,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Botón Eliminar (en estado BORRADOR y POR_PAGAR)
-    if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_eliminar) && 
-        (estadoActual.toUpperCase() === "BORRADOR" || estadoActual.toUpperCase() === "POR_PAGAR")) {
+    if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_eliminar) &&
+      (estadoActual.toUpperCase() === "BORRADOR" || estadoActual.toUpperCase() === "POR_PAGAR")) {
       botones.push(`
         <button
           class="eliminar-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
@@ -1742,7 +1760,7 @@ document.addEventListener("DOMContentLoaded", function () {
       ajax: {
         url: "ventas/getventasData",
         type: "GET",
-        dataSrc: function(json) {
+        dataSrc: function (json) {
           return json.data || [];
         },
         error: function (xhr, status, error) {
@@ -1780,17 +1798,27 @@ document.addEventListener("DOMContentLoaded", function () {
   /**
    * Obtiene la tasa de cambio actual de una moneda
    */
-  async function obtenerTasaMoneda(codigoMoneda) {
+  async function obtenerTasaMoneda(codigoMoneda, fecha = null) {
     try {
-      const response = await fetch(`ventas/getTasaMoneda?codigo=${encodeURIComponent(codigoMoneda)}`);
-      const data = await response.json();
-      
-      if (data.status && data.data) {
-        return data.data.tasa_a_bs || 1;
+      let url = `ventas/getTasa?codigo_moneda=${encodeURIComponent(codigoMoneda)}`;
+      if (fecha) {
+        url += `&fecha=${encodeURIComponent(fecha)}`;
       }
-      return 1;
+
+      console.log('obtenerTasaMoneda - codigoMoneda:', codigoMoneda, 'fecha:', fecha);
+      console.log('obtenerTasaMoneda - URL:', url);
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      console.log('obtenerTasaMoneda - Respuesta:', data);
+
+      const tasa = parseFloat(data.tasa) || 1;
+      console.log('obtenerTasaMoneda - Tasa final:', tasa);
+
+      return tasa;
     } catch (error) {
-      console.error('Error al obtener tasa de moneda:', error);
+      console.error('obtenerTasaMoneda - Error:', error);
       return 1;
     }
   }
@@ -1803,28 +1831,32 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!selectMoneda || !selectMoneda.selectedOptions[0]) {
       return parseFloat(productoData.precio_unitario || 0);
     }
-    
+
     const monedaGeneralVenta = selectMoneda.selectedOptions[0].dataset.codigo || '';
     const monedaProducto = productoData.codigo_moneda_producto;
     let precioFinal = parseFloat(productoData.precio_unitario || 0);
+
+    // Obtener fecha de venta
+    const fechaVentaInput = document.getElementById("fecha_venta_modal");
+    const fechaVenta = fechaVentaInput ? fechaVentaInput.value : null;
 
     // Si las monedas son diferentes, hacer conversión
     if (monedaProducto && monedaGeneralVenta && monedaProducto !== monedaGeneralVenta) {
       try {
         // Si el producto está en moneda extranjera y la venta en VES
         if (monedaProducto !== 'VES' && monedaGeneralVenta === 'VES') {
-          const tasaProducto = await obtenerTasaMoneda(monedaProducto);
+          const tasaProducto = await obtenerTasaMoneda(monedaProducto, fechaVenta);
           precioFinal = precioFinal * tasaProducto;
         }
         // Si el producto está en VES y la venta en moneda extranjera  
         else if (monedaProducto === 'VES' && monedaGeneralVenta !== 'VES') {
-          const tasaVenta = await obtenerTasaMoneda(monedaGeneralVenta);
+          const tasaVenta = await obtenerTasaMoneda(monedaGeneralVenta, fechaVenta);
           precioFinal = precioFinal / tasaVenta;
         }
         // Si ambas son monedas extranjeras diferentes
         else if (monedaProducto !== 'VES' && monedaGeneralVenta !== 'VES' && monedaProducto !== monedaGeneralVenta) {
-          const tasaProducto = await obtenerTasaMoneda(monedaProducto);
-          const tasaVenta = await obtenerTasaMoneda(monedaGeneralVenta);
+          const tasaProducto = await obtenerTasaMoneda(monedaProducto, fechaVenta);
+          const tasaVenta = await obtenerTasaMoneda(monedaGeneralVenta, fechaVenta);
           // Convertir primero a VES, luego a la moneda de venta
           precioFinal = (precioFinal * tasaProducto) / tasaVenta;
         }
@@ -1842,7 +1874,7 @@ document.addEventListener("DOMContentLoaded", function () {
    */
   async function recalcularPreciosDetalle() {
     const filas = detalleVentaBody.querySelectorAll("tr");
-    
+
     if (filas.length === 0) return;
 
     // Mostrar loading
@@ -1860,12 +1892,12 @@ document.addEventListener("DOMContentLoaded", function () {
       const idProducto = fila.querySelector("input[name='detalle_idproducto[]']").value;
       const monedaOriginal = fila.querySelector("input[name='detalle_moneda_original[]']").value;
       const precioOriginal = parseFloat(fila.querySelector("input[name='detalle_precio_original[]']").value || 0);
-      
+
       // Encontrar datos del producto en la lista cargada
       const productoData = listaProductosCargadosSelect.find(
         (p) => String(p.idproducto || p.id) === String(idProducto)
       );
-      
+
       if (productoData) {
         // Crear objeto temporal con los datos originales del producto
         const datosProductoOriginal = {
@@ -1873,15 +1905,15 @@ document.addEventListener("DOMContentLoaded", function () {
           codigo_moneda_producto: monedaOriginal,
           precio_unitario: precioOriginal
         };
-        
+
         // Convertir precio según nueva moneda
         const precioConvertido = await convertirPrecioSegunMoneda(datosProductoOriginal);
         const nuevoPrecio = precioConvertido.toFixed(2);
-        
+
         // Actualizar precio unitario
         const inputPrecio = fila.querySelector("input[name='detalle_precio_unitario_venta[]']");
         inputPrecio.value = nuevoPrecio;
-        
+
         // Recalcular subtotal
         const cantidad = parseFloat(fila.querySelector("input[name='detalle_cantidad[]']").value || 1);
         const nuevoSubtotal = (precioConvertido * cantidad).toFixed(2);
@@ -1889,17 +1921,28 @@ document.addEventListener("DOMContentLoaded", function () {
         inputSubtotal.value = nuevoSubtotal;
       }
     }
-    
+
     // Cerrar loading y recalcular totales
     Swal.close();
     calcularTotalesGenerales();
+  }
+
+  // Agregar evento al cambio de fecha de venta
+  const fechaVentaInput = document.getElementById("fecha_venta_modal");
+  if (fechaVentaInput) {
+    fechaVentaInput.addEventListener("change", function () {
+      const filasDetalle = detalleVentaBody.querySelectorAll("tr");
+      if (filasDetalle.length > 0) {
+        recalcularPreciosDetalle();
+      }
+    });
   }
 
   // Agregar evento al cambio de moneda general (ambos selects)
   ["idmoneda_general", "idmoneda_general_modal"].forEach(selectId => {
     const selectElement = document.getElementById(selectId);
     if (selectElement) {
-      selectElement.addEventListener("change", function() {
+      selectElement.addEventListener("change", function () {
         const filasDetalle = detalleVentaBody.querySelectorAll("tr");
         if (filasDetalle.length > 0) {
           recalcularPreciosDetalle();
@@ -1915,7 +1958,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (notaDespachoBtn) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       const idventa = notaDespachoBtn.getAttribute("data-idventa");
       if (!idventa || isNaN(parseInt(idventa))) {
         Swal.fire("Error", "ID de venta no válido.", "error");
@@ -1953,7 +1996,7 @@ document.addEventListener("DOMContentLoaded", function () {
       regex: expresiones.apellido,
       mensajes: {
         vacio: "El apellido es obligatorio.",
-        formato: "El apellido debe tener entre 3 y 50 caracteres alfabéticos.",
+        formato: "El apellido debe tener entre 3 y 30 caracteres alfabéticos.",
       },
     },
     {
@@ -1986,7 +2029,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const camposObligatoriosClienteModal = [
     "cedula_cliente_modal",
-    "nombre_cliente_modal", 
+    "nombre_cliente_modal",
     "apellido_cliente_modal",
     "telefono_principal_cliente_modal",
     "direccion_cliente_modal"
@@ -2080,7 +2123,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!todosValidos) {
         Swal.fire({
           title: 'Error de validación',
-           html: `<ul style="text-align:left;">${camposConError.map(msg => `<li>• ${msg}</li>`).join('')}</ul>`,
+          html: `<ul style="text-align:left;">${camposConError.map(msg => `<li>• ${msg}</li>`).join('')}</ul>`,
           icon: 'error'
         });
         return;

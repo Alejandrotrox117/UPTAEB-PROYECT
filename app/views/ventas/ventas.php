@@ -267,7 +267,7 @@ $permisos = $data['permisos'] ?? []; ?>
           </label>
           <input type="text" id="telefono_principal_cliente_modal" name="telefono_principal" 
                  class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                 placeholder="04XX-XXXXXXX" >
+                 placeholder="04XXXXXXXXX" >
           <div id="error-telefono_principal_cliente_modal-vacio" class="mt-1 text-sm text-red-500 hidden"></div>
           <div id="error-telefono_principal_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
@@ -287,9 +287,9 @@ $permisos = $data['permisos'] ?? []; ?>
           <label for="observaciones_cliente_modal" class="block mb-2 text-gray-700 font-medium">
             Observaciones
           </label>
-          <input type="text" id="observaciones_cliente_modal" name="observaciones" 
+          <textarea id="observaciones_cliente_modal" name="observaciones" 
                  class="w-full px-4 py-2 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" 
-                 placeholder="Observaciones adicionales">
+                 placeholder="Observaciones adicionales"></textarea>
           <div id="error-observaciones_cliente_modal-formato" class="mt-1 text-sm text-red-500 hidden"></div>
         </div>
       </div>
