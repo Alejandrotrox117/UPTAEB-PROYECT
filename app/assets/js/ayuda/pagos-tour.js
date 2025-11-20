@@ -24,6 +24,7 @@ function iniciarTourPagos() {
             });
         },
         onCancel: function() {
+            localStorage.setItem('pagos-tour-completed', 'true');
             console.log('Tour del módulo de pagos cancelado');
         }
     });
