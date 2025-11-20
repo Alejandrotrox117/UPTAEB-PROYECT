@@ -122,7 +122,7 @@ function validarFormularioCompleto() {
   return true;
 }
 
-// Función para validar formulario de lotes completo
+// Función para validar formulario de lotes
 function validarFormularioLoteCompleto() {
   const empleado = document.getElementById('lote_prod_empleado');
   const productoInicial = document.getElementById('lote_prod_producto_inicial');
@@ -148,23 +148,7 @@ function validarFormularioLoteCompleto() {
   return true;
 }
 
-// Función de prueba
-window.probarSeguridad = function() {
-  const empleado = document.getElementById('prod_empleado');
-  const producto = document.getElementById('prod_producto_producir');
-  
-  if (empleado && empleadosValidos.length > 0) {
-    empleado.value = '99999';
-    empleado.dispatchEvent(new Event('change'));
-  }
-  
-  if (producto && productosValidos.length > 0) {
-    setTimeout(() => {
-      producto.value = '88888';
-      producto.dispatchEvent(new Event('change'));
-    }, 2000);
-  }
-};
+
 
 window.verificarArrays = function() {
   console.log('Empleados:', empleadosValidos.length, 'Productos:', productosValidos.length);
