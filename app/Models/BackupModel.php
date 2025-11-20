@@ -268,9 +268,22 @@ class BackupModel {
             $stmt->execute();
             $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Filtrar solo archivos que existen físicamente
+            $archivosExistentes = [];
+            $directorioBackups = $this->obtenerRutaBackups();
+            foreach ($resultado as $backup) {
+                $rutaArchivo = $directorioBackups . $backup['nombre_archivo'];
+                if (file_exists($rutaArchivo)) {
+                    $archivosExistentes[] = $backup;
+                } else {
+                    // Opcional: marcar como inactivo en BD si no existe
+                    // $this->marcarBackupInactivo($backup['id']);
+                }
+            }
+
             return [
                 'status' => true,
-                'data' => $resultado,
+                'data' => $archivosExistentes,
                 'message' => 'Backups obtenidos exitosamente'
             ];
 

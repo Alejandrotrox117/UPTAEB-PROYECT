@@ -38,20 +38,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function configurarEventos() {
         // Botones principales
-        document.getElementById('btnBackupCompleto').addEventListener('click', crearBackupCompleto);
-        document.getElementById('btnBackupTabla').addEventListener('click', mostrarModalBackupTabla);
-        document.getElementById('btnImportarDB').addEventListener('click', mostrarModalImportar);
-        document.getElementById('btnActualizarLista').addEventListener('click', cargarListaBackups);
+        const btnBackupCompleto = document.getElementById('btnBackupCompleto');
+        if (btnBackupCompleto) {
+            btnBackupCompleto.addEventListener('click', crearBackupCompleto);
+        }
+        
+        const btnBackupTabla = document.getElementById('btnBackupTabla');
+        if (btnBackupTabla) {
+            btnBackupTabla.addEventListener('click', mostrarModalBackupTabla);
+        }
+        
+        const btnImportarDB = document.getElementById('btnImportarDB');
+        if (btnImportarDB) {
+            btnImportarDB.addEventListener('click', mostrarModalImportar);
+        }
+        
+        const btnActualizarLista = document.getElementById('btnActualizarLista');
+        if (btnActualizarLista) {
+            btnActualizarLista.addEventListener('click', cargarListaBackups);
+        }
 
         // Modal Backup por Tabla
-        document.getElementById('btnCerrarModalTabla').addEventListener('click', ocultarModalBackupTabla);
-        document.getElementById('btnCancelarBackupTabla').addEventListener('click', ocultarModalBackupTabla);
-        document.getElementById('btnConfirmarBackupTabla').addEventListener('click', crearBackupTabla);
+        const btnCerrarModalTabla = document.getElementById('btnCerrarModalTabla');
+        if (btnCerrarModalTabla) {
+            btnCerrarModalTabla.addEventListener('click', ocultarModalBackupTabla);
+        }
+        
+        const btnCancelarBackupTabla = document.getElementById('btnCancelarBackupTabla');
+        if (btnCancelarBackupTabla) {
+            btnCancelarBackupTabla.addEventListener('click', ocultarModalBackupTabla);
+        }
+        
+        const btnConfirmarBackupTabla = document.getElementById('btnConfirmarBackupTabla');
+        if (btnConfirmarBackupTabla) {
+            btnConfirmarBackupTabla.addEventListener('click', crearBackupTabla);
+        }
 
         // Modal Importar DB
-        document.getElementById('btnCerrarModalImportar').addEventListener('click', ocultarModalImportar);
-        document.getElementById('btnCancelarImportar').addEventListener('click', ocultarModalImportar);
-        document.getElementById('formImportarDB').addEventListener('submit', ejecutarImportacion);
+        const btnCerrarModalImportar = document.getElementById('btnCerrarModalImportar');
+        if (btnCerrarModalImportar) {
+            btnCerrarModalImportar.addEventListener('click', ocultarModalImportar);
+        }
+        
+        const btnCancelarImportar = document.getElementById('btnCancelarImportar');
+        if (btnCancelarImportar) {
+            btnCancelarImportar.addEventListener('click', ocultarModalImportar);
+        }
+        
+        const formImportarDB = document.getElementById('formImportarDB');
+        if (formImportarDB) {
+            formImportarDB.addEventListener('submit', ejecutarImportacion);
+        }
 
         // Event delegation para botones de la tabla
         document.addEventListener('click', function(e) {
@@ -87,29 +124,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function ocultarModalBackupTabla() {
-        modalBackupTabla.classList.add('opacity-0', 'pointer-events-none');
-        modalBackupTabla.querySelector('.transform').classList.remove('scale-100');
-        modalBackupTabla.querySelector('.transform').classList.add('scale-95');
-        document.getElementById('formBackupTabla').reset();
+        if (modalBackupTabla) {
+            modalBackupTabla.classList.add('opacity-0', 'pointer-events-none');
+            const transform = modalBackupTabla.querySelector('.transform');
+            if (transform) {
+                transform.classList.remove('scale-100');
+                transform.classList.add('scale-95');
+            }
+        }
+        const formBackupTabla = document.getElementById('formBackupTabla');
+        if (formBackupTabla) {
+            formBackupTabla.reset();
+        }
     }
 
     // Funciones para mostrar/ocultar modal importar
     function mostrarModalImportar() {
-        modalImportarDB.classList.remove('opacity-0', 'pointer-events-none');
-        modalImportarDB.querySelector('.transform').classList.remove('scale-95');
-        modalImportarDB.querySelector('.transform').classList.add('scale-100');
+        if (modalImportarDB) {
+            modalImportarDB.classList.remove('opacity-0', 'pointer-events-none');
+            const transform = modalImportarDB.querySelector('.transform');
+            if (transform) {
+                transform.classList.remove('scale-95');
+                transform.classList.add('scale-100');
+            }
+        }
     }
 
     function ocultarModalImportar() {
-        modalImportarDB.classList.add('opacity-0', 'pointer-events-none');
-        modalImportarDB.querySelector('.transform').classList.remove('scale-100');
-        modalImportarDB.querySelector('.transform').classList.add('scale-95');
-        document.getElementById('formImportarDB').reset();
+        if (modalImportarDB) {
+            modalImportarDB.classList.add('opacity-0', 'pointer-events-none');
+            const transform = modalImportarDB.querySelector('.transform');
+            if (transform) {
+                transform.classList.remove('scale-100');
+                transform.classList.add('scale-95');
+            }
+        }
+        const formImportarDB = document.getElementById('formImportarDB');
+        if (formImportarDB) {
+            formImportarDB.reset();
+        }
     }
 
     // Funciones de backup
     async function crearBackupCompleto() {
         const btn = document.getElementById('btnBackupCompleto');
+        if (!btn) return;
+        
         const btnText = btn.innerHTML;
         
         try {
@@ -153,7 +213,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function crearBackupTabla() {
-        const tabla = document.getElementById('selectTabla').value;
+        const selectTabla = document.getElementById('selectTabla');
+        if (!selectTabla) return;
+        
+        const tabla = selectTabla.value;
         
         if (!tabla) {
             Swal.fire({
@@ -166,6 +229,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const btn = document.getElementById('btnConfirmarBackupTabla');
+        if (!btn) return;
+        
         const btnText = btn.innerHTML;
         
         try {
@@ -264,8 +329,14 @@ document.addEventListener('DOMContentLoaded', function() {
     async function ejecutarImportacion(e) {
         e.preventDefault();
         
-        const archivo = document.getElementById('archivoSQL').files[0];
-        const baseDatos = document.getElementById('selectBaseDatos').value;
+        const archivoInput = document.getElementById('archivoSQL');
+        if (!archivoInput) return;
+        
+        const archivo = archivoInput.files[0];
+        const selectBaseDatos = document.getElementById('selectBaseDatos');
+        if (!selectBaseDatos) return;
+        
+        const baseDatos = selectBaseDatos.value;
         
         if (!archivo) {
             Swal.fire({
@@ -313,6 +384,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!confirmResult.isConfirmed) return;
 
         const btn = document.getElementById('btnConfirmarImportar');
+        if (!btn) return;
+        
         const btnText = btn.innerHTML;
         
         try {
@@ -400,7 +473,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const loader = document.getElementById('loaderTableBackups');
         
         try {
-            loader.classList.remove('hidden');
+            if (loader) {
+                loader.classList.remove('hidden');
+            }
             
             const response = await fetch(base_url + 'backup/listarBackups');
             const data = await response.json();
@@ -435,7 +510,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonColor: '#EF4444'
             });
         } finally {
-            loader.classList.add('hidden');
+            if (loader) {
+                loader.classList.add('hidden');
+            }
         }
     }
 
@@ -542,14 +619,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (data.status === 'success') {
                 const select = document.getElementById('selectTabla');
-                select.innerHTML = '<option value="">Seleccione una tabla...</option>';
-                
-                data.tablas.forEach(tabla => {
-                    const option = document.createElement('option');
-                    option.value = tabla.name;
-                    option.textContent = tabla.name;
-                    select.appendChild(option);
-                });
+                if (select) {
+                    select.innerHTML = '<option value="">Seleccione una tabla...</option>';
+                    
+                    data.tablas.forEach(tabla => {
+                        const option = document.createElement('option');
+                        option.value = tabla.name;
+                        option.textContent = tabla.name;
+                        select.appendChild(option);
+                    });
+                }
             }
         } catch (error) {
             console.error('Error al cargar tablas:', error);
@@ -563,9 +642,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (data.status === 'success') {
                 const stats = data.estadisticas;
-                document.getElementById('totalBackups').textContent = stats.total || '0';
-                document.getElementById('ultimoBackup').textContent = stats.ultimo || 'N/A';
-                document.getElementById('espacioTotal').textContent = stats.espacio || 'N/A';
+                const totalBackupsEl = document.getElementById('totalBackups');
+                if (totalBackupsEl) {
+                    totalBackupsEl.textContent = stats.total || '0';
+                }
+                const ultimoBackupEl = document.getElementById('ultimoBackup');
+                if (ultimoBackupEl) {
+                    ultimoBackupEl.textContent = stats.ultimo || 'N/A';
+                }
+                const espacioTotalEl = document.getElementById('espacioTotal');
+                if (espacioTotalEl) {
+                    espacioTotalEl.textContent = stats.espacio || 'N/A';
+                }
             }
         } catch (error) {
             console.error('Error al cargar estadísticas:', error);
