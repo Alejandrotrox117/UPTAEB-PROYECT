@@ -30,6 +30,7 @@ if (!in_array($controller, $publicRoutes)) {
     }
 }
 
+$functionalControllers = ['login'];
 
 $controllerFile = "app/Controllers/" . ucfirst($controller) . ".php";
 if (!file_exists($controllerFile)) {
@@ -37,28 +38,42 @@ if (!file_exists($controllerFile)) {
 }
 
 if (file_exists($controllerFile)) {
-    $controllerClassName = "App\\Controllers\\" . ucfirst(strtolower($controller));
     
-    if (!class_exists($controllerClassName)) {
-        $controllerClassName = "App\\Controllers\\" . $controller;
-    }
-    
-    if (!class_exists($controllerClassName)) {
-        $controllerClassName = "App\\Controllers\\" . strtolower($controller);
-    }
-    
-    if (class_exists($controllerClassName)) {
-        $controllerInstance = new $controllerClassName();
-
-        if (method_exists($controllerInstance, $method)) {
-            call_user_func_array(array($controllerInstance, $method), $params);
+    if (in_array($controller, $functionalControllers)) {
+        require_once $controllerFile;
+        
+        $functionName = $controller . '_' . $method;
+        
+        if (function_exists($functionName)) {
+            call_user_func_array($functionName, $params);
         } else {
             $errorController = new \App\Controllers\Errors();
             $errorController->index();
         }
     } else {
-        $errorController = new \App\Controllers\Errors();
-        $errorController->index();
+        $controllerClassName = "App\\Controllers\\" . ucfirst(strtolower($controller));
+        
+        if (!class_exists($controllerClassName)) {
+            $controllerClassName = "App\\Controllers\\" . $controller;
+        }
+        
+        if (!class_exists($controllerClassName)) {
+            $controllerClassName = "App\\Controllers\\" . strtolower($controller);
+        }
+        
+        if (class_exists($controllerClassName)) {
+            $controllerInstance = new $controllerClassName();
+
+            if (method_exists($controllerInstance, $method)) {
+                call_user_func_array(array($controllerInstance, $method), $params);
+            } else {
+                $errorController = new \App\Controllers\Errors();
+                $errorController->index();
+            }
+        } else {
+            $errorController = new \App\Controllers\Errors();
+            $errorController->index();
+        }
     }
 } else {
     $errorController = new \App\Controllers\Errors();
