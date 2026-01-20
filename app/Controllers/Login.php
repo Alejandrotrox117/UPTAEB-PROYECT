@@ -24,7 +24,7 @@ function login_index() {
     $data["page_tag"] = "Inicio";
     $data["page_name"] = "login";
     $data["page_functions_js"] = "functions_login.js";
-    $data["recaptcha_site_key"] = defined('RECAPTCHA_SITE_KEY') ? RECAPTCHA_SITE_KEY : '';
+    $data["recaptcha_site_key"] = getRecaptchaSiteKey();
     $data["csrf_token"] = generateCSRFToken();
     renderView("login", $data);
 }
@@ -137,7 +137,7 @@ function login_logout() {
     
     session_destroy();
     
-    header('Location: ' . base_url() . 'login');
+    header('Location: ' . base_url('login'));
     exit();
 }
 
@@ -219,7 +219,7 @@ function login_enviarResetPassword() {
 
 function login_confirmarReset($token = null) {
     if (empty($token)) {
-        header("Location: " . base_url() . "/login?error=token_invalido");
+        header("Location: " . base_url('login?error=token_invalido'));
         exit();
     }
 

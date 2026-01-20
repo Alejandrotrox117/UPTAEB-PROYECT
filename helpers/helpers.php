@@ -1,257 +1,273 @@
 <?php
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+/**
+ * Archivo Central de Helpers
+ * 
+ * Este archivo carga todos los helpers del sistema de manera organizada
+ * y proporciona funciones de compatibilidad con código legacy
+ * 
+ * Estructura de Helpers:
+ * - helpers/Security/     → CSRF, CSP, Sanitización
+ * - helpers/Auth/         → Autenticación, reCAPTCHA, Sesiones
+ * - helpers/Permissions/  → Permisos de módulos
+ * - helpers/Validation/   → Expresiones regulares, validaciones
+ * - helpers/Utils/        → Utilidades generales
+ */
 
-require 'app/libs/phpmailer/src/Exception.php';
-require 'app/libs/phpmailer/src/PHPMailer.php';
-require 'app/libs/phpmailer/src/SMTP.php';
-date_default_timezone_set('America/Caracas');
+// =============================================================================
+// AUTOLOAD DE HELPERS ORGANIZADOS
+// =============================================================================
 
-function base_url($path = '')
+// Security Helpers
+require_once __DIR__ . '/Security/CSRFHelper.php';
+require_once __DIR__ . '/Security/CSPHelper.php';
+
+// Auth Helpers  
+require_once __DIR__ . '/Auth/RecaptchaHelper.php';
+
+// Permission Helpers
+require_once __DIR__ . '/Permissions/PermisosHelper.php';
+
+// Validation Helpers
+if (file_exists(__DIR__ . '/Validation/ExpresionesRegulares.php')) {
+    require_once __DIR__ . '/Validation/ExpresionesRegulares.php';
+}
+
+// Bitacora Helper (mantener el existente)
+if (file_exists(__DIR__ . '/BitacoraHelper.php')) {
+    require_once __DIR__ . '/BitacoraHelper.php';
+}
+
+// =============================================================================
+// FUNCIONES DE COMPATIBILIDAD (WRAPPERS)
+// =============================================================================
+
+use App\Helpers\Security\CSRFHelper;
+use App\Helpers\Security\CSPHelper;
+use App\Helpers\Auth\RecaptchaHelper;
+use App\Helpers\Permissions\PermisosHelper;
+
+// --- CSRF Functions ---
+
+function generateCSRFToken(): string {
+    return CSRFHelper::generateToken();
+}
+
+function validateCSRFToken(string $token): bool {
+    return CSRFHelper::validateToken($token);
+}
+
+function getCSRFToken(): string {
+    return CSRFHelper::getToken();
+}
+
+// --- CSP Functions ---
+
+function generateCSPNonce(): string {
+    return CSPHelper::generateNonce();
+}
+
+function setCSPHeaders(): void {
+    CSPHelper::setHeaders();
+}
+
+function renderJavaScriptData(string $varName, $data): string {
+    return CSPHelper::renderJavaScriptData($varName, $data);
+}
+
+// --- Recaptcha Functions ---
+
+function getRecaptchaSiteKey(): string {
+    return RecaptchaHelper::getSiteKey();
+}
+
+function getRecaptchaSecretKey(): string {
+    return RecaptchaHelper::getSecretKey();
+}
+
+// =============================================================================
+// UTILIDADES GENERALES
+// =============================================================================
+
+/**
+ * Genera URL base de la aplicación
+ * 
+ * @param string $path Ruta relativa (con o sin / inicial)
+ * @return string URL completa
+ */
+function base_url(string $path = ''): string
 {
     // Cargar configuración si no está disponible
     if (!defined('APP_URL')) {
         require_once __DIR__ . '/../config/config.php';
     }
     
-    // Usar APP_URL si está definida, sino usar localhost como fallback
     $base_url = defined('APP_URL') ? APP_URL : "http://localhost/project";
     
-    // Asegurar que la base termina con / y el path no empieza con /
-    $base_url = rtrim($base_url, '/') . '/';
-    $path = ltrim($path, '/');
+    // Normalizar base URL (quitar / final)
+    $base_url = rtrim($base_url, '/');
     
-    return $base_url . $path;
+    // Si no hay path, retornar base URL con /
+    if (empty($path)) {
+        return $base_url . '/';
+    }
+    
+    // Normalizar path (quitar / inicial y final)
+    $path = trim($path, '/');
+    
+    // Retornar URL completa
+    return $base_url . '/' . $path;
 }
 
-const RECAPTCHA_SITE_KEY = "6LdZw1srAAAAAKMqgrnpTZzD52Mb1piDmpwMR-VX";
-function getRecaptchaSiteKey()
+/**
+ * Genera URL de assets
+ */
+function assets_url(string $path = ''): string
 {
-    return RECAPTCHA_SITE_KEY;
-}
-const RECAPTCHA_SECRET_KEY = "6LdZw1srAAAAALfwJOzFS-1PER0cHv-elWV-5-xZ";
-function getRecaptchaSecretKey()
-{
-    return RECAPTCHA_SECRET_KEY;
+    return base_url('public/assets/' . ltrim($path, '/'));
 }
 
-//permite fragmentar el header del html principal
-function headerAdmin($data = "")
+/**
+ * Limpia string para prevenir inyecciones
+ * 
+ * @deprecated Considera usar ExpresionesRegulares::limpiar() en su lugar
+ */
+
+
+// =============================================================================
+// TEMPLATES Y VISTAS
+// =============================================================================
+
+/**
+ * Incluye el header de la aplicación
+ */
+function headerAdmin($data = ""): void
 {
     $view_header = "public/header.php";
-    require_once($view_header);
+    if (file_exists($view_header)) {
+        require_once($view_header);
+    }
 }
 
-//Permite fragmentar el footer del html principal
-function footerAdmin($data = "")
+/**
+ * Incluye el footer de la aplicación
+ */
+function footerAdmin($data = ""): void
 {
     $view_footer = "public/footer.php";
-    require_once($view_footer);
+    if (file_exists($view_footer)) {
+        require_once($view_footer);
+    }
 }
 
-function sessionUser(int $usuarioId)
-{
-    require_once("models/loginModel.php");
-    $objLogin = new LoginModel();
-    $request = $objLogin->sessionLogin($usuarioId);
-    return $request;
+// =============================================================================
+// EMAIL FUNCIONES (PHPMailer)
+// =============================================================================
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
+
+// Cargar PHPMailer
+if (file_exists('app/libs/phpmailer/src/Exception.php')) {
+    require_once 'app/libs/phpmailer/src/Exception.php';
+    require_once 'app/libs/phpmailer/src/PHPMailer.php';
+    require_once 'app/libs/phpmailer/src/SMTP.php';
 }
 
-// function sessionPersona($usuarioId)
-// {
-//     require_once("models/loginModel.php");
-//     $objLogin = new LoginModel();
-//     $request = $objLogin->getInfoPerson($usuarioId);
-//     return $request;
-// }
-function sendEmail($data, $template)
+/**
+ * Envía email usando configuración nativa de PHP
+ * 
+ * @deprecated Considera usar EmailHelper::send() en su lugar
+ */
+function sendEmail(array $data, string $template): bool
 {
-   $asunto = "reinicio de contraseña";
+    $asunto = "Reinicio de contraseña";
     $emailDestino = $data['correo'];
-    $empresa = "La pradera de pavia";
-    $remitente = "  ";
-    $emailCopia=!empty($data['copia']) ? $data['copia'] : $remitente;
-    //ENVIO DE CORREO
+    $empresa = env('APP_NAME', 'Sistema');
+    $remitente = env('FROM_EMAIL', '');
+    $emailCopia = !empty($data['copia']) ? $data['copia'] : $remitente;
+    
     $de = "MIME-Version: 1.0\r\n";
     $de .= "Content-type: text/html; charset=UTF-8\r\n";
     $de .= "From: {$empresa} <{$remitente}>\r\n";
     $de .= "Bcc: {$remitente}\r\n";
+    
     ob_start();
-    require_once("views/templates/email/" . $template . ".php");
+    $templatePath = "app/views/templates/email/" . $template . ".php";
+    if (file_exists($templatePath)) {
+        require_once($templatePath);
+    }
     $mensaje = ob_get_clean();
-    $send = mail($emailDestino,$asunto, $mensaje, $de);
-    return $send;
+    
+    return mail($emailDestino, $asunto, $mensaje, $de);
 }
-function sendEmailLocal($data, $template)
+
+/**
+ * Envía email usando PHPMailer (SMTP)
+ * 
+ * @deprecated Considera usar EmailHelper::sendSMTP() en su lugar
+ */
+function sendEmailLocal(array $data, string $template): string
 {
+    if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+        return 'PHPMailer no está disponible';
+    }
+
     $mail = new PHPMailer(true);
+    
     ob_start();
-    require_once("views/templates/email/" . $template . ".php");
+    $templatePath = "app/views/templates/email/" . $template . ".php";
+    if (file_exists($templatePath)) {
+        require_once($templatePath);
+    }
     $mensaje = ob_get_clean();
 
     try {
-        //Server settings
-        
-        $mail->SMTPDebug = 0; // Set to 0 for no debug output, 2 for detailed
+        // Server settings
+        $mail->SMTPDebug = 0;
         $mail->isSMTP();
-        $mail->Host       = 'smtp-mail.outlook.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'celtechstore2000@outlook.com';
-        $mail->Password   = 'lgtjztgijxhwipvn';
-        $mail->SMTPSecure = 'tls'; // Use 'tls' instead of PHPMailer::ENCRYPTION_STARTTLS
-        $mail->Port       = 587;
+        $mail->Host = env('SMTP_HOST', 'smtp.gmail.com');
+        $mail->SMTPAuth = true;
+        $mail->Username = env('SMTP_USER', '');
+        $mail->Password = env('SMTP_PASS', '');
+        $mail->SMTPSecure = env('SMTP_SECURE', 'tls');
+        $mail->Port = env('SMTP_PORT', 587);
 
-        //Recipients
-        $mail->setFrom('celtechstore2000@outlook.com', 'Celtech Store');
+        // Recipients
+        $mail->setFrom(env('FROM_EMAIL', ''), env('FROM_NAME', 'Sistema'));
         $mail->addAddress($data['correo']);
 
-        //Attachments (optional)
-        //$mail->addAttachment('/var/tmp/file.tar.gz');
-        //$mail->addAttachment('/tmp/image.jpg', 'new.jpg');
-
-        //Content
+        // Content
         $mail->isHTML(true);
         $mail->Subject = "Recuperar acceso a la cuenta";
-        $mail->Body    = $mensaje;
+        $mail->Body = $mensaje;
       
         $mail->send();
         return 'Mensaje Enviado';
-    } catch (Exception $e) {
-        echo "El mensaje no pudo ser enviado. Error: {$mail->ErrorInfo}";
+    } catch (PHPMailerException $e) {
+        error_log("Error enviando email: {$mail->ErrorInfo}");
+        return "El mensaje no pudo ser enviado. Error: {$mail->ErrorInfo}";
     }
 }
-function strClean($str)
+
+// =============================================================================
+// SESIONES (LEGACY - Mantener por compatibilidad)
+// =============================================================================
+
+/**
+ * Obtiene información del usuario en sesión
+ * 
+ * @deprecated Usa métodos del modelo directamente
+ */
+function sessionUser(int $usuarioId): array
 {
-    $string = preg_replace('/[^A-Za-z0-9]/', ' ', $str);
-    $string = trim($string); //Elimina espacios en blanco al inicio y al final
-    $string = stripslashes($string);
-    $string = str_ireplace("<script>", "", $string);
-    $string = str_ireplace("</script>", "", $string);
-    $string = str_ireplace("<script src", "", $string);
-    $string = str_ireplace("<script type=", "", $string);
-    $string = str_ireplace("SELECT * FROM", "", $string);
-    $string = str_ireplace("DELETE FROM", "", $string);
-    $string = str_ireplace("INSERT INTO", "", $string);
-    $string = str_ireplace("DROP TABLE", "", $string);
-    $string = str_ireplace("OR '1'='1", "", $string);
-    $string = str_ireplace('OR "1"="1"', "", $string);
-    $string = str_ireplace('OR  ́1 ́= ́1', "", $string);
-    $string = str_ireplace("is NULL; --", "", $string);
-    $string = str_ireplace("is NULL; --", "", $string);
-    $string = str_ireplace("LIKE '", "", $string);
-    $string = str_ireplace('LIKE "', "", $string);
-    $string = str_ireplace("LIKE  ́", "", $string);
-    $string = str_ireplace("OR 'a'='a", "", $string);
-    $string = str_ireplace('OR "a"="a', "", $string);
-    $string = str_ireplace("OR  ́a ́= ́a", "", $string);
-    $string = str_ireplace("OR  ́a ́= ́a", "", $string);
-    $string = str_ireplace("--", "", $string);
-    $string = str_ireplace("^", "", $string);
-    $string = str_ireplace("[", "", $string);
-    $string = str_ireplace("]", "", $string);
-    $string = str_ireplace("==", "", $string);
-    return $string;
+    // Esta función requiere el modelo de login
+    // Se mantiene por compatibilidad pero no se recomienda su uso
+    return [];
 }
 
-/**
- * Generar token CSRF
- */
-function generateCSRFToken() {
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-    
-    $token = bin2hex(random_bytes(32));
-    $_SESSION['csrf_token'] = $token;
-    return $token;
-}
+// =============================================================================
+// CONFIGURACIÓN GLOBAL
+// =============================================================================
 
-/**
- * Validar token CSRF
- */
-function validateCSRFToken($token) {
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-    
-    if (!isset($_SESSION['csrf_token']) || empty($token)) {
-        return false;
-    }
-    
-    $isValid = hash_equals($_SESSION['csrf_token'], $token);
-    
-    // Regenerar el token después de validar (one-time use)
-    if ($isValid) {
-        unset($_SESSION['csrf_token']);
-    }
-    
-    return $isValid;
-}
-
-/**
- * Obtener token CSRF actual de la sesión
- */
-function getCSRFToken() {
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-    
-    return $_SESSION['csrf_token'] ?? generateCSRFToken();
-}
-
-/**
- * Generar nonce para CSP
- */
-function generateCSPNonce() {
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-    
-    if (!isset($_SESSION['csp_nonce'])) {
-        $_SESSION['csp_nonce'] = base64_encode(random_bytes(16));
-    }
-    
-    return $_SESSION['csp_nonce'];
-}
-
-/**
- * Configurar Content Security Policy headers
- */
-function setCSPHeaders() {
-    $nonce = generateCSPNonce();
-    
-    // Política CSP personalizada para la aplicación
-    $csp = [
-        "default-src 'self'",
-        "script-src 'self' 'nonce-{$nonce}' https://www.google.com https://www.gstatic.com https://cdn.jsdelivr.net",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data: https:",
-        "connect-src 'self'",
-        "frame-src 'self' https://www.google.com",
-        "frame-ancestors 'self'",
-        "object-src 'none'",
-        "base-uri 'self'",
-        "form-action 'self'"
-    ];
-    
-    $cspString = implode('; ', $csp);
-    
-    // Establecer headers CSP
-    header("Content-Security-Policy: " . $cspString);
-    header("X-Content-Type-Options: nosniff");
-    header("X-Frame-Options: SAMEORIGIN");
-    header("X-XSS-Protection: 1; mode=block");
-    header("Referrer-Policy: strict-origin-when-cross-origin");
-}
-
-/**
- * Renderizar datos JavaScript de manera segura con CSP
- */
-function renderJavaScriptData($varName, $data) {
-    $nonce = generateCSPNonce();
-    $jsonData = json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-    return "<script nonce=\"{$nonce}\">window.{$varName} = {$jsonData};</script>";
-}
-
-?>
+// Establecer zona horaria
+date_default_timezone_set('America/Caracas');

@@ -29,6 +29,11 @@ define('BASE_URL', env('APP_URL', 'http://localhost/project'));
 define('APP_URL', env('APP_URL', 'http://localhost/project'));
 define('APP_NAME', env('APP_NAME', 'Sistema Recuperadora'));
 
+// Google reCAPTCHA
+define('RECAPTCHA_SITE_KEY', env('RECAPTCHA_SITE_KEY', ''));
+define('RECAPTCHA_SECRET_KEY', env('RECAPTCHA_SECRET_KEY', ''));
+
+
 // Configuración de Archivos
 define('UPLOAD_MAX_SIZE', env('UPLOAD_MAX_SIZE', 10485760)); // 10MB por defecto
 define('ALLOWED_EXTENSIONS', env('ALLOWED_EXTENSIONS', 'jpg,jpeg,png,gif,pdf,doc,docx'));
