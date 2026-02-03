@@ -4,6 +4,7 @@ use App\Models\UsuariosModel;
 use App\Models\BitacoraModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
+use App\Helpers\Validation\ExpresionesRegulares;
 
 // =============================================================================
 // FUNCIONES AUXILIARES DEL CONTROLADOR
@@ -74,9 +75,10 @@ function usuarios_createUsuario() {
                 die();
             }
 
+            // Sanitizar datos con ExpresionesRegulares
             $datosLimpios = [
-                'usuario' => strClean($request['usuario'] ?? ''),
-                'correo' => filter_var($request['correo'] ?? '', FILTER_SANITIZE_EMAIL),
+                'usuario' => ExpresionesRegulares::limpiar($request['usuario'] ?? '', 'alfanumerico'),
+                'correo' => ExpresionesRegulares::limpiar($request['correo'] ?? '', 'email'),
                 'clave' => $request['clave'] ?? '',
                 'idrol' => intval($request['idrol'] ?? 0),
                 'personaId' => !empty($request['personaId']) ? intval($request['personaId']) : null
@@ -255,9 +257,10 @@ function usuarios_updateUsuario() {
                 die();
             }
 
+            // Sanitizar datos con ExpresionesRegulares
             $datosLimpios = [
-                'usuario' => strClean($request['usuario'] ?? ''),
-                'correo' => filter_var($request['correo'] ?? '', FILTER_SANITIZE_EMAIL),
+                'usuario' => ExpresionesRegulares::limpiar($request['usuario'] ?? '', 'alfanumerico'),
+                'correo' => ExpresionesRegulares::limpiar($request['correo'] ?? '', 'email'),
                 'clave' => $request['clave'] ?? '', 
                 'idrol' => intval($request['idrol'] ?? 0),
                 'personaId' => !empty($request['personaId']) ? intval($request['personaId']) : null
@@ -516,7 +519,8 @@ function usuarios_buscarUsuario() {
                 die();
             }
 
-            $strTermino = strClean($request['termino'] ?? '');
+            // Sanitizar término de búsqueda
+            $strTermino = ExpresionesRegulares::limpiar($request['termino'] ?? '', 'alfanumerico');
             if (empty($strTermino)) {
                 $arrResponse = array('status' => false, 'message' => 'Término de búsqueda requerido');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);

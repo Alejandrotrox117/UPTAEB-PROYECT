@@ -25,7 +25,7 @@ if (file_exists(__DIR__ . '/BitacoraHelper.php')) {
     require_once __DIR__ . '/BitacoraHelper.php';
 }
 
-// Controller Helpers 
+// Controller Helpers (incluye funciones de validación)
 if (file_exists(__DIR__ . '/controller_helpers.php')) {
     require_once __DIR__ . '/controller_helpers.php';
 }

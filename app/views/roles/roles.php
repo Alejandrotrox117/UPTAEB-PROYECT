@@ -224,8 +224,8 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
 </div>
 <?php endif; ?>
 
-<!-- ✅ MODAL CONFIRMAR ELIMINAR - SOLO SI TIENE PERMISOS -->
-<?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar')): ?>
+<!-- Modal Confirmar Eliminar - Solo si tiene permisos -->
+<?php if ($permisos['eliminar']): ?>
 <div id="modalConfirmarEliminar" class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-[60] p-4">
   <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-md max-h-[95vh]">
     <div class="px-4 md:px-6 py-4 border-b border-gray-200">
@@ -247,48 +247,6 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
   </div>
 </div>
 <?php endif; ?>
-
-<!-- ✅ MENSAJE DE PERMISOS INSUFICIENTES -->
-<?php if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
-<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
-    <div class="flex">
-        <div class="flex-shrink-0">
-            <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
-        </div>
-        <div class="ml-3">
-            <h3 class="text-sm font-medium text-yellow-800">
-                Permisos Limitados
-            </h3>
-            <div class="mt-2 text-sm text-yellow-700">
-                <p>Su nivel de acceso actual no permite ver el contenido de este módulo. Contacte al administrador si necesita acceso adicional.</p>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- ✅ AGREGAR REQUIRE PARA USAR EL HELPER EN LA VISTA -->
-<?php
-require_once "helpers/PermisosModuloVerificar.php";
-
-$permisosRoles = [
-    'crear' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear'),
-    'editar' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar'),
-    'eliminar' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar'),
-    'ver' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')
-];
-?>
-
-<?= renderJavaScriptData('PERMISOS_ROLES', $permisosRoles); ?>
-<script nonce="<?= generateCSPNonce(); ?>">
-// ✅ FUNCIÓN PARA VERIFICAR PERMISOS EN JAVASCRIPT
-window.tienePermiso = function(accion) {
-    return window.PERMISOS_ROLES[accion] || false;
-};
-
-// ✅ LOG DE PERMISOS PARA DEBUG
-console.log('🔐 Permisos del usuario para módulo Roles:', window.PERMISOS_ROLES);
-</script>
 
 <!-- Scripts específicos del módulo de roles -->
 <script src="<?= base_url('app/assets/js/ayuda/roles-tour.js'); ?>"></script>

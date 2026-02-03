@@ -137,6 +137,17 @@ class ExpresionesRegulares
             case 'codigo':
                 return preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($valor)));
             
+            case 'rol':
+            case 'rol_nombre':
+                // Solo permite letras, números, espacios y acentos comunes
+                return preg_replace('/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-_]/', '', trim($valor));
+            
+            case 'descripcion':
+                // Permite caracteres alfanuméricos, espacios, puntuación básica
+                $limpio = trim($valor);
+                $limpio = strip_tags($limpio);
+                return htmlspecialchars($limpio, ENT_QUOTES, 'UTF-8');
+            
             default:
                 return trim($valor);
         }
