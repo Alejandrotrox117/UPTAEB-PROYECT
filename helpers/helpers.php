@@ -1,17 +1,5 @@
 <?php
-/**
- * Archivo Central de Helpers
- * 
- * Este archivo carga todos los helpers del sistema de manera organizada
- * y proporciona funciones de compatibilidad con código legacy
- * 
- * Estructura de Helpers:
- * - helpers/Security/     → CSRF, CSP, Sanitización
- * - helpers/Auth/         → Autenticación, reCAPTCHA, Sesiones
- * - helpers/Permissions/  → Permisos de módulos
- * - helpers/Validation/   → Expresiones regulares, validaciones
- * - helpers/Utils/        → Utilidades generales
- */
+
 
 // =============================================================================
 // AUTOLOAD DE HELPERS ORGANIZADOS
@@ -32,14 +20,18 @@ if (file_exists(__DIR__ . '/Validation/ExpresionesRegulares.php')) {
     require_once __DIR__ . '/Validation/ExpresionesRegulares.php';
 }
 
-// Bitacora Helper (mantener el existente)
+// Bitacora Helper 
 if (file_exists(__DIR__ . '/BitacoraHelper.php')) {
     require_once __DIR__ . '/BitacoraHelper.php';
 }
 
-// =============================================================================
+// Controller Helpers 
+if (file_exists(__DIR__ . '/controller_helpers.php')) {
+    require_once __DIR__ . '/controller_helpers.php';
+}
+
+
 // FUNCIONES DE COMPATIBILIDAD (WRAPPERS)
-// =============================================================================
 
 use App\Helpers\Security\CSRFHelper;
 use App\Helpers\Security\CSPHelper;
@@ -133,9 +125,7 @@ function assets_url(string $path = ''): string
  */
 
 
-// =============================================================================
 // TEMPLATES Y VISTAS
-// =============================================================================
 
 /**
  * Incluye el header de la aplicación
