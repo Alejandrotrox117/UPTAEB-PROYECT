@@ -123,7 +123,7 @@ headerAdmin($data); ?>
 
 <!-- MODAL DETALLE BITÁCORA -->
 <div id="modalDetalleBitacora" 
-     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
+     class="fixed inset-0 flex items-center justify-center bg-opacity-30 backdrop-blur-[2px]   bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform scale-95 transition-transform duration-300 max-h-screen overflow-hidden">
         
         <!-- Header del Modal -->

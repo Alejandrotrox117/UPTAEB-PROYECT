@@ -104,28 +104,31 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Usuarios');
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
                 <div>
                     <label for="usuarioNombre" class="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario <span class="text-red-500">*</span></label>
-                    <input type="text" id="usuarioNombre" name="usuario" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                    <input type="text" id="usuarioNombre" name="usuario" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Ingrese nombre de usuario" >
+                    <div id="error-usuarioNombre-vacio" class="text-red-500 text-xs mt-1 hidden"></div>
+                    <div id="error-usuarioNombre-formato" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
                 <div>
                     <label for="usuarioCorreo" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
-                    <input type="email" id="usuarioCorreo" name="correo" placeholder="usuario@dominio.com" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                    <input type="email" id="usuarioCorreo" name="correo" placeholder="usuario@dominio.com" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
+                    <div id="error-usuarioCorreo-vacio" class="text-red-500 text-xs mt-1 hidden"></div>
+                    <div id="error-usuarioCorreo-formato" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
                 <div>
                     <label for="usuarioClave" class="block text-sm font-medium text-gray-700 mb-1">Contraseña <span class="text-red-500">*</span></label>
-                    <input type="password" id="usuarioClave" name="clave" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                    <input type="password" id="usuarioClave" name="clave" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="********" >
+                    <div id="error-usuarioClave-vacio" class="text-red-500 text-xs mt-1 hidden"></div>
+                    <div id="error-usuarioClave-formato" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
                 <div>
                     <label for="usuarioRol" class="block text-sm font-medium text-gray-700 mb-1">Rol <span class="text-red-500">*</span></label>
-                    <select id="usuarioRol" name="idrol" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                    <select id="usuarioRol" name="idrol" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
                         <option value="">Seleccione un rol</option>
                     </select>
-                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                    <div id="error-usuarioRol-vacio" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
             </div>
 
@@ -134,7 +137,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Usuarios');
                 <select id="usuarioPersona" name="personaId" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
                     <option value="">Sin persona asociada</option>
                 </select>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div id="error-usuarioPersona-formato" class="text-red-500 text-xs mt-1 hidden"></div>
                 <small class="text-gray-500 text-xs">Puede asociar este usuario a una persona existente en el sistema.</small>
             </div>
         </form>
@@ -172,28 +175,30 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Usuarios');
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
                 <div>
                     <label for="usuarioNombreActualizar" class="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario <span class="text-red-500">*</span></label>
-                    <input type="text" id="usuarioNombreActualizar" name="usuario" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                    <input type="text" id="usuarioNombreActualizar" name="usuario" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Ingrese nombre de usuario" >
+                    <div id="error-usuarioNombreActualizar-vacio" class="text-red-500 text-xs mt-1 hidden"></div>
+                    <div id="error-usuarioNombreActualizar-formato" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
                 <div>
                     <label for="usuarioCorreoActualizar" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico <span class="text-red-500">*</span></label>
-                    <input type="email" id="usuarioCorreoActualizar" name="correo" placeholder="usuario@dominio.com" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                    <input type="email" id="usuarioCorreoActualizar" name="correo" placeholder="usuario@dominio.com" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
+                    <div id="error-usuarioCorreoActualizar-vacio" class="text-red-500 text-xs mt-1 hidden"></div>
+                    <div id="error-usuarioCorreoActualizar-formato" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
                 <div>
                     <label for="usuarioClaveActualizar" class="block text-sm font-medium text-gray-700 mb-1">Contraseña <small class="text-gray-500">(dejar en blanco para no cambiar)</small></label>
-                    <input type="password" id="usuarioClaveActualizar" name="clave" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                    <input type="password" id="usuarioClaveActualizar" name="clave" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="********">
+                    <div id="error-usuarioClaveActualizar-formato" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
                 <div>
                     <label for="usuarioRolActualizar" class="block text-sm font-medium text-gray-700 mb-1">Rol <span class="text-red-500">*</span></label>
-                    <select id="usuarioRolActualizar" name="idrol" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                    <select id="usuarioRolActualizar" name="idrol" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
                         <option value="">Seleccione un rol</option>
                     </select>
-                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                    <div id="error-usuarioRolActualizar-vacio" class="text-red-500 text-xs mt-1 hidden"></div>
                 </div>
             </div>
            
@@ -202,7 +207,7 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Usuarios');
                 <select id="usuarioPersonaActualizar" name="personaId" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
                     <option value="">Sin persona asociada</option>
                 </select>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div id="error-usuarioPersonaActualizar-formato" class="text-red-500 text-xs mt-1 hidden"></div>
                 <small class="text-gray-500 text-xs">Puede asociar este usuario a una persona existente en el sistema.</small>
             </div>
         </form>

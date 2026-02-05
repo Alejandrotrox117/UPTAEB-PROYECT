@@ -13,8 +13,7 @@ function iniciarTourRoles() {
                 enabled: true
             }
         },
-        onComplete: function() {
-            localStorage.setItem('roles-tour-completed', 'true');
+        onComplete: function () {
             Swal.fire({
                 title: '¡Tour Completado!',
                 text: 'Ya conoces las principales funcionalidades del módulo de roles.',
@@ -22,7 +21,7 @@ function iniciarTourRoles() {
                 confirmButtonText: 'Excelente'
             });
         },
-        onCancel: function() {
+        onCancel: function () {
             console.log('Tour del módulo de roles cancelado');
         }
     });
@@ -315,60 +314,29 @@ function agregarBotonAyudaRoles() {
         justify-content: center !important;
         font-size: 20px !important;
     `;
-    
+
     helpButton.setAttribute('title', 'Iniciar tour del módulo de roles');
     helpButton.addEventListener('click', iniciarTourRoles);
-    helpButton.addEventListener('mouseenter', function() {
+    helpButton.addEventListener('mouseenter', function () {
         this.style.transform = 'scale(1.1)';
         this.style.backgroundColor = '#15803d';
     });
-    helpButton.addEventListener('mouseleave', function() {
+    helpButton.addEventListener('mouseleave', function () {
         this.style.transform = 'scale(1)';
         this.style.backgroundColor = '#16a34a';
     });
-    
+
     document.body.appendChild(helpButton);
 }
 
-// Auto-inicializar cuando se carga el DOM
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar si estamos en el módulo de roles
+document.addEventListener('DOMContentLoaded', function () {
     if (window.location.pathname.includes('roles') && !window.location.pathname.includes('RolesIntegrado')) {
-        
-        // Esperar a que todos los elementos se carguen completamente
-        setTimeout(function() {
-            // Agregar botón de ayuda
+        setTimeout(function () {
             agregarBotonAyudaRoles();
-            
-            // Auto-iniciar tour solo la primera vez
-            if (!localStorage.getItem('roles-tour-completed')) {
-                setTimeout(function() {
-                    // Preguntar si quiere hacer el tour
-                    Swal.fire({
-                        title: '¿Quieres hacer un tour del módulo?',
-                        text: 'Te mostramos las principales funcionalidades del módulo de roles',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, empezar tour',
-                        cancelButtonText: 'Ahora no',
-                        confirmButtonColor: '#16a34a',
-                        cancelButtonColor: '#6b7280'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            iniciarTourRoles();
-                        } else {
-                            // Si dice que no, marcar como completado para no molestarlo más
-                            localStorage.setItem('roles-tour-completed', 'true');
-                        }
-                    });
-                }, 1000);
-            }
         }, 500);
     }
 });
 
-// También agregar función global para reiniciar el tour
-window.reiniciarTourRoles = function() {
-    localStorage.removeItem('roles-tour-completed');
+window.reiniciarTourRoles = function () {
     iniciarTourRoles();
 };

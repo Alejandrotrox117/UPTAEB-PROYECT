@@ -13,8 +13,7 @@ function iniciarTourUsuarios() {
                 enabled: true
             }
         },
-        onComplete: function() {
-            localStorage.setItem('usuarios-tour-completed', 'true');
+        onComplete: function () {
             Swal.fire({
                 title: '¡Tour Completado!',
                 text: 'Ya conoces las principales funcionalidades del módulo de usuarios.',
@@ -22,7 +21,7 @@ function iniciarTourUsuarios() {
                 confirmButtonText: 'Excelente'
             });
         },
-        onCancel: function() {
+        onCancel: function () {
             console.log('Tour del módulo de usuarios cancelado');
         }
     });
@@ -322,60 +321,29 @@ function agregarBotonAyudaUsuarios() {
         justify-content: center !important;
         font-size: 20px !important;
     `;
-    
+
     helpButton.setAttribute('title', 'Iniciar tour del módulo de usuarios');
     helpButton.addEventListener('click', iniciarTourUsuarios);
-    helpButton.addEventListener('mouseenter', function() {
+    helpButton.addEventListener('mouseenter', function () {
         this.style.transform = 'scale(1.1)';
         this.style.backgroundColor = '#15803d';
     });
-    helpButton.addEventListener('mouseleave', function() {
+    helpButton.addEventListener('mouseleave', function () {
         this.style.transform = 'scale(1)';
         this.style.backgroundColor = '#16a34a';
     });
-    
+
     document.body.appendChild(helpButton);
 }
 
-// Auto-inicializar cuando se carga el DOM
-document.addEventListener('DOMContentLoaded', function() {
-    // Verificar si estamos en el módulo de usuarios
+document.addEventListener('DOMContentLoaded', function () {
     if (window.location.pathname.includes('usuarios')) {
-        
-        // Esperar a que todos los elementos se carguen completamente
-        setTimeout(function() {
-            // Agregar botón de ayuda
+        setTimeout(function () {
             agregarBotonAyudaUsuarios();
-            
-            // Auto-iniciar tour solo la primera vez
-            if (!localStorage.getItem('usuarios-tour-completed')) {
-                setTimeout(function() {
-                    // Preguntar si quiere hacer el tour
-                    Swal.fire({
-                        title: '¿Quieres hacer un tour del módulo?',
-                        text: 'Te mostramos las principales funcionalidades del módulo de usuarios',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, empezar tour',
-                        cancelButtonText: 'Ahora no',
-                        confirmButtonColor: '#2563eb',
-                        cancelButtonColor: '#6b7280'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            iniciarTourUsuarios();
-                        } else {
-                            // Si dice que no, marcar como completado para no molestarlo más
-                            localStorage.setItem('usuarios-tour-completed', 'true');
-                        }
-                    });
-                }, 1000);
-            }
         }, 500);
     }
 });
 
-// También agregar función global para reiniciar el tour
-window.reiniciarTourUsuarios = function() {
-    localStorage.removeItem('usuarios-tour-completed');
+window.reiniciarTourUsuarios = function () {
     iniciarTourUsuarios();
 };
