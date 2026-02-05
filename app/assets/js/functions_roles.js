@@ -19,7 +19,7 @@ const camposFormularioRol = [
   {
     id: "descripcionRol",
     tipo: "textarea",
-    opcional:true,
+    opcional: true,
     mensajes: { vacio: "La descripción es obligatoria." },
     expresion: expresiones.textoGeneral
   },
@@ -104,11 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ajax: {
       url: "Roles/getRolesData",
       type: "GET",
-      /**
-       * ✅ FUNCIÓN MODIFICADA: Filtra los datos antes de mostrarlos.
-       * Si el usuario NO es superusuario, se elimina el rol con ID 1 de la lista.
-       * Esto oculta el rol de "Superusuario" a todos los demás.
-       */
+
       dataSrc: function (json) {
         if (!json.data) {
           return [];
@@ -237,20 +233,20 @@ function registrarRol() {
   let formularioValido = true;
   camposFormularioRol.forEach(campo => {
     if (campo.opcional) return;
-    
+
     const inputElement = form.querySelector(`#${campo.id}`);
     if (!inputElement || inputElement.offsetParent === null) return;
-    
+
     let esValido = true;
     if (campo.tipo === "select") {
       esValido = validarSelect(inputElement, campo.mensajes);
     } else if (campo.expresion) {
       esValido = validarCampo(inputElement, campo.expresion, campo.mensajes);
     }
-    
+
     if (!esValido) formularioValido = false;
   });
-  
+
   if (!formularioValido) return;
 
   const formData = new FormData(form);
@@ -304,20 +300,20 @@ function actualizarRol() {
   let formularioValido = true;
   camposFormularioActualizarRol.forEach(campo => {
     if (campo.opcional) return;
-    
+
     const inputElement = form.querySelector(`#${campo.id}`);
     if (!inputElement || inputElement.offsetParent === null) return;
-    
+
     let esValido = true;
     if (campo.tipo === "select") {
       esValido = validarSelect(inputElement, campo.mensajes);
     } else if (campo.expresion) {
       esValido = validarCampo(inputElement, campo.expresion, campo.mensajes);
     }
-    
+
     if (!esValido) formularioValido = false;
   });
-  
+
   if (!formularioValido) return;
 
   const formData = new FormData(form);

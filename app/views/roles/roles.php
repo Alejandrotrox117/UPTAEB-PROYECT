@@ -46,7 +46,7 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
             <?php if ($permisos['crear']): ?>
             <button id="btnAbrirModalRegistrarRol"
                 class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
-                <i class="mr-1 md:mr-2"></i> Registrar Rol
+                <i class="fas fa-user-tag mr-1 md:mr-2"></i> Registrar Rol
             </button>
             <?php else: ?>
             <div class="text-gray-500 text-sm">
@@ -88,13 +88,16 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
             <div class="mb-4">
                 <label for="nombreRol" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol <span class="text-red-500">*</span></label>
                 <input type="text" id="nombreRol" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div class="text-red-500 text-xs mt-1 error-nombreRol-vacio hidden">El nombre del rol es obligatorio</div>
+                <div class="text-red-500 text-xs mt-1 error-nombreRol-formato hidden">El nombre solo puede contener letras, números, espacios y guiones</div>
+                <div class="text-red-500 text-xs mt-1 error-nombreRol-longitud hidden">El nombre debe tener entre 3 y 50 caracteres</div>
             </div>
 
             <div class="mb-4">
                 <label for="descripcionRol" class="block text-sm font-medium text-gray-700 mb-1">Descripción <span class="text-red-500">*</span></label>
                 <textarea id="descripcionRol" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" ></textarea>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div class="text-red-500 text-xs mt-1 error-descripcionRol-vacio hidden">La descripción es obligatoria</div>
+                <div class="text-red-500 text-xs mt-1 error-descripcionRol-longitud hidden">La descripción no puede superar los 255 caracteres</div>
             </div>
 
             <div class="mb-4">
@@ -104,7 +107,8 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
                     <option value="ACTIVO">ACTIVO</option>
                     <option value="INACTIVO">INACTIVO</option>
                 </select>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div class="text-red-500 text-xs mt-1 error-estatusRol-vacio hidden">El estatus es obligatorio</div>
+                <div class="text-red-500 text-xs mt-1 error-estatusRol-formato hidden">El estatus debe ser ACTIVO o INACTIVO</div>
             </div>
         </form>
 
@@ -140,13 +144,16 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
             <div class="mb-4">
                 <label for="nombreActualizar" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol <span class="text-red-500">*</span></label>
                 <input type="text" id="nombreActualizar" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div class="text-red-500 text-xs mt-1 error-nombreActualizar-vacio hidden">El nombre del rol es obligatorio</div>
+                <div class="text-red-500 text-xs mt-1 error-nombreActualizar-formato hidden">El nombre solo puede contener letras, números, espacios y guiones</div>
+                <div class="text-red-500 text-xs mt-1 error-nombreActualizar-longitud hidden">El nombre debe tener entre 3 y 50 caracteres</div>
             </div>
 
             <div class="mb-4">
                 <label for="descripcionActualizar" class="block text-sm font-medium text-gray-700 mb-1">Descripción <span class="text-red-500">*</span></label>
                 <textarea id="descripcionActualizar" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" ></textarea>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div class="text-red-500 text-xs mt-1 error-descripcionActualizar-vacio hidden">La descripción es obligatoria</div>
+                <div class="text-red-500 text-xs mt-1 error-descripcionActualizar-longitud hidden">La descripción no puede superar los 255 caracteres</div>
             </div>
 
             <div class="mb-4">
@@ -156,7 +163,8 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
                     <option value="ACTIVO">ACTIVO</option>
                     <option value="INACTIVO">INACTIVO</option>
                 </select>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div class="text-red-500 text-xs mt-1 error-estatusActualizar-vacio hidden">El estatus es obligatorio</div>
+                <div class="text-red-500 text-xs mt-1 error-estatusActualizar-formato hidden">El estatus debe ser ACTIVO o INACTIVO</div>
             </div>
         </form>
 

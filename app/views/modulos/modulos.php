@@ -1,8 +1,5 @@
 <?php headerAdmin($data);?>
 
-<input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
-<input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
-
 <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
     <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <h2 class="text-xl font-semibold text-gray-800">Hola, <?= htmlspecialchars($_SESSION['usuario_nombre'] ?? 'Usuario') ?> 👋</h2>
@@ -17,7 +14,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6">
             <button id="btnAbrirModalRegistrarModulo"
                 class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
-                <i class="mr-1 md:mr-2"></i> Registrar Módulo
+                <i class="fas fa-cube mr-1 md:mr-2"></i> Registrar Módulo
             </button>
             <button id="btnVerControladores"
                 class="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
