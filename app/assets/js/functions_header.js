@@ -1,5 +1,12 @@
+// ============================================
+// FUNCIONES DE UI DEL HEADER - SOLO WEBSOCKET
+// ============================================
+// Este archivo maneja SOLO la interfaz de usuario.
+// Las notificaciones son manejadas automáticamente por notifications-websocket.js
+// ============================================
+
 document.addEventListener("DOMContentLoaded", () => {
-  
+
   const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebar-overlay");
@@ -48,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
+
   const currentPath = window.location.pathname;
   const navLinksQuery = "#sidebar nav a.nav-link";
   const allNavLinks = document.querySelectorAll(navLinksQuery);
@@ -99,13 +106,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
+
+  // Sistema de notificaciones ahora manejado por WebSocket
+  // Mantener solo UI handlers básicos
   if (document.getElementById("notifications-dropdown")) {
-    initNotificationSystem();
+    initNotificationUI();
   }
 });
 
-function initNotificationSystem() {
+// ============================================
+// SISTEMA DE NOTIFICACIONES VÍA WEBSOCKET
+// Las notificaciones ahora se manejan automáticamente
+// ============================================
+
+function initNotificationUI() {
   const mobileNotificationsToggle = document.getElementById(
     "mobile-notifications-toggle"
   );
@@ -119,10 +133,8 @@ function initNotificationSystem() {
     "close-notifications-btn"
   );
   const markAllReadBtn = document.getElementById("mark-all-read-btn");
-  const refreshNotificationsBtn = document.getElementById(
-    "refresh-notifications-btn"
-  );
 
+  // Toggle para abrir/cerrar dropdown
   if (mobileNotificationsToggle)
     mobileNotificationsToggle.addEventListener("click", toggleNotifications);
   if (desktopNotificationsToggle)
@@ -131,12 +143,8 @@ function initNotificationSystem() {
     closeNotificationsBtn.addEventListener("click", closeNotifications);
   if (markAllReadBtn)
     markAllReadBtn.addEventListener("click", markAllNotificationsAsRead);
-  if (refreshNotificationsBtn)
-    refreshNotificationsBtn.addEventListener("click", () => {
-      loadNotifications();
-      actualizarContadorNotificaciones();
-    });
 
+  // Cerrar dropdown al hacer click fuera
   document.addEventListener("click", (event) => {
     if (
       notificationsDropdown &&
@@ -147,19 +155,12 @@ function initNotificationSystem() {
       closeNotifications();
     }
   });
-
-  loadNotifications();
-  actualizarContadorNotificaciones();
-  setInterval(actualizarContadorNotificaciones, 30000);
 }
 
 function toggleNotifications() {
   const dropdown = document.getElementById("notifications-dropdown");
   if (dropdown) {
     dropdown.classList.toggle("hidden");
-    if (!dropdown.classList.contains("hidden")) {
-      loadNotifications();
-    }
   }
 }
 
@@ -170,67 +171,62 @@ function closeNotifications() {
   }
 }
 
-function loadNotifications() {
-  const notificationsList = document.getElementById("notifications-list");
-  if (!notificationsList) return;
-  
-  console.log(" loadNotifications - Iniciando carga de notificaciones");
-  notificationsList.innerHTML = `<div class="text-center py-4 text-blue-500"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><p>Cargando...</p></div>`;
-  
-  console.log(" loadNotifications - Intentando fetch a getNotificaciones");
-  fetch(`${base_url}/notificaciones/getNotificaciones`)
-    .then((response) => {
-      console.log(" loadNotifications - Respuesta recibida:", response);
-      console.log(" loadNotifications - Status:", response.status);
-      return response.json();
-    })
+// Función para marcar todas como leídas (usa el backend)
+function markAllNotificationsAsRead() {
+  fetch(`${base_url}/notificaciones/marcarTodasLeidas`, { method: "POST" })
+    .then((response) => response.json())
     .then((result) => {
-      console.log(" loadNotifications - JSON parseado:", result);
-      if (result.status && result.data) {
-        console.log(" loadNotifications - Mostrando notificaciones");
-        displayNotifications(result.data);
-        actualizarContadorNotificaciones(); // Actualizar contador también
-      } else {
-        console.log(" loadNotifications - No hay notificaciones o error");
-        notificationsList.innerHTML = `<div class="text-center py-4 text-gray-500"><i class="fas fa-bell-slash fa-2x mb-2"></i><p>No hay notificaciones</p></div>`;
-      }
-      
-      // Mostrar información de debug si existe
-      if (result.debug_info) {
-        console.log(" DEBUG INFO:", result.debug_info);
+      if (result.status) {
+        // Actualizar UI
+        document
+          .querySelectorAll(".notification-item.unread")
+          .forEach((item) => {
+            item.classList.remove("unread");
+          });
+
+        // Actualizar badges
+        const mobileBadge = document.getElementById('mobile-notification-badge');
+        const desktopBadge = document.getElementById('desktop-notification-badge');
+        [mobileBadge, desktopBadge].forEach(badge => {
+          if (badge) {
+            badge.textContent = '0';
+            badge.classList.add('hidden');
+          }
+        });
+
+        console.log('✅ Todas las notificaciones marcadas como leídas');
       }
     })
     .catch((error) => {
-      console.error(" ERROR al cargar notificaciones:", error);
-      console.error(" ERROR detalles:", error.message);
-      notificationsList.innerHTML = `<div class="text-center py-4 text-red-500"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Error al cargar</p></div>`;
+      console.error('❌ Error al marcar todas como leídas:', error);
     });
 }
 
+// ============================================
+// FUNCIONES DE COMPATIBILIDAD PARA CÓDIGO LEGACY
+// Estas funciones se mantienen para no romper código existente
+// pero ahora delegan en el sistema WebSocket
+// ============================================
+
 function regenerarNotificacionesStock() {
+  console.log('⚠️ regenerarNotificacionesStock: Las notificaciones se actualizarán automáticamente vía WebSocket');
   return fetch(`${base_url}/compras/regenerarNotificaciones`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     }
   })
-  .then(response => response.json())
-  .then(result => {
-    if (result.status) {
-      console.log("Notificaciones regeneradas exitosamente");
-      // Recargar notificaciones después de regenerar
-      setTimeout(() => {
-        cargarNotificaciones();
-      }, 1000);
-    } else {
-      console.error("Error al regenerar notificaciones:", result.message);
-    }
-    return result;
-  })
-  .catch(error => {
-    console.error("Error en regeneración:", error);
-    return { status: false, message: error.message };
-  });
+    .then(response => response.json())
+    .then(result => {
+      if (result.status) {
+        console.log("✅ Notificaciones regeneradas - se actualizarán automáticamente");
+      }
+      return result;
+    })
+    .catch(error => {
+      console.error("❌ Error en regeneración:", error);
+      return { status: false, message: error.message };
+    });
 }
 
 // Función para manejar cambios de estado de compra
@@ -239,155 +235,57 @@ function cambiarEstadoCompra(idcompra, nuevoEstado, estadoAnterior) {
   formData.append('idcompra', idcompra);
   formData.append('estado', nuevoEstado);
   formData.append('estado_anterior', estadoAnterior);
-  
+
   return fetch("./Compras/cambiarEstado", {
     method: 'POST',
     body: formData
   })
-  .then(response => response.json())
-  .then(result => {
-    if (result.status) {
-      // Si la compra cambió a PAGADA, esperar un momento y recargar notificaciones
-      if (nuevoEstado === 'PAGADA' && estadoAnterior !== 'PAGADA') {
-        setTimeout(() => {
-          cargarNotificaciones();
-          actualizarContadorNotificaciones();
-        }, 2000); // Esperar 2 segundos para que se procese todo
+    .then(response => response.json())
+    .then(result => {
+      if (result.status) {
+        console.log('✅ Estado cambiado - notificaciones actualizadas vía WebSocket');
       }
-    }
-    return result;
-  });
-}
-
-// Agregar auto-actualización de notificaciones cada 30 segundos
-let intervaloNotificaciones;
-
-function iniciarAutoActualizacion() {
-  // Limpiar intervalo existente si hay uno
-  if (intervaloNotificaciones) {
-    clearInterval(intervaloNotificaciones);
-  }
-  
-  // Configurar nueva auto-actualización cada 30 segundos
-  intervaloNotificaciones = setInterval(() => {
-    actualizarContadorNotificaciones();
-    
-    // Solo recargar lista si está abierta
-    const dropdown = document.getElementById('notifications-dropdown');
-    if (dropdown && !dropdown.classList.contains('hidden')) {
-      cargarNotificaciones();
-    }
-  }, 30000);
-}
-
-// Llamar la función cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-  iniciarAutoActualizacion();
-  
-  // Agregar evento al botón de refrescar notificaciones
-  const refreshBtn = document.getElementById('refresh-notifications-btn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', function() {
-      cargarNotificaciones();
+      return result;
     });
-  }
-});
+}
 
-// Detener auto-actualización cuando se cierra la página
-window.addEventListener('beforeunload', function() {
-  if (intervaloNotificaciones) {
-    clearInterval(intervaloNotificaciones);
-  }
-});
+// Funciones obsoletas - Ahora todo se maneja via WebSocket
+// Se mantienen como stubs para evitar errores en código legacy
+
+function loadNotifications() {
+  console.warn('⚠️ loadNotifications está obsoleta - las notificaciones se cargan automáticamente vía WebSocket');
+}
 
 function displayNotifications(notifications) {
-  const notificationsList = document.getElementById("notifications-list");
-  if (!notificationsList) return;
-  if (notifications.length === 0) {
-    notificationsList.innerHTML = `<div class="text-center py-4 text-gray-500"><i class="fas fa-bell-slash fa-2x mb-2"></i><p>No hay notificaciones</p></div>`;
-    return;
-  }
-  let notificationsHTML = "";
-  notifications.forEach((notification) => {
-    const isUnread = notification.leida == 0;
-    let iconClass = "fas fa-info-circle text-blue-500";
-    if (notification.tipo === "STOCK_BAJO")
-      iconClass = "fas fa-exclamation-triangle text-yellow-500";
-    if (notification.tipo === "SIN_STOCK")
-      iconClass = "fas fa-times-circle text-red-500";
-    notificationsHTML += `<div class="notification-item p-3 border-b border-gray-100 cursor-pointer ${
-      isUnread ? "unread" : ""
-    }" data-notification-id="${
-      notification.idnotificacion
-    }" onclick="markNotificationAsRead(${notification.idnotificacion})"><div class="flex items-start space-x-3"><div class="flex-shrink-0"><i class="${iconClass} text-lg"></i></div><div class="flex-1 min-w-0"><div class="flex items-center justify-between"><p class="text-sm font-medium text-gray-900 truncate">${
-      notification.titulo
-    }</p>${
-      isUnread ? '<div class="w-2 h-2 bg-red-500 rounded-full"></div>' : ""
-    }</div><p class="text-xs text-gray-600 mt-1">${
-      notification.mensaje
-    }</p><div class="flex items-center justify-between mt-2"><span class="text-xs font-medium">${
-      notification.prioridad || "MEDIA"
-    }</span><span class="text-xs text-gray-400">${
-      notification.fecha_formato
-    }</span></div></div></div></div>`;
-  });
-  notificationsList.innerHTML = notificationsHTML;
+  console.warn('⚠️ displayNotifications está obsoleta - el WebSocket maneja la visualización');
 }
 
 function actualizarContadorNotificaciones() {
-  fetch(`${base_url}/notificaciones/getContadorNotificaciones`)
-    .then((response) => response.json())
-    .then((result) => {
-      const badges = document.querySelectorAll(
-        "#mobile-notification-badge, #desktop-notification-badge"
-      );
-      const count = result.count || 0;
-      badges.forEach((badge) => {
-        if (badge) {
-          badge.textContent = count > 99 ? "99+" : count;
-          badge.classList.toggle("hidden", count === 0);
-        }
-      });
-    });
+  console.warn('⚠️ actualizarContadorNotificaciones está obsoleta - el WebSocket actualiza el contador automáticamente');
 }
 
 function markNotificationAsRead(notificationId) {
-  fetch(`${base_url}/notificaciones/marcarLeida`, {
-    method: "POST",
-    body: JSON.stringify({ idnotificacion: notificationId }),
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        const el = document.querySelector(
-          `[data-notification-id="${notificationId}"]`
-        );
-        if (el) {
-          el.classList.remove("unread");
-          const dot = el.querySelector(".w-2.h-2.bg-red-500");
-          if (dot) dot.remove();
+  // Redirigir a la implementación WebSocket
+  if (window.notificationsWS) {
+    window.notificationsWS.marcarComoLeida(notificationId);
+  } else {
+    console.warn('⚠️ WebSocket no disponible, usando método legacy');
+    fetch(`${base_url}/notificaciones/marcarLeida`, {
+      method: "POST",
+      body: JSON.stringify({ idnotificacion: notificationId }),
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.status) {
+          const el = document.querySelector(`[data-notification-id="${notificationId}"]`);
+          if (el) {
+            el.classList.remove("unread");
+          }
         }
-        actualizarContadorNotificaciones();
-      }
-    });
+      });
+  }
 }
 
-function markAllNotificationsAsRead() {
-  fetch(`${base_url}/notificaciones/marcarTodasLeidas`, { method: "POST" })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status) {
-        document
-          .querySelectorAll(".notification-item.unread")
-          .forEach((item) => {
-            item.classList.remove("unread");
-            const dot = item.querySelector(".w-2.h-2.bg-red-500");
-            if (dot) dot.remove();
-          });
-        actualizarContadorNotificaciones();
-      }
-    });
-}
-
+// Exportar para compatibilidad
 window.markNotificationAsRead = markNotificationAsRead;

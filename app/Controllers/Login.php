@@ -3,22 +3,25 @@
 use App\Models\LoginModel;
 
 //obtener el modelo de login
-function getLoginModel() {
+function getLoginModel()
+{
     return new LoginModel();
 }
 
 //Renderizar la vista 
-function renderView($view, $data = []) {
+function renderView($view, $data = [])
+{
     extract($data);
     require_once "app/views/login/" . $view . ".php";
 }
 
-function login_index() {
+function login_index()
+{
     if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
         header('Location: ' . base_url('dashboard'));
         exit();
     }
-    
+
     $data['page_id'] = 5;
     $data["page_title"] = "Inicio de sesión";
     $data["page_tag"] = "Inicio";
@@ -29,7 +32,8 @@ function login_index() {
     renderView("login", $data);
 }
 
-function login_loginUser() {
+function login_loginUser()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'msg' => 'Método no permitido']);
         exit();
@@ -41,7 +45,7 @@ function login_loginUser() {
             echo json_encode(['status' => false, 'msg' => 'Token de seguridad inválido. Por favor, recargue la página e intente nuevamente.']);
             exit();
         }
-        
+
         if (defined('RECAPTCHA_SECRET_KEY') && !empty(RECAPTCHA_SECRET_KEY)) {
             $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
             if (!login_verifyRecaptcha($recaptcha_response)) {
@@ -52,15 +56,15 @@ function login_loginUser() {
 
         $strUsuario = strtolower(($_POST['txtEmail'] ?? ''));
         $strPassword = ($_POST['txtPass'] ?? '');
-        
+
         if (empty($strUsuario) || empty($strPassword)) {
             echo json_encode(['status' => false, 'msg' => 'Usuario y contraseña son obligatorios']);
             exit();
         }
-        
+
         $model = getLoginModel();
         $emailExists = $model->getUsuarioEmail($strUsuario);
-        
+
         if (!$emailExists) {
             echo json_encode(['status' => false, 'msg' => 'El correo electrónico ingresado no existe en el sistema']);
             exit();
@@ -70,7 +74,7 @@ function login_loginUser() {
             echo json_encode(['status' => false, 'msg' => 'Su cuenta se encuentra inactiva. Contacte al administrador del sistema']);
             exit();
         }
-        
+
         $strPassword = hash("SHA256", $strPassword);
         $requestUser = $model->login($strUsuario, $strPassword);
 
@@ -86,8 +90,8 @@ function login_loginUser() {
             exit();
         }
 
-        $_SESSION = array(); 
-        
+        $_SESSION = array();
+
         $_SESSION['user'] = [
             'idusuario' => intval($userData['idusuario']),
             'usuario' => $userData['usuario'],
@@ -112,7 +116,7 @@ function login_loginUser() {
         }
 
         echo json_encode([
-            'status' => true, 
+            'status' => true,
             'msg' => 'Login exitoso',
             'redirect' => base_url() . 'dashboard'
         ]);
@@ -124,31 +128,39 @@ function login_loginUser() {
     exit();
 }
 
-function login_logout() {
+function login_logout()
+{
     $_SESSION = [];
-    
+
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
         );
     }
-    
+
     session_destroy();
-    
+
     header('Location: ' . base_url('login'));
     exit();
 }
 
-function login_resetPassword() {
+function login_resetPassword()
+{
     $data['page_title'] = "Recuperar Contraseña";
     $data['recaptcha_site_key'] = defined('RECAPTCHA_SITE_KEY') ? RECAPTCHA_SITE_KEY : '';
     $data["csrf_token"] = generateCSRFToken();
     renderView("resetPassword", $data);
 }
 
-function login_enviarResetPassword() {
+function login_enviarResetPassword()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $csrf_token = $_POST['csrf_token'] ?? '';
@@ -156,9 +168,9 @@ function login_enviarResetPassword() {
                 echo json_encode(['status' => false, 'msg' => 'Token de seguridad inválido. Por favor, recargue la página e intente nuevamente.']);
                 exit();
             }
-            
+
             $email = strtolower(trim($_POST['txtEmailReset'] ?? ''));
-            
+
             if (empty($email)) {
                 echo json_encode(['status' => false, 'msg' => 'El correo electrónico es obligatorio para poder recuperar tu contraseña.']);
                 exit();
@@ -171,7 +183,7 @@ function login_enviarResetPassword() {
 
             $model = getLoginModel();
             $usuario = $model->getUsuarioEmail($email);
-            
+
             if (!$usuario) {
                 echo json_encode(['status' => false, 'msg' => 'No encontramos una cuenta asociada a este correo electrónico. Verifica que sea el correo correcto.']);
                 exit();
@@ -184,24 +196,24 @@ function login_enviarResetPassword() {
 
             $token = bin2hex(random_bytes(32));
             $tokenSaved = $model->setTokenUser($usuario['idusuario'], $token);
-            
+
             if ($tokenSaved) {
                 $nombreCompleto = $usuario['usuario'] ?? 'Usuario';
-                
+
                 $emailResult = \EmailHelper::enviarEmailRecuperacion(
-                    $email, 
-                    $token, 
+                    $email,
+                    $token,
                     $nombreCompleto
                 );
-                
+
                 if ($emailResult['status']) {
                     echo json_encode([
-                        'status' => true, 
+                        'status' => true,
                         'msg' => 'Se ha enviado un enlace de recuperación a tu correo electrónico. El enlace expira en 1 hora, así que úsalo pronto. Revisa tu bandeja de entrada y la carpeta de spam.'
                     ]);
                 } else {
                     echo json_encode([
-                        'status' => false, 
+                        'status' => false,
                         'msg' => 'No pudimos enviar el correo de recuperación. ' . $emailResult['message'] . ' Por favor, intenta nuevamente en unos minutos.'
                     ]);
                 }
@@ -217,7 +229,8 @@ function login_enviarResetPassword() {
     exit();
 }
 
-function login_confirmarReset($token = null) {
+function login_confirmarReset($token = null)
+{
     if (empty($token)) {
         header("Location: " . base_url('login?error=token_invalido'));
         exit();
@@ -225,7 +238,7 @@ function login_confirmarReset($token = null) {
 
     $model = getLoginModel();
     $tokenData = $model->getTokenUserByToken($token);
-    
+
     if (!$tokenData) {
         $data['page_title'] = "Token Inválido";
         $data['error'] = "El enlace de recuperación es inválido o ha expirado.";
@@ -241,7 +254,8 @@ function login_confirmarReset($token = null) {
     renderView("nuevaPassword", $data);
 }
 
-function login_actualizarPassword() {
+function login_actualizarPassword()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $csrf_token = $_POST['csrf_token'] ?? '';
@@ -249,7 +263,7 @@ function login_actualizarPassword() {
                 echo json_encode(['status' => false, 'msg' => 'Token de seguridad inválido. Por favor, recargue la página e intente nuevamente.']);
                 exit();
             }
-            
+
             $token = trim($_POST['token'] ?? '');
             $password = trim($_POST['txtPassword'] ?? '');
             $confirmPassword = trim($_POST['txtConfirmPassword'] ?? '');
@@ -281,9 +295,9 @@ function login_actualizarPassword() {
 
             if ($updated) {
                 $model->deleteToken($token);
-                
+
                 echo json_encode([
-                    'status' => true, 
+                    'status' => true,
                     'msg' => '¡Perfecto! Tu contraseña ha sido actualizada exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña.'
                 ]);
             } else {
@@ -298,14 +312,15 @@ function login_actualizarPassword() {
     exit();
 }
 
-function login_verifyRecaptcha($recaptcha_response) {
+function login_verifyRecaptcha($recaptcha_response)
+{
     if (empty($recaptcha_response)) {
         return false;
     }
 
     $secret_key = RECAPTCHA_SECRET_KEY;
     $verify_url = "https://www.google.com/recaptcha/api/siteverify";
-    
+
     $data = array(
         'secret' => $secret_key,
         'response' => $recaptcha_response,

@@ -16,12 +16,14 @@
 <!-- Chart.js para gráficos del dashboard -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Archivo dinámico de validaciones -->
- <script type="module" src="<?= base_url('app/assets/js/validaciones.js'); ?>"></script>
- <script type="module" src="<?= base_url('app/assets/js/exporthelpers.js'); ?>"></script>
+<script type="module" src="<?= base_url('app/assets/js/validaciones.js'); ?>"></script>
+<script type="module" src="<?= base_url('app/assets/js/exporthelpers.js'); ?>"></script>
 <?php if (isset($data['page_functions_js'])): ?>
   <script type="module" src="<?= base_url('app/assets/js/' . $data['page_functions_js']); ?>"></script>
 <?php endif; ?>
- <script type="module" src="<?= base_url('app/assets/js/functions_header.js'); ?>"></script>
+<script type="module" src="<?= base_url('app/assets/js/functions_header.js'); ?>"></script>
+<!-- WebSocket Notifications Client -->\n
+<script type="module" src="<?= base_url('app/assets/js/notifications-websocket.js'); ?>"></script>
 
 </div>
 </body>
