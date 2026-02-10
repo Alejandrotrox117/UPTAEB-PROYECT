@@ -7,12 +7,6 @@ function getLoginModel() {
     return new LoginModel();
 }
 
-//Renderizar la vista 
-function renderView($view, $data = []) {
-    extract($data);
-    require_once "app/views/login/" . $view . ".php";
-}
-
 function login_index() {
     if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
         header('Location: ' . base_url('dashboard'));
@@ -26,7 +20,7 @@ function login_index() {
     $data["page_functions_js"] = "functions_login.js";
     $data["recaptcha_site_key"] = getRecaptchaSiteKey();
     $data["csrf_token"] = generateCSRFToken();
-    renderView("login", $data);
+    renderView('login', 'login', $data);
 }
 
 function login_loginUser() {
@@ -145,7 +139,7 @@ function login_resetPassword() {
     $data['page_title'] = "Recuperar Contraseña";
     $data['recaptcha_site_key'] = defined('RECAPTCHA_SITE_KEY') ? RECAPTCHA_SITE_KEY : '';
     $data["csrf_token"] = generateCSRFToken();
-    renderView("resetPassword", $data);
+    renderView('login', 'resetPassword', $data);
 }
 
 function login_enviarResetPassword() {
@@ -229,7 +223,7 @@ function login_confirmarReset($token = null) {
     if (!$tokenData) {
         $data['page_title'] = "Token Inválido";
         $data['error'] = "El enlace de recuperación es inválido o ha expirado.";
-        renderView("tokenError", $data);
+        renderView('login', 'tokenError', $data);
         return;
     }
 
@@ -238,7 +232,7 @@ function login_confirmarReset($token = null) {
     $data['usuario'] = $tokenData;
     $data['page_functions_js'] = "functions_resetpass.js";
     $data["csrf_token"] = generateCSRFToken();
-    renderView("nuevaPassword", $data);
+    renderView('login', 'nuevaPassword', $data);
 }
 
 function login_actualizarPassword() {
