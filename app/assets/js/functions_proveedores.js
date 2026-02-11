@@ -32,7 +32,7 @@ const camposFormularioProveedor = [
   {id: "proveedorTelefono",tipo: "input",regex: expresiones.telefono_principal,
     mensajes: {
       vacio: "El teléfono es obligatorio.",
-      formato: "Formato de teléfono inválido. Debe ser 0414-0424-0412-0416-0426",
+      formato: "Formato de teléfono inválido. Debe ser 0414-0424-0412-0416-0426-0422",
     },
   },
   {id: "proveedorCorreo",tipo: "input",regex: expresiones.email,
