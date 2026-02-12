@@ -128,8 +128,8 @@
               </label>
               <input type="text" id="identificacion" name="identificacion" 
                 class="w-full border-2 rounded-lg px-4 py-3 text-base focus:outline-none focus:border-indigo-500 transition" 
-                required pattern="\d{7,10}" placeholder="Ej: 12345678">
-              <small class="text-red-500 hidden" id="error-identificacion">Entre 7 y 10 dígitos</small>
+                required pattern="[VEJvej]?-?\d{7,10}" placeholder="Ej: V12345678 o V-12345678">
+              <small class="text-red-500 hidden" id="error-identificacion">Formato: V12345678 o V-12345678</small>
             </div>
             
             <div>
