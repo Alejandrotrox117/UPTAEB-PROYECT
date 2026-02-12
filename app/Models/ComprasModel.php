@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use App\Core\Conexion;
+use App\Helpers\NotificacionHelper;
 use PDO;
 use PDOException;
 use Exception;
@@ -841,13 +842,19 @@ class ComprasModel
             if ($nuevoEstado === 'PAGADA') {
                 $this->ejecutarGeneracionNotaEntrega($idcompra, $db);
                 
-                // Limpiar notificaciones de compras cuando se marca como pagada
-                try {
-                    $notificacionesModel = new NotificacionesModel();
-                    $notificacionesModel->limpiarNotificacionesCompraPagada($idcompra);
-                    error_log("ComprasModel: Notificaciones de compra limpiadas para compra ID: {$idcompra}");
-                } catch (Exception $e) {
-                    error_log("ComprasModel: Error al limpiar notificaciones de compra ID {$idcompra}: " . $e->getMessage());
+                // Notificar compra pagada
+                $this->notificarCompraPagada($idcompra);
+            } elseif ($nuevoEstado === 'POR_AUTORIZAR') {
+                // Notificar que requiere autorización
+                $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
+                if ($compraData) {
+                    $this->notificarCompraPorAutorizar($idcompra, $compraData['nro_compra'], $compraData['total_general']);
+                }
+            } elseif ($nuevoEstado === 'AUTORIZADA') {
+                // Notificar que está autorizada y lista para pago
+                $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
+                if ($compraData) {
+                    $this->notificarCompraAutorizadaPago($idcompra, $compraData['nro_compra'], $compraData['total_general']);
                 }
             }
 
@@ -1454,6 +1461,80 @@ class ComprasModel
             return [];
         } finally {
             $conexion->disconnect();
+        }
+    }
+    
+    // Métodos de notificación WebSocket
+    private function notificarCompraPorAutorizar($compraId, $numero, $total) {
+        try {
+            $notificador = new NotificacionHelper();
+            
+            if (!$notificador->isConnected()) {
+                return;
+            }
+            
+            $notificador->enviarPorModulo(
+                'compras',
+                'COMPRA_POR_AUTORIZAR',
+                [
+                    'titulo' => 'Compra Requiere Autorización',
+                    'mensaje' => "Compra #$numero por $" . number_format($total, 2),
+                    'compra_id' => $compraId,
+                    'numero' => $numero,
+                    'total' => $total
+                ],
+                'ALTA'
+            );
+        } catch (Exception $e) {
+            error_log("Error notificando compra por autorizar: " . $e->getMessage());
+        }
+    }
+
+    private function notificarCompraAutorizadaPago($compraId, $numero, $total) {
+        try {
+            $notificador = new NotificacionHelper();
+            
+            if ($notificador->isConnected()) {
+                $notificador->enviarPorModulo(
+                    'compras',
+                    'COMPRA_AUTORIZADA_PAGO',
+                    [
+                        'titulo' => 'Compra Autorizada - Pendiente Pago',
+                        'mensaje' => "Compra #$numero por $" . number_format($total, 2) . " lista para pagar",
+                        'compra_id' => $compraId
+                    ],
+                    'MEDIA'
+                );
+            }
+        } catch (Exception $e) {
+            error_log("Error notificando compra autorizada: " . $e->getMessage());
+        }
+    }
+
+    private function notificarCompraPagada($compraId) {
+        try {
+            $compraData = $this->ejecutarBusquedaCompraPorId($compraId);
+            
+            if (!$compraData) {
+                return;
+            }
+            
+            $notificador = new NotificacionHelper();
+            
+            if ($notificador->isConnected()) {
+                $notificador->enviarPorModulo(
+                    'compras',
+                    'COMPRA_PAGADA',
+                    [
+                        'titulo' => 'Compra Pagada',
+                        'mensaje' => "Compra #{$compraData['nro_compra']} ha sido pagada completamente",
+                        'compra_id' => $compraId
+                    ],
+                    'BAJA'
+                );
+            }
+        } catch (Exception $e) {
+            error_log("Error notificando compra pagada: " . $e->getMessage());
         }
     }
 }

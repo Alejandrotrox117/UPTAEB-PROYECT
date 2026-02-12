@@ -18,17 +18,36 @@
  * @param array $data Datos a pasar a la vista
  */
 function renderView($controller, $view, $data = []) {
-    // Normalizar nombre del controlador
-    $controller = strtolower($controller);
+    error_log("🔍 renderView called - Controller: $controller, View: $view");
     
     // Para controladores especiales
-    if ($controller === 'home') {
+    if (strtolower($controller) === 'home') {
         $viewPath = "app/views/home/home.php";
-    } elseif ($controller === 'errors') {
+        error_log("🏠 Home view path: $viewPath");
+    } elseif (strtolower($controller) === 'errors') {
         $viewPath = "app/views/Errors/" . $view . ".php";
+        error_log("❌ Errors view path: $viewPath");
     } else {
+        // Intentar con el nombre original primero (puede tener mayúsculas)
         $viewPath = "app/views/" . $controller . "/" . $view . ".php";
+        error_log("🔍 Intento 1 (original): $viewPath - " . (file_exists($viewPath) ? "EXISTS" : "NO EXISTE"));
+        
+        // Si no existe, intentar con minúsculas
+        if (!file_exists($viewPath)) {
+            $controllerLower = strtolower($controller);
+            $viewPath = "app/views/" . $controllerLower . "/" . $view . ".php";
+            error_log("🔍 Intento 2 (lowercase): $viewPath - " . (file_exists($viewPath) ? "EXISTS" : "NO EXISTE"));
+        }
+        
+        // Si aún no existe, intentar con primera letra mayúscula
+        if (!file_exists($viewPath)) {
+            $controllerUcfirst = ucfirst(strtolower($controller));
+            $viewPath = "app/views/" . $controllerUcfirst . "/" . $view . ".php";
+            error_log("🔍 Intento 3 (ucfirst): $viewPath - " . (file_exists($viewPath) ? "EXISTS" : "NO EXISTE"));
+        }
     }
+    
+    error_log("📂 Vista final a cargar: $viewPath");
     
     // Extraer datos para que estén disponibles en la vista
     if (is_array($data) && !empty($data)) {
@@ -37,10 +56,11 @@ function renderView($controller, $view, $data = []) {
     
     // Cargar la vista
     if (file_exists($viewPath)) {
+        error_log("✅ Cargando vista: $viewPath");
         require_once($viewPath);
     } else {
-        error_log("Vista no encontrada: $viewPath");
-        echo "Error: Vista no encontrada";
+        error_log("❌ Vista no encontrada: $viewPath");
+        echo "Error: Vista no encontrada - $viewPath";
     }
 }
 
