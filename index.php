@@ -32,7 +32,7 @@ if (!in_array($controller, $publicRoutes)) {
     }
 }
 
-$functionalControllers = ['login', 'usuarios', 'roles', 'modulos', 'rolesintegrado', 'proveedores', 'empleados'];
+$functionalControllers = ['login', 'usuarios', 'roles', 'modulos', 'rolesintegrado', 'proveedores', 'empleados', 'productos'];
 
 $controllerFile = "app/Controllers/" . ucfirst($controller) . ".php";
 if (!file_exists($controllerFile)) {
