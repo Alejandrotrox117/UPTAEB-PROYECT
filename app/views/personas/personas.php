@@ -1,6 +1,15 @@
-<?php headerAdmin($data);?>
+<?php 
+use App\Helpers\PermisosModuloVerificar;
+headerAdmin($data);
+
+// OBTENER PERMISOS DEL USUARIO PARA EL MÓDULO
+$permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('personas');
+?>
 <input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
 <input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
+
+<!-- PASAR PERMISOS AL JAVASCRIPT -->
+<?= renderJavaScriptData('permisosPersonas', $permisos); ?>
 
 <main class="flex-1 p-6">
     <div class="flex justify-between items-center">
@@ -9,16 +18,29 @@
             class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400">
     </div>
 
+    <?php if (!$permisos['ver']): ?>
+    <div class="min-h-screen mt-6">
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+            <p class="text-yellow-700"><strong>Acceso Restringido:</strong> No tienes permisos para ver la lista de personas.</p>
+        </div>
+    </div>
+    <?php else: ?>
     <div class="min-h-screen mt-6">
         <h1 class="text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
         <p class="text-green-500 text-lg">Listado de personas registradas en el sistema</p>
 
         <div class="bg-white p-8 mt-6 rounded-2xl shadow-lg">
             <div class="flex justify-between items-center mb-6">
+                <?php if ($permisos['crear']): ?>
                 <button id="btnAbrirModalRegistrarPersona"
                     class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
                     <i class="fas fa-plus mr-2"></i> Registrar Persona
                 </button>
+                <?php else: ?>
+                <button disabled class="bg-gray-300 text-gray-500 px-6 py-2 rounded-lg font-semibold shadow cursor-not-allowed">
+                    <i class="fas fa-lock mr-1"></i> Sin permisos para crear personas
+                </button>
+                <?php endif; ?>
             </div>
 
             <div class="overflow-x-auto">
@@ -37,6 +59,7 @@
             </div>
         </div>
     </div>
+    <?php endif; // fin permisos ver ?>
 </main>
 
 <!-- Modal Registrar Persona -->

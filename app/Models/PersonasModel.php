@@ -438,9 +438,11 @@ class PersonasModel extends mysql
             $stmtPersona = $this->dbPrincipal->prepare($sqlPersona);
             $stmtPersona->execute([$idpersona_pk]);
 
-            $sqlUsuario = "UPDATE usuario SET estatus = 'INACTIVO' WHERE personaId = ?";
-            $stmtUsuario = $this->dbSeguridad->prepare($sqlUsuario);
-            $stmtUsuario->execute([$personaIdentificacion]);
+            if (!empty($personaIdentificacion)) {
+                $sqlUsuario = "UPDATE usuario SET estatus = 'INACTIVO' WHERE personaId = ? AND personaId != '' AND personaId != '0'";
+                $stmtUsuario = $this->dbSeguridad->prepare($sqlUsuario);
+                $stmtUsuario->execute([$personaIdentificacion]);
+            }
             
             $this->dbPrincipal->commit();
             $this->dbSeguridad->commit();
@@ -458,12 +460,11 @@ class PersonasModel extends mysql
     {
         $sql = "SELECT p.idpersona as idpersona_pk, p.nombre as persona_nombre, p.apellido as persona_apellido,
                     p.identificacion as persona_cedula, p.genero as persona_genero,
-                    u.correo as correo_usuario_login, p.telefono_principal, p.estatus as persona_estatus,
+                    u.correo as correo_usuario_login, u.idusuario as usuario_id, p.telefono_principal, p.estatus as persona_estatus,
                     r.nombre as rol_nombre
                 FROM personas p
-                LEFT JOIN {$this->conexion->getDatabaseSeguridad()}.usuario u ON p.identificacion = u.personaId
+                LEFT JOIN {$this->conexion->getDatabaseSeguridad()}.usuario u ON p.identificacion = u.personaId AND u.personaId != '' AND u.personaId != '0'
                 LEFT JOIN {$this->conexion->getDatabaseSeguridad()}.roles r ON u.idrol = r.idrol
-                WHERE p.estatus = 'ACTIVO'
                 ORDER BY p.nombre ASC, p.apellido ASC"; 
 
         try {
@@ -473,6 +474,52 @@ class PersonasModel extends mysql
         } catch (PDOException $e) {
             error_log("PersonasModel::selectAllPersonasActivas - Error al seleccionar personas: " . $e->getMessage());
             return ["status" => false, "message" => "Error al obtener personas: " . $e->getMessage(), "data" => []];
+        }
+    }
+
+    public function reactivarPersonaById(int $idpersona_pk): bool
+    {
+        if (!$this->dbPrincipal || !$this->dbSeguridad) {
+            error_log("PersonasModel::reactivarPersonaById -> Conexión a la base de datos no establecida.");
+            return false;
+        }
+
+        try {
+            $this->dbPrincipal->beginTransaction();
+            $this->dbSeguridad->beginTransaction();
+
+            $sqlGetIdentificacion = "SELECT identificacion FROM personas WHERE idpersona = ?";
+            $stmtGetIdentificacion = $this->dbPrincipal->prepare($sqlGetIdentificacion);
+            $stmtGetIdentificacion->execute([$idpersona_pk]);
+            $personaData = $stmtGetIdentificacion->fetch(PDO::FETCH_ASSOC);
+
+            if (!$personaData) {
+                $this->dbPrincipal->rollBack();
+                $this->dbSeguridad->rollBack();
+                return false;
+            }
+
+            $personaIdentificacion = $personaData['identificacion'];
+
+            $sqlPersona = "UPDATE personas SET estatus = 'ACTIVO', fecha_modificacion = NOW() WHERE idpersona = ?";
+            $stmtPersona = $this->dbPrincipal->prepare($sqlPersona);
+            $stmtPersona->execute([$idpersona_pk]);
+
+            if (!empty($personaIdentificacion)) {
+                $sqlUsuario = "UPDATE usuario SET estatus = 'ACTIVO' WHERE personaId = ? AND personaId != '' AND personaId != '0'";
+                $stmtUsuario = $this->dbSeguridad->prepare($sqlUsuario);
+                $stmtUsuario->execute([$personaIdentificacion]);
+            }
+
+            $this->dbPrincipal->commit();
+            $this->dbSeguridad->commit();
+            return $stmtPersona->rowCount() > 0;
+
+        } catch (PDOException $e) {
+            $this->dbPrincipal->rollBack();
+            $this->dbSeguridad->rollBack();
+            error_log("PersonasModel::reactivarPersonaById -> " . $e->getMessage());
+            return false;
         }
     }
 

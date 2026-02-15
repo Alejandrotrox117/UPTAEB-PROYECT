@@ -9,6 +9,19 @@ import {
 } from "./validaciones.js";
 
 let tablaPersonas;
+let esSuperUsuarioPersonas = false;
+let idUsuarioPersonas = 0;
+
+/**
+ * Verifica si el usuario tiene un permiso específico en el módulo personas.
+ * Super usuarios siempre tienen todos los permisos.
+ */
+function tienePermisoPersonas(accion) {
+  if (esSuperUsuarioPersonas) {
+    return true;
+  }
+  return window.permisosPersonas && window.permisosPersonas[accion] === true;
+}
 
 const camposFormularioPersona = [
   {
@@ -193,12 +206,99 @@ const camposFormularioActualizarPersona = [
   },
 ];
 
+function verificarSuperUsuarioPersonas() {
+  return fetch("Personas/verificarSuperUsuario", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((result) => result)
+    .catch((error) => {
+      console.error("Error al verificar super usuario:", error);
+      return { status: false, es_super_usuario: false, usuario_id: 0 };
+    });
+}
+
+function recargarTablaPersonas() {
+  try {
+    if (tablaPersonas && tablaPersonas.ajax && typeof tablaPersonas.ajax.reload === 'function') {
+      tablaPersonas.ajax.reload(null, false);
+      return true;
+    }
+    window.location.reload();
+    return true;
+  } catch (error) {
+    console.error("Error al recargar tabla:", error);
+    window.location.reload();
+    return false;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   
   cargarRoles();
 
+  verificarSuperUsuarioPersonas().then((result) => {
+    if (result && result.status) {
+      esSuperUsuarioPersonas = result.es_super_usuario;
+      idUsuarioPersonas = result.usuario_id;
+    } else {
+      esSuperUsuarioPersonas = false;
+      idUsuarioPersonas = 0;
+    }
+
+    // Filtro: super usuarios ven todos, usuarios normales solo activos
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      if (settings.nTable.id !== "TablaPersonas") {
+        return true;
+      }
+      if (esSuperUsuarioPersonas) {
+        return true;
+      }
+      var api = new $.fn.dataTable.Api(settings);
+      var rowData = api.row(dataIndex).data();
+      return rowData && rowData.persona_estatus && rowData.persona_estatus.toUpperCase() !== "INACTIVO";
+    });
+
+    inicializarTablaPersonas();
+
+    setTimeout(() => {
+      if (tablaPersonas && typeof tablaPersonas.draw === 'function') {
+        tablaPersonas.draw(false);
+      }
+    }, 500);
+  }).catch((error) => {
+    console.error("Error en verificación de super usuario:", error);
+    esSuperUsuarioPersonas = false;
+    idUsuarioPersonas = 0;
+
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      if (settings.nTable.id !== "TablaPersonas") {
+        return true;
+      }
+      var api = new $.fn.dataTable.Api(settings);
+      var rowData = api.row(dataIndex).data();
+      return rowData && rowData.persona_estatus && rowData.persona_estatus.toUpperCase() !== "INACTIVO";
+    });
+
+    inicializarTablaPersonas();
+  });
+});
+
+function inicializarTablaPersonas() {
+  if (!tienePermisoPersonas('ver')) {
+    console.warn('Sin permisos para ver personas');
+    return;
+  }
+
   $(document).ready(function () {
-    
+    if ($.fn.DataTable.isDataTable('#TablaPersonas')) {
+      $('#TablaPersonas').DataTable().destroy();
+    }
+
     tablaPersonas = $("#TablaPersonas").DataTable({
       processing: true,
       ajax: {
@@ -271,17 +371,47 @@ document.addEventListener("DOMContentLoaded", function () {
             const nombreCompleto = `${row.persona_nombre || ""} ${
               row.persona_apellido || ""
             }`.trim();
-            return `
+            const estatusPersona = (row.persona_estatus || "").toUpperCase();
+            const esInactivo = estatusPersona === "INACTIVO";
+
+            let acciones = '<div class="inline-flex items-center space-x-1">';
+
+            const idUsuarioAsociado = parseInt(row.usuario_id) || 0;
+            const esUsuarioPropio = idUsuarioAsociado > 0 && idUsuarioAsociado === idUsuarioPersonas;
+
+            // Botón Ver - solo si tiene permiso de ver
+            if (tienePermisoPersonas('ver')) {
+              acciones += `
               <button class="ver-persona-btn text-green-500 hover:text-green-700 p-1" data-idpersona-pk="${row.idpersona_pk}" title="Ver detalles">
                   <i class="fas fa-eye fa-lg"></i>
-              </button>
-              <button class="editar-persona-btn text-blue-500 hover:text-blue-700 p-1 ml-2" data-idpersona-pk="${row.idpersona_pk}" title="Editar">
-                  <i class="fas fa-edit fa-lg"></i>
-              </button>
-              <button class="eliminar-persona-btn text-red-500 hover:text-red-700 p-1 ml-2" data-idpersona-pk="${row.idpersona_pk}" data-nombre="${nombreCompleto}" title="Eliminar">
-                  <i class="fas fa-trash fa-lg"></i>
-              </button>
-            `;
+              </button>`;
+            }
+
+            if (esInactivo && esSuperUsuarioPersonas) {
+              // Para personas inactivas, mostrar solo botón de reactivar (solo super usuarios)
+              acciones += `
+              <button class="reactivar-persona-btn text-green-600 hover:text-green-700 p-1 ml-2" data-idpersona-pk="${row.idpersona_pk}" data-nombre="${nombreCompleto}" title="Reactivar persona">
+                  <i class="fas fa-undo fa-lg"></i>
+              </button>`;
+            } else if (!esInactivo) {
+              // Botón Editar - solo si tiene permiso de editar
+              if (tienePermisoPersonas('editar')) {
+                acciones += `
+                <button class="editar-persona-btn text-blue-500 hover:text-blue-700 p-1 ml-2" data-idpersona-pk="${row.idpersona_pk}" title="Editar">
+                    <i class="fas fa-edit fa-lg"></i>
+                </button>`;
+              }
+              // Botón Eliminar - solo si tiene permiso de eliminar y no es su propia persona
+              if (tienePermisoPersonas('eliminar') && !esUsuarioPropio) {
+                acciones += `
+                <button class="eliminar-persona-btn text-red-500 hover:text-red-700 p-1 ml-2" data-idpersona-pk="${row.idpersona_pk}" data-nombre="${nombreCompleto}" title="Desactivar">
+                    <i class="fas fa-trash fa-lg"></i>
+                </button>`;
+              }
+            }
+
+            acciones += '</div>';
+            return acciones;
           },
           width: "120px",
           className: "text-center",
@@ -337,9 +467,20 @@ document.addEventListener("DOMContentLoaded", function () {
         eliminarPersona(idPersona, nombrePersona);
       }
     );
-  });
 
-  
+    $("#TablaPersonas tbody").on(
+      "click",
+      ".reactivar-persona-btn",
+      function () {
+        const idPersona = $(this).data("idpersona-pk");
+        const nombrePersona = $(this).data("nombre");
+        reactivarPersona(idPersona, nombrePersona);
+      }
+    );
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarPersona"
   );
@@ -882,12 +1023,12 @@ function mostrarModalVerPersona(persona) {
 function eliminarPersona(idPersona, nombrePersona) {
   Swal.fire({
     title: "¿Estás seguro?",
-    text: `¿Deseas eliminar a ${nombrePersona}? Esta acción no se puede deshacer.`,
+    text: `¿Deseas desactivar a ${nombrePersona}? Podrás reactivarla después.`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#dc2626",
     cancelButtonColor: "#00c950",
-    confirmButtonText: "Sí, eliminar",
+    confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
     if (result.isConfirmed) {
@@ -906,16 +1047,51 @@ function eliminarPersona(idPersona, nombrePersona) {
         .then((response) => response.json())
         .then((result) => {
           if (result.status) {
-            Swal.fire("¡Eliminado!", result.message, "success");
-            if (typeof tablaPersonas !== "undefined" && tablaPersonas.ajax) {
-              tablaPersonas.ajax.reload(null, false);
-            }
+            Swal.fire("¡Desactivado!", result.message, "success");
+            recargarTablaPersonas();
           } else {
             Swal.fire(
               "Error",
-              result.message || "No se pudo eliminar la persona.",
+              result.message || "No se pudo desactivar la persona.",
               "error"
             );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
+        });
+    }
+  });
+}
+
+function reactivarPersona(idPersona, nombrePersona) {
+  Swal.fire({
+    title: "¿Reactivar persona?",
+    text: `¿Deseas reactivar a ${nombrePersona}? Su estatus cambiará a ACTIVO.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, reactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Personas/reactivarPersona", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idpersona_pk: idPersona }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Reactivado!", result.message || "Persona reactivada correctamente.", "success");
+            recargarTablaPersonas();
+          } else {
+            Swal.fire("Error", result.message || "No se pudo reactivar la persona.", "error");
           }
         })
         .catch((error) => {

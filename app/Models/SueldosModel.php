@@ -301,7 +301,7 @@ class SueldosModel
         $db = $conexion->get_conectGeneral();
 
         try {
-            $this->setQuery("DELETE FROM sueldos WHERE idsueldo = ?");
+            $this->setQuery("UPDATE sueldos SET estatus = 'INACTIVO', fecha_modificacion = NOW() WHERE idsueldo = ?");
             $this->setArray([$idsueldo]);
             
             $stmt = $db->prepare($this->getQuery());
