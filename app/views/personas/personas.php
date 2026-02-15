@@ -11,54 +11,63 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('personas');
 <!-- PASAR PERMISOS AL JAVASCRIPT -->
 <?= renderJavaScriptData('permisosPersonas', $permisos); ?>
 
-<main class="flex-1 p-6">
-    <div class="flex justify-between items-center">
-        <h2 class="text-xl font-semibold">Administración de Personas</h2>
-        <input type="text" placeholder="Buscar en página..."
-            class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400">
+<main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Administración de Personas</h2>
     </div>
 
     <?php if (!$permisos['ver']): ?>
-    <div class="min-h-screen mt-6">
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-            <p class="text-yellow-700"><strong>Acceso Restringido:</strong> No tienes permisos para ver la lista de personas.</p>
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 mt-6 rounded-r-lg">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-yellow-700 font-medium">
+                    <strong>Acceso Restringido:</strong> No tienes permisos para ver la lista de personas.
+                </p>
+                <p class="text-xs text-yellow-600 mt-1">
+                    Contacta al administrador del sistema si necesitas acceso a este módulo.
+                </p>
+            </div>
         </div>
     </div>
     <?php else: ?>
-    <div class="min-h-screen mt-6">
-        <h1 class="text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
-        <p class="text-green-500 text-lg">Listado de personas registradas en el sistema</p>
 
-        <div class="bg-white p-8 mt-6 rounded-2xl shadow-lg">
-            <div class="flex justify-between items-center mb-6">
-                <?php if ($permisos['crear']): ?>
-                <button id="btnAbrirModalRegistrarPersona"
-                    class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
-                    <i class="fas fa-plus mr-2"></i> Registrar Persona
-                </button>
-                <?php else: ?>
-                <button disabled class="bg-gray-300 text-gray-500 px-6 py-2 rounded-lg font-semibold shadow cursor-not-allowed">
-                    <i class="fas fa-lock mr-1"></i> Sin permisos para crear personas
-                </button>
-                <?php endif; ?>
+    <div class="mt-0 sm:mt-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
+        <p class="text-green-600 text-base md:text-lg">Listado de personas registradas en el sistema</p>
+    </div>
+
+    <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <?php if ($permisos['crear']): ?>
+            <button id="btnAbrirModalRegistrarPersona"
+                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
+                <i class="fas fa-user-plus mr-1 md:mr-2"></i> Registrar Persona
+            </button>
+            <?php else: ?>
+            <div class="bg-gray-100 px-4 py-2 md:px-6 rounded-lg text-gray-500 text-sm md:text-base">
+                <i class="fas fa-lock mr-1 md:mr-2"></i> Sin permisos para crear personas
             </div>
+            <?php endif; ?>
+        </div>
 
-            <div class="overflow-x-auto">
-                <!-- DatatABLE-->
-                <table id="TablaPersonas" class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-gray-500 text-sm border-b">
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-900">
-                    </tbody>
-                </table>
-                <div id="loaderTablePersonas" class="flex justify-center items-center my-4" style="display: none;">
-                    <div class="dot-flashing"></div>
-                </div>
+        <div class="overflow-x-auto w-full relative">
+            <table id="TablaPersonas" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 700px;">
+                <thead>
+                    <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
+                </tbody>
+            </table>
+            <div id="loaderTablePersonas" class="flex justify-center items-center my-4" style="display: none;">
+                <div class="dot-flashing"></div>
             </div>
         </div>
     </div>
+
     <?php endif; // fin permisos ver ?>
 </main>
 
