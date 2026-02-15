@@ -572,6 +572,28 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Checkbox para asociar usuario en modo edición
+  const checkboxAsociarUsuario = document.getElementById("asociarUsuarioCheck");
+  const camposAsociarContainer = document.getElementById("asociarUsuarioCampos");
+  if (checkboxAsociarUsuario && camposAsociarContainer) {
+    checkboxAsociarUsuario.addEventListener("change", function () {
+      if (this.checked) {
+        camposAsociarContainer.classList.remove("hidden");
+      } else {
+        camposAsociarContainer.classList.add("hidden");
+      }
+    });
+  }
+
+  // Botón confirmar asociar usuario
+  const btnConfirmarAsociar = document.getElementById("btnConfirmarAsociarUsuario");
+  if (btnConfirmarAsociar) {
+    btnConfirmarAsociar.addEventListener("click", function () {
+      const idPersona = document.getElementById("idPersonaActualizar").value;
+      asociarUsuario(idPersona);
+    });
+  }
+
   
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
@@ -635,12 +657,48 @@ function mostrarModalEditarPersona(persona) {
   document.getElementById("observacionesActualizar").value =
     persona.persona_observaciones || "";
 
-  
+  const btnDesasociar = document.getElementById("btnDesasociarUsuario");
+  const camposUsuarioContenido = document.getElementById("usuarioCamposActualizarContenido");
+  const sinUsuarioMsg = document.getElementById("sinUsuarioAsociado");
+
+  // Elementos de asociar usuario
+  const checkboxAsociar = document.getElementById("asociarUsuarioCheck");
+  const camposAsociar = document.getElementById("asociarUsuarioCampos");
+
   if (persona.idusuario) {
+    // Persona tiene usuario asociado: mostrar campos y botón desasociar
     document.getElementById("correoUsuarioActualizar").value =
       persona.correo_usuario_login || "";
     document.getElementById("rolActualizar").value = persona.idrol || "";
+    document.getElementById("claveActualizar").value = "";
     
+    if (camposUsuarioContenido) camposUsuarioContenido.classList.remove("hidden");
+    if (sinUsuarioMsg) sinUsuarioMsg.classList.add("hidden");
+    if (btnDesasociar) {
+      btnDesasociar.classList.remove("hidden");
+      btnDesasociar.onclick = function () {
+        desasociarUsuario(persona.idpersona_pk, persona.correo_usuario_login || "el usuario");
+      };
+    }
+  } else {
+    // Persona sin usuario asociado: ocultar campos, mostrar sección asociar
+    document.getElementById("correoUsuarioActualizar").value = "";
+    document.getElementById("rolActualizar").value = "";
+    document.getElementById("claveActualizar").value = "";
+
+    if (camposUsuarioContenido) camposUsuarioContenido.classList.add("hidden");
+    if (sinUsuarioMsg) sinUsuarioMsg.classList.remove("hidden");
+    if (btnDesasociar) btnDesasociar.classList.add("hidden");
+
+    // Reset campos de asociar
+    if (checkboxAsociar) checkboxAsociar.checked = false;
+    if (camposAsociar) camposAsociar.classList.add("hidden");
+    const correoAsociar = document.getElementById("correoUsuarioAsociar");
+    const claveAsociar = document.getElementById("claveUsuarioAsociar");
+    const rolAsociar = document.getElementById("rolUsuarioAsociar");
+    if (correoAsociar) correoAsociar.value = "";
+    if (claveAsociar) claveAsociar.value = "";
+    if (rolAsociar) rolAsociar.value = "";
   }
 
   
@@ -822,6 +880,16 @@ function cargarRoles() {
             '<option value="">Seleccione un rol</option>';
           result.data.forEach((rol) => {
             selectRolActualizar.innerHTML += `<option value="${rol.idrol}">${rol.nombre}</option>`;
+          });
+        }
+
+        // Poblar select de rol para asociar usuario
+        const selectRolAsociar = document.getElementById("rolUsuarioAsociar");
+        if (selectRolAsociar) {
+          selectRolAsociar.innerHTML =
+            '<option value="">Seleccione un Rol</option>';
+          result.data.forEach((rol) => {
+            selectRolAsociar.innerHTML += `<option value="${rol.idrol}">${rol.nombre}</option>`;
           });
         }
       }
@@ -1092,6 +1160,108 @@ function reactivarPersona(idPersona, nombrePersona) {
             recargarTablaPersonas();
           } else {
             Swal.fire("Error", result.message || "No se pudo reactivar la persona.", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
+        });
+    }
+  });
+}
+
+function asociarUsuario(idPersona) {
+  const correo = document.getElementById("correoUsuarioAsociar").value.trim();
+  const clave = document.getElementById("claveUsuarioAsociar").value;
+  const rol = document.getElementById("rolUsuarioAsociar").value;
+
+  if (!correo || !clave || !rol) {
+    Swal.fire("Atención", "Correo, contraseña y rol son obligatorios.", "warning");
+    return;
+  }
+
+  Swal.fire({
+    title: "¿Asociar usuario?",
+    html: `Se creará un nuevo usuario con el correo <strong>${correo}</strong> asociado a esta persona.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, asociar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const btnConfirmar = document.getElementById("btnConfirmarAsociarUsuario");
+      if (btnConfirmar) {
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Asociando...`;
+      }
+
+      fetch("Personas/asociarUsuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          idpersona_pk: idPersona,
+          correo_electronico_usuario: correo,
+          clave_usuario: clave,
+          idrol_usuario: rol,
+        }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Asociado!", result.message || "Usuario asociado correctamente.", "success");
+            cerrarModal("modalActualizarPersona");
+            recargarTablaPersonas();
+          } else {
+            Swal.fire("Error", result.message || "No se pudo asociar el usuario.", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
+        })
+        .finally(() => {
+          if (btnConfirmar) {
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerHTML = `<i class="fas fa-link mr-1"></i> Asociar Usuario`;
+          }
+        });
+    }
+  });
+}
+
+function desasociarUsuario(idPersona, correoUsuario) {
+  Swal.fire({
+    title: "¿Desasociar usuario?",
+    html: `¿Deseas desasociar el usuario <strong>${correoUsuario}</strong> de esta persona?<br><small class="text-gray-500">El usuario seguirá existiendo pero ya no estará vinculado a esta persona.</small>`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#ef4444",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, desasociar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Personas/desasociarUsuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idpersona_pk: idPersona }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Desasociado!", result.message || "Usuario desasociado correctamente.", "success");
+            cerrarModal("modalActualizarPersona");
+            recargarTablaPersonas();
+          } else {
+            Swal.fire("Error", result.message || "No se pudo desasociar el usuario.", "error");
           }
         })
         .catch((error) => {

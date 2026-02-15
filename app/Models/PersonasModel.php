@@ -103,9 +103,35 @@ class PersonasModel extends mysql
         }
     }
 
+    /**
+     * Verifica si ya existe un usuario con el correo dado.
+     */
+    public function existeCorreoUsuario(string $correo): bool
+    {
+        try {
+            $sql = "SELECT COUNT(*) as total FROM usuario WHERE correo = ? OR usuario = ?";
+            $stmt = $this->dbSeguridad->prepare($sql);
+            $stmt->execute([$correo, $correo]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return ($row && intval($row['total']) > 0);
+        } catch (PDOException $e) {
+            error_log("Error al verificar correo usuario: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function insertUsuario(int $personaId, array $dataUsuario): array
     {
         try {
+            // Validar correo duplicado
+            $correo = $dataUsuario['correo_electronico_usuario'];
+            if ($this->existeCorreoUsuario($correo)) {
+                return [
+                    'status' => false,
+                    'message' => 'Ya existe un usuario registrado con ese correo electrónico.'
+                ];
+            }
+
             $this->dbSeguridad->beginTransaction();
 
             $claveHasheada = hash("SHA256", $dataUsuario['clave_usuario']);
@@ -520,6 +546,45 @@ class PersonasModel extends mysql
             $this->dbSeguridad->rollBack();
             error_log("PersonasModel::reactivarPersonaById -> " . $e->getMessage());
             return false;
+        }
+    }
+
+    public function desasociarUsuarioDePersona(int $idpersona_pk): array
+    {
+        if (!$this->dbSeguridad) {
+            error_log("PersonasModel::desasociarUsuarioDePersona -> Conexión a la base de datos de seguridad no establecida.");
+            return ['status' => false, 'message' => 'Error de conexión a la base de datos.'];
+        }
+
+        try {
+            // Buscar el usuario asociado a esta persona por idpersona
+            $sqlFind = "SELECT idusuario, correo FROM usuario WHERE personaId = ?";
+            $stmtFind = $this->dbSeguridad->prepare($sqlFind);
+            $stmtFind->execute([$idpersona_pk]);
+            $usuario = $stmtFind->fetch(PDO::FETCH_ASSOC);
+
+            if (!$usuario) {
+                return ['status' => false, 'message' => 'No se encontró un usuario asociado a esta persona.'];
+            }
+
+            // Desasociar: poner personaId vacío
+            $sqlUpdate = "UPDATE usuario SET personaId = '' WHERE personaId = ? AND personaId != '' AND personaId != '0'";
+            $stmtUpdate = $this->dbSeguridad->prepare($sqlUpdate);
+            $stmtUpdate->execute([$idpersona_pk]);
+
+            if ($stmtUpdate->rowCount() > 0) {
+                return [
+                    'status' => true,
+                    'message' => 'Usuario desasociado correctamente.',
+                    'usuario_desasociado' => $usuario['correo']
+                ];
+            } else {
+                return ['status' => false, 'message' => 'No se pudo desasociar el usuario.'];
+            }
+
+        } catch (PDOException $e) {
+            error_log("PersonasModel::desasociarUsuarioDePersona -> " . $e->getMessage());
+            return ['status' => false, 'message' => 'Error al desasociar el usuario: ' . $e->getMessage()];
         }
     }
 

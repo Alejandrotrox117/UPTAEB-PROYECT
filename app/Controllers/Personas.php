@@ -144,6 +144,15 @@ function personas_createPersona()
         ];
 
         $model = getPersonasModel();
+
+        // Validar correo duplicado si se va a crear usuario
+        if (($personaData['crear_usuario'] ?? '0') === '1' && !empty($personaData['correo_electronico_usuario'])) {
+            if ($model->existeCorreoUsuario($personaData['correo_electronico_usuario'])) {
+                echo json_encode(['status' => false, 'message' => 'Ya existe un usuario registrado con ese correo electrónico.'], JSON_UNESCAPED_UNICODE);
+                die();
+            }
+        }
+
         $request = $model->insertPersonaConUsuario($personaData);
 
         if (isset($request['status']) && $request['status'] === true) {
@@ -430,4 +439,140 @@ function personas_verificarSuperUsuario()
         }
         die();
     }
+}
+
+/**
+ * Desasocia el usuario vinculado a una persona.
+ */
+function personas_desasociarUsuario()
+{
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
+        die();
+    }
+
+    $idusuario = obtenerUsuarioSesion();
+    $bitacoraModel = getPersonasBitacoraModel();
+
+    try {
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'editar')) {
+            BitacoraHelper::registrarError('personas', 'Intento de desasociar usuario sin permisos', $idusuario, $bitacoraModel);
+            echo json_encode(['status' => false, 'message' => 'No tienes permisos para editar personas'], JSON_UNESCAPED_UNICODE);
+            die();
+        }
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || empty($data['idpersona_pk'])) {
+            throw new \Exception('Datos inválidos');
+        }
+
+        $idpersona_pk = intval($data['idpersona_pk']);
+
+        // Verificar que no se desasocie su propio usuario
+        $model = getPersonasModel();
+        $personaData = $model->selectPersonaById($idpersona_pk);
+        if (!empty($personaData) && isset($personaData['idusuario'])) {
+            $idUsuarioAsociado = intval($personaData['idusuario']);
+            if ($idUsuarioAsociado === $idusuario) {
+                echo json_encode(['status' => false, 'message' => 'No puedes desasociar tu propio usuario.'], JSON_UNESCAPED_UNICODE);
+                die();
+            }
+        }
+
+        $resultado = $model->desasociarUsuarioDePersona($idpersona_pk);
+
+        if (isset($resultado['status']) && $resultado['status'] === true) {
+            $detalle = "Usuario desasociado de persona ID: " . $idpersona_pk;
+            if (!empty($resultado['usuario_desasociado'])) {
+                $detalle .= " (" . $resultado['usuario_desasociado'] . ")";
+            }
+            BitacoraHelper::registrarAccion('personas', 'DESASOCIAR_USUARIO', $idusuario, $bitacoraModel, $detalle, $idpersona_pk);
+        }
+
+        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+
+    } catch (\Exception $e) {
+        error_log("Error en desasociarUsuario: " . $e->getMessage());
+        BitacoraHelper::registrarError('personas', $e->getMessage(), $idusuario, $bitacoraModel);
+        echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
+    die();
+}
+
+/**
+ * Asocia un nuevo usuario a una persona existente.
+ */
+function personas_asociarUsuario()
+{
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
+        die();
+    }
+
+    $idusuario = obtenerUsuarioSesion();
+    $bitacoraModel = getPersonasBitacoraModel();
+
+    try {
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('personas', 'editar')) {
+            BitacoraHelper::registrarError('personas', 'Intento de asociar usuario sin permisos', $idusuario, $bitacoraModel);
+            echo json_encode(['status' => false, 'message' => 'No tienes permisos para editar personas'], JSON_UNESCAPED_UNICODE);
+            die();
+        }
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || empty($data['idpersona_pk'])) {
+            throw new \Exception('Datos inválidos');
+        }
+
+        $idpersona_pk = intval($data['idpersona_pk']);
+        $model = getPersonasModel();
+
+        // Verificar que la persona no tenga ya un usuario asociado
+        $personaData = $model->selectPersonaById($idpersona_pk);
+        if (!empty($personaData) && !empty($personaData['idusuario'])) {
+            echo json_encode(['status' => false, 'message' => 'Esta persona ya tiene un usuario asociado.'], JSON_UNESCAPED_UNICODE);
+            die();
+        }
+
+        // Validar datos del usuario
+        $correo = trim($data['correo_electronico_usuario'] ?? '');
+        $clave = $data['clave_usuario'] ?? '';
+        $idrol = $data['idrol_usuario'] ?? '';
+
+        if (empty($correo) || empty($clave) || empty($idrol)) {
+            echo json_encode(['status' => false, 'message' => 'Correo, contraseña y rol son obligatorios.'], JSON_UNESCAPED_UNICODE);
+            die();
+        }
+
+        // Validar correo duplicado
+        if ($model->existeCorreoUsuario($correo)) {
+            echo json_encode(['status' => false, 'message' => 'Ya existe un usuario registrado con ese correo electrónico.'], JSON_UNESCAPED_UNICODE);
+            die();
+        }
+
+        $usuarioData = [
+            'correo_electronico_usuario' => $correo,
+            'clave_usuario' => $clave,
+            'idrol_usuario' => $idrol
+        ];
+
+        $resultado = $model->insertUsuario($idpersona_pk, $usuarioData);
+
+        if (isset($resultado['status']) && $resultado['status'] === true) {
+            $detalle = "Usuario asociado a persona ID: " . $idpersona_pk . " (" . $correo . ")";
+            BitacoraHelper::registrarAccion('personas', 'ASOCIAR_USUARIO', $idusuario, $bitacoraModel, $detalle, $idpersona_pk);
+        }
+
+        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+
+    } catch (\Exception $e) {
+        error_log("Error en asociarUsuario: " . $e->getMessage());
+        BitacoraHelper::registrarError('personas', $e->getMessage(), $idusuario, $bitacoraModel);
+        echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
+    die();
 }

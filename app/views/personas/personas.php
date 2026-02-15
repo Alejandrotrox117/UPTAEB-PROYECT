@@ -265,7 +265,14 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('personas');
             </div>
 
             <div id="usuarioCamposActualizar" class="border-t border-gray-200 pt-6 mt-6">
-                <h4 class="text-lg font-semibold text-gray-700 mb-4">Datos de Acceso del Usuario</h4>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700">Datos de Acceso del Usuario</h4>
+                    <button type="button" id="btnDesasociarUsuario"
+                        class="hidden px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition font-medium">
+                        <i class="fas fa-unlink mr-1"></i> Desasociar Usuario
+                    </button>
+                </div>
+                <div id="usuarioCamposActualizarContenido">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
                     <div>
                         <label for="correoUsuarioActualizar" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico (Login)</label>
@@ -284,6 +291,44 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('personas');
                         <option value="">Seleccione un Rol</option>
                     </select>
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
+                </div> <!-- fin usuarioCamposActualizarContenido -->
+                <div id="sinUsuarioAsociado" class="hidden">
+                    <div class="text-center py-4 text-gray-400 mb-4" id="sinUsuarioMensaje">
+                        <i class="fas fa-user-slash text-3xl mb-2"></i>
+                        <p>Esta persona no tiene un usuario asociado.</p>
+                    </div>
+                    <!-- Checkbox para Asociar Usuario -->
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="asociarUsuarioCheck" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                        <label for="asociarUsuarioCheck" class="ml-2 block text-sm text-gray-900">¿Asociar un Usuario a esta Persona?</label>
+                    </div>
+                    <div id="asociarUsuarioCampos" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+                            <div>
+                                <label for="correoUsuarioAsociar" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico (Login) <span class="text-red-500">*</span></label>
+                                <input type="email" id="correoUsuarioAsociar" placeholder="usuario@dominio.com" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                            </div>
+                            <div>
+                                <label for="claveUsuarioAsociar" class="block text-sm font-medium text-gray-700 mb-1">Contraseña <span class="text-red-500">*</span></label>
+                                <input type="password" id="claveUsuarioAsociar" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="rolUsuarioAsociar" class="block text-sm font-medium text-gray-700 mb-1">Rol de Usuario <span class="text-red-500">*</span></label>
+                            <select id="rolUsuarioAsociar" class="w-full md:w-1/2 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                                <option value="">Seleccione un Rol</option>
+                            </select>
+                            <div class="text-red-500 text-xs mt-1 error-message"></div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="btnConfirmarAsociarUsuario" class="px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition font-medium">
+                                <i class="fas fa-link mr-1"></i> Asociar Usuario
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
