@@ -121,9 +121,9 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "INSERT INTO producto (
                     nombre, descripcion, unidad_medida, precio, 
-                    idcategoria, moneda, estatus, existencia,
+                    idcategoria, moneda, estatus, existencia, stock_minimo,
                     fecha_creacion, ultima_modificacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
             );
             
             $this->setArray([
@@ -134,7 +134,8 @@ class ProductosModel extends Mysql
                 $data['idcategoria'],
                 $data['moneda'],
                 'ACTIVO',
-                0 
+                0,
+                intval($data['stock_minimo'] ?? 0)
             ]);
             
             $stmt = $db->prepare($this->getQuery());
@@ -182,7 +183,7 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "UPDATE producto SET 
                     nombre = ?, descripcion = ?, unidad_medida = ?, 
-                    precio = ?, idcategoria = ?, moneda = ?, 
+                    precio = ?, idcategoria = ?, moneda = ?, stock_minimo = ?,
                     ultima_modificacion = NOW() 
                 WHERE idproducto = ?"
             );
@@ -194,6 +195,7 @@ class ProductosModel extends Mysql
                 $data['precio'],
                 $data['idcategoria'],
                 $data['moneda'],
+                intval($data['stock_minimo'] ?? 0),
                 $idproducto
             ]);
             
@@ -240,7 +242,7 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "SELECT 
                     p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
-                    p.precio, p.existencia, p.idcategoria, p.moneda, p.estatus,
+                    p.precio, p.existencia, p.stock_minimo, p.idcategoria, p.moneda, p.estatus,
                     p.fecha_creacion, p.ultima_modificacion,
                     c.nombre as categoria_nombre,
                     DATE_FORMAT(p.fecha_creacion, ?) as fecha_creacion_formato,
@@ -312,7 +314,7 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "SELECT 
                     p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
-                    p.precio, p.existencia, p.idcategoria, p.moneda, p.estatus,
+                    p.precio, p.existencia, p.stock_minimo, p.idcategoria, p.moneda, p.estatus,
                     p.fecha_creacion, p.ultima_modificacion,
                     c.nombre as categoria_nombre,
                     DATE_FORMAT(p.fecha_creacion, ?) as fecha_creacion_formato,
@@ -357,7 +359,7 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "SELECT 
                     p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
-                    p.precio, p.existencia, p.moneda,
+                    p.precio, p.existencia, p.stock_minimo, p.moneda,
                     c.nombre as categoria_nombre
                 FROM producto p 
                 LEFT JOIN categoria c ON p.idcategoria = c.idcategoria

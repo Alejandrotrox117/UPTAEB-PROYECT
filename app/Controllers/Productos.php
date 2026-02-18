@@ -296,7 +296,8 @@ class Productos extends Controllers
             'unidad_medida' => strtoupper(trim($request['unidad_medida'] ?? '')),
             'precio' => floatval($request['precio'] ?? 0),
             'idcategoria' => intval($request['idcategoria'] ?? 0),
-            'moneda' => strtoupper(trim($request['moneda'] ?? 'BS'))
+            'moneda' => strtoupper(trim($request['moneda'] ?? 'BS')),
+            'stock_minimo' => intval($request['stock_minimo'] ?? 0)
         ];
 
         $errores = [];
@@ -305,6 +306,7 @@ class Productos extends Controllers
         if (empty($datosLimpios['unidad_medida'])) $errores[] = 'La unidad de medida es obligatoria.';
         if ($datosLimpios['precio'] <= 0) $errores[] = 'El precio debe ser mayor a 0.';
         if (empty($datosLimpios['idcategoria'])) $errores[] = 'La categoría es obligatoria.';
+        if ($datosLimpios['stock_minimo'] < 0) $errores[] = 'El stock mínimo no puede ser negativo.';
 
         $resultadosValidacion = ExpresionesRegulares::validarCampos($datosLimpios, ['nombre' => 'nombre']);
         if (!$resultadosValidacion['nombre']['valido']) {
