@@ -20,7 +20,7 @@ if (isset($arrUrl[1]) && $arrUrl[1] != "") {
 $params = !empty($arrUrl[2]) ? array_slice($arrUrl, 2) : [];
 
 
-$publicRoutes = ['login', 'home', 'register', 'forgot-password', 'session_test'];
+$publicRoutes = ['login', 'home', 'register', 'forgot-password', 'session_test', 'notificaciones'];
 
 
 if (!in_array($controller, $publicRoutes)) {

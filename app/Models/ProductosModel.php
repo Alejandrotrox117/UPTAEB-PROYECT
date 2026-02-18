@@ -597,7 +597,9 @@ class ProductosModel extends Mysql
         }
     }
     
-    private function verificarStockYNotificar(int $productoId) {
+    public function verificarStockYNotificar(int $productoId) {
+        error_log("🔍 verificarStockYNotificar llamado para producto ID: $productoId");
+        
         try {
             $conn = new Conexion();
             $conn->connect();
@@ -613,41 +615,32 @@ class ProductosModel extends Mysql
             
             $conn->disconnect();
             
+            if (!$producto) {
+                error_log("⚠️ Producto ID $productoId no encontrado");
+                return;
+            }
+            
+            error_log("📊 Stock actual: {$producto['existencia']}, Stock mínimo: {$producto['stock_minimo']}");
+            
             if ($producto) {
                 $notificador = new NotificacionHelper();
                 
-                if (!$notificador->isConnected()) {
-                    return;
-                }
+                error_log("✅ NotificacionHelper instanciado, Redis conectado: " . ($notificador->isConnected() ? 'Sí' : 'No'));
                 
                 if ($producto['existencia'] == 0) {
-                    $notificador->enviarPorModulo(
-                        'productos',
-                        'SIN_STOCK',
-                        [
-                            'titulo' => 'Sin Stock',
-                            'mensaje' => "Producto: {$producto['nombre']} - SIN STOCK",
-                            'producto_id' => $productoId
-                        ],
-                        'CRITICA'
-                    );
+                    error_log("🚨 Enviando notificación SIN_STOCK para: {$producto['nombre']}");
+                    $producto['idproducto'] = $productoId;
+                    $notificador->enviarNotificacionStockMinimo($producto);
                 } elseif ($producto['stock_minimo'] > 0 && $producto['existencia'] <= $producto['stock_minimo']) {
-                    $notificador->enviarPorModulo(
-                        'productos',
-                        'STOCK_BAJO',
-                        [
-                            'titulo' => 'Stock Bajo',
-                            'mensaje' => "{$producto['nombre']}: {$producto['existencia']} unidades (mínimo: {$producto['stock_minimo']})",
-                            'producto_id' => $productoId,
-                            'existencia' => $producto['existencia'],
-                            'stock_minimo' => $producto['stock_minimo']
-                        ],
-                        'ALTA'
-                    );
+                    error_log("⚠️ Enviando notificación STOCK_BAJO para: {$producto['nombre']}");
+                    $producto['idproducto'] = $productoId;
+                    $notificador->enviarNotificacionStockMinimo($producto);
+                } else {
+                    error_log("✅ Stock OK - No se requiere notificación");
                 }
             }
         } catch (Exception $e) {
-            error_log("Error verificando stock: " . $e->getMessage());
+            error_log("❌ Error verificando stock: " . $e->getMessage());
         }
     }
 

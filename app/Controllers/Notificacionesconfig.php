@@ -1,5 +1,7 @@
 <?php
 
+require_once "helpers/helpers.php";
+
 use App\Models\NotificacionesConfigModel;
 use App\Helpers\PermisosModuloVerificar;
 

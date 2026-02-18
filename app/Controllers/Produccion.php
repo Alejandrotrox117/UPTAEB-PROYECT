@@ -6,6 +6,7 @@ use App\Models\ProduccionModel;
 use App\Models\BitacoraModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
+use Exception;
 
 class Produccion extends Controllers
 {

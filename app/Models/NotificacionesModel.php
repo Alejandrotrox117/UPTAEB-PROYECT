@@ -3,8 +3,10 @@ namespace App\Models;
 
 use App\Core\Mysql;
 use App\Core\Conexion;
+use App\Helpers\NotificacionHelper;
 use PDO;
 use PDOException;
+use Exception;
 
 class NotificacionesModel extends Mysql
 {
@@ -52,52 +54,63 @@ class NotificacionesModel extends Mysql
     }
 
     private function ejecutarCreacionNotificacion(array $data){
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectSeguridad();
-
         try {
-            // Obtener el ID del módulo basado en el nombre
-            $moduloId = $this->obtenerIdModulo($data['modulo']);
-            if (!$moduloId) {
-                throw new Exception("Módulo '{$data['modulo']}' no encontrado");
+            $notifHelper = new NotificacionHelper();
+            
+            // Determinar destinatarios
+            $destinatarios = [];
+            
+            // Si hay permisoId, obtener los roles que tienen ese permiso
+            if (isset($data['permiso_id']) && $data['permiso_id']) {
+                // Obtener roles con este permiso específico
+                $conexion = new Conexion();
+                $conexion->connect();
+                $db = $conexion->get_conectSeguridad();
+                
+                $sql = "SELECT DISTINCT rmp.idrol FROM rol_modulo_permisos rmp 
+                        WHERE rmp.idpermiso = ? AND rmp.activo = 1";
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$data['permiso_id']]);
+                $roles = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                
+                $destinatarios = !empty($roles) ? $roles : [1]; // Fallback a admin
+                $conexion->disconnect();
+            } else {
+                // Si no hay permiso específico, enviar a todos los roles
+                $conexion = new Conexion();
+                $conexion->connect();
+                $db = $conexion->get_conectSeguridad();
+                
+                $sql = "SELECT idrol FROM roles WHERE estatus = 'ACTIVO'";
+                $stmt = $db->prepare($sql);
+                $stmt->execute();
+                $roles = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                
+                $destinatarios = !empty($roles) ? $roles : [1];
+                $conexion->disconnect();
             }
-
-            $this->setQuery(
-                "INSERT INTO notificaciones (
-                    tipo, titulo, mensaje, modulo, referencia_id, 
-                    permiso, prioridad, 
-                    fecha_creacion, leida, activa
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), 0, 1)"
+            
+            // Llamar al NotificacionHelper para guardar y enviar
+            $resultado = $notifHelper->enviarPorRoles(
+                $data['tipo'],
+                [
+                    'titulo' => $data['titulo'],
+                    'mensaje' => $data['mensaje'],
+                    'modulo' => $data['modulo'],
+                    'referencia_id' => $data['referencia_id'] ?? null,
+                    'icono' => $data['icono'] ?? null
+                ],
+                $destinatarios,
+                $data['prioridad'] ?? 'MEDIA'
             );
             
-            // El permiso debe ser el ID del permiso específico
-            $permisoId = $data['permiso_id'] ?? null;
-            
-            $this->setArray([
-                $data['tipo'],
-                $data['titulo'],
-                $data['mensaje'],
-                $moduloId,
-                $data['referencia_id'] ?? null,
-                $permisoId,
-                $data['prioridad'] ?? 'MEDIA'
-            ]);
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $notificacionId = $db->lastInsertId();
-            
-            $resultado = $notificacionId > 0;
+            error_log("✅ Notificación creada usando NotificacionHelper: " . $data['tipo']);
+            return $resultado;
             
         } catch (Exception $e) {
-            error_log("Error al crear notificación: " . $e->getMessage());
-            $resultado = false;
-        } finally {
-            $conexion->disconnect();
+            error_log("❌ Error al crear notificación: " . $e->getMessage());
+            return false;
         }
-
-        return $resultado;
     }
 
     public function obtenerRolPorUsuario($usuarioId)
@@ -113,7 +126,7 @@ class NotificacionesModel extends Mysql
                 INNER JOIN roles r 
                 ON u.idrol = r.idrol 
                 WHERE u.idusuario = ?
-                AND u.estatus = 'ACTIVO' 
+                AND u.estatus = 'activo' 
                 AND r.estatus = 'ACTIVO';"
             );
             
@@ -136,92 +149,61 @@ class NotificacionesModel extends Mysql
     }
 
     private function ejecutarBusquedaNotificacionesPorUsuario(int $usuarioId, int $rolId){
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectSeguridad();
-
+        $resultado = [
+            "status" => false,
+            "message" => "No se procesó la solicitud",
+            "data" => []
+        ];
+        
         try {
-            // Verificar si es SuperAdmin (rol ID 1 usualmente)
-            $this->setQuery("SELECT nombre FROM roles WHERE idrol = ?");
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute([$rolId]);
-            $rolInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            $esSuperAdmin = ($rolInfo && (strtolower($rolInfo['nombre']) === 'superadmin' || $rolInfo['nombre'] === 'SuperAdmin'));
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectSeguridad();
+
+            // Obtener notificaciones dirigidas al usuario O a su rol
+            $query = "
+                SELECT 
+                    idnotificacion,
+                    tipo,
+                    titulo,
+                    mensaje,
+                    modulo,
+                    referencia_id,
+                    prioridad,
+                    fecha_creacion,
+                    leida,
+                    fecha_lectura,
+                    DATE_FORMAT(fecha_creacion, '%d/%m/%Y %H:%i') as fecha_formato
+                FROM notificaciones
+                WHERE (idusuario_destino = ? OR idrol_destino = ?)
+                  AND activa = 1
+                  AND habilitada = 1
+                ORDER BY leida ASC, fecha_creacion DESC
+                LIMIT 50
+            ";
             
-            if ($esSuperAdmin) {
-                // SuperAdmin ve todas las notificaciones
-                $this->setQuery(
-                    "SELECT 
-                        n.idnotificacion, n.tipo, n.titulo, n.mensaje, n.modulo, 
-                        n.referencia_id, n.prioridad, n.fecha_creacion, n.leida,
-                        m.titulo as modulo_nombre,
-                        p.nombre_permiso,
-                        DATE_FORMAT(n.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_formato
-                    FROM notificaciones n 
-                    LEFT JOIN modulos m ON n.modulo = m.idmodulo
-                    LEFT JOIN permisos p ON n.permiso = p.idpermiso
-                    WHERE n.activa = 1 
-                    ORDER BY n.leida ASC, n.fecha_creacion DESC
-                    LIMIT 20"
-                );
-                $this->setArray([]);
-            } else {
-                // Para otros roles, usar lógica de permisos
-                $this->setQuery(
-                    "SELECT DISTINCT
-                        n.idnotificacion, n.tipo, n.titulo, n.mensaje, n.modulo, 
-                        n.referencia_id, n.prioridad, n.fecha_creacion, n.leida,
-                        m.titulo as modulo_nombre,
-                        p.nombre_permiso,
-                        DATE_FORMAT(n.fecha_creacion, '%d/%m/%Y %H:%i') as fecha_formato
-                    FROM notificaciones n 
-                    LEFT JOIN modulos m ON n.modulo = m.idmodulo
-                    LEFT JOIN permisos p ON n.permiso = p.idpermiso
-                    WHERE n.activa = 1 
-                    AND (
-                        -- Caso 1: Notificaciones sin permiso específico (para todos)
-                        n.permiso IS NULL
-                        OR
-                        -- Caso 2: El usuario tiene acceso al módulo de la notificación
-                        EXISTS (
-                            SELECT 1 FROM rol_modulo_permisos rmp 
-                            WHERE rmp.idrol = ? 
-                            AND rmp.idmodulo = n.modulo 
-                            AND rmp.activo = 1
-                            AND (
-                                rmp.idpermiso = n.permiso  -- Permiso específico
-                                OR
-                                rmp.idpermiso IN (  -- Acceso Total
-                                    SELECT p2.idpermiso FROM permisos p2 
-                                    WHERE p2.nombre_permiso = 'Acceso Total'
-                                )
-                            )
-                        )
-                    )
-                    ORDER BY n.leida ASC, n.fecha_creacion DESC
-                    LIMIT 20"
-                );
-                $this->setArray([$rolId]);
-            }
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
+            $stmt = $db->prepare($query);
+            $stmt->execute([$usuarioId, $rolId]);
+            $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             $resultado = [
                 "status" => true,
-                "data" => $this->getResult()
+                "data" => $datos
             ];
             
-        } catch (Exception $e) {
-            error_log("Error al obtener notificaciones: " . $e->getMessage());
+            error_log("✅ ejecutarBusquedaNotificacionesPorUsuario: Obtuvimos " . count($datos) . " notificaciones");
+            
+        } catch (\Exception $e) {
+            error_log("❌ Error en ejecutarBusquedaNotificacionesPorUsuario: " . $e->getMessage());
             $resultado = [
                 "status" => false,
-                "message" => "Error al obtener notificaciones",
+                "message" => "Error al obtener notificaciones: " . $e->getMessage(),
                 "data" => []
             ];
         } finally {
-            $conexion->disconnect();
+            if (isset($conexion)) {
+                $conexion->disconnect();
+            }
         }
 
         return $resultado;
@@ -300,46 +282,27 @@ class NotificacionesModel extends Mysql
         $db = $conexion->get_conectSeguridad();
 
         try {
-            // Obtener rol del usuario
-            $rolId = $this->obtenerRolPorUsuario($usuarioId);
-            if (!$rolId) {
-                return false;
-            }
-
-            $this->setQuery(
-                "UPDATE notificaciones n
-                SET leida = 1, fecha_lectura = NOW() 
-                WHERE n.idnotificacion = ? 
-                AND EXISTS (
-                    SELECT 1 FROM rol_modulo_permisos rmp 
-                    WHERE rmp.idrol = ? 
-                    AND rmp.idmodulo = n.modulo 
-                    AND rmp.activo = 1
-                    AND (
-                        -- Opción 1: El usuario tiene el permiso específico de la notificación
-                        rmp.idpermiso = n.permiso
-                        OR
-                        -- Opción 2: El usuario tiene Acceso Total al módulo
-                        rmp.idpermiso IN (
-                            SELECT p2.idpermiso 
-                            FROM permisos p2 
-                            WHERE p2.nombre_permiso = 'Acceso Total'
-                        )
-                        OR
-                        -- Opción 3: Para notificaciones sin permiso específico, mostrar si tiene cualquier acceso al módulo
-                        n.permiso IS NULL
-                    )
-                )"
-            );
+            // NUEVA LÓGICA: MARCAR COMO LEIDA EN notificaciones_destinatarios
+            $this->setQuery("
+                UPDATE notificaciones_destinatarios nd
+                SET nd.leida = 1, nd.fecha_lectura = NOW()
+                WHERE nd.idnotificacion = ?
+                AND (nd.idusuario = ? OR EXISTS (
+                    SELECT 1 FROM usuario u 
+                    WHERE u.idusuario = ? 
+                    AND u.idrol = nd.idrol
+                ))
+            ");
             
-            $this->setArray([$notificacionId, $rolId]);
+            $this->setArray([$notificacionId, $usuarioId, $usuarioId]);
             
             $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $resultado = $stmt->rowCount() > 0;
+            $resultado = $stmt->execute($this->getArray());
+            
+            error_log("✅ Notificación marcada como leída: " . ($resultado ? 'OK' : 'FALLO'));
             
         } catch (Exception $e) {
-            error_log("Error al marcar notificación como leída: " . $e->getMessage());
+            error_log("❌ Error al marcar notificación como leída: " . $e->getMessage());
             $resultado = false;
         } finally {
             $conexion->disconnect();
@@ -354,40 +317,24 @@ class NotificacionesModel extends Mysql
         $db = $conexion->get_conectSeguridad();
 
         try {
-            $this->setQuery(
-                "UPDATE notificaciones n
-                SET leida = 1, fecha_lectura = NOW() 
-                WHERE n.leida = 0 AND n.activa = 1
-                AND EXISTS (
-                    SELECT 1 FROM rol_modulo_permisos rmp 
-                    WHERE rmp.idrol = ? 
-                    AND rmp.idmodulo = n.modulo 
-                    AND rmp.activo = 1
-                    AND (
-                        -- Opción 1: El usuario tiene el permiso específico de la notificación
-                        rmp.idpermiso = n.permiso
-                        OR
-                        -- Opción 2: El usuario tiene Acceso Total al módulo
-                        rmp.idpermiso IN (
-                            SELECT p2.idpermiso 
-                            FROM permisos p2 
-                            WHERE p2.nombre_permiso = 'Acceso Total'
-                        )
-                        OR
-                        -- Opción 3: Para notificaciones sin permiso específico, mostrar si tiene cualquier acceso al módulo
-                        n.permiso IS NULL
-                    )
-                )"
-            );
+            // NUEVA LÓGICA: MARCAR TODAS COMO LEIDAS EN notificaciones_destinatarios
+            $this->setQuery("
+                UPDATE notificaciones_destinatarios nd
+                SET nd.leida = 1, nd.fecha_lectura = NOW()
+                WHERE nd.leida = 0
+                AND (nd.idusuario = ? OR nd.idrol = ?)
+            ");
             
-            $this->setArray([$rolId]);
+            $this->setArray([$usuarioId, $rolId]);
             
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount();
             
+            error_log("✅ Marcadas $resultado notificaciones como leídas");
+            
         } catch (Exception $e) {
-            error_log("Error al marcar todas las notificaciones como leídas: " . $e->getMessage());
+            error_log("❌ Error al marcar todas las notificaciones como leídas: " . $e->getMessage());
             $resultado = 0;
         } finally {
             $conexion->disconnect();
@@ -422,21 +369,26 @@ class NotificacionesModel extends Mysql
                 throw new Exception("No se encontraron permisos asignados para notificaciones de productos");
             }
 
-            // Obtener productos con stock bajo (1-9)
+            // Obtener productos con stock bajo o igual al stock_minimo (configurado por producto)
             $this->setQuery(
-                "SELECT idproducto, nombre, existencia 
+                "SELECT idproducto, nombre, existencia, stock_minimo 
                 FROM {$dbGeneral}.producto 
-                WHERE estatus = 'ACTIVO' AND existencia BETWEEN 1 AND 9"
+                WHERE estatus = 'ACTIVO' 
+                AND stock_minimo > 0
+                AND existencia > 0 
+                AND existencia <= stock_minimo"
             );
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
             $productosStockBajo = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Obtener productos sin stock (0)
+            // Obtener productos sin stock (0) que tengan stock_minimo configurado
             $this->setQuery(
-                "SELECT idproducto, nombre, existencia 
+                "SELECT idproducto, nombre, existencia, stock_minimo 
                 FROM {$dbGeneral}.producto 
-                WHERE estatus = 'ACTIVO' AND existencia = 0"
+                WHERE estatus = 'ACTIVO' 
+                AND stock_minimo > 0
+                AND existencia = 0"
             );
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
@@ -453,8 +405,8 @@ class NotificacionesModel extends Mysql
 
             // Procesar productos con stock bajo - UNA notificación por permiso asignado
             foreach ($productosStockBajo as $producto) {
-                $titulo = "Stock Bajo - " . $producto['nombre'];
-                $mensaje = "El producto '{$producto['nombre']}' tiene solo {$producto['existencia']} unidades en stock.";
+                $titulo = "⚠️ Stock Mínimo - " . $producto['nombre'];
+                $mensaje = "El producto '{$producto['nombre']}' tiene {$producto['existencia']} unidades (mínimo: {$producto['stock_minimo']}).";
                 
                 foreach ($permisosAsignados as $permiso) {
                     // Verificar si ya existe una notificación para evitar duplicados
@@ -1004,6 +956,149 @@ class NotificacionesModel extends Mysql
             return ['error' => $e->getMessage()];
         } finally {
             $conexion->disconnect();
+        }
+    }
+
+    // ===== MÉTODOS CRUD PARA NOTIFICACIONES =====
+
+    /**
+     * Marcar una notificación como leída
+     */
+    public function marcarComoLeidaCompleto($idnotificacion, $usuarioId, $rolId) {
+        try {
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectSeguridad();
+
+            $sql = "UPDATE notificaciones 
+                    SET leida = 1, fecha_lectura = NOW()
+                    WHERE idnotificacion = ?
+                    AND (idusuario_destino = ? OR idrol_destino = ?)";
+            
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute([$idnotificacion, $usuarioId, $rolId]);
+            
+            $conexion->disconnect();
+            
+            return [
+                'status' => true,
+                'message' => 'Notificación marcada como leída'
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("Error al marcar como leída: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al marcar como leída'
+            ];
+        }
+    }
+
+    /**
+     * Marcar todas las notificaciones como leídas para un usuario/rol
+     */
+    public function marcarTodasComoLeidasCompleto($usuarioId, $rolId) {
+        try {
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectSeguridad();
+
+            $sql = "UPDATE notificaciones 
+                    SET leida = 1, fecha_lectura = NOW()
+                    WHERE (idusuario_destino = ? OR idrol_destino = ?)
+                    AND activa = 1
+                    AND leida = 0";
+            
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute([$usuarioId, $rolId]);
+            $rowsUpdated = $stmt->rowCount();
+            
+            $conexion->disconnect();
+            
+            return [
+                'status' => true,
+                'message' => "Se marcaron $rowsUpdated notificaciones como leídas",
+                'cantidad' => $rowsUpdated
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("Error al marcar todas como leídas: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al marcar como leídas'
+            ];
+        }
+    }
+
+    /**
+     * Eliminar una notificación
+     */
+    public function eliminarNotificacion($idnotificacion, $usuarioId, $rolId) {
+        try {
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectSeguridad();
+
+            // Soft delete - marcar como inactiva
+            $sql = "UPDATE notificaciones 
+                    SET activa = 0
+                    WHERE idnotificacion = ?
+                    AND (idusuario_destino = ? OR idrol_destino = ?)";
+            
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute([$idnotificacion, $usuarioId, $rolId]);
+            
+            $conexion->disconnect();
+            
+            return [
+                'status' => true,
+                'message' => 'Notificación eliminada'
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("Error al eliminar notificación: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al eliminar'
+            ];
+        }
+    }
+
+    /**
+     * Limpiar notificaciones antiguas y leídas (más de 30 días)
+     */
+    public function limpiarNotificacionesAntiguas() {
+        try {
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectSeguridad();
+
+            // Eliminar notificaciones leídas hace más de 30 días
+            $sql = "UPDATE notificaciones 
+                    SET activa = 0
+                    WHERE leida = 1 
+                    AND DATE_SUB(NOW(), INTERVAL 30 DAY) >= fecha_lectura";
+            
+            $stmt = $db->prepare($sql);
+            $result = $stmt->execute();
+            $rowsAffected = $stmt->rowCount();
+            
+            $conexion->disconnect();
+            
+            error_log("✅ Limpieza completada: $rowsAffected notificaciones antiguas marcadas como inactivas");
+            
+            return [
+                'status' => true,
+                'message' => "Se limpiaron $rowsAffected notificaciones antiguas",
+                'cantidad' => $rowsAffected
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("Error al limpiar notificaciones: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => 'Error al limpiar'
+            ];
         }
     }
 }

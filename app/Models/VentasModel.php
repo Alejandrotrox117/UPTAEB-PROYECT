@@ -3,6 +3,7 @@ namespace App\Models;
 
 use App\Core\Conexion;
 use App\Models\MovimientosModel;
+use App\Helpers\NotificacionHelper;
 use PDO;
 use PDOException;
 use Exception;
@@ -759,6 +760,9 @@ private function registrarMovimientosInventario($db, $idventa, array $detalles) 
             $this->setArray([$movimientosModel->getStockResultante(), $movimientosModel->getIdproducto()]);
             $stmtUpdate = $db->prepare($this->getQuery());
             $stmtUpdate->execute($this->getArray());
+            
+            // ⚠️ VERIFICAR STOCK MÍNIMO (Notificación informativa)
+            $this->verificarStockMinimo($db, $movimientosModel->getIdproducto(), $movimientosModel->getStockResultante());
         }
         
         return true;
@@ -1524,6 +1528,35 @@ private function generarNumeroMovimientoDevolucion($db) {
                 'valido' => false,
                 'mensaje' => 'Error al validar pagos: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Verificar si el producto llegó a stock mínimo (Notificación informativa)
+     */
+    private function verificarStockMinimo($db, $idproducto, $existenciaActual) {
+        try {
+            // Obtener datos del producto
+            $this->setQuery("SELECT idproducto, nombre, existencia, stock_minimo FROM producto WHERE idproducto = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idproducto]);
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$producto || $producto['stock_minimo'] <= 0) {
+                return; // No tiene stock_minimo configurado
+            }
+            
+            // Verificar si llegó o está por debajo del stock mínimo
+            if ($existenciaActual <= $producto['stock_minimo']) {
+                error_log("⚠️ Stock mínimo alcanzado: {$producto['nombre']} ({$existenciaActual} <= {$producto['stock_minimo']})");
+                
+                // Enviar notificación (BD + WebSocket)
+                $helper = new NotificacionHelper();
+                $helper->enviarNotificacionStockMinimo($producto);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("❌ Error al verificar stock mínimo: " . $e->getMessage());
         }
     }
 }

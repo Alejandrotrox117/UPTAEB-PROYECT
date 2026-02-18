@@ -39,8 +39,8 @@ class NotificacionesConfigModel {
                     'descripcion' => 'Información de producto modificada',
                     'prioridad' => 'BAJA'
                 ],
-                'STOCK_BAJO' => [
-                    'nombre' => 'Stock Bajo',
+                'STOCK_MINIMO' => [
+                    'nombre' => 'Stock Mínimo',
                     'descripcion' => 'Producto por debajo del stock mínimo',
                     'prioridad' => 'ALTA'
                 ],
@@ -111,11 +111,13 @@ class NotificacionesConfigModel {
             
             $conn->disconnect();
             
-            // Crear mapa de config
+            // Crear mapa de config (modulo => tipo => habilitada)
             $configMap = [];
             foreach ($configGuardada as $item) {
-                $key = $item['modulo'] . '|' . $item['tipo_notificacion'];
-                $configMap[$key] = $item['habilitada'];
+                if (!isset($configMap[$item['modulo']])) {
+                    $configMap[$item['modulo']] = [];
+                }
+                $configMap[$item['modulo']][$item['tipo_notificacion']] = (bool)$item['habilitada'];
             }
             
             // Combinar con catálogo
@@ -125,12 +127,14 @@ class NotificacionesConfigModel {
             foreach ($catalogo as $modulo => $tipos) {
                 $resultado[$modulo] = [];
                 foreach ($tipos as $tipo => $info) {
-                    $key = $modulo . '|' . $tipo;
+                    // Si no hay config guardada, permitir por defecto (true)
+                    $habilitada = isset($configMap[$modulo][$tipo]) ? $configMap[$modulo][$tipo] : true;
+                    
                     $resultado[$modulo][$tipo] = [
                         'nombre' => $info['nombre'],
                         'descripcion' => $info['descripcion'],
                         'prioridad' => $info['prioridad'],
-                        'habilitada' => isset($configMap[$key]) ? (bool)$configMap[$key] : true
+                        'habilitada' => $habilitada
                     ];
                 }
             }
@@ -159,16 +163,18 @@ class NotificacionesConfigModel {
             $stmtDelete = $db->prepare($sqlDelete);
             $stmtDelete->execute([$rolId]);
             
-            // Insertar nueva config
+            // Insertar nueva config (modulo, tipo, habilitada)
+            // La estructura esperada es: $config = ['modulo' => '...', 'tipo' => '...', 'habilitada' => bool]
             $sqlInsert = "INSERT INTO notificaciones_config 
                          (idrol, modulo, tipo_notificacion, habilitada) 
                          VALUES (?, ?, ?, ?)";
             $stmtInsert = $db->prepare($sqlInsert);
             
             foreach ($configuraciones as $config) {
+                $modulo = $config['modulo'] ?? 'general';
                 $stmtInsert->execute([
                     $rolId,
-                    $config['modulo'],
+                    $modulo,
                     $config['tipo'],
                     $config['habilitada'] ? 1 : 0
                 ]);
@@ -185,7 +191,6 @@ class NotificacionesConfigModel {
             }
             $errorMsg = $e->getMessage();
             error_log("Error guardarConfiguracion: " . $errorMsg);
-            error_log("Stack trace: " . $e->getTraceAsString());
             return ['status' => false, 'message' => 'Error al guardar: ' . $errorMsg];
         }
     }

@@ -7,7 +7,8 @@ use App\Models\BitacoraModel;
 use App\Models\NotificacionesModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
-use App\Helpers\ExpresionesRegulares;
+use App\Helpers\Validation\ExpresionesRegulares;
+use Exception;
 
 class Ventas extends Controllers
 {

@@ -20,6 +20,7 @@ use App\Helpers\PermisosModuloVerificar;
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="base-url" content="<?= base_url(''); ?>">
   <link rel="shortcut icon" href="<?= base_url('app/assets/img/favicon.svg'); ?>" type="image/x-icon">
   <title>Recuperadora</title>
   <meta name="description" content="Recuperadora de materiales reciclables">
