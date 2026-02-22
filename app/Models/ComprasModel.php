@@ -798,7 +798,7 @@ class ComprasModel
         }
     }
 
-    private function ejecutarCambioEstadoCompra(int $idcompra, string $nuevoEstado)
+    private function ejecutarCambioEstadoCompra(int $idcompra, string $nuevoEstado, int $idusuario = 0)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -845,10 +845,11 @@ class ComprasModel
                 // Notificar compra pagada
                 $this->notificarCompraPagada($idcompra);
             } elseif ($nuevoEstado === 'POR_AUTORIZAR') {
-                // Notificar que requiere autorización
+                // Notificar a los autorizadores y confirmar al comprador
                 $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
                 if ($compraData) {
                     $this->notificarCompraPorAutorizar($idcompra, $compraData['nro_compra'], $compraData['total_general']);
+                    $this->notificarCompraEnviadaAutorizacion($idcompra, $compraData['nro_compra'], $idusuario);
                 }
             } elseif ($nuevoEstado === 'AUTORIZADA') {
                 // Notificar que está autorizada y lista para pago
@@ -1390,9 +1391,9 @@ class ComprasModel
         return $this->ejecutarEliminacionLogicaCompra($idcompra);
     }
 
-    public function cambiarEstadoCompra(int $idcompra, string $nuevoEstado)
+    public function cambiarEstadoCompra(int $idcompra, string $nuevoEstado, int $idusuario = 0)
     {
-        return $this->ejecutarCambioEstadoCompra($idcompra, $nuevoEstado);
+        return $this->ejecutarCambioEstadoCompra($idcompra, $nuevoEstado, $idusuario);
     }
 
     public function insertProveedor(array $data): array
@@ -1468,21 +1469,24 @@ class ComprasModel
     private function notificarCompraPorAutorizar($compraId, $numero, $total) {
         try {
             $notificador = new NotificacionHelper();
-            
-            if (!$notificador->isConnected()) {
+            // Solo roles con Acceso Total (idpermiso=8) en el módulo compras
+            $rolesAutorizadores = $notificador->obtenerRolesConAccesoTotal('compras');
+            if (empty($rolesAutorizadores)) {
+                error_log("notificarCompraPorAutorizar: sin roles autorizadores encontrados para módulo compras");
                 return;
             }
-            
-            $notificador->enviarPorModulo(
-                'compras',
+            $notificador->enviarPorRoles(
                 'COMPRA_POR_AUTORIZAR',
                 [
-                    'titulo' => 'Compra Requiere Autorización',
-                    'mensaje' => "Compra #$numero por $" . number_format($total, 2),
-                    'compra_id' => $compraId,
-                    'numero' => $numero,
-                    'total' => $total
+                    'titulo'        => 'Compra Requiere Autorización',
+                    'mensaje'       => "Compra #$numero por $" . number_format($total, 2) . " pendiente de aprobación",
+                    'modulo'        => 'compras',
+                    'referencia_id' => $compraId,
+                    'compra_id'     => $compraId,
+                    'numero'        => $numero,
+                    'total'         => $total
                 ],
+                $rolesAutorizadores,
                 'ALTA'
             );
         } catch (Exception $e) {
@@ -1490,22 +1494,44 @@ class ComprasModel
         }
     }
 
+    private function notificarCompraEnviadaAutorizacion($compraId, $numero, $idusuario) {
+        if (!$idusuario) {
+            return; // Sin usuario identificado no se puede notificar al comprador
+        }
+        try {
+            $notificador = new NotificacionHelper();
+            $notificador->enviarAUsuario(
+                'COMPRA_ENVIADA_AUTORIZACION',
+                [
+                    'titulo'        => 'Compra Enviada a Autorización',
+                    'mensaje'       => "Tu compra #$numero fue enviada al gerente para aprobación",
+                    'modulo'        => 'compras',
+                    'referencia_id' => $compraId,
+                    'compra_id'     => $compraId
+                ],
+                $idusuario,
+                'MEDIA'
+            );
+        } catch (Exception $e) {
+            error_log("Error notificando compra enviada a autorización: " . $e->getMessage());
+        }
+    }
+
     private function notificarCompraAutorizadaPago($compraId, $numero, $total) {
         try {
             $notificador = new NotificacionHelper();
-            
-            if ($notificador->isConnected()) {
-                $notificador->enviarPorModulo(
-                    'compras',
-                    'COMPRA_AUTORIZADA_PAGO',
-                    [
-                        'titulo' => 'Compra Autorizada - Pendiente Pago',
-                        'mensaje' => "Compra #$numero por $" . number_format($total, 2) . " lista para pagar",
-                        'compra_id' => $compraId
-                    ],
-                    'MEDIA'
-                );
-            }
+            $notificador->enviarPorModulo(
+                'compras',
+                'COMPRA_AUTORIZADA_PAGO',
+                [
+                    'titulo'     => 'Compra Autorizada - Pendiente Pago',
+                    'mensaje'    => "Compra #$numero por $" . number_format($total, 2) . " lista para pagar",
+                    'modulo'     => 'compras',
+                    'referencia_id' => $compraId,
+                    'compra_id'  => $compraId
+                ],
+                'MEDIA'
+            );
         } catch (Exception $e) {
             error_log("Error notificando compra autorizada: " . $e->getMessage());
         }
@@ -1514,25 +1540,22 @@ class ComprasModel
     private function notificarCompraPagada($compraId) {
         try {
             $compraData = $this->ejecutarBusquedaCompraPorId($compraId);
-            
             if (!$compraData) {
                 return;
             }
-            
             $notificador = new NotificacionHelper();
-            
-            if ($notificador->isConnected()) {
-                $notificador->enviarPorModulo(
-                    'compras',
-                    'COMPRA_PAGADA',
-                    [
-                        'titulo' => 'Compra Pagada',
-                        'mensaje' => "Compra #{$compraData['nro_compra']} ha sido pagada completamente",
-                        'compra_id' => $compraId
-                    ],
-                    'BAJA'
-                );
-            }
+            $notificador->enviarPorModulo(
+                'compras',
+                'COMPRA_PAGADA',
+                [
+                    'titulo'     => 'Compra Pagada',
+                    'mensaje'    => "Compra #{$compraData['nro_compra']} ha sido pagada completamente",
+                    'modulo'     => 'compras',
+                    'referencia_id' => $compraId,
+                    'compra_id'  => $compraId
+                ],
+                'BAJA'
+            );
         } catch (Exception $e) {
             error_log("Error notificando compra pagada: " . $e->getMessage());
         }

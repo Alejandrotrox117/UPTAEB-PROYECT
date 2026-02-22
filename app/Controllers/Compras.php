@@ -7,7 +7,7 @@ use App\Models\BitacoraModel;
 use App\Models\NotificacionesModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
-
+use Exception;
 class Compras extends Controllers
 {
     private $notificacionesModel;
@@ -572,7 +572,7 @@ class Compras extends Controllers
                 }
                 
                 // Cambiar el estado
-                $resultado = $this->get_model()->cambiarEstadoCompra($idcompra, $nuevoEstado);
+                $resultado = $this->get_model()->cambiarEstadoCompra($idcompra, $nuevoEstado, intval($idusuario ?? 0));
                 
                 if ($resultado['status']) {
                     // Registrar en bitácora el cambio de estado

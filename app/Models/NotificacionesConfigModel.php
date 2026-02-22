@@ -17,6 +17,11 @@ class NotificacionesConfigModel {
                     'descripcion' => 'Cuando una compra requiere autorización del gerente',
                     'prioridad' => 'ALTA'
                 ],
+                'COMPRA_ENVIADA_AUTORIZACION' => [
+                    'nombre' => 'Compra Enviada a Autorización',
+                    'descripcion' => 'Confirmación al comprador de que su compra fue enviada a autorizar',
+                    'prioridad' => 'MEDIA'
+                ],
                 'COMPRA_AUTORIZADA_PAGO' => [
                     'nombre' => 'Compra Autorizada - Pago Pendiente',
                     'descripcion' => 'Compra autorizada lista para procesar pago',

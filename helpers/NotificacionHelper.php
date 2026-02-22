@@ -111,6 +111,36 @@ class NotificacionHelper {
     }
     
    
+    /**
+     * Obtener roles que tienen Acceso Total (idpermiso=8) en un módulo.
+     * Estos son los roles autorizadores (gerentes/admins).
+     */
+    public function obtenerRolesConAccesoTotal($modulo) {
+        try {
+            $conn = new \App\Core\Conexion();
+            $conn->connect();
+            $db = $conn->get_conectSeguridad();
+
+            $sql = "SELECT DISTINCT rmp.idrol
+                    FROM rol_modulo_permisos rmp
+                    INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
+                    WHERE LOWER(m.titulo) = LOWER(?)
+                      AND rmp.idpermiso = 8
+                      AND rmp.activo = 1";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$modulo]);
+            $roles = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+            $conn->disconnect();
+            error_log(" obtenerRolesConAccesoTotal: módulo=$modulo, roles=" . implode(',', $roles ?: []));
+            return $roles ?: [];
+        } catch (\Exception $e) {
+            error_log("❌ Error obtenerRolesConAccesoTotal: " . $e->getMessage());
+            return [];
+        }
+    }
+
     private function filtrarRolesPorConfigNotificacion($roles, $modulo, $tipoNotificacion) {
         if (empty($roles)) {
             return [];
@@ -213,10 +243,9 @@ class NotificacionHelper {
                 $data['mensaje'] ?? '',
                 $modulo,
                 $data['referencia_id'] ?? null,
-                $data['icono'] ?? null,
                 $prioridad,
-                [$usuarioId],  // Pasar usuario ID
-                'usuario'      // Tipo de destinatario: usuario
+                [$usuarioId],
+                'usuario'
             );
 
             if (!$idnotificacion) {
@@ -274,7 +303,6 @@ class NotificacionHelper {
                 $data['mensaje'] ?? '',
                 $modulo,
                 $data['referencia_id'] ?? null,
-                $data['icono'] ?? null,
                 $prioridad,
                 $todosLosRoles,
                 'rol'
@@ -405,7 +433,6 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
                 "El producto '{$producto['nombre']}' tiene {$producto['existencia']} unidades (mínimo: {$producto['stock_minimo']})",
                 'productos',
                 $producto['idproducto'],
-                'fas fa-exclamation-triangle text-yellow-500',
                 'ALTA',
                 $rolesDestino,
                 'rol'
@@ -457,7 +484,7 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
     
     
     
-    private function guardarNotificacionCompletaBD($tipo, $titulo, $mensaje, $modulo, $referenciaId = null, $icono = null, $prioridad = 'MEDIA', $destinatarios = [], $tipoDestinatario = 'rol') {
+    private function guardarNotificacionCompletaBD($tipo, $titulo, $mensaje, $modulo, $referenciaId = null, $prioridad = 'MEDIA', $destinatarios = [], $tipoDestinatario = 'rol') {
         try {
            
             $conexion = new \App\Core\Conexion();
