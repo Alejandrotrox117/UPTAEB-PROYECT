@@ -6,7 +6,8 @@ use App\Models\EmpleadosModel;
 use App\Models\BitacoraModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
-use App\Helpers\PermisosHelper;
+use PDOException;
+use Exception;
 
 class Empleados extends Controllers
 {

@@ -6,23 +6,36 @@
 // =============================================================================
 
 // Security Helpers
-require_once __DIR__ . '/Security/CSRFHelper.php';
-require_once __DIR__ . '/Security/CSPHelper.php';
+if (file_exists(__DIR__ . '/Security/CSRFHelper.php')) {
+    require_once __DIR__ . '/Security/CSRFHelper.php';
+} else {
+    error_log(' Helper no encontrado: Security/CSRFHelper.php');
+}
+if (file_exists(__DIR__ . '/Security/CSPHelper.php')) {
+    require_once __DIR__ . '/Security/CSPHelper.php';
+} else {
+    error_log(' Helper no encontrado: Security/CSPHelper.php');
+}
 
-// Auth Helpers  
-require_once __DIR__ . '/Auth/RecaptchaHelper.php';
-
-// Permission Helpers
-require_once __DIR__ . '/Permissions/PermisosHelper.php';
+// Auth Helpers
+if (file_exists(__DIR__ . '/Auth/RecaptchaHelper.php')) {
+    require_once __DIR__ . '/Auth/RecaptchaHelper.php';
+} else {
+    error_log(' Helper no encontrado: Auth/RecaptchaHelper.php');
+}
 
 // Validation Helpers
 if (file_exists(__DIR__ . '/Validation/ExpresionesRegulares.php')) {
     require_once __DIR__ . '/Validation/ExpresionesRegulares.php';
+} else {
+    error_log(' Helper no encontrado: Validation/ExpresionesRegulares.php');
 }
 
-// Bitacora Helper 
+// Bitacora Helper
 if (file_exists(__DIR__ . '/BitacoraHelper.php')) {
     require_once __DIR__ . '/BitacoraHelper.php';
+} else {
+    error_log(' Helper no encontrado: BitacoraHelper.php');
 }
 
 // Controller Helpers (incluye funciones de validación)
@@ -36,7 +49,6 @@ if (file_exists(__DIR__ . '/controller_helpers.php')) {
 use App\Helpers\Security\CSRFHelper;
 use App\Helpers\Security\CSPHelper;
 use App\Helpers\Auth\RecaptchaHelper;
-use App\Helpers\Permissions\PermisosHelper;
 
 // --- CSRF Functions ---
 

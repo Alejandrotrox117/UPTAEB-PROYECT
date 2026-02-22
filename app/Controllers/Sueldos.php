@@ -4,9 +4,12 @@ namespace App\Controllers;
 use App\Core\Controllers;
 use App\Models\SueldosModel;
 use App\Models\BitacoraModel;
+use App\Models\TiposPagosModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
-use App\Helpers\PermisosHelper;
+use App\Helpers\Validation\ExpresionesRegulares;
+use Exception;
+
 
 class Sueldos extends Controllers
 {
@@ -483,7 +486,7 @@ class Sueldos extends Controllers
                     die();
                 }
 
-                $strTermino = strClean($request['termino'] ?? '');
+                $strTermino = ExpresionesRegulares::limpiar($request['termino'] ?? '', 'textoGeneral');
                 if (empty($strTermino)) {
                     $arrResponse = array('status' => false, 'message' => 'Término de búsqueda requerido');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -705,8 +708,6 @@ class Sueldos extends Controllers
 
     public function getTiposPagos()
     {
-        // Incluir el modelo de tipos de pago
-        require_once "app/models/tiposPagosModel.php";
         $tiposPagosModel = new TiposPagosModel();
         
         try {

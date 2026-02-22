@@ -282,16 +282,16 @@ class NotificacionesModel extends Mysql
         $db = $conexion->get_conectSeguridad();
 
         try {
-            // NUEVA LÓGICA: MARCAR COMO LEIDA EN notificaciones_destinatarios
             $this->setQuery("
-                UPDATE notificaciones_destinatarios nd
-                SET nd.leida = 1, nd.fecha_lectura = NOW()
-                WHERE nd.idnotificacion = ?
-                AND (nd.idusuario = ? OR EXISTS (
-                    SELECT 1 FROM usuario u 
-                    WHERE u.idusuario = ? 
-                    AND u.idrol = nd.idrol
-                ))
+                UPDATE notificaciones
+                SET leida = 1, fecha_lectura = NOW()
+                WHERE idnotificacion = ?
+                AND (
+                    idusuario_destino = ?
+                    OR idrol_destino = (
+                        SELECT idrol FROM usuario WHERE idusuario = ? LIMIT 1
+                    )
+                )
             ");
             
             $this->setArray([$notificacionId, $usuarioId, $usuarioId]);
@@ -317,12 +317,11 @@ class NotificacionesModel extends Mysql
         $db = $conexion->get_conectSeguridad();
 
         try {
-            // NUEVA LÓGICA: MARCAR TODAS COMO LEIDAS EN notificaciones_destinatarios
             $this->setQuery("
-                UPDATE notificaciones_destinatarios nd
-                SET nd.leida = 1, nd.fecha_lectura = NOW()
-                WHERE nd.leida = 0
-                AND (nd.idusuario = ? OR nd.idrol = ?)
+                UPDATE notificaciones
+                SET leida = 1, fecha_lectura = NOW()
+                WHERE leida = 0
+                AND (idusuario_destino = ? OR idrol_destino = ?)
             ");
             
             $this->setArray([$usuarioId, $rolId]);

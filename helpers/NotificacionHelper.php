@@ -162,22 +162,20 @@ class NotificacionHelper {
                 $data['mensaje'] ?? '',
                 $modulo,
                 $data['referencia_id'] ?? null,
-                $data['icono'] ?? null,
                 $prioridad,
-                $rolesIds,  // Pasar roles para guardar en notificaciones_destinatarios
-                'rol'       // Tipo de destinatario: 'rol' o 'usuario'
+                $rolesIds,
+                'rol'
             );
 
             if (!$idnotificacion) {
-                error_log(" No se pudo guardar notificación en BD");
+              
                 return false;
             }
 
-            error_log(" Notificación guardada en BD con ID: $idnotificacion para roles: " . implode(',', $rolesIds));
-
-            // 2. ENVIAR POR WEBSOCKET (Tiempo real)
+           
+       
             if (!$this->connected) {
-                error_log("Redis no conectado, pero notificación guardada en BD");
+            
                 return true; // Retornar true porque YA está guardada
             }
 
@@ -386,30 +384,21 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
                 $rolesConPermiso = $this->obtenerRolesConPermiso('productos');
                 
                 if (empty($rolesConPermiso)) {
-                    error_log("⚠️ No hay roles con permiso 'ver' en módulo 'productos', usando roles por defecto [1, 2]");
+                    
                     $rolesDestino = [1, 2]; // Fallback a admin
                 } else {
                     // Filtrar por configuración de notificaciones (tipo STOCK_MINIMO)
                     $rolesDestino = $this->filtrarRolesPorConfigNotificacion($rolesConPermiso, 'productos', 'STOCK_MINIMO');
                     
                     if (empty($rolesDestino)) {
-                        error_log("⚠️ No hay roles con STOCK_MINIMO habilitado, usando todos los que tienen permiso");
+                       
                         $rolesDestino = $rolesConPermiso;
                     }
                 }
                 
-                error_log(" Roles obtenidos dinámicamente: " . implode(',', $rolesDestino ?: []));
-            } else {
-                error_log(" Roles especificados: " . implode(',', $rolesDestino));
-            }
+                } else {
+                }
             
-            // Validar que el producto tenga ID
-            if (empty($producto['idproducto'])) {
-                error_log(" ❌ Error: Producto sin ID");
-                return false;
-            }
-            
-          
             $idnotificacion = $this->guardarNotificacionCompletaBD(
                 'STOCK_MINIMO',
                 "Stock Mínimo - {$producto['nombre']}",
@@ -427,9 +416,7 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
                 return false;
             }
             
-            error_log(" Notificación de stock guardada en BD con ID: $idnotificacion");
-            
-            // Enviar por WebSocket si está conectado
+         
             if ($this->isConnected()) {
                 try {
                     $data = [
@@ -453,14 +440,13 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
                     ];
                     
                     $suscriptores = $this->redis->publish('notificaciones', json_encode($mensaje));
-                    error_log(" WebSocket: Notificación STOCK_MINIMO publicada a $suscriptores suscriptores");
+                  
                 } catch (\Exception $e) {
                     error_log("Error al publicar en WebSocket: " . $e->getMessage());
                 }
             }
             
-            error_log(" Notificación STOCK_MINIMO ({$producto['nombre']}) - BD: OK, WebSocket: Enviada");
-            
+           
             return $idnotificacion;
             
         } catch (\Exception $e) {
@@ -473,8 +459,7 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
     
     private function guardarNotificacionCompletaBD($tipo, $titulo, $mensaje, $modulo, $referenciaId = null, $icono = null, $prioridad = 'MEDIA', $destinatarios = [], $tipoDestinatario = 'rol') {
         try {
-            error_log(" GUARDANDO NOTIFICACIÓN: tipo=$tipo, modulo=$modulo, destinatarios=" . implode(',', $destinatarios ?? []));
-            
+           
             $conexion = new \App\Core\Conexion();
             $conexion->connect();
             $db = $conexion->get_conectSeguridad();
@@ -484,28 +469,14 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
             $stmtModulo->execute([$modulo]);
             $moduloResult = $stmtModulo->fetch(\PDO::FETCH_ASSOC);
             
-            $moduloId = null;
-            
             if (!$moduloResult) {
-                error_log("Módulo '$modulo' no encontrado en BD, buscando alternativa o usando NULL");
-                
-                // Intentar crear el módulo si no existe
-                try {
-                    $stmtInsertModulo = $db->prepare(
-                        "INSERT INTO modulos (titulo, descripcion, estatus, fecha_creacion, fecha_modificacion) 
-                         VALUES (?, ?, 'ACTIVO', NOW(), NOW())"
-                    );
-                    $stmtInsertModulo->execute([$modulo, "Módulo de $modulo"]);
-                    $moduloId = $db->lastInsertId();
-                    error_log(" Módulo creado automáticamente: ID $moduloId");
-                } catch (\Exception $e) {
-                    error_log("No se pudo crear módulo: " . $e->getMessage());
-                    $moduloId = null;
-                }
-            } else {
-                $moduloId = $moduloResult['idmodulo'];
-                error_log(" Módulo encontrado: ID $moduloId");
+                error_log("Módulo '$modulo' no encontrado en BD. Verifica que el módulo exista en la tabla modulos.");
+                $conexion->disconnect();
+                return false;
             }
+
+            $moduloId = $moduloResult['idmodulo'];
+            error_log(" Módulo encontrado: ID $moduloId");
             
             // 2. INSERTAR NOTIFICACIONES EN LA TABLA UNIFICADA (una por cada destinatario)
             $primerIdNotificacion = null;
@@ -603,58 +574,6 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
         }
     }
 
-    
-    private function guardarNotificacionBD($datos) {
-        try {
-            error_log(" Intentando guardar notificación en BD: " . json_encode($datos));
-            
-            $conexion = new \App\Core\Conexion();
-            $conexion->connect();
-            $db = $conexion->get_conectSeguridad();
-            
-            // Obtener ID del módulo por nombre
-            $stmtModulo = $db->prepare("SELECT idmodulo FROM modulos WHERE LOWER(titulo) = LOWER(?) LIMIT 1");
-            $stmtModulo->execute([$datos['modulo']]);
-            $modulo = $stmtModulo->fetch(\PDO::FETCH_ASSOC);
-            
-            if (!$modulo) {
-                error_log(" Módulo '{$datos['modulo']}' no encontrado en BD");
-                $conexion->disconnect();
-                return false;
-            }
-            
-            // Insertar notificación
-            $sql = "INSERT INTO notificaciones (
-                tipo, titulo, mensaje, modulo, referencia_id, prioridad, 
-                fecha_creacion
-            ) VALUES (?, ?, ?, ?, ?, ?, NOW())";
-            
-            $stmt = $db->prepare($sql);
-            $resultado = $stmt->execute([
-                $datos['tipo'],
-                $datos['titulo'],
-                $datos['mensaje'],
-                $modulo['idmodulo'],
-                $datos['referencia_id'] ?? null,
-                $datos['prioridad'] ?? 'MEDIA'
-            ]);
-            
-            if ($resultado) {
-                $notifId = $db->lastInsertId();
-                error_log(" Notificación guardada en BD con ID: $notifId");
-            } else {
-                error_log(" Error al ejecutar INSERT: " . json_encode($stmt->errorInfo()));
-            }
-            
-            $conexion->disconnect();
-            return $resultado;
-            
-        } catch (\Exception $e) {
-            error_log(" Error al guardar notificación en BD: " . $e->getMessage());
-            return false;
-        }
-    }
-    
     /**
      * Cierra la conexión a Redis
      */

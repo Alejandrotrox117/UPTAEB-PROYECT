@@ -6,8 +6,7 @@ use App\Models\ProveedoresModel;
 use App\Models\BitacoraModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
-use App\Helpers\PermisosHelper;
-use App\Helpers\ExpresionesRegulares;
+use App\Helpers\Validation\ExpresionesRegulares;
 use DateTime;
 use DateInterval;
 use Exception;
@@ -666,7 +665,7 @@ class Proveedores extends Controllers
                     die();
                 }
 
-                $strTermino = strClean($request['termino'] ?? '');
+                $strTermino = ExpresionesRegulares::limpiar($request['termino'] ?? '', 'textoGeneral');
                 if (empty($strTermino)) {
                     $arrResponse = array('status' => false, 'message' => 'Término de búsqueda requerido');
                     echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
