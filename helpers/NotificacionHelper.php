@@ -25,7 +25,7 @@ class NotificacionHelper {
             $this->connected = true;
             error_log(" NotificacionHelper: Conectado a Redis usando Predis");
             
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log(" NotificacionHelper Error: " . $e->getMessage());
             $this->connected = false;
             $this->redis = null;

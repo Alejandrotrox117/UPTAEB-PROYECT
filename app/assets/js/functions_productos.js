@@ -552,7 +552,7 @@ function inicializarTablaProductos() {
       },
     });
 
-  });
+  }); // fin $(document).ready
 
   // Event listeners delegados FUERA del $(document).ready) anidado para que persistan
   $(document).on("click", ".ver-producto-btn", function () {
@@ -575,27 +575,26 @@ function inicializarTablaProductos() {
     }
   });
 
-    $("#TablaProductos tbody").on("click", ".eliminar-producto-btn", function () {
-      const idProducto = $(this).data("idproducto");
-      const nombreProducto = $(this).data("nombre");
-      if (idProducto && typeof eliminarProducto === "function") {
-        eliminarProducto(idProducto, nombreProducto);
-      } else {
-        console.error("Función eliminarProducto no definida o idProducto no encontrado.", idProducto);
-        Swal.fire("Error", "No se pudo obtener el ID del producto.", "error");
-      }
-    });
+  $("#TablaProductos tbody").on("click", ".eliminar-producto-btn", function () {
+    const idProducto = $(this).data("idproducto");
+    const nombreProducto = $(this).data("nombre");
+    if (idProducto && typeof eliminarProducto === "function") {
+      eliminarProducto(idProducto, nombreProducto);
+    } else {
+      console.error("Función eliminarProducto no definida o idProducto no encontrado.", idProducto);
+      Swal.fire("Error", "No se pudo obtener el ID del producto.", "error");
+    }
+  });
 
-    $("#TablaProductos tbody").on("click", ".reactivar-producto-btn", function () {
-      const idProducto = $(this).data("idproducto");
-      const nombreProducto = $(this).data("nombre");
-      if (idProducto && typeof activarProducto === "function") {
-        activarProducto(idProducto, nombreProducto);
-      } else {
-        console.error("Función activarProducto no definida o idProducto no encontrado.", idProducto);
-        Swal.fire("Error", "No se pudo obtener el ID del producto.", "error");
-      }
-    });
+  $("#TablaProductos tbody").on("click", ".reactivar-producto-btn", function () {
+    const idProducto = $(this).data("idproducto");
+    const nombreProducto = $(this).data("nombre");
+    if (idProducto && typeof activarProducto === "function") {
+      activarProducto(idProducto, nombreProducto);
+    } else {
+      console.error("Función activarProducto no definida o idProducto no encontrado.", idProducto);
+      Swal.fire("Error", "No se pudo obtener el ID del producto.", "error");
+    }
   });
 
   
