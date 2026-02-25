@@ -1,338 +1,431 @@
 <?php
-namespace App\Controllers;
 
-use App\Core\Controllers;
 use App\Models\ProductosModel;
 use App\Models\BitacoraModel;
 use App\Models\NotificacionesModel;
+use App\Models\EmpleadosModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
 use App\Helpers\Validation\ExpresionesRegulares;
-use Exception;
 
-class Productos extends Controllers
-{
-    private $bitacoraModel;
-    private $BitacoraHelper;
-    private $notificacionesModel;
+// =============================================================================
+// FUNCIONES AUXILIARES DEL CONTROLADOR
+// =============================================================================
 
-    public function __construct()
-    {
-        parent::__construct();
-        
+/**
+ * Obtiene el modelo de productos
+ */
+function getProductosModel() {
+    return new ProductosModel();
+}
 
-        $this->bitacoraModel = new BitacoraModel();
-        $this->BitacoraHelper = new BitacoraHelper();
-        $this->notificacionesModel = new NotificacionesModel();
+/**
+ * Obtiene el modelo de bitácora
+ */
+function getProductosBitacoraModel() {
+    return new BitacoraModel();
+}
 
-        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
-            header('Location: ' . base_url() . '/login');
-            die();
-        }
+/**
+ * Obtiene el modelo de notificaciones
+ */
+function getProductosNotificacionesModel() {
+    return new NotificacionesModel();
+}
 
-        
-        if (!PermisosModuloVerificar::verificarAccesoModulo('productos')) {
-            $this->views->getView($this, "permisos");
-            exit();
+/**
+ * Renderiza una vista de productos
+ */
+function renderProductosView($view, $data = []) {
+    renderView('productos', $view, $data);
+}
+
+/**
+ * Valida y limpia los datos de un producto
+ */
+function validarDatosProducto($request) {
+    $datosLimpios = [
+        'nombre' => ExpresionesRegulares::limpiar($request['nombre'] ?? '', 'nombre'),
+        'descripcion' => trim($request['descripcion'] ?? ''),
+        'unidad_medida' => strtoupper(trim($request['unidad_medida'] ?? '')),
+        'precio' => floatval($request['precio'] ?? 0),
+        'idcategoria' => intval($request['idcategoria'] ?? 0),
+        'moneda' => strtoupper(trim($request['moneda'] ?? 'BS'))
+    ];
+
+    $errores = [];
+
+    if (empty($datosLimpios['nombre'])) $errores[] = 'El nombre es obligatorio.';
+    if (empty($datosLimpios['unidad_medida'])) $errores[] = 'La unidad de medida es obligatoria.';
+    if ($datosLimpios['precio'] <= 0) $errores[] = 'El precio debe ser mayor a 0.';
+    if (empty($datosLimpios['idcategoria'])) $errores[] = 'La categoría es obligatoria.';
+
+    $resultadosValidacion = ExpresionesRegulares::validarCampos($datosLimpios, ['nombre' => 'nombre']);
+    if (!$resultadosValidacion['nombre']['valido']) {
+        $errores[] = ExpresionesRegulares::obtenerMensajeError('nombre', 'nombre');
+    }
+
+    if (!empty($datosLimpios['descripcion'])) {
+        $resultadosValidacionDesc = ExpresionesRegulares::validarCampos($datosLimpios, ['descripcion' => 'textoGeneral']);
+        if (!$resultadosValidacionDesc['descripcion']['valido']) {
+            $errores[] = ExpresionesRegulares::obtenerMensajeError('descripcion', 'textoGeneral');
         }
     }
 
-    public function index()
-    {
-        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')) {
-            $this->views->getView($this, "permisos");
-            exit();
-        }
-
-        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
-        BitacoraHelper::registrarAccesoModulo('productos', $idusuario, $this->bitacoraModel);
-
-        $data['page_tag'] = "Productos";
-        $data['page_title'] = "Administración de Productos";
-        $data['page_name'] = "productos";
-        $data['page_content'] = "Gestión integral de productos del sistema";
-        $data['page_functions_js'] = "functions_productos.js";
-        $this->views->getView($this, "productos", $data);
+    if (!in_array($datosLimpios['unidad_medida'], ['UNIDAD', 'KG', 'GRAMO', 'LITRO', 'ML', 'METRO', 'CM', 'CAJA', 'PAQUETE'])) {
+        $errores[] = 'Unidad de medida inválida.';
     }
 
-    public function createProducto()
-    {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
-            die();
-        }
+    if (!in_array($datosLimpios['moneda'], ['BS', 'USD', 'EUR'])) {
+        $errores[] = 'Moneda inválida.';
+    }
 
-        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+    if (!empty($errores)) {
+        throw new Exception(implode(' | ', $errores));
+    }
 
-        try {
-            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'crear')) {
-                BitacoraHelper::registrarError('productos', 'Intento de crear producto sin permisos', $idusuario, $this->bitacoraModel);
-                echo json_encode(['status' => false, 'message' => 'No tienes permisos para crear productos'], JSON_UNESCAPED_UNICODE);
-                die();
-            }
+    return $datosLimpios;
+}
 
-            $postdata = file_get_contents('php://input');
-            $request = json_decode($postdata, true);
+// =============================================================================
+// FUNCIONES PÚBLICAS DEL CONTROLADOR
+// =============================================================================
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Datos JSON inválidos');
-            }
-
-            $datosLimpios = $this->validarDatosProducto($request);
-
-            $resultado = $this->model->insertProducto($datosLimpios);
-
-            if ($resultado['status'] === true) {
-                $productoId = $resultado['producto_id'] ?? null;
-                $detalle = "Producto creado con ID: " . ($productoId ?? 'desconocido');
-                BitacoraHelper::registrarAccion('productos', 'CREAR_PRODUCTO', $idusuario, $this->bitacoraModel, $detalle, $productoId);
-                $this->notificacionesModel->generarNotificacionesProductos();
-            }
-
-            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
-
-        } catch (Exception $e) {
-            error_log("Error en createProducto: " . $e->getMessage());
-            BitacoraHelper::registrarError('productos', $e->getMessage(), $idusuario, $this->bitacoraModel);
-            echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
-        }
+/**
+ * Página principal del módulo de productos
+ */
+function productos_index() {
+    // Verificar autenticación
+    if (!obtenerUsuarioSesion()) {
+        header('Location: ' . base_url() . '/login');
         die();
     }
 
-    public function updateProducto()
-    {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
-            die();
-        }
+    // Verificar acceso al módulo
+    if (!PermisosModuloVerificar::verificarAccesoModulo('productos')) {
+        renderProductosView("permisos");
+        exit();
+    }
 
-        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+    if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')) {
+        renderProductosView("permisos");
+        exit();
+    }
 
-        try {
-            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'editar')) {
-                BitacoraHelper::registrarError('productos', 'Intento de editar producto sin permisos', $idusuario, $this->bitacoraModel);
-                echo json_encode(['status' => false, 'message' => 'No tienes permisos para editar productos'], JSON_UNESCAPED_UNICODE);
-                die();
-            }
+    $idusuario = obtenerUsuarioSesion();
+    $bitacoraModel = getProductosBitacoraModel();
+    BitacoraHelper::registrarAccesoModulo('productos', $idusuario, $bitacoraModel);
 
-            $postdata = file_get_contents('php://input');
-            $request = json_decode($postdata, true);
+    $data['page_tag'] = "Productos";
+    $data['page_title'] = "Administración de Productos";
+    $data['page_name'] = "productos";
+    $data['page_content'] = "Gestión integral de productos del sistema";
+    $data['page_functions_js'] = "functions_productos.js";
+    renderProductosView("productos", $data);
+}
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Datos JSON inválidos');
-            }
-
-            $idProducto = intval($request['idproducto'] ?? 0);
-            if ($idProducto <= 0) {
-                throw new Exception('ID de producto inválido');
-            }
-
-            $datosLimpios = $this->validarDatosProducto($request);
-
-            $resultado = $this->model->updateProducto($idProducto, $datosLimpios);
-
-            if ($resultado['status'] === true) {
-                $detalle = "Producto actualizado con ID: " . $idProducto;
-                BitacoraHelper::registrarAccion('productos', 'ACTUALIZAR_PRODUCTO', $idusuario, $this->bitacoraModel, $detalle, $idProducto);
-                $this->notificacionesModel->generarNotificacionesProductos();
-            }
-
-            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
-
-        } catch (Exception $e) {
-            error_log("Error en updateProducto: " . $e->getMessage());
-            BitacoraHelper::registrarError('productos', $e->getMessage(), $idusuario, $this->bitacoraModel);
-            echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
-        }
+/**
+ * Crear un nuevo producto
+ */
+function productos_createProducto() {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
     }
 
-    public function deleteProducto()
-    {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
+    $idusuario = obtenerUsuarioSesion();
+    $bitacoraModel = getProductosBitacoraModel();
+
+    try {
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'crear')) {
+            BitacoraHelper::registrarError('productos', 'Intento de crear producto sin permisos', $idusuario, $bitacoraModel);
+            echo json_encode(['status' => false, 'message' => 'No tienes permisos para crear productos'], JSON_UNESCAPED_UNICODE);
             die();
         }
 
-        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        $postdata = file_get_contents('php://input');
+        $request = json_decode($postdata, true);
 
-        try {
-            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'eliminar')) {
-                BitacoraHelper::registrarError('productos', 'Intento de eliminar producto sin permisos', $idusuario, $this->bitacoraModel);
-                echo json_encode(['status' => false, 'message' => 'No tienes permisos para eliminar productos'], JSON_UNESCAPED_UNICODE);
-                die();
-            }
-
-            $postdata = file_get_contents('php://input');
-            $request = json_decode($postdata, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE || empty($request['idproducto'])) {
-                throw new Exception('Datos inválidos');
-            }
-
-            $idProducto = intval($request['idproducto']);
-            $resultado = $this->model->deleteProductoById($idProducto, $idusuario);
-
-            if ($resultado['status'] === true) {
-                $detalle = "Producto desactivado con ID: " . $idProducto;
-                BitacoraHelper::registrarAccion('productos', 'ELIMINAR_PRODUCTO', $idusuario, $this->bitacoraModel, $detalle, $idProducto);
-                $this->notificacionesModel->generarNotificacionesProductos();
-            }
-
-            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
-
-        } catch (Exception $e) {
-            error_log("Error en deleteProducto: " . $e->getMessage());
-            BitacoraHelper::registrarError('productos', $e->getMessage(), $idusuario, $this->bitacoraModel);
-            echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Datos JSON inválidos');
         }
+
+        $datosLimpios = validarDatosProducto($request);
+
+        $model = getProductosModel();
+        $resultado = $model->insertProducto($datosLimpios);
+
+        if ($resultado['status'] === true) {
+            $productoId = $resultado['producto_id'] ?? null;
+            $detalle = "Producto creado con ID: " . ($productoId ?? 'desconocido');
+            BitacoraHelper::registrarAccion('productos', 'CREAR_PRODUCTO', $idusuario, $bitacoraModel, $detalle, $productoId);
+            $notificacionesModel = getProductosNotificacionesModel();
+            $notificacionesModel->generarNotificacionesProductos();
+        }
+
+        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+
+    } catch (Exception $e) {
+        error_log("Error en createProducto: " . $e->getMessage());
+        BitacoraHelper::registrarError('productos', $e->getMessage(), $idusuario, $bitacoraModel);
+        echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
+    die();
+}
+
+/**
+ * Actualizar un producto
+ */
+function productos_updateProducto() {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
     }
 
-    public function activarProducto()
-    {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
+    $idusuario = obtenerUsuarioSesion();
+    $bitacoraModel = getProductosBitacoraModel();
+
+    try {
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'editar')) {
+            BitacoraHelper::registrarError('productos', 'Intento de editar producto sin permisos', $idusuario, $bitacoraModel);
+            echo json_encode(['status' => false, 'message' => 'No tienes permisos para editar productos'], JSON_UNESCAPED_UNICODE);
             die();
         }
 
-        $idusuario = $this->BitacoraHelper->obtenerUsuarioSesion();
+        $postdata = file_get_contents('php://input');
+        $request = json_decode($postdata, true);
 
-        try {
-            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'editar')) {
-                BitacoraHelper::registrarError('productos', 'Intento de activar producto sin permisos', $idusuario, $this->bitacoraModel);
-                echo json_encode(['status' => false, 'message' => 'No tienes permisos para activar productos'], JSON_UNESCAPED_UNICODE);
-                die();
-            }
-
-            $postdata = file_get_contents('php://input');
-            $request = json_decode($postdata, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE || empty($request['idproducto'])) {
-                throw new Exception('Datos inválidos');
-            }
-
-            $idProducto = intval($request['idproducto']);
-            $resultado = $this->model->activarProductoById($idProducto, $idusuario);
-
-            if ($resultado['status'] === true) {
-                $detalle = "Producto activado con ID: " . $idProducto;
-                BitacoraHelper::registrarAccion('productos', 'ACTIVAR_PRODUCTO', $idusuario, $this->bitacoraModel, $detalle, $idProducto);
-                $this->notificacionesModel->generarNotificacionesProductos();
-            }
-
-            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
-
-        } catch (Exception $e) {
-            error_log("Error en activarProducto: " . $e->getMessage());
-            BitacoraHelper::registrarError('productos', $e->getMessage(), $idusuario, $this->bitacoraModel);
-            echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Datos JSON inválidos');
         }
+
+        $idProducto = intval($request['idproducto'] ?? 0);
+        if ($idProducto <= 0) {
+            throw new Exception('ID de producto inválido');
+        }
+
+        $datosLimpios = validarDatosProducto($request);
+
+        $model = getProductosModel();
+        $resultado = $model->updateProducto($idProducto, $datosLimpios);
+
+        if ($resultado['status'] === true) {
+            $detalle = "Producto actualizado con ID: " . $idProducto;
+            BitacoraHelper::registrarAccion('productos', 'ACTUALIZAR_PRODUCTO', $idusuario, $bitacoraModel, $detalle, $idProducto);
+            $notificacionesModel = getProductosNotificacionesModel();
+            $notificacionesModel->generarNotificacionesProductos();
+        }
+
+        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+
+    } catch (Exception $e) {
+        error_log("Error en updateProducto: " . $e->getMessage());
+        BitacoraHelper::registrarError('productos', $e->getMessage(), $idusuario, $bitacoraModel);
+        echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
+    die();
+}
+
+/**
+ * Eliminar (desactivar) un producto
+ */
+function productos_deleteProducto() {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
     }
 
-    
+    $idusuario = obtenerUsuarioSesion();
+    $bitacoraModel = getProductosBitacoraModel();
 
-    public function getProductosData()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            try {
-                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')) {
-                    echo json_encode(['status' => false, 'message' => 'No tienes permisos para ver los productos'], JSON_UNESCAPED_UNICODE);
-                    die();
-                }
-                $arrResponse = $this->model->selectAllProductos();
-                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                error_log("Error en getProductosData: " . $e->getMessage());
-                echo json_encode(['status' => false, 'message' => 'Error interno del servidor'], JSON_UNESCAPED_UNICODE);
-            }
+    try {
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'eliminar')) {
+            BitacoraHelper::registrarError('productos', 'Intento de eliminar producto sin permisos', $idusuario, $bitacoraModel);
+            echo json_encode(['status' => false, 'message' => 'No tienes permisos para eliminar productos'], JSON_UNESCAPED_UNICODE);
             die();
         }
+
+        $postdata = file_get_contents('php://input');
+        $request = json_decode($postdata, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || empty($request['idproducto'])) {
+            throw new Exception('Datos inválidos');
+        }
+
+        $idProducto = intval($request['idproducto']);
+        $model = getProductosModel();
+        $resultado = $model->deleteProductoById($idProducto);
+
+        if ($resultado) {
+            $detalle = "Producto desactivado con ID: " . $idProducto;
+            BitacoraHelper::registrarAccion('productos', 'ELIMINAR_PRODUCTO', $idusuario, $bitacoraModel, $detalle, $idProducto);
+            $notificacionesModel = getProductosNotificacionesModel();
+            $notificacionesModel->generarNotificacionesProductos();
+            echo json_encode(['status' => true, 'message' => 'Producto desactivado correctamente'], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode(['status' => false, 'message' => 'No se pudo desactivar el producto'], JSON_UNESCAPED_UNICODE);
+        }
+
+    } catch (Exception $e) {
+        error_log("Error en deleteProducto: " . $e->getMessage());
+        BitacoraHelper::registrarError('productos', $e->getMessage(), $idusuario, $bitacoraModel);
+        echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
+    die();
+}
+
+/**
+ * Activar un producto
+ */
+function productos_activarProducto() {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
+        die();
     }
 
-    public function getProductoById($idproducto)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            try {
-                if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')) {
-                    echo json_encode(['status' => false, 'message' => 'No tienes permisos para ver este producto'], JSON_UNESCAPED_UNICODE);
-                    die();
-                }
-                if (empty($idproducto) || !is_numeric($idproducto)) {
-                    throw new Exception('ID de producto inválido');
-                }
-                $arrData = $this->model->selectProductoById(intval($idproducto));
-                echo json_encode(['status' => true, 'data' => $arrData], JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                error_log("Error en getProductoById: " . $e->getMessage());
-                echo json_encode(['status' => false, 'message' => 'Error al obtener el producto'], JSON_UNESCAPED_UNICODE);
-            }
+    $idusuario = obtenerUsuarioSesion();
+    $bitacoraModel = getProductosBitacoraModel();
+
+    try {
+        if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'editar')) {
+            BitacoraHelper::registrarError('productos', 'Intento de activar producto sin permisos', $idusuario, $bitacoraModel);
+            echo json_encode(['status' => false, 'message' => 'No tienes permisos para activar productos'], JSON_UNESCAPED_UNICODE);
             die();
         }
+
+        $postdata = file_get_contents('php://input');
+        $request = json_decode($postdata, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || empty($request['idproducto'])) {
+            throw new Exception('Datos inválidos');
+        }
+
+        $idProducto = intval($request['idproducto']);
+        $model = getProductosModel();
+        $resultado = $model->activarProductoById($idProducto);
+
+        if ($resultado) {
+            $detalle = "Producto activado con ID: " . $idProducto;
+            BitacoraHelper::registrarAccion('productos', 'ACTIVAR_PRODUCTO', $idusuario, $bitacoraModel, $detalle, $idProducto);
+            $notificacionesModel = getProductosNotificacionesModel();
+            $notificacionesModel->generarNotificacionesProductos();
+            echo json_encode(['status' => true, 'message' => 'Producto reactivado correctamente'], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode(['status' => false, 'message' => 'No se pudo reactivar el producto'], JSON_UNESCAPED_UNICODE);
+        }
+
+    } catch (Exception $e) {
+        error_log("Error en activarProducto: " . $e->getMessage());
+        BitacoraHelper::registrarError('productos', $e->getMessage(), $idusuario, $bitacoraModel);
+        echo json_encode(['status' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
     }
+    die();
+}
 
-    public function getCategorias()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            try {
-                $arrResponse = $this->model->selectCategoriasActivas();
-                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                error_log("Error en getCategorias: " . $e->getMessage());
-                echo json_encode(['status' => false, 'message' => 'Error al obtener categorías'], JSON_UNESCAPED_UNICODE);
+/**
+ * Obtener listado de productos
+ */
+function productos_getProductosData() {
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        try {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')) {
+                echo json_encode(['status' => false, 'message' => 'No tienes permisos para ver los productos'], JSON_UNESCAPED_UNICODE);
+                die();
             }
-            die();
+            $model = getProductosModel();
+            $arrResponse = $model->selectAllProductos();
+            echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en getProductosData: " . $e->getMessage());
+            echo json_encode(['status' => false, 'message' => 'Error interno del servidor'], JSON_UNESCAPED_UNICODE);
         }
-    }
-
-    
-
-    private function validarDatosProducto($request)
-    {
-        $datosLimpios = [
-            'nombre' => ExpresionesRegulares::limpiar($request['nombre'] ?? '', 'nombre'),
-            'descripcion' => trim($request['descripcion'] ?? ''),
-            'unidad_medida' => strtoupper(trim($request['unidad_medida'] ?? '')),
-            'precio' => floatval($request['precio'] ?? 0),
-            'idcategoria' => intval($request['idcategoria'] ?? 0),
-            'moneda' => strtoupper(trim($request['moneda'] ?? 'BS')),
-            'stock_minimo' => intval($request['stock_minimo'] ?? 0)
-        ];
-
-        $errores = [];
-
-        if (empty($datosLimpios['nombre'])) $errores[] = 'El nombre es obligatorio.';
-        if (empty($datosLimpios['unidad_medida'])) $errores[] = 'La unidad de medida es obligatoria.';
-        if ($datosLimpios['precio'] <= 0) $errores[] = 'El precio debe ser mayor a 0.';
-        if (empty($datosLimpios['idcategoria'])) $errores[] = 'La categoría es obligatoria.';
-        if ($datosLimpios['stock_minimo'] < 0) $errores[] = 'El stock mínimo no puede ser negativo.';
-
-        $resultadosValidacion = ExpresionesRegulares::validarCampos($datosLimpios, ['nombre' => 'nombre']);
-        if (!$resultadosValidacion['nombre']['valido']) {
-            $errores[] = ExpresionesRegulares::obtenerMensajeError('nombre', 'nombre');
-        }
-
-        if (!empty($datosLimpios['descripcion'])) {
-            $resultadosValidacionDesc = ExpresionesRegulares::validarCampos($datosLimpios, ['descripcion' => 'textoGeneral']);
-            if (!$resultadosValidacionDesc['descripcion']['valido']) {
-                $errores[] = ExpresionesRegulares::obtenerMensajeError('descripcion', 'textoGeneral');
-            }
-        }
-
-        if (!in_array($datosLimpios['unidad_medida'], ['UNIDAD', 'KG', 'GRAMO', 'LITRO', 'ML', 'METRO', 'CM', 'CAJA', 'PAQUETE'])) {
-            $errores[] = 'Unidad de medida inválida.';
-        }
-
-        if (!in_array($datosLimpios['moneda'], ['BS', 'USD', 'EUR'])) {
-            $errores[] = 'Moneda inválida.';
-        }
-
-        if (!empty($errores)) {
-            throw new Exception(implode(' | ', $errores));
-        }
-
-        return $datosLimpios;
+        die();
     }
 }
+
+/**
+ * Obtener un producto por ID
+ */
+function productos_getProductoById($idproducto) {
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        try {
+            if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')) {
+                echo json_encode(['status' => false, 'message' => 'No tienes permisos para ver este producto'], JSON_UNESCAPED_UNICODE);
+                die();
+            }
+            if (empty($idproducto) || !is_numeric($idproducto)) {
+                throw new Exception('ID de producto inválido');
+            }
+            $model = getProductosModel();
+            $arrData = $model->selectProductoById(intval($idproducto));
+            echo json_encode(['status' => true, 'data' => $arrData], JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en getProductoById: " . $e->getMessage());
+            echo json_encode(['status' => false, 'message' => 'Error al obtener el producto'], JSON_UNESCAPED_UNICODE);
+        }
+        die();
+    }
+}
+
+/**
+ * Obtener categorías activas
+ */
+function productos_getCategorias() {
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        try {
+            $model = getProductosModel();
+            $arrResponse = $model->selectCategoriasActivas();
+            echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+        } catch (Exception $e) {
+            error_log("Error en getCategorias: " . $e->getMessage());
+            echo json_encode(['status' => false, 'message' => 'Error al obtener categorías'], JSON_UNESCAPED_UNICODE);
+        }
+        die();
+    }
+}
+
+/**
+ * Verificar si el usuario actual es super usuario
+ */
+function productos_verificarSuperUsuario() {
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        try {
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+
+            $idusuario = obtenerUsuarioSesion();
+
+            if (!$idusuario) {
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Usuario no autenticado',
+                    'es_super_usuario' => false,
+                    'usuario_id' => 0
+                ]);
+                die();
+            }
+
+            $empleadosModel = new EmpleadosModel();
+            $esSuperAdmin = $empleadosModel->verificarEsSuperUsuario($idusuario);
+
+            echo json_encode([
+                'status' => true,
+                'es_super_usuario' => $esSuperAdmin,
+                'usuario_id' => $idusuario,
+                'message' => 'Verificación completada'
+            ]);
+        } catch (Exception $e) {
+            error_log("Error en verificarSuperUsuario (Productos): " . $e->getMessage());
+            echo json_encode([
+                'status' => false,
+                'message' => 'Error interno del servidor: ' . $e->getMessage(),
+                'es_super_usuario' => false,
+                'usuario_id' => 0
+            ]);
+        }
+        die();
+    }
+}
+
 ?>

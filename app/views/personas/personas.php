@@ -1,42 +1,74 @@
-<?php headerAdmin($data);?>
+<?php 
+use App\Helpers\PermisosModuloVerificar;
+headerAdmin($data);
+
+// OBTENER PERMISOS DEL USUARIO PARA EL MÓDULO
+$permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('personas');
+?>
 <input type="hidden" id="usuarioAuthRolNombre" value="<?php echo htmlspecialchars(strtolower($rolUsuarioAutenticado)); ?>">
 <input type="hidden" id="usuarioAuthRolId" value="<?php echo htmlspecialchars($idRolUsuarioAutenticado); ?>">
 
-<main class="flex-1 p-6">
-    <div class="flex justify-between items-center">
-        <h2 class="text-xl font-semibold">Administración de Personas</h2>
-        <input type="text" placeholder="Buscar en página..."
-            class="pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400">
+<!-- PASAR PERMISOS AL JAVASCRIPT -->
+<?= renderJavaScriptData('permisosPersonas', $permisos); ?>
+
+<main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 bg-gray-100">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800">Administración de Personas</h2>
     </div>
 
-    <div class="min-h-screen mt-6">
-        <h1 class="text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
-        <p class="text-green-500 text-lg">Listado de personas registradas en el sistema</p>
-
-        <div class="bg-white p-8 mt-6 rounded-2xl shadow-lg">
-            <div class="flex justify-between items-center mb-6">
-                <button id="btnAbrirModalRegistrarPersona"
-                    class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow">
-                    <i class="fas fa-plus mr-2"></i> Registrar Persona
-                </button>
+    <?php if (!$permisos['ver']): ?>
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 mt-6 rounded-r-lg">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
             </div>
-
-            <div class="overflow-x-auto">
-                <!-- DatatABLE-->
-                <table id="TablaPersonas" class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-gray-500 text-sm border-b">
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-900">
-                    </tbody>
-                </table>
-                <div id="loaderTablePersonas" class="flex justify-center items-center my-4" style="display: none;">
-                    <div class="dot-flashing"></div>
-                </div>
+            <div class="ml-3">
+                <p class="text-sm text-yellow-700 font-medium">
+                    <strong>Acceso Restringido:</strong> No tienes permisos para ver la lista de personas.
+                </p>
+                <p class="text-xs text-yellow-600 mt-1">
+                    Contacta al administrador del sistema si necesitas acceso a este módulo.
+                </p>
             </div>
         </div>
     </div>
+    <?php else: ?>
+
+    <div class="mt-0 sm:mt-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900"><?php echo $data['page_title']; ?></h1>
+        <p class="text-green-600 text-base md:text-lg">Listado de personas registradas en el sistema</p>
+    </div>
+
+    <div class="bg-white p-4 md:p-6 mt-6 rounded-2xl shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <?php if ($permisos['crear']): ?>
+            <button id="btnAbrirModalRegistrarPersona"
+                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
+                <i class="fas fa-user-plus mr-1 md:mr-2"></i> Registrar Persona
+            </button>
+            <?php else: ?>
+            <div class="bg-gray-100 px-4 py-2 md:px-6 rounded-lg text-gray-500 text-sm md:text-base">
+                <i class="fas fa-lock mr-1 md:mr-2"></i> Sin permisos para crear personas
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="overflow-x-auto w-full relative">
+            <table id="TablaPersonas" class="display stripe hover responsive nowrap fuente-tabla-pequena" style="width:100%; min-width: 700px;">
+                <thead>
+                    <tr class="text-gray-600 text-xs uppercase tracking-wider bg-gray-50 border-b border-gray-200">
+                    </tr>
+                </thead>
+                <tbody class="text-gray-700 text-sm divide-y divide-gray-200">
+                </tbody>
+            </table>
+            <div id="loaderTablePersonas" class="flex justify-center items-center my-4" style="display: none;">
+                <div class="dot-flashing"></div>
+            </div>
+        </div>
+    </div>
+
+    <?php endif; // fin permisos ver ?>
 </main>
 
 <!-- Modal Registrar Persona -->
@@ -242,7 +274,14 @@
             </div>
 
             <div id="usuarioCamposActualizar" class="border-t border-gray-200 pt-6 mt-6">
-                <h4 class="text-lg font-semibold text-gray-700 mb-4">Datos de Acceso del Usuario</h4>
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700">Datos de Acceso del Usuario</h4>
+                    <button type="button" id="btnDesasociarUsuario"
+                        class="hidden px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition font-medium">
+                        <i class="fas fa-unlink mr-1"></i> Desasociar Usuario
+                    </button>
+                </div>
+                <div id="usuarioCamposActualizarContenido">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
                     <div>
                         <label for="correoUsuarioActualizar" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico (Login)</label>
@@ -261,6 +300,44 @@
                         <option value="">Seleccione un Rol</option>
                     </select>
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
+                </div> <!-- fin usuarioCamposActualizarContenido -->
+                <div id="sinUsuarioAsociado" class="hidden">
+                    <div class="text-center py-4 text-gray-400 mb-4" id="sinUsuarioMensaje">
+                        <i class="fas fa-user-slash text-3xl mb-2"></i>
+                        <p>Esta persona no tiene un usuario asociado.</p>
+                    </div>
+                    <!-- Checkbox para Asociar Usuario -->
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="asociarUsuarioCheck" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                        <label for="asociarUsuarioCheck" class="ml-2 block text-sm text-gray-900">¿Asociar un Usuario a esta Persona?</label>
+                    </div>
+                    <div id="asociarUsuarioCampos" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+                            <div>
+                                <label for="correoUsuarioAsociar" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico (Login) <span class="text-red-500">*</span></label>
+                                <input type="email" id="correoUsuarioAsociar" placeholder="usuario@dominio.com" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                            </div>
+                            <div>
+                                <label for="claveUsuarioAsociar" class="block text-sm font-medium text-gray-700 mb-1">Contraseña <span class="text-red-500">*</span></label>
+                                <input type="password" id="claveUsuarioAsociar" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="rolUsuarioAsociar" class="block text-sm font-medium text-gray-700 mb-1">Rol de Usuario <span class="text-red-500">*</span></label>
+                            <select id="rolUsuarioAsociar" class="w-full md:w-1/2 border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400">
+                                <option value="">Seleccione un Rol</option>
+                            </select>
+                            <div class="text-red-500 text-xs mt-1 error-message"></div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="btnConfirmarAsociarUsuario" class="px-4 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition font-medium">
+                                <i class="fas fa-link mr-1"></i> Asociar Usuario
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>

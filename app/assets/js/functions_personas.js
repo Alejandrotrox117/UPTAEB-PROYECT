@@ -9,6 +9,19 @@ import {
 } from "./validaciones.js";
 
 let tablaPersonas;
+let esSuperUsuarioPersonas = false;
+let idUsuarioPersonas = 0;
+
+/**
+ * Verifica si el usuario tiene un permiso específico en el módulo personas.
+ * Super usuarios siempre tienen todos los permisos.
+ */
+function tienePermisoPersonas(accion) {
+  if (esSuperUsuarioPersonas) {
+    return true;
+  }
+  return window.permisosPersonas && window.permisosPersonas[accion] === true;
+}
 
 const camposFormularioPersona = [
   {
@@ -193,12 +206,99 @@ const camposFormularioActualizarPersona = [
   },
 ];
 
+function verificarSuperUsuarioPersonas() {
+  return fetch("Personas/verificarSuperUsuario", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((result) => result)
+    .catch((error) => {
+      console.error("Error al verificar super usuario:", error);
+      return { status: false, es_super_usuario: false, usuario_id: 0 };
+    });
+}
+
+function recargarTablaPersonas() {
+  try {
+    if (tablaPersonas && tablaPersonas.ajax && typeof tablaPersonas.ajax.reload === 'function') {
+      tablaPersonas.ajax.reload(null, false);
+      return true;
+    }
+    window.location.reload();
+    return true;
+  } catch (error) {
+    console.error("Error al recargar tabla:", error);
+    window.location.reload();
+    return false;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   
   cargarRoles();
 
+  verificarSuperUsuarioPersonas().then((result) => {
+    if (result && result.status) {
+      esSuperUsuarioPersonas = result.es_super_usuario;
+      idUsuarioPersonas = result.usuario_id;
+    } else {
+      esSuperUsuarioPersonas = false;
+      idUsuarioPersonas = 0;
+    }
+
+    // Filtro: super usuarios ven todos, usuarios normales solo activos
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      if (settings.nTable.id !== "TablaPersonas") {
+        return true;
+      }
+      if (esSuperUsuarioPersonas) {
+        return true;
+      }
+      var api = new $.fn.dataTable.Api(settings);
+      var rowData = api.row(dataIndex).data();
+      return rowData && rowData.persona_estatus && rowData.persona_estatus.toUpperCase() !== "INACTIVO";
+    });
+
+    inicializarTablaPersonas();
+
+    setTimeout(() => {
+      if (tablaPersonas && typeof tablaPersonas.draw === 'function') {
+        tablaPersonas.draw(false);
+      }
+    }, 500);
+  }).catch((error) => {
+    console.error("Error en verificación de super usuario:", error);
+    esSuperUsuarioPersonas = false;
+    idUsuarioPersonas = 0;
+
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      if (settings.nTable.id !== "TablaPersonas") {
+        return true;
+      }
+      var api = new $.fn.dataTable.Api(settings);
+      var rowData = api.row(dataIndex).data();
+      return rowData && rowData.persona_estatus && rowData.persona_estatus.toUpperCase() !== "INACTIVO";
+    });
+
+    inicializarTablaPersonas();
+  });
+});
+
+function inicializarTablaPersonas() {
+  if (!tienePermisoPersonas('ver')) {
+    console.warn('Sin permisos para ver personas');
+    return;
+  }
+
   $(document).ready(function () {
-    
+    if ($.fn.DataTable.isDataTable('#TablaPersonas')) {
+      $('#TablaPersonas').DataTable().destroy();
+    }
+
     tablaPersonas = $("#TablaPersonas").DataTable({
       processing: true,
       ajax: {
@@ -233,33 +333,57 @@ document.addEventListener("DOMContentLoaded", function () {
         },
       },
       columns: [
-        { data: "persona_nombre", title: "Nombre" },
-        { data: "persona_apellido", title: "Apellido" },
-        { data: "persona_cedula", title: "Cédula" },
+        {
+          data: "persona_nombre",
+          title: "Nombre",
+          className: "all whitespace-nowrap py-2 px-3 text-gray-700 dt-fixed-col-background",
+        },
+        {
+          data: "persona_apellido",
+          title: "Apellido",
+          className: "all whitespace-nowrap py-2 px-3 text-gray-700",
+        },
+        {
+          data: "persona_cedula",
+          title: "Cédula",
+          className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
+        },
         {
           data: "persona_genero",
           title: "Género",
+          className: "desktop whitespace-nowrap py-2 px-3 text-gray-700",
           render: function (data, type, row) {
             if (data) {
               return data.charAt(0).toUpperCase() + data.slice(1);
             }
-            return '<i style="color: silver;">N/A</i>';
+            return '<span class="text-xs italic text-gray-500">N/A</span>';
           },
         },
-        { data: "telefono_principal", title: "Teléfono" },
+        {
+          data: "telefono_principal",
+          title: "Teléfono",
+          className: "tablet-l whitespace-nowrap py-2 px-3 text-gray-700",
+          render: function (data, type, row) {
+            if (data) {
+              return data;
+            }
+            return '<span class="text-xs italic text-gray-500">N/A</span>';
+          },
+        },
         {
           data: "persona_estatus",
           title: "Estatus",
+          className: "min-tablet-p text-center py-2 px-3",
           render: function (data, type, row) {
             if (data) {
               const estatusUpper = String(data).toUpperCase();
               if (estatusUpper === "ACTIVO") {
-                return `<span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">${data}</span>`;
+                return `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
               } else {
-                return `<span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">${data}</span>`;
+                return `<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
               }
             }
-            return '<i style="color: silver;">N/A</i>';
+            return '<span class="text-xs italic text-gray-500">N/A</span>';
           },
         },
         {
@@ -267,52 +391,150 @@ document.addEventListener("DOMContentLoaded", function () {
           title: "Acciones",
           orderable: false,
           searchable: false,
+          className: "all text-center actions-column py-1 px-2",
+          width: "auto",
           render: function (data, type, row) {
             const nombreCompleto = `${row.persona_nombre || ""} ${
               row.persona_apellido || ""
             }`.trim();
-            return `
-              <button class="ver-persona-btn text-green-500 hover:text-green-700 p-1" data-idpersona-pk="${row.idpersona_pk}" title="Ver detalles">
-                  <i class="fas fa-eye fa-lg"></i>
-              </button>
-              <button class="editar-persona-btn text-blue-500 hover:text-blue-700 p-1 ml-2" data-idpersona-pk="${row.idpersona_pk}" title="Editar">
-                  <i class="fas fa-edit fa-lg"></i>
-              </button>
-              <button class="eliminar-persona-btn text-red-500 hover:text-red-700 p-1 ml-2" data-idpersona-pk="${row.idpersona_pk}" data-nombre="${nombreCompleto}" title="Eliminar">
-                  <i class="fas fa-trash fa-lg"></i>
-              </button>
-            `;
+            const estatusPersona = (row.persona_estatus || "").toUpperCase();
+            const esInactivo = estatusPersona === "INACTIVO";
+
+            let acciones = '<div class="inline-flex items-center space-x-1">';
+
+            const idUsuarioAsociado = parseInt(row.usuario_id) || 0;
+            const esUsuarioPropio = idUsuarioAsociado > 0 && idUsuarioAsociado === idUsuarioPersonas;
+
+            // Botón Ver
+            if (tienePermisoPersonas('ver')) {
+              acciones += `
+                <button class="ver-persona-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                        data-idpersona-pk="${row.idpersona_pk}" 
+                        title="Ver detalles">
+                    <i class="fas fa-eye fa-fw text-base"></i>
+                </button>`;
+            }
+
+            if (esInactivo && esSuperUsuarioPersonas) {
+              acciones += `
+                <button class="reactivar-persona-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
+                        data-idpersona-pk="${row.idpersona_pk}" 
+                        data-nombre="${nombreCompleto}" 
+                        title="Reactivar persona">
+                    <i class="fas fa-undo fa-fw text-base"></i>
+                </button>`;
+            } else if (!esInactivo) {
+              if (tienePermisoPersonas('editar')) {
+                acciones += `
+                <button class="editar-persona-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                        data-idpersona-pk="${row.idpersona_pk}" 
+                        title="Editar">
+                    <i class="fas fa-edit fa-fw text-base"></i>
+                </button>`;
+              }
+              if (tienePermisoPersonas('eliminar') && !esUsuarioPropio) {
+                acciones += `
+                <button class="eliminar-persona-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                        data-idpersona-pk="${row.idpersona_pk}" 
+                        data-nombre="${nombreCompleto}" 
+                        title="Desactivar">
+                    <i class="fas fa-trash-alt fa-fw text-base"></i>
+                </button>`;
+              }
+            }
+
+            const tieneAlgunPermiso = tienePermisoPersonas('ver') ||
+              (esInactivo && esSuperUsuarioPersonas) ||
+              (!esInactivo && (tienePermisoPersonas('editar') || (tienePermisoPersonas('eliminar') && !esUsuarioPropio)));
+
+            if (!tieneAlgunPermiso) {
+              acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
+            }
+
+            acciones += '</div>';
+            return acciones;
           },
-          width: "120px",
-          className: "text-center",
         },
       ],
       language: {
-        decimal: "",
-        emptyTable: "No hay información disponible en la tabla",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-        infoFiltered: "(filtrado de _MAX_ entradas totales)",
-        lengthMenu: "Mostrar _MENU_ entradas",
-        loadingRecords: "Cargando...",
-        processing: "Procesando...",
-        search: "Buscar:",
-        zeroRecords: "No se encontraron registros coincidentes",
+        processing: `
+          <div class="fixed inset-0 bg-transparent backdrop-blur-[2px] bg-opacity-40 flex items-center justify-center z-[9999]" style="margin-left:0;">
+              <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-3">
+                  <i class="fas fa-spinner fa-spin fa-2x text-green-500"></i>
+                  <span class="text-lg font-medium text-gray-700">Procesando...</span>
+              </div>
+          </div>`,
+        emptyTable:
+          '<div class="text-center py-4"><i class="fas fa-users-slash fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No hay personas disponibles.</p></div>',
+        info: "Mostrando _START_ a _END_ de _TOTAL_ personas",
+        infoEmpty: "Mostrando 0 personas",
+        infoFiltered: "(filtrado de _MAX_ personas totales)",
+        lengthMenu: "Mostrar _MENU_ personas",
+        search: "_INPUT_",
+        searchPlaceholder: "Buscar persona...",
+        zeroRecords:
+          '<div class="text-center py-4"><i class="fas fa-user-times fa-2x text-gray-400 mb-2"></i><p class="text-gray-600">No se encontraron coincidencias.</p></div>',
         paginate: {
-          first: "Primero",
-          last: "Último",
-          next: "Siguiente",
-          previous: "Anterior",
-        },
-        aria: {
-          sortAscending: ": activar para ordenar la columna ascendentemente",
-          sortDescending: ": activar para ordenar la columna descendentemente",
+          first: '<i class="fas fa-angle-double-left"></i>',
+          last: '<i class="fas fa-angle-double-right"></i>',
+          next: '<i class="fas fa-angle-right"></i>',
+          previous: '<i class="fas fa-angle-left"></i>',
         },
       },
       destroy: true,
-      responsive: true,
+      responsive: {
+        details: {
+          type: "column",
+          target: -1,
+          renderer: function (api, rowIdx, columns) {
+            var data = $.map(columns, function (col, i) {
+              return col.hidden && col.title
+                ? `<tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}" class="bg-gray-50 hover:bg-gray-100">
+                    <td class="font-semibold pr-2 py-1.5 text-sm text-gray-700 w-1/3">${col.title}:</td>
+                    <td class="py-1.5 text-sm text-gray-900">${col.data}</td>
+                </tr>`
+                : "";
+            }).join("");
+            return data
+              ? $(
+                  '<table class="w-full table-fixed details-table border-t border-gray-200"/>'
+                ).append(data)
+              : false;
+          },
+        },
+      },
+      autoWidth: false,
       pageLength: 10,
-      order: [[1, "asc"]],
+      lengthMenu: [
+        [10, 25, 50, -1],
+        [10, 25, 50, "Todos"],
+      ],
+      order: [[0, "asc"]],
+      scrollX: true,
+      fixedColumns: {
+        left: 1,
+      },
+      className: "compact",
+      initComplete: function (settings, json) {
+        window.tablaPersonas = this.api();
+      },
+      drawCallback: function (settings) {
+        $(settings.nTableWrapper)
+          .find('.dataTables_filter input[type="search"]')
+          .addClass(
+            "py-2 px-3 text-sm border-gray-300 rounded-md focus:ring-green-400 focus:border-green-400 text-gray-700 bg-white"
+          )
+          .removeClass("form-control-sm");
+
+        var api = new $.fn.dataTable.Api(settings);
+        if (
+          api.fixedColumns &&
+          typeof api.fixedColumns === "function" &&
+          api.fixedColumns().relayout
+        ) {
+          api.fixedColumns().relayout();
+        }
+      },
     });
 
     
@@ -337,9 +559,20 @@ document.addEventListener("DOMContentLoaded", function () {
         eliminarPersona(idPersona, nombrePersona);
       }
     );
-  });
 
-  
+    $("#TablaPersonas tbody").on(
+      "click",
+      ".reactivar-persona-btn",
+      function () {
+        const idPersona = $(this).data("idpersona-pk");
+        const nombrePersona = $(this).data("nombre");
+        reactivarPersona(idPersona, nombrePersona);
+      }
+    );
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
   const btnAbrirModalRegistro = document.getElementById(
     "btnAbrirModalRegistrarPersona"
   );
@@ -431,6 +664,28 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Checkbox para asociar usuario en modo edición
+  const checkboxAsociarUsuario = document.getElementById("asociarUsuarioCheck");
+  const camposAsociarContainer = document.getElementById("asociarUsuarioCampos");
+  if (checkboxAsociarUsuario && camposAsociarContainer) {
+    checkboxAsociarUsuario.addEventListener("change", function () {
+      if (this.checked) {
+        camposAsociarContainer.classList.remove("hidden");
+      } else {
+        camposAsociarContainer.classList.add("hidden");
+      }
+    });
+  }
+
+  // Botón confirmar asociar usuario
+  const btnConfirmarAsociar = document.getElementById("btnConfirmarAsociarUsuario");
+  if (btnConfirmarAsociar) {
+    btnConfirmarAsociar.addEventListener("click", function () {
+      const idPersona = document.getElementById("idPersonaActualizar").value;
+      asociarUsuario(idPersona);
+    });
+  }
+
   
   const btnCerrarModalVer = document.getElementById("btnCerrarModalVer");
   const btnCerrarModalVer2 = document.getElementById("btnCerrarModalVer2");
@@ -494,12 +749,48 @@ function mostrarModalEditarPersona(persona) {
   document.getElementById("observacionesActualizar").value =
     persona.persona_observaciones || "";
 
-  
+  const btnDesasociar = document.getElementById("btnDesasociarUsuario");
+  const camposUsuarioContenido = document.getElementById("usuarioCamposActualizarContenido");
+  const sinUsuarioMsg = document.getElementById("sinUsuarioAsociado");
+
+  // Elementos de asociar usuario
+  const checkboxAsociar = document.getElementById("asociarUsuarioCheck");
+  const camposAsociar = document.getElementById("asociarUsuarioCampos");
+
   if (persona.idusuario) {
+    // Persona tiene usuario asociado: mostrar campos y botón desasociar
     document.getElementById("correoUsuarioActualizar").value =
       persona.correo_usuario_login || "";
     document.getElementById("rolActualizar").value = persona.idrol || "";
+    document.getElementById("claveActualizar").value = "";
     
+    if (camposUsuarioContenido) camposUsuarioContenido.classList.remove("hidden");
+    if (sinUsuarioMsg) sinUsuarioMsg.classList.add("hidden");
+    if (btnDesasociar) {
+      btnDesasociar.classList.remove("hidden");
+      btnDesasociar.onclick = function () {
+        desasociarUsuario(persona.idpersona_pk, persona.correo_usuario_login || "el usuario");
+      };
+    }
+  } else {
+    // Persona sin usuario asociado: ocultar campos, mostrar sección asociar
+    document.getElementById("correoUsuarioActualizar").value = "";
+    document.getElementById("rolActualizar").value = "";
+    document.getElementById("claveActualizar").value = "";
+
+    if (camposUsuarioContenido) camposUsuarioContenido.classList.add("hidden");
+    if (sinUsuarioMsg) sinUsuarioMsg.classList.remove("hidden");
+    if (btnDesasociar) btnDesasociar.classList.add("hidden");
+
+    // Reset campos de asociar
+    if (checkboxAsociar) checkboxAsociar.checked = false;
+    if (camposAsociar) camposAsociar.classList.add("hidden");
+    const correoAsociar = document.getElementById("correoUsuarioAsociar");
+    const claveAsociar = document.getElementById("claveUsuarioAsociar");
+    const rolAsociar = document.getElementById("rolUsuarioAsociar");
+    if (correoAsociar) correoAsociar.value = "";
+    if (claveAsociar) claveAsociar.value = "";
+    if (rolAsociar) rolAsociar.value = "";
   }
 
   
@@ -681,6 +972,16 @@ function cargarRoles() {
             '<option value="">Seleccione un rol</option>';
           result.data.forEach((rol) => {
             selectRolActualizar.innerHTML += `<option value="${rol.idrol}">${rol.nombre}</option>`;
+          });
+        }
+
+        // Poblar select de rol para asociar usuario
+        const selectRolAsociar = document.getElementById("rolUsuarioAsociar");
+        if (selectRolAsociar) {
+          selectRolAsociar.innerHTML =
+            '<option value="">Seleccione un Rol</option>';
+          result.data.forEach((rol) => {
+            selectRolAsociar.innerHTML += `<option value="${rol.idrol}">${rol.nombre}</option>`;
           });
         }
       }
@@ -882,12 +1183,12 @@ function mostrarModalVerPersona(persona) {
 function eliminarPersona(idPersona, nombrePersona) {
   Swal.fire({
     title: "¿Estás seguro?",
-    text: `¿Deseas eliminar a ${nombrePersona}? Esta acción no se puede deshacer.`,
+    text: `¿Deseas desactivar a ${nombrePersona}? Podrás reactivarla después.`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#dc2626",
     cancelButtonColor: "#00c950",
-    confirmButtonText: "Sí, eliminar",
+    confirmButtonText: "Sí, desactivar",
     cancelButtonText: "Cancelar",
   }).then((result) => {
     if (result.isConfirmed) {
@@ -906,16 +1207,153 @@ function eliminarPersona(idPersona, nombrePersona) {
         .then((response) => response.json())
         .then((result) => {
           if (result.status) {
-            Swal.fire("¡Eliminado!", result.message, "success");
-            if (typeof tablaPersonas !== "undefined" && tablaPersonas.ajax) {
-              tablaPersonas.ajax.reload(null, false);
-            }
+            Swal.fire("¡Desactivado!", result.message, "success");
+            recargarTablaPersonas();
           } else {
             Swal.fire(
               "Error",
-              result.message || "No se pudo eliminar la persona.",
+              result.message || "No se pudo desactivar la persona.",
               "error"
             );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
+        });
+    }
+  });
+}
+
+function reactivarPersona(idPersona, nombrePersona) {
+  Swal.fire({
+    title: "¿Reactivar persona?",
+    text: `¿Deseas reactivar a ${nombrePersona}? Su estatus cambiará a ACTIVO.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, reactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Personas/reactivarPersona", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idpersona_pk: idPersona }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Reactivado!", result.message || "Persona reactivada correctamente.", "success");
+            recargarTablaPersonas();
+          } else {
+            Swal.fire("Error", result.message || "No se pudo reactivar la persona.", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
+        });
+    }
+  });
+}
+
+function asociarUsuario(idPersona) {
+  const correo = document.getElementById("correoUsuarioAsociar").value.trim();
+  const clave = document.getElementById("claveUsuarioAsociar").value;
+  const rol = document.getElementById("rolUsuarioAsociar").value;
+
+  if (!correo || !clave || !rol) {
+    Swal.fire("Atención", "Correo, contraseña y rol son obligatorios.", "warning");
+    return;
+  }
+
+  Swal.fire({
+    title: "¿Asociar usuario?",
+    html: `Se creará un nuevo usuario con el correo <strong>${correo}</strong> asociado a esta persona.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, asociar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const btnConfirmar = document.getElementById("btnConfirmarAsociarUsuario");
+      if (btnConfirmar) {
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Asociando...`;
+      }
+
+      fetch("Personas/asociarUsuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({
+          idpersona_pk: idPersona,
+          correo_electronico_usuario: correo,
+          clave_usuario: clave,
+          idrol_usuario: rol,
+        }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Asociado!", result.message || "Usuario asociado correctamente.", "success");
+            cerrarModal("modalActualizarPersona");
+            recargarTablaPersonas();
+          } else {
+            Swal.fire("Error", result.message || "No se pudo asociar el usuario.", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
+        })
+        .finally(() => {
+          if (btnConfirmar) {
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerHTML = `<i class="fas fa-link mr-1"></i> Asociar Usuario`;
+          }
+        });
+    }
+  });
+}
+
+function desasociarUsuario(idPersona, correoUsuario) {
+  Swal.fire({
+    title: "¿Desasociar usuario?",
+    html: `¿Deseas desasociar el usuario <strong>${correoUsuario}</strong> de esta persona?<br><small class="text-gray-500">El usuario seguirá existiendo pero ya no estará vinculado a esta persona.</small>`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#ef4444",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, desasociar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Personas/desasociarUsuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idpersona_pk: idPersona }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Desasociado!", result.message || "Usuario desasociado correctamente.", "success");
+            cerrarModal("modalActualizarPersona");
+            recargarTablaPersonas();
+          } else {
+            Swal.fire("Error", result.message || "No se pudo desasociar el usuario.", "error");
           }
         })
         .catch((error) => {
