@@ -5,6 +5,7 @@ use App\Core\Controllers;
 use App\Models\NotificacionesModel;
 use App\Helpers\BitacoraHelper;
 use App\Helpers\PermisosModuloVerificar;
+use Exception;
 
 class Notificaciones extends Controllers
 {
@@ -14,7 +15,23 @@ class Notificaciones extends Controllers
         parent::__construct();
         $this->model = new NotificacionesModel();
         $this->BitacoraHelper = new BitacoraHelper();
-        if (!$this->BitacoraHelper->obtenerUsuarioSesion()) {
+        
+        // Solo verificar sesión si no es una solicitud AJAX a /notificaciones/getNotificaciones
+        // o si es un método que requiere autenticación
+        $usuarioId = $this->BitacoraHelper->obtenerUsuarioSesion();
+        
+        // Si es una solicitud AJAX, configurar header JSON y permitir sin autenticación
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        
+        if (!$usuarioId) {
+            // Si es AJAX, devolver JSON
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                echo json_encode(['status' => false, 'message' => 'No autenticado']);
+                die();
+            }
+            // Si no, redirigir a login
             header('Location: ' . base_url() . '/login');
             die();
         }
@@ -34,17 +51,17 @@ class Notificaciones extends Controllers
     public function getNotificaciones()
     {
         // LOG DE DEPURACIÓN - INICIO
-        error_log(" getNotificaciones - INICIADO");
+       
         
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            error_log(" getNotificaciones - Método GET verificado");
+            
             
             try {
                 $usuarioId = $this->obtenerUsuarioSesion();
-                error_log(" getNotificaciones - Usuario ID obtenido: " . ($usuarioId ?: 'NULL'));
+               
                 
                 if (!$usuarioId) {
-                    error_log(" getNotificaciones - ERROR: Usuario no autenticado");
+                   
                     $arrResponse = array(
                         'status' => false, 
                         'message' => 'Usuario no autenticado', 
@@ -55,10 +72,10 @@ class Notificaciones extends Controllers
                 }
 
                 $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
-                error_log(" getNotificaciones - Rol ID obtenido: " . ($rolId ?: 'NULL'));
+               
                 
                 if (!$rolId) {
-                    error_log(" getNotificaciones - ERROR: No se pudo obtener el rol del usuario");
+                   
                     $arrResponse = array(
                         'status' => false, 
                         'message' => 'No se pudo obtener el rol del usuario', 
@@ -72,14 +89,22 @@ class Notificaciones extends Controllers
                 $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 20;
                 $soloNoLeidas = isset($_GET['no_leidas']) ? (bool)$_GET['no_leidas'] : false;
 
-                error_log(" getNotificaciones - Llamando al modelo para obtener notificaciones");
+               
                 $arrResponse = $this->model->obtenerNotificacionesPorUsuario($usuarioId, $rolId);
-                error_log(" getNotificaciones - Respuesta del modelo: " . json_encode($arrResponse));
+               
+                
+                // Si la respuesta no tiene status, agregar
+                if (!isset($arrResponse['status'])) {
+                    $arrResponse['status'] = true;
+                }
+                if (!isset($arrResponse['data'])) {
+                    $arrResponse['data'] = [];
+                }
                 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                 
             } catch (Exception $e) {
-                error_log(" getNotificaciones - EXCEPCIÓN: " . $e->getMessage());
+               
                 $response = array(
                     'status' => false, 
                     'message' => 'Error interno del servidor', 
@@ -89,7 +114,7 @@ class Notificaciones extends Controllers
             }
             die();
         } else {
-            error_log(" getNotificaciones - ERROR: Método no es GET, es: " . $_SERVER['REQUEST_METHOD']);
+           
         }
     }
 
@@ -119,7 +144,7 @@ class Notificaciones extends Controllers
                 $count = $this->model->contarNotificacionesNoLeidas($usuarioId, $rolId);
                 echo json_encode(array('count' => $count), JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
-                error_log("Error en getContadorNotificaciones: " . $e->getMessage());
+
                 echo json_encode(array('count' => 0), JSON_UNESCAPED_UNICODE);
             }
             die();
@@ -158,48 +183,7 @@ class Notificaciones extends Controllers
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
-                error_log("Error en marcarLeida: " . $e->getMessage());
-                $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
-                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            }
-            die();
-        }
-    }
-
-    public function marcarTodasLeidas()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                $usuarioId = $this->obtenerUsuarioSesion();
-                
-                $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
-                
-                if (!$rolId) {
-                    $arrResponse = array(
-                        'status' => false, 
-                        'message' => 'No se pudo obtener el rol del usuario', 
-                        'data' => []
-                    );
-                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-                    die();
-                }
-
-                if (!$usuarioId || !$rolId) {
-                    $arrResponse = array('status' => false, 'message' => 'Usuario no autenticado');
-                    echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-                    die();
-                }
-
-                $resultado = $this->model->marcarTodasComoLeidas($usuarioId, $rolId);
-                
-                $arrResponse = array(
-                    'status' => true, 
-                    'message' => "Se marcaron {$resultado} notificaciones como leídas"
-                );
-
-                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
-            } catch (Exception $e) {
-                error_log("Error en marcarTodasLeidas: " . $e->getMessage());
+               
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
@@ -221,7 +205,7 @@ class Notificaciones extends Controllers
 
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             } catch (Exception $e) {
-                error_log("Error en generarNotificacionesProductos: " . $e->getMessage());
+               
                 $arrResponse = array('status' => false, 'message' => 'Error interno del servidor');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
             }
@@ -266,9 +250,53 @@ class Notificaciones extends Controllers
     }
 
     // MÉTODO TEMPORAL DE PRUEBA - ELIMINAR DESPUÉS
+    public function obtenerNotificaciones()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            try {
+                $usuarioId = $this->obtenerUsuarioSesion();
+                
+                if (!$usuarioId) {
+                    echo json_encode([
+                        'status' => false, 
+                        'message' => 'Usuario no autenticado', 
+                        'data' => []
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
+                
+                if (!$rolId) {
+                    echo json_encode([
+                        'status' => false, 
+                        'message' => 'No se pudo obtener el rol del usuario', 
+                        'data' => []
+                    ], JSON_UNESCAPED_UNICODE);
+                    die();
+                }
+
+                // Obtener notificaciones no leídas
+                $arrResponse = $this->model->obtenerNotificacionesPorUsuario($usuarioId, $rolId);
+                
+                echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
+                
+            } catch (Exception $e) {
+                
+                
+                echo json_encode([
+                    'status' => false, 
+                    'message' => 'Error interno del servidor', 
+                    'data' => []
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            die();
+        }
+    }
+
     public function getNotificacionesSimple()
     {
-        error_log(" getNotificacionesSimple - INICIADO");
+       
         
         // Respuesta de prueba
         $response = [
@@ -294,8 +322,102 @@ class Notificaciones extends Controllers
         
         header('Content-Type: application/json');
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        error_log(" getNotificacionesSimple - RESPUESTA ENVIADA");
+       
+        die();
+    }
+
+    /**
+     * Marcar notificación como leída
+     */
+    public function marcarComoLeida()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            die();
+        }
+
+        try {
+            $usuarioId = $this->obtenerUsuarioSesion();
+            if (!$usuarioId) {
+                echo json_encode(['status' => false, 'message' => 'No autenticado']);
+                die();
+            }
+
+            $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($data['idnotificacion'])) {
+                echo json_encode(['status' => false, 'message' => 'ID inválido']);
+                die();
+            }
+
+            $resultado = $this->model->marcarComoLeidaCompleto($data['idnotificacion'], $usuarioId, $rolId);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            
+        } catch (\Exception $e) {
+            echo json_encode(['status' => false, 'message' => $e->getMessage()]);
+        }
+        die();
+    }
+
+    /**
+     * Marcar todas las notificaciones como leídas
+     */
+    public function marcarTodasLeidas()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            die();
+        }
+
+        try {
+            $usuarioId = $this->obtenerUsuarioSesion();
+            if (!$usuarioId) {
+                echo json_encode(['status' => false, 'message' => 'No autenticado']);
+                die();
+            }
+
+            $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
+            $resultado = $this->model->marcarTodasComoLeidasCompleto($usuarioId, $rolId);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            
+        } catch (\Exception $e) {
+            echo json_encode(['status' => false, 'message' => $e->getMessage()]);
+        }
+        die();
+    }
+
+    /**
+     * Eliminar una notificación
+     */
+    public function eliminarNotificacion()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+            http_response_code(405);
+            die();
+        }
+
+        try {
+            $usuarioId = $this->obtenerUsuarioSesion();
+            if (!$usuarioId) {
+                echo json_encode(['status' => false, 'message' => 'No autenticado']);
+                die();
+            }
+
+            $rolId = $this->model->obtenerRolPorUsuario($usuarioId);
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($data['idnotificacion'])) {
+                echo json_encode(['status' => false, 'message' => 'ID inválido']);
+                die();
+            }
+
+            $resultado = $this->model->eliminarNotificacion($data['idnotificacion'], $usuarioId, $rolId);
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+            
+        } catch (\Exception $e) {
+            echo json_encode(['status' => false, 'message' => $e->getMessage()]);
+        }
         die();
     }
 }
-?>

@@ -3,8 +3,10 @@ namespace App\Models;
 
 use App\Core\Mysql;
 use App\Core\Conexion;
+use App\Models\ProductosModel;
 use PDO;
 use PDOException;
+use Exception;
 
 class MovimientosModel 
 {
@@ -214,7 +216,7 @@ class MovimientosModel
                 FROM movimientos_existencia m
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
-                WHERE m.estatus != 'eliminado'
+                WHERE m.estatus = 'activo'
                 ORDER BY COALESCE(m.fecha_creacion, m.idmovimiento) DESC"
             );
             
@@ -375,6 +377,12 @@ class MovimientosModel
                     $this->getIdproducto()
                 ]);
                 
+                error_log("🔔 Movimiento registrado, verificando stock para producto ID: " . $this->getIdproducto());
+                
+                // Verificar stock y notificar si es necesario
+                $productosModel = new ProductosModel();
+                $productosModel->verificarStockYNotificar($this->getIdproducto());
+                
                 $db->commit();
                 $this->setStatus(true);
                 $this->setMessage('Movimiento registrado correctamente.');
@@ -478,6 +486,10 @@ class MovimientosModel
                     $this->getStockResultante(),
                     $this->getIdproducto()
                 ]);
+                
+                // Verificar stock y notificar si es necesario
+                $productosModel = new ProductosModel();
+                $productosModel->verificarStockYNotificar($this->getIdproducto());
                 
                 $db->commit();
                 $resultado = [
@@ -594,6 +606,10 @@ class MovimientosModel
 
             $updateProducto = $db->prepare("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
             $updateProducto->execute([$stockDespuesAnulacion, $original['idproducto']]);
+
+            // Verificar stock y notificar si es necesario
+            $productosModel = new ProductosModel();
+            $productosModel->verificarStockYNotificar($original['idproducto']);
 
             $stmtMarcarAnulado = $db->prepare("UPDATE movimientos_existencia SET estatus = 'inactivo', fecha_modificacion = NOW() WHERE idmovimiento = ?");
             $stmtMarcarAnulado->execute([$idmovimiento]);
@@ -728,7 +744,7 @@ class MovimientosModel
                 FROM movimientos_existencia m
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
-                WHERE m.estatus != 'eliminado' 
+                WHERE m.estatus = 'activo' 
                 AND (COALESCE(m.numero_movimiento, CONCAT('MOV-', m.idmovimiento)) LIKE ? 
                      OR p.nombre LIKE ? 
                      OR tm.nombre LIKE ? 
@@ -892,17 +908,22 @@ class MovimientosModel
      * Insertar nuevo movimiento
      */
     public function insertMovimiento(array $data){
+        error_log("🔵 insertMovimiento llamado con datos: " . json_encode($data));
+        
         $this->setData($data);
         
       
         $validacion = $this->validarDatosMovimiento($this->getData());
         if (!$validacion['valido']) {
+            error_log("❌ Validación falló: " . $validacion['mensaje']);
             return [
                 'status' => false,
                 'message' => $validacion['mensaje'],
                 'data' => null
             ];
         }
+        
+        error_log("✅ Validación OK, ejecutando inserción...");
 
         return $this->ejecutarInsercionMovimiento($this->getData());
     }
@@ -993,6 +1014,10 @@ class MovimientosModel
             $updateProducto1 = $db->prepare("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
             $updateProducto1->execute([$stockDespuesAnulacion, $original['idproducto']]);
 
+            // Verificar stock y notificar si es necesario
+            $productosModel = new ProductosModel();
+            $productosModel->verificarStockYNotificar($original['idproducto']);
+
             $stmtMarcarAnulado = $db->prepare("UPDATE movimientos_existencia SET estatus = 'inactivo', fecha_modificacion = NOW() WHERE idmovimiento = ?");
             $stmtMarcarAnulado->execute([$idmovimiento]);
 
@@ -1049,6 +1074,10 @@ class MovimientosModel
 
             $updateProducto2 = $db->prepare("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
             $updateProducto2->execute([$this->getStockResultante(), $this->getIdproducto()]);
+
+            // Verificar stock y notificar si es necesario
+            $productosModel = new ProductosModel();
+            $productosModel->verificarStockYNotificar($this->getIdproducto());
 
             $db->commit();
 

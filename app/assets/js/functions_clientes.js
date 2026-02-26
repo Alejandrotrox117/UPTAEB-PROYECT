@@ -9,6 +9,8 @@ import {
 } from "./validaciones.js";
 
 let tablaClientes;
+let esSuperUsuarioClientes = false;
+let idUsuarioClientes = 0;
 
 const camposFormularioCliente = [
   {
@@ -154,7 +156,41 @@ function cerrarModalPermisosDenegados() {
 
 
 function tienePermiso(accion) {
+  if (esSuperUsuarioClientes) {
+    return true;
+  }
   return window.permisosClientes && window.permisosClientes[accion] === true;
+}
+
+function verificarSuperUsuarioClientes() {
+  return fetch("clientes/verificarSuperUsuario", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then((response) => response.json())
+    .then((result) => result)
+    .catch((error) => {
+      console.error("Error al verificar super usuario:", error);
+      return { status: false, es_super_usuario: false, usuario_id: 0 };
+    });
+}
+
+function recargarTablaClientes() {
+  try {
+    if (tablaClientes && tablaClientes.ajax && typeof tablaClientes.ajax.reload === 'function') {
+      tablaClientes.ajax.reload(null, false);
+      return true;
+    }
+    window.location.reload();
+    return true;
+  } catch (error) {
+    console.error("Error al recargar tabla:", error);
+    window.location.reload();
+    return false;
+  }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -165,6 +201,25 @@ document.addEventListener("DOMContentLoaded", function () {
     btnCerrarModalPermisos.addEventListener('click', cerrarModalPermisosDenegados);
   }
 
+  verificarSuperUsuarioClientes().then((result) => {
+    if (result && result.status) {
+      esSuperUsuarioClientes = result.es_super_usuario;
+      idUsuarioClientes = result.usuario_id;
+    } else {
+      esSuperUsuarioClientes = false;
+      idUsuarioClientes = 0;
+    }
+
+    inicializarModuloClientes();
+  }).catch((error) => {
+    console.error("Error verificando super usuario, inicializando sin permisos elevados:", error);
+    esSuperUsuarioClientes = false;
+    idUsuarioClientes = 0;
+    inicializarModuloClientes();
+  });
+});
+
+function inicializarModuloClientes() {
   $(document).ready(function () {
     
     if (!tienePermiso('ver')) {
@@ -300,9 +355,11 @@ document.addEventListener("DOMContentLoaded", function () {
           width: "auto",
           render: function (data, type, row) {
             const nombreClienteParaEliminar = `${row.nombre} ${row.apellido}` || row.cedula;
+            const estatusCliente = (row.estatus || '').toLowerCase();
+            const esInactivo = estatusCliente === 'inactivo';
             let acciones = '<div class="inline-flex items-center space-x-1">';
             
-            
+            // Botón Ver
             if (tienePermiso('ver')) {
               acciones += `
                 <button class="ver-cliente-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
@@ -312,29 +369,43 @@ document.addEventListener("DOMContentLoaded", function () {
                 </button>`;
             }
             
-            
-            if (tienePermiso('editar')) {
+            if (esInactivo && esSuperUsuarioClientes) {
+              // Para clientes inactivos, mostrar solo botón de reactivar (solo super usuarios)
               acciones += `
-                <button class="editar-cliente-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
-                        data-idcliente="${row.idcliente}" 
-                        title="Editar">
-                    <i class="fas fa-edit fa-fw text-base"></i>
-                </button>`;
-            }
-            
-            
-            if (tienePermiso('eliminar')) {
-              acciones += `
-                <button class="eliminar-cliente-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                <button class="reactivar-cliente-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" 
                         data-idcliente="${row.idcliente}" 
                         data-nombre="${nombreClienteParaEliminar}" 
-                        title="Desactivar">
-                    <i class="fas fa-trash-alt fa-fw text-base"></i>
+                        title="Reactivar cliente">
+                    <i class="fas fa-undo fa-fw text-base"></i>
                 </button>`;
+            } else if (!esInactivo) {
+              // Botón Editar
+              if (tienePermiso('editar')) {
+                acciones += `
+                  <button class="editar-cliente-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" 
+                          data-idcliente="${row.idcliente}" 
+                          title="Editar">
+                      <i class="fas fa-edit fa-fw text-base"></i>
+                  </button>`;
+              }
+              
+              // Botón Eliminar
+              if (tienePermiso('eliminar')) {
+                acciones += `
+                  <button class="eliminar-cliente-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" 
+                          data-idcliente="${row.idcliente}" 
+                          data-nombre="${nombreClienteParaEliminar}" 
+                          title="Desactivar">
+                      <i class="fas fa-trash-alt fa-fw text-base"></i>
+                  </button>`;
+              }
             }
             
-            
-            if (!tienePermiso('ver') && !tienePermiso('editar') && !tienePermiso('eliminar')) {
+            const tieneAlgunPermiso = tienePermiso('ver') ||
+              (esInactivo && esSuperUsuarioClientes) ||
+              (!esInactivo && (tienePermiso('editar') || tienePermiso('eliminar')));
+
+            if (!tieneAlgunPermiso) {
               acciones += '<span class="text-gray-400 text-xs">Sin permisos</span>';
             }
             
@@ -476,6 +547,17 @@ document.addEventListener("DOMContentLoaded", function () {
         Swal.fire("Error", "No se pudo obtener el ID del cliente.", "error");
       }
     });
+
+    $("#Tablaclientes tbody").on("click", ".reactivar-cliente-btn", function (e) {
+      e.preventDefault();
+      const idCliente = $(this).data("idcliente");
+      const nombreCliente = $(this).data("nombre");
+      if (idCliente) {
+        reactivarCliente(idCliente, nombreCliente);
+      } else {
+        Swal.fire("Error", "No se pudo obtener el ID del cliente.", "error");
+      }
+    });
   });
 
   
@@ -555,7 +637,7 @@ document.addEventListener("DOMContentLoaded", function () {
   
   if (btnCerrarModalVer) btnCerrarModalVer.addEventListener("click", () => cerrarModal("modalVerCliente"));
   if (btnCerrarModalVer2) btnCerrarModalVer2.addEventListener("click", () => cerrarModal("modalVerCliente"));
-});
+}
 
 function registrarCliente() {
  
@@ -900,6 +982,40 @@ function eliminarCliente(idCliente, nombreCliente) {
           } else {
             Swal.fire("Error", "Error de conexión.", "error");
           }
+        });
+    }
+  });
+}
+
+function reactivarCliente(idCliente, nombreCliente) {
+  Swal.fire({
+    title: "¿Reactivar cliente?",
+    text: `¿Deseas reactivar a ${nombreCliente}? Su estatus cambiará a ACTIVO.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, reactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("clientes/reactivarCliente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        body: JSON.stringify({ idcliente: idCliente }),
+      })
+        .then(response => response.json())
+        .then(result => {
+          if (result.status) {
+            Swal.fire("¡Reactivado!", result.message || "Cliente reactivado correctamente.", "success");
+            recargarTablaClientes();
+          } else {
+            Swal.fire("Error", result.message || "No se pudo reactivar el cliente.", "error");
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
         });
     }
   });

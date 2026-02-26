@@ -14,7 +14,7 @@ $permisos = $data['permisos'] ?? []; ?>
       <div class="flex justify-between items-center mb-4">
         <?php if ($permisos['puede_crear']): ?>
           <button id="abrirModalBtn" class="bg-green-500 text-white px-6 py-2 rounded-lg font-semibold">
-            Registrar Venta
+            <i class="fas fa-plus mr-2"></i>Registrar Venta
           </button>
         <?php else: ?>
           <div class="text-gray-500 text-sm">

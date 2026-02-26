@@ -4,6 +4,7 @@ import {
   validarCamposVacios,
   validarCampo,
   validarSelect,
+  expresiones
 } from "./validaciones.js";
 
 let tablaRoles;
@@ -12,12 +13,15 @@ const camposFormularioRol = [
   {
     id: "nombreRol",
     tipo: "input",
-    mensajes: { vacio: "El nombre del rol es obligatorio." },
+    mensajes: { vacio: "El nombre del rol es obligatorio.", formato: "El nombre debe tener entre 3 y 50 caracteres, solo letras y espacios." },
+    expresion: expresiones.nombre
   },
   {
     id: "descripcionRol",
     tipo: "textarea",
-    mensajes: { vacio: "La descripción del rol es obligatoria." },
+    opcional: true,
+    mensajes: { vacio: "La descripción es obligatoria." },
+    expresion: expresiones.textoGeneral
   },
   {
     id: "estatusRol",
@@ -30,12 +34,14 @@ const camposFormularioActualizarRol = [
   {
     id: "nombreActualizar",
     tipo: "input",
-    mensajes: { vacio: "El nombre del rol es obligatorio." },
+    mensajes: { vacio: "El nombre del rol es obligatorio.", formato: "El nombre debe tener entre 3 y 50 caracteres, solo letras y espacios." },
+    expresion: expresiones.nombre
   },
   {
     id: "descripcionActualizar",
     tipo: "textarea",
-    mensajes: { vacio: "La descripción del rol es obligatoria." },
+    mensajes: { vacio: "La descripción del rol es obligatoria.", formato: "La descripción debe tener entre 10 y 255 caracteres." },
+    expresion: expresiones.textoGeneral
   },
   {
     id: "estatusActualizar",
@@ -98,11 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ajax: {
       url: "Roles/getRolesData",
       type: "GET",
-      /**
-       * ✅ FUNCIÓN MODIFICADA: Filtra los datos antes de mostrarlos.
-       * Si el usuario NO es superusuario, se elimina el rol con ID 1 de la lista.
-       * Esto oculta el rol de "Superusuario" a todos los demás.
-       */
+
       dataSrc: function (json) {
         if (!json.data) {
           return [];
@@ -227,6 +229,26 @@ function registrarRol() {
   const form = document.getElementById("formRegistrarRol");
   if (!validarCamposVacios(camposFormularioRol, "formRegistrarRol")) return;
 
+  // Validar expresiones y formatos
+  let formularioValido = true;
+  camposFormularioRol.forEach(campo => {
+    if (campo.opcional) return;
+
+    const inputElement = form.querySelector(`#${campo.id}`);
+    if (!inputElement || inputElement.offsetParent === null) return;
+
+    let esValido = true;
+    if (campo.tipo === "select") {
+      esValido = validarSelect(inputElement, campo.mensajes);
+    } else if (campo.expresion) {
+      esValido = validarCampo(inputElement, campo.expresion, campo.mensajes);
+    }
+
+    if (!esValido) formularioValido = false;
+  });
+
+  if (!formularioValido) return;
+
   const formData = new FormData(form);
   const data = Object.fromEntries(formData.entries());
 
@@ -273,6 +295,26 @@ function actualizarRol() {
   const form = document.getElementById("formActualizarRol");
   if (!validarCamposVacios(camposFormularioActualizarRol, "formActualizarRol"))
     return;
+
+  // Validar expresiones y formatos
+  let formularioValido = true;
+  camposFormularioActualizarRol.forEach(campo => {
+    if (campo.opcional) return;
+
+    const inputElement = form.querySelector(`#${campo.id}`);
+    if (!inputElement || inputElement.offsetParent === null) return;
+
+    let esValido = true;
+    if (campo.tipo === "select") {
+      esValido = validarSelect(inputElement, campo.mensajes);
+    } else if (campo.expresion) {
+      esValido = validarCampo(inputElement, campo.expresion, campo.mensajes);
+    }
+
+    if (!esValido) formularioValido = false;
+  });
+
+  if (!formularioValido) return;
 
   const formData = new FormData(form);
   const data = Object.fromEntries(formData.entries());

@@ -468,4 +468,5 @@ $permisos = $data['permisos'];
     </div>
 </div>
 
+<script src="<?= base_url('app/assets/js/ayuda/movimientos-tour.js'); ?>"></script>
 <?php footerAdmin($data); ?>

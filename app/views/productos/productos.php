@@ -102,6 +102,13 @@
                     </select>
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
+
+                <div>
+                    <label for="productoStockMinimo" class="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo</label>
+                    <input type="number" id="productoStockMinimo" name="stock_minimo" step="1" min="0" placeholder="0" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm">
+                    <p class="text-gray-500 text-xs mt-1">Cantidad mínima antes de generar alerta</p>
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
             </div>
         </form>
         <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
@@ -113,6 +120,7 @@
             </button>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Modal Actualizar Producto -->
@@ -184,6 +192,13 @@
                     </select>
                     <div class="text-red-500 text-xs mt-1 error-message"></div>
                 </div>
+
+                <div>
+                    <label for="productoStockMinimoActualizar" class="block text-sm font-medium text-gray-700 mb-1">Stock Mínimo</label>
+                    <input type="number" id="productoStockMinimoActualizar" name="stock_minimo" step="1" min="0" placeholder="0" class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm">
+                    <p class="text-gray-500 text-xs mt-1">Cantidad mínima antes de generar alerta</p>
+                    <div class="text-red-500 text-xs mt-1 error-message"></div>
+                </div>
             </div>
         </form>
         <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
@@ -200,61 +215,58 @@
 <!-- Modal Ver Producto -->
 <div id="modalVerProducto" class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-50 p-4">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-4xl max-h-[95vh]">
-        <div class="bg-white rounded-lg shadow-xl w-full max-h-[calc(95vh-80px)] sm:max-h-[90vh]">
-            <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
-                <h3 class="text-lg md:text-xl font-semibold text-gray-900">
-                    <i class="fas fa-eye mr-2 text-green-600"></i>
-                    Detalles del Producto
-                </h3>
-                <button id="btnCerrarModalVer" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="p-4 md:p-6 overflow-y-auto max-h-[calc(95vh-180px)] sm:max-h-[70vh]">
-                <div class="mb-6">
-                    <h4 class="text-base md:text-lg font-medium text-gray-900 mb-4">
-                        <i class="fas fa-box mr-2 text-green-600"></i>
-                        Información del Producto
-                    </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500">Nombre</label>
-                            <p id="verProductoNombre" class="text-gray-900 font-medium">-</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500">Categoría</label>
-                            <p id="verProductoCategoria" class="text-gray-900 font-medium">-</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500">Unidad de Medida</label>
-                            <p id="verProductoUnidadMedida" class="text-gray-900 font-medium">-</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500">Precio</label>
-                            <p id="verProductoPrecio" class="text-gray-900 font-medium">-</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500">Existencia</label>
-                            <p id="verProductoExistencia" class="text-gray-900 font-medium">-</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500">Estatus</label>
-                            <p id="verProductoEstatus" class="text-gray-900 font-medium">-</p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-medium text-gray-500">Descripción</label>
-                            <p id="verProductoDescripcion" class="text-gray-900 font-medium">-</p>
-                        </div>
+        <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
+            <h3 class="text-lg md:text-xl font-semibold text-gray-900">
+                <i class="fas fa-eye mr-2 text-green-600"></i>
+                Detalles del Producto
+            </h3>
+            <button id="btnCerrarModalVer" type="button" class="text-gray-500 hover:text-gray-700 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-4 md:p-6 overflow-y-auto max-h-[calc(95vh-180px)] sm:max-h-[70vh]">
+            <div class="mb-6">
+                <h4 class="text-base md:text-lg font-medium text-gray-900 mb-4">
+                    <i class="fas fa-box mr-2 text-green-600"></i>
+                    Información del Producto
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Nombre</label>
+                        <p id="verProductoNombre" class="text-gray-900 font-medium">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Categoría</label>
+                        <p id="verProductoCategoria" class="text-gray-900 font-medium">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Unidad de Medida</label>
+                        <p id="verProductoUnidadMedida" class="text-gray-900 font-medium">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Precio</label>
+                        <p id="verProductoPrecio" class="text-gray-900 font-medium">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Existencia</label>
+                        <p id="verProductoExistencia" class="text-gray-900 font-medium">-</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500">Estatus</label>
+                        <p id="verProductoEstatus" class="text-gray-900 font-medium">-</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-medium text-gray-500">Descripción</label>
+                        <p id="verProductoDescripcion" class="text-gray-900 font-medium">-</p>
                     </div>
                 </div>
-                <div class="flex justify-end pt-4 md:pt-6 border-t border-gray-200">
-                    <button type="button" id="btnCerrarModalVer2"
-                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 text-sm md:text-base">
-                        <i class="fas fa-times mr-1 md:mr-2"></i>
-                        Cerrar
-                    </button>
-                </div>
             </div>
+        </div>
+        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex justify-end">
+            <button type="button" id="btnCerrarModalVer2" class="px-4 py-2 md:px-6 md:py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 text-sm md:text-base">
+                <i class="fas fa-times mr-1 md:mr-2"></i>
+                Cerrar
+            </button>
         </div>
     </div>
 </div>

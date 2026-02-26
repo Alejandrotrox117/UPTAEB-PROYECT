@@ -1031,6 +1031,28 @@ class PagosModel extends Mysql
     public function selectTiposPago(){
         return $this->ejecutarBusquedaTiposPago();
     }
+    
+    public function verificarTipoPagoExiste(int $idtipo_pago){
+        try {
+            $conexion = new Conexion();
+            $conexion->connect();
+            $db = $conexion->get_conectGeneral();
+            
+            $this->setQuery("SELECT COUNT(*) as total FROM tipos_pagos WHERE idtipo_pago = ? AND estatus = 'activo'");
+            $this->setArray([$idtipo_pago]);
+            
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute($this->getArray());
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $conexion->disconnect();
+            
+            return $result && $result['total'] > 0;
+        } catch (Exception $e) {
+            error_log("Error al verificar tipo de pago: " . $e->getMessage());
+            return false;
+        }
+    }
 
     public function selectComprasPendientes(){
         return $this->ejecutarBusquedaComprasPendientes();

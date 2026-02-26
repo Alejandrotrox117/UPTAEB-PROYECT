@@ -260,4 +260,7 @@
     </div>
 </div>
 
+<!-- Scripts específicos para el tour de ayuda -->
+<script src="<?= base_url('app/assets/js/ayuda/proveedores-tour.js'); ?>"></script>
+
 <?php footerAdmin($data); ?>

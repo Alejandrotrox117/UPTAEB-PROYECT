@@ -3,6 +3,7 @@ namespace App\Models;
 
 use App\Core\Mysql;
 use App\Core\Conexion;
+use App\Helpers\NotificacionHelper;
 use PDO;
 use PDOException;
 use Exception;
@@ -16,11 +17,10 @@ class ProductosModel extends Mysql
     private $productoId;
     private $message;
     private $status;
-    private $notificacionesModel;
  
     public function __construct()
     {
-        $this->notificacionesModel = new NotificacionesModel();
+        // Constructor sin NotificacionesModel
     }
 
     // Getters y Setters
@@ -121,9 +121,9 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "INSERT INTO producto (
                     nombre, descripcion, unidad_medida, precio, 
-                    idcategoria, moneda, estatus, existencia,
+                    idcategoria, moneda, estatus, existencia, stock_minimo,
                     fecha_creacion, ultima_modificacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
             );
             
             $this->setArray([
@@ -134,7 +134,8 @@ class ProductosModel extends Mysql
                 $data['idcategoria'],
                 $data['moneda'],
                 'ACTIVO',
-                0 
+                0,
+                intval($data['stock_minimo'] ?? 0)
             ]);
             
             $stmt = $db->prepare($this->getQuery());
@@ -145,8 +146,8 @@ class ProductosModel extends Mysql
                 $this->setStatus(true);
                 $this->setMessage('Producto registrado exitosamente.');
                 
-                // Crear notificación de nuevo producto
-                $this->crearNotificacionNuevoProducto($data['nombre'], $this->getProductoId());
+                // Notificar nuevo producto vía WebSocket
+                $this->notificarNuevoProducto($data['nombre'], $this->getProductoId());
             } else {
                 $this->setStatus(false);
                 $this->setMessage('Error al obtener ID de producto tras registro.');
@@ -182,7 +183,7 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "UPDATE producto SET 
                     nombre = ?, descripcion = ?, unidad_medida = ?, 
-                    precio = ?, idcategoria = ?, moneda = ?, 
+                    precio = ?, idcategoria = ?, moneda = ?, stock_minimo = ?,
                     ultima_modificacion = NOW() 
                 WHERE idproducto = ?"
             );
@@ -194,6 +195,7 @@ class ProductosModel extends Mysql
                 $data['precio'],
                 $data['idcategoria'],
                 $data['moneda'],
+                intval($data['stock_minimo'] ?? 0),
                 $idproducto
             ]);
             
@@ -206,7 +208,7 @@ class ProductosModel extends Mysql
                 $this->setMessage('Producto actualizado exitosamente.');
                 
                 // Crear notificación de producto actualizado
-                $this->crearNotificacionProductoActualizado($data['nombre'], $idproducto);
+                $this->notificarProductoActualizado($data['nombre'], $idproducto);
             } else {
                 $this->setStatus(false);
                 $this->setMessage('No se pudo actualizar el producto o no se realizaron cambios.');
@@ -240,7 +242,7 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "SELECT 
                     p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
-                    p.precio, p.existencia, p.idcategoria, p.moneda, p.estatus,
+                    p.precio, p.existencia, p.stock_minimo, p.idcategoria, p.moneda, p.estatus,
                     p.fecha_creacion, p.ultima_modificacion,
                     c.nombre as categoria_nombre,
                     DATE_FORMAT(p.fecha_creacion, ?) as fecha_creacion_formato,
@@ -290,7 +292,7 @@ class ProductosModel extends Mysql
             
             if ($resultado && $producto) {
                 // Crear notificación de producto desactivado
-                $this->crearNotificacionProductoDesactivado($producto['nombre'], $idproducto);
+                $this->notificarProductoDesactivado($producto['nombre'], $idproducto);
             }
             
         } catch (Exception $e) {
@@ -312,7 +314,7 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "SELECT 
                     p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
-                    p.precio, p.existencia, p.idcategoria, p.moneda, p.estatus,
+                    p.precio, p.existencia, p.stock_minimo, p.idcategoria, p.moneda, p.estatus,
                     p.fecha_creacion, p.ultima_modificacion,
                     c.nombre as categoria_nombre,
                     DATE_FORMAT(p.fecha_creacion, ?) as fecha_creacion_formato,
@@ -357,7 +359,7 @@ class ProductosModel extends Mysql
             $this->setQuery(
                 "SELECT 
                     p.idproducto, p.nombre, p.descripcion, p.unidad_medida,
-                    p.precio, p.existencia, p.moneda,
+                    p.precio, p.existencia, p.stock_minimo, p.moneda,
                     c.nombre as categoria_nombre
                 FROM producto p 
                 LEFT JOIN categoria c ON p.idcategoria = c.idcategoria
@@ -452,7 +454,7 @@ class ProductosModel extends Mysql
             
             if ($resultado && $producto) {
                 // Crear notificación de producto activado
-                $this->crearNotificacionProductoActivado($producto['nombre'], $idproducto);
+                $this->notificarProductoActivado($producto['nombre'], $idproducto);
             }
             
         } catch (Exception $e) {
@@ -509,96 +511,138 @@ class ProductosModel extends Mysql
         return $resultado;
     }
 
-    // Métodos para crear notificaciones
-    private function crearNotificacionNuevoProducto(string $nombreProducto, int $productoId){
+    // Métodos de notificación WebSocket
+    private function notificarNuevoProducto(string $nombreProducto, int $productoId) {
         try {
-            // Obtener permisos relevantes para notificaciones de productos
-            $permisosRelevantes = $this->notificacionesModel->obtenerPermisosParaAccion('productos', 'ver');
+            $notificador = new NotificacionHelper();
             
-            foreach ($permisosRelevantes as $permiso) {
-                $dataNotificacion = [
-                    'tipo' => 'PRODUCTO_NUEVO',
-                    'titulo' => 'Nuevo Producto Registrado',
-                    'mensaje' => "Se ha registrado un nuevo producto: '{$nombreProducto}'",
-                    'modulo' => 'productos',
-                    'referencia_id' => $productoId,
-                    'permiso_id' => $permiso['idpermiso'],
-                    'prioridad' => 'MEDIA'
-                ];
-                
-                $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            if (!$notificador->isConnected()) {
+                error_log('Redis no disponible para notificación');
+                return;
             }
-        } catch (Exception $e) {
-            error_log("Error al crear notificación de nuevo producto: " . $e->getMessage());
+            
+            $notificador->enviarPorModulo(
+                'productos',
+                'PRODUCTO_NUEVO',
+                [
+                    'titulo' => 'Nuevo Producto',
+                    'mensaje' => "Producto registrado: $nombreProducto",
+                    'producto_id' => $productoId
+                ],
+                'MEDIA'
+            );
+        } catch (\Throwable $e) {
+            error_log("Error notificando producto: " . $e->getMessage());
         }
     }
 
-    private function crearNotificacionProductoActualizado(string $nombreProducto, int $productoId){
+    private function notificarProductoActualizado(string $nombreProducto, int $productoId) {
         try {
-            // Obtener permisos relevantes para notificaciones de productos
-            $permisosRelevantes = $this->notificacionesModel->obtenerPermisosParaAccion('productos', 'ver');
+            $notificador = new NotificacionHelper();
             
-            foreach ($permisosRelevantes as $permiso) {
-                $dataNotificacion = [
-                    'tipo' => 'PRODUCTO_ACTUALIZADO',
-                    'titulo' => 'Producto Actualizado',
-                    'mensaje' => "El producto '{$nombreProducto}' ha sido actualizado",
-                    'modulo' => 'productos',
-                    'referencia_id' => $productoId,
-                    'permiso_id' => $permiso['idpermiso'],
-                    'prioridad' => 'BAJA'
-                ];
-                
-                $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            if ($notificador->isConnected()) {
+                $notificador->enviarPorModulo(
+                    'productos',
+                    'PRODUCTO_ACTUALIZADO',
+                    [
+                        'titulo' => 'Producto Actualizado',
+                        'mensaje' => "Producto: $nombreProducto",
+                        'producto_id' => $productoId
+                    ],
+                    'BAJA'
+                );
             }
-        } catch (Exception $e) {
-            error_log("Error al crear notificación de producto actualizado: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            error_log("Error notificando actualización: " . $e->getMessage());
         }
     }
 
-    private function crearNotificacionProductoDesactivado(string $nombreProducto, int $productoId){
+    private function notificarProductoDesactivado(string $nombreProducto, int $productoId) {
         try {
-            // Obtener permisos relevantes para notificaciones de productos
-            $permisosRelevantes = $this->notificacionesModel->obtenerPermisosParaAccion('productos', 'ver');
+            $notificador = new NotificacionHelper();
             
-            foreach ($permisosRelevantes as $permiso) {
-                $dataNotificacion = [
-                    'tipo' => 'PRODUCTO_DESACTIVADO',
-                    'titulo' => 'Producto Desactivado',
-                    'mensaje' => "El producto '{$nombreProducto}' ha sido desactivado",
-                    'modulo' => 'productos',
-                    'referencia_id' => $productoId,
-                    'permiso_id' => $permiso['idpermiso'],
-                    'prioridad' => 'MEDIA'
-                ];
-                
-                $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            if ($notificador->isConnected()) {
+                $notificador->enviarPorModulo(
+                    'productos',
+                    'PRODUCTO_DESACTIVADO',
+                    [
+                        'titulo' => 'Producto Desactivado',
+                        'mensaje' => "Producto: $nombreProducto",
+                        'producto_id' => $productoId
+                    ],
+                    'MEDIA'
+                );
             }
-        } catch (Exception $e) {
-            error_log("Error al crear notificación de producto desactivado: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            error_log("Error notificando desactivación: " . $e->getMessage());
         }
     }
 
-    private function crearNotificacionProductoActivado(string $nombreProducto, int $productoId){
+    private function notificarProductoActivado(string $nombreProducto, int $productoId) {
         try {
-            // Obtener permisos relevantes para notificaciones de productos
-            $permisosRelevantes = $this->notificacionesModel->obtenerPermisosParaAccion('productos', 'ver');
+            $notificador = new NotificacionHelper();
             
-            foreach ($permisosRelevantes as $permiso) {
-                $dataNotificacion = [
-                    'tipo' => 'PRODUCTO_ACTIVADO',
-                    'titulo' => 'Producto Activado',
-                    'mensaje' => "El producto '{$nombreProducto}' ha sido activado",
-                    'modulo' => 'productos',
-                    'referencia_id' => $productoId,
-                    'permiso_id' => $permiso['idpermiso'],
-                    'prioridad' => 'BAJA'
-                ];
-                
-                $this->notificacionesModel->crearNotificacion($dataNotificacion);
+            if ($notificador->isConnected()) {
+                $notificador->enviarPorModulo(
+                    'productos',
+                    'PRODUCTO_ACTIVADO',
+                    [
+                        'titulo' => 'Producto Activado',
+                        'mensaje' => "Producto: $nombreProducto",
+                        'producto_id' => $productoId
+                    ],
+                    'BAJA'
+                );
             }
-        } catch (Exception $e) {
-            error_log("Error al crear notificación de producto activado: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            error_log("Error notificando activación: " . $e->getMessage());
+        }
+    }
+    
+    public function verificarStockYNotificar(int $productoId) {
+        error_log("🔍 verificarStockYNotificar llamado para producto ID: $productoId");
+        
+        try {
+            $conn = new Conexion();
+            $conn->connect();
+            $db = $conn->get_conectGeneral();
+            
+            $sql = "SELECT nombre, existencia, stock_minimo 
+                    FROM producto 
+                    WHERE idproducto = ?";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$productoId]);
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $conn->disconnect();
+            
+            if (!$producto) {
+                error_log("⚠️ Producto ID $productoId no encontrado");
+                return;
+            }
+            
+            error_log("📊 Stock actual: {$producto['existencia']}, Stock mínimo: {$producto['stock_minimo']}");
+            
+            if ($producto) {
+                $notificador = new NotificacionHelper();
+                
+                error_log("✅ NotificacionHelper instanciado, Redis conectado: " . ($notificador->isConnected() ? 'Sí' : 'No'));
+                
+                if ($producto['existencia'] == 0) {
+                    error_log("🚨 Enviando notificación SIN_STOCK para: {$producto['nombre']}");
+                    $producto['idproducto'] = $productoId;
+                    $notificador->enviarNotificacionStockMinimo($producto);
+                } elseif ($producto['stock_minimo'] > 0 && $producto['existencia'] <= $producto['stock_minimo']) {
+                    error_log("⚠️ Enviando notificación STOCK_BAJO para: {$producto['nombre']}");
+                    $producto['idproducto'] = $productoId;
+                    $notificador->enviarNotificacionStockMinimo($producto);
+                } else {
+                    error_log("✅ Stock OK - No se requiere notificación");
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log("❌ Error verificando stock: " . $e->getMessage());
         }
     }
 

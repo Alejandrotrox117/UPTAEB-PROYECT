@@ -20,6 +20,7 @@ use App\Helpers\PermisosModuloVerificar;
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="base-url" content="<?= base_url(''); ?>">
   <link rel="shortcut icon" href="<?= base_url('app/assets/img/favicon.svg'); ?>" type="image/x-icon">
   <title>Recuperadora</title>
   <meta name="description" content="Recuperadora de materiales reciclables">
@@ -185,6 +186,14 @@ use App\Helpers\PermisosModuloVerificar;
                   </a>
                 </li>
                 <?php endif; ?>
+                <?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('notificacionesconfig', 'ver')): ?>
+<li class="menu-item">
+  <a href="<?= base_url('notificacionesconfig'); ?>" class="nav-link flex items-center p-2 rounded-md text-sm text-gray-600 hover:bg-green-100 hover:text-green-600 group">
+    <i class="nav-icon fa-solid fa-bell-concierge w-4 text-center text-xs text-gray-400 group-hover:text-green-500"></i>
+    <span class="nav-text ml-3">Config Notificaciones</span>
+  </a>
+</li>
+<?php endif; ?>
                
     
                 

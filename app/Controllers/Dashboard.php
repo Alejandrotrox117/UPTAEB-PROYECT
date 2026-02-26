@@ -131,7 +131,7 @@ class Dashboard extends Controllers
         try {
             $response = [
                 
-                "kpisEjecutivos" => $this->model->getKPIsTiempoReal(),
+                "kpisEjecutivos" => $this->model->getKPIsEjecutivos(),
                 
                 
                 "tendenciasVentas" => $this->model->getTendenciasVentas(),

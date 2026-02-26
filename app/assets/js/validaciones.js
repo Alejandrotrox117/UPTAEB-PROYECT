@@ -1,7 +1,7 @@
 const expresiones = {
   nombre: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{3,50}$/,
   apellido: /^[a-zA-Z\s]{3,20}$/,
-  telefono_principal: /^(0414|0424|0426|0416|0412)\d{7}$/,
+  telefono_principal: /^(0414|0424|0426|0416|0412|0422)\d{7}$/,
   direccion: /^.{5,100}$/,
   estatus: /^(Activo|Inactivo)$/,
   observaciones: /^.{0,50}$/,
@@ -299,6 +299,21 @@ function validarSelect(select, mensajes, formId = null) {
     }
   }
 
+  // Verificar si el valor existe en las opciones del select
+  const options = Array.from(input.options);
+  const optionExists = options.some(option => option.value === valor);
+  if (valor !== "" && !optionExists) {
+    if (mensajes.invalido || mensajes.formato) {
+      if (errorDiv) {
+        errorDiv.textContent = mensajes.invalido || mensajes.formato || "Valor seleccionado inválido.";
+        errorDiv.classList.remove("hidden");
+      }
+      input.classList.add("border-red-500", "focus:ring-red-500");
+      input.classList.remove("border-gray-300", "focus:ring-green-400");
+      return false;
+    }
+  }
+
 
   if (errorDiv) {
     errorDiv.textContent = "";
@@ -532,14 +547,25 @@ const inicializarValidaciones = (campos, formId = null) => {
 
         input.addEventListener("input", () => {
           if (input.offsetParent !== null) {
-            validarCampo(input, campo.regex, campo.mensajes, campo.opcional || false);
+            validarCampo(input, campo.expresion, campo.mensajes, campo.opcional || false);
           }
         });
         input.addEventListener("blur", () => {
           if (input.offsetParent !== null) {
-            validarCampo(input, campo.regex, campo.mensajes, campo.opcional || false);
+            validarCampo(input, campo.expresion, campo.mensajes, campo.opcional || false);
           }
         });
+
+        // Prevenir escritura de caracteres inválidos para campos de nombre
+        if (campo.expresion === expresiones.nombre) {
+          input.addEventListener("keypress", (e) => {
+            const char = String.fromCharCode(e.which);
+            const allowed = /[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/;
+            if (!allowed.test(char)) {
+              e.preventDefault();
+            }
+          });
+        }
       }
     }
   });

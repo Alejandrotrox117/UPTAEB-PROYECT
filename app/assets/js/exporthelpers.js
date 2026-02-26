@@ -8,6 +8,7 @@ export function abrirModal(modalId) {
   
   console.log(`abrirModal - Modal encontrado: ${modalId}`);
   modal.classList.remove("opacity-0", "pointer-events-none");
+  modal.classList.add("opacity-100", "pointer-events-auto");
   return true;
 }
 
@@ -19,6 +20,8 @@ export function cerrarModal(modalId) {
     return false;
   }
   
+  console.log(`cerrarModal - Cerrando modal: ${modalId}`);
+  modal.classList.remove("opacity-100", "pointer-events-auto");
   modal.classList.add("opacity-0", "pointer-events-none");
   const form = modal.querySelector("form");
   if (form) form.reset();

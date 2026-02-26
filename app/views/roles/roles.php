@@ -46,7 +46,7 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
             <?php if ($permisos['crear']): ?>
             <button id="btnAbrirModalRegistrarRol"
                 class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 md:px-6 rounded-lg font-semibold shadow text-sm md:text-base">
-                <i class="mr-1 md:mr-2"></i> Registrar Rol
+                <i class="fas fa-user-tag mr-1 md:mr-2"></i> Registrar Rol
             </button>
             <?php else: ?>
             <div class="text-gray-500 text-sm">
@@ -87,24 +87,28 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
         <form id="formRegistrarRol" class="px-4 md:px-8 py-6 max-h-[calc(70vh-120px)] sm:max-h-[60vh] overflow-y-auto">
             <div class="mb-4">
                 <label for="nombreRol" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol <span class="text-red-500">*</span></label>
-                <input type="text" id="nombreRol" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <input type="text" id="nombreRol" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
+                <div class="text-red-500 text-xs mt-1 error-nombreRol-vacio hidden">El nombre del rol es obligatorio</div>
+                <div class="text-red-500 text-xs mt-1 error-nombreRol-formato hidden">El nombre solo puede contener letras, números, espacios y guiones</div>
+                <div class="text-red-500 text-xs mt-1 error-nombreRol-longitud hidden">El nombre debe tener entre 3 y 50 caracteres</div>
             </div>
 
             <div class="mb-4">
                 <label for="descripcionRol" class="block text-sm font-medium text-gray-700 mb-1">Descripción <span class="text-red-500">*</span></label>
-                <textarea id="descripcionRol" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required></textarea>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <textarea id="descripcionRol" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" ></textarea>
+                <div class="text-red-500 text-xs mt-1 error-descripcionRol-vacio hidden">La descripción es obligatoria</div>
+                <div class="text-red-500 text-xs mt-1 error-descripcionRol-longitud hidden">La descripción no puede superar los 255 caracteres</div>
             </div>
 
             <div class="mb-4">
                 <label for="estatusRol" class="block text-sm font-medium text-gray-700 mb-1">Estatus <span class="text-red-500">*</span></label>
-                <select id="estatusRol" name="estatus" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                <select id="estatusRol" name="estatus" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
                     <option value="">Seleccione un estatus</option>
                     <option value="ACTIVO">ACTIVO</option>
                     <option value="INACTIVO">INACTIVO</option>
                 </select>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div class="text-red-500 text-xs mt-1 error-estatusRol-vacio hidden">El estatus es obligatorio</div>
+                <div class="text-red-500 text-xs mt-1 error-estatusRol-formato hidden">El estatus debe ser ACTIVO o INACTIVO</div>
             </div>
         </form>
 
@@ -139,24 +143,28 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
             
             <div class="mb-4">
                 <label for="nombreActualizar" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol <span class="text-red-500">*</span></label>
-                <input type="text" id="nombreActualizar" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <input type="text" id="nombreActualizar" name="nombre" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
+                <div class="text-red-500 text-xs mt-1 error-nombreActualizar-vacio hidden">El nombre del rol es obligatorio</div>
+                <div class="text-red-500 text-xs mt-1 error-nombreActualizar-formato hidden">El nombre solo puede contener letras, números, espacios y guiones</div>
+                <div class="text-red-500 text-xs mt-1 error-nombreActualizar-longitud hidden">El nombre debe tener entre 3 y 50 caracteres</div>
             </div>
 
             <div class="mb-4">
                 <label for="descripcionActualizar" class="block text-sm font-medium text-gray-700 mb-1">Descripción <span class="text-red-500">*</span></label>
-                <textarea id="descripcionActualizar" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required></textarea>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <textarea id="descripcionActualizar" name="descripcion" rows="3" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" ></textarea>
+                <div class="text-red-500 text-xs mt-1 error-descripcionActualizar-vacio hidden">La descripción es obligatoria</div>
+                <div class="text-red-500 text-xs mt-1 error-descripcionActualizar-longitud hidden">La descripción no puede superar los 255 caracteres</div>
             </div>
 
             <div class="mb-4">
                 <label for="estatusActualizar" class="block text-sm font-medium text-gray-700 mb-1">Estatus <span class="text-red-500">*</span></label>
-                <select id="estatusActualizar" name="estatus" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" required>
+                <select id="estatusActualizar" name="estatus" class="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" >
                     <option value="">Seleccione un estatus</option>
                     <option value="ACTIVO">ACTIVO</option>
                     <option value="INACTIVO">INACTIVO</option>
                 </select>
-                <div class="text-red-500 text-xs mt-1 error-message"></div>
+                <div class="text-red-500 text-xs mt-1 error-estatusActualizar-vacio hidden">El estatus es obligatorio</div>
+                <div class="text-red-500 text-xs mt-1 error-estatusActualizar-formato hidden">El estatus debe ser ACTIVO o INACTIVO</div>
             </div>
         </form>
 
@@ -224,8 +232,8 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
 </div>
 <?php endif; ?>
 
-<!-- ✅ MODAL CONFIRMAR ELIMINAR - SOLO SI TIENE PERMISOS -->
-<?php if (PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar')): ?>
+<!-- Modal Confirmar Eliminar - Solo si tiene permisos -->
+<?php if ($permisos['eliminar']): ?>
 <div id="modalConfirmarEliminar" class="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-30 backdrop-blur-[2px] opacity-0 pointer-events-none transition-opacity duration-300 z-[60] p-4">
   <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full sm:w-11/12 max-w-md max-h-[95vh]">
     <div class="px-4 md:px-6 py-4 border-b border-gray-200">
@@ -247,48 +255,6 @@ $esSuperUsuario = $rolesModel->verificarEsSuperUsuario($idUsuarioSesion);
   </div>
 </div>
 <?php endif; ?>
-
-<!-- ✅ MENSAJE DE PERMISOS INSUFICIENTES -->
-<?php if (!PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')): ?>
-<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
-    <div class="flex">
-        <div class="flex-shrink-0">
-            <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
-        </div>
-        <div class="ml-3">
-            <h3 class="text-sm font-medium text-yellow-800">
-                Permisos Limitados
-            </h3>
-            <div class="mt-2 text-sm text-yellow-700">
-                <p>Su nivel de acceso actual no permite ver el contenido de este módulo. Contacte al administrador si necesita acceso adicional.</p>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- ✅ AGREGAR REQUIRE PARA USAR EL HELPER EN LA VISTA -->
-<?php
-require_once "helpers/PermisosModuloVerificar.php";
-
-$permisosRoles = [
-    'crear' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'crear'),
-    'editar' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'editar'),
-    'eliminar' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'eliminar'),
-    'ver' => PermisosModuloVerificar::verificarPermisoModuloAccion('roles', 'ver')
-];
-?>
-
-<?= renderJavaScriptData('PERMISOS_ROLES', $permisosRoles); ?>
-<script nonce="<?= generateCSPNonce(); ?>">
-// ✅ FUNCIÓN PARA VERIFICAR PERMISOS EN JAVASCRIPT
-window.tienePermiso = function(accion) {
-    return window.PERMISOS_ROLES[accion] || false;
-};
-
-// ✅ LOG DE PERMISOS PARA DEBUG
-console.log('🔐 Permisos del usuario para módulo Roles:', window.PERMISOS_ROLES);
-</script>
 
 <!-- Scripts específicos del módulo de roles -->
 <script src="<?= base_url('app/assets/js/ayuda/roles-tour.js'); ?>"></script>
