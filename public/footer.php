@@ -1,6 +1,6 @@
 <script nonce="<?= generateCSPNonce(); ?>">
   window.base_url = "<?= base_url(); ?>";
-  
+
   // Variables de sesión para WebSocket
   window.SESSION_USER_ID = <?= $_SESSION['usuario_id'] ?? 0; ?>;
   window.SESSION_ROL_ID = <?= $_SESSION['rol_id'] ?? 0; ?>;
@@ -21,16 +21,18 @@
 <!-- Chart.js para gráficos del dashboard -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Archivo dinámico de validaciones -->
- <script type="module" src="<?= base_url('app/assets/js/validaciones.js'); ?>"></script>
- <script type="module" src="<?= base_url('app/assets/js/exporthelpers.js'); ?>"></script>
+<script type="module" src="<?= base_url('app/assets/js/validaciones.js'); ?>"></script>
+<script type="module" src="<?= base_url('app/assets/js/exporthelpers.js'); ?>"></script>
 <?php if (isset($data['page_functions_js'])): ?>
   <script type="module" src="<?= base_url('app/assets/js/' . $data['page_functions_js']); ?>"></script>
 <?php endif; ?>
- <script type="module" src="<?= base_url('app/assets/js/functions_header.js'); ?>"></script>
- <!-- DEBUG: Footer.php cargado correctamente -->
- <!-- Sistema de Notificaciones WebSocket -->
- <script>console.log('DEBUG: Intentando cargar notificaciones_websocket.js desde:', '<?= base_url('app/assets/js/notificaciones_websocket.js'); ?>');</script>
- <script src="<?= base_url('app/assets/js/notificaciones_websocket.js'); ?>"></script>
+<script type="module" src="<?= base_url('app/assets/js/functions_header.js'); ?>"></script>
+<!-- DEBUG: Footer.php cargado correctamente -->
+<!-- Sistema de Notificaciones WebSocket -->
+<script>console.log('DEBUG: Intentando cargar notificaciones_websocket.js desde:', '<?= base_url('app/assets/js/notificaciones_websocket.js'); ?>');</script>
+<script src="<?= base_url('app/assets/js/notificaciones_websocket.js'); ?>"></script>
+<!-- Herramienta Global de Ayuda (FAQ) -->
+<script src="<?= base_url('app/assets/js/global_help.js'); ?>"></script>
 
 </div>
 </body>
