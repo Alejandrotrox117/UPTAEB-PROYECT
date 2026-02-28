@@ -104,7 +104,7 @@ class NotificacionesModel extends Mysql
                 $data['prioridad'] ?? 'MEDIA'
             );
             
-            error_log("✅ Notificación creada usando NotificacionHelper: " . $data['tipo']);
+            error_log("Notificación creada usando NotificacionHelper: " . $data['tipo']);
             return $resultado;
             
         } catch (Exception $e) {
@@ -160,9 +160,9 @@ class NotificacionesModel extends Mysql
             $conexion->connect();
             $db = $conexion->get_conectSeguridad();
 
-            // Obtener notificaciones dirigidas al usuario O a su rol
+            // Obtener notificaciones dirigidas al usuario O a su rol (DISTINCT evita duplicados)
             $query = "
-                SELECT 
+                SELECT DISTINCT
                     idnotificacion,
                     tipo,
                     titulo,
@@ -178,7 +178,7 @@ class NotificacionesModel extends Mysql
                 WHERE (idusuario_destino = ? OR idrol_destino = ?)
                   AND activa = 1
                   AND habilitada = 1
-                ORDER BY leida ASC, fecha_creacion DESC
+                ORDER BY leida ASC, fecha_creacion DESC, idnotificacion DESC
                 LIMIT 50
             ";
             
@@ -191,7 +191,7 @@ class NotificacionesModel extends Mysql
                 "data" => $datos
             ];
             
-            error_log("✅ ejecutarBusquedaNotificacionesPorUsuario: Obtuvimos " . count($datos) . " notificaciones");
+            error_log("ejecutarBusquedaNotificacionesPorUsuario: Obtuvimos " . count($datos) . " notificaciones");
             
         } catch (\Exception $e) {
             error_log("❌ Error en ejecutarBusquedaNotificacionesPorUsuario: " . $e->getMessage());
@@ -299,7 +299,7 @@ class NotificacionesModel extends Mysql
             $stmt = $db->prepare($this->getQuery());
             $resultado = $stmt->execute($this->getArray());
             
-            error_log("✅ Notificación marcada como leída: " . ($resultado ? 'OK' : 'FALLO'));
+            error_log("Notificación marcada como leída: " . ($resultado ? 'OK' : 'FALLO'));
             
         } catch (Exception $e) {
             error_log("❌ Error al marcar notificación como leída: " . $e->getMessage());
@@ -330,7 +330,7 @@ class NotificacionesModel extends Mysql
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount();
             
-            error_log("✅ Marcadas $resultado notificaciones como leídas");
+            error_log("Marcadas $resultado notificaciones como leídas");
             
         } catch (Exception $e) {
             error_log("❌ Error al marcar todas las notificaciones como leídas: " . $e->getMessage());
@@ -1055,7 +1055,6 @@ class NotificacionesModel extends Mysql
             ];
             
         } catch (\Exception $e) {
-            error_log("Error al eliminar notificación: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error al eliminar'
@@ -1084,8 +1083,6 @@ class NotificacionesModel extends Mysql
             
             $conexion->disconnect();
             
-            error_log("✅ Limpieza completada: $rowsAffected notificaciones antiguas marcadas como inactivas");
-            
             return [
                 'status' => true,
                 'message' => "Se limpiaron $rowsAffected notificaciones antiguas",
@@ -1093,7 +1090,6 @@ class NotificacionesModel extends Mysql
             ];
             
         } catch (\Exception $e) {
-            error_log("Error al limpiar notificaciones: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error al limpiar'

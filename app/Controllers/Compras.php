@@ -620,14 +620,14 @@ class Compras extends Controllers
 
     private function verificarPermisosCambioEstado($estadoAnterior, $nuevoEstado)
     {
-        // Enviar a autorización: pueden hacerlo usuarios con permisos de crear o eliminar
+        // Enviar a autorización: usuarios con permisos de crear o eliminar
         if ($estadoAnterior === 'BORRADOR' && $nuevoEstado === 'POR_AUTORIZAR') {
             return (PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'crear') ||
                     PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar'));
         }
         
-        // Autorizar o devolver a borrador: solo usuarios con permisos de eliminar
-        if ($estadoAnterior === 'POR_AUTORIZAR' && 
+        // Autorizar o devolver a borrador: solo usuarios con permisos de eliminar (o acceso_total vía el helper)
+        if ($estadoAnterior === 'POR_AUTORIZAR' &&
             ($nuevoEstado === 'AUTORIZADA' || $nuevoEstado === 'BORRADOR')) {
             return PermisosModuloVerificar::verificarPermisoModuloAccion('compras', 'eliminar');
         }

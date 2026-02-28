@@ -106,7 +106,7 @@ function mostrarConfiguracion(config) {
         const moduloHTML = `
             <div class="border border-gray-200 rounded-lg overflow-hidden">
                 <!-- Header del módulo -->
-                <div class="bg-gradient-to-r from-green-500 to-green-600 p-4">
+                <div class="bg-green-600 p-4">
                     <h3 class="text-lg font-semibold text-white flex items-center">
                         <i class="${modulosIconos[modulo] || 'fas fa-cubes'} mr-2"></i>
                         ${modulosNombres[modulo] || modulo}

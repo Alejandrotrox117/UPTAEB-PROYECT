@@ -14,20 +14,20 @@ class SistemaNotificacionesWS {
         this.reconexionIntento = 0;
         this.maxReintentos = 5;
         this.notificacionesInformativas = []; // 📦 Notificaciones informativas en memoria
-        
+
         // Configurar base URL para API calls
         const baseUrlElement = document.querySelector('meta[name="base-url"]');
         this.baseUrl = (baseUrlElement?.content || '/project').replace(/\/$/, '');
 
         console.log('🚀 Inicializando Sistema de Notificaciones WebSocket (Híbrido)');
         console.log(`📍 Base URL: ${this.baseUrl}`);
-        
+
         // 1. Cargar notificaciones persistentes desde BD
         this.cargarNotificacionesBD();
-        
+
         // 2. Cargar notificaciones temporales desde localStorage
         this.cargarNotificacionesLocalStorage();
-        
+
         // 3. Conectar WebSocket para tiempo real
         this.conectar();
     }
@@ -123,14 +123,23 @@ class SistemaNotificacionesWS {
                 // Notificaciones de compras
                 case 'TEST_COMPRA':
                 case 'COMPRA_POR_AUTORIZAR':
-                case 'COMPRA_AUTORIZADA_PAGO':
-                    this.mostrarNotificacionCompra(mensaje.data);
+                case 'COMPRA_AUTORIZADA_PAGO': {
+                    // Mezclar idnotificacion de la raíz del mensaje dentro de data
+                    const dataCompra = Object.assign({}, mensaje.data, {
+                        idnotificacion: mensaje.idnotificacion || mensaje.data?.idnotificacion
+                    });
+                    this.mostrarNotificacionCompra(dataCompra);
                     break;
+                }
 
                 // Notificaciones de ventas
-                case 'VENTA_CREADA_PAGO':
-                    this.mostrarNotificacionVenta(mensaje.data);
+                case 'VENTA_CREADA_PAGO': {
+                    const dataVenta = Object.assign({}, mensaje.data, {
+                        idnotificacion: mensaje.idnotificacion || mensaje.data?.idnotificacion
+                    });
+                    this.mostrarNotificacionVenta(dataVenta);
                     break;
+                }
 
                 // Notificaciones de productos (CRUD)
                 case 'PRODUCTO_NUEVO':
@@ -186,7 +195,8 @@ class SistemaNotificacionesWS {
             timerProgressBar: true
         });
 
-        this.agregarAListaVisual(data);
+        // Usar agregarNotificacionAlDropdown para que tenga botones de marcar/eliminar
+        this.agregarNotificacionAlDropdown(data);
     }
 
     mostrarNotificacionVenta(data) {
@@ -204,7 +214,8 @@ class SistemaNotificacionesWS {
             timerProgressBar: true
         });
 
-        this.agregarAListaVisual(data);
+        // Usar agregarNotificacionAlDropdown para que tenga botones de marcar/eliminar
+        this.agregarNotificacionAlDropdown(data);
     }
 
     mostrarNotificacionProducto(data) {
@@ -240,7 +251,7 @@ class SistemaNotificacionesWS {
 
         const now = new Date();
         const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        
+
         const esLeida = data.leida ? 'read' : 'unread';
         const estilo = data.leida ? 'bg-gray-50' : 'bg-blue-50';
 
@@ -279,26 +290,26 @@ class SistemaNotificacionesWS {
 
         // Insertar al inicio
         notificationsList.insertAdjacentHTML('afterbegin', notificationHTML);
-        
+
         // Agregar event listeners a los botones
         const item = notificationsList.firstElementChild;
         const btnMarkRead = item.querySelector('.btn-mark-read');
         const btnDelete = item.querySelector('.btn-delete-notif');
-        
+
         if (btnMarkRead) {
             btnMarkRead.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.marcarComoLeida(data.idnotificacion, item);
             });
         }
-        
+
         if (btnDelete) {
             btnDelete.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.eliminarNotificacion(data.idnotificacion, item);
             });
         }
-        
+
         console.log(' Notificación agregada al dropdown');
     }
 
@@ -364,7 +375,7 @@ class SistemaNotificacionesWS {
         badges.forEach(badge => {
             const count = this.notificacionesNoLeidas;
             badge.textContent = count > 99 ? '99+' : count;
-            
+
             // Mostrar badge si hay notificaciones
             if (count > 0) {
                 badge.classList.remove('hidden');
@@ -372,7 +383,7 @@ class SistemaNotificacionesWS {
                 badge.classList.add('hidden');
             }
         });
-        
+
         console.log(`🔔 Badge actualizado: ${this.notificacionesNoLeidas} notificaciones`);
     }
 
@@ -563,16 +574,16 @@ function inicializarSistemaNotificaciones() {
 /**
  * Procesar notificación informativa (solo localStorage)
  */
-SistemaNotificacionesWS.prototype.procesarNotificacionInformativa = function(mensaje) {
+SistemaNotificacionesWS.prototype.procesarNotificacionInformativa = function (mensaje) {
     // Guardar en localStorage
     this.guardarEnLocalStorage(mensaje);
-    
+
     // Mostrar toast
     this.mostrarToastInformativo(mensaje);
-    
+
     // Agregar al dropdown
     this.agregarNotificacionAlDropdown(mensaje.data || mensaje);
-    
+
     // Incrementar contador
     this.incrementarContador();
 };
@@ -580,21 +591,21 @@ SistemaNotificacionesWS.prototype.procesarNotificacionInformativa = function(men
 /**
  * Guardar notificación en localStorage
  */
-SistemaNotificacionesWS.prototype.guardarEnLocalStorage = function(notificacion) {
+SistemaNotificacionesWS.prototype.guardarEnLocalStorage = function (notificacion) {
     try {
         const key = 'notificaciones_informativas';
         let notificaciones = JSON.parse(localStorage.getItem(key) || '[]');
-        
+
         // Agregar nueva notificación con ID único
         notificacion.id = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         notificacion.timestamp = new Date().toISOString();
         notificaciones.unshift(notificacion);
-        
+
         // Limitar a 50 notificaciones
         if (notificaciones.length > 50) {
             notificaciones = notificaciones.slice(0, 50);
         }
-        
+
         localStorage.setItem(key, JSON.stringify(notificaciones));
         console.log(`💾 Notificación guardada en localStorage (total: ${notificaciones.length})`);
     } catch (error) {
@@ -605,14 +616,14 @@ SistemaNotificacionesWS.prototype.guardarEnLocalStorage = function(notificacion)
 /**
  * Cargar notificaciones persistentes desde la base de datos
  */
-SistemaNotificacionesWS.prototype.cargarNotificacionesBD = async function() {
+SistemaNotificacionesWS.prototype.cargarNotificacionesBD = async function () {
     try {
         console.log('📡 Cargando notificaciones persistentes desde BD...');
-        
+
         const endpoint = `${this.baseUrl}/notificaciones/getNotificaciones`;
-        
+
         console.log('Endpoint:', endpoint);
-        
+
         const response = await fetch(endpoint, {
             method: 'GET',
             credentials: 'include',  // Enviar cookies de sesión
@@ -621,28 +632,28 @@ SistemaNotificacionesWS.prototype.cargarNotificacionesBD = async function() {
                 'X-Requested-With': 'XMLHttpRequest'  // Indicar que es AJAX
             }
         });
-        
+
         if (!response.ok) {
             console.error('❌ Respuesta HTTP error:', response.status, response.statusText);
             const text = await response.text();
             console.error('Respuesta:', text.substring(0, 500));
             return;
         }
-        
+
         const contentType = response.headers.get('content-type');
         console.log('📋 Content-Type:', contentType);
-        
+
         if (!contentType || !contentType.includes('application/json')) {
             console.error('❌ Content-Type no es JSON:', contentType);
             const text = await response.text();
             console.error('Respuesta recibida (primeros 500 chars):', text.substring(0, 500));
             return;
         }
-        
+
         let result;
         const responseText = await response.text();
         console.log('📄 Respuesta raw (primeros 200 chars):', responseText.substring(0, 200));
-        
+
         // Intentar parsear JSON
         try {
             result = JSON.parse(responseText);
@@ -652,13 +663,13 @@ SistemaNotificacionesWS.prototype.cargarNotificacionesBD = async function() {
             console.error('   Charcode del primer carácter:', responseText.charCodeAt(0));
             return;
         }
-        
+
         console.log('Respuesta JSON:', result);
-        
+
         if (result.status && result.data && Array.isArray(result.data)) {
             const notificaciones = result.data;
             console.log(`✅ Cargadas ${notificaciones.length} notificaciones desde BD`);
-            
+
             // Agregar al dropdown
             let agregadas = 0;
             notificaciones.forEach(notif => {
@@ -678,13 +689,13 @@ SistemaNotificacionesWS.prototype.cargarNotificacionesBD = async function() {
                 }
             });
             console.log(`📌 Agregadas ${agregadas}/${notificaciones.length} notificaciones al dropdown`);
-            
+
             // Actualizar contador con notificaciones no leídas
             const noLeidas = notificaciones.filter(n => parseInt(n.leida) === 0).length;
             this.notificacionesNoLeidas = noLeidas;
             this.actualizarBadges();
             console.log(`🔔 Badge actualizado: ${noLeidas} no leídas`);
-            
+
         } else {
             console.log('⚠️ Respuesta sin datos esperados:');
             console.log('  - status:', result.status);
@@ -700,11 +711,11 @@ SistemaNotificacionesWS.prototype.cargarNotificacionesBD = async function() {
 /**
  * Cargar notificaciones desde localStorage
  */
-SistemaNotificacionesWS.prototype.cargarNotificacionesLocalStorage = function() {
+SistemaNotificacionesWS.prototype.cargarNotificacionesLocalStorage = function () {
     try {
         const key = 'notificaciones_informativas';
         const notificaciones = JSON.parse(localStorage.getItem(key) || '[]');
-        
+
         if (notificaciones.length > 0) {
             console.log(`📦 Cargadas ${notificaciones.length} notificaciones desde localStorage`);
             this.notificacionesInformativas = notificaciones;
@@ -718,10 +729,10 @@ SistemaNotificacionesWS.prototype.cargarNotificacionesLocalStorage = function() 
 /**
  * Mostrar toast para notificación informativa
  */
-SistemaNotificacionesWS.prototype.mostrarToastInformativo = function(mensaje) {
+SistemaNotificacionesWS.prototype.mostrarToastInformativo = function (mensaje) {
     const titulo = mensaje.data?.titulo || mensaje.titulo || 'Notificación';
     const texto = mensaje.data?.mensaje || mensaje.mensaje || '';
-    
+
     Swal.fire({
         icon: 'info',
         title: titulo,
@@ -737,9 +748,9 @@ SistemaNotificacionesWS.prototype.mostrarToastInformativo = function(mensaje) {
 /**
  * Marca una notificación como leída
  */
-SistemaNotificacionesWS.prototype.marcarComoLeida = function(idNotificacion, elementoUI = null) {
+SistemaNotificacionesWS.prototype.marcarComoLeida = function (idNotificacion, elementoUI = null) {
     const self = this;
-    
+
     fetch(`${this.baseUrl}/notificaciones/marcarComoLeida`, {
         method: 'POST',
         headers: {
@@ -751,51 +762,51 @@ SistemaNotificacionesWS.prototype.marcarComoLeida = function(idNotificacion, ele
             idnotificacion: idNotificacion
         })
     })
-    .then(response => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-    })
-    .then(result => {
-        if (result.status) {
-            console.log('✅ Notificación marcada como leída:', idNotificacion);
-            
-            // Decrementar contador de notificaciones no leídas
-            if (this.notificacionesNoLeidas > 0) {
-                this.notificacionesNoLeidas--;
-            }
-            
-            if (elementoUI) {
-                elementoUI.classList.remove('unread', 'bg-blue-50');
-                elementoUI.classList.add('read', 'bg-gray-50');
-                
-                const btnMarkRead = elementoUI.querySelector('.btn-mark-read');
-                if (btnMarkRead) {
-                    btnMarkRead.remove();
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(result => {
+            if (result.status) {
+                console.log('✅ Notificación marcada como leída:', idNotificacion);
+
+                // Decrementar contador de notificaciones no leídas
+                if (this.notificacionesNoLeidas > 0) {
+                    this.notificacionesNoLeidas--;
                 }
-                
-                const dot = elementoUI.querySelector('[class*="animate-pulse"]');
-                if (dot) {
-                    dot.remove();
+
+                if (elementoUI) {
+                    elementoUI.classList.remove('unread', 'bg-blue-50');
+                    elementoUI.classList.add('read', 'bg-gray-50');
+
+                    const btnMarkRead = elementoUI.querySelector('.btn-mark-read');
+                    if (btnMarkRead) {
+                        btnMarkRead.remove();
+                    }
+
+                    const dot = elementoUI.querySelector('[class*="animate-pulse"]');
+                    if (dot) {
+                        dot.remove();
+                    }
                 }
+
+                self.actualizarBadges();
+            } else {
+                console.error('❌ Error:', result.message);
             }
-            
-            self.actualizarBadges();
-        } else {
-            console.error('❌ Error:', result.message);
-        }
-    })
-    .catch(error => {
-        console.error('❌ Error:', error);
-        alert('Error al marcar notificación: ' + error.message);
-    });
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            alert('Error al marcar notificación: ' + error.message);
+        });
 };
 
 /**
  * Elimina una notificación (soft delete)
  */
-SistemaNotificacionesWS.prototype.eliminarNotificacion = function(idNotificacion, elementoUI = null) {
+SistemaNotificacionesWS.prototype.eliminarNotificacion = function (idNotificacion, elementoUI = null) {
     const self = this;
-    
+
     fetch(`${this.baseUrl}/notificaciones/eliminarNotificacion`, {
         method: 'DELETE',
         headers: {
@@ -807,49 +818,49 @@ SistemaNotificacionesWS.prototype.eliminarNotificacion = function(idNotificacion
             idnotificacion: idNotificacion
         })
     })
-    .then(response => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-    })
-    .then(result => {
-        if (result.status) {
-            console.log('✅ Notificación eliminada:', idNotificacion);
-            
-            if (elementoUI) {
-                elementoUI.style.transition = 'opacity 0.3s ease-out';
-                elementoUI.style.opacity = '0';
-                
-                setTimeout(() => {
-                    elementoUI.remove();
-                    
-                    const notificationsList = document.getElementById('notifications-list');
-                    if (notificationsList && notificationsList.children.length === 0) {
-                        notificationsList.innerHTML = `
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(result => {
+            if (result.status) {
+                console.log('✅ Notificación eliminada:', idNotificacion);
+
+                if (elementoUI) {
+                    elementoUI.style.transition = 'opacity 0.3s ease-out';
+                    elementoUI.style.opacity = '0';
+
+                    setTimeout(() => {
+                        elementoUI.remove();
+
+                        const notificationsList = document.getElementById('notifications-list');
+                        if (notificationsList && notificationsList.children.length === 0) {
+                            notificationsList.innerHTML = `
                             <div class="text-center p-6 text-gray-500">
                                 <i class="fas fa-inbox text-3xl mb-2"></i>
                                 <p class="text-sm">No hay notificaciones</p>
                             </div>
                         `;
-                    }
-                }, 300);
+                        }
+                    }, 300);
+                }
+
+                self.actualizarBadges();
+            } else {
+                console.error('❌ Error:', result.message);
             }
-            
-            self.actualizarBadges();
-        } else {
-            console.error('❌ Error:', result.message);
-        }
-    })
-    .catch(error => {
-        console.error('❌ Error:', error);
-    });
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+        });
 };
 
 /**
  * Marca todas las notificaciones como leídas
  */
-SistemaNotificacionesWS.prototype.marcarTodasComoLeidas = function() {
+SistemaNotificacionesWS.prototype.marcarTodasComoLeidas = function () {
     const self = this;
-    
+
     fetch(`${this.baseUrl}/notificaciones/marcarTodasLeidas`, {
         method: 'POST',
         headers: {
@@ -859,51 +870,51 @@ SistemaNotificacionesWS.prototype.marcarTodasComoLeidas = function() {
         credentials: 'include',
         body: JSON.stringify({})
     })
-    .then(response => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-    })
-    .then(result => {
-        if (result.status) {
-            console.log('✅ Todas las notificaciones marcadas como leídas');
-            
-            // Contar cuántas estaban sin leer y reset el contador
-            const notificationsList = document.getElementById('notifications-list');
-            if (notificationsList) {
-                const items = notificationsList.querySelectorAll('.notification-item.unread');
-                self.notificacionesNoLeidas = 0; // Reiniciar a 0 ya que todas se marcan como leídas
-                
-                items.forEach(item => {
-                    item.classList.remove('unread', 'bg-blue-50');
-                    item.classList.add('read', 'bg-gray-50');
-                    
-                    const btnMarkRead = item.querySelector('.btn-mark-read');
-                    if (btnMarkRead) {
-                        btnMarkRead.remove();
-                    }
-                    
-                    const dot = item.querySelector('[class*="animate-pulse"]');
-                    if (dot) {
-                        dot.remove();
-                    }
-                });
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(result => {
+            if (result.status) {
+                console.log('✅ Todas las notificaciones marcadas como leídas');
+
+                // Contar cuántas estaban sin leer y reset el contador
+                const notificationsList = document.getElementById('notifications-list');
+                if (notificationsList) {
+                    const items = notificationsList.querySelectorAll('.notification-item.unread');
+                    self.notificacionesNoLeidas = 0; // Reiniciar a 0 ya que todas se marcan como leídas
+
+                    items.forEach(item => {
+                        item.classList.remove('unread', 'bg-blue-50');
+                        item.classList.add('read', 'bg-gray-50');
+
+                        const btnMarkRead = item.querySelector('.btn-mark-read');
+                        if (btnMarkRead) {
+                            btnMarkRead.remove();
+                        }
+
+                        const dot = item.querySelector('[class*="animate-pulse"]');
+                        if (dot) {
+                            dot.remove();
+                        }
+                    });
+                }
+
+                self.actualizarBadges();
+            } else {
+                console.error('❌ Error:', result.message);
             }
-            
-            self.actualizarBadges();
-        } else {
-            console.error('❌ Error:', result.message);
-        }
-    })
-    .catch(error => {
-        console.error('❌ Error:', error);
-        alert('Error: ' + error.message);
-    });
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            alert('Error: ' + error.message);
+        });
 };
 
 /**
  * Limpiar notificaciones informativas del localStorage
  */
-SistemaNotificacionesWS.prototype.limpiarNotificacionesInformativas = function() {
+SistemaNotificacionesWS.prototype.limpiarNotificacionesInformativas = function () {
     try {
         localStorage.removeItem('notificaciones_informativas');
         this.notificacionesInformativas = [];

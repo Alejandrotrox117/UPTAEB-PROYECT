@@ -89,12 +89,12 @@ class NotificacionHelper {
             $conn->connect();
             $db = $conn->get_conectSeguridad();
             
-            // Obtener todos los roles que tienen al menos un permiso en el módulo especificado
-            // (ignora la acción específica, obtiene a TODOS los que pueden ver el módulo)
+            // Obtener todos los roles que tienen al menos un permiso ACTIVO en el módulo especificado
             $sql = "SELECT DISTINCT rmp.idrol 
                     FROM rol_modulo_permisos rmp
                     INNER JOIN modulos m ON rmp.idmodulo = m.idmodulo
-                    WHERE LOWER(m.titulo) = LOWER(?)";
+                    WHERE LOWER(m.titulo) = LOWER(?)
+                      AND rmp.activo = 1";
             
             $stmt = $db->prepare($sql);
             $stmt->execute([$modulo]);
@@ -516,9 +516,42 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
                 
                 $stmtNotificacion = $db->prepare($sqlNotificacion);
                 
+                // Prepared statement para verificar duplicados antes de insertar
+                $sqlCheck = "SELECT COUNT(*) FROM notificaciones
+                             WHERE tipo = ? AND modulo = ? AND referencia_id = ?
+                             AND activa = 1
+                             AND (
+                                 (? IS NOT NULL AND idusuario_destino = ?)
+                                 OR
+                                 (? IS NOT NULL AND idrol_destino = ?)
+                             )";
+                $stmtCheck = $db->prepare($sqlCheck);
+                
                 foreach ($destinatarios as $destinatario) {
                     $idusuario = ($tipoDestinatario === 'usuario') ? $destinatario : null;
-                    $idrol = ($tipoDestinatario === 'rol') ? $destinatario : null;
+                    $idrol     = ($tipoDestinatario === 'rol')     ? $destinatario : null;
+                    
+                    // Verificar si ya existe una notificación activa idéntica para este destinatario
+                    $stmtCheck->execute([
+                        $tipo, $moduloId, $referenciaId,
+                        $idusuario, $idusuario,
+                        $idrol,     $idrol
+                    ]);
+                    if ((int)$stmtCheck->fetchColumn() > 0) {
+                        error_log(" Notificación duplicada omitida: tipo=$tipo, ref=$referenciaId, destinatario=$destinatario");
+                        // Usar el ID de la notificación existente como referencia
+                        if (!$primerIdNotificacion) {
+                            $stmtExist = $db->prepare(
+                                "SELECT idnotificacion FROM notificaciones
+                                 WHERE tipo=? AND modulo=? AND referencia_id=? AND activa=1
+                                 AND (idusuario_destino=? OR idrol_destino=?)
+                                 LIMIT 1"
+                            );
+                            $stmtExist->execute([$tipo, $moduloId, $referenciaId, $idusuario, $idrol]);
+                            $primerIdNotificacion = $stmtExist->fetchColumn() ?: null;
+                        }
+                        continue; // Saltar la inserción duplicada
+                    }
                     
                     $result = $stmtNotificacion->execute([
                         $tipo,

@@ -830,8 +830,9 @@ class ComprasModel
 
             if (!$this->validarTransicionEstado($estadoActual, $nuevoEstado)) {
                 return [
-                    'status' => false,
-                    'message' => 'Transición de estado no válida.'
+                    'status'  => false,
+                    'message' => "Transición de estado no válida. La compra está actualmente en estado '{$estadoActual}' y no puede pasar a '{$nuevoEstado}'.",
+                    'estado_actual' => $estadoActual
                 ];
             }
 
@@ -841,22 +842,6 @@ class ComprasModel
 
             if ($nuevoEstado === 'PAGADA') {
                 $this->ejecutarGeneracionNotaEntrega($idcompra, $db);
-                
-                // Notificar compra pagada
-                $this->notificarCompraPagada($idcompra);
-            } elseif ($nuevoEstado === 'POR_AUTORIZAR') {
-                // Notificar a los autorizadores y confirmar al comprador
-                $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
-                if ($compraData) {
-                    $this->notificarCompraPorAutorizar($idcompra, $compraData['nro_compra'], $compraData['total_general']);
-                    $this->notificarCompraEnviadaAutorizacion($idcompra, $compraData['nro_compra'], $idusuario);
-                }
-            } elseif ($nuevoEstado === 'AUTORIZADA') {
-                // Notificar que está autorizada y lista para pago
-                $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
-                if ($compraData) {
-                    $this->notificarCompraAutorizadaPago($idcompra, $compraData['nro_compra'], $compraData['total_general']);
-                }
             }
 
             return [
@@ -1500,6 +1485,27 @@ class ComprasModel
         }
         try {
             $notificador = new NotificacionHelper();
+            
+            // Evitar doble notificación: si el creador tiene Acceso Total en compras,
+            // ya recibió la notificación de COMPRA_POR_AUTORIZAR como autorizador.
+            // En ese caso no enviamos una segunda notificación personal.
+            $rolesAutorizadores = $notificador->obtenerRolesConAccesoTotal('compras');
+            if (!empty($rolesAutorizadores)) {
+                // Obtener el rol del usuario creador
+                $conn = new Conexion();
+                $conn->connect();
+                $db = $conn->get_conectSeguridad();
+                $stmt = $db->prepare("SELECT idrol FROM usuario WHERE idusuario = ? LIMIT 1");
+                $stmt->execute([$idusuario]);
+                $rolUsuario = $stmt->fetchColumn();
+                $conn->disconnect();
+                
+                if ($rolUsuario && in_array($rolUsuario, $rolesAutorizadores)) {
+                    error_log("notificarCompraEnviadaAutorizacion: omitida para usuario $idusuario (ya notificado como autorizador, rol=$rolUsuario)");
+                    return;
+                }
+            }
+            
             $notificador->enviarAUsuario(
                 'COMPRA_ENVIADA_AUTORIZACION',
                 [

@@ -281,10 +281,10 @@ function initializeDataTable() {
         render: function (data) {
           return data
             ? "Bs. " +
-                parseFloat(data).toLocaleString("es-ES", {
-                  minimumFractionDigits: 4,
-                  maximumFractionDigits: 4,
-                })
+            parseFloat(data).toLocaleString("es-ES", {
+              minimumFractionDigits: 4,
+              maximumFractionDigits: 4,
+            })
             : "Bs. 0.0000";
         },
       },
@@ -383,8 +383,8 @@ function initializeDataTable() {
           }).join("");
           return data
             ? $(
-                '<table class="w-full table-fixed details-table border-t border-gray-200"/>'
-              ).append(data)
+              '<table class="w-full table-fixed details-table border-t border-gray-200"/>'
+            ).append(data)
             : false;
         },
       },
@@ -769,11 +769,11 @@ function calcularSubtotalLineaItemActualizar(item) {
   } else {
     cantidadBase = parseFloat(item.cantidad_unidad) || 0;
   }
-  
+
   const porcentajeDescuento = parseFloat(item.descuento) || 0;
   let cantidadConDescuento = cantidadBase;
   let cantidadDescontada = 0;
-  
+
   // Aplicar descuento a la cantidad
   if (porcentajeDescuento > 0 && porcentajeDescuento <= 100) {
     // Calcular la cantidad que se descuenta
@@ -785,15 +785,15 @@ function calcularSubtotalLineaItemActualizar(item) {
       `Porcentaje de descuento (${porcentajeDescuento}%) es mayor a 100. Se aplicará 0% o el máximo permitido.`
     );
   }
-  
+
   // Guardar la cantidad final con descuento aplicado
   item.cantidad_final = cantidadConDescuento;
-  
+
   // Calcular subtotales
   const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
   const subtotalConDescuento = parseFloat((cantidadConDescuento * precioUnitario).toFixed(4));
   const montoDescuento = parseFloat((subtotalAntesDescuento - subtotalConDescuento).toFixed(4));
-  
+
   item.subtotal_original_linea = subtotalAntesDescuento;
   item.monto_descuento_linea = montoDescuento;
   item.subtotal_linea = subtotalConDescuento;
@@ -885,45 +885,37 @@ function renderizarTablaDetalleActualizar() {
       <div class="space-y-1">
         <div>
           <label class="flex items-center text-xs">
-            <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_actualizar" ${
-              item.no_usa_vehiculo ? "checked" : ""
-            }> No usa vehículo
+            <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_actualizar" ${item.no_usa_vehiculo ? "checked" : ""
+        }> No usa vehículo
           </label>
         </div>
-        <div class="campos_peso_vehiculo_actualizar ${
-          item.no_usa_vehiculo ? "hidden" : ""
+        <div class="campos_peso_vehiculo_actualizar ${item.no_usa_vehiculo ? "hidden" : ""
         }">
           P.Bru: 
-          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_actualizar" value="${
-            item.peso_bruto || ""
-          }" placeholder="0.0000">
+          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_actualizar" value="${item.peso_bruto || ""
+        }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           P.Veh: 
-          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_actualizar" value="${
-            item.peso_vehiculo || ""
-          }" placeholder="0.0000">
+          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_actualizar" value="${item.peso_vehiculo || ""
+        }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaVehiculoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           Descuento %: 
-          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_actualizar" value="${
-            item.descuento || ""
-          }" placeholder="0.0000">
+          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_actualizar" value="${item.descuento || ""
+        }" placeholder="0.0000">
         </div>
-        <div class="campo_peso_neto_directo_actualizar ${
-          !item.no_usa_vehiculo ? "hidden" : ""
+        <div class="campo_peso_neto_directo_actualizar ${!item.no_usa_vehiculo ? "hidden" : ""
         }">
-          P.Neto: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_actualizar" value="${
-            item.peso_neto_directo || ""
-          }" placeholder="0.0000">
+          P.Neto: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_actualizar" value="${item.peso_neto_directo || ""
+        }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaBrutoActualizar bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           Descuento %: 
-          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_actualizar" value="${
-            item.descuento || ""
-          }" placeholder="0.0000">
+          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_actualizar" value="${item.descuento || ""
+        }" placeholder="0.0000">
         </div>
         Neto Calc: <strong class="peso_neto_calculado_display_actualizar">${(() => {
           const pesoNeto = calcularPesoNetoItemActualizar(item);
           const descuento = parseFloat(item.descuento) || 0;
-          const pesoConDescuento = descuento > 0 && descuento <= 100 
+          const pesoConDescuento = descuento > 0 && descuento <= 100
             ? parseFloat((pesoNeto * (1 - descuento / 100)).toFixed(4))
             : pesoNeto;
           return pesoConDescuento.toFixed(4);
@@ -932,9 +924,8 @@ function renderizarTablaDetalleActualizar() {
     } else {
       infoEspecificaHtml = `
         <div>
-          Cant: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_actualizar" value="${
-            item.cantidad_unidad || "1"
-          }" placeholder="1">
+          Cant: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_actualizar" value="${item.cantidad_unidad || "1"
+        }" placeholder="1">
         </div>`;
     }
 
@@ -942,14 +933,12 @@ function renderizarTablaDetalleActualizar() {
       <td class="py-0.5 px-0.5 text-xs">${item.nombre}</td>
       <td class="py-0.5 px-0.5 text-xs">${infoEspecificaHtml}</td>
       <td class="py-0.5 px-0.5 text-xs">
-          ${
-            item.idmoneda_item
-          } <input type="number" step="0.0001" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_actualizar" value="${item.precio_unitario.toFixed(
-      4
-    )}" placeholder="0.0000" readonly>
+          ${item.idmoneda_item
+      } <input type="number" step="0.0001" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_actualizar" value="${item.precio_unitario.toFixed(
+        4
+      )}" placeholder="0.0000" readonly>
       </td>
-      <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_actualizar">${
-        item.idmoneda_item
+      <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_actualizar">${item.idmoneda_item
       } ${calcularSubtotalLineaItemActualizar(item).toFixed(4)}</td>
       <td class="py-0.5 px-0.5 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleActualizar text-xs"></button></td>
     `;
@@ -1023,14 +1012,14 @@ function addEventListenersToDetalleInputsActualizar() {
             )
               ? "peso_vehiculo"
               : e.target.classList.contains("peso_bruto_actualizar")
-              ? "peso_bruto"
-              : e.target.classList.contains("peso_neto_directo_actualizar")
-              ? "peso_neto_directo"
-              : e.target.classList.contains("cantidad_unidad_actualizar")
-              ? "cantidad_unidad"
-              : e.target.classList.contains("descuento_actualizar")
-              ? "descuento"
-              : "precio_unitario";
+                ? "peso_bruto"
+                : e.target.classList.contains("peso_neto_directo_actualizar")
+                  ? "peso_neto_directo"
+                  : e.target.classList.contains("cantidad_unidad_actualizar")
+                    ? "cantidad_unidad"
+                    : e.target.classList.contains("descuento_actualizar")
+                      ? "descuento"
+                      : "precio_unitario";
 
             let valor = parseFloat(e.target.value) || 0;
 
@@ -1106,15 +1095,14 @@ function actualizarCalculosFilaActualizar(rowElement, item) {
   if (pesoNetoDisplay) {
     const pesoNeto = calcularPesoNetoItemActualizar(item);
     const descuento = parseFloat(item.descuento) || 0;
-    const pesoConDescuento = descuento > 0 && descuento <= 100 
+    const pesoConDescuento = descuento > 0 && descuento <= 100
       ? parseFloat((pesoNeto * (1 - descuento / 100)).toFixed(4))
       : pesoNeto;
     pesoNetoDisplay.textContent = pesoConDescuento.toFixed(4);
   }
   rowElement.querySelector(
     ".subtotal_linea_display_actualizar"
-  ).textContent = `${
-    item.idmoneda_item
+  ).textContent = `${item.idmoneda_item
   } ${calcularSubtotalLineaItemActualizar(item).toFixed(4)}`;
   calcularTotalesGeneralesActualizar();
 }
@@ -1445,13 +1433,11 @@ async function buscarProveedor(elements) {
           "hover:bg-gray-100",
           "cursor-pointer"
         );
-        itemDiv.textContent = `${prov.nombre || ""} ${
-          prov.apellido || ""
-        } (${prov.identificacion || ""})`.trim();
+        itemDiv.textContent = `${prov.nombre || ""} ${prov.apellido || ""
+          } (${prov.identificacion || ""})`.trim();
         itemDiv.dataset.idproveedor = prov.idproveedor;
-        itemDiv.dataset.nombre = `${prov.nombre || ""} ${
-          prov.apellido || ""
-        }`.trim();
+        itemDiv.dataset.nombre = `${prov.nombre || ""} ${prov.apellido || ""
+          }`.trim();
         itemDiv.dataset.identificacion = prov.identificacion || "";
 
         itemDiv.addEventListener("click", function () {
@@ -1480,10 +1466,10 @@ async function recargarSelectProductos(selectElement) {
     const response = await fetch('Compras/getListaProductosParaFormulario');
     if (!response.ok) throw new Error('Error en respuesta de productos');
     const productos = await response.json();
-    
+
     // Limpiar el select
     selectElement.innerHTML = '<option value="">Seleccione producto...</option>';
-    
+
     // Agregar productos desde el servidor (usando la misma estructura que la carga inicial)
     productos.forEach(producto => {
       const option = document.createElement('option');
@@ -1496,7 +1482,7 @@ async function recargarSelectProductos(selectElement) {
       option.textContent = `${producto.nombre_producto} (${producto.nombre_categoria})`;
       selectElement.appendChild(option);
     });
-    
+
     return true;
   } catch (error) {
     console.error('Error al recargar productos:', error);
@@ -1508,7 +1494,7 @@ async function recargarSelectProductos(selectElement) {
 async function agregarProductoDetalle(elements) {
   const selectedOption =
     elements.selectProductoAgregarModal.options[
-      elements.selectProductoAgregarModal.selectedIndex
+    elements.selectProductoAgregarModal.selectedIndex
     ];
   if (!selectedOption.value) {
     Swal.fire("Atención", "Seleccione un producto.", "warning");
@@ -1516,22 +1502,22 @@ async function agregarProductoDetalle(elements) {
   }
 
   const idproducto = selectedOption.value;
-  
+
   // Validar el producto con el backend antes de agregarlo
   const nombreProducto = selectedOption.dataset.nombre;
-  
+
   try {
     const formData = new FormData();
     formData.append('idproducto', idproducto);
     formData.append('nombre', nombreProducto);
-    
+
     const response = await fetch('Compras/validarProducto', {
       method: 'POST',
       body: formData
     });
-    
+
     const data = await response.json();
-    
+
     if (!data.status) {
       Swal.fire({
         icon: 'error',
@@ -1544,10 +1530,10 @@ async function agregarProductoDetalle(elements) {
       await recargarSelectProductos(elements.selectProductoAgregarModal);
       return;
     }
-    
+
     // Si la validación es exitosa, usar los datos validados del servidor
     const productoValidado = data.producto;
-    
+
     // Validar duplicados usando el ID validado del servidor
     if (detalleCompraItemsModal.find((item) => item.idproducto == productoValidado.idproducto)) {
       Swal.fire("Atención", "Este producto ya ha sido agregado al detalle.", "warning");
@@ -1556,7 +1542,7 @@ async function agregarProductoDetalle(elements) {
       await recargarSelectProductos(elements.selectProductoAgregarModal);
       return;
     }
-    
+
     const selectMonedaGeneralModal = document.getElementById(
       "idmoneda_general_compra_modal"
     );
@@ -1589,7 +1575,7 @@ async function agregarProductoDetalle(elements) {
     elements.selectProductoAgregarModal.value = "";
     // Recargar el select para asegurar datos limpios del servidor
     await recargarSelectProductos(elements.selectProductoAgregarModal);
-    
+
   } catch (error) {
     console.error('Error al validar producto:', error);
     Swal.fire({
@@ -1612,11 +1598,11 @@ function calcularSubtotalLineaItemModal(item) {
   } else {
     cantidadBase = parseFloat(item.cantidad_unidad) || 0;
   }
-  
+
   const porcentajeDescuento = parseFloat(item.descuento) || 0;
   let cantidadConDescuento = cantidadBase;
   let cantidadDescontada = 0;
-  
+
   // Aplicar descuento a la cantidad
   if (porcentajeDescuento > 0 && porcentajeDescuento <= 100) {
     // Calcular la cantidad que se descuenta
@@ -1628,15 +1614,15 @@ function calcularSubtotalLineaItemModal(item) {
       `Porcentaje de descuento (${porcentajeDescuento}%) es mayor a 100. Se aplicará 0% o el máximo permitido.`
     );
   }
-  
+
   // Guardar la cantidad final con descuento aplicado
   item.cantidad_final = cantidadConDescuento;
-  
+
   // Calcular subtotales
   const subtotalAntesDescuento = parseFloat((cantidadBase * precioUnitario).toFixed(4));
   const subtotalConDescuento = parseFloat((cantidadConDescuento * precioUnitario).toFixed(4));
   const montoDescuento = parseFloat((subtotalAntesDescuento - subtotalConDescuento).toFixed(4));
-  
+
   item.subtotal_original_linea = subtotalAntesDescuento;
   item.monto_descuento_linea = montoDescuento;
   item.subtotal_linea = subtotalConDescuento;
@@ -1711,45 +1697,37 @@ function renderizarTablaDetalleModal() {
       <div class="space-y-1">
         <div>
           <label class="flex items-center text-xs">
-            <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_modal" ${
-              item.no_usa_vehiculo ? "checked" : ""
-            }> No usa vehículo
+            <input type="checkbox" class="form-checkbox h-3 w-3 mr-1 no_usa_vehiculo_cb_modal" ${item.no_usa_vehiculo ? "checked" : ""
+        }> No usa vehículo
           </label>
         </div>
-        <div class="campos_peso_vehiculo_modal ${
-          item.no_usa_vehiculo ? "hidden" : ""
+        <div class="campos_peso_vehiculo_modal ${item.no_usa_vehiculo ? "hidden" : ""
         }">
           P.Bru: 
-          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${
-            item.peso_bruto || ""
-          }" placeholder="0.0000">
+          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_bruto_modal" value="${item.peso_bruto || ""
+        }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           P.Veh: 
-          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${
-            item.peso_vehiculo || ""
-          }" placeholder="0.0000">
+          <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_vehiculo_modal" value="${item.peso_vehiculo || ""
+        }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaVehiculo bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           Descuento %: 
-          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${
-            item.descuento || ""
-          }" placeholder="0.0000">
+          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""
+        }" placeholder="0.0000">
         </div>
-        <div class="campo_peso_neto_directo_modal ${
-          !item.no_usa_vehiculo ? "hidden" : ""
+        <div class="campo_peso_neto_directo_modal ${!item.no_usa_vehiculo ? "hidden" : ""
         }">
-          P.Neto: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${
-            item.peso_neto_directo || ""
-          }" placeholder="0.0000">
+          P.Neto: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 peso_neto_directo_modal" value="${item.peso_neto_directo || ""
+        }" placeholder="0.0000">
           <button type="button" class="btnUltimoPesoRomanaBruto bg-blue-100 text-blue-700 px-2 py-1 rounded ml-1" title="Traer último peso de romana"><i class="fas fa-balance-scale"></i></button>
           Descuento %: 
-          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${
-            item.descuento || ""
-          }" placeholder="0.0000">
+          <input type="number" step="0.0001" min="0" max="100" class="w-18 border rounded-md px-2 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 descuento_modal" value="${item.descuento || ""
+        }" placeholder="0.0000">
         </div>
         Neto Calc: <strong class="peso_neto_calculado_display_modal">${(() => {
           const pesoNeto = calcularPesoNetoItemModal(item);
           const descuento = parseFloat(item.descuento) || 0;
-          const pesoConDescuento = descuento > 0 && descuento <= 100 
+          const pesoConDescuento = descuento > 0 && descuento <= 100
             ? parseFloat((pesoNeto * (1 - descuento / 100)).toFixed(4))
             : pesoNeto;
           return pesoConDescuento.toFixed(4);
@@ -1758,9 +1736,8 @@ function renderizarTablaDetalleModal() {
     } else {
       infoEspecificaHtml = `
         <div>
-          Cant: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${
-            item.cantidad_unidad || "1"
-          }" placeholder="1">
+          Cant: <input type="number" step="0.0001" min="0.0001" class="w-18 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 cantidad_unidad_modal" value="${item.cantidad_unidad || "1"
+        }" placeholder="1">
         </div>`;
     }
 
@@ -1768,14 +1745,12 @@ function renderizarTablaDetalleModal() {
       <td class="py-0.5 px-0.5 text-xs">${item.nombre}</td>
       <td class="py-0.5 px-0.5 text-xs">${infoEspecificaHtml}</td>
       <td class="py-0.5 px-0.5 text-xs">
-          ${
-            item.idmoneda_item
-          } <input type="number" step="0.0001" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(
-      4
-    )}" placeholder="0.0000" readonly>
+          ${item.idmoneda_item
+      } <input type="number" step="0.0001" class="w-17 border rounded-md px-1 py-1 text-s focus:outline-none focus:ring-2 focus:ring-green-500 precio_unitario_item_modal" value="${item.precio_unitario.toFixed(
+        4
+      )}" placeholder="0.0000" readonly>
       </td>
-      <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_modal">${
-        item.idmoneda_item
+      <td class="py-0.5 px-0.5 text-xs subtotal_linea_display_modal">${item.idmoneda_item
       } ${calcularSubtotalLineaItemModal(item).toFixed(4)}</td>
       <td class="py-0.5 px-0.5 text-center"><button type="button" class="fa-solid fa-x text-red-500 hover:text-red-700 btnEliminarItemDetalleModal text-xs"></button></td>
     `;
@@ -1843,14 +1818,14 @@ function addEventListenersToDetalleInputsModal() {
             const fieldName = e.target.classList.contains("peso_vehiculo_modal")
               ? "peso_vehiculo"
               : e.target.classList.contains("peso_bruto_modal")
-              ? "peso_bruto"
-              : e.target.classList.contains("peso_neto_directo_modal")
-              ? "peso_neto_directo"
-              : e.target.classList.contains("cantidad_unidad_modal")
-              ? "cantidad_unidad"
-              : e.target.classList.contains("descuento_modal")
-              ? "descuento"
-              : "precio_unitario";
+                ? "peso_bruto"
+                : e.target.classList.contains("peso_neto_directo_modal")
+                  ? "peso_neto_directo"
+                  : e.target.classList.contains("cantidad_unidad_modal")
+                    ? "cantidad_unidad"
+                    : e.target.classList.contains("descuento_modal")
+                      ? "descuento"
+                      : "precio_unitario";
 
             let valor = parseFloat(e.target.value) || 0;
 
@@ -1926,15 +1901,14 @@ function actualizarCalculosFilaModal(rowElement, item) {
   if (pesoNetoDisplay) {
     const pesoNeto = calcularPesoNetoItemModal(item);
     const descuento = parseFloat(item.descuento) || 0;
-    const pesoConDescuento = descuento > 0 && descuento <= 100 
+    const pesoConDescuento = descuento > 0 && descuento <= 100
       ? parseFloat((pesoNeto * (1 - descuento / 100)).toFixed(4))
       : pesoNeto;
     pesoNetoDisplay.textContent = pesoConDescuento.toFixed(4);
   }
   rowElement.querySelector(
     ".subtotal_linea_display_modal"
-  ).textContent = `${
-    item.idmoneda_item
+  ).textContent = `${item.idmoneda_item
   } ${calcularSubtotalLineaItemModal(item).toFixed(4)}`;
   calcularTotalesGeneralesModal();
 }
@@ -2428,13 +2402,11 @@ async function buscarProveedorActualizar(elements) {
           "hover:bg-gray-100",
           "cursor-pointer"
         );
-        itemDiv.textContent = `${prov.nombre || ""} ${
-          prov.apellido || ""
-        } (${prov.identificacion || ""})`.trim();
+        itemDiv.textContent = `${prov.nombre || ""} ${prov.apellido || ""
+          } (${prov.identificacion || ""})`.trim();
         itemDiv.dataset.idproveedor = prov.idproveedor;
-        itemDiv.dataset.nombre = `${prov.nombre || ""} ${
-          prov.apellido || ""
-        }`.trim();
+        itemDiv.dataset.nombre = `${prov.nombre || ""} ${prov.apellido || ""
+          }`.trim();
         itemDiv.dataset.identificacion = prov.identificacion || "";
 
         itemDiv.addEventListener("click", function () {
@@ -2461,7 +2433,7 @@ async function buscarProveedorActualizar(elements) {
 async function agregarProductoDetalleActualizar(elements) {
   const selectedOption =
     elements.selectProductoAgregarActualizar.options[
-      elements.selectProductoAgregarActualizar.selectedIndex
+    elements.selectProductoAgregarActualizar.selectedIndex
     ];
   if (!selectedOption.value) {
     Swal.fire("Atención", "Seleccione un producto.", "warning");
@@ -2469,22 +2441,22 @@ async function agregarProductoDetalleActualizar(elements) {
   }
 
   const idproducto = selectedOption.value;
-  
+
   // Validar el producto con el backend antes de agregarlo
   const nombreProducto = selectedOption.dataset.nombre;
-  
+
   try {
     const formData = new FormData();
     formData.append('idproducto', idproducto);
     formData.append('nombre', nombreProducto);
-    
+
     const response = await fetch('Compras/validarProducto', {
       method: 'POST',
       body: formData
     });
-    
+
     const data = await response.json();
-    
+
     if (!data.status) {
       Swal.fire({
         icon: 'error',
@@ -2497,10 +2469,10 @@ async function agregarProductoDetalleActualizar(elements) {
       await recargarSelectProductos(elements.selectProductoAgregarActualizar);
       return;
     }
-    
+
     // Si la validación es exitosa, usar los datos validados del servidor
     const productoValidado = data.producto;
-    
+
     // Validar duplicados usando el ID validado del servidor
     if (detalleCompraItemsActualizar.find((item) => item.idproducto == productoValidado.idproducto)) {
       Swal.fire("Atención", "Este producto ya ha sido agregado al detalle.", "warning");
@@ -2509,10 +2481,10 @@ async function agregarProductoDetalleActualizar(elements) {
       await recargarSelectProductos(elements.selectProductoAgregarActualizar);
       return;
     }
-    
+
     const monedaGeneralSeleccionada =
       elements.selectMonedaGeneralActualizar.options[
-        elements.selectMonedaGeneralActualizar.selectedIndex
+      elements.selectMonedaGeneralActualizar.selectedIndex
       ];
     const simboloMonedaGeneral = monedaGeneralSeleccionada
       ? monedaGeneralSeleccionada.dataset.simbolo
@@ -2542,7 +2514,7 @@ async function agregarProductoDetalleActualizar(elements) {
     elements.selectProductoAgregarActualizar.value = "";
     // Recargar el select para asegurar datos limpios del servidor
     await recargarSelectProductos(elements.selectProductoAgregarActualizar);
-    
+
   } catch (error) {
     console.error('Error al validar producto:', error);
     Swal.fire({
@@ -2908,29 +2880,26 @@ function mostrarModalVerCompra(
         : 0;
 
       tr.innerHTML = `
-        <td class="px-4 py-2">${
-          detalle.nombre_producto || detalle.producto_nombre || "N/A"
+        <td class="px-4 py-2">${detalle.nombre_producto || detalle.producto_nombre || "N/A"
         }</td>
         <td class="px-4 py-2 text-right">${cantidad.toLocaleString("es-ES", {
           minimumFractionDigits: 4,
           maximumFractionDigits: 4,
         })}</td>
-        <td class="px-4 py-2 text-right">${
-          detalle.codigo_moneda || ""
+        <td class="px-4 py-2 text-right">${detalle.codigo_moneda || ""
         } ${precioUnitario.toLocaleString("es-ES", {
-        minimumFractionDigits: 4,
-        maximumFractionDigits: 4,
-      })}</td>
+          minimumFractionDigits: 4,
+          maximumFractionDigits: 4,
+        })}</td>
         <td class="px-4 py-2 text-right">${descuentoValor.toLocaleString(
           "es-ES",
           { minimumFractionDigits: 2, maximumFractionDigits: 4 }
         )} %</td>
-        <td class="px-4 py-2 text-right">${
-          detalle.codigo_moneda || ""
+        <td class="px-4 py-2 text-right">${detalle.codigo_moneda || ""
         } ${subtotalLinea.toLocaleString("es-ES", {
-        minimumFractionDigits: 4,
-        maximumFractionDigits: 4,
-      })}</td>
+          minimumFractionDigits: 4,
+          maximumFractionDigits: 4,
+        })}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -3045,9 +3014,14 @@ function cambiarEstadoCompra(idCompra, nuevoEstado) {
         .then((response) => response.json())
         .then((result) => {
           if (result.status) {
-            Swal.fire("¡Éxito!", result.message, "success");
-            recargarTablaCompras();
+            Swal.fire("¡Éxito!", result.message, "success").then(() => {
+              // Recargar DESPUÉS de cerrar el Swal para evitar que el usuario
+              // vea y haga clic en botones desactualizados mientras el diálogo está abierto
+              recargarTablaCompras();
+            });
           } else {
+            // Recargar inmediatamente para sincronizar estado (sin esperar cerrar el Swal)
+            recargarTablaCompras();
             Swal.fire(
               "Error",
               result.message || "No se pudo cambiar el estado de la compra.",

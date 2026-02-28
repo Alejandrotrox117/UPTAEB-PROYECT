@@ -10,7 +10,7 @@ let permisosUsuario = {
 
 
 function obtenerPermisos() {
-    
+
     if (window.permisosCompras && typeof window.permisosCompras === 'object' && window.permisosCompras.ver !== undefined) {
         permisosUsuario = {
             ver: window.permisosCompras.ver || false,
@@ -28,7 +28,7 @@ function obtenerPermisos() {
             const permisoCrear = document.getElementById('permisoCrear');
             const permisoEditar = document.getElementById('permisoEditar');
             const permisoEliminar = document.getElementById('permisoEliminar');
-            
+
             if (permisoVer || permisoCrear || permisoEditar || permisoEliminar) {
                 permisosUsuario = {
                     ver: permisoVer ? permisoVer.value === '1' : false,
@@ -48,12 +48,12 @@ function obtenerPermisos() {
         window.permisosCompras = {};
     }
     window.permisosCompras.permisosUsuario = permisosUsuario;
-    
-    const evento = new CustomEvent('permisosComprasCargados', { 
-        detail: permisosUsuario 
+
+    const evento = new CustomEvent('permisosComprasCargados', {
+        detail: permisosUsuario
     });
     document.dispatchEvent(evento);
-    
+
     setTimeout(() => {
         if (window.tablaCompras && typeof window.tablaCompras.draw === 'function') {
             window.tablaCompras.draw();
@@ -67,9 +67,9 @@ function generarBotonesAccionConPermisos(data, type, row) {
     var estadoActual = row.estatus_compra || "";
     var botones = [];
 
-    var rolId = document.getElementById('usuarioAuthRolId') ? 
-      parseInt(document.getElementById('usuarioAuthRolId').value) : 0;
-    
+    var rolId = document.getElementById('usuarioAuthRolId') ?
+        parseInt(document.getElementById('usuarioAuthRolId').value) : 0;
+
     var esSuperusuario = rolId === 1;
 
     var esCompraInactiva = estadoActual.toLowerCase() === "inactivo";
@@ -84,7 +84,7 @@ function generarBotonesAccionConPermisos(data, type, row) {
                 <i class="fas fa-eye fa-fw text-base"></i>
             </button>
         `);
-        
+
         // Botón para ver factura (solo si la compra está pagada)
         if (estadoActual.toUpperCase() === "PAGADA" && (permisosUsuario.ver_factura || permisosUsuario.acceso_total)) {
             botones.push(`
@@ -146,6 +146,7 @@ function generarBotonesAccionConPermisos(data, type, row) {
             }
             break;
         case "POR_AUTORIZAR":
+            // Solo roles con eliminar o acceso_total pueden autorizar o devolver a borrador
             if (permisosUsuario.eliminar || permisosUsuario.acceso_total) {
                 botones.push(`
                     <button
@@ -300,11 +301,11 @@ document.addEventListener("DOMContentLoaded", function () {
     obtenerPermisos();
 
     if (!permisosUsuario.ver && !permisosUsuario.crear && !permisosUsuario.editar && !permisosUsuario.eliminar) {
-        setTimeout(function() {
+        setTimeout(function () {
             obtenerPermisos();
         }, 100);
     }
-    
+
 });
 
 window.permisosCompras = window.permisosCompras || {};
