@@ -1,225 +1,228 @@
 <?php
-namespace App\Controllers;
 
-use App\Core\Controllers;
 use App\Models\CategoriasModel;
 
-class Categorias extends Controllers
-{
-    // Categorias del sistema que no se pueden eliminar
-    const CATEGORIAS_SISTEMA = [1, 2, 3]; // 1=Pacas, 2=Materiales, 3=Consumibles
+// =============================================================================
+// CONSTANTES DEL MÓDULO
+// =============================================================================
 
-    public function set_model($model)
-    {
-        $this->model = $model;
+// Categorías del sistema que no se pueden eliminar
+// 1=Pacas, 2=Materiales, 3=Consumibles
+define('CATEGORIAS_SISTEMA', [1, 2, 3]);
+
+// =============================================================================
+// FUNCIONES AUXILIARES DEL CONTROLADOR
+// =============================================================================
+
+/**
+ * Obtiene el modelo de categorías
+ */
+function getCategoriasModel() {
+    return new CategoriasModel();
+}
+
+/**
+ * Renderiza una vista de categorías
+ */
+function renderCategoriasView($view, $data = []) {
+    renderView('categorias', $view, $data);
+}
+
+// =============================================================================
+// FUNCIONES PÚBLICAS DEL CONTROLADOR
+// =============================================================================
+
+/**
+ * Vista principal de categorías
+ */
+function categorias_index() {
+    $data['page_title'] = "Gestion de categorias";
+    $data['page_name'] = "categorias";
+    $data['page_functions_js'] = "functions_categorias.js";
+    renderCategoriasView("categorias", $data);
+}
+
+/**
+ * Obtiene todas las categorías para DataTable
+ */
+function categorias_getCategoriasData() {
+    $model = getCategoriasModel();
+    $arrData = $model->SelectAllCategorias();
+
+    $response = [
+        "recordsTotal" => count($arrData),
+        "recordsFiltered" => count($arrData),
+        "data" => $arrData
+    ];
+
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    exit();
+}
+
+/**
+ * Crear una nueva categoría
+ */
+function categorias_crearCategoria() {
+    try {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (!$data || !is_array($data)) {
+            echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
+            exit();
+        }
+
+        $nombre = trim($data['nombre'] ?? '');
+        $descripcion = trim($data['descripcion'] ?? '');
+        $estatus = trim($data['estatus'] ?? 'ACTIVO');
+
+        if (empty($nombre)) {
+            echo json_encode(["status" => false, "message" => "El nombre de la categoria es obligatorio."]);
+            exit();
+        }
+
+        $model = getCategoriasModel();
+        $insertData = $model->insertCategoria([
+            "nombre" => $nombre,
+            "descripcion" => $descripcion,
+            "estatus" => $estatus,
+        ]);
+
+        if ($insertData) {
+            echo json_encode(["status" => true, "message" => "Categoria registrada correctamente."]);
+        } else {
+            echo json_encode(["status" => false, "message" => "Error al registrar la categoria. Intenta nuevamente."]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
     }
+    exit();
+}
 
-    public function get_model()
-    {
-        return $this->model;
+/**
+ * Actualizar una categoría existente
+ */
+function categorias_actualizarCategoria() {
+    try {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        if (!$data || !is_array($data)) {
+            echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
+            exit();
+        }
+
+        $idcategoria = trim($data['idcategoria'] ?? null);
+        $nombre = trim($data['nombre'] ?? '');
+        $descripcion = trim($data['descripcion'] ?? '');
+        $estatus = trim($data['estatus'] ?? '');
+
+        if (empty($idcategoria) || empty($nombre)) {
+            echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
+            exit();
+        }
+
+        $model = getCategoriasModel();
+        $updateData = $model->updateCategoria([
+            "idcategoria" => $idcategoria,
+            "nombre" => $nombre,
+            "descripcion" => $descripcion,
+            "estatus" => $estatus,
+        ]);
+
+        if ($updateData) {
+            echo json_encode(["status" => true, "message" => "Categoria actualizada correctamente."]);
+        } else {
+            echo json_encode(["status" => false, "message" => "Error al actualizar la categoria. Intenta nuevamente."]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
     }
+    exit();
+}
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
+/**
+ * Eliminar (desactivar) una categoría
+ */
+function categorias_deleteCategoria($idcategoria) {
+    try {
+        if (empty($idcategoria)) {
+            echo json_encode(["status" => false, "message" => "ID de categoria no proporcionado."]);
+            exit();
+        }
 
-    
-    public function index()
-    {
-        $data['page_title'] = "Gestion de categorias";
-        $data['page_name'] = "categorias";
-        $data['page_functions_js'] = "functions_categorias.js";
-        $this->views->getView($this, "categorias", $data);
-    }
-
-    
-    public function getCategoriasData()
-    {
-        $arrData = $this->get_model()->SelectAllCategorias();
-
-        $response = [
-           
-            "recordsTotal" => count($arrData),
-            "recordsFiltered" => count($arrData),
-            "data" => $arrData
-        ];
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
-    }
-
-    
-    public function crearCategoria()
-    {
-        try {
-            $json = file_get_contents('php://input');//input');//input');
-            $data = json_decode($json, true);
-
-            
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
-                exit();
-            }
-
-            
-            $nombre = trim($data['nombre'] ?? '');
-            $descripcion = trim($data['descripcion'] ?? '');
-            $estatus = trim($data['estatus'] ?? 'ACTIVO');
-
-            
-            if (empty($nombre)) {
-                echo json_encode(["status" => false, "message" => "El nombre de la categoria es obligatorio."]);
-                exit();
-            }
-
-            
-            $insertData = $this->model->insertCategoria([
-                "nombre" => $nombre,
-                "descripcion" => $descripcion,
-                "estatus" => $estatus,
+        // Validar que no sea una categoría del sistema
+        if (in_array((int)$idcategoria, CATEGORIAS_SISTEMA)) {
+            echo json_encode([
+                "status" => false,
+                "message" => "No se puede eliminar esta categoria porque es una categoria del sistema."
             ]);
-
-            
-            if ($insertData) {
-                echo json_encode(["status" => true, "message" => "Categoria registrada correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al registrar la categoria. Intenta nuevamente."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+            exit();
         }
-        exit();
-    }
 
-    
-    public function actualizarCategoria()
-    {
-        try {
-            $json = file_get_contents('php://input');//input');
-            $data = json_decode($json, true);
+        $model = getCategoriasModel();
+        $deleteData = $model->deleteCategoria($idcategoria);
 
-            
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
-                exit();
-            }
-
-            
-            $idcategoria = trim($data['idcategoria'] ?? null);
-            $nombre = trim($data['nombre'] ?? '');
-            $descripcion = trim($data['descripcion'] ?? '');
-            $estatus = trim($data['estatus'] ?? '');
-
-            
-            if (empty($idcategoria) || empty($nombre)) {
-                echo json_encode(["status" => false, "message" => "Datos incompletos. Por favor, llena todos los campos obligatorios."]);
-                exit();
-            }
-
-            
-            $updateData = $this->model->updateCategoria([
-                "idcategoria" => $idcategoria,
-                "nombre" => $nombre,
-                "descripcion" => $descripcion,
-                "estatus" => $estatus,
-            ]);
-
-            
-            if ($updateData) {
-                echo json_encode(["status" => true, "message" => "Categoria actualizada correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al actualizar la categoria. Intenta nuevamente."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+        if ($deleteData) {
+            echo json_encode(["status" => true, "message" => "Categoria desactivada correctamente."]);
+        } else {
+            echo json_encode(["status" => false, "message" => "Error al desactivar la categoria. Intenta nuevamente."]);
         }
-        exit();
+    } catch (Exception $e) {
+        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
     }
+    exit();
+}
 
-    
-    public function deleteCategoria($idcategoria)
-    {
-        try {
-            
-            if (empty($idcategoria)) {
-                echo json_encode(["status" => false, "message" => "ID de categoria no proporcionado."]);
-                return;
-            }
+/**
+ * Obtener una categoría por su ID
+ */
+function categorias_getCategoriaById($idcategoria) {
+    try {
+        $model = getCategoriasModel();
+        $categoria = $model->getCategoriaById($idcategoria);
 
-            // Validar que no sea una categoria del sistema
-            if (in_array((int)$idcategoria, self::CATEGORIAS_SISTEMA)) {
-                echo json_encode([
-                    "status" => false, 
-                    "message" => "No se puede eliminar esta categoria porque es una categoria del sistema."
-                ]);
-                return;
-            }
-
-            
-            $deleteData = $this->model->deleteCategoria($idcategoria);
-
-            
-            if ($deleteData) {
-                echo json_encode(["status" => true, "message" => "Categoria desactivada correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al desactivar la categoria. Intenta nuevamente."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+        if ($categoria) {
+            echo json_encode(["status" => true, "data" => $categoria]);
+        } else {
+            echo json_encode(["status" => false, "message" => "Categoria no encontrada."]);
         }
-        exit();
+    } catch (Exception $e) {
+        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
     }
+    exit();
+}
 
-    
-    public function getCategoriaById($idcategoria)
-    {
-        try {
-            $categoria = $this->model->getCategoriaById($idcategoria);
+/**
+ * Reactivar una categoría inactiva
+ */
+function categorias_reactivarCategoria() {
+    try {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
 
-            if ($categoria) {
-                echo json_encode(["status" => true, "data" => $categoria]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Categoria no encontrada."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+        if (!$data || !is_array($data)) {
+            echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
+            exit();
         }
-        exit();
-    }
 
-    /**
-     * Reactivar una categoria inactiva
-     */
-    public function reactivarCategoria()
-    {
-        try {
-            $json = file_get_contents('php://input');
-            $data = json_decode($json, true);
+        $idcategoria = intval($data['idcategoria'] ?? 0);
 
-            if (!$data || !is_array($data)) {
-                echo json_encode(["status" => false, "message" => "No se recibieron datos validos."]);
-                exit();
-            }
-
-            $idcategoria = intval($data['idcategoria'] ?? 0);
-            
-            if ($idcategoria <= 0) {
-                echo json_encode(["status" => false, "message" => "ID de categoria invalido."]);
-                exit();
-            }
-
-            // Llamar al modelo para reactivar
-            $reactivarData = $this->model->reactivarCategoria($idcategoria);
-
-            if ($reactivarData) {
-                echo json_encode(["status" => true, "message" => "Categoria reactivada correctamente."]);
-            } else {
-                echo json_encode(["status" => false, "message" => "Error al reactivar la categoria. Intenta nuevamente."]);
-            }
-        } catch (Exception $e) {
-            echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
+        if ($idcategoria <= 0) {
+            echo json_encode(["status" => false, "message" => "ID de categoria invalido."]);
+            exit();
         }
-        exit();
+
+        $model = getCategoriasModel();
+        $reactivarData = $model->reactivarCategoria($idcategoria);
+
+        if ($reactivarData) {
+            echo json_encode(["status" => true, "message" => "Categoria reactivada correctamente."]);
+        } else {
+            echo json_encode(["status" => false, "message" => "Error al reactivar la categoria. Intenta nuevamente."]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(["status" => false, "message" => "Error inesperado: " . $e->getMessage()]);
     }
+    exit();
 }

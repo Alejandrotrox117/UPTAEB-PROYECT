@@ -39,7 +39,7 @@ class ExpresionesRegulares
         'nombre' => 'El nombre debe contener solo letras y espacios, entre 2 y 50 caracteres.',
         'apellido' => 'El apellido debe contener solo letras y espacios, entre 2 y 100 caracteres.',
         'cedula' => 'Formato de cédula inválido. Ejemplo: V-12345678',
-        'telefono' => 'El teléfono debe tener exactamente 11 dígitos.',
+        'telefono' => 'El teléfono debe tener exactamente 11 dígitos. Ejemplo: 04141234567, 04221234567.',
         'email' => 'Formato de email inválido.',
         'direccion' => 'La dirección debe tener entre 5 y 100 caracteres.',
         'textoGeneral' => 'El texto debe tener entre 2 y 100 caracteres.',

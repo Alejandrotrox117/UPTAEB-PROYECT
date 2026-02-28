@@ -8,6 +8,8 @@ import {
 
 let tablaProductos;
 let categorias = [];
+let esSuperUsuarioActual = false;
+let idUsuarioActual = 0;
 
 // Arrays de validación de seguridad anti-manipulación
 let categoriasValidas = [];
@@ -284,15 +286,54 @@ document.addEventListener("DOMContentLoaded", function () {
   
   cargarCategorias();
 
-  $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-    if (settings.nTable.id !== "TablaProductos") {
-      return true;
+  verificarSuperUsuarioProductos().then((result) => {
+    if (result && result.status) {
+      esSuperUsuarioActual = result.es_super_usuario;
+      idUsuarioActual = result.usuario_id;
+    } else {
+      esSuperUsuarioActual = false;
+      idUsuarioActual = 0;
     }
-    var api = new $.fn.dataTable.Api(settings);
-    var rowData = api.row(dataIndex).data();
-    return rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
-  });
 
+    // Filtro: super usuarios ven todos, usuarios normales solo activos
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      if (settings.nTable.id !== "TablaProductos") {
+        return true;
+      }
+      if (esSuperUsuarioActual) {
+        return true;
+      }
+      var api = new $.fn.dataTable.Api(settings);
+      var rowData = api.row(dataIndex).data();
+      return rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
+    });
+
+    inicializarTablaProductos();
+
+    setTimeout(() => {
+      if (tablaProductos && typeof tablaProductos.draw === 'function') {
+        tablaProductos.draw(false);
+      }
+    }, 500);
+  }).catch((error) => {
+    console.error("Error en verificación de super usuario:", error);
+    esSuperUsuarioActual = false;
+    idUsuarioActual = 0;
+
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+      if (settings.nTable.id !== "TablaProductos") {
+        return true;
+      }
+      var api = new $.fn.dataTable.Api(settings);
+      var rowData = api.row(dataIndex).data();
+      return rowData && rowData.estatus && rowData.estatus.toLowerCase() !== "inactivo";
+    });
+
+    inicializarTablaProductos();
+  });
+});
+
+function inicializarTablaProductos() {
   $(document).ready(function () {
     if ($.fn.DataTable.isDataTable('#TablaProductos')) {
       $('#TablaProductos').DataTable().destroy();
@@ -403,18 +444,36 @@ document.addEventListener("DOMContentLoaded", function () {
           render: function (data, type, row) {
             const idProducto = row.idproducto || "";
             const nombreProducto = row.nombre || "";
-            return `
-              <div class="inline-flex items-center space-x-1">
+            const estatusProducto = row.estatus || "";
+            const esProductoInactivo = estatusProducto.toUpperCase() === 'INACTIVO';
+
+            let acciones = '<div class="inline-flex items-center space-x-1">';
+
+            // Botón Ver - siempre visible
+            acciones += `
                 <button class="ver-producto-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" data-idproducto="${idProducto}" title="Ver detalles">
                     <i class="fas fa-eye fa-fw text-base"></i>
-                </button>
+                </button>`;
+
+            if (esProductoInactivo) {
+              // Para productos inactivos, mostrar solo botón de reactivar
+              acciones += `
+                <button class="reactivar-producto-btn text-green-600 hover:text-green-700 p-1 transition-colors duration-150" data-idproducto="${idProducto}" data-nombre="${nombreProducto}" title="Reactivar producto">
+                    <i class="fas fa-undo fa-fw text-base"></i>
+                </button>`;
+            } else {
+              // Para productos activos, mostrar botones de editar y eliminar
+              acciones += `
                 <button class="editar-producto-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150" data-idproducto="${idProducto}" title="Editar">
                     <i class="fas fa-edit fa-fw text-base"></i>
                 </button>
                 <button class="eliminar-producto-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150" data-idproducto="${idProducto}" data-nombre="${nombreProducto}" title="Desactivar">
                     <i class="fas fa-trash-alt fa-fw text-base"></i>
-                </button>
-              </div>`;
+                </button>`;
+            }
+
+            acciones += '</div>';
+            return acciones;
           },
         },
         {
@@ -493,7 +552,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
     });
 
-  });
+  }); // fin $(document).ready
 
   // Event listeners delegados FUERA del $(document).ready) anidado para que persistan
   $(document).on("click", ".ver-producto-btn", function () {
@@ -516,13 +575,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  $(document).on("click", ".eliminar-producto-btn", function () {
+  $("#TablaProductos tbody").on("click", ".eliminar-producto-btn", function () {
     const idProducto = $(this).data("idproducto");
     const nombreProducto = $(this).data("nombre");
     if (idProducto && typeof eliminarProducto === "function") {
       eliminarProducto(idProducto, nombreProducto);
     } else {
       console.error("Función eliminarProducto no definida o idProducto no encontrado.", idProducto);
+      Swal.fire("Error", "No se pudo obtener el ID del producto.", "error");
+    }
+  });
+
+  $("#TablaProductos tbody").on("click", ".reactivar-producto-btn", function () {
+    const idProducto = $(this).data("idproducto");
+    const nombreProducto = $(this).data("nombre");
+    if (idProducto && typeof activarProducto === "function") {
+      activarProducto(idProducto, nombreProducto);
+    } else {
+      console.error("Función activarProducto no definida o idProducto no encontrado.", idProducto);
       Swal.fire("Error", "No se pudo obtener el ID del producto.", "error");
     }
   });
@@ -602,7 +672,7 @@ document.addEventListener("DOMContentLoaded", function () {
       generarNotificacionesProductos();
     });
   }
-});
+} // fin de inicializarTablaProductos
 
 
 function registrarProducto() {
@@ -859,4 +929,79 @@ function eliminarProducto(idProducto, nombreProducto) {
         });
     }
   });
+}
+
+/**
+ * Activar (reactivar) un producto inactivo
+ */
+function activarProducto(idProducto, nombreProducto) {
+  Swal.fire({
+    title: "¿Reactivar producto?",
+    text: `¿Deseas reactivar el producto "${nombreProducto}"? Su estatus cambiará a ACTIVO.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#00c950",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Sí, reactivar",
+    cancelButtonText: "Cancelar",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch("Productos/activarProducto", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify({ idproducto: idProducto }),
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.status) {
+            Swal.fire("¡Reactivado!", result.message || "Producto reactivado correctamente.", "success").then(() => {
+              recargarTablaProductos();
+              if (typeof actualizarContadorNotificaciones === 'function') {
+                actualizarContadorNotificaciones();
+              }
+            });
+          } else {
+            Swal.fire("Error", result.message || "No se pudo reactivar el producto.", "error");
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Error de conexión.", "error");
+        });
+    }
+  });
+}
+
+/**
+ * Verificar si el usuario actual es super usuario
+ */
+function verificarSuperUsuarioProductos() {
+  return fetch("Productos/verificarSuperUsuario", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (result.status) {
+        esSuperUsuarioActual = result.es_super_usuario;
+        idUsuarioActual = result.usuario_id;
+        return result;
+      } else {
+        esSuperUsuarioActual = false;
+        idUsuarioActual = 0;
+        return { es_super_usuario: false, usuario_id: 0 };
+      }
+    })
+    .catch(error => {
+      console.error("Error en verificarSuperUsuarioProductos:", error);
+      esSuperUsuarioActual = false;
+      idUsuarioActual = 0;
+      return { es_super_usuario: false, usuario_id: 0 };
+    });
 }

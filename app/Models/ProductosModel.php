@@ -531,7 +531,7 @@ class ProductosModel extends Mysql
                 ],
                 'MEDIA'
             );
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Error notificando producto: " . $e->getMessage());
         }
     }
@@ -552,7 +552,7 @@ class ProductosModel extends Mysql
                     'BAJA'
                 );
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Error notificando actualización: " . $e->getMessage());
         }
     }
@@ -573,7 +573,7 @@ class ProductosModel extends Mysql
                     'MEDIA'
                 );
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Error notificando desactivación: " . $e->getMessage());
         }
     }
@@ -594,7 +594,7 @@ class ProductosModel extends Mysql
                     'BAJA'
                 );
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("Error notificando activación: " . $e->getMessage());
         }
     }
@@ -641,7 +641,7 @@ class ProductosModel extends Mysql
                     error_log("✅ Stock OK - No se requiere notificación");
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             error_log("❌ Error verificando stock: " . $e->getMessage());
         }
     }
