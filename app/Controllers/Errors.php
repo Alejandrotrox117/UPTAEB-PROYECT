@@ -1,20 +1,21 @@
 <?php
-namespace App\Controllers;
 
-use App\Core\Controllers;
+/**
+ * Controlador de Errores - Estilo Funcional
+ */
 
-class Errors extends Controllers{
-        public function __construct(){
-            parent::__construct();
-        }
+/**
+ * Página de error 404 / Página no encontrada
+ */
+function errors_notFound()
+{
+    renderView('errors', 'error');
+}
 
-
-        public function notFound(){
-            $this->views->getView($this, "error");
-        }
-
-        public function index(){
-            $this->views->getView($this, "error");
-        }
-
-    }
+/**
+ * Página principal de errores (alias de notFound)
+ */
+function errors_index()
+{
+    renderView('errors', 'error');
+}

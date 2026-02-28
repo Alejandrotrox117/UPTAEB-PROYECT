@@ -1,40 +1,36 @@
 <?php
 
-class Home extends Controllers 
+/**
+ * Controlador Home - Estilo Funcional
+ */
+
+/**
+ * Página principal - index
+ */
+function home_index()
 {
-    
-    public function set_model($model)
-    {
-        $this->model = $model;
+    $data['page_id'] = 1;
+    $data["page_title"] = "Pagina principal";
+    $data["tag_page"] = "La pradera de pavia";
+    $data["page_name"] = "Home";
+
+    renderView("home", "home", $data);
+}
+
+/**
+ * Página principal - home (alias o método con parámetros)
+ */
+function home_home($params = null)
+{
+    $data['page_id'] = 1;
+    $data["page_title"] = "Pagina principal";
+    $data["tag_page"] = "La pradera de pavia";
+    $data["page_name"] = "Home";
+
+    if ($params) {
+        // En estilo funcional, los parámetros llegarían como argumentos de la función
+        // Pero el método original hacía un echo si había params.
     }
 
-    public function get_model()
-    {
-        return $this->model;
-    }
-
-    public function index()
-    {
-        $this->views->getView($this, "home");
-    }
-
-
-    public function home($params = null) {
-        $data['page_id'] = 1;
-        $data["page_title"] = "Pagina principal";
-        $data["tag_page"] = "La pradera de pavia";
-        $data["page_name"] = "Home";
-        
-        
-        if ($params) {
-            echo "Parámetros recibidos: " . $params;
-        }
-    
-        $this->views->getView($this, "home", $data);
-    }
-    
-
-    
-
-}   
-?>
+    renderView("home", "home", $data);
+}

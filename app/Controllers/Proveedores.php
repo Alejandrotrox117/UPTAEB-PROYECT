@@ -13,14 +13,16 @@ use App\Helpers\Validation\ExpresionesRegulares;
 /**
  * Obtiene el modelo de proveedores
  */
-function getProveedoresModel() {
+function getProveedoresModel()
+{
     return new ProveedoresModel();
 }
 
 /**
  * Renderiza una vista de proveedores
  */
-function renderProveedoresView($view, $data = []) {
+function renderProveedoresView($view, $data = [])
+{
     renderView('proveedores', $view, $data);
 }
 
@@ -31,7 +33,8 @@ function renderProveedoresView($view, $data = []) {
 /**
  * Página principal del módulo de proveedores
  */
-function proveedores_index() {
+function proveedores_index()
+{
     // Verificar autenticación
     if (!obtenerUsuarioSesion()) {
         header('Location: ' . base_url() . '/login');
@@ -59,7 +62,8 @@ function proveedores_index() {
 /**
  * Crear un nuevo proveedor
  */
-function proveedores_createProveedor() {
+function proveedores_createProveedor()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $postdata = file_get_contents('php://input');
@@ -215,8 +219,8 @@ function proveedores_createProveedor() {
                 die();
             }
 
-            $model = getProveedoresModel();
-            $arrResponse = $model->insertProveedor($arrData);
+            $objProveedor = getProveedoresModel();
+            $arrResponse = $objProveedor->insertProveedor($arrData);
 
             if ($arrResponse['status'] === true) {
                 $resultadoBitacora = registrarEnBitacora('proveedor', 'INSERTAR', $idusuario);
@@ -240,7 +244,8 @@ function proveedores_createProveedor() {
 /**
  * Obtener listado de proveedores
  */
-function proveedores_getProveedoresData() {
+function proveedores_getProveedoresData()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Proveedores', 'ver')) {
@@ -253,8 +258,8 @@ function proveedores_getProveedoresData() {
             $idusuario = obtenerUsuarioSesion();
 
             // Obtener proveedores (activos para usuarios normales, todos para super usuarios)
-            $model = getProveedoresModel();
-            $arrResponse = $model->selectAllProveedores($idusuario);
+            $objProveedor = getProveedoresModel();
+            $arrResponse = $objProveedor->selectAllProveedores($idusuario);
 
             if ($arrResponse['status']) {
                 registrarEnBitacora('Proveedores', 'CONSULTA_LISTADO', $idusuario);
@@ -273,7 +278,12 @@ function proveedores_getProveedoresData() {
 /**
  * Obtener un proveedor por ID
  */
-function proveedores_getProveedorById($idproveedor) {
+function proveedores_getProveedorById($idproveedor)
+{
+    if (session_status() == PHP_SESSION_NONE) {
+        session_start();
+    }
+
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         if (empty($idproveedor) || !is_numeric($idproveedor)) {
             $arrResponse = array('status' => false, 'message' => 'ID de proveedor inválido');
@@ -282,8 +292,8 @@ function proveedores_getProveedorById($idproveedor) {
         }
 
         try {
-            $model = getProveedoresModel();
-            $arrData = $model->selectProveedorById(intval($idproveedor));
+            $objProveedor = getProveedoresModel();
+            $arrData = $objProveedor->selectProveedorById(intval($idproveedor));
             if (!empty($arrData)) {
                 $arrResponse = array('status' => true, 'data' => $arrData);
             } else {
@@ -302,7 +312,8 @@ function proveedores_getProveedorById($idproveedor) {
 /**
  * Actualizar un proveedor
  */
-function proveedores_updateProveedor() {
+function proveedores_updateProveedor()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $postdata = file_get_contents('php://input');
@@ -465,8 +476,8 @@ function proveedores_updateProveedor() {
                 die();
             }
 
-            $model = getProveedoresModel();
-            $arrResponse = $model->updateProveedor($intIdProveedor, $arrData);
+            $objProveedor = getProveedoresModel();
+            $arrResponse = $objProveedor->updateProveedor($intIdProveedor, $arrData);
 
             if ($arrResponse['status'] === true) {
                 $resultadoBitacora = registrarEnBitacora('proveedor', 'ACTUALIZAR', $idusuario);
@@ -489,7 +500,8 @@ function proveedores_updateProveedor() {
 /**
  * Eliminar (desactivar) un proveedor
  */
-function proveedores_deleteProveedor() {
+function proveedores_deleteProveedor()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $postdata = file_get_contents('php://input');
@@ -509,8 +521,8 @@ function proveedores_deleteProveedor() {
             }
 
             $idusuario = obtenerUsuarioSesion();
-            $model = getProveedoresModel();
-            $requestDelete = $model->deleteProveedorById($intIdProveedor, $idusuario);
+            $objProveedor = getProveedoresModel();
+            $requestDelete = $objProveedor->deleteProveedorById($intIdProveedor);
             if ($requestDelete) {
                 $arrResponse = array('status' => true, 'message' => 'Proveedor desactivado correctamente');
             } else {
@@ -538,11 +550,12 @@ function proveedores_deleteProveedor() {
 /**
  * Obtener proveedores activos
  */
-function proveedores_getProveedoresActivos() {
+function proveedores_getProveedoresActivos()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            $model = getProveedoresModel();
-            $arrResponse = $model->selectProveedoresActivos();
+            $objProveedor = getProveedoresModel();
+            $arrResponse = $objProveedor->selectProveedoresActivos();
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getProveedoresActivos: " . $e->getMessage());
@@ -556,7 +569,8 @@ function proveedores_getProveedoresActivos() {
 /**
  * Activar un proveedor
  */
-function proveedores_activarProveedor() {
+function proveedores_activarProveedor()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $postdata = file_get_contents('php://input');
@@ -576,8 +590,8 @@ function proveedores_activarProveedor() {
             }
 
             $idusuario = obtenerUsuarioSesion();
-            $model = getProveedoresModel();
-            $requestActivar = $model->activarProveedorById($intIdProveedor, $idusuario);
+            $objProveedor = getProveedoresModel();
+            $requestActivar = $objProveedor->reactivarProveedor($intIdProveedor);
             if ($requestActivar) {
                 $arrResponse = array('status' => true, 'message' => 'Proveedor activado correctamente');
             } else {
@@ -597,11 +611,12 @@ function proveedores_activarProveedor() {
 /**
  * Exportar proveedores
  */
-function proveedores_exportarProveedores() {
+function proveedores_exportarProveedores()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            $model = getProveedoresModel();
-            $arrData = $model->selectAllProveedores();
+            $objProveedor = getProveedoresModel();
+            $arrData = $objProveedor->selectAllProveedores();
 
             if ($arrData['status']) {
                 $data['proveedores'] = $arrData['data'];
@@ -626,7 +641,8 @@ function proveedores_exportarProveedores() {
 /**
  * Buscar proveedores
  */
-function proveedores_buscarProveedor() {
+function proveedores_buscarProveedor()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $postdata = file_get_contents('php://input');
@@ -638,15 +654,15 @@ function proveedores_buscarProveedor() {
                 die();
             }
 
-            $strTermino = strClean($request['termino'] ?? '');
+            $strTermino = ExpresionesRegulares::limpiar($request['termino'] ?? '');
             if (empty($strTermino)) {
                 $arrResponse = array('status' => false, 'message' => 'Término de búsqueda requerido');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                 die();
             }
 
-            $model = getProveedoresModel();
-            $arrData = $model->buscarProveedores($strTermino);
+            $objProveedor = getProveedoresModel();
+            $arrData = $objProveedor->buscarProveedores($strTermino);
             if ($arrData['status']) {
                 $arrResponse = array('status' => true, 'data' => $arrData['data']);
             } else {
@@ -666,7 +682,8 @@ function proveedores_buscarProveedor() {
 /**
  * Reactivar un proveedor (solo super usuarios)
  */
-function proveedores_reactivarProveedor() {
+function proveedores_reactivarProveedor()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             error_log("=== Iniciando reactivarProveedor ===");
@@ -675,8 +692,8 @@ function proveedores_reactivarProveedor() {
             error_log("Usuario de sesión: " . ($idusuarioSesion ?: 'NULL'));
 
             // Solo super usuarios pueden reactivar proveedores
-            $model = getProveedoresModel();
-            $esSuperUsuario = $model->verificarEsSuperUsuario($idusuarioSesion);
+            $objProveedor = getProveedoresModel();
+            $esSuperUsuario = $objProveedor->verificarEsSuperUsuario($idusuarioSesion);
             error_log("Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
 
             if (!$esSuperUsuario) {
@@ -707,7 +724,7 @@ function proveedores_reactivarProveedor() {
             $idproveedor = intval($data['idproveedor']);
             error_log("Intentando reactivar proveedor ID: $idproveedor");
 
-            $arrResponse = $model->reactivarProveedor($idproveedor);
+            $arrResponse = $objProveedor->reactivarProveedor($idproveedor);
             error_log("Resultado del modelo: " . print_r($arrResponse, true));
 
             if ($arrResponse['status']) {
@@ -729,7 +746,8 @@ function proveedores_reactivarProveedor() {
 /**
  * Verificar si el usuario actual es super usuario
  */
-function proveedores_verificarSuperUsuario() {
+function proveedores_verificarSuperUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             error_log("=== Iniciando verificarSuperUsuario en Proveedores controller ===");
@@ -762,8 +780,8 @@ function proveedores_verificarSuperUsuario() {
 
             error_log("Verificando usuario ID: $idusuario con esSuperAdmin");
 
-            $model = getProveedoresModel();
-            $esSuperAdmin = $model->verificarEsSuperUsuario($idusuario);
+            $objProveedor = getProveedoresModel();
+            $esSuperAdmin = $objProveedor->verificarEsSuperUsuario($idusuario);
 
             error_log("Resultado esSuperAdmin: " . ($esSuperAdmin ? 'SÍ' : 'NO'));
 
@@ -786,5 +804,3 @@ function proveedores_verificarSuperUsuario() {
         die();
     }
 }
-
-?>
