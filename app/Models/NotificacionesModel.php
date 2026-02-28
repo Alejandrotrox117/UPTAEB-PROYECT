@@ -177,7 +177,6 @@ class NotificacionesModel extends Mysql
                 FROM notificaciones
                 WHERE (idusuario_destino = ? OR idrol_destino = ?)
                   AND activa = 1
-                  AND habilitada = 1
                 ORDER BY leida ASC, fecha_creacion DESC, idnotificacion DESC
                 LIMIT 50
             ";

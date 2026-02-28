@@ -126,7 +126,7 @@ class ProveedoresModel extends Mysql
                 "INSERT INTO proveedor (
                     nombre, apellido, identificacion, fecha_nacimiento, 
                     direccion, correo_electronico, estatus, telefono_principal, 
-                    observaciones, genero, fecha_cracion, fecha_modificacion
+                    observaciones, genero, fecha_creacion, fecha_modificacion
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
             );
             
@@ -247,9 +247,9 @@ class ProveedoresModel extends Mysql
                 "SELECT 
                     idproveedor, nombre, apellido, identificacion, fecha_nacimiento,
                     direccion, correo_electronico, estatus, telefono_principal,
-                    observaciones, genero, fecha_cracion, fecha_modificacion,
+                    observaciones, genero, fecha_creacion, fecha_modificacion,
                     DATE_FORMAT(fecha_nacimiento, ?) as fecha_nacimiento_formato,
-                    DATE_FORMAT(fecha_cracion, ?) as fecha_creacion_formato,
+                    DATE_FORMAT(fecha_creacion, ?) as fecha_creacion_formato,
                     DATE_FORMAT(fecha_modificacion, ?) as fecha_modificacion_formato
                 FROM proveedor 
                 WHERE idproveedor = ?"
@@ -318,12 +318,12 @@ class ProveedoresModel extends Mysql
                 "SELECT 
                     idproveedor, nombre, apellido, identificacion, fecha_nacimiento,
                     direccion, correo_electronico, estatus, telefono_principal,
-                    observaciones, genero, fecha_cracion, fecha_modificacion,
+                    observaciones, genero, fecha_creacion, fecha_modificacion,
                     DATE_FORMAT(fecha_nacimiento, ?) as fecha_nacimiento_formato,
-                    DATE_FORMAT(fecha_cracion, ?) as fecha_creacion_formato,
+                    DATE_FORMAT(fecha_creacion, ?) as fecha_creacion_formato,
                     DATE_FORMAT(fecha_modificacion, ?) as fecha_modificacion_formato
                 FROM proveedor" . $whereClause . " 
-                ORDER BY fecha_cracion DESC"
+                ORDER BY fecha_creacion DESC"
             );
             
             $this->setArray(['%d/%m/%Y', '%d/%m/%Y', '%d/%m/%Y']);

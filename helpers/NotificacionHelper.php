@@ -511,8 +511,8 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
             if (!empty($destinatarios)) {
                 $sqlNotificacion = "INSERT INTO notificaciones (
                     tipo, titulo, mensaje, modulo, referencia_id, prioridad,
-                    idusuario_destino, idrol_destino, leida, habilitada, activa, fecha_creacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 1, NOW())";
+                    idusuario_destino, idrol_destino, leida, activa, fecha_creacion
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 1, NOW())";
                 
                 $stmtNotificacion = $db->prepare($sqlNotificacion);
                 
@@ -578,8 +578,8 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
                 // Si no hay destinatarios especificados, guardar para todos (rol 1 = SuperAdmin)
                 $sqlNotificacion = "INSERT INTO notificaciones (
                     tipo, titulo, mensaje, modulo, referencia_id, prioridad,
-                    idrol_destino, leida, habilitada, activa, fecha_creacion
-                ) VALUES (?, ?, ?, ?, ?, ?, 1, 0, 1, 1, NOW())";
+                    idrol_destino, leida, activa, fecha_creacion
+                ) VALUES (?, ?, ?, ?, ?, ?, 1, 0, 1, NOW())";
                 
                 $stmtNotificacion = $db->prepare($sqlNotificacion);
                 $result = $stmtNotificacion->execute([

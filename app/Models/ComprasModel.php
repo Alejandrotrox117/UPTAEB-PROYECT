@@ -840,8 +840,22 @@ class ComprasModel
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$nuevoEstado, $idcompra]);
 
-            if ($nuevoEstado === 'PAGADA') {
+            // Obtener datos de la compra para las notificaciones
+            $stmtInfo = $db->prepare("SELECT nro_compra, total_general FROM compra WHERE idcompra = ?");
+            $stmtInfo->execute([$idcompra]);
+            $infoCompra = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+            $nroCompra  = $infoCompra['nro_compra']    ?? $idcompra;
+            $totalCompra = $infoCompra['total_general'] ?? 0;
+
+            // Disparar notificaciones según el nuevo estado
+            if ($nuevoEstado === 'POR_AUTORIZAR') {
+                $this->notificarCompraPorAutorizar($idcompra, $nroCompra, $totalCompra);
+                $this->notificarCompraEnviadaAutorizacion($idcompra, $nroCompra, $idusuario);
+            } elseif ($nuevoEstado === 'AUTORIZADA') {
+                $this->notificarCompraAutorizadaPago($idcompra, $nroCompra, $totalCompra);
+            } elseif ($nuevoEstado === 'PAGADA') {
                 $this->ejecutarGeneracionNotaEntrega($idcompra, $db);
+                $this->notificarCompraPagada($idcompra);
             }
 
             return [
@@ -867,7 +881,7 @@ class ComprasModel
         $db = $conexion->get_conectGeneral();
 
         try {
-            $this->setQuery("INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_cracion, fecha_modificacion) 
+            $this->setQuery("INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_creacion, fecha_modificacion) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', NOW(), NOW())");
             
             $this->setArray([

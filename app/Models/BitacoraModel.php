@@ -375,13 +375,12 @@ class BitacoraModel extends Mysql
                 'fecha_accion' => date('Y-m-d H:i:s')
             ];
 
-            $this->setQuery("INSERT INTO bitacora (tabla, accion, idusuario, fecha_accion, fecha) 
-                    VALUES (?, ?, ?, ?, ?)");
+            $this->setQuery("INSERT INTO bitacora (tabla, accion, idusuario, fecha_accion) 
+                    VALUES (?, ?, ?, ?)");
             $this->setArray([
                 $datos['tabla'],
                 $datos['accion'],
                 $datos['idusuario'],
-                $datos['fecha_accion'],
                 $datos['fecha_accion']
             ]);
 
