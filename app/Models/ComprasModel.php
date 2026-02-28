@@ -10,7 +10,7 @@ use Exception;
 class ComprasModel
 {
     const SUPER_USUARIO_ROL_ID = 1; // ID del rol de super usuario
-    
+
     private $query;
     private $array;
     private $data;
@@ -45,130 +45,170 @@ class ComprasModel
 
     public function __construct()
     {
-       
+
     }
 
     // GETTERS Y SETTERS DE CONTROL
-    public function getQuery(){
+    public function getQuery()
+    {
         return $this->query;
     }
-    public function setQuery(string $query){
-        $this->query = $query; 
+    public function setQuery(string $query)
+    {
+        $this->query = $query;
     }
-    public function getArray(){ 
-        return $this->array ?? []; 
+    public function getArray()
+    {
+        return $this->array ?? [];
     }
-    public function setArray(array $array){
+    public function setArray(array $array)
+    {
         $this->array = $array;
     }
-    public function getData(){
-        return $this->data ?? []; 
+    public function getData()
+    {
+        return $this->data ?? [];
     }
-    public function setData(array $data){
-        $this->data = $data; 
+    public function setData(array $data)
+    {
+        $this->data = $data;
     }
-    public function getResult(){
+    public function getResult()
+    {
         return $this->result;
     }
-    public function setResult($result){
+    public function setResult($result)
+    {
         $this->result = $result;
     }
-    public function getMessage(){
-        return $this->message ?? ''; 
+    public function getMessage()
+    {
+        return $this->message ?? '';
     }
-    public function setMessage(string $message){
+    public function setMessage(string $message)
+    {
         $this->message = $message;
     }
-    public function getStatus(){
+    public function getStatus()
+    {
         return $this->status ?? false;
     }
-    public function setStatus(bool $status){
+    public function setStatus(bool $status)
+    {
         $this->status = $status;
     }
 
     // GETTERS Y SETTERS DE COMPRA
-    public function setIdCompra($idcompra){
+    public function setIdCompra($idcompra)
+    {
         $this->idcompra = $idcompra;
     }
-    public function getIdCompra(){
+    public function getIdCompra()
+    {
         return $this->idcompra;
     }
-    public function setNroCompra($nro_compra){
+    public function setNroCompra($nro_compra)
+    {
         $this->nro_compra = $nro_compra;
     }
-    public function getNroCompra(){
+    public function getNroCompra()
+    {
         return $this->nro_compra;
     }
-    public function setFecha($fecha){
+    public function setFecha($fecha)
+    {
         $this->fecha = $fecha;
     }
-    public function getFecha(){
+    public function getFecha()
+    {
         return $this->fecha;
     }
-    public function setIdProveedor($idproveedor){
-        $this->idproveedor = $idproveedor; 
+    public function setIdProveedor($idproveedor)
+    {
+        $this->idproveedor = $idproveedor;
     }
-    public function getIdProveedor(){
+    public function getIdProveedor()
+    {
         return $this->idproveedor;
     }
-    public function setIdMonedaGeneral($idmoneda_general){
+    public function setIdMonedaGeneral($idmoneda_general)
+    {
         $this->idmoneda_general = $idmoneda_general;
     }
-    public function getIdMonedaGeneral(){
-        return $this->idmoneda_general; 
+    public function getIdMonedaGeneral()
+    {
+        return $this->idmoneda_general;
     }
-    public function setSubtotalGeneral($subtotal_general){ 
+    public function setSubtotalGeneral($subtotal_general)
+    {
         $this->subtotal_general = $subtotal_general;
     }
-    public function getSubtotalGeneral(){
+    public function getSubtotalGeneral()
+    {
         return $this->subtotal_general;
     }
-    public function setDescuentoPorcentajeGeneral($descuento_porcentaje_general){
+    public function setDescuentoPorcentajeGeneral($descuento_porcentaje_general)
+    {
         $this->descuento_porcentaje_general = $descuento_porcentaje_general;
     }
-    public function getDescuentoPorcentajeGeneral(){
+    public function getDescuentoPorcentajeGeneral()
+    {
         return $this->descuento_porcentaje_general;
     }
-    public function setMontoDescuentoGeneral($monto_descuento_general){
+    public function setMontoDescuentoGeneral($monto_descuento_general)
+    {
         $this->monto_descuento_general = $monto_descuento_general;
     }
-    public function getMontoDescuentoGeneral(){
+    public function getMontoDescuentoGeneral()
+    {
         return $this->monto_descuento_general;
     }
-    public function setTotalGeneral($total_general){
+    public function setTotalGeneral($total_general)
+    {
         $this->total_general = $total_general;
     }
-    public function getTotalGeneral(){
+    public function getTotalGeneral()
+    {
         return $this->total_general;
     }
-    public function setEstatusCompra($estatus_compra){
+    public function setEstatusCompra($estatus_compra)
+    {
         $this->estatus_compra = $estatus_compra;
     }
-    public function getEstatusCompra(){
+    public function getEstatusCompra()
+    {
         return $this->estatus_compra;
     }
-    public function setObservacionesCompra($observaciones_compra){
-        $this->observaciones_compra = $observaciones_compra; 
+    public function setObservacionesCompra($observaciones_compra)
+    {
+        $this->observaciones_compra = $observaciones_compra;
     }
-    public function getObservacionesCompra(){
-        return $this->observaciones_compra; 
+    public function getObservacionesCompra()
+    {
+        return $this->observaciones_compra;
     }
-    public function setTermino($termino){
-        $this->termino = $termino; 
+    public function setTermino($termino)
+    {
+        $this->termino = $termino;
     }
-    public function getTermino(){
+    public function getTermino()
+    {
         return $this->termino;
     }
-    public function setIdentificacion($identificacion){ 
-        $this->identificacion = $identificacion; 
+    public function setIdentificacion($identificacion)
+    {
+        $this->identificacion = $identificacion;
     }
-    public function getIdentificacion(){
-        return $this->identificacion; 
+    public function getIdentificacion()
+    {
+        return $this->identificacion;
     }
-    public function setIdProducto($idproducto){
+    public function setIdProducto($idproducto)
+    {
         $this->idproducto = $idproducto;
     }
-    public function getIdProducto(){
+    public function getIdProducto()
+    {
         return $this->idproducto;
     }
 
@@ -193,13 +233,13 @@ class ComprasModel
                     FROM compra c
                     LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor
                     ORDER BY c.fecha_creacion DESC");
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             return $this->getResult();
-            
+
         } catch (PDOException $e) {
             error_log("ComprasModel::ejecutarConsultaTodasCompras - Error: " . $e->getMessage());
             return [];
@@ -219,15 +259,15 @@ class ComprasModel
             $this->setQuery("SELECT MAX(CAST(SUBSTRING_INDEX(nro_compra, '-', -1) AS UNSIGNED)) as max_num
                         FROM compra WHERE nro_compra LIKE ?");
             $this->setArray(["C-" . $year . "-%"]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $result = $this->getResult();
             $next_num = ($result && isset($result['max_num'])) ? intval($result['max_num']) + 1 : 1;
             return "C-" . $year . "-" . str_pad($next_num, 5, "0", STR_PAD_LEFT);
-            
+
         } catch (PDOException $e) {
             error_log("ComprasModel::ejecutarGeneracionNumeroCompra - Error: " . $e->getMessage());
             return "C-" . date("Y") . "-ERROR";
@@ -248,16 +288,16 @@ class ComprasModel
                         WHERE (nombre LIKE ? OR apellido LIKE ? OR identificacion LIKE ?)
                         AND estatus = 'activo'
                         LIMIT 10");
-            
+
             $param = "%{$this->getTermino()}%";
             $this->setArray([$param, $param, $param]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             return $this->getResult();
-            
+
         } catch (PDOException $e) {
             error_log("ComprasModel::ejecutarBusquedaProveedor - Error: " . $e->getMessage());
             return [];
@@ -289,13 +329,13 @@ class ComprasModel
                         monedas m ON p.moneda = m.codigo_moneda 
                     WHERE
                         p.estatus = 'activo'");
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             return $this->getResult();
-            
+
         } catch (PDOException $e) {
             error_log("ComprasModel::ejecutarConsultaProductosConCategoria - Error: " . $e->getMessage());
             return [];
@@ -320,15 +360,15 @@ class ComprasModel
                     JOIN categoria cp ON p.idcategoria = cp.idcategoria
                     LEFT JOIN monedas m ON p.moneda = m.codigo_moneda
                     WHERE p.idproducto = ? AND p.estatus = 'activo'");
-            
+
             $this->setArray([$this->getIdProducto()]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             return $this->getResult();
-            
+
         } catch (PDOException $e) {
             error_log("ComprasModel::ejecutarBusquedaProductoPorId - Error: " . $e->getMessage());
             return false;
@@ -345,13 +385,13 @@ class ComprasModel
 
         try {
             $this->setQuery("SELECT idmoneda, codigo_moneda, valor FROM monedas WHERE estatus = 'activo'");
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             return $this->getResult();
-            
+
         } catch (PDOException $e) {
             error_log("ComprasModel::ejecutarConsultaMonedasActivas - Error: " . $e->getMessage());
             return [];
@@ -370,19 +410,19 @@ class ComprasModel
             $this->setQuery("SELECT codigo_moneda, tasa_a_bs 
                     FROM historial_tasas_bcv 
                     WHERE fecha_publicacion_bcv = ?");
-            
+
             $this->setArray([$this->getFecha()]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
-            
+
             $tasas = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $tasas[$row['codigo_moneda']] = floatval($row['tasa_a_bs']);
             }
-            
+
             return $tasas;
-            
+
         } catch (PDOException $e) {
             error_log("ComprasModel::ejecutarConsultaTasasPorFecha - Error: " . $e->getMessage());
             return [];
@@ -399,18 +439,18 @@ class ComprasModel
 
         try {
             $this->setQuery("SELECT peso FROM historial_romana ORDER BY idromana DESC LIMIT 1");
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $result = $this->getResult();
             if ($result && isset($result['peso'])) {
                 return floatval($result['peso']);
             } else {
                 return null;
             }
-            
+
         } catch (PDOException $e) {
             error_log("ComprasModel::ejecutarConsultaUltimoPesoRomana - Error: " . $e->getMessage());
             return null;
@@ -430,7 +470,7 @@ class ComprasModel
 
             $this->setQuery("INSERT INTO compra (nro_compra, fecha, idproveedor, idmoneda_general, subtotal_general, descuento_porcentaje_general, monto_descuento_general, total_general, balance, observaciones_compra, estatus_compra)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'BORRADOR')");
-            
+
             $this->setArray([
                 $datosCompra['nro_compra'],
                 $datosCompra['fecha_compra'],
@@ -449,12 +489,12 @@ class ComprasModel
                 $db->rollBack();
                 throw new Exception("Error al insertar cabecera de compra");
             }
-            
+
             $idCompra = $db->lastInsertId();
 
             $this->setQuery("INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, descuento, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            
+
             $stmtDetalle = $db->prepare($this->getQuery());
 
             foreach ($detallesCompra as $detalle) {
@@ -515,7 +555,7 @@ class ComprasModel
 
         try {
             $db->beginTransaction();
-        
+
             $this->setQuery("UPDATE compra SET 
                         fecha = ?, 
                         idproveedor = ?, 
@@ -527,7 +567,7 @@ class ComprasModel
                         observaciones_compra = ?,
                         fecha_modificacion = NOW()
                     WHERE idcompra = ?");
-            
+
             $this->setArray([
                 $datosCompra['fecha_compra'],
                 $datosCompra['idproveedor'],
@@ -555,7 +595,7 @@ class ComprasModel
 
             $this->setQuery("INSERT INTO detalle_compra (idcompra, idproducto, descripcion_temporal_producto, cantidad, descuento, precio_unitario_compra, idmoneda_detalle, subtotal_linea, peso_vehiculo, peso_bruto, peso_neto)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            
+
             $stmtDetalle = $db->prepare($this->getQuery());
 
             foreach ($detallesCompra as $detalle) {
@@ -638,7 +678,7 @@ class ComprasModel
                         LEFT JOIN monedas m ON dc.idmoneda_detalle = m.idmoneda
                         LEFT JOIN categoria cat ON p.idcategoria = cat.idcategoria
                         WHERE dc.idcompra = ?");
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idcompra]);
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -678,7 +718,13 @@ class ComprasModel
                         c.estatus_compra,
                         c.fecha_creacion,
                         c.fecha_modificacion,
+                        p.nombre as nombrePersona,
+                        p.apellido as apellidoPersona,
+                        p.identificacion as personaId,
                         CONCAT(p.nombre, ' ', COALESCE(p.apellido, '')) as proveedor_nombre,
+                        p.telefono_principal as telefono,
+                        p.direccion as direccion,
+                        p.correo_electronico as email,
                         m.codigo_moneda AS moneda_general_compra_codigo,
                         (SELECT ht_eur.tasa_a_bs
                         FROM historial_tasas_bcv ht_eur
@@ -696,7 +742,7 @@ class ComprasModel
                     LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor
                     LEFT JOIN monedas m ON c.idmoneda_general = m.idmoneda
                     WHERE c.idcompra = ?");
-            
+
             $this->setArray([$codigoMonedaEuro, $codigoMonedaDolar, $idcompra]);
 
             $stmt = $db->prepare($this->getQuery());
@@ -723,16 +769,20 @@ class ComprasModel
             $this->setQuery("SELECT 
                         dc.iddetalle_compra,
                         dc.idcompra,
+                        dc.idproducto as productoId,
                         dc.idproducto,
+                        dc.descripcion_temporal_producto as modelo,
                         dc.descripcion_temporal_producto,
                         CAST(dc.cantidad AS DECIMAL(15,4)) as cantidad,
                         CAST(dc.descuento AS DECIMAL(15,4)) as descuento,
+                        CAST(dc.precio_unitario_compra AS DECIMAL(15,4)) as precio,
                         CAST(dc.precio_unitario_compra AS DECIMAL(15,4)) as precio_unitario_compra,
                         dc.idmoneda_detalle,
                         CAST(dc.subtotal_linea AS DECIMAL(15,4)) as subtotal_linea,
                         CAST(dc.peso_vehiculo AS DECIMAL(15,4)) as peso_vehiculo,
                         CAST(dc.peso_bruto AS DECIMAL(15,4)) as peso_bruto,
                         CAST(dc.peso_neto AS DECIMAL(15,4)) as peso_neto,
+                        p.nombre as nombreProducto,
                         p.nombre as producto_nombre,
                         p.nombre as nombre_producto,
                         m.codigo_moneda
@@ -740,7 +790,7 @@ class ComprasModel
                     LEFT JOIN producto p ON dc.idproducto = p.idproducto
                     LEFT JOIN monedas m ON dc.idmoneda_detalle = m.idmoneda
                     WHERE dc.idcompra = ?");
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idcompra]);
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -776,13 +826,13 @@ class ComprasModel
             if ($compra['estatus_compra'] !== 'BORRADOR') {
                 return ['status' => false, 'message' => 'La compra solo se puede eliminar si su estado es BORRADOR.'];
             }
-            
+
             $this->setQuery("UPDATE compra SET estatus_compra = 'inactivo' WHERE idcompra = ?");
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idcompra]);
-            
+
             $db->commit();
-            
+
             if ($stmt->rowCount() > 0) {
                 return ['status' => true, 'message' => 'Compra eliminada exitosamente.'];
             } else {
@@ -806,7 +856,7 @@ class ComprasModel
 
         try {
             $estadosValidos = ['BORRADOR', 'POR_AUTORIZAR', 'AUTORIZADA', 'POR_PAGAR', 'PAGADA'];
-            
+
             if (!in_array($nuevoEstado, $estadosValidos)) {
                 return [
                     'status' => false,
@@ -830,9 +880,8 @@ class ComprasModel
 
             if (!$this->validarTransicionEstado($estadoActual, $nuevoEstado)) {
                 return [
-                    'status'  => false,
-                    'message' => "Transición de estado no válida. La compra está actualmente en estado '{$estadoActual}' y no puede pasar a '{$nuevoEstado}'.",
-                    'estado_actual' => $estadoActual
+                    'status' => false,
+                    'message' => 'Transición de estado no válida.'
                 ];
             }
 
@@ -855,7 +904,22 @@ class ComprasModel
                 $this->notificarCompraAutorizadaPago($idcompra, $nroCompra, $totalCompra);
             } elseif ($nuevoEstado === 'PAGADA') {
                 $this->ejecutarGeneracionNotaEntrega($idcompra, $db);
+
+                // Notificar compra pagada
                 $this->notificarCompraPagada($idcompra);
+            } elseif ($nuevoEstado === 'POR_AUTORIZAR') {
+                // Notificar a los autorizadores y confirmar al comprador
+                $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
+                if ($compraData) {
+                    $this->notificarCompraPorAutorizar($idcompra, $compraData['nro_compra'], $compraData['total_general']);
+                    $this->notificarCompraEnviadaAutorizacion($idcompra, $compraData['nro_compra'], $idusuario);
+                }
+            } elseif ($nuevoEstado === 'AUTORIZADA') {
+                // Notificar que está autorizada y lista para pago
+                $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
+                if ($compraData) {
+                    $this->notificarCompraAutorizadaPago($idcompra, $compraData['nro_compra'], $compraData['total_general']);
+                }
             }
 
             return [
@@ -883,7 +947,7 @@ class ComprasModel
         try {
             $this->setQuery("INSERT INTO proveedor (nombre, apellido, identificacion, telefono_principal, correo_electronico, direccion, fecha_nacimiento, genero, observaciones, estatus, fecha_creacion, fecha_modificacion) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', NOW(), NOW())");
-            
+
             $this->setArray([
                 $data['nombre'],
                 $data['apellido'],
@@ -895,10 +959,10 @@ class ComprasModel
                 $data['genero'],
                 $data['observaciones']
             ]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $insertExitoso = $stmt->execute($this->getArray());
-            
+
             if ($insertExitoso) {
                 $idProveedor = $db->lastInsertId();
                 return [
@@ -953,11 +1017,11 @@ class ComprasModel
             'POR_AUTORIZAR' => ['AUTORIZADA', 'BORRADOR'],
             'AUTORIZADA' => ['POR_PAGAR'],
             'POR_PAGAR' => ['PAGADA', 'AUTORIZADA'],
-            'PAGADA' => [] 
+            'PAGADA' => []
         ];
 
-        return isset($transicionesValidas[$estadoActual]) && 
-               in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
+        return isset($transicionesValidas[$estadoActual]) &&
+            in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
     }
 
     private function ejecutarGeneracionNotaEntrega($idcompra, $db)
@@ -983,7 +1047,7 @@ class ComprasModel
             return false;
         }
     }
-    
+
     private function ejecutarGuardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
     {
         $conexion = new Conexion();
@@ -1055,15 +1119,15 @@ class ComprasModel
                 AND LOWER(m.titulo) = LOWER(?)
                 AND rmp.activo = 1
             ");
-            
+
             $this->setArray([$idusuario, $modulo]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             return $this->getResult();
-            
+
         } catch (Exception $e) {
             error_log("ComprasModel::ejecutarBusquedaPermisosUsuarioModulo - Error: " . $e->getMessage());
             return [];
@@ -1091,15 +1155,15 @@ class ComprasModel
                 AND rmp.activo = 1
                 ORDER BY m.titulo, p.idpermiso
             ");
-            
+
             $this->setArray([$idrol]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             return $this->getResult();
-            
+
         } catch (Exception $e) {
             error_log("ComprasModel::ejecutarBusquedaTodosPermisosRol - Error: " . $e->getMessage());
             return [];
@@ -1117,13 +1181,13 @@ class ComprasModel
         try {
             $this->setQuery("SELECT estatus_compra FROM compra WHERE idcompra = ?");
             $this->setArray([$idcompra]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             return $result ? $result['estatus_compra'] : null;
-            
+
         } catch (Exception $e) {
             error_log("ComprasModel::ejecutarBusquedaEstadoCompra - Error: " . $e->getMessage());
             return null;
@@ -1155,7 +1219,7 @@ class ComprasModel
                     FROM compra c
                     LEFT JOIN proveedor p ON c.idproveedor = p.idproveedor  
                     WHERE c.idcompra = ?");
-            
+
             $id = is_array($idcompra) ? $idcompra[0] : $idcompra;
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$id]);
@@ -1177,7 +1241,7 @@ class ComprasModel
                     FROM detalle_compra dc
                     LEFT JOIN producto p ON dc.idproducto = p.idproducto
                     WHERE dc.idcompra = ?");
-            
+
             $id = is_array($idcompra) ? $idcompra[0] : $idcompra;
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$id]);
@@ -1186,7 +1250,7 @@ class ComprasModel
             return [
                 'solicitud' => $compra,
                 'detalles' => $detalles,
-                'pago' => [] 
+                'pago' => []
             ];
 
         } catch (PDOException $e) {
@@ -1207,18 +1271,18 @@ class ComprasModel
             // Verificar que la compra existe
             $this->setQuery("SELECT idcompra, estatus_compra FROM compra WHERE idcompra = ?");
             $this->setArray([$idcompra]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $compra = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$compra) {
                 return [
                     'status' => false,
                     'message' => 'Compra no encontrada'
                 ];
             }
-            
+
             // Verificar si la compra está inactiva (el estado debe ser exactamente "inactivo")
             if ($compra['estatus_compra'] !== 'inactivo') {
                 return [
@@ -1226,14 +1290,14 @@ class ComprasModel
                     'message' => 'La compra no está inactiva'
                 ];
             }
-            
+
             // Reactivar compra (cambiar a BORRADOR)
             $this->setQuery("UPDATE compra SET estatus_compra = 'BORRADOR', fecha_modificacion = NOW() WHERE idcompra = ?");
             $this->setArray([$idcompra]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $resultado = $stmt->execute($this->getArray());
-            
+
             if ($resultado && $stmt->rowCount() > 0) {
                 return [
                     'status' => true,
@@ -1245,7 +1309,7 @@ class ComprasModel
                     'message' => 'No se pudo reactivar la compra'
                 ];
             }
-            
+
         } catch (Exception $e) {
             error_log("ComprasModel::ejecutarReactivacionCompra - Error: " . $e->getMessage());
             return [
@@ -1309,7 +1373,7 @@ class ComprasModel
             error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
             return ['status' => false, 'message' => $errorMessage];
         }
-        
+
         // Validación de proveedor
         $proveedor = $this->getProveedorById($datosCompra['idproveedor']);
         if (!$proveedor) {
@@ -1449,7 +1513,7 @@ class ComprasModel
                     FROM historial_tasas_bcv
                     WHERE DATE(fecha_publicacion_bcv) = CURDATE()
                     ORDER BY codigo_moneda";
-            
+
             $stmt = $db->prepare($sql);
             $stmt->execute();
             $tasas = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -1463,9 +1527,10 @@ class ComprasModel
             $conexion->disconnect();
         }
     }
-    
+
     // Métodos de notificación WebSocket
-    private function notificarCompraPorAutorizar($compraId, $numero, $total) {
+    private function notificarCompraPorAutorizar($compraId, $numero, $total)
+    {
         try {
             $notificador = new NotificacionHelper();
             // Solo roles con Acceso Total (idpermiso=8) en el módulo compras
@@ -1477,13 +1542,13 @@ class ComprasModel
             $notificador->enviarPorRoles(
                 'COMPRA_POR_AUTORIZAR',
                 [
-                    'titulo'        => 'Compra Requiere Autorización',
-                    'mensaje'       => "Compra #$numero por $" . number_format($total, 2) . " pendiente de aprobación",
-                    'modulo'        => 'compras',
+                    'titulo' => 'Compra Requiere Autorización',
+                    'mensaje' => "Compra #$numero por $" . number_format($total, 2) . " pendiente de aprobación",
+                    'modulo' => 'compras',
                     'referencia_id' => $compraId,
-                    'compra_id'     => $compraId,
-                    'numero'        => $numero,
-                    'total'         => $total
+                    'compra_id' => $compraId,
+                    'numero' => $numero,
+                    'total' => $total
                 ],
                 $rolesAutorizadores,
                 'ALTA'
@@ -1493,13 +1558,14 @@ class ComprasModel
         }
     }
 
-    private function notificarCompraEnviadaAutorizacion($compraId, $numero, $idusuario) {
+    private function notificarCompraEnviadaAutorizacion($compraId, $numero, $idusuario)
+    {
         if (!$idusuario) {
             return; // Sin usuario identificado no se puede notificar al comprador
         }
         try {
             $notificador = new NotificacionHelper();
-            
+
             // Evitar doble notificación: si el creador tiene Acceso Total en compras,
             // ya recibió la notificación de COMPRA_POR_AUTORIZAR como autorizador.
             // En ese caso no enviamos una segunda notificación personal.
@@ -1513,21 +1579,21 @@ class ComprasModel
                 $stmt->execute([$idusuario]);
                 $rolUsuario = $stmt->fetchColumn();
                 $conn->disconnect();
-                
+
                 if ($rolUsuario && in_array($rolUsuario, $rolesAutorizadores)) {
                     error_log("notificarCompraEnviadaAutorizacion: omitida para usuario $idusuario (ya notificado como autorizador, rol=$rolUsuario)");
                     return;
                 }
             }
-            
+
             $notificador->enviarAUsuario(
                 'COMPRA_ENVIADA_AUTORIZACION',
                 [
-                    'titulo'        => 'Compra Enviada a Autorización',
-                    'mensaje'       => "Tu compra #$numero fue enviada al gerente para aprobación",
-                    'modulo'        => 'compras',
+                    'titulo' => 'Compra Enviada a Autorización',
+                    'mensaje' => "Tu compra #$numero fue enviada al gerente para aprobación",
+                    'modulo' => 'compras',
                     'referencia_id' => $compraId,
-                    'compra_id'     => $compraId
+                    'compra_id' => $compraId
                 ],
                 $idusuario,
                 'MEDIA'
@@ -1537,18 +1603,19 @@ class ComprasModel
         }
     }
 
-    private function notificarCompraAutorizadaPago($compraId, $numero, $total) {
+    private function notificarCompraAutorizadaPago($compraId, $numero, $total)
+    {
         try {
             $notificador = new NotificacionHelper();
             $notificador->enviarPorModulo(
                 'compras',
                 'COMPRA_AUTORIZADA_PAGO',
                 [
-                    'titulo'     => 'Compra Autorizada - Pendiente Pago',
-                    'mensaje'    => "Compra #$numero por $" . number_format($total, 2) . " lista para pagar",
-                    'modulo'     => 'compras',
+                    'titulo' => 'Compra Autorizada - Pendiente Pago',
+                    'mensaje' => "Compra #$numero por $" . number_format($total, 2) . " lista para pagar",
+                    'modulo' => 'compras',
                     'referencia_id' => $compraId,
-                    'compra_id'  => $compraId
+                    'compra_id' => $compraId
                 ],
                 'MEDIA'
             );
@@ -1557,7 +1624,8 @@ class ComprasModel
         }
     }
 
-    private function notificarCompraPagada($compraId) {
+    private function notificarCompraPagada($compraId)
+    {
         try {
             $compraData = $this->ejecutarBusquedaCompraPorId($compraId);
             if (!$compraData) {
@@ -1568,11 +1636,11 @@ class ComprasModel
                 'compras',
                 'COMPRA_PAGADA',
                 [
-                    'titulo'     => 'Compra Pagada',
-                    'mensaje'    => "Compra #{$compraData['nro_compra']} ha sido pagada completamente",
-                    'modulo'     => 'compras',
+                    'titulo' => 'Compra Pagada',
+                    'mensaje' => "Compra #{$compraData['nro_compra']} ha sido pagada completamente",
+                    'modulo' => 'compras',
                     'referencia_id' => $compraId,
-                    'compra_id'  => $compraId
+                    'compra_id' => $compraId
                 ],
                 'BAJA'
             );

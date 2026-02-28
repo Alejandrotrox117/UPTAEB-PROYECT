@@ -7,9 +7,9 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 require_once "vendor/autoload.php";
 
-require_once "config/config.php"; 
+require_once "config/config.php";
 
-$url = !empty($_GET['url']) ? $_GET['url'] : 'login'; 
+$url = !empty($_GET['url']) ? $_GET['url'] : 'login';
 
 $arrUrl = explode('/', $url);
 $controller = !empty($arrUrl[0]) ? strtolower($arrUrl[0]) : 'login';
@@ -24,15 +24,13 @@ $publicRoutes = ['login', 'home', 'register', 'forgot-password', 'session_test',
 
 
 if (!in_array($controller, $publicRoutes)) {
-  
+
     if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
-      
+
         header('Location: ' . base_url('login'));
         exit();
     }
 }
-
-$functionalControllers = ['login', 'usuarios', 'roles', 'modulos', 'rolesintegrado', 'proveedores', 'empleados', 'productos', 'categorias', 'pagos', 'tasas', 'sueldos', 'personas', 'clientes', 'notificacionesconfig'];
 
 $controllerFile = "app/Controllers/" . ucfirst($controller) . ".php";
 if (!file_exists($controllerFile)) {
@@ -40,44 +38,33 @@ if (!file_exists($controllerFile)) {
 }
 
 if (file_exists($controllerFile)) {
-    
-    if (in_array($controller, $functionalControllers)) {
-        require_once $controllerFile;
-        
-        $functionName = $controller . '_' . $method;
-        
-        if (function_exists($functionName)) {
-            call_user_func_array($functionName, $params);
-        } else {
-            $errorController = new \App\Controllers\Errors();
-            $errorController->index();
-        }
-    } else {
-        $controllerClassName = "App\\Controllers\\" . ucfirst(strtolower($controller));
-        
-        if (!class_exists($controllerClassName)) {
-            $controllerClassName = "App\\Controllers\\" . $controller;
-        }
-        
-        if (!class_exists($controllerClassName)) {
-            $controllerClassName = "App\\Controllers\\" . strtolower($controller);
-        }
-        
-        if (class_exists($controllerClassName)) {
-            $controllerInstance = new $controllerClassName();
+    require_once $controllerFile;
 
-            if (method_exists($controllerInstance, $method)) {
-                call_user_func_array(array($controllerInstance, $method), $params);
+    $functionName = $controller . '_' . $method;
+    error_log("🔍 Router - Controller: $controller, Method: $method, Function: $functionName, File: $controllerFile");
+
+    if (function_exists($functionName)) {
+        error_log("✅ Router - Function exists, calling it.");
+        call_user_func_array($functionName, $params);
+    } else {
+        error_log("❌ Router - Function '$functionName' DOES NOT exist in " . get_included_files()[count(get_included_files()) - 1]);
+        // Fallback or error
+        if (file_exists("app/Controllers/Errors.php")) {
+            require_once "app/Controllers/Errors.php";
+            if (function_exists("errors_index")) {
+                errors_index();
             } else {
-                $errorController = new \App\Controllers\Errors();
-                $errorController->index();
+                echo "Error: function errors_index not found";
             }
         } else {
-            $errorController = new \App\Controllers\Errors();
-            $errorController->index();
+            echo "Error: Controller file not found and Errors controller missing";
         }
     }
 } else {
-    $errorController = new \App\Controllers\Errors();
-    $errorController->index();
+    if (file_exists("app/Controllers/Errors.php")) {
+        require_once "app/Controllers/Errors.php";
+        if (function_exists("errors_index")) {
+            errors_index();
+        }
+    }
 }

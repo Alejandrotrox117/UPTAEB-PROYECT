@@ -1,64 +1,51 @@
 <?php
-require_once "app/core/Controllers.php";
-require_once "helpers/helpers.php";
-require_once "helpers/permisosVerificar.php"; // Asegúrate de incluir el helper de permisos
 
-class Romana extends Controllers
+use App\Models\RomanaModel;
+use App\Helpers\PermisosModuloVerificar;
+
+/**
+ * Controlador Romana - Estilo Funcional
+ */
+
+function romana_index()
 {
-    public function set_model($model)
-    {
-        $this->model = $model;
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
     }
-
-    public function get_model()
-    {
-        return $this->model;
+    if (!obtenerUsuarioSesion()) {
+        header('Location: ' . base_url() . '/login');
+        die();
     }
-
-    public function __construct()
-    {
-        parent::__construct();
-        // Verificar permisos de acceso al módulo Romana
-        permisosVerificar::verificarAccesoModulo('romana');
-    }
-
-    // Vista principal para gestionar pesajes de romana
-    public function index()
-    {
-        $data['page_title'] = "Gestión de Romanas";
-        $data['page_name'] = "Romana";
-        $data['page_functions_js'] = "functions_romana.js";
-        
-        // Agregar permisos a los datos
-        $data['permisos'] = [
-            'puede_ver' => PermisosVerificar::verificarPermisoAccion('romana', 'ver'),
-            'puede_crear' => PermisosVerificar::verificarPermisoAccion('romana', 'crear'),
-            'puede_editar' => PermisosVerificar::verificarPermisoAccion('romana', 'editar'),
-            'puede_eliminar' => PermisosVerificar::verificarPermisoAccion('romana', 'eliminar')
-        ];
-        
-        $this->views->getView($this, "romana", $data);
-    }
-
-    // Obtener datos de Pesos de Romana para DataTables (encapsulado)
-    public function getRomanaData()
-    {
-        $arrData = $this->get_model()->selectAllRomana();
-
-        // Si el modelo devuelve un array con 'status' y 'data'
-        if (isset($arrData['data'])) {
-            $data = $arrData['data'];
-        } else {
-            $data = $arrData;
-        }
-
-        $response = [
-            "recordsTotal" => count($data),
-            "recordsFiltered" => count($data),
-            "data" => $data
-        ];
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    if (!PermisosModuloVerificar::verificarAccesoModulo('romana')) {
+        renderView('errors', "permisos");
         exit();
     }
+    registrarAccesoModulo('romana', obtenerUsuarioSesion());
+
+    $data['page_title'] = "Gestión de Romanas";
+    $data['page_name'] = "Romana";
+    $data['page_functions_js'] = "functions_romana.js";
+
+    $data['permisos'] = [
+        'puede_ver' => PermisosModuloVerificar::verificarPermisoModuloAccion('romana', 'ver'),
+        'puede_crear' => PermisosModuloVerificar::verificarPermisoModuloAccion('romana', 'crear'),
+        'puede_editar' => PermisosModuloVerificar::verificarPermisoModuloAccion('romana', 'editar'),
+        'puede_eliminar' => PermisosModuloVerificar::verificarPermisoModuloAccion('romana', 'eliminar')
+    ];
+
+    renderView("romana", "romana", $data);
+}
+
+function romana_getRomanaData()
+{
+    $model = new RomanaModel();
+    $arrData = $model->selectAllRomana();
+    $data = isset($arrData['data']) ? $arrData['data'] : $arrData;
+
+    echo json_encode([
+        "recordsTotal" => count($data),
+        "recordsFiltered" => count($data),
+        "data" => $data
+    ], JSON_UNESCAPED_UNICODE);
+    exit();
 }
