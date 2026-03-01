@@ -287,6 +287,7 @@ class MovimientosModel
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
                 WHERE m.estatus NOT IN ('eliminado', 'inactivo')
+                WHERE m.estatus NOT IN ('eliminado', 'inactivo')
                 ORDER BY COALESCE(m.fecha_creacion, m.idmovimiento) DESC"
             );
 
@@ -351,6 +352,7 @@ class MovimientosModel
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
                 WHERE m.idmovimiento = ? AND m.estatus NOT IN ('eliminado', 'inactivo')"
+                WHERE m.idmovimiento = ? AND m.estatus NOT IN ('eliminado', 'inactivo')"
             );
 
             $this->setArray([$idmovimiento]);
@@ -401,6 +403,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
                  cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, total, observaciones, estatus)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
@@ -662,6 +665,7 @@ class MovimientosModel
                 (numero_movimiento, idproducto, idtipomovimiento, cantidad_entrada, cantidad_salida, 
                  stock_anterior, stock_resultante, total, observaciones, estatus)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'devolucion')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'devolucion')"
             );
 
             $stmtAnulacion->execute([
@@ -673,6 +677,7 @@ class MovimientosModel
                 $stockActual,
                 $stockDespuesAnulacion,
                 $stockDespuesAnulacion,
+                '[DEVOLUCIÓN] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
                 '[DEVOLUCIÓN] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
             ]);
 
@@ -1092,6 +1097,7 @@ class MovimientosModel
                 (numero_movimiento, idproducto, idtipomovimiento, cantidad_entrada, cantidad_salida, 
                  stock_anterior, stock_resultante, total, observaciones, estatus)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'devolucion')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'devolucion')"
             );
 
             $stmtAnulacion->execute([
@@ -1103,6 +1109,7 @@ class MovimientosModel
                 $stockActual,
                 $stockDespuesAnulacion,
                 $stockDespuesAnulacion,
+                '[DEVOLUCIÓN] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
                 '[DEVOLUCIÓN] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
             ]);
 
@@ -1147,6 +1154,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
                  cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, total, observaciones, estatus)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'correccion')"
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'correccion')"
             );
 
