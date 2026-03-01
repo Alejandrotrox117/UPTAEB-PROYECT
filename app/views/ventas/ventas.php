@@ -332,5 +332,39 @@ $permisos = $data['permisos'] ?? []; ?>
 
 
 
+<!-- Modal Pagos de Venta -->
+<div id="modalPagosVenta" class="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 opacity-0 pointer-events-none transparent backdrop-blur-[2px] transition-opacity duration-300">
+  <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg flex flex-col" style="max-height:90vh">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200 flex-shrink-0">
+      <div>
+        <h3 class="text-lg font-bold text-gray-800">
+          <i class="fas fa-credit-card mr-2 text-green-600"></i>
+          <span id="modalPagos_titulo">Pagos de Venta</span>
+        </h3>
+        <p class="text-xs text-gray-500 mt-0.5" id="modalPagos_subtitulo"></p>
+      </div>
+      <button id="cerrarModalPagosVentaBtn" class="p-1 text-gray-400 rounded-full hover:text-gray-600 hover:bg-gray-200 transition-colors">
+        <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+    </div>
+    <!-- Resumen balance -->
+    <div id="modalPagos_resumen" class="px-6 pt-4 pb-3 border-b border-gray-100 flex-shrink-0"></div>
+    <!-- Cuerpo scrolleable: historial + formulario -->
+    <div class="overflow-y-auto flex-1 px-6 py-4" id="modalPagos_cuerpo">
+      <div class="flex justify-center items-center py-8">
+        <i class="fas fa-spinner fa-spin mr-2 text-gray-400"></i>
+        <span class="text-gray-400">Cargando...</span>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="flex justify-end px-6 py-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
+      <button type="button" id="cerrarModalPagosVentaBtn2" class="px-5 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <div id="permisosUsuario" data-permisos='<?= json_encode($permisos) ?>' style="display:none"></div>
 <?php footerAdmin($data); ?>

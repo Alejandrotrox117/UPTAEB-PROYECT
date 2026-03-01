@@ -852,7 +852,7 @@ document.addEventListener("DOMContentLoaded", function () {
         total_general: parseFloat(
           document.getElementById("total_general").value || 0
         ),
-        estatus: "POR_PAGAR",
+        estatus: "BORRADOR",
         observaciones: document.getElementById("observaciones")?.value || "",
         detalles: [],
       };
@@ -1159,13 +1159,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Ir a pagos
-    const irPagosBtn = e.target.closest(".ir-pagos-venta-btn");
-    if (irPagosBtn) {
-      const idVenta = irPagosBtn.getAttribute("data-idventa");
+    // Ver / Registrar pagos — abre modal
+    const verPagosBtn = e.target.closest(".ver-pagos-venta-btn");
+    if (verPagosBtn) {
+      const idVenta = verPagosBtn.getAttribute("data-idventa");
       if (idVenta) {
-        // Redirigir al módulo de pagos con filtro de venta
-        window.location.href = `pagos?venta=${idVenta}`;
+        abrirModalPagosVenta(parseInt(idVenta));
       }
     }
 
@@ -1329,6 +1328,254 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   );
+
+  // ============================================================
+  // MODAL DE PAGOS
+  // ============================================================
+
+  let _modalPagosIdVenta = null;
+
+  async function abrirModalPagosVenta(idVenta) {
+    _modalPagosIdVenta = idVenta;
+    const modal = document.getElementById("modalPagosVenta");
+    if (!modal) return;
+    modal.classList.remove("opacity-0", "pointer-events-none", "transparent");
+    modal.classList.add("opacity-100");
+    document.getElementById("modalPagos_cuerpo").innerHTML =
+      '<div class="flex justify-center items-center py-8"><i class="fas fa-spinner fa-spin mr-2 text-gray-400"></i><span class="text-gray-400">Cargando...</span></div>';
+    document.getElementById("modalPagos_resumen").innerHTML = "";
+    await cargarDatosModalPagos(idVenta);
+  }
+
+  function cerrarModalPagosVenta() {
+    const modal = document.getElementById("modalPagosVenta");
+    if (modal) {
+      modal.classList.add("opacity-0", "pointer-events-none", "transparent");
+      modal.classList.remove("opacity-100");
+    }
+    _modalPagosIdVenta = null;
+  }
+
+  async function cargarDatosModalPagos(idVenta) {
+    try {
+      const res  = await fetch(`ventas/getPagosVenta?idventa=${idVenta}`);
+      const data = await res.json();
+      if (!data.status) throw new Error(data.message || "Error al cargar datos");
+
+      const { venta, pagos, total_pagado } = data.data;
+      const moneda   = venta.codigo_moneda || "";
+      const total    = parseFloat(venta.total_general || 0);
+      const balance  = parseFloat(venta.balance || 0);
+      const pagado   = total - balance;
+      const pct      = total > 0 ? Math.min(99, Math.floor((pagado / total) * 100)) : 0;
+      const esPagada = venta.estatus.toUpperCase() === "PAGADA";
+
+      // Título
+      document.getElementById("modalPagos_titulo").textContent = `Pagos — ${venta.nro_venta}`;
+      document.getElementById("modalPagos_subtitulo").textContent = venta.cliente_nombre || "";
+
+      // Resumen
+      const colorPct  = balance <= 0 ? "bg-green-500" : pct >= 75 ? "bg-yellow-400" : pct >= 40 ? "bg-orange-400" : "bg-red-500";
+      const colorBal  = balance <= 0 ? "text-green-600" : "text-red-600";
+      document.getElementById("modalPagos_resumen").innerHTML = `
+        <div class="grid grid-cols-3 gap-4 mb-3 text-center">
+          <div class="bg-gray-50 rounded-lg p-2">
+            <p class="text-xs text-gray-500 mb-0.5">Total</p>
+            <p class="font-bold text-gray-800">${total.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
+          </div>
+          <div class="bg-green-50 rounded-lg p-2">
+            <p class="text-xs text-gray-500 mb-0.5">Pagado</p>
+            <p class="font-bold text-green-700">${pagado.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
+          </div>
+          <div class="${balance <= 0 ? 'bg-green-50' : 'bg-red-50'} rounded-lg p-2">
+            <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
+            <p class="font-bold ${colorBal}">${balance <= 0 ? '0.00' : balance.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
+          </div>
+        </div>
+        <div class="w-full h-2 bg-gray-200 rounded-full">
+          <div class="h-2 rounded-full ${colorPct} transition-all" style="width:${balance <= 0 ? 100 : pct}%"></div>
+        </div>
+        <p class="text-right text-xs text-gray-400 mt-1">${balance <= 0 ? '✅ Completamente pagado' : pct + '% pagado'}</p>
+      `;
+
+      // Historial de pagos
+      const estadoBadge = (est) => {
+        const map = { activo: 'bg-blue-100 text-blue-700', conciliado: 'bg-green-100 text-green-700', inactivo: 'bg-gray-100 text-gray-500' };
+        return `<span class="px-1.5 py-0.5 text-xs rounded-full font-medium ${map[est] || 'bg-gray-100 text-gray-500'}">${est}</span>`;
+      };
+
+      let historialHtml = `
+        <h4 class="font-semibold text-gray-700 text-sm mb-2"><i class="fas fa-history mr-1 text-gray-400"></i>Historial de pagos</h4>
+      `;
+      if (!pagos || pagos.length === 0) {
+        historialHtml += `<p class="text-sm text-gray-400 italic mb-4">Sin pagos registrados aún.</p>`;
+      } else {
+        historialHtml += `<table class="w-full text-xs border-collapse mb-4">
+          <thead><tr class="bg-gray-50 text-gray-600">
+            <th class="px-2 py-1.5 text-left border-b">Fecha</th>
+            <th class="px-2 py-1.5 text-left border-b">Tipo</th>
+            <th class="px-2 py-1.5 text-right border-b">Monto</th>
+            <th class="px-2 py-1.5 text-left border-b">Referencia</th>
+            <th class="px-2 py-1.5 text-left border-b">Estado</th>
+          </tr></thead><tbody>`;
+        pagos.forEach(p => {
+          historialHtml += `<tr class="border-b border-gray-100 hover:bg-gray-50">
+            <td class="px-2 py-1.5">${p.fecha_pago || '-'}</td>
+            <td class="px-2 py-1.5">${p.tipo_pago || '-'}</td>
+            <td class="px-2 py-1.5 text-right font-medium">${parseFloat(p.monto).toFixed(2)} <span class="text-gray-400">${moneda}</span></td>
+            <td class="px-2 py-1.5 text-gray-500">${p.referencia || '-'}</td>
+            <td class="px-2 py-1.5">${estadoBadge(p.estatus)}</td>
+          </tr>`;
+        });
+        historialHtml += `</tbody></table>`;
+      }
+
+      // Formulario de nuevo pago (solo si está en POR_PAGAR)
+      let formularioHtml = "";
+      if (!esPagada && balance > 0.01) {
+        formularioHtml = await construirFormularioPago(idVenta, balance, moneda);
+      }
+
+      document.getElementById("modalPagos_cuerpo").innerHTML = historialHtml + formularioHtml;
+
+      // Listener del formulario
+      const form = document.getElementById("formNuevoPagoVenta");
+      if (form) {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          await enviarPagoVenta(idVenta, form);
+        });
+      }
+    } catch (err) {
+      document.getElementById("modalPagos_cuerpo").innerHTML =
+        `<div class="text-red-500 text-center py-6"><i class="fas fa-exclamation-circle mr-1"></i>${err.message}</div>`;
+    }
+  }
+
+  async function construirFormularioPago(idVenta, balance, moneda) {
+    // Obtener tipos de pago
+    let opcionesTipo = '<option value="">Seleccionar...</option>';
+    try {
+      const resTipos = await fetch("pagos/getTiposPago");
+      const dataTipos = await resTipos.json();
+      if (dataTipos.status && Array.isArray(dataTipos.data)) {
+        dataTipos.data.forEach(t => {
+          opcionesTipo += `<option value="${t.idtipo_pago}">${t.nombre}</option>`;
+        });
+      }
+    } catch (_) {}
+
+    return `
+      <div class="border-t border-gray-200 pt-4 mt-2">
+        <h4 class="font-semibold text-gray-700 text-sm mb-3">
+          <i class="fas fa-plus-circle mr-1 text-green-500"></i>Registrar nuevo pago
+        </h4>
+        <form id="formNuevoPagoVenta" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Monto <span class="text-red-400">*</span></label>
+            <div class="flex items-center border rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-green-400">
+              <input type="number" id="pagoMonto" name="monto" step="0.01" min="0.01"
+                max="${balance.toFixed(2)}"
+                class="flex-1 px-3 py-2 text-sm outline-none" placeholder="0.00" required />
+              <span class="px-2 text-xs text-gray-400 bg-gray-50 border-l">${moneda}</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-0.5">Máx: ${balance.toFixed(2)} ${moneda}</p>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Método de pago <span class="text-red-400">*</span></label>
+            <select id="pagoTipo" name="idtipo_pago" class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" required>
+              ${opcionesTipo}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Fecha <span class="text-red-400">*</span></label>
+            <input type="date" id="pagoFecha" name="fecha_pago"
+              value="${new Date().toISOString().slice(0,10)}"
+              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" required />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Referencia</label>
+            <input type="text" id="pagoReferencia" name="referencia"
+              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+              placeholder="Nro. de transferencia, cheque..." />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Observaciones</label>
+            <input type="text" id="pagoObservaciones" name="observaciones"
+              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+              placeholder="Opcional..." />
+          </div>
+          <div class="sm:col-span-2 flex justify-end">
+            <button type="submit" id="btnSubmitPago"
+              class="flex items-center gap-2 px-5 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition disabled:opacity-60">
+              <i class="fas fa-check"></i> Registrar Pago
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+  }
+
+  async function enviarPagoVenta(idVenta, form) {
+    const btn = document.getElementById("btnSubmitPago");
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
+
+    try {
+      const payload = {
+        idventa:       idVenta,
+        idtipo_pago:   parseInt(form.idtipo_pago.value),
+        monto:         parseFloat(form.monto.value),
+        fecha_pago:    form.fecha_pago.value,
+        referencia:    form.referencia.value,
+        observaciones: form.observaciones.value,
+      };
+
+      const res  = await fetch("ventas/registrarPago", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!data.status) throw new Error(data.message || "Error al registrar pago");
+
+      if (data.auto_pagada) {
+        await Swal.fire({
+          icon: "success",
+          title: "¡Venta Pagada!",
+          text: "El pago completó el saldo. La venta fue marcada como PAGADA automáticamente.",
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#16a34a",
+        });
+        cerrarModalPagosVenta();
+        recargarTablaVentas();
+      } else {
+        // Recargar el modal con los datos actualizados
+        await cargarDatosModalPagos(idVenta);
+        Swal.fire({ toast: true, position: "top-end", icon: "success",
+          title: "Pago registrado", showConfirmButton: false, timer: 2500 });
+        recargarTablaVentas();
+      }
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Registrar Pago'; }
+      Swal.fire({ icon: "error", title: "Error", text: err.message });
+    }
+  }
+
+  function recargarTablaVentas() {
+    const tabla = $("#Tablaventas").DataTable();
+    if (tabla) tabla.ajax.reload(null, false);
+  }
+
+  // Cerrar modal pagos
+  ["cerrarModalPagosVentaBtn", "cerrarModalPagosVentaBtn2"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("click", cerrarModalPagosVenta);
+  });
+
+  // ============================================================
+  // FIN MODAL DE PAGOS
+  // ============================================================
 
   // Función para cambiar estado de venta
   function cambiarEstadoVenta(idVenta, nuevoEstado) {
@@ -1655,9 +1902,9 @@ document.addEventListener("DOMContentLoaded", function () {
       `);
     }
 
-    // Botón Editar (en estado BORRADOR y POR_PAGAR)
+    // Botón Editar (solo en estado BORRADOR)
     if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_editar) &&
-      (estadoActual.toUpperCase() === "BORRADOR" || estadoActual.toUpperCase() === "POR_PAGAR")) {
+      estadoActual.toUpperCase() === "BORRADOR") {
       botones.push(`
         <button
           class="editar-venta-btn text-blue-600 hover:text-blue-700 p-1 transition-colors duration-150"
@@ -1687,24 +1934,23 @@ document.addEventListener("DOMContentLoaded", function () {
           break;
 
         case "POR_PAGAR":
-          // Marcar como pagada
+          // Registrar / ver pagos
           botones.push(`
             <button
-              class="cambiar-estado-venta-btn text-green-500 hover:text-green-700 p-1 transition-colors duration-150"
+              class="ver-pagos-venta-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
               data-idventa="${idVenta}"
-              data-nuevo-estado="PAGADA"
-              title="Marcar como Pagada"
+              title="Registrar / Ver Pagos"
             >
-              <i class="fas fa-check fa-fw text-base"></i>
+              <i class="fas fa-credit-card fa-fw text-base"></i>
             </button>
           `);
           break;
 
         case "PAGADA":
-          // Ver pagos
+          // Ver pagos — solo lectura
           botones.push(`
             <button
-              class="ir-pagos-venta-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
+              class="ver-pagos-venta-btn text-green-600 hover:text-green-800 p-1 transition-colors duration-150"
               data-idventa="${idVenta}"
               title="Ver Pagos"
             >
@@ -1715,9 +1961,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Botón Eliminar (en estado BORRADOR y POR_PAGAR)
+    // Botón Eliminar (solo en estado BORRADOR)
     if ((window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_eliminar) &&
-      (estadoActual.toUpperCase() === "BORRADOR" || estadoActual.toUpperCase() === "POR_PAGAR")) {
+      estadoActual.toUpperCase() === "BORRADOR") {
       botones.push(`
         <button
           class="eliminar-btn text-red-600 hover:text-red-700 p-1 transition-colors duration-150"
@@ -1739,6 +1985,55 @@ document.addEventListener("DOMContentLoaded", function () {
       { data: "nro_venta", title: "Nro. Venta" },
       { data: "cliente_nombre", title: "Cliente" },
       { data: "fecha_venta", title: "Fecha" },
+      {
+        data: "total_general",
+        title: "Total",
+        render: function (data, type, row) {
+          const moneda = row.codigo_moneda || "";
+          const monto = parseFloat(data || 0).toFixed(2);
+          return `<span class="font-medium text-gray-800">${monto} <span class="text-xs text-gray-500">${moneda}</span></span>`;
+        },
+      },
+      {
+        data: "balance",
+        title: "Saldo Pendiente",
+        render: function (data, type, row) {
+          const moneda = row.codigo_moneda || "";
+          const balance = parseFloat(data || 0);
+          const total   = parseFloat(row.total_general || 0);
+          const estado  = (row.estatus || "").toUpperCase();
+
+          // Si está pagada o en borrador el balance no es relevante visualmente
+          if (estado === "PAGADA" || balance <= 0) {
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      <i class="fas fa-check-circle mr-1"></i>Pagado
+                    </span>`;
+          }
+
+          // Calcular porcentaje pagado para la barra de progreso
+          const pagado    = total - balance;
+          const porcentaje = total > 0 ? Math.min(99, Math.floor((pagado / total) * 100)) : 0;
+
+          let colorBarra  = "bg-red-500";
+          let colorTexto  = "text-red-700";
+          let colorFondo  = "bg-red-50";
+          if (porcentaje >= 75) {
+            colorBarra = "bg-yellow-400"; colorTexto = "text-yellow-700"; colorFondo = "bg-yellow-50";
+          } else if (porcentaje >= 40) {
+            colorBarra = "bg-orange-400"; colorTexto = "text-orange-700"; colorFondo = "bg-orange-50";
+          }
+
+          return `<div class="min-w-[110px]">
+                    <div class="flex justify-between items-center mb-0.5">
+                      <span class="text-xs font-semibold ${colorTexto}">${balance.toFixed(2)} <span class="font-normal text-gray-400">${moneda}</span></span>
+                      <span class="text-xs text-gray-400">${porcentaje}% pag.</span>
+                    </div>
+                    <div class="w-full h-1.5 rounded-full bg-gray-200">
+                      <div class="h-1.5 rounded-full ${colorBarra}" style="width:${porcentaje}%"></div>
+                    </div>
+                  </div>`;
+        },
+      },
       {
         data: "estatus",
         title: "Estatus",

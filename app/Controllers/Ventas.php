@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\VentasModel;
+use App\Models\PagosModel;
 use App\Models\BitacoraModel;
 use App\Models\NotificacionesModel;
 use App\Helpers\BitacoraHelper;
@@ -489,4 +490,111 @@ function ventas_getProductosDisponibles()
     $productos = $objVentas->obtenerProductos();
     echo json_encode(['status' => true, 'data' => $productos]);
     exit;
+}
+
+function ventas_getPagosVenta()
+{
+    header('Content-Type: application/json');
+
+    if (!obtenerUsuarioSesion()) {
+        echo json_encode(['status' => false, 'message' => 'Usuario no autenticado']);
+        exit();
+    }
+
+    $idventa = intval($_GET['idventa'] ?? 0);
+    if ($idventa <= 0) {
+        echo json_encode(['status' => false, 'message' => 'ID de venta inválido']);
+        exit();
+    }
+
+    try {
+        $objVentas = getVentasModel();
+        $resultado = $objVentas->obtenerPagosDeVenta($idventa);
+        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+    } catch (Exception $e) {
+        error_log("ventas_getPagosVenta - Error: " . $e->getMessage());
+        echo json_encode(['status' => false, 'message' => 'Error al obtener los pagos']);
+    }
+    exit();
+}
+
+function ventas_registrarPago()
+{
+    header('Content-Type: application/json');
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['status' => false, 'message' => 'Método no permitido']);
+        exit();
+    }
+
+    if (!obtenerUsuarioSesion()) {
+        echo json_encode(['status' => false, 'message' => 'Usuario no autenticado']);
+        exit();
+    }
+
+    try {
+        $postdata = file_get_contents('php://input');
+        $request  = json_decode($postdata, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Datos JSON inválidos');
+        }
+
+        $idventa       = intval($request['idventa']       ?? 0);
+        $idtipo_pago   = intval($request['idtipo_pago']   ?? 0);
+        $monto         = floatval($request['monto']        ?? 0);
+        $referencia    = trim($request['referencia']    ?? '');
+        $fecha_pago    = trim($request['fecha_pago']    ?? date('Y-m-d'));
+        $observaciones = trim($request['observaciones'] ?? '');
+
+        if ($idventa     <= 0) throw new Exception('Venta no válida');
+        if ($idtipo_pago <= 0) throw new Exception('Debe seleccionar un método de pago');
+        if ($monto       <= 0) throw new Exception('El monto debe ser mayor a 0');
+
+        $objVentas    = getVentasModel();
+        $estadoActual = strtoupper((string)$objVentas->obtenerEstadoVenta($idventa));
+        if ($estadoActual !== 'POR_PAGAR') {
+            throw new Exception('Solo se pueden registrar pagos en ventas con estado POR_PAGAR');
+        }
+
+        $objPagos  = new PagosModel();
+        $infoVenta = $objPagos->getInfoVenta($idventa);
+
+        $arrData = [
+            'idpersona'    => $infoVenta['idpersona'] ?? null,
+            'idtipo_pago'  => $idtipo_pago,
+            'idventa'      => $idventa,
+            'idcompra'     => null,
+            'idsueldotemp' => null,
+            'monto'        => $monto,
+            'referencia'   => $referencia    ?: null,
+            'fecha_pago'   => $fecha_pago,
+            'observaciones'=> $observaciones ?: null,
+        ];
+
+        $resultado = $objPagos->insertPago($arrData);
+
+        if ($resultado['status'] === true) {
+            $resBalance     = $objVentas->obtenerPagosDeVenta($idventa);
+            $autoTransicion = false;
+
+            if ($resBalance['status'] && isset($resBalance['data']['venta'])) {
+                $balance = floatval($resBalance['data']['venta']['balance']);
+                if ($balance <= 0.01) {
+                    $objVentas->cambiarEstadoVenta($idventa, 'PAGADA');
+                    $autoTransicion = true;
+                }
+            }
+
+            registrarEnBitacora('ventas', 'REGISTRAR_PAGO');
+            $resultado['auto_pagada']   = $autoTransicion;
+            $resultado['nuevo_balance'] = $resBalance['data']['venta'] ?? [];
+        }
+
+        echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
+    } catch (Exception $e) {
+        error_log("ventas_registrarPago - Error: " . $e->getMessage());
+        echo json_encode(['status' => false, 'message' => $e->getMessage()]);
+    }
+    exit();
 }
