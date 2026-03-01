@@ -219,10 +219,12 @@ use App\Helpers\PermisosModuloVerificar;
     <!-- Contenedor Principal -->
     <div class="flex-1 w-full relative">
         
-        <!-- Icono de notificaciones posicionado absolutamente (solo para desktop) -->
+        <!-- Icono de notificaciones y ayuda posicionado absolutamente (solo para desktop) -->
         <?php if ($puedeVerNotificaciones): ?>
         <div class="hidden lg:block absolute top-4 right-6 z-20">
-            <div class="relative">
+            <div class="relative flex items-center space-x-3">
+                <div id="help-btn-container"></div>
+                
                 <button id="desktop-notifications-toggle" class="text-gray-600 hover:text-green-600 p-2 relative bg-white rounded-full shadow-md">
                     <i class="fas fa-bell text-xl"></i>
                     <span id="desktop-notification-badge" class="notification-badge hidden">0</span>

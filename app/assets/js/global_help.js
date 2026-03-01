@@ -3,21 +3,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const faqBtn = document.createElement('button');
     faqBtn.id = 'faq-global-help-btn';
     faqBtn.innerHTML = '<i class="fas fa-info"></i>';
-    faqBtn.className = 'fixed hover:bg-blue-700 text-white p-4 rounded-full shadow-lg z-50 transition-all duration-300 hover:scale-110 flex items-center justify-center';
+    faqBtn.className = 'text-gray-600 hover:text-green-600 p-2 relative bg-white rounded-full shadow-md z-50 transition-all duration-300 hover:scale-110 flex items-center justify-center';
     faqBtn.style.cssText = `
-        position: fixed !important;
-        bottom: 90px !important;
-        right: 24px !important;
-        width: 56px !important;
-        height: 56px !important;
-        border-radius: 50% !important;
-        background-color: #2563eb !important;
-        color: white !important;
+        width: 38px !important;
+        height: 38px !important;
         border: none !important;
         cursor: pointer !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
-        z-index: 1000 !important;
-        font-size: 20px !important;
+        font-size: 16px !important;
     `;
     faqBtn.setAttribute('title', 'Preguntas Frecuentes y Ayuda');
 
@@ -121,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
            style="z-index: 1060; width: 22%; min-width: 330px; max-width: 450px;">
         
         <!-- Header -->
-        <div class="px-6 py-8 border-b border-blue-700 flex justify-between items-center bg-blue-600 text-white shadow-md z-10 shrink-0">
+        <div class="px-6 py-8 border-b border-green-700 flex justify-between items-center bg-green-600 text-white shadow-md z-10 shrink-0">
           <h2 class="text-2xl font-bold flex items-center">
             <i class="fas fa-question-circle mr-3 text-3xl"></i> Centro de Ayuda
           </h2>
@@ -141,14 +133,14 @@ document.addEventListener('DOMContentLoaded', function () {
             ${renderFAQs()}
           </div>
           
-          <div class="mt-8 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-5 shadow-sm mb-4">
+          <div class="mt-8 bg-green-50 border-l-4 border-green-500 rounded-r-lg p-5 shadow-sm mb-4">
             <div class="flex flex-col">
               <div class="flex items-center mb-2">
-                <i class="fas fa-compass text-blue-500 mr-2 text-xl"></i>
-                <h4 class="font-bold text-blue-900 text-sm">Tour Paso a Paso</h4>
+                <i class="fas fa-compass text-green-500 mr-2 text-xl"></i>
+                <h4 class="font-bold text-green-900 text-sm">Tour Paso a Paso</h4>
               </div>
-              <p class="text-blue-800 text-xs mb-4 leading-relaxed">Revisa de forma interactiva la funcionalidad de esta pantalla y aprende rápidamente donde está cada opción directamente sobre la interfaz visual de la plataforma.</p>
-              <button id="faq-start-tour-btn" class="w-full text-sm bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold transition-colors shadow flex items-center justify-center group">
+              <p class="text-green-800 text-xs mb-4 leading-relaxed">Revisa de forma interactiva la funcionalidad de esta pantalla y aprende rápidamente donde está cada opción directamente sobre la interfaz visual de la plataforma.</p>
+              <button id="faq-start-tour-btn" class="w-full text-sm bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-semibold transition-colors shadow flex items-center justify-center group">
                 <i class="fas fa-play mr-2 group-hover:scale-110 transition-transform"></i> Iniciar Tour Pantalla Actual
               </button>
             </div>
@@ -179,9 +171,14 @@ document.addEventListener('DOMContentLoaded', function () {
       </style>
     `;
 
-    // Inject into body
+    // Inject into DOM
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    document.body.appendChild(faqBtn);
+    const helpBtnContainer = document.getElementById('help-btn-container');
+    if (helpBtnContainer) {
+        helpBtnContainer.appendChild(faqBtn);
+    } else {
+        document.body.appendChild(faqBtn);
+    }
 
     // Logic bindings
     const overlay = document.getElementById('faq-modal-overlay');
