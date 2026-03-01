@@ -56,8 +56,8 @@ function rolesintegrado_index()
 function rolesintegrado_getRoles()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-        $model = getRolesintegradoModel();
-        $arrData = $model->selectAllRoles();
+        $objRolesintegrado = getRolesintegradoModel();
+        $arrData = $objRolesintegrado->selectAllRoles();
         echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
     }
     die();
@@ -69,8 +69,8 @@ function rolesintegrado_getRoles()
 function rolesintegrado_getModulosDisponibles()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-        $model = getRolesintegradoModel();
-        $arrData = $model->selectAllModulosActivos();
+        $objRolesintegrado = getRolesintegradoModel();
+        $arrData = $objRolesintegrado->selectAllModulosActivos();
         echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
     }
     die();
@@ -82,8 +82,8 @@ function rolesintegrado_getModulosDisponibles()
 function rolesintegrado_getPermisosDisponibles()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-        $model = getRolesintegradoModel();
-        $arrData = $model->selectAllPermisosActivos();
+        $objRolesintegrado = getRolesintegradoModel();
+        $arrData = $objRolesintegrado->selectAllPermisosActivos();
         echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
     }
     die();
@@ -95,8 +95,8 @@ function rolesintegrado_getPermisosDisponibles()
 function rolesintegrado_getAsignacionesRol(int $idrol)
 {
     if ($idrol > 0) {
-        $model = getRolesintegradoModel();
-        $arrData = $model->selectAsignacionesRolCompletas($idrol);
+        $objRolesintegrado = getRolesintegradoModel();
+        $arrData = $objRolesintegrado->selectAsignacionesRolCompletas($idrol);
         echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
     } else {
         echo json_encode(['status' => false, 'message' => 'ID de rol no válido']);
@@ -124,8 +124,8 @@ function rolesintegrado_guardarAsignacionesCompletas()
             die();
         }
 
-        $model = getRolesintegradoModel();
-        $request = $model->guardarAsignacionesRolCompletas($data);
+        $objRolesintegrado = getRolesintegradoModel();
+        $request = $objRolesintegrado->guardarAsignacionesRolCompletas($data);
         echo json_encode($request, JSON_UNESCAPED_UNICODE);
     }
     die();

@@ -1,13 +1,14 @@
 <?php
 namespace App\Models;
 
-use App\Core\Mysql;
 use App\Core\Conexion;
 use PDO;
 use PDOException;
 
-class BitacoraModel extends Mysql
+class BitacoraModel
 {
+    private $objModelBitacoraModel;
+    
     private $query;
     private $array;
     private $data;
@@ -27,7 +28,18 @@ class BitacoraModel extends Mysql
 
     public function __construct()
     {
-        parent::__construct();
+    }
+    
+    /**
+     * Obtiene o crea la instancia privada del modelo (Lazy Load)
+     * @return BitacoraModel
+     */
+    private function getInstanciaModel()
+    {
+        if ($this->objModelBitacoraModel == null) {
+            $this->objModelBitacoraModel = new BitacoraModel();
+        }
+        return $this->objModelBitacoraModel;
     }
 
     // GETTERS Y SETTERS DE CONTROL
@@ -124,43 +136,49 @@ class BitacoraModel extends Mysql
         return $this->dias;
     }
 
-    // MÉTODOS PÚBLICOS
+    // MÉTODOS PÚBLICOS (Proxies)
     public function SelectAllBitacora()
     {
-        return $this->ejecutarConsultaTodaBitacora();
+        $objModelBitacora = $this->getInstanciaModel();
+        return $objModelBitacora->ejecutarConsultaTodaBitacora();
     }
 
     public function obtenerRegistroPorId($idbitacora)
     {
-        $this->setIdBitacora($idbitacora);
-        return $this->ejecutarConsultaBitacoraPorId();
+        $objModelBitacora = $this->getInstanciaModel();
+        $objModelBitacora->setIdBitacora($idbitacora);
+        return $objModelBitacora->ejecutarConsultaBitacoraPorId();
     }
 
     public function obtenerHistorial($filtros = [])
     {
-        $this->setFiltros($filtros);
-        return $this->ejecutarConsultaHistorialConFiltros();
+        $objModelBitacora = $this->getInstanciaModel();
+        $objModelBitacora->setFiltros($filtros);
+        return $objModelBitacora->ejecutarConsultaHistorialConFiltros();
     }
 
     public function limpiarRegistrosAntiguos($dias)
     {
-        $this->setDias($dias);
-        return $this->ejecutarLimpiezaRegistrosAntiguos();
+        $objModelBitacora = $this->getInstanciaModel();
+        $objModelBitacora->setDias($dias);
+        return $objModelBitacora->ejecutarLimpiezaRegistrosAntiguos();
     }
 
     public function registrarAccion($tabla, $accion, $idusuario, $detalle = null, $idRegistro = null)
     {
-        $this->setTabla($tabla);
-        $this->setAccion($accion);
-        $this->setIdUsuario($idusuario);
-        $this->setDetalle($detalle);
-        $this->setIdRegistro($idRegistro);
-        return $this->ejecutarRegistroAccion();
+        $objModelBitacora = $this->getInstanciaModel();
+        $objModelBitacora->setTabla($tabla);
+        $objModelBitacora->setAccion($accion);
+        $objModelBitacora->setIdUsuario($idusuario);
+        $objModelBitacora->setDetalle($detalle);
+        $objModelBitacora->setIdRegistro($idRegistro);
+        return $objModelBitacora->ejecutarRegistroAccion();
     }
 
     public function obtenerModulosDisponibles()
     {
-        return $this->ejecutarConsultaModulosDisponibles();
+        $objModelBitacora = $this->getInstanciaModel();
+        return $objModelBitacora->ejecutarConsultaModulosDisponibles();
     }
 
     // MÉTODOS PRIVADOS

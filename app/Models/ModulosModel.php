@@ -20,9 +20,23 @@ class ModulosModel
     private $descripcion;
     private $estatus;
 
+    private $objModelModulosModel;
+
     public function __construct()
     {
         
+    }
+
+    /**
+     * Obtener instancia del modelo interno (Lazy Load)
+     * Permite la coexistencia de dos instancias del modelo
+     */
+    private function getInstanciaModel()
+    {
+        if ($this->objModelModulosModel == null) {
+            $this->objModelModulosModel = new ModulosModel();
+        }
+        return $this->objModelModulosModel;
     }
 
     // GETTERS Y SETTERS DE CONTROL
@@ -92,37 +106,43 @@ class ModulosModel
     // MÉTODOS PÚBLICOS
     public function insertModulo(array $data)
     {
-        $this->setData($data);
-        return $this->ejecutarInsercionModulo();
+        $objModelModulosModel = $this->getInstanciaModel();
+        $objModelModulosModel->setData($data);
+        return $objModelModulosModel->ejecutarInsercionModulo();
     }
 
     public function updateModulo(int $idmodulo, array $data)
     {
-        $this->setIdModulo($idmodulo);
-        $this->setData($data);
-        return $this->ejecutarActualizacionModulo();
+        $objModelModulosModel = $this->getInstanciaModel();
+        $objModelModulosModel->setIdModulo($idmodulo);
+        $objModelModulosModel->setData($data);
+        return $objModelModulosModel->ejecutarActualizacionModulo();
     }
 
     public function selectModuloById(int $idmodulo)
     {
-        $this->setIdModulo($idmodulo);
-        return $this->ejecutarConsultaModuloPorId();
+        $objModelModulosModel = $this->getInstanciaModel();
+        $objModelModulosModel->setIdModulo($idmodulo);
+        return $objModelModulosModel->ejecutarConsultaModuloPorId();
     }
 
     public function deleteModuloById(int $idmodulo)
     {
-        $this->setIdModulo($idmodulo);
-        return $this->ejecutarEliminacionLogicaModulo();
+        $objModelModulosModel = $this->getInstanciaModel();
+        $objModelModulosModel->setIdModulo($idmodulo);
+        return $objModelModulosModel->ejecutarEliminacionLogicaModulo();
     }
 
     public function selectAllModulosActivos()
     {
-        return $this->ejecutarConsultaTodosModulosActivos();
+        $objModelModulosModel = $this->getInstanciaModel();
+        return $objModelModulosModel->ejecutarConsultaTodosModulosActivos();
     }
 
     public function getControlladoresDisponibles()
     {
-        return $this->ejecutarConsultaControlladoresDisponibles();
+        $objModelModulosModel = $this->getInstanciaModel();
+        return $objModelModulosModel->ejecutarConsultaControlladoresDisponibles();
     }
 
     // MÉTODOS PRIVADOS

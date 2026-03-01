@@ -8,10 +8,23 @@ use PDOException;
 class RolesModel 
 {
     const SUPER_USUARIO_ROL_ID = 1;
+    
+    private $objModelRolesModel = null;
 
     public function __construct()
     {
         // Constructor vacío. La conexión se gestiona por método.
+    }
+
+    /**
+     * Obtiene la instancia interna del modelo (Lazy Load)
+     */
+    private function getInstanciaModel()
+    {
+        if ($this->objModelRolesModel == null) {
+            $this->objModelRolesModel = new RolesModel();
+        }
+        return $this->objModelRolesModel;
     }
 
     private function esSuperUsuario(int $idusuario): bool
@@ -228,59 +241,67 @@ class RolesModel
 
     public function insertRol(array $data)
     {
-        if ($this->ejecutarVerificacionNombreExistente($data['nombre'])) {
+        $objModelRolesModel = $this->getInstanciaModel();
+        if ($objModelRolesModel->ejecutarVerificacionNombreExistente($data['nombre'])) {
             return ['status' => false, 'message' => 'Ya existe un rol activo con ese nombre.'];
         }
-        return $this->ejecutarInsercionRol($data);
+        return $objModelRolesModel->ejecutarInsercionRol($data);
     }
 
     public function updateRol(int $idrol, array $data): array
     {
-        if ($this->ejecutarVerificacionNombreExistente($data['nombre'], $idrol)) {
+        $objModelRolesModel = $this->getInstanciaModel();
+        if ($objModelRolesModel->ejecutarVerificacionNombreExistente($data['nombre'], $idrol)) {
             return ['status' => false, 'message' => 'Ya existe otro rol activo con ese nombre.'];
         }
-        return $this->ejecutarActualizacionRol($idrol, $data);
+        return $objModelRolesModel->ejecutarActualizacionRol($idrol, $data);
     }
 
     public function selectRolById(int $idrol)
     {
-        return $this->ejecutarBusquedaRolPorId($idrol);
+        $objModelRolesModel = $this->getInstanciaModel();
+        return $objModelRolesModel->ejecutarBusquedaRolPorId($idrol);
     }
 
     public function deleteRolById(int $idrol): array
     {
-        if ($this->ejecutarVerificacionUsoRol($idrol)) {
+        $objModelRolesModel = $this->getInstanciaModel();
+        if ($objModelRolesModel->ejecutarVerificacionUsoRol($idrol)) {
             return ['status' => false, 'message' => 'No se puede desactivar el rol porque está siendo usado por usuarios activos.'];
         }
-        return $this->ejecutarDesactivacionRol($idrol);
+        return $objModelRolesModel->ejecutarDesactivacionRol($idrol);
     }
 
     public function selectAllRoles(int $idUsuarioSesion): array
     {
-        $esSuperUsuario = $this->esSuperUsuario($idUsuarioSesion);
-        return $this->ejecutarBusquedaTodosRoles($esSuperUsuario);
+        $objModelRolesModel = $this->getInstanciaModel();
+        $esSuperUsuario = $objModelRolesModel->verificarEsSuperUsuario($idUsuarioSesion);
+        return $objModelRolesModel->ejecutarBusquedaTodosRoles($esSuperUsuario);
     }
 
     public function reactivarRol(int $idrol): array
     {
-        $rol = $this->selectRolById($idrol);
+        $objModelRolesModel = $this->getInstanciaModel();
+        $rol = $objModelRolesModel->selectRolById($idrol);
         if (!$rol) {
             return ['status' => false, 'message' => 'El rol no existe.'];
         }
         if ($rol['estatus'] === 'ACTIVO') {
             return ['status' => false, 'message' => 'El rol ya se encuentra activo.'];
         }
-        return $this->ejecutarReactivacionRol($idrol);
+        return $objModelRolesModel->ejecutarReactivacionRol($idrol);
     }
 
     public function verificarEsSuperUsuario(int $idusuario): bool
     {
-        return $this->esSuperUsuario($idusuario);
+        $objModelRolesModel = $this->getInstanciaModel();
+        return $objModelRolesModel->esSuperUsuario($idusuario);
     }
 
     public function selectAllRolesForSelect()
     {
-        return $this->ejecutarBusquedaRolesParaSelect();
+        $objModelRolesModel = $this->getInstanciaModel();
+        return $objModelRolesModel->ejecutarBusquedaRolesParaSelect();
     }
 }
 ?>

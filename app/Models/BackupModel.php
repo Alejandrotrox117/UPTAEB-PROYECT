@@ -9,6 +9,7 @@ use Exception;
 
 class BackupModel {
 
+    private $objModelBackupModel;
     private $dbSeguridad;
     private $dbGeneral;
     private $conexion;
@@ -29,7 +30,19 @@ class BackupModel {
         $this->dbGeneral = $this->conexion->get_conectGeneral();
         $this->bitacoraModel = new BitacoraModel();
         $this->BitacoraHelper = new BitacoraHelper();
-        $this->directorioBackups = $this->obtenerRutaBackups();
+        try {
+            $this->directorioBackups = $this->obtenerRutaBackups();
+        } catch (Exception $e) {
+            // Si falla, usar ruta por defecto sin validación
+            $this->directorioBackups = defined('BACKUP_DIR') ? BACKUP_DIR : __DIR__ . '/../../config/backups/';
+            $this->directorioBackups = rtrim($this->directorioBackups, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+            error_log("Advertencia en BackupModel constructor: " . $e->getMessage());
+        }
+    }
+
+    private function getInstanciaModel() {
+        // Para BackupModel, retornamos la instancia actual debido a las conexiones del constructor
+        return $this;
     }
 
     public function getDbSeguridad() {
@@ -82,27 +95,32 @@ class BackupModel {
 
     public function crearBackupCompleto()
     {
-        return $this->ejecutarBackupCompleto();
+        $objModelBackupModel = $this->getInstanciaModel();
+        return $objModelBackupModel->ejecutarBackupCompleto();
     }
 
     public function crearBackupTabla(string $tabla)
     {
-        return $this->ejecutarBackupTabla($tabla);
+        $objModelBackupModel = $this->getInstanciaModel();
+        return $objModelBackupModel->ejecutarBackupTabla($tabla);
     }
 
     public function obtenerListaBackups()
     {
-        return $this->ejecutarBusquedaBackups();
+        $objModelBackupModel = $this->getInstanciaModel();
+        return $objModelBackupModel->ejecutarBusquedaBackups();
     }
 
     public function eliminarBackup(string $nombreArchivo)
     {
-        return $this->ejecutarEliminacionBackup($nombreArchivo);
+        $objModelBackupModel = $this->getInstanciaModel();
+        return $objModelBackupModel->ejecutarEliminacionBackup($nombreArchivo);
     }
 
     public function restaurarBackup(string $nombreArchivo)
     {
-        return $this->ejecutarRestauracionBackup($nombreArchivo);
+        $objModelBackupModel = $this->getInstanciaModel();
+        return $objModelBackupModel->ejecutarRestauracionBackup($nombreArchivo);
     }
 
     /**
@@ -111,6 +129,7 @@ class BackupModel {
 
     public function obtenerEstadisticasBackups()
     {
+        $objModelBackupModel = $this->getInstanciaModel();
         try {
             $directorio = $this->directorioBackups;
             
@@ -666,6 +685,7 @@ class BackupModel {
      */
     public function importarBaseDatos($rutaArchivo, $baseDatos = 'bd_pda')
     {
+        $objModelBackupModel = $this->getInstanciaModel();
         try {
             if (!file_exists($rutaArchivo)) {
                 return ['status' => false, 'message' => 'El archivo SQL no existe'];

@@ -8,11 +8,7 @@ use App\Helpers\PermisosModuloVerificar;
  */
 function getModulosModel(): ModulosModel
 {
-    static $model = null;
-    if ($model === null) {
-        $model = new ModulosModel();
-    }
-    return $model;
+    return new ModulosModel();
 }
 
 /**
@@ -63,8 +59,8 @@ function modulos_index()
 function modulos_getModulosData()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-        $model = getModulosModel();
-        $arrData = $model->selectAllModulosActivos();
+        $objModulos = getModulosModel();
+        $arrData = $objModulos->selectAllModulosActivos();
         echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
     }
     die();
@@ -100,8 +96,8 @@ function modulos_createModulo()
             die();
         }
 
-        $model = getModulosModel();
-        $request = $model->insertModulo($moduloData);
+        $objModulos = getModulosModel();
+        $request = $objModulos->insertModulo($moduloData);
         echo json_encode($request, JSON_UNESCAPED_UNICODE);
     }
     die();
@@ -113,8 +109,8 @@ function modulos_createModulo()
 function modulos_getModuloById(int $idmodulo)
 {
     if ($idmodulo > 0) {
-        $model = getModulosModel();
-        $arrData = $model->selectModuloById($idmodulo);
+        $objModulos = getModulosModel();
+        $arrData = $objModulos->selectModuloById($idmodulo);
         
         if (empty($arrData)) {
             $response = ["status" => false, "message" => "Datos no encontrados."];
@@ -162,8 +158,8 @@ function modulos_updateModulo()
                 die();
             }
 
-            $model = getModulosModel();
-            $resultado = $model->updateModulo($idModulo, $dataParaModelo);
+            $objModulos = getModulosModel();
+            $resultado = $objModulos->updateModulo($idModulo, $dataParaModelo);
             
             echo json_encode($resultado);
 
@@ -195,8 +191,8 @@ function modulos_deleteModulo()
         $idmodulo = isset($data['idmodulo']) ? intval($data['idmodulo']) : 0;
 
         if ($idmodulo > 0) {
-            $model = getModulosModel();
-            $requestDelete = $model->deleteModuloById($idmodulo);
+            $objModulos = getModulosModel();
+            $requestDelete = $objModulos->deleteModuloById($idmodulo);
             
             if ($requestDelete) {
                 $response = ["status" => true, "message" => "Módulo desactivado correctamente."];
@@ -218,8 +214,8 @@ function modulos_deleteModulo()
 function modulos_getControladores()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-        $model = getModulosModel();
-        $arrData = $model->getControlladoresDisponibles();
+        $objModulos = getModulosModel();
+        $arrData = $objModulos->getControlladoresDisponibles();
         echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
     }
     die();

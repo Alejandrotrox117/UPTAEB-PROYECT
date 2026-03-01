@@ -8,6 +8,14 @@ use App\Helpers\PermisosModuloVerificar;
  * Controlador Bitacora - Estilo Funcional
  */
 
+/**
+ * Función de fábrica para obtener la instancia del modelo BitacoraModel
+ */
+function getBitacoraModel()
+{
+    return new BitacoraModel();
+}
+
 function bitacora_verificarAcceso($accion = 'ver')
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -66,7 +74,7 @@ function bitacora_getBitacoraData()
     }
 
     try {
-        $model = new BitacoraModel();
+        $objBitacora = getBitacoraModel();
         $filtros = [];
         if (!empty($_POST['modulo']))
             $filtros['tabla'] = $_POST['modulo'];
@@ -77,7 +85,7 @@ function bitacora_getBitacoraData()
         if (!empty($_POST['usuario']))
             $filtros['idusuario'] = $_POST['usuario'];
 
-        $arrData = $model->obtenerHistorial($filtros);
+        $arrData = $objBitacora->obtenerHistorial($filtros);
 
         $data = [];
         foreach ($arrData as $row) {
@@ -114,9 +122,9 @@ function bitacora_getBitacoraById($idbitacora)
     }
 
     try {
-        $model = new BitacoraModel();
+        $objBitacora = getBitacoraModel();
         $idbitacora = intval($idbitacora);
-        $bitacora = $model->obtenerRegistroPorId($idbitacora);
+        $bitacora = $objBitacora->obtenerRegistroPorId($idbitacora);
 
         if ($bitacora) {
             echo json_encode([
@@ -149,8 +157,8 @@ function bitacora_getModulosDisponibles()
     }
 
     try {
-        $model = new BitacoraModel();
-        $modulos = $model->obtenerModulosDisponibles();
+        $objBitacora = getBitacoraModel();
+        $modulos = $objBitacora->obtenerModulosDisponibles();
         echo json_encode(["status" => true, "data" => $modulos]);
     } catch (Exception $e) {
         echo json_encode(["status" => false, "message" => "Error al obtener módulos"]);
@@ -168,9 +176,9 @@ function bitacora_limpiarBitacora()
     }
 
     try {
-        $model = new BitacoraModel();
+        $objBitacora = getBitacoraModel();
         $dias = intval($_POST['dias']);
-        $registrosEliminados = $model->limpiarRegistrosAntiguos($dias);
+        $registrosEliminados = $objBitacora->limpiarRegistrosAntiguos($dias);
 
         registrarEnBitacora('Bitacora', 'LIMPIEZA', null, "Eliminados {$registrosEliminados} registros anteriores a {$dias} días");
 

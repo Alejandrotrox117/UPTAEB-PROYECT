@@ -1,19 +1,30 @@
 <?php
 namespace App\Models;
 
-use App\Core\Mysql;
 use App\Core\Conexion;
 use PDO;
 use PDOException;
 use Exception;
 
-class DashboardModel extends Mysql
+class DashboardModel
 {
     private $query;
     private $array;
     private $result;
+    private $objModelDashboardModel;
 
     public function __construct() {}
+
+    /**
+     * Método de gestión de instancias (Lazy Load)
+     * Asegura la coexistencia de dos instancias
+     */
+    private function getInstanciaModel() {
+        if ($this->objModelDashboardModel == null) {
+            $this->objModelDashboardModel = new DashboardModel();
+        }
+        return $this->objModelDashboardModel;
+    }
 
     // --- Getters y Setters ---
     public function getQuery()
@@ -46,8 +57,173 @@ class DashboardModel extends Mysql
         $this->result = $result;
     }
 
+    // --- Métodos Públicos (Proxies) ---
 
     public function getResumen()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaResumen();
+    }
+
+    public function getAnalisisInventario()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaAnalisisInventario();
+    }
+
+    public function getUltimasVentas()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaUltimasVentas();
+    }
+
+    public function getMonedas()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaMonedas();
+    }
+
+    public function getProveedoresActivos()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaProveedoresActivos();
+    }
+
+    public function getProductos()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaProductos();
+    }
+
+    public function getProductosStockBajo()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaEmpleadosActivos();
+    }
+
+    public function getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor = null, $idproducto = null)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto);
+    }
+
+    public function getEmpleadosActivos()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaKPIsEjecutivos();
+    }
+
+    public function getTendenciasVentas()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaTendenciasVentas();
+    }
+
+    public function getRentabilidadProductos()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaRentabilidadProductos();
+    }
+
+    public function getEficienciaEmpleados($fecha_desde, $fecha_hasta, $idempleado, $estado)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaEficienciaEmpleados($fecha_desde, $fecha_hasta, $idempleado, $estado);
+    }
+
+    public function getEstadosProduccion($fecha_desde, $fecha_hasta)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaEstadosProduccion($fecha_desde, $fecha_hasta);
+    }
+
+    public function getCumplimientoTareas($fecha_desde, $fecha_hasta)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaCumplimientoTareas($fecha_desde, $fecha_hasta);
+    }
+
+    public function getTopClientes($limit = 10)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaTopClientes($limit);
+    }
+
+    public function getTopProveedores($limit = 10)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaTopProveedores($limit);
+    }
+
+    public function getKPIsEjecutivos()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaKPIsEjecutivosCompleto();
+    }
+
+    public function getKPIsTiempoReal()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaKPIsTiempoReal();
+    }
+
+    public function getTareasPendientes()
+    {
+        return [];
+    }
+
+    public function getTiposDePago()
+    {
+        return $this->ejecutarGetTiposDePago();
+    }
+
+    public function getIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null)
+    {
+        return $this->ejecutarGetIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago);
+    }
+
+    public function getIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null)
+    {
+        return $this->ejecutarGetIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago);
+    }
+
+    public function getEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
+    {
+        return $this->ejecutarGetEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+    }
+
+    public function getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
+    {
+        return $this->ejecutarGetEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+    }
+
+    public function getMovimientosInventarioMes()
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaMovimientosInventarioMes();
+    }
+
+    public function getReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso = null, $idempleado = null)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso, $idempleado);
+    }
+
+    public function getReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso = null)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso);
+    }
+
+    public function getReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta)
+    {
+        $objModelDashboardModel = $this->getInstanciaModel();
+        return $objModelDashboardModel->ejecutarBusquedaReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta);
+    }
+
+    // --- Métodos Privados (Trabajadores) ---
+
+    private function ejecutarBusquedaResumen()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -67,7 +243,7 @@ class DashboardModel extends Mysql
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
             return $resultado;
         } catch (Exception $e) {
-            error_log("DashboardModel::getResumen - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaResumen - Error: " . $e->getMessage());
             return [
                 'ventas_hoy' => 0,
                 'ventas_ayer' => 0,
@@ -84,7 +260,7 @@ class DashboardModel extends Mysql
         }
     }
 
-    public function getAnalisisInventario()
+    private function ejecutarBusquedaAnalisisInventario()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -136,7 +312,7 @@ class DashboardModel extends Mysql
 
             return $response;
         } catch (Exception $e) {
-            error_log("DashboardModel::getAnalisisInventario - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaAnalisisInventario - Error: " . $e->getMessage());
             return [
                 'stock_critico' => 0,
                 'valor_por_categoria' => json_encode(['categorias' => []]),
@@ -148,8 +324,7 @@ class DashboardModel extends Mysql
         }
     }
 
-
-    public function getUltimasVentas()
+    private function ejecutarBusquedaUltimasVentas()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -170,14 +345,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getCategorias - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaUltimasVentas - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getMonedas()
+    private function ejecutarBusquedaMonedas()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -195,15 +370,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getUltimasVentas - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaMonedas - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-
-    public function getProveedoresActivos()
+    private function ejecutarBusquedaProveedoresActivos()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -213,14 +387,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getProveedoresActivos - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaProveedoresActivos - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getProductos()
+    private function ejecutarBusquedaProductos()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -230,14 +404,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getMonedas - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaProductos - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getProductosStockBajo()
+    private function ejecutarBusquedaEmpleadosActivos()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -247,7 +421,56 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getProductosStockBajo - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaEmpleadosActivos - Error: " . $e->getMessage());
+            return [];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
+    private function ejecutarBusquedaReporteCompras($fecha_desde, $fecha_hasta, $idproveedor = null, $idproducto = null)
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+        try {
+            $sql = "SELECT 
+                c.fecha,
+                c.nro_compra,
+                c.estatus_compra,
+                CONCAT(pr.nombre, ' ', COALESCE(pr.apellido, '')) as proveedor,
+                p.nombre as producto,
+                dc.cantidad,
+                dc.precio_unitario_compra,
+                dc.subtotal_linea,
+                c.total_general,
+                COALESCE(c.balance, 0) as balance
+                FROM compra c
+                INNER JOIN proveedor pr ON c.idproveedor = pr.idproveedor
+                INNER JOIN detalle_compra dc ON c.idcompra = dc.idcompra
+                INNER JOIN producto p ON dc.idproducto = p.idproducto
+                WHERE c.fecha BETWEEN ? AND ?
+                AND c.estatus_compra = 'PAGADA'";
+
+            $params = [$fecha_desde, $fecha_hasta];
+
+            if ($idproveedor) {
+                $sql .= " AND c.idproveedor = ?";
+                $params[] = $idproveedor;
+            }
+
+            if ($idproducto) {
+                $sql .= " AND dc.idproducto = ?";
+                $params[] = $idproducto;
+            }
+
+            $sql .= " ORDER BY c.fecha DESC, c.nro_compra DESC";
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("DashboardModel::ejecutarBusquedaReporteCompras - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -391,57 +614,7 @@ class DashboardModel extends Mysql
     }
 
 
-    public function getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor = null, $idproducto = null)
-    {
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-        try {
-            $sql = "SELECT 
-                c.fecha,
-                c.nro_compra,
-                c.estatus_compra,
-                CONCAT(pr.nombre, ' ', COALESCE(pr.apellido, '')) as proveedor,
-                p.nombre as producto,
-                dc.cantidad,
-                dc.precio_unitario_compra,
-                dc.subtotal_linea,
-                c.total_general,
-                COALESCE(c.balance, 0) as balance
-                FROM compra c
-                INNER JOIN proveedor pr ON c.idproveedor = pr.idproveedor
-                INNER JOIN detalle_compra dc ON c.idcompra = dc.idcompra
-                INNER JOIN producto p ON dc.idproducto = p.idproducto
-                WHERE c.fecha BETWEEN ? AND ?
-                AND c.estatus_compra = 'PAGADA'";
-
-            $params = [$fecha_desde, $fecha_hasta];
-
-            if ($idproveedor) {
-                $sql .= " AND c.idproveedor = ?";
-                $params[] = $idproveedor;
-            }
-
-            if ($idproducto) {
-                $sql .= " AND dc.idproducto = ?";
-                $params[] = $idproducto;
-            }
-
-            $sql .= " ORDER BY c.fecha DESC, c.nro_compra DESC";
-
-            $stmt = $db->prepare($sql);
-            $stmt->execute($params);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            error_log("DashboardModel::getProductos - Error: " . $e->getMessage());
-            return [];
-        } finally {
-            $conexion->disconnect();
-        }
-    }
-
-
-    public function getEmpleadosActivos()
+    private function ejecutarBusquedaKPIsEjecutivos()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -473,14 +646,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getEmpleadosActivos (Métricas) - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaKPIsEjecutivos - Error: " . $e->getMessage());
             return ['margen_ganancia' => 0, 'roi_mes' => 0, 'rotacion_inventario' => 0, 'productividad_general' => 0];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getTendenciasVentas()
+    private function ejecutarBusquedaTendenciasVentas()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -499,14 +672,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getTendenciasVentas - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaTendenciasVentas - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getRentabilidadProductos()
+    private function ejecutarBusquedaRentabilidadProductos()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -542,14 +715,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getRentabilidadProductos - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaRentabilidadProductos - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getEficienciaEmpleados($fecha_desde, $fecha_hasta, $idempleado, $estado)
+    private function ejecutarBusquedaEficienciaEmpleados($fecha_desde, $fecha_hasta, $idempleado, $estado)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -588,7 +761,7 @@ class DashboardModel extends Mysql
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getEficienciaEmpleados - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaEficienciaEmpleados - Error: " . $e->getMessage());
             return [];
             return [];
         } finally {
@@ -596,7 +769,7 @@ class DashboardModel extends Mysql
         }
     }
 
-    public function getEstadosProduccion($fecha_desde, $fecha_hasta)
+    private function ejecutarBusquedaEstadosProduccion($fecha_desde, $fecha_hasta)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -621,14 +794,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getEstadosProduccion - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaEstadosProduccion - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getCumplimientoTareas($fecha_desde, $fecha_hasta)
+    private function ejecutarBusquedaCumplimientoTareas($fecha_desde, $fecha_hasta)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -653,14 +826,14 @@ class DashboardModel extends Mysql
             $stmt->execute($params);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getCumplimientoTareas - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaCumplimientoTareas - Error: " . $e->getMessage());
             return ['total_tareas' => 0, 'tareas_completadas' => 0, 'tareas_en_progreso' => 0, 'tareas_pendientes' => 0];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getTopClientes($limit = 10)
+    private function ejecutarBusquedaTopClientes($limit = 10)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -684,14 +857,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getTopClientes - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaTopClientes - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getTopProveedores($limit = 10)
+    private function ejecutarBusquedaTopProveedores($limit = 10)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -714,14 +887,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getTopProveedores - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaTopProveedores - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-    public function getKPIsEjecutivos()
+    private function ejecutarBusquedaKPIsEjecutivosCompleto()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -766,7 +939,7 @@ class DashboardModel extends Mysql
                 'productividad_general' => round($productividad_general, 2)
             ];
         } catch (Exception $e) {
-            error_log("DashboardModel::getKPIsEjecutivos - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaKPIsEjecutivosCompleto - Error: " . $e->getMessage());
             return [
                 'margen_ganancia' => 0,
                 'roi_mes' => 0,
@@ -778,7 +951,7 @@ class DashboardModel extends Mysql
         }
     }
 
-    public function getKPIsTiempoReal()
+    private function ejecutarBusquedaKPIsTiempoReal()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -815,51 +988,14 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getKPIsTiempoReal - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaKPIsTiempoReal - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 
-
-
-    public function getTareasPendientes()
-    {
-        return [];
-    }
-
-
-    public function getTiposDePago()
-    {
-        return $this->ejecutarGetTiposDePago();
-    }
-
-    public function getIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null)
-    {
-        return $this->ejecutarGetIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago);
-    }
-
-    public function getIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null)
-    {
-        return $this->ejecutarGetIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago);
-    }
-
-    public function getEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
-    {
-        return $this->ejecutarGetEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
-    }
-
-    public function getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago = null, $tipo_egreso = null)
-    {
-        return $this->ejecutarGetEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
-    }
-
-    /**
-     * Obtiene los movimientos de inventario (entradas/salidas) del mes actual
-     * @return array [entradas => int, salidas => int]
-     */
-    public function getMovimientosInventarioMes()
+    private function ejecutarBusquedaMovimientosInventarioMes()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -873,7 +1009,7 @@ class DashboardModel extends Mysql
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            error_log("DashboardModel::getMovimientosInventarioMes - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaMovimientosInventarioMes - Error: " . $e->getMessage());
             return ['entradas' => 0, 'salidas' => 0];
         } finally {
             $conexion->disconnect();
@@ -888,7 +1024,7 @@ class DashboardModel extends Mysql
      * @param int $idempleado
      * @return array
      */
-    public function getReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso = null, $idempleado = null)
+    private function ejecutarBusquedaReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso = null, $idempleado = null)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -930,7 +1066,7 @@ class DashboardModel extends Mysql
             
             return $result;
         } catch (Exception $e) {
-            error_log("DashboardModel::getReporteSemanalEmpleados - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaReporteSemanalEmpleados - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -944,7 +1080,7 @@ class DashboardModel extends Mysql
      * @param string $tipo_proceso 'CLASIFICACION', 'EMPAQUE' o null para ambos
      * @return array
      */
-    public function getReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso = null)
+    private function ejecutarBusquedaReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso = null)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -984,7 +1120,7 @@ class DashboardModel extends Mysql
             
             return $result;
         } catch (Exception $e) {
-            error_log("DashboardModel::getReporteSemanalMateriales - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaReporteSemanalMateriales - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
@@ -997,7 +1133,7 @@ class DashboardModel extends Mysql
      * @param string $fecha_hasta
      * @return array
      */
-    public function getReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta)
+    private function ejecutarBusquedaReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1025,11 +1161,10 @@ class DashboardModel extends Mysql
             
             return $result;
         } catch (Exception $e) {
-            error_log("DashboardModel::getReporteSemanalTotalMateriales - Error: " . $e->getMessage());
+            error_log("DashboardModel::ejecutarBusquedaReporteSemanalTotalMateriales - Error: " . $e->getMessage());
             return [];
         } finally {
             $conexion->disconnect();
         }
     }
 }
-

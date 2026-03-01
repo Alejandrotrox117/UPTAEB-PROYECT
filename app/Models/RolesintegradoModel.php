@@ -19,9 +19,22 @@ class RolesintegradoModel
     private $idpermiso;
     private $asignaciones;
 
+    private $objModelRolesintegradoModel = null;
+
     public function __construct()
     {
         // Inicialización del modelo sin herencia
+    }
+
+    /**
+     * Obtiene la instancia interna del modelo (Lazy Load - Patrón de doble instancia)
+     */
+    private function getInstanciaModel(): RolesintegradoModel
+    {
+        if ($this->objModelRolesintegradoModel == null) {
+            $this->objModelRolesintegradoModel = new RolesintegradoModel();
+        }
+        return $this->objModelRolesintegradoModel;
     }
 
     // GETTERS Y SETTERS DE CONTROL
@@ -89,31 +102,51 @@ class RolesintegradoModel
     }
 
     // MÉTODOS PÚBLICOS
+    /**
+     * Obtiene las asignaciones completas de un rol (Proxy que delega a método privado)
+     */
     public function selectAsignacionesRolCompletas(int $idrol)
     {
-        $this->setIdRol($idrol);
-        return $this->ejecutarConsultaAsignacionesRolCompletas();
+        $objModelRolesintegrado = $this->getInstanciaModel();
+        $objModelRolesintegrado->setIdRol($idrol);
+        return $objModelRolesintegrado->ejecutarConsultaAsignacionesRolCompletas();
     }
 
+    /**
+     * Guarda las asignaciones completas de un rol (Proxy que delega a método privado)
+     */
     public function guardarAsignacionesRolCompletas(array $data)
     {
-        $this->setData($data);
-        return $this->ejecutarGuardadoAsignacionesRolCompletas();
+        $objModelRolesintegrado = $this->getInstanciaModel();
+        $objModelRolesintegrado->setData($data);
+        return $objModelRolesintegrado->ejecutarGuardadoAsignacionesRolCompletas();
     }
 
+    /**
+     * Obtiene todos los roles (Proxy que delega a método privado)
+     */
     public function selectAllRoles()
     {
-        return $this->ejecutarConsultaTodosRoles();
+        $objModelRolesintegrado = $this->getInstanciaModel();
+        return $objModelRolesintegrado->ejecutarConsultaTodosRoles();
     }
 
+    /**
+     * Obtiene todos los módulos activos (Proxy que delega a método privado)
+     */
     public function selectAllModulosActivos()
     {
-        return $this->ejecutarConsultaTodosModulosActivos();
+        $objModelRolesintegrado = $this->getInstanciaModel();
+        return $objModelRolesintegrado->ejecutarConsultaTodosModulosActivos();
     }
 
+    /**
+     * Obtiene todos los permisos activos (Proxy que delega a método privado)
+     */
     public function selectAllPermisosActivos()
     {
-        return $this->ejecutarConsultaTodosPermisosActivos();
+        $objModelRolesintegrado = $this->getInstanciaModel();
+        return $objModelRolesintegrado->ejecutarConsultaTodosPermisosActivos();
     }
 
     // MÉTODOS PRIVADOS

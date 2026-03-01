@@ -66,8 +66,8 @@ function roles_getRolesData() {
 
         try {
             $idusuario = obtenerUsuarioSesion();
-            $model = getRolesModel();
-            $arrData = $model->selectAllRoles($idusuario);
+            $objRoles = getRolesModel();
+            $arrData = $objRoles->selectAllRoles($idusuario);
             
             $bitacoraModel = new BitacoraModel();
             BitacoraHelper::registrarAccion('Roles', 'CONSULTA_LISTADO', $idusuario, $bitacoraModel, 'Consulta de listado de roles');
@@ -138,8 +138,8 @@ function roles_createRol() {
                 'estatus' => $datosLimpios['estatus']
             ];
 
-            $model = getRolesModel();
-            $request = $model->insertRol($rolData);
+            $objRoles = getRolesModel();
+            $request = $objRoles->insertRol($rolData);
             $idusuario = obtenerUsuarioSesion();
             $bitacoraModel = new BitacoraModel();
 
@@ -177,8 +177,8 @@ function roles_getRolById($idrol) {
     
     if ($idrol > 0) {
         try {
-            $model = getRolesModel();
-            $arrData = $model->selectRolById($idrol);
+            $objRoles = getRolesModel();
+            $arrData = $objRoles->selectRolById($idrol);
             $response = (empty($arrData))
                 ? ["status" => false, "message" => "Rol no encontrado."]
                 : ["status" => true, "data" => $arrData];
@@ -262,15 +262,15 @@ function roles_updateRol() {
             die();
         }
 
-        $model = getRolesModel();
-        $rolAnterior = $model->selectRolById($idRol);
+        $objRoles = getRolesModel();
+        $rolAnterior = $objRoles->selectRolById($idRol);
         $dataParaModelo = [
             'nombre' => $datosLimpios['nombre'],
             'descripcion' => $datosLimpios['descripcion'],
             'estatus' => $datosLimpios['estatus'],
         ];
 
-        $resultado = $model->updateRol($idRol, $dataParaModelo);
+        $resultado = $objRoles->updateRol($idRol, $dataParaModelo);
         $idusuario = obtenerUsuarioSesion();
         $bitacoraModel = new BitacoraModel();
 
@@ -322,9 +322,9 @@ function roles_deleteRol() {
                 die();
             }
 
-            $model = getRolesModel();
-            $rolAnterior = $model->selectRolById($idrol);
-            $requestDelete = $model->deleteRolById($idrol);
+            $objRoles = getRolesModel();
+            $rolAnterior = $objRoles->selectRolById($idrol);
+            $requestDelete = $objRoles->deleteRolById($idrol);
             $idusuario = obtenerUsuarioSesion();
             $bitacoraModel = new BitacoraModel();
 
@@ -357,9 +357,9 @@ function roles_reactivarRol() {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $idusuario = obtenerUsuarioSesion();
-            $model = getRolesModel();
+            $objRoles = getRolesModel();
             
-            $esSuperUsuario = $model->verificarEsSuperUsuario($idusuario);
+            $esSuperUsuario = $objRoles->verificarEsSuperUsuario($idusuario);
             if (!$esSuperUsuario) {
                 echo json_encode(['status' => false, 'message' => 'Acción no permitida.']);
                 exit();
@@ -378,8 +378,8 @@ function roles_reactivarRol() {
                 die();
             }
 
-            $rolAnterior = $model->selectRolById($idrol);
-            $requestReactivar = $model->reactivarRol($idrol);
+            $rolAnterior = $objRoles->selectRolById($idrol);
+            $requestReactivar = $objRoles->reactivarRol($idrol);
             $bitacoraModel = new BitacoraModel();
 
             if ($requestReactivar['status']) {

@@ -11,6 +11,12 @@ use App\Helpers\Validation\ExpresionesRegulares;
  * Controlador Ventas - Estilo Funcional
  */
 
+// Función de fábrica para obtener el modelo Ventas
+function getVentasModel()
+{
+    return new VentasModel();
+}
+
 // Helper para obtener modelos
 function ventas_getModels()
 {
@@ -88,9 +94,9 @@ function ventas_getventasData()
     }
 
     try {
-        $models = ventas_getModels();
+        $objVentas = getVentasModel();
         $idUsuarioSesion = obtenerUsuarioSesion();
-        $arrData = $models['ventas']->getVentasDatatable($idUsuarioSesion);
+        $arrData = $objVentas->getVentasDatatable($idUsuarioSesion);
         registrarEnBitacora('ventas', 'CONSULTA_DATOS');
 
         echo json_encode(['data' => $arrData], JSON_UNESCAPED_UNICODE);
@@ -123,7 +129,7 @@ function ventas_setVenta()
     }
 
     try {
-        $models = ventas_getModels();
+        $objVentas = getVentasModel();
         $datosClienteNuevo = $data['cliente_nuevo'] ?? null;
         $detalles = $data['detalles'] ?? [];
 
@@ -133,7 +139,7 @@ function ventas_setVenta()
         // ... validación (omitida por brevedad en este ejemplo, pero debería mantenerse igual)
         // ... asumo que el script original tiene toda la lógica de validación aquí
 
-        $resultado = $models['ventas']->insertVenta($data, $detalles, $datosClienteNuevo);
+        $resultado = $objVentas->insertVenta($data, $detalles, $datosClienteNuevo);
 
         if ($resultado['success']) {
             ventas_generarNotificacionPago($resultado['idventa']);
@@ -171,8 +177,8 @@ function ventas_getProductosLista()
     }
 
     try {
-        $models = ventas_getModels();
-        $productos = $models['ventas']->obtenerProductos();
+        $objVentas = getVentasModel();
+        $productos = $objVentas->obtenerProductos();
         registrarEnBitacora('ventas', 'CONSULTA_PRODUCTOS');
         echo json_encode(['status' => true, 'data' => $productos]);
     } catch (Exception $e) {
@@ -194,8 +200,8 @@ function ventas_getMonedas()
     }
 
     try {
-        $models = ventas_getModels();
-        $monedas = $models['ventas']->getMonedasActivas();
+        $objVentas = getVentasModel();
+        $monedas = $objVentas->getMonedasActivas();
         registrarEnBitacora('ventas', 'CONSULTA_MONEDAS');
         echo json_encode(["status" => true, "data" => $monedas]);
     } catch (Exception $e) {
@@ -220,8 +226,8 @@ function ventas_buscarClientes()
 
     if (strlen($criterio) >= 2) {
         try {
-            $models = ventas_getModels();
-            $clientes = $models['ventas']->buscarClientes($criterio);
+            $objVentas = getVentasModel();
+            $clientes = $objVentas->buscarClientes($criterio);
             registrarEnBitacora('ventas', 'BUSCAR_CLIENTES');
             echo json_encode($clientes);
         } catch (Exception $e) {
@@ -255,15 +261,15 @@ function ventas_getVentaDetalle()
     }
 
     try {
-        $models = ventas_getModels();
-        $venta = $models['ventas']->obtenerVentaPorId($idventa);
+        $objVentas = getVentasModel();
+        $venta = $objVentas->obtenerVentaPorId($idventa);
 
         if (!$venta) {
             echo json_encode(['status' => false, 'message' => 'Venta no encontrada']);
             exit();
         }
 
-        $detalle = $models['ventas']->obtenerDetalleVenta($idventa);
+        $detalle = $objVentas->obtenerDetalleVenta($idventa);
         registrarEnBitacora('ventas', 'VER_DETALLE');
         echo json_encode([
             'status' => true,
@@ -298,8 +304,8 @@ function ventas_deleteVenta()
     }
 
     try {
-        $models = ventas_getModels();
-        $resultado = $models['ventas']->eliminarVenta($idventa);
+        $objVentas = getVentasModel();
+        $resultado = $objVentas->eliminarVenta($idventa);
 
         if ($resultado['success']) {
             registrarEnBitacora('ventas', 'ELIMINAR');
@@ -331,8 +337,8 @@ function ventas_updateVenta()
     $idventa = intval($data['idventa'] ?? 0);
 
     try {
-        $models = ventas_getModels();
-        $resultado = $models['ventas']->updateVenta($idventa, $data);
+        $objVentas = getVentasModel();
+        $resultado = $objVentas->updateVenta($idventa, $data);
 
         if ($resultado['success']) {
             registrarEnBitacora('ventas', 'ACTUALIZAR');
@@ -361,17 +367,17 @@ function ventas_cambiarEstadoVenta()
     $nuevoEstado = trim($data['nuevo_estado'] ?? '');
 
     try {
-        $models = ventas_getModels();
-        $estadoAnterior = $models['ventas']->obtenerEstadoVenta($idventa);
+        $objVentas = getVentasModel();
+        $estadoAnterior = $objVentas->obtenerEstadoVenta($idventa);
 
         // Verificación de permisos (simplificada para el ejemplo)
-        $resultado = $models['ventas']->cambiarEstadoVenta($idventa, $nuevoEstado);
+        $resultado = $objVentas->cambiarEstadoVenta($idventa, $nuevoEstado);
 
         if ($resultado['status']) {
             registrarEnBitacora('ventas', 'CAMBIO_ESTADO', null, "De $estadoAnterior a $nuevoEstado");
             echo json_encode(["status" => true, "message" => "Estado cambiado correctamente."]);
         } else {
-            echo json_encode(["status" => false, "message" => "Error al cambiar el estado."]);
+            echo json_encode(["status" => false, "message" => $resultado['message'] ?? "Error al cambiar el estado."]);
         }
     } catch (Exception $e) {
         echo json_encode(["status" => false, "message" => $e->getMessage()]);
@@ -382,13 +388,14 @@ function ventas_cambiarEstadoVenta()
 function ventas_generarNotificacionPago($idventa)
 {
     try {
-        $models = ventas_getModels();
-        $ventaData = $models['ventas']->getVentaDetalle($idventa);
+        $objVentas = getVentasModel();
+        $ventaData = $objVentas->getVentaDetalle($idventa);
         if (!$ventaData || !isset($ventaData['venta']))
             return;
 
         $ventaInfo = $ventaData['venta'];
 
+        $models = ventas_getModels();
         if ($models['notificaciones']->verificarNotificacionExistente('VENTA_CREADA_PAGO', 'ventas', $idventa))
             return;
 
@@ -418,14 +425,14 @@ function ventas_notaDespacho($idventa)
     ventas_verificarAcceso('ver');
 
     try {
-        $models = ventas_getModels();
+        $objVentas = getVentasModel();
         registrarEnBitacora('ventas', 'GENERAR_NOTA_DESPACHO');
 
         $data['page_tag'] = "Nota de Despacho";
         $data['page_title'] = "Nota de Despacho";
         $data['page_name'] = "Nota de Despacho";
 
-        $ventaData = $models['ventas']->getVentaDetalle($idventa);
+        $ventaData = $objVentas->getVentaDetalle($idventa);
         if (empty($ventaData) || !$ventaData['status']) {
             header('Location: ' . base_url('ventas?error=no_encontrada'));
             exit();
@@ -446,13 +453,13 @@ function ventas_reporteVenta($idventa)
     ventas_verificarAcceso('exportar');
 
     try {
-        $models = ventas_getModels();
+        $objVentas = getVentasModel();
         registrarEnBitacora('ventas', 'GENERAR_REPORTE_PDF');
 
         $data['page_tag'] = "Reporte de Venta";
         $data['page_title'] = "Reporte de Venta";
 
-        $ventaData = $models['ventas']->getVentaDetalle($idventa);
+        $ventaData = $objVentas->getVentaDetalle($idventa);
         if (empty($ventaData) || !$ventaData['status']) {
             header('Location: ' . base_url('ventas?error=no_encontrada'));
             exit();
@@ -468,18 +475,18 @@ function ventas_reporteVenta($idventa)
 
 function ventas_getTasa()
 {
-    $models = ventas_getModels();
+    $objVentas = getVentasModel();
     $codigo = $_GET['codigo_moneda'] ?? '';
     $fecha = $_GET['fecha'] ?? date('Y-m-d');
-    $tasa = $models['ventas']->getTasaPorCodigoYFecha($codigo, $fecha);
+    $tasa = $objVentas->getTasaPorCodigoYFecha($codigo, $fecha);
     echo json_encode(['tasa' => $tasa ?: 1]);
     exit;
 }
 
 function ventas_getProductosDisponibles()
 {
-    $models = ventas_getModels();
-    $productos = $models['ventas']->obtenerProductos();
+    $objVentas = getVentasModel();
+    $productos = $objVentas->obtenerProductos();
     echo json_encode(['status' => true, 'data' => $productos]);
     exit;
 }

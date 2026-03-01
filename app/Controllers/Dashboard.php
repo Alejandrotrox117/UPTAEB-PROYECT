@@ -45,29 +45,34 @@ function dashboard_validarRangoFechas($desde, $hasta)
     return $desde <= $hasta;
 }
 
+// Función de fábrica para obtener el modelo
+function getDashboardModel() {
+    return new DashboardModel();
+}
+
 // Métodos públicos convertidos a funciones
 
 function dashboard_index()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
     $data = [
         "page_title" => "Dashboard Ejecutivo",
         "page_name" => "Dashboard",
         "page_functions_js" => "functions_dashboard.js",
 
-        "tipos_pago" => $model->getTiposDePago(),
+        "tipos_pago" => $objDashboard->getTiposDePago(),
         "tipos_egreso" => ["Compras", "Sueldos", "Otros Egresos"],
-        "proveedores" => $model->getProveedoresActivos(),
-        "productos" => $model->getProductos(),
+        "proveedores" => $objDashboard->getProveedoresActivos(),
+        "productos" => $objDashboard->getProductos(),
 
-        "empleados" => $model->getEmpleadosActivos(),
+        "empleados" => $objDashboard->getEmpleadosActivos(),
     ];
     renderView("dashboard", "dashboard", $data);
 }
 
 function dashboard_getDashboardData()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
 
     $fecha_desde_ingresos = dashboard_validarYFormatearFecha($_GET["fecha_desde_ingresos"] ?? null, "inicio");
     $fecha_hasta_ingresos = dashboard_validarYFormatearFecha($_GET["fecha_hasta_ingresos"] ?? null, "fin");
@@ -89,11 +94,11 @@ function dashboard_getDashboardData()
     }
 
     $response = [
-        "resumen" => $model->getResumen(),
-        "ventas" => $model->getUltimasVentas(),
-        "ventasMensuales" => $model->getTendenciasVentas(),
-        "reporteIngresos" => $model->getIngresosReporte($fecha_desde_ingresos, $fecha_hasta_ingresos, $idtipo_pago_ingresos),
-        "reporteEgresos" => $model->getEgresosReporte($fecha_desde_egresos, $fecha_hasta_egresos, $idtipo_pago_egresos, $tipo_egreso),
+        "resumen" => $objDashboard->getResumen(),
+        "ventas" => $objDashboard->getUltimasVentas(),
+        "ventasMensuales" => $objDashboard->getTendenciasVentas(),
+        "reporteIngresos" => $objDashboard->getIngresosReporte($fecha_desde_ingresos, $fecha_hasta_ingresos, $idtipo_pago_ingresos),
+        "reporteEgresos" => $objDashboard->getEgresosReporte($fecha_desde_egresos, $fecha_hasta_egresos, $idtipo_pago_egresos, $tipo_egreso),
     ];
 
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
@@ -102,7 +107,7 @@ function dashboard_getDashboardData()
 
 function dashboard_getDashboardAvanzado()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
 
     $prod_fecha_desde = dashboard_validarYFormatearFecha($_GET["prod_fecha_desde"] ?? null, "inicio");
     $prod_fecha_hasta = dashboard_validarYFormatearFecha($_GET["prod_fecha_hasta"] ?? null, "fin");
@@ -117,16 +122,16 @@ function dashboard_getDashboardAvanzado()
 
     try {
         $response = [
-            "kpisEjecutivos" => $model->getKPIsEjecutivos(),
-            "tendenciasVentas" => $model->getTendenciasVentas(),
-            "rentabilidadProductos" => $model->getRentabilidadProductos(),
-            "eficienciaEmpleados" => $model->getEficienciaEmpleados($prod_fecha_desde, $prod_fecha_hasta, $prod_empleado, $prod_estado),
-            "estadosProduccion" => $model->getStatesProduccion($prod_fecha_desde, $prod_fecha_hasta),
-            "cumplimientoTareas" => $model->getCumplimientoTareas($prod_fecha_desde, $prod_fecha_hasta),
-            "topClientes" => $model->getTopClientes(),
-            "topProveedores" => $model->getProveedoresActivos(),
-            "analisisInventario" => $model->getAnalisisInventario(),
-            "kpisTiempoReal" => $model->getKPIsTiempoReal(),
+            "kpisEjecutivos" => $objDashboard->getKPIsEjecutivos(),
+            "tendenciasVentas" => $objDashboard->getTendenciasVentas(),
+            "rentabilidadProductos" => $objDashboard->getRentabilidadProductos(),
+            "eficienciaEmpleados" => $objDashboard->getEficienciaEmpleados($prod_fecha_desde, $prod_fecha_hasta, $prod_empleado, $prod_estado),
+            "estadosProduccion" => $objDashboard->getEstadosProduccion($prod_fecha_desde, $prod_fecha_hasta),
+            "cumplimientoTareas" => $objDashboard->getCumplimientoTareas($prod_fecha_desde, $prod_fecha_hasta),
+            "topClientes" => $objDashboard->getTopClientes(),
+            "topProveedores" => $objDashboard->getProveedoresActivos(),
+            "analisisInventario" => $objDashboard->getAnalisisInventario(),
+            "kpisTiempoReal" => $objDashboard->getKPIsTiempoReal(),
         ];
 
         header('Content-Type: application/json');
@@ -141,7 +146,7 @@ function dashboard_getDashboardAvanzado()
 
 function dashboard_getReportesSemanalesProduccion()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
 
     $fecha_desde = dashboard_validarYFormatearFecha($_GET["fecha_desde"] ?? null, "inicio");
     $fecha_hasta = dashboard_validarYFormatearFecha($_GET["fecha_hasta"] ?? null, "fin");
@@ -160,9 +165,9 @@ function dashboard_getReportesSemanalesProduccion()
 
     try {
         $response = [
-            "reporteEmpleados" => $model->getReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso, $idempleado),
-            "reporteMateriales" => $model->getReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso),
-            "reporteTotalMateriales" => $model->getReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta),
+            "reporteEmpleados" => $objDashboard->getReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso, $idempleado),
+            "reporteMateriales" => $objDashboard->getReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso),
+            "reporteTotalMateriales" => $objDashboard->getReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta),
         ];
 
         header('Content-Type: application/json');
@@ -177,7 +182,7 @@ function dashboard_getReportesSemanalesProduccion()
 
 function dashboard_descargarIngresosPDF()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
 
     $fecha_desde = dashboard_validarYFormatearFecha($_GET["fecha_desde"] ?? null, "inicio");
     $fecha_hasta = dashboard_validarYFormatearFecha($_GET["fecha_hasta"] ?? null, "fin");
@@ -187,8 +192,8 @@ function dashboard_descargarIngresosPDF()
         die("Error: Rango de fechas inválido.");
     }
 
-    $ingresosDetallados = $model->getIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago);
-    $ingresosResumen = $model->getIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago);
+    $ingresosDetallados = $objDashboard->getIngresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago);
+    $ingresosResumen = $objDashboard->getIngresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago);
 
     $pdf = new PDF("P", "mm", "Letter");
     $pdf->AliasNbPages();
@@ -251,7 +256,7 @@ function dashboard_descargarIngresosPDF()
 
 function dashboard_descargarEgresosPDF()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
 
     $fecha_desde = dashboard_validarYFormatearFecha($_GET["fecha_desde"] ?? null, "inicio");
     $fecha_hasta = dashboard_validarYFormatearFecha($_GET["fecha_hasta"] ?? null, "fin");
@@ -263,8 +268,8 @@ function dashboard_descargarEgresosPDF()
         die("Error: Rango de fechas inválido.");
     }
 
-    $egresosDetallados = $model->getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
-    $egresosResumen = $model->getEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+    $egresosDetallados = $objDashboard->getEgresosDetallados($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
+    $egresosResumen = $objDashboard->getEgresosReporte($fecha_desde, $fecha_hasta, $idtipo_pago, $tipo_egreso);
 
     $pdf = new PDF("P", "mm", "Letter");
     $pdf->AliasNbPages();
@@ -325,7 +330,7 @@ function dashboard_descargarEgresosPDF()
 
 function dashboard_getReporteComprasData()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
 
     $fecha_desde = dashboard_validarYFormatearFecha($_GET["fecha_desde"] ?? null, "inicio");
     $fecha_hasta = dashboard_validarYFormatearFecha($_GET["fecha_hasta"] ?? null, "fin");
@@ -338,14 +343,14 @@ function dashboard_getReporteComprasData()
         exit();
     }
 
-    $data = $model->getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto);
+    $data = $objDashboard->getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto);
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit();
 }
 
 function dashboard_descargarReporteComprasPDF()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
 
     $fecha_desde = dashboard_validarYFormatearFecha($_GET["fecha_desde"] ?? null, "inicio");
     $fecha_hasta = dashboard_validarYFormatearFecha($_GET["fecha_hasta"] ?? null, "fin");
@@ -356,7 +361,7 @@ function dashboard_descargarReporteComprasPDF()
         die("Error: Rango de fechas inválido.");
     }
 
-    $compras = $model->getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto);
+    $compras = $objDashboard->getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto);
 
     $pdf = new PDF("L", "mm", "Letter");
     $pdf->AliasNbPages();
@@ -402,11 +407,11 @@ function dashboard_descargarReporteComprasPDF()
 
 function dashboard_descargarReporteEjecutivoPDF()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
 
-    $kpis = $model->getKPIsEjecutivos();
-    $topClientes = $model->getTopClientes(5);
-    $topProveedores = $model->getTopProveedores(5);
+    $kpis = $objDashboard->getKPIsEjecutivos();
+    $topClientes = $objDashboard->getTopClientes(5);
+    $topProveedores = $objDashboard->getTopProveedores(5);
 
     $pdf = new PDF("P", "mm", "Letter");
     $pdf->AliasNbPages();
@@ -465,9 +470,9 @@ function dashboard_descargarReporteEjecutivoPDF()
 
 function dashboard_getMovimientosInventarioMes()
 {
-    $model = new DashboardModel();
+    $objDashboard = getDashboardModel();
     try {
-        $data = $model->getMovimientosInventarioMes();
+        $data = $objDashboard->getMovimientosInventarioMes();
         header('Content-Type: application/json');
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {

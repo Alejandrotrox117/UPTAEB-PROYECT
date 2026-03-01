@@ -9,6 +9,11 @@ use App\Helpers\PermisosModuloVerificar;
  * Controlador Backup - Estilo Funcional
  */
 
+// Función de fábrica para obtener el modelo
+function getBackupModel() {
+    return new BackupModel();
+}
+
 // Helper para verificar acceso común
 function backup_verificarAcceso()
 {
@@ -16,7 +21,7 @@ function backup_verificarAcceso()
         session_start();
     }
 
-    if (!obtenUsuarioSesion()) {
+    if (!obtenerUsuarioSesion()) {
         header('Location: ' . base_url() . '/login');
         die();
     }
@@ -60,8 +65,8 @@ function backup_obtenerListaBackups()
         }
 
         try {
-            $model = new BackupModel();
-            $resultado = $model->obtenerListaBackups();
+            $objBackup = getBackupModel();
+            $resultado = $objBackup->obtenerListaBackups();
 
             if ($resultado['status']) {
                 registrarEnBitacora('Backup', 'CONSULTA_LISTADO');
@@ -81,6 +86,12 @@ function backup_obtenerListaBackups()
     }
 }
 
+// Alias para compatibilidad con JavaScript
+function backup_listarBackups()
+{
+    backup_obtenerListaBackups();
+}
+
 function backup_crearBackupCompleto()
 {
     backup_verificarAcceso();
@@ -97,8 +108,8 @@ function backup_crearBackupCompleto()
         }
 
         try {
-            $model = new BackupModel();
-            $resultado = $model->crearBackupCompleto();
+            $objBackup = getBackupModel();
+            $resultado = $objBackup->crearBackupCompleto();
 
             if ($resultado['status']) {
                 echo json_encode([
@@ -150,8 +161,8 @@ function backup_crearBackupTabla()
                 die();
             }
 
-            $model = new BackupModel();
-            $resultado = $model->crearBackupTabla($tabla);
+            $objBackup = getBackupModel();
+            $resultado = $objBackup->crearBackupTabla($tabla);
 
             if ($resultado['status']) {
                 echo json_encode([
@@ -203,8 +214,8 @@ function backup_eliminarBackup()
                 die();
             }
 
-            $model = new BackupModel();
-            $resultado = $model->eliminarBackup($nombreArchivo);
+            $objBackup = getBackupModel();
+            $resultado = $objBackup->eliminarBackup($nombreArchivo);
 
             if ($resultado['status']) {
                 echo json_encode([
@@ -294,7 +305,7 @@ function backup_importarDB()
 
         try {
             $idusuario = obtenerUsuarioSesion();
-            $model = new BackupModel();
+            $objBackup = getBackupModel();
 
             $esSuperUsuario = (isset($_SESSION['user']['idrol']) && $_SESSION['user']['idrol'] == 1);
 
@@ -351,7 +362,7 @@ function backup_importarDB()
                 die();
             }
 
-            $resultado = $model->importarBaseDatos($rutaTemporal, $baseDatos);
+            $resultado = $objBackup->importarBaseDatos($rutaTemporal, $baseDatos);
 
             if (file_exists($rutaTemporal)) {
                 unlink($rutaTemporal);
@@ -403,10 +414,10 @@ function backup_obtenerTablas()
         }
 
         try {
-            $model = new BackupModel();
+            $objBackup = getBackupModel();
             $tablas = [];
 
-            $stmtGeneral = $model->getDbGeneral()->query("SHOW TABLES");
+            $stmtGeneral = $objBackup->getDbGeneral()->query("SHOW TABLES");
             while ($row = $stmtGeneral->fetch(PDO::FETCH_NUM)) {
                 $tablas[] = [
                     'name' => $row[0],
@@ -414,7 +425,7 @@ function backup_obtenerTablas()
                 ];
             }
 
-            $stmtSeguridad = $model->getDbSeguridad()->query("SHOW TABLES");
+            $stmtSeguridad = $objBackup->getDbSeguridad()->query("SHOW TABLES");
             while ($row = $stmtSeguridad->fetch(PDO::FETCH_NUM)) {
                 $tablas[] = [
                     'name' => $row[0],
@@ -456,8 +467,8 @@ function backup_obtenerEstadisticas()
         }
 
         try {
-            $model = new BackupModel();
-            $resultado = $model->obtenerEstadisticasBackups();
+            $objBackup = getBackupModel();
+            $resultado = $objBackup->obtenerEstadisticasBackups();
             echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
 
         } catch (Exception $e) {

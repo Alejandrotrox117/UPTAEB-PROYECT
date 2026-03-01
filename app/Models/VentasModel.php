@@ -202,7 +202,7 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
         return $result;
     }
 
-    private function ejecutarBusquedaTodasVentas(int $idUsuarioSesion = 0){
+    public function ejecutarBusquedaTodasVentas(int $idUsuarioSesion = 0){
     $conexion = new Conexion();
     $conexion->connect();
     $db = $conexion->get_conectGeneral();
@@ -242,7 +242,7 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
     }
 }
 
-    private function ejecutarInsercionVenta(array $data, array $detalles, array $datosClienteNuevo = null)
+    public function ejecutarInsercionVenta(array $data, array $detalles, array $datosClienteNuevo = null)
 {
     $conexion = new Conexion();
     $conexion->connect();
@@ -357,7 +357,7 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
 }
 
 
-    private function ejecutarBusquedaVentaPorId(int $idventa)
+    public function ejecutarBusquedaVentaPorId(int $idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -394,7 +394,7 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
         return $this->getResult();
     }
 
-    private function ejecutarBusquedaDetalleVenta(int $idventa)
+    public function ejecutarBusquedaDetalleVenta(int $idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -425,7 +425,7 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
         return $this->getResult();
     }
 
-    private function ejecutarEliminacionVenta(int $idventa)
+    public function ejecutarEliminacionVenta(int $idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -471,7 +471,7 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
         return $resultado;
     }
 
-    private function ejecutarBusquedaClientes(string $criterio)
+    public function ejecutarBusquedaClientes(string $criterio)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -503,7 +503,7 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
         return $this->getResult();
     }
 
-    private function ejecutarBusquedaProductosParaFormulario()
+    public function ejecutarBusquedaProductosParaFormulario()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -549,7 +549,7 @@ private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
         return $this->getResult();
     }
 
-    private function ejecutarBusquedaMonedasActivas()
+    public function ejecutarBusquedaMonedasActivas()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -988,7 +988,8 @@ private function generarNumeroMovimientoDevolucion($db) {
 
 
 
-    public function getVentasDatatable(int $idUsuarioSesion = 0){
+    public function getVentasDatatable(int $idUsuarioSesion = 0)
+    {
         return $this->ejecutarBusquedaTodasVentas($idUsuarioSesion);
     }
 
@@ -1006,7 +1007,7 @@ private function generarNumeroMovimientoDevolucion($db) {
         return $this->ejecutarActualizacionVenta($this->getVentaId(), $this->getData());
     }
 
-    private function ejecutarActualizacionVenta(int $idventa, array $data)
+    public function ejecutarActualizacionVenta(int $idventa, array $data)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1153,7 +1154,7 @@ private function generarNumeroMovimientoDevolucion($db) {
         return $this->ejecutarObtenerDetalleVentaCompleto($idventa);
     }
 
-    private function ejecutarObtenerDetalleVentaCompleto($idventa)
+    public function ejecutarObtenerDetalleVentaCompleto($idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1225,9 +1226,10 @@ private function generarNumeroMovimientoDevolucion($db) {
         return $this->ejecutarBusquedaProductosParaFormulario();
     }
 
-    public function verificarEsSuperUsuario(int $idusuario){
-    return $this->esSuperUsuario($idusuario);
-}
+    public function verificarEsSuperUsuario(int $idusuario)
+    {
+        return $this->esSuperUsuario($idusuario);
+    }
 
     public function validarDatosCliente($datos)
     {
@@ -1263,7 +1265,7 @@ private function generarNumeroMovimientoDevolucion($db) {
         return $this->ejecutarGetTasaPorCodigoYFecha($codigo, $fecha);
     }
 
-    private function ejecutarGetTasaPorCodigoYFecha($codigo, $fecha)
+    public function ejecutarGetTasaPorCodigoYFecha($codigo, $fecha)
     {
         try {
             $sql = "SELECT tasa_a_bs FROM historial_tasas_bcv WHERE codigo_moneda = ? AND DATE(fecha_publicacion_bcv) <= DATE(?) ORDER BY fecha_publicacion_bcv DESC LIMIT 1";
@@ -1280,7 +1282,7 @@ private function generarNumeroMovimientoDevolucion($db) {
         return $this->ejecutarObtenerEstadoVenta($idventa);
     }
 
-    private function ejecutarObtenerEstadoVenta($idventa)
+    public function ejecutarObtenerEstadoVenta($idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1306,7 +1308,7 @@ private function generarNumeroMovimientoDevolucion($db) {
         return $this->ejecutarCambioEstadoVenta($idventa, $nuevoEstado);
     }
 
-    private function ejecutarCambioEstadoVenta(int $idventa, string $nuevoEstado)
+    public function ejecutarCambioEstadoVenta(int $idventa, string $nuevoEstado)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1316,9 +1318,10 @@ private function generarNumeroMovimientoDevolucion($db) {
             $estadosValidos = ['BORRADOR', 'POR_PAGAR', 'PAGADA', 'ANULADA'];
 
             if (!in_array($nuevoEstado, $estadosValidos)) {
+                error_log("VentasModel::ejecutarCambioEstadoVenta - Estado no válido: $nuevoEstado");
                 return [
                     'status' => false,
-                    'message' => 'Estado no válido.'
+                    'message' => 'Estado no válido: ' . $nuevoEstado
                 ];
             }
 
@@ -1328,6 +1331,7 @@ private function generarNumeroMovimientoDevolucion($db) {
             $venta = $stmtGet->fetch(PDO::FETCH_ASSOC);
 
             if (!$venta) {
+                error_log("VentasModel::ejecutarCambioEstadoVenta - Venta no encontrada: $idventa");
                 return [
                     'status' => false,
                     'message' => 'Venta no encontrada.'
@@ -1335,11 +1339,13 @@ private function generarNumeroMovimientoDevolucion($db) {
             }
 
             $estadoActual = $venta['estatus'];
+            error_log("VentasModel::ejecutarCambioEstadoVenta - ID: $idventa, Estado actual: $estadoActual, Nuevo estado: $nuevoEstado");
 
             if (!$this->validarTransicionEstadoVenta($estadoActual, $nuevoEstado)) {
+                error_log("VentasModel::ejecutarCambioEstadoVenta - Transición no válida de $estadoActual a $nuevoEstado");
                 return [
                     'status' => false,
-                    'message' => 'Transición de estado no válida.'
+                    'message' => "Transición de estado no válida. No se puede cambiar de '$estadoActual' a '$nuevoEstado'."
                 ];
             }
 
@@ -1379,11 +1385,19 @@ private function generarNumeroMovimientoDevolucion($db) {
             'BORRADOR' => ['POR_PAGAR'],
             'POR_PAGAR' => ['PAGADA', 'BORRADOR'],
             'PAGADA' => [], // Una vez pagada, no se puede cambiar
-            'ANULADA' => [] // Una vez anulada, no se puede cambiar
+            'ANULADA' => [], // Una vez anulada, no se puede cambiar
+            // Permitir transiciones desde estados no estándar (legacy)
+            'Activo' => ['BORRADOR', 'POR_PAGAR'],
+            'Inactivo' => ['BORRADOR', 'POR_PAGAR']
         ];
 
-        return isset($transicionesValidas[$estadoActual]) &&
-            in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
+        // Si el estado actual no está en la lista, registrarlo y retornar false
+        if (!isset($transicionesValidas[$estadoActual])) {
+            error_log("VentasModel::validarTransicionEstadoVenta - Estado actual desconocido: $estadoActual");
+            return false;
+        }
+
+        return in_array($nuevoEstado, $transicionesValidas[$estadoActual]);
     }
 
     /**
@@ -1399,7 +1413,7 @@ private function generarNumeroMovimientoDevolucion($db) {
         return $this->ejecutarGetVentaDetalle($idventa);
     }
 
-    private function ejecutarGetVentaDetalle($idventa)
+    public function ejecutarGetVentaDetalle($idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1447,7 +1461,7 @@ private function generarNumeroMovimientoDevolucion($db) {
         }
     }
 
-    private function ejecutarObtenerTasaActualMoneda($codigoMoneda)
+    public function ejecutarObtenerTasaActualMoneda($codigoMoneda)
     {
         $conexion = new Conexion();
         $conexion->connect();
