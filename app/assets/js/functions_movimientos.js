@@ -162,7 +162,7 @@ function validarFormularioMovimiento(camposArray, formId) {
   let tieneEntrada = false;
   let tieneSalida = false;
 
-  
+  // Validar campos obligatorios
   for (const campo of camposArray) {
     if (campo.opcional) continue;
 
@@ -172,8 +172,8 @@ function validarFormularioMovimiento(camposArray, formId) {
     let esValido = true;
     if (campo.tipo === "select") {
       esValido = validarSelect(campo.id, campo.mensajes, formId);
-    } else if (["input", "textarea"].includes(campo.tipo)) {
-      if (inputElement.value.trim() === "" && campo.mensajes && campo.mensajes.vacio) {
+    } else if (["input", "textarea"].includes(campo.tipo) && campo.mensajes?.vacio) {
+      if (inputElement.value.trim() === "") {
         esValido = false;
         mostrarErrorCampo(inputElement, campo.mensajes.vacio);
       }
@@ -182,11 +182,11 @@ function validarFormularioMovimiento(camposArray, formId) {
     if (!esValido) formularioValido = false;
   }
 
-  
+  // Validar cantidades de entrada y salida
   const entradaField = form.querySelector('#cantidad_entrada, #cantidad_entradaActualizar');
   const salidaField = form.querySelector('#cantidad_salida, #cantidad_salidaActualizar');
 
-  if (entradaField && entradaField.value.trim() !== '') {
+  if (entradaField?.value.trim()) {
     const valorEntrada = parseFloat(entradaField.value);
     if (valorEntrada > 0) {
       tieneEntrada = true;
@@ -197,7 +197,7 @@ function validarFormularioMovimiento(camposArray, formId) {
     }
   }
 
-  if (salidaField && salidaField.value.trim() !== '') {
+  if (salidaField?.value.trim()) {
     const valorSalida = parseFloat(salidaField.value);
     if (valorSalida > 0) {
       tieneSalida = true;
@@ -208,16 +208,16 @@ function validarFormularioMovimiento(camposArray, formId) {
     }
   }
 
-  
+  // Validar que tenga al menos una cantidad
   if (!tieneEntrada && !tieneSalida) {
     Swal.fire("Atención", "Debe especificar al menos una cantidad (entrada o salida).", "warning");
-    formularioValido = false;
+    return false;
   }
 
-  
+  // Validar que no tenga ambas cantidades
   if (tieneEntrada && tieneSalida) {
     Swal.fire("Atención", "No puede tener cantidad de entrada y salida al mismo tiempo.", "warning");
-    formularioValido = false;
+    return false;
   }
 
   return formularioValido;
@@ -225,13 +225,11 @@ function validarFormularioMovimiento(camposArray, formId) {
 
 
 function mostrarErrorCampo(inputElement, mensaje) {
-  
+  // Actualizar clases del input
   inputElement.classList.remove('border-green-500', 'ring-green-500');
-  
-  
   inputElement.classList.add('border-red-500', 'ring-red-500');
   
-  
+  // Buscar o crear elemento de error
   let errorElement = inputElement.parentNode.querySelector('.error-message');
   if (!errorElement) {
     errorElement = document.createElement('span');
@@ -293,8 +291,12 @@ function llenarSelectFiltroTipos() {
     return;
   }
 
-  selectFiltro.innerHTML = '<option value="">Todos los tipos de movimiento</option>' + 
-    tiposMovimientoDisponibles.map(t => `<option value="${t.idtipomovimiento}">${t.nombre}${t.descripcion ? ` - ${t.descripcion}` : ''}</option>`).join('');
+  const options = ['<option value="">Todos los tipos de movimiento</option>'];
+  tiposMovimientoDisponibles.forEach(t => {
+    const desc = t.descripcion ? ` - ${t.descripcion}` : '';
+    options.push(`<option value="${t.idtipomovimiento}">${t.nombre}${desc}</option>`);
+  });
+  selectFiltro.innerHTML = options.join('');
 
   selectFiltro.addEventListener('change', function() {
     filtrarMovimientosPorTipo(this.value, this.options[this.selectedIndex].text);
@@ -309,10 +311,13 @@ function filtrarMovimientosPorTipo(tipoId, nombreTipo) {
   
   const indicadorFiltro = document.getElementById('indicador-filtro-actual');
   if (indicadorFiltro) {
-    indicadorFiltro.innerHTML = tipoId 
-      ? `<i class="fas fa-filter mr-1"></i>Filtrado por: ${nombreTipo}`
-      : '<i class="fas fa-list mr-1"></i>Mostrando todos los movimientos';
-    indicadorFiltro.className = `text-sm ${tipoId ? 'text-blue-600 font-medium' : 'text-gray-600'} flex items-center`;
+    if (tipoId) {
+      indicadorFiltro.innerHTML = `<i class="fas fa-filter mr-1"></i>Filtrado por: ${nombreTipo}`;
+      indicadorFiltro.className = 'text-sm text-blue-600 font-medium flex items-center';
+    } else {
+      indicadorFiltro.innerHTML = '<i class="fas fa-list mr-1"></i>Mostrando todos los movimientos';
+      indicadorFiltro.className = 'text-sm text-gray-600 flex items-center';
+    }
   }
 
   if (tablaMovimientos) {
@@ -404,13 +409,15 @@ function actualizarContadoresSimples() {
     return acc;
   }, { entradas: 0, salidas: 0 });
 
-  const statTotal = document.getElementById('stat-total');
-  const statEntradas = document.getElementById('stat-entradas');
-  const statSalidas = document.getElementById('stat-salidas');
+  const elementos = {
+    total: document.getElementById('stat-total'),
+    entradas: document.getElementById('stat-entradas'),
+    salidas: document.getElementById('stat-salidas')
+  };
   
-  if (statTotal) statTotal.textContent = datos.length;
-  if (statEntradas) statEntradas.textContent = stats.entradas;
-  if (statSalidas) statSalidas.textContent = stats.salidas;
+  if (elementos.total) elementos.total.textContent = datos.length;
+  if (elementos.entradas) elementos.entradas.textContent = stats.entradas;
+  if (elementos.salidas) elementos.salidas.textContent = stats.salidas;
 
   console.log(` Estadísticas actualizadas: Total: ${datos.length}, Entradas: ${stats.entradas}, Salidas: ${stats.salidas}`);
 }
@@ -556,9 +563,17 @@ document.addEventListener("DOMContentLoaded", function () {
             if (data) {
               const estatusLower = String(data).toLowerCase();
               if (estatusLower === "activo") {
-                return `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
+                return `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">Activo</span>`;
+              } else if (estatusLower === "devolucion") {
+                return `<span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
+                        <i class="fas fa-undo mr-1"></i>Devolución</span>`;
+              } else if (estatusLower === "correccion") {
+                return `<span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">
+                        <i class="fas fa-edit mr-1"></i>Corrección</span>`;
+              } else if (estatusLower === "inactivo") {
+                return `<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">Anulado</span>`;
               } else {
-                return `<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
+                return `<span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap">${data}</span>`;
               }
             }
             return '<span class="text-xs italic text-gray-500">N/A</span>';
@@ -576,10 +591,13 @@ document.addEventListener("DOMContentLoaded", function () {
             
             const esAnulado = row.estatus === 'inactivo';
             const esVinculado = row.idcompra || row.idventa || row.idproduccion;
-            const esMovimientoAutomatico = row.observaciones && (
+            const esDevolucion = row.estatus === 'devolucion';
+            const esCorreccion = row.estatus === 'correccion';
+            const esMovimientoAutomatico = esDevolucion || esCorreccion || (row.observaciones && (
               row.observaciones.includes('[ANULACIÓN AUTOMÁTICA]') || 
-              row.observaciones.includes('[CORRECCIÓN AUTOMÁTICA]')
-            );
+              row.observaciones.includes('[CORRECCIÓN AUTOMÁTICA]') ||
+              row.observaciones.includes('[DEVOLUCIÓN]')
+            ));
             
             if (tienePermiso('ver')) {
               acciones += `
@@ -1101,16 +1119,22 @@ function llenarSelectProductos(selectId, productos) {
     return;
   }
   
-  select.innerHTML = '<option value="">Seleccione un producto</option>' + 
-    productos.map(p => `<option value="${p.idproducto}" data-stock="${p.stock_actual || 0}">${p.nombre} - Stock: ${p.stock_actual || 0}</option>`).join('');
+  const options = ['<option value="">Seleccione un producto</option>'];
+  productos.forEach(p => {
+    const stock = p.stock_actual || 0;
+    options.push(`<option value="${p.idproducto}" data-stock="${stock}">${p.nombre} - Stock: ${stock}</option>`);
+  });
+  select.innerHTML = options.join('');
   
   select.addEventListener('change', function() {
     const selectedOption = this.options[this.selectedIndex];
-    const stockActual = selectedOption ? selectedOption.getAttribute('data-stock') || 0 : 0;
+    if (!selectedOption || !this.value) return;
+    
+    const stockActual = selectedOption.getAttribute('data-stock') || 0;
     const isRegistro = selectId === 'idproducto';
     const stockAnteriorField = document.getElementById(isRegistro ? 'stock_anterior' : 'stock_anteriorActualizar');
     
-    if (stockAnteriorField && this.value) {
+    if (stockAnteriorField) {
       stockAnteriorField.value = parseFloat(stockActual).toFixed(2);
       stockAnteriorField.dispatchEvent(new Event('input'));
     }
@@ -1129,8 +1153,12 @@ function llenarSelectTiposMovimiento(selectId, tipos) {
     return;
   }
   
-  select.innerHTML = '<option value="">Seleccione un tipo</option>' + 
-    tipos.map(t => `<option value="${t.idtipomovimiento}">${t.nombre}${t.descripcion ? ` - ${t.descripcion}` : ''}</option>`).join('');
+  const options = ['<option value="">Seleccione un tipo</option>'];
+  tipos.forEach(t => {
+    const desc = t.descripcion ? ` - ${t.descripcion}` : '';
+    options.push(`<option value="${t.idtipomovimiento}">${t.nombre}${desc}</option>`);
+  });
+  select.innerHTML = options.join('');
   
   console.log(`Select ${selectId} poblado con ${tipos.length} tipos`);
 }
@@ -1169,7 +1197,23 @@ function verDetalleMovimiento(idMovimiento) {
         document.getElementById("verMovimientoCantidad").textContent = cantidadTexto;
         
         document.getElementById("verMovimientoStock").textContent = movimiento.stock_resultante ? parseFloat(movimiento.stock_resultante).toFixed(2) : "0.00";
-        document.getElementById("verMovimientoEstatus").textContent = movimiento.estatus || "N/A";
+        
+        // Mostrar estatus con badge
+        const estatus = (movimiento.estatus || 'activo').toLowerCase();
+        let estatusHTML = '';
+        if (estatus === 'devolucion') {
+          estatusHTML = '<span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-1 rounded-full"><i class="fas fa-undo mr-1"></i>Devolución</span>';
+        } else if (estatus === 'correccion') {
+          estatusHTML = '<span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-1 rounded-full"><i class="fas fa-edit mr-1"></i>Corrección</span>';
+        } else if (estatus === 'activo') {
+          estatusHTML = '<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full">Activo</span>';
+        } else if (estatus === 'inactivo') {
+          estatusHTML = '<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-1 rounded-full">Anulado</span>';
+        } else {
+          estatusHTML = '<span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-1 rounded-full">' + movimiento.estatus + '</span>';
+        }
+        document.getElementById("verMovimientoTipoOperacion").innerHTML = estatusHTML;
+        
         document.getElementById("verMovimientoObservaciones").textContent = movimiento.observaciones || "Sin observaciones";
         
         abrirModal("modalVerDetalleMovimiento");

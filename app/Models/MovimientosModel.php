@@ -1,11 +1,9 @@
 <?php
 namespace App\Models;
 
-use App\Core\Mysql;
 use App\Core\Conexion;
 use App\Models\ProductosModel;
 use PDO;
-use PDOException;
 use Exception;
 
 class MovimientosModel
@@ -23,7 +21,6 @@ class MovimientosModel
     private $query;
     private $array;
     private $data;
-    private $result;
     private $movimientoId;
     private $message;
     private $status;
@@ -39,9 +36,6 @@ class MovimientosModel
     private $cantidad_salida;
     private $stock_anterior;
     private $stock_resultante;
-    private $total;
-    private $entrada;
-    private $salida;
     private $observaciones;
     private $estatus;
     private $fecha_creacion;
@@ -292,7 +286,7 @@ class MovimientosModel
                 FROM movimientos_existencia m
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
-                WHERE m.estatus = 'activo'
+                WHERE m.estatus NOT IN ('eliminado', 'inactivo')
                 ORDER BY COALESCE(m.fecha_creacion, m.idmovimiento) DESC"
             );
 
@@ -309,7 +303,6 @@ class MovimientosModel
             ];
 
         } catch (Exception $e) {
-            error_log("MovimientosModel::ejecutarBusquedaTodosMovimientos - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error al obtener movimientos: ' . $e->getMessage(),
@@ -357,7 +350,7 @@ class MovimientosModel
                 FROM movimientos_existencia m
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
-                WHERE m.idmovimiento = ? AND m.estatus != 'eliminado'"
+                WHERE m.idmovimiento = ? AND m.estatus NOT IN ('eliminado', 'inactivo')"
             );
 
             $this->setArray([$idmovimiento]);
@@ -408,7 +401,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
                  cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
             // Usar setters con validación
@@ -668,7 +661,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, cantidad_entrada, cantidad_salida, 
                  stock_anterior, stock_resultante, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'devolucion')"
             );
 
             $stmtAnulacion->execute([
@@ -680,7 +673,7 @@ class MovimientosModel
                 $stockActual,
                 $stockDespuesAnulacion,
                 $stockDespuesAnulacion,
-                '[ANULACIÓN AUTOMÁTICA] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
+                '[DEVOLUCIÓN] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
             ]);
 
             $idAnulacion = $db->lastInsertId();
@@ -711,7 +704,6 @@ class MovimientosModel
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            error_log("MovimientosModel::ejecutarAnulacionMovimiento - Error: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error al anular: ' . $e->getMessage(),
@@ -747,7 +739,6 @@ class MovimientosModel
             ];
 
         } catch (Exception $e) {
-            error_log("MovimientosModel::ejecutarBusquedaProductosActivos - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error al obtener productos: ' . $e->getMessage(),
@@ -784,7 +775,6 @@ class MovimientosModel
             ];
 
         } catch (Exception $e) {
-            error_log("MovimientosModel::ejecutarBusquedaTiposMovimientoActivos - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error al obtener tipos de movimiento: ' . $e->getMessage(),
@@ -858,7 +848,6 @@ class MovimientosModel
             }
 
         } catch (Exception $e) {
-            error_log("MovimientosModel::ejecutarBusquedaMovimientosPorCriterio - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error en la búsqueda: ' . $e->getMessage(),
@@ -984,7 +973,6 @@ class MovimientosModel
 
             return $prefijo . $fecha . '-' . str_pad($consecutivo, 4, '0', STR_PAD_LEFT);
         } catch (Exception $e) {
-            error_log("MovimientosModel::generarCodigoMovimiento - Error: " . $e->getMessage());
             return $prefijo . $fecha . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         }
     }
@@ -1009,7 +997,6 @@ class MovimientosModel
 
         $validacion = $this->validarDatosMovimiento($this->getData());
         if (!$validacion['valido']) {
-            error_log("❌ Validación falló: " . $validacion['mensaje']);
             return [
                 'status' => false,
                 'message' => $validacion['mensaje'],
@@ -1104,7 +1091,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, cantidad_entrada, cantidad_salida, 
                  stock_anterior, stock_resultante, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'devolucion')"
             );
 
             $stmtAnulacion->execute([
@@ -1116,7 +1103,7 @@ class MovimientosModel
                 $stockActual,
                 $stockDespuesAnulacion,
                 $stockDespuesAnulacion,
-                '[ANULACIÓN AUTOMÁTICA] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
+                '[DEVOLUCIÓN] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
             ]);
 
             $updateProducto1 = $db->prepare("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
@@ -1160,7 +1147,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
                  cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'correccion')"
             );
 
             $stmtNuevo->execute([
@@ -1205,7 +1192,6 @@ class MovimientosModel
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            error_log("MovimientosModel::anularYCorregirMovimiento - Error: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error: ' . $e->getMessage(),
@@ -1389,7 +1375,6 @@ class MovimientosModel
             ];
 
         } catch (Exception $e) {
-            error_log("MovimientosModel::getTiposMovimientoConEstadisticas - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error al obtener tipos de movimiento: ' . $e->getMessage(),
