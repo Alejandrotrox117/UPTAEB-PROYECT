@@ -597,7 +597,7 @@ class BackupModel {
 
     private function esTablaDeSecurity(string $statement)
     {
-        $tablasSecurity = ['bitacora', 'usuarios', 'roles', 'modulos', 'permisos', 'rol_modulo', 'rol_modulo_permisos', 'notificaciones', 'historial_backups'];
+        $tablasSecurity = ['bitacora', 'usuarios', 'roles', 'modulos', 'permisos', 'rol_modulo_permisos', 'notificaciones', 'historial_backups'];
         
         foreach ($tablasSecurity as $tabla) {
             if (strpos($statement, "`{$tabla}`") !== false || strpos($statement, " {$tabla} ") !== false) {
