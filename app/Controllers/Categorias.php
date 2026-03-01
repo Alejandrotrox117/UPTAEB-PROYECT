@@ -17,14 +17,16 @@ define('CATEGORIAS_SISTEMA', [1, 2, 3]);
 /**
  * Obtiene el modelo de categorías
  */
-function getCategoriasModel() {
+function getCategoriasModel()
+{
     return new CategoriasModel();
 }
 
 /**
  * Renderiza una vista de categorías
  */
-function renderCategoriasView($view, $data = []) {
+function renderCategoriasView($view, $data = [])
+{
     renderView('categorias', $view, $data);
 }
 
@@ -35,7 +37,8 @@ function renderCategoriasView($view, $data = []) {
 /**
  * Vista principal de categorías
  */
-function categorias_index() {
+function categorias_index()
+{
     $data['page_title'] = "Gestion de categorias";
     $data['page_name'] = "categorias";
     $data['page_functions_js'] = "functions_categorias.js";
@@ -45,9 +48,10 @@ function categorias_index() {
 /**
  * Obtiene todas las categorías para DataTable
  */
-function categorias_getCategoriasData() {
-    $model = getCategoriasModel();
-    $arrData = $model->SelectAllCategorias();
+function categorias_getCategoriasData()
+{
+    $objCategorias = getCategoriasModel();
+    $arrData = $objCategorias->SelectAllCategorias();
 
     $response = [
         "recordsTotal" => count($arrData),
@@ -62,7 +66,8 @@ function categorias_getCategoriasData() {
 /**
  * Crear una nueva categoría
  */
-function categorias_crearCategoria() {
+function categorias_crearCategoria()
+{
     try {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
@@ -81,8 +86,8 @@ function categorias_crearCategoria() {
             exit();
         }
 
-        $model = getCategoriasModel();
-        $insertData = $model->insertCategoria([
+        $objCategorias = getCategoriasModel();
+        $insertData = $objCategorias->insertCategoria([
             "nombre" => $nombre,
             "descripcion" => $descripcion,
             "estatus" => $estatus,
@@ -102,7 +107,8 @@ function categorias_crearCategoria() {
 /**
  * Actualizar una categoría existente
  */
-function categorias_actualizarCategoria() {
+function categorias_actualizarCategoria()
+{
     try {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
@@ -122,8 +128,8 @@ function categorias_actualizarCategoria() {
             exit();
         }
 
-        $model = getCategoriasModel();
-        $updateData = $model->updateCategoria([
+        $objCategorias = getCategoriasModel();
+        $updateData = $objCategorias->updateCategoria([
             "idcategoria" => $idcategoria,
             "nombre" => $nombre,
             "descripcion" => $descripcion,
@@ -144,7 +150,8 @@ function categorias_actualizarCategoria() {
 /**
  * Eliminar (desactivar) una categoría
  */
-function categorias_deleteCategoria($idcategoria) {
+function categorias_deleteCategoria($idcategoria)
+{
     try {
         if (empty($idcategoria)) {
             echo json_encode(["status" => false, "message" => "ID de categoria no proporcionado."]);
@@ -152,7 +159,7 @@ function categorias_deleteCategoria($idcategoria) {
         }
 
         // Validar que no sea una categoría del sistema
-        if (in_array((int)$idcategoria, CATEGORIAS_SISTEMA)) {
+        if (in_array((int) $idcategoria, CATEGORIAS_SISTEMA)) {
             echo json_encode([
                 "status" => false,
                 "message" => "No se puede eliminar esta categoria porque es una categoria del sistema."
@@ -160,8 +167,8 @@ function categorias_deleteCategoria($idcategoria) {
             exit();
         }
 
-        $model = getCategoriasModel();
-        $deleteData = $model->deleteCategoria($idcategoria);
+        $objCategorias = getCategoriasModel();
+        $deleteData = $objCategorias->deleteCategoria($idcategoria);
 
         if ($deleteData) {
             echo json_encode(["status" => true, "message" => "Categoria desactivada correctamente."]);
@@ -177,10 +184,11 @@ function categorias_deleteCategoria($idcategoria) {
 /**
  * Obtener una categoría por su ID
  */
-function categorias_getCategoriaById($idcategoria) {
+function categorias_getCategoriaById($idcategoria)
+{
     try {
-        $model = getCategoriasModel();
-        $categoria = $model->getCategoriaById($idcategoria);
+        $objCategorias = getCategoriasModel();
+        $categoria = $objCategorias->getCategoriaById($idcategoria);
 
         if ($categoria) {
             echo json_encode(["status" => true, "data" => $categoria]);
@@ -196,7 +204,8 @@ function categorias_getCategoriaById($idcategoria) {
 /**
  * Reactivar una categoría inactiva
  */
-function categorias_reactivarCategoria() {
+function categorias_reactivarCategoria()
+{
     try {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
@@ -213,8 +222,8 @@ function categorias_reactivarCategoria() {
             exit();
         }
 
-        $model = getCategoriasModel();
-        $reactivarData = $model->reactivarCategoria($idcategoria);
+        $objCategorias = getCategoriasModel();
+        $reactivarData = $objCategorias->reactivarCategoria($idcategoria);
 
         if ($reactivarData) {
             echo json_encode(["status" => true, "message" => "Categoria reactivada correctamente."]);

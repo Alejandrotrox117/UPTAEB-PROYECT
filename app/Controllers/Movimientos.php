@@ -9,6 +9,12 @@ use App\Helpers\PermisosModuloVerificar;
  * Controlador Movimientos - Estilo Funcional
  */
 
+
+function getMovimientosModel()
+{
+    return new MovimientosModel();
+}
+
 function movimientos_verificarSesion()
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -51,8 +57,8 @@ function movimientos_getMovimientos()
     }
 
     try {
-        $model = new MovimientosModel();
-        echo json_encode($model->selectAllMovimientos(), JSON_UNESCAPED_UNICODE);
+        $objMovimientos = getMovimientosModel();
+        echo json_encode($objMovimientos->selectAllMovimientos(), JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         echo json_encode(["status" => false, "message" => "Error."]);
     }
@@ -69,8 +75,8 @@ function movimientos_getMovimientoById($id)
     }
 
     try {
-        $model = new MovimientosModel();
-        echo json_encode($model->selectMovimientoById(intval($id)), JSON_UNESCAPED_UNICODE);
+        $objMovimientos = getMovimientosModel();
+        echo json_encode($objMovimientos->selectMovimientoById(intval($id)), JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         echo json_encode(['status' => false, 'message' => 'Error.']);
     }
@@ -82,8 +88,8 @@ function movimientos_getTiposMovimiento()
     movimientos_verificarSesion();
     header('Content-Type: application/json');
     try {
-        $model = new MovimientosModel();
-        echo json_encode($model->getTiposMovimientoActivos(), JSON_UNESCAPED_UNICODE);
+        $objMovimientos = getMovimientosModel();
+        echo json_encode($objMovimientos->getTiposMovimientoActivos(), JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         echo json_encode(["status" => false, "message" => "Error."]);
     }
@@ -101,8 +107,8 @@ function movimientos_createMovimiento()
 
     try {
         $data = json_decode(file_get_contents('php://input'), true);
-        $model = new MovimientosModel();
-        $result = $model->insertMovimiento($data);
+        $objMovimientos = getMovimientosModel();
+        $result = $objMovimientos->insertMovimiento($data);
         if ($result['status'])
             registrarEnBitacora('movimientos', 'CREAR_MOVIMIENTO');
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
@@ -123,8 +129,8 @@ function movimientos_updateMovimiento()
 
     try {
         $data = json_decode(file_get_contents('php://input'), true);
-        $model = new MovimientosModel();
-        $result = $model->anularYCorregirMovimiento(intval($data['idmovimiento']), $data['nuevos_datos']);
+        $objMovimientos = getMovimientosModel();
+        $result = $objMovimientos->anularYCorregirMovimiento(intval($data['idmovimiento']), $data['nuevos_datos']);
         if ($result['status'])
             registrarEnBitacora('movimientos', 'ANULAR_Y_CORREGIR_MOVIMIENTO');
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
@@ -145,8 +151,8 @@ function movimientos_anularMovimiento()
 
     try {
         $data = json_decode(file_get_contents('php://input'), true);
-        $model = new MovimientosModel();
-        $result = $model->anularMovimientoById(intval($data['idmovimiento']));
+        $objMovimientos = getMovimientosModel();
+        $result = $objMovimientos->anularMovimientoById(intval($data['idmovimiento']));
         if ($result['status'])
             registrarEnBitacora('movimientos', 'ANULAR_MOVIMIENTO');
         echo json_encode($result, JSON_UNESCAPED_UNICODE);
@@ -166,8 +172,8 @@ function movimientos_exportarMovimientos()
     }
 
     try {
-        $model = new MovimientosModel();
-        $res = $model->selectAllMovimientos();
+        $objMovimientos = getMovimientosModel();
+        $res = $objMovimientos->selectAllMovimientos();
         if ($res['status'])
             registrarEnBitacora('movimientos', 'EXPORTAR_MOVIMIENTOS');
         echo json_encode($res, JSON_UNESCAPED_UNICODE);
@@ -182,9 +188,9 @@ function movimientos_getDatosFormulario()
     movimientos_verificarSesion();
     header('Content-Type: application/json');
     try {
-        $model = new MovimientosModel();
-        $productosResponse = $model->getProductosActivos();
-        $tiposResponse = $model->getTiposMovimientoActivos();
+        $objMovimientos = getMovimientosModel();
+        $productosResponse = $objMovimientos->getProductosActivos();
+        $tiposResponse = $objMovimientos->getTiposMovimientoActivos();
 
         echo json_encode([
             "status" => true,
@@ -205,8 +211,8 @@ function movimientos_buscarMovimientos()
     movimientos_verificarSesion();
     header('Content-Type: application/json');
     try {
-        $model = new MovimientosModel();
-        echo json_encode($model->buscarMovimientos($_GET['criterio'] ?? ''), JSON_UNESCAPED_UNICODE);
+        $objMovimientos = getMovimientosModel();
+        echo json_encode($objMovimientos->buscarMovimientos($_GET['criterio'] ?? ''), JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         echo json_encode(["status" => false, "message" => "Error."]);
     }

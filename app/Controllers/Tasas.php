@@ -10,14 +10,16 @@ use App\Models\TasasModel;
 /**
  * Obtiene el modelo de tasas
  */
-function getTasasModel() {
+function getTasasModel()
+{
     return new TasasModel();
 }
 
 /**
  * Renderiza una vista de tasas
  */
-function renderTasasView($view, $data = []) {
+function renderTasasView($view, $data = [])
+{
     renderView('tasas', $view, $data);
 }
 
@@ -28,7 +30,8 @@ function renderTasasView($view, $data = []) {
 /**
  * Vista principal de histórico de tasas BCV
  */
-function tasas_index() {
+function tasas_index()
+{
     $data['page_title'] = "Gestión de Histórico de Tasas";
     $data['page_name'] = "Tasas BCV";
     $data['page_functions_js'] = "functions_tasas_bcv.js";
@@ -38,13 +41,14 @@ function tasas_index() {
 /**
  * Obtener tasas USD y EUR recientes
  */
-function tasas_getTasas() {
+function tasas_getTasas()
+{
     header('Content-Type: application/json');
 
-    $model = getTasasModel();
+    $objTasas = getTasasModel();
 
-    $tasasUsd = $model->obtenerTasasPorMoneda('USD', 5);
-    $tasasEur = $model->obtenerTasasPorMoneda('EUR', 5);
+    $tasasUsd = $objTasas->obtenerTasasPorMoneda('USD', 5);
+    $tasasEur = $objTasas->obtenerTasasPorMoneda('EUR', 5);
 
     $mensajeFlash = $_SESSION['mensaje_flash'] ?? null;
     unset($_SESSION['mensaje_flash']);
@@ -60,10 +64,11 @@ function tasas_getTasas() {
 /**
  * Actualizar tasas desde el BCV (scraping)
  */
-function tasas_actualizarTasasBCV() {
+function tasas_actualizarTasasBCV()
+{
     header('Content-Type: application/json');
 
-    $model = getTasasModel();
+    $objTasas = getTasasModel();
     $bcvScraper = new BcvScraperModel();
     $monedasParaActualizar = ['USD', 'EUR'];
     $respuestasIndividuales = [];
@@ -74,7 +79,7 @@ function tasas_actualizarTasasBCV() {
         $datosTasa = $bcvScraper->obtenerDatosTasaBcv($moneda);
 
         if ($datosTasa && isset($datosTasa['tasa']) && isset($datosTasa['fecha_bcv'])) {
-            $resultadoGuardado = $model->guardarTasa(
+            $resultadoGuardado = $objTasas->guardarTasa(
                 $moneda,
                 $datosTasa['tasa'],
                 $datosTasa['fecha_bcv']
@@ -115,9 +120,10 @@ function tasas_actualizarTasasBCV() {
 /**
  * Obtener todas las tasas para DataTable
  */
-function tasas_getTasasData() {
-    $model = getTasasModel();
-    $arrData = $model->SelectAllTasas();
+function tasas_getTasasData()
+{
+    $objTasas = getTasasModel();
+    $arrData = $objTasas->SelectAllTasas();
 
     $response = [
         "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,

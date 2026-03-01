@@ -13,14 +13,16 @@ use App\Helpers\Validation\ExpresionesRegulares;
 /**
  * Obtiene el modelo de empleados
  */
-function getEmpleadosModel() {
+function getEmpleadosModel()
+{
     return new EmpleadosModel();
 }
 
 /**
  * Renderiza una vista de empleados
  */
-function renderEmpleadosView($view, $data = []) {
+function renderEmpleadosView($view, $data = [])
+{
     renderView('empleados', $view, $data);
 }
 
@@ -31,7 +33,8 @@ function renderEmpleadosView($view, $data = []) {
 /**
  * Página principal del módulo de empleados
  */
-function empleados_index() {
+function empleados_index()
+{
     // Verificar autenticación
     if (!obtenerUsuarioSesion()) {
         header('Location: ' . base_url() . '/login');
@@ -53,7 +56,8 @@ function empleados_index() {
 /**
  * Obtener listado de empleados
  */
-function empleados_getEmpleadoData() {
+function empleados_getEmpleadoData()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             error_log("=== getEmpleadoData llamado ===");
@@ -69,8 +73,8 @@ function empleados_getEmpleadoData() {
             error_log("Usuario ID obtenido: " . ($idusuario ?: 'NULL'));
 
             // Obtener empleados (activos para usuarios normales, todos para super usuarios)
-            $model = getEmpleadosModel();
-            $arrResponse = $model->selectAllEmpleados($idusuario);
+            $objEmpleados = getEmpleadosModel();
+            $arrResponse = $objEmpleados->selectAllEmpleados($idusuario);
 
             error_log("Empleados encontrados: " . count($arrResponse['data']));
 
@@ -91,7 +95,8 @@ function empleados_getEmpleadoData() {
 /**
  * Crear un nuevo empleado
  */
-function empleados_createEmpleado() {
+function empleados_createEmpleado()
+{
     try {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
@@ -149,8 +154,8 @@ function empleados_createEmpleado() {
             exit();
         }
 
-        $model = getEmpleadosModel();
-        $insertData = $model->insertEmpleado([
+        $objEmpleados = getEmpleadosModel();
+        $insertData = $objEmpleados->insertEmpleado([
             "nombre" => $nombre,
             "apellido" => $apellido,
             "identificacion" => $identificacion,
@@ -182,7 +187,8 @@ function empleados_createEmpleado() {
 /**
  * Eliminar (desactivar) un empleado
  */
-function empleados_deleteEmpleado() {
+function empleados_deleteEmpleado()
+{
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
 
@@ -194,8 +200,8 @@ function empleados_deleteEmpleado() {
         return;
     }
 
-    $model = getEmpleadosModel();
-    $deleteData = $model->deleteEmpleado($idempleado);
+    $objEmpleados = getEmpleadosModel();
+    $deleteData = $objEmpleados->deleteEmpleado($idempleado);
 
     if ($deleteData) {
         $response = ["status" => true, "message" => "Empleado desactivado correctamente."];
@@ -210,7 +216,8 @@ function empleados_deleteEmpleado() {
 /**
  * Actualizar un empleado
  */
-function empleados_updateEmpleado() {
+function empleados_updateEmpleado()
+{
     try {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
@@ -270,8 +277,8 @@ function empleados_updateEmpleado() {
             exit();
         }
 
-        $model = getEmpleadosModel();
-        $updateData = $model->updateEmpleado([
+        $objEmpleados = getEmpleadosModel();
+        $updateData = $objEmpleados->updateEmpleado([
             "idempleado" => $idempleado,
             "nombre" => $nombre,
             "apellido" => $apellido,
@@ -318,7 +325,8 @@ function empleados_updateEmpleado() {
 /**
  * Obtener un empleado por ID
  */
-function empleados_getEmpleadoById($idempleado) {
+function empleados_getEmpleadoById($idempleado)
+{
     try {
         // Si $idempleado es un array, tomar el primer elemento
         if (is_array($idempleado)) {
@@ -331,8 +339,8 @@ function empleados_getEmpleadoById($idempleado) {
             exit();
         }
 
-        $model = getEmpleadosModel();
-        $empleado = $model->getEmpleadoById($idempleado);
+        $objEmpleados = getEmpleadosModel();
+        $empleado = $objEmpleados->getEmpleadoById($idempleado);
 
         if ($empleado) {
             echo json_encode(["status" => true, "data" => $empleado]);
@@ -364,7 +372,8 @@ function empleados_getEmpleadoById($idempleado) {
 /**
  * Reactivar un empleado (solo super usuarios)
  */
-function empleados_reactivarEmpleado() {
+function empleados_reactivarEmpleado()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             error_log("=== Iniciando reactivarEmpleado ===");
@@ -373,8 +382,8 @@ function empleados_reactivarEmpleado() {
             error_log("Usuario de sesión: " . ($idusuarioSesion ?: 'NULL'));
 
             // Solo super usuarios pueden reactivar empleados
-            $model = getEmpleadosModel();
-            $esSuperUsuario = $model->verificarEsSuperUsuario($idusuarioSesion);
+            $objEmpleados = getEmpleadosModel();
+            $esSuperUsuario = $objEmpleados->verificarEsSuperUsuario($idusuarioSesion);
             error_log("Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
 
             if (!$esSuperUsuario) {
@@ -405,7 +414,7 @@ function empleados_reactivarEmpleado() {
             $idempleado = intval($data['idempleado']);
             error_log("Intentando reactivar empleado ID: $idempleado");
 
-            $arrResponse = $model->reactivarEmpleado($idempleado);
+            $arrResponse = $objEmpleados->reactivarEmpleado($idempleado);
             error_log("Resultado del modelo: " . print_r($arrResponse, true));
 
             if ($arrResponse['status']) {
@@ -427,7 +436,8 @@ function empleados_reactivarEmpleado() {
 /**
  * Verificar si el usuario actual es super usuario
  */
-function empleados_verificarSuperUsuario() {
+function empleados_verificarSuperUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             error_log("=== Iniciando verificarSuperUsuario en Empleados controller ===");
@@ -458,8 +468,8 @@ function empleados_verificarSuperUsuario() {
 
             error_log("Verificando usuario ID: $idusuario con esSuperAdmin");
 
-            $model = getEmpleadosModel();
-            $esSuperAdmin = $model->verificarEsSuperUsuario($idusuario);
+            $objEmpleados = getEmpleadosModel();
+            $esSuperAdmin = $objEmpleados->verificarEsSuperUsuario($idusuario);
 
             error_log("Resultado esSuperAdmin: " . ($esSuperAdmin ? 'SÍ' : 'NO'));
 

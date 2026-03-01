@@ -5,9 +5,11 @@ use App\Core\Mysql;
 use App\Core\Conexion;
 use PDO;
 use PDOException;
+use Exception;
 
-class PagosModel extends Mysql
+class PagosModel
 {
+    private $objModelPagosModel;
     private $query;
     private $array;
     private $data;
@@ -18,68 +20,90 @@ class PagosModel extends Mysql
 
     public function __construct()
     {
-        parent::__construct();
+    }
+
+    private function getInstanciaModel()
+    {
+        if ($this->objModelPagosModel == null) {
+            $this->objModelPagosModel = new PagosModel();
+        }
+        return $this->objModelPagosModel;
     }
 
     // Getters y Setters
-    public function getQuery(){
+    public function getQuery()
+    {
         return $this->query;
     }
 
-    public function setQuery(string $query){
+    public function setQuery(string $query)
+    {
         $this->query = $query;
     }
 
-    public function getArray(){
+    public function getArray()
+    {
         return $this->array ?? [];
     }
 
-    public function setArray(array $array){
+    public function setArray(array $array)
+    {
         $this->array = $array;
     }
 
-    public function getData(){
+    public function getData()
+    {
         return $this->data ?? [];
     }
 
-    public function setData(array $data){
+    public function setData(array $data)
+    {
         $this->data = $data;
     }
 
-    public function getResult(){
+    public function getResult()
+    {
         return $this->result;
     }
 
-    public function setResult($result){
+    public function setResult($result)
+    {
         $this->result = $result;
     }
 
-    public function getPagoId(){
+    public function getPagoId()
+    {
         return $this->pagoId;
     }
 
-    public function setPagoId(?int $pagoId){
+    public function setPagoId(?int $pagoId)
+    {
         $this->pagoId = $pagoId;
     }
 
-    public function getMessage(){
+    public function getMessage()
+    {
         return $this->message ?? '';
     }
 
-    public function setMessage(string $message){
+    public function setMessage(string $message)
+    {
         $this->message = $message;
     }
 
-    public function getStatus(){
+    public function getStatus()
+    {
         return $this->status ?? false;
     }
 
-    public function setStatus(bool $status){
+    public function setStatus(bool $status)
+    {
         $this->status = $status;
     }
 
     // Método privado para verificar si una persona existe
-    private function ejecutarVerificacionPersona(int $idpersona){
+    private function ejecutarVerificacionPersona(int $idpersona)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -87,14 +111,14 @@ class PagosModel extends Mysql
         try {
             $this->setQuery("SELECT COUNT(*) as total FROM personas WHERE idpersona = ?");
             $this->setArray([$idpersona]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
 
             $result = $this->getResult();
             $exists = $result && $result['total'] > 0;
-            
+
         } catch (Exception $e) {
             $conexion->disconnect();
             error_log("Error al verificar persona existente: " . $e->getMessage());
@@ -106,7 +130,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para insertar pago
-    private function ejecutarInsercionPago(array $data){
+    private function ejecutarInsercionPago(array $data)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -127,7 +152,7 @@ class PagosModel extends Mysql
                     fecha_creacion
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', NOW())"
             );
-            
+
             $this->setArray([
                 $data['idpersona'],
                 $data['idtipo_pago'],
@@ -139,30 +164,30 @@ class PagosModel extends Mysql
                 $data['fecha_pago'],
                 $data['observaciones']
             ]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setPagoId($db->lastInsertId());
-            
+
             if ($this->getPagoId()) {
                 // Si el pago está asociado a una venta, verificar si debe marcarse como pagada
                 if (!empty($data['idventa'])) {
                     $this->verificarEstadoVentaDespuesPago($db, $data['idventa']);
                 }
-                
+
                 $this->setStatus(true);
                 $this->setMessage('Pago registrado exitosamente.');
             } else {
                 $this->setStatus(false);
                 $this->setMessage('Error al obtener ID de pago tras registro.');
             }
-            
+
             $resultado = [
                 'status' => $this->getStatus(),
                 'message' => $this->getMessage(),
                 'data' => ['idpago' => $this->getPagoId()]
             ];
-            
+
         } catch (Exception $e) {
             $conexion->disconnect();
             error_log("Error al insertar pago: " . $e->getMessage());
@@ -178,11 +203,12 @@ class PagosModel extends Mysql
         return $resultado;
     }
 
-    private function verificarEstadoVentaDespuesPago($db, $idventa) {
+    private function verificarEstadoVentaDespuesPago($db, $idventa)
+    {
         try {
             // Solo actualizar el balance, NO marcar como pagada automáticamente
             // La venta solo se marca como pagada cuando se concilian los pagos
-            
+
             // Calcular el total de pagos registrados (activos + conciliados)
             $this->setQuery("
                 SELECT COALESCE(SUM(monto), 0) as total_pagado
@@ -193,37 +219,38 @@ class PagosModel extends Mysql
             $stmt->execute([$idventa]);
             $resultadoPagos = $stmt->fetch(PDO::FETCH_ASSOC);
             $totalPagado = $resultadoPagos['total_pagado'] ?? 0;
-            
+
             // Obtener el total de la venta
             $this->setQuery("SELECT total_general FROM venta WHERE idventa = ?");
             $stmtVenta = $db->prepare($this->getQuery());
             $stmtVenta->execute([$idventa]);
             $ventaInfo = $stmtVenta->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($ventaInfo) {
                 $totalVenta = $ventaInfo['total_general'];
                 $nuevoBalance = $totalVenta - $totalPagado;
-                
+
                 // Asegurar que el balance no sea negativo
                 if ($nuevoBalance < 0) {
                     $nuevoBalance = 0;
                 }
-                
+
                 // SOLO actualizar el balance, no cambiar el estado
                 $this->setQuery("UPDATE venta SET balance = ? WHERE idventa = ?");
                 $stmt = $db->prepare($this->getQuery());
                 $stmt->execute([$nuevoBalance, $idventa]);
-                
+
                 error_log("PagosModel::verificarEstadoVentaDespuesPago -> Balance actualizado para venta ID: " . $idventa . " - Nuevo balance: $nuevoBalance (Total pagado: $totalPagado)");
             }
-            
+
         } catch (Exception $e) {
             error_log("Error al verificar estado de venta después del pago: " . $e->getMessage());
         }
     }
 
     // Función privada para actualizar pago
-    private function ejecutarActualizacionPago(int $idpago, array $data){
+    private function ejecutarActualizacionPago(int $idpago, array $data)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -250,7 +277,7 @@ class PagosModel extends Mysql
                     observaciones = ?
                 WHERE idpago = ? AND estatus = 'activo'"
             );
-            
+
             $this->setArray([
                 $data['idpersona'],
                 $data['idtipo_pago'],
@@ -263,11 +290,11 @@ class PagosModel extends Mysql
                 $data['observaciones'],
                 $idpago
             ]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $rowCount = $stmt->rowCount();
-            
+
             if ($rowCount > 0) {
                 $this->setStatus(true);
                 $this->setMessage('Pago actualizado exitosamente.');
@@ -275,12 +302,12 @@ class PagosModel extends Mysql
                 $this->setStatus(false);
                 $this->setMessage('No se pudo actualizar el pago o no se realizaron cambios.');
             }
-            
+
             $resultado = [
                 'status' => $this->getStatus(),
                 'message' => $this->getMessage()
             ];
-            
+
         } catch (Exception $e) {
             $conexion->disconnect();
             error_log("Error al actualizar pago: " . $e->getMessage());
@@ -296,7 +323,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para buscar pago por ID
-    private function ejecutarBusquedaPagoPorId(int $idpago){
+    private function ejecutarBusquedaPagoPorId(int $idpago)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -366,15 +394,15 @@ class PagosModel extends Mysql
                 LEFT JOIN empleado empl ON s.idempleado = empl.idempleado
                 WHERE p.idpago = ?"
             );
-            
+
             $this->setArray([$idpago]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $resultado = $this->getResult();
-            
+
         } catch (Exception $e) {
             $conexion->disconnect();
             error_log("PagosModel::ejecutarBusquedaPagoPorId -> " . $e->getMessage());
@@ -387,7 +415,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para eliminar pago (soft delete)
-    private function ejecutarEliminacionPago(int $idpago){
+    private function ejecutarEliminacionPago(int $idpago)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -395,11 +424,11 @@ class PagosModel extends Mysql
         try {
             $this->setQuery("UPDATE pagos SET estatus = 'inactivo' WHERE idpago = ? AND estatus = 'activo'");
             $this->setArray([$idpago]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount() > 0;
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarEliminacionPago -> " . $e->getMessage());
             $resultado = false;
@@ -411,7 +440,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para obtener todos los pagos
-    private function ejecutarBusquedaTodosPagos(){
+    private function ejecutarBusquedaTodosPagos()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -478,19 +508,19 @@ class PagosModel extends Mysql
                 LEFT JOIN empleado empl ON s.idempleado = empl.idempleado
                 ORDER BY p.idpago DESC, p.fecha_creacion DESC"
             );
-            
+
             $this->setArray([]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Pagos obtenidos.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarBusquedaTodosPagos - Error: " . $e->getMessage());
             $resultado = [
@@ -506,7 +536,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para obtener tipos de pago
-    private function ejecutarBusquedaTiposPago(){
+    private function ejecutarBusquedaTiposPago()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -518,19 +549,19 @@ class PagosModel extends Mysql
                  WHERE estatus = 'activo' 
                  ORDER BY nombre"
             );
-            
+
             $this->setArray([]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Tipos de pago obtenidos.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarBusquedaTiposPago - Error: " . $e->getMessage());
             $resultado = [
@@ -546,7 +577,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para obtener compras pendientes
-    private function ejecutarBusquedaComprasPendientes(){
+    private function ejecutarBusquedaComprasPendientes()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -570,19 +602,19 @@ class PagosModel extends Mysql
                 ORDER BY
                     c.fecha DESC"
             );
-            
+
             $this->setArray([]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Compras pendientes obtenidas.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarBusquedaComprasPendientes - Error: " . $e->getMessage());
             $resultado = [
@@ -598,7 +630,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para obtener ventas pendientes
-    private function ejecutarBusquedaVentasPendientes(){
+    private function ejecutarBusquedaVentasPendientes()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -618,19 +651,19 @@ class PagosModel extends Mysql
                 AND v.balance > 0.01
                 ORDER BY v.fecha_venta DESC"
             );
-            
+
             $this->setArray([]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Ventas pendientes obtenidas.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarBusquedaVentasPendientes - Error: " . $e->getMessage());
             $resultado = [
@@ -646,7 +679,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para obtener sueldos pendientes
-    private function ejecutarBusquedaSueldosPendientes(){
+    private function ejecutarBusquedaSueldosPendientes()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -703,19 +737,19 @@ class PagosModel extends Mysql
                 AND (s.idpersona IS NOT NULL OR s.idempleado IS NOT NULL)
                 ORDER BY s.fecha_creacion DESC"
             );
-            
+
             $this->setArray([]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Sueldos pendientes obtenidos.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarBusquedaSueldosPendientes - Error: " . $e->getMessage());
             $resultado = [
@@ -731,7 +765,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para obtener información de compra
-    private function ejecutarBusquedaInfoCompra(int $idcompra){
+    private function ejecutarBusquedaInfoCompra(int $idcompra)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -744,15 +779,15 @@ class PagosModel extends Mysql
                  LEFT JOIN personas per ON p.identificacion = per.identificacion
                  WHERE c.idcompra = ?"
             );
-            
+
             $this->setArray([$idcompra]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $result = $this->getResult();
-            
+
             if (!empty($result)) {
                 if ($result['idpersona']) {
                     $resultado = ['idpersona' => $result['idpersona']];
@@ -763,7 +798,7 @@ class PagosModel extends Mysql
             } else {
                 $resultado = ['idpersona' => null];
             }
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarBusquedaInfoCompra - Error: " . $e->getMessage());
             $resultado = ['idpersona' => null];
@@ -775,7 +810,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para obtener información de venta
-    private function ejecutarBusquedaInfoVenta(int $idventa){
+    private function ejecutarBusquedaInfoVenta(int $idventa)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -788,15 +824,15 @@ class PagosModel extends Mysql
                  LEFT JOIN personas per ON c.cedula = per.identificacion
                  WHERE v.idventa = ?"
             );
-            
+
             $this->setArray([$idventa]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $result = $this->getResult();
-            
+
             if (!empty($result)) {
                 if ($result['idpersona']) {
                     $resultado = ['idpersona' => $result['idpersona']];
@@ -807,7 +843,7 @@ class PagosModel extends Mysql
             } else {
                 $resultado = ['idpersona' => null];
             }
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarBusquedaInfoVenta - Error: " . $e->getMessage());
             $resultado = ['idpersona' => null];
@@ -819,7 +855,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para crear persona para proveedor
-    private function ejecutarCreacionPersonaParaProveedor(int $idproveedor){
+    private function ejecutarCreacionPersonaParaProveedor(int $idproveedor)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -827,11 +864,11 @@ class PagosModel extends Mysql
         try {
             $this->setQuery("SELECT nombre, apellido, identificacion FROM proveedor WHERE idproveedor = ?");
             $this->setArray([$idproveedor]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $proveedor = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!empty($proveedor)) {
                 $this->setQuery(
                     "INSERT INTO personas (nombre, apellido, identificacion, telefono_principal, estatus, fecha_creacion) 
@@ -842,11 +879,11 @@ class PagosModel extends Mysql
                     $proveedor['apellido'] ?? '',
                     $proveedor['identificacion']
                 ]);
-                
+
                 $stmt = $db->prepare($this->getQuery());
                 $stmt->execute($this->getArray());
                 $idpersona = $db->lastInsertId();
-                
+
                 if ($idpersona > 0) {
                     $resultado = ['idpersona' => $idpersona];
                 } else {
@@ -855,7 +892,7 @@ class PagosModel extends Mysql
             } else {
                 $resultado = ['idpersona' => null];
             }
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarCreacionPersonaParaProveedor - Error: " . $e->getMessage());
             $resultado = ['idpersona' => null];
@@ -867,7 +904,8 @@ class PagosModel extends Mysql
     }
 
     // Función privada para crear persona para cliente
-    private function ejecutarCreacionPersonaParaCliente(int $idcliente){
+    private function ejecutarCreacionPersonaParaCliente(int $idcliente)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -875,11 +913,11 @@ class PagosModel extends Mysql
         try {
             $this->setQuery("SELECT nombre, apellido, cedula FROM cliente WHERE idcliente = ?");
             $this->setArray([$idcliente]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $cliente = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!empty($cliente)) {
                 $this->setQuery(
                     "INSERT INTO personas (nombre, apellido, identificacion, telefono_principal, estatus, fecha_creacion) 
@@ -890,11 +928,11 @@ class PagosModel extends Mysql
                     $cliente['apellido'] ?? '',
                     $cliente['cedula']
                 ]);
-                
+
                 $stmt = $db->prepare($this->getQuery());
                 $stmt->execute($this->getArray());
                 $idpersona = $db->lastInsertId();
-                
+
                 if ($idpersona > 0) {
                     $resultado = ['idpersona' => $idpersona];
                 } else {
@@ -903,7 +941,7 @@ class PagosModel extends Mysql
             } else {
                 $resultado = ['idpersona' => null];
             }
-            
+
         } catch (Exception $e) {
             error_log("PagosModel::ejecutarCreacionPersonaParaCliente - Error: " . $e->getMessage());
             $resultado = ['idpersona' => null];
@@ -952,12 +990,10 @@ class PagosModel extends Mysql
             if (!empty($pago['idcompra'])) {
                 // Lógica para compras
                 $this->procesarConciliacionCompra($db, $pago['idcompra']);
-            } 
-            elseif (!empty($pago['idventa'])) {
+            } elseif (!empty($pago['idventa'])) {
                 // Lógica para ventas
                 $this->procesarConciliacionVenta($db, $pago['idventa']);
-            }
-            elseif (!empty($pago['idsueldotemp'])) {
+            } elseif (!empty($pago['idsueldotemp'])) {
                 // Los pagos de sueldos se procesan automáticamente mediante el trigger
                 // trg_pago_sueldo_conciliado que:
                 // - Resta el monto del balance del sueldo
@@ -979,21 +1015,27 @@ class PagosModel extends Mysql
     }
 
     // Métodos públicos que usan las funciones privadas
-    public function insertPago(array $data){
-        $this->setData($data);
-        return $this->ejecutarInsercionPago($this->getData());
+    public function insertPago(array $data)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        $objModelPagosModel->setData($data);
+        return $objModelPagosModel->ejecutarInsercionPago($objModelPagosModel->getData());
     }
 
-    public function updatePago(int $idpago, array $data){
-        $this->setData($data);
-        $this->setPagoId($idpago);
-        return $this->ejecutarActualizacionPago($this->getPagoId(), $this->getData());
+    public function updatePago(int $idpago, array $data)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        $objModelPagosModel->setData($data);
+        $objModelPagosModel->setPagoId($idpago);
+        return $objModelPagosModel->ejecutarActualizacionPago($objModelPagosModel->getPagoId(), $objModelPagosModel->getData());
     }
 
-    public function selectPagoById(int $idpago){
-        $this->setPagoId($idpago);
-        $result = $this->ejecutarBusquedaPagoPorId($this->getPagoId());
-        
+    public function selectPagoById(int $idpago)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        $objModelPagosModel->setPagoId($idpago);
+        $result = $objModelPagosModel->ejecutarBusquedaPagoPorId($objModelPagosModel->getPagoId());
+
         if (!empty($result)) {
             return [
                 'status' => true,
@@ -1007,10 +1049,12 @@ class PagosModel extends Mysql
         }
     }
 
-    public function deletePagoById(int $idpago){
-        $this->setPagoId($idpago);
-        $result = $this->ejecutarEliminacionPago($this->getPagoId());
-        
+    public function deletePagoById(int $idpago)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        $objModelPagosModel->setPagoId($idpago);
+        $result = $objModelPagosModel->ejecutarEliminacionPago($objModelPagosModel->getPagoId());
+
         if ($result) {
             return [
                 'status' => true,
@@ -1024,29 +1068,34 @@ class PagosModel extends Mysql
         }
     }
 
-    public function selectAllPagos(){
-        return $this->ejecutarBusquedaTodosPagos();
+    public function selectAllPagos()
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarBusquedaTodosPagos();
     }
 
-    public function selectTiposPago(){
-        return $this->ejecutarBusquedaTiposPago();
+    public function selectTiposPago()
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarBusquedaTiposPago();
     }
-    
-    public function verificarTipoPagoExiste(int $idtipo_pago){
+
+    private function ejecutarVerificacionTipoPagoExiste(int $idtipo_pago)
+    {
         try {
             $conexion = new Conexion();
             $conexion->connect();
             $db = $conexion->get_conectGeneral();
-            
+
             $this->setQuery("SELECT COUNT(*) as total FROM tipos_pagos WHERE idtipo_pago = ? AND estatus = 'activo'");
             $this->setArray([$idtipo_pago]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             $conexion->disconnect();
-            
+
             return $result && $result['total'] > 0;
         } catch (Exception $e) {
             error_log("Error al verificar tipo de pago: " . $e->getMessage());
@@ -1054,32 +1103,49 @@ class PagosModel extends Mysql
         }
     }
 
-    public function selectComprasPendientes(){
-        return $this->ejecutarBusquedaComprasPendientes();
+    public function verificarTipoPagoExiste(int $idtipo_pago)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarVerificacionTipoPagoExiste($idtipo_pago);
     }
 
-    public function selectVentasPendientes(){
-        return $this->ejecutarBusquedaVentasPendientes();
+    public function selectComprasPendientes()
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarBusquedaComprasPendientes();
     }
 
-    public function selectSueldosPendientes(){
-        return $this->ejecutarBusquedaSueldosPendientes();
+    public function selectVentasPendientes()
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarBusquedaVentasPendientes();
     }
 
-    public function getInfoCompra(int $idcompra){
-        return $this->ejecutarBusquedaInfoCompra($idcompra);
+    public function selectSueldosPendientes()
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarBusquedaSueldosPendientes();
     }
 
-    public function getInfoVenta(int $idventa){
-        return $this->ejecutarBusquedaInfoVenta($idventa);
+    public function getInfoCompra(int $idcompra)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarBusquedaInfoCompra($idcompra);
     }
 
-    public function getInfoSueldo(int $idsueldotemp){
+    public function getInfoVenta(int $idventa)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarBusquedaInfoVenta($idventa);
+    }
+
+    private function ejecutarBusquedaInfoSueldo(int $idsueldotemp)
+    {
         try {
             $conexion = new Conexion();
             $conexion->connect();
             $db = $conexion->get_conectGeneral();
-            
+
             // Buscar en la tabla sueldos usando el ID proporcionado
             $this->setQuery(
                 "SELECT 
@@ -1099,42 +1165,50 @@ class PagosModel extends Mysql
                 FROM sueldos s 
                 WHERE s.idsueldo = ?"
             );
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idsueldotemp]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             $conexion->disconnect();
-            
+
             if ($result && $result['idpersona_final']) {
                 return ['idpersona' => $result['idpersona_final']];
             } else {
                 return ['idpersona' => null];
             }
-            
+
         } catch (Exception $e) {
             error_log("Error en getInfoSueldo: " . $e->getMessage());
             return ['idpersona' => null];
         }
     }
 
-    public function conciliarPago(int $idpago){
-        $this->setPagoId($idpago);
-        
+    public function getInfoSueldo(int $idsueldotemp)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarBusquedaInfoSueldo($idsueldotemp);
+    }
+
+    public function conciliarPago(int $idpago)
+    {
+        $objModelPagosModel = $this->getInstanciaModel();
+        $objModelPagosModel->setPagoId($idpago);
+
         try {
-            $result = $this->ejecutarConciliacionPago($this->getPagoId());
-            
+            $result = $objModelPagosModel->ejecutarConciliacionPago($objModelPagosModel->getPagoId());
+
             return [
                 'status' => true,
                 'message' => 'Pago conciliado exitosamente',
-                'idpago' => $this->getPagoId()
+                'idpago' => $objModelPagosModel->getPagoId()
             ];
-            
+
         } catch (Exception $e) {
             return [
                 'status' => false,
                 'message' => $e->getMessage(),
-                'idpago' => $this->getPagoId()
+                'idpago' => $objModelPagosModel->getPagoId()
             ];
         }
     }
@@ -1144,7 +1218,8 @@ class PagosModel extends Mysql
      */
     public function obtenerResumenPagosVenta($idventa)
     {
-        return $this->ejecutarObtenerResumenPagosVenta($idventa);
+        $objModelPagosModel = $this->getInstanciaModel();
+        return $objModelPagosModel->ejecutarObtenerResumenPagosVenta($idventa);
     }
 
     private function ejecutarObtenerResumenPagosVenta($idventa)
@@ -1219,18 +1294,18 @@ class PagosModel extends Mysql
             // 2. Actualizar el balance de la compra  
             // 3. Cambiar el estado de la compra según corresponda
             // Por lo tanto, solo registramos el evento
-            
+
             error_log("PagosModel::procesarConciliacionCompra -> Procesando compra ID: {$idcompra}");
-            
+
             // Opcional: Verificar el resultado después del trigger
             $this->setQuery("SELECT balance, estatus_compra FROM compra WHERE idcompra = ?");
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$idcompra]);
             $compra = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($compra) {
                 error_log("PagosModel::procesarConciliacionCompra -> Compra ID: {$idcompra}, Balance: {$compra['balance']}, Estado: {$compra['estatus_compra']}");
-                
+
                 // Si la compra está pagada, procesar notificaciones
                 if ($compra['estatus_compra'] === 'PAGADA') {
                     try {

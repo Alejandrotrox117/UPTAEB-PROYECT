@@ -8,8 +8,17 @@ use PDOException;
 use Exception;
 use DateTime;
 
-class ProduccionModel extends Mysql
+class ProduccionModel
 {
+    private $objModelProduccionModel;
+
+    private function getInstanciaModel() {
+        if ($this->objModelProduccionModel == null) {
+            $this->objModelProduccionModel = new ProduccionModel();
+        }
+        return $this->objModelProduccionModel;
+    }
+
     
     private $query;
     private $array;
@@ -1459,28 +1468,38 @@ class ProduccionModel extends Mysql
 
     public function registrarSolicitudPago(array $registros = [])
     {
-        return $this->ejecutarRegistroSolicitudPago($registros);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarRegistroSolicitudPago($registros);
     }
 
     public function insertarRegistroProduccion(array $data)
     {
-        return $this->ejecutarInsercionRegistroProduccion($data);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarInsercionRegistroProduccion($data);
     }
 
     public function obtenerRegistrosPorLote($idlote)
     {
-        return $this->ejecutarConsultaRegistrosPorLote($idlote);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarConsultaRegistrosPorLote($idlote);
     }
 
     public function selectAllRegistrosProduccion($filtros = [])
     {
-        return $this->ejecutarConsultaTodosRegistrosProduccion($filtros);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarConsultaTodosRegistrosProduccion($filtros);
     }
 
     /**
      * Obtiene todos los registros de producción con filtros opcionales
      */
     public function actualizarRegistroProduccion($idregistro, array $data)
+    {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarActualizacionRegistroProduccion($idregistro, $data);
+    }
+
+    private function ejecutarActualizacionRegistroProduccion($idregistro, array $data)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1635,6 +1654,12 @@ class ProduccionModel extends Mysql
     /** Obtiene listado de salarios configurados por proceso/producto */
     public function selectPreciosProceso()
     {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarConsultaPreciosProceso();
+    }
+
+    private function ejecutarConsultaPreciosProceso()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -1659,6 +1684,12 @@ class ProduccionModel extends Mysql
 
     /** Crea un salario por proceso/producto */
     public function createPrecioProceso(array $data)
+    {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarCreacionPrecioProceso($data);
+    }
+
+    private function ejecutarCreacionPrecioProceso(array $data)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1705,6 +1736,12 @@ class ProduccionModel extends Mysql
     /** Actualiza un salario por proceso/producto */
     public function updatePrecioProceso(int $idconfig_salario, array $data)
     {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarActualizacionPrecioProceso($idconfig_salario, $data);
+    }
+
+    private function ejecutarActualizacionPrecioProceso(int $idconfig_salario, array $data)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -1735,6 +1772,12 @@ class ProduccionModel extends Mysql
     /** Elimina (lógico) un salario por proceso/producto */
     public function deletePrecioProceso(int $idconfig_salario)
     {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarEliminacionPrecioProceso($idconfig_salario);
+    }
+
+    private function ejecutarEliminacionPrecioProceso(int $idconfig_salario)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -1755,6 +1798,12 @@ class ProduccionModel extends Mysql
      * Solo permite eliminar si está en estado BORRADOR
      */
     public function eliminarRegistroProduccion($idregistro)
+    {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarEliminacionRegistroProduccion($idregistro);
+    }
+
+    private function ejecutarEliminacionRegistroProduccion($idregistro)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1835,6 +1884,12 @@ class ProduccionModel extends Mysql
      */
     public function marcarRegistroComoPagado($idregistro)
     {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarMarcadoRegistroComoPagado($idregistro);
+    }
+
+    private function ejecutarMarcadoRegistroComoPagado($idregistro)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -1895,6 +1950,12 @@ class ProduccionModel extends Mysql
      * Cancela un registro de producción
      */
     public function cancelarRegistroProduccion($idregistro)
+    {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarCancelacionRegistroProduccion($idregistro);
+    }
+
+    private function ejecutarCancelacionRegistroProduccion($idregistro)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1966,6 +2027,12 @@ class ProduccionModel extends Mysql
      */
     public function getRegistroById($idregistro)
     {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarObtenerRegistroById($idregistro);
+    }
+
+    private function ejecutarObtenerRegistroById($idregistro)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -2020,6 +2087,12 @@ class ProduccionModel extends Mysql
      * Solo permite actualizar lotes en estado PLANIFICADO
      */
     public function actualizarLote($idlote, array $data)
+    {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarActualizacionLote($idlote, $data);
+    }
+
+    private function ejecutarActualizacionLote($idlote, array $data)
     {
         $this->setIdLote($idlote);
         
@@ -2152,6 +2225,12 @@ class ProduccionModel extends Mysql
      */
     public function eliminarLote($idlote)
     {
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarEliminacionLote($idlote);
+    }
+
+    private function ejecutarEliminacionLote($idlote)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -2223,47 +2302,56 @@ class ProduccionModel extends Mysql
 
     public function insertLote(array $data)
     {
-        return $this->ejecutarInsercionLote($data);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarInsercionLote($data);
     }
 
     public function selectAllLotes()
     {
-        return $this->ejecutarConsultaTodosLotes();
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarConsultaTodosLotes();
     }
 
     public function selectLoteById(int $idlote)
     {
-        return $this->ejecutarConsultaLotePorId($idlote);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarConsultaLotePorId($idlote);
     }
 
     public function iniciarLoteProduccion(int $idlote)
     {
-        return $this->ejecutarInicioLote($idlote);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarInicioLote($idlote);
     }
 
     public function cerrarLoteProduccion(int $idlote)
     {
-        return $this->ejecutarCierreLote($idlote);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarCierreLote($idlote);
     }
 
     public function selectConfiguracionProduccion()
     {
-        return $this->ejecutarConsultaConfiguracionProduccion();
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarConsultaConfiguracionProduccion();
     }
 
     public function updateConfiguracionProduccion(array $data)
     {
-        return $this->ejecutarActualizacionConfiguracionProduccion($data);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarActualizacionConfiguracionProduccion($data);
     }
 
     public function selectEmpleadosActivos()
     {
-        return $this->ejecutarConsultaEmpleadosActivos();
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarConsultaEmpleadosActivos();
     }
 
     public function selectProductos(string $tipo = 'todos')
     {
-        return $this->ejecutarConsultaProductos($tipo);
+        $objModelProduccionModel = $this->getInstanciaModel();
+        return $objModelProduccionModel->ejecutarConsultaProductos($tipo);
     }
 
 

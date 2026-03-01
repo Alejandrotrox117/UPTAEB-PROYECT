@@ -15,35 +15,40 @@ use App\Helpers\Validation\ExpresionesRegulares;
 /**
  * Obtiene el modelo de productos
  */
-function getProductosModel() {
+function getProductosModel()
+{
     return new ProductosModel();
 }
 
 /**
  * Obtiene el modelo de bitácora
  */
-function getProductosBitacoraModel() {
+function getProductosBitacoraModel()
+{
     return new BitacoraModel();
 }
 
 /**
  * Obtiene el modelo de notificaciones
  */
-function getProductosNotificacionesModel() {
+function getProductosNotificacionesModel()
+{
     return new NotificacionesModel();
 }
 
 /**
  * Renderiza una vista de productos
  */
-function renderProductosView($view, $data = []) {
+function renderProductosView($view, $data = [])
+{
     renderView('productos', $view, $data);
 }
 
 /**
  * Valida y limpia los datos de un producto
  */
-function validarDatosProducto($request) {
+function validarDatosProducto($request)
+{
     $datosLimpios = [
         'nombre' => ExpresionesRegulares::limpiar($request['nombre'] ?? '', 'nombre'),
         'descripcion' => trim($request['descripcion'] ?? ''),
@@ -55,10 +60,14 @@ function validarDatosProducto($request) {
 
     $errores = [];
 
-    if (empty($datosLimpios['nombre'])) $errores[] = 'El nombre es obligatorio.';
-    if (empty($datosLimpios['unidad_medida'])) $errores[] = 'La unidad de medida es obligatoria.';
-    if ($datosLimpios['precio'] <= 0) $errores[] = 'El precio debe ser mayor a 0.';
-    if (empty($datosLimpios['idcategoria'])) $errores[] = 'La categoría es obligatoria.';
+    if (empty($datosLimpios['nombre']))
+        $errores[] = 'El nombre es obligatorio.';
+    if (empty($datosLimpios['unidad_medida']))
+        $errores[] = 'La unidad de medida es obligatoria.';
+    if ($datosLimpios['precio'] <= 0)
+        $errores[] = 'El precio debe ser mayor a 0.';
+    if (empty($datosLimpios['idcategoria']))
+        $errores[] = 'La categoría es obligatoria.';
 
     $resultadosValidacion = ExpresionesRegulares::validarCampos($datosLimpios, ['nombre' => 'nombre']);
     if (!$resultadosValidacion['nombre']['valido']) {
@@ -94,7 +103,8 @@ function validarDatosProducto($request) {
 /**
  * Página principal del módulo de productos
  */
-function productos_index() {
+function productos_index()
+{
     // Verificar autenticación
     if (!obtenerUsuarioSesion()) {
         header('Location: ' . base_url() . '/login');
@@ -127,7 +137,8 @@ function productos_index() {
 /**
  * Crear un nuevo producto
  */
-function productos_createProducto() {
+function productos_createProducto()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
@@ -152,8 +163,8 @@ function productos_createProducto() {
 
         $datosLimpios = validarDatosProducto($request);
 
-        $model = getProductosModel();
-        $resultado = $model->insertProducto($datosLimpios);
+        $objProductos = getProductosModel();
+        $resultado = $objProductos->insertProducto($datosLimpios);
 
         if ($resultado['status'] === true) {
             $productoId = $resultado['producto_id'] ?? null;
@@ -176,7 +187,8 @@ function productos_createProducto() {
 /**
  * Actualizar un producto
  */
-function productos_updateProducto() {
+function productos_updateProducto()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
@@ -206,8 +218,8 @@ function productos_updateProducto() {
 
         $datosLimpios = validarDatosProducto($request);
 
-        $model = getProductosModel();
-        $resultado = $model->updateProducto($idProducto, $datosLimpios);
+        $objProductos = getProductosModel();
+        $resultado = $objProductos->updateProducto($idProducto, $datosLimpios);
 
         if ($resultado['status'] === true) {
             $detalle = "Producto actualizado con ID: " . $idProducto;
@@ -229,7 +241,8 @@ function productos_updateProducto() {
 /**
  * Eliminar (desactivar) un producto
  */
-function productos_deleteProducto() {
+function productos_deleteProducto()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
@@ -253,8 +266,8 @@ function productos_deleteProducto() {
         }
 
         $idProducto = intval($request['idproducto']);
-        $model = getProductosModel();
-        $resultado = $model->deleteProductoById($idProducto);
+        $objProductos = getProductosModel();
+        $resultado = $objProductos->deleteProductoById($idProducto);
 
         if ($resultado) {
             $detalle = "Producto desactivado con ID: " . $idProducto;
@@ -277,7 +290,8 @@ function productos_deleteProducto() {
 /**
  * Activar un producto
  */
-function productos_activarProducto() {
+function productos_activarProducto()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
@@ -301,8 +315,8 @@ function productos_activarProducto() {
         }
 
         $idProducto = intval($request['idproducto']);
-        $model = getProductosModel();
-        $resultado = $model->activarProductoById($idProducto);
+        $objProductos = getProductosModel();
+        $resultado = $objProductos->activarProductoById($idProducto);
 
         if ($resultado) {
             $detalle = "Producto activado con ID: " . $idProducto;
@@ -325,15 +339,16 @@ function productos_activarProducto() {
 /**
  * Obtener listado de productos
  */
-function productos_getProductosData() {
+function productos_getProductosData()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')) {
                 echo json_encode(['status' => false, 'message' => 'No tienes permisos para ver los productos'], JSON_UNESCAPED_UNICODE);
                 die();
             }
-            $model = getProductosModel();
-            $arrResponse = $model->selectAllProductos();
+            $objProductos = getProductosModel();
+            $arrResponse = $objProductos->selectAllProductos();
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getProductosData: " . $e->getMessage());
@@ -346,7 +361,8 @@ function productos_getProductosData() {
 /**
  * Obtener un producto por ID
  */
-function productos_getProductoById($idproducto) {
+function productos_getProductoById($idproducto)
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('productos', 'ver')) {
@@ -356,8 +372,8 @@ function productos_getProductoById($idproducto) {
             if (empty($idproducto) || !is_numeric($idproducto)) {
                 throw new Exception('ID de producto inválido');
             }
-            $model = getProductosModel();
-            $arrData = $model->selectProductoById(intval($idproducto));
+            $objProductos = getProductosModel();
+            $arrData = $objProductos->selectProductoById(intval($idproducto));
             echo json_encode(['status' => true, 'data' => $arrData], JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getProductoById: " . $e->getMessage());
@@ -370,11 +386,12 @@ function productos_getProductoById($idproducto) {
 /**
  * Obtener categorías activas
  */
-function productos_getCategorias() {
+function productos_getCategorias()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            $model = getProductosModel();
-            $arrResponse = $model->selectCategoriasActivas();
+            $objProductos = getProductosModel();
+            $arrResponse = $objProductos->selectCategoriasActivas();
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getCategorias: " . $e->getMessage());
@@ -387,7 +404,8 @@ function productos_getCategorias() {
 /**
  * Verificar si el usuario actual es super usuario
  */
-function productos_verificarSuperUsuario() {
+function productos_verificarSuperUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (session_status() === PHP_SESSION_NONE) {

@@ -12,29 +12,33 @@ use App\Helpers\PermisosModuloVerificar;
 /**
  * Obtiene el modelo de pagos
  */
-function getPagosModel() {
+function getPagosModel()
+{
     return new PagosModel();
 }
 
 /**
  * Obtiene el modelo de bitácora para pagos
  */
-function getPagosBitacoraModel() {
+function getPagosBitacoraModel()
+{
     return new BitacoraModel();
 }
 
 /**
  * Renderiza una vista de pagos
  */
-function renderPagosView($view, $data = []) {
+function renderPagosView($view, $data = [])
+{
     renderView('pagos', $view, $data);
 }
 
 /**
  * Valida y limpia los datos de un pago
  */
-function validarDatosPago($request) {
-    $model = getPagosModel();
+function validarDatosPago($request)
+{
+    $objPagos = getPagosModel();
 
     $datosLimpios = [
         'tipo_pago' => trim($request['tipo_pago'] ?? ''),
@@ -56,7 +60,7 @@ function validarDatosPago($request) {
     }
 
     // Validar que el idtipo_pago existe en la base de datos
-    $tipoPagoValido = $model->verificarTipoPagoExiste($datosLimpios['idtipo_pago']);
+    $tipoPagoValido = $objPagos->verificarTipoPagoExiste($datosLimpios['idtipo_pago']);
     if (!$tipoPagoValido) {
         throw new Exception('El método de pago seleccionado no es válido. Posible manipulación detectada.');
     }
@@ -99,23 +103,24 @@ function validarDatosPago($request) {
 /**
  * Obtiene la información del destinatario según el tipo de pago
  */
-function obtenerInformacionDestinatario($datos) {
-    $model = getPagosModel();
+function obtenerInformacionDestinatario($datos)
+{
+    $objPagos = getPagosModel();
 
     switch ($datos['tipo_pago']) {
         case 'compra':
             if (!empty($datos['idcompra'])) {
-                return $model->getInfoCompra($datos['idcompra']);
+                return $objPagos->getInfoCompra($datos['idcompra']);
             }
             break;
         case 'venta':
             if (!empty($datos['idventa'])) {
-                return $model->getInfoVenta($datos['idventa']);
+                return $objPagos->getInfoVenta($datos['idventa']);
             }
             break;
         case 'sueldo':
             if (!empty($datos['idsueldotemp'])) {
-                return $model->getInfoSueldo($datos['idsueldotemp']);
+                return $objPagos->getInfoSueldo($datos['idsueldotemp']);
             }
             break;
         case 'otro':
@@ -128,7 +133,8 @@ function obtenerInformacionDestinatario($datos) {
 /**
  * Valida el formato de una fecha
  */
-function validarFechaPago($fecha) {
+function validarFechaPago($fecha)
+{
     $d = DateTime::createFromFormat('Y-m-d', $fecha);
     return $d && $d->format('Y-m-d') === $fecha;
 }
@@ -140,7 +146,8 @@ function validarFechaPago($fecha) {
 /**
  * Vista principal de pagos
  */
-function pagos_index() {
+function pagos_index()
+{
     $bitacoraModel = getPagosBitacoraModel();
     $bitacoraHelper = new BitacoraHelper();
 
@@ -173,7 +180,8 @@ function pagos_index() {
 /**
  * Crear un nuevo pago
  */
-function pagos_createPago() {
+function pagos_createPago()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
@@ -212,8 +220,8 @@ function pagos_createPago() {
             'observaciones' => $datosLimpios['observaciones'] ?: null,
         ];
 
-        $model = getPagosModel();
-        $resultado = $model->insertPago($arrData);
+        $objPagos = getPagosModel();
+        $resultado = $objPagos->insertPago($arrData);
 
         if ($resultado['status'] === true) {
             $pagoId = $resultado['pago_id'] ?? null;
@@ -233,7 +241,8 @@ function pagos_createPago() {
 /**
  * Actualizar un pago existente
  */
-function pagos_updatePago() {
+function pagos_updatePago()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
@@ -261,9 +270,9 @@ function pagos_updatePago() {
             throw new Exception('ID de pago requerido');
         }
 
-        $model = getPagosModel();
+        $objPagos = getPagosModel();
         $idpago = intval($request['idpago']);
-        $pagoExistente = $model->selectPagoById($idpago);
+        $pagoExistente = $objPagos->selectPagoById($idpago);
         if (!$pagoExistente['status'] || !$pagoExistente['data']) {
             throw new Exception('El pago no existe');
         }
@@ -286,7 +295,7 @@ function pagos_updatePago() {
             'observaciones' => $datosLimpios['observaciones'] ?: null,
         ];
 
-        $resultado = $model->updatePago($idpago, $arrData);
+        $resultado = $objPagos->updatePago($idpago, $arrData);
 
         if ($resultado['status'] === true) {
             $detalle = "Pago actualizado con ID: " . $idpago;
@@ -305,7 +314,8 @@ function pagos_updatePago() {
 /**
  * Conciliar un pago
  */
-function pagos_conciliarPago() {
+function pagos_conciliarPago()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
@@ -346,8 +356,10 @@ function pagos_conciliarPago() {
             throw new Exception('No se recibieron datos válidos');
         }
 
-        if (!isset($request['idpago']) ||
-            ($request['idpago'] === '' || $request['idpago'] === null || $request['idpago'] === 0)) {
+        if (
+            !isset($request['idpago']) ||
+            ($request['idpago'] === '' || $request['idpago'] === null || $request['idpago'] === 0)
+        ) {
             throw new Exception('ID de pago requerido para la conciliación');
         }
 
@@ -360,10 +372,10 @@ function pagos_conciliarPago() {
             throw new Exception('Usuario no autenticado');
         }
 
-        $model = getPagosModel();
+        $objPagos = getPagosModel();
 
         // Verificar que el pago existe antes de conciliar
-        $pagoExistente = $model->selectPagoById($idpago);
+        $pagoExistente = $objPagos->selectPagoById($idpago);
         if (!$pagoExistente['status'] || !$pagoExistente['data']) {
             throw new Exception('El pago no existe o no se pudo obtener la información');
         }
@@ -373,7 +385,7 @@ function pagos_conciliarPago() {
             throw new Exception('El pago ya está conciliado');
         }
 
-        $resultado = $model->conciliarPago($idpago);
+        $resultado = $objPagos->conciliarPago($idpago);
 
         if ($resultado['status'] === true) {
             $detalle = "Pago conciliado con ID: " . $idpago;
@@ -392,7 +404,8 @@ function pagos_conciliarPago() {
 /**
  * Eliminar (desactivar) un pago
  */
-function pagos_deletePago() {
+function pagos_deletePago()
+{
     if ($_SERVER['REQUEST_METHOD'] != 'POST') {
         echo json_encode(['status' => false, 'message' => 'Método no permitido'], JSON_UNESCAPED_UNICODE);
         die();
@@ -416,9 +429,9 @@ function pagos_deletePago() {
             throw new Exception('Datos inválidos');
         }
 
-        $model = getPagosModel();
+        $objPagos = getPagosModel();
         $idpago = intval($request['idpago']);
-        $pagoExistente = $model->selectPagoById($idpago);
+        $pagoExistente = $objPagos->selectPagoById($idpago);
         if (!$pagoExistente['status'] || !$pagoExistente['data']) {
             throw new Exception('El pago no existe');
         }
@@ -426,7 +439,7 @@ function pagos_deletePago() {
             throw new Exception('Solo se pueden eliminar pagos con estatus activo');
         }
 
-        $resultado = $model->deletePagoById($idpago);
+        $resultado = $objPagos->deletePagoById($idpago);
 
         if ($resultado['status'] === true) {
             $detalle = "Pago eliminado con ID: " . $idpago;
@@ -445,15 +458,16 @@ function pagos_deletePago() {
 /**
  * Obtener todos los pagos
  */
-function pagos_getPagosData() {
+function pagos_getPagosData()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('pagos', 'ver')) {
                 echo json_encode(['status' => false, 'message' => 'No tiene permiso para ver los datos'], JSON_UNESCAPED_UNICODE);
                 die();
             }
-            $model = getPagosModel();
-            $resultado = $model->selectAllPagos();
+            $objPagos = getPagosModel();
+            $resultado = $objPagos->selectAllPagos();
             echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getPagosData: " . $e->getMessage());
@@ -466,7 +480,8 @@ function pagos_getPagosData() {
 /**
  * Obtener un pago por ID
  */
-function pagos_getPagoById($idpago) {
+function pagos_getPagoById($idpago)
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('pagos', 'ver')) {
@@ -476,8 +491,8 @@ function pagos_getPagoById($idpago) {
             if (empty($idpago) || !is_numeric($idpago)) {
                 throw new Exception('ID de pago inválido');
             }
-            $model = getPagosModel();
-            $resultado = $model->selectPagoById(intval($idpago));
+            $objPagos = getPagosModel();
+            $resultado = $objPagos->selectPagoById(intval($idpago));
             echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getPagoById: " . $e->getMessage());
@@ -490,11 +505,12 @@ function pagos_getPagoById($idpago) {
 /**
  * Obtener tipos de pago
  */
-function pagos_getTiposPago() {
+function pagos_getTiposPago()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            $model = getPagosModel();
-            $resultado = $model->selectTiposPago();
+            $objPagos = getPagosModel();
+            $resultado = $objPagos->selectTiposPago();
             echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getTiposPago: " . $e->getMessage());
@@ -507,11 +523,12 @@ function pagos_getTiposPago() {
 /**
  * Obtener compras pendientes de pago
  */
-function pagos_getComprasPendientes() {
+function pagos_getComprasPendientes()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            $model = getPagosModel();
-            $resultado = $model->selectComprasPendientes();
+            $objPagos = getPagosModel();
+            $resultado = $objPagos->selectComprasPendientes();
             echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getComprasPendientes: " . $e->getMessage());
@@ -524,11 +541,12 @@ function pagos_getComprasPendientes() {
 /**
  * Obtener ventas pendientes de pago
  */
-function pagos_getVentasPendientes() {
+function pagos_getVentasPendientes()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            $model = getPagosModel();
-            $resultado = $model->selectVentasPendientes();
+            $objPagos = getPagosModel();
+            $resultado = $objPagos->selectVentasPendientes();
             echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getVentasPendientes: " . $e->getMessage());
@@ -541,11 +559,12 @@ function pagos_getVentasPendientes() {
 /**
  * Obtener sueldos pendientes de pago
  */
-function pagos_getSueldosPendientes() {
+function pagos_getSueldosPendientes()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            $model = getPagosModel();
-            $resultado = $model->selectSueldosPendientes();
+            $objPagos = getPagosModel();
+            $resultado = $objPagos->selectSueldosPendientes();
             echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getSueldosPendientes: " . $e->getMessage());
