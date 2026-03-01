@@ -889,37 +889,25 @@ class ComprasModel
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute([$nuevoEstado, $idcompra]);
 
-            // Obtener datos de la compra para las notificaciones
+            // Obtener datos de la compra para notificaciones
             $stmtInfo = $db->prepare("SELECT nro_compra, total_general FROM compra WHERE idcompra = ?");
             $stmtInfo->execute([$idcompra]);
-            $infoCompra = $stmtInfo->fetch(PDO::FETCH_ASSOC);
-            $nroCompra  = $infoCompra['nro_compra']    ?? $idcompra;
+            $infoCompra  = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+            $nroCompra   = $infoCompra['nro_compra']    ?? $idcompra;
             $totalCompra = $infoCompra['total_general'] ?? 0;
 
             // Disparar notificaciones según el nuevo estado
             if ($nuevoEstado === 'POR_AUTORIZAR') {
+                // Al gerente/autorizadores: hay una compra esperando aprobación
                 $this->notificarCompraPorAutorizar($idcompra, $nroCompra, $totalCompra);
+                // Al creador (si no es él mismo el autorizador): su compra fue enviada
                 $this->notificarCompraEnviadaAutorizacion($idcompra, $nroCompra, $idusuario);
             } elseif ($nuevoEstado === 'AUTORIZADA') {
-                $this->notificarCompraAutorizadaPago($idcompra, $nroCompra, $totalCompra);
+                // Al módulo, excluyendo al autorizador actual (él ya sabe que aprobó)
+                $this->notificarCompraAutorizadaPago($idcompra, $nroCompra, $totalCompra, $idusuario);
             } elseif ($nuevoEstado === 'PAGADA') {
                 $this->ejecutarGeneracionNotaEntrega($idcompra, $db);
-
-                // Notificar compra pagada
                 $this->notificarCompraPagada($idcompra);
-            } elseif ($nuevoEstado === 'POR_AUTORIZAR') {
-                // Notificar a los autorizadores y confirmar al comprador
-                $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
-                if ($compraData) {
-                    $this->notificarCompraPorAutorizar($idcompra, $compraData['nro_compra'], $compraData['total_general']);
-                    $this->notificarCompraEnviadaAutorizacion($idcompra, $compraData['nro_compra'], $idusuario);
-                }
-            } elseif ($nuevoEstado === 'AUTORIZADA') {
-                // Notificar que está autorizada y lista para pago
-                $compraData = $this->ejecutarBusquedaCompraPorId($idcompra);
-                if ($compraData) {
-                    $this->notificarCompraAutorizadaPago($idcompra, $compraData['nro_compra'], $compraData['total_general']);
-                }
             }
 
             return [
@@ -1603,22 +1591,33 @@ class ComprasModel
         }
     }
 
-    private function notificarCompraAutorizadaPago($compraId, $numero, $total)
+    private function notificarCompraAutorizadaPago($compraId, $numero, $total, $idAprobador = null)
     {
         try {
             $notificador = new NotificacionHelper();
-            $notificador->enviarPorModulo(
-                'compras',
-                'COMPRA_AUTORIZADA_PAGO',
-                [
-                    'titulo' => 'Compra Autorizada - Pendiente Pago',
-                    'mensaje' => "Compra #$numero por $" . number_format($total, 2) . " lista para pagar",
-                    'modulo' => 'compras',
-                    'referencia_id' => $compraId,
-                    'compra_id' => $compraId
-                ],
-                'MEDIA'
-            );
+
+            $data = [
+                'titulo'        => 'Compra Autorizada - Pendiente Pago',
+                'mensaje'       => "Compra #$numero por $" . number_format($total, 2) . " fue autorizada y está lista para pagar",
+                'modulo'        => 'compras',
+                'referencia_id' => $compraId,
+                'compra_id'     => $compraId
+            ];
+
+            // Obtener roles con acceso al módulo compras,
+            // pero excluir los roles autorizadores (ellos ya saben que aprobaron)
+            $rolesConPermiso    = $notificador->obtenerRolesConPermiso('compras');
+            $rolesAutorizadores = $notificador->obtenerRolesConAccesoTotal('compras');
+
+            // Quitar roles autorizadores de la lista de destinatarios
+            $rolesFiltrados = array_values(array_diff($rolesConPermiso, $rolesAutorizadores));
+
+            if (!empty($rolesFiltrados)) {
+                $notificador->enviarPorRoles('COMPRA_AUTORIZADA_PAGO', $data, $rolesFiltrados, 'MEDIA');
+            } else {
+                // Si todos los roles con acceso son autorizadores, enviar a todos de todas formas
+                $notificador->enviarPorModulo('compras', 'COMPRA_AUTORIZADA_PAGO', $data, 'MEDIA');
+            }
         } catch (Exception $e) {
             error_log("Error notificando compra autorizada: " . $e->getMessage());
         }

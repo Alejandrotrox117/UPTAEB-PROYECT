@@ -50,23 +50,26 @@ class NotificacionHelper {
             $rolesConPermiso = $this->obtenerRolesConPermiso($modulo);
             
             if (empty($rolesConPermiso)) {
-                error_log("No hay roles con permiso ver para: $modulo");
+                error_log("No hay roles con permiso para: $modulo");
                 return false;
             }
             
-            error_log(" Roles con permiso 'ver' en $modulo: " . implode(', ', $rolesConPermiso));
+            error_log(" Roles con permiso en $modulo: " . implode(', ', $rolesConPermiso));
             
-            // 2. Filtrar por configuración de notificaciones (tipo específico)
+            // 2. Filtrar roles que tienen DESHABILITADA esta notificación
+            // Si todos la deshabilitaron o no hay config, se envía a todos con permiso
             $rolesFiltrados = $this->filtrarRolesPorConfigNotificacion($rolesConPermiso, $modulo, $tipo);
             
             if (empty($rolesFiltrados)) {
-                error_log("No hay roles con notificación $tipo habilitada en $modulo");
-                return false;
+                // Ningún rol configuró explícitamente esta notificación como habilitada
+                // → la enviamos a todos con permiso (opt-in por defecto)
+                error_log("Sin config específica para $tipo en $modulo, enviando a todos con permiso");
+                $rolesFiltrados = $rolesConPermiso;
             }
             
-            error_log(" Roles con notificación habilitada: " . implode(', ', $rolesFiltrados));
+            error_log(" Roles destinatarios finales: " . implode(', ', $rolesFiltrados));
             
-            // 3. AGREGAR MÓDULO A LOS DATOS SI NO ESTÁ
+            // 3. Agregar módulo a los datos si no está
             if (!isset($data['modulo'])) {
                 $data['modulo'] = $modulo;
             }
@@ -83,7 +86,7 @@ class NotificacionHelper {
     /**
      * Obtener roles con permiso en un módulo
      */
-    private function obtenerRolesConPermiso($modulo, $accion = null) {
+    public function obtenerRolesConPermiso($modulo, $accion = null) {
         try {
             $conn = new \App\Core\Conexion();
             $conn->connect();
@@ -406,27 +409,25 @@ public function enviarNotificacionStockMinimo($producto, $rolesDestino = null) {
             
             // Si no se especifican roles, obtenerlos dinámicamente según permisos
             if (empty($rolesDestino)) {
-                error_log(" Roles no especificados, obteniendo roles con permiso en módulo 'productos'...");
+                // Obtener roles con acceso al módulo de productos O movimientos
+                $rolesProd = $this->obtenerRolesConPermiso('productos');
+                $rolesMov  = $this->obtenerRolesConPermiso('Movimientos');
+
+                // Unión sin duplicados
+                $rolesConPermiso = array_values(array_unique(array_merge($rolesProd, $rolesMov)));
                 
-                // Obtener roles con permiso en el módulo productos
-                $rolesConPermiso = $this->obtenerRolesConPermiso('productos');
-                
+                error_log(" Roles con permiso en productos/Movimientos: " . implode(',', $rolesConPermiso));
+
                 if (empty($rolesConPermiso)) {
-                    
-                    $rolesDestino = [1, 2]; // Fallback a admin
+                    // Sin roles configurados: notificar solo al admin
+                    $rolesDestino = [1];
+                    error_log("⚠️ Sin roles con permiso, usando fallback admin");
                 } else {
-                    // Filtrar por configuración de notificaciones (tipo STOCK_MINIMO)
-                    $rolesDestino = $this->filtrarRolesPorConfigNotificacion($rolesConPermiso, 'productos', 'STOCK_MINIMO');
-                    
-                    if (empty($rolesDestino)) {
-                       
-                        $rolesDestino = $rolesConPermiso;
-                    }
+                    // Excluir solo quienes explícitamente deshabilitaron STOCK_MINIMO
+                    $deshabilitadosProd = $this->filtrarRolesPorConfigNotificacion($rolesConPermiso, 'productos', 'STOCK_MINIMO');
+                    $rolesDestino = !empty($deshabilitadosProd) ? $deshabilitadosProd : $rolesConPermiso;
                 }
-                
-                } else {
-                }
-            
+            }
             $idnotificacion = $this->guardarNotificacionCompletaBD(
                 'STOCK_MINIMO',
                 "Stock Mínimo - {$producto['nombre']}",
