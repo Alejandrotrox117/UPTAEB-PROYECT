@@ -1,11 +1,9 @@
 <?php
 namespace App\Models;
 
-use App\Core\Mysql;
 use App\Core\Conexion;
 use App\Models\ProductosModel;
 use PDO;
-use PDOException;
 use Exception;
 
 class MovimientosModel 
@@ -14,7 +12,6 @@ class MovimientosModel
     private $query;
     private $array;
     private $data;
-    private $result;
     private $movimientoId;
     private $message;
     private $status;
@@ -30,20 +27,10 @@ class MovimientosModel
     private $cantidad_salida;
     private $stock_anterior;
     private $stock_resultante;
-    private $total;
-    private $entrada;
-    private $salida;
     private $observaciones;
     private $estatus;
-    private $fecha_creacion;
-    private $fecha_modificacion;
 
-    public function __construct()
-    {
-       
-    }
-
-   
+    //  GETTERS Y SETTERS GENERALES
     public function getQuery(){
         return $this->query;
     }
@@ -66,14 +53,6 @@ class MovimientosModel
 
     public function setData(array $data){
         $this->data = $data;
-    }
-
-    public function getResult(){
-        return $this->result;
-    }
-
-    public function setResult($result){
-        $this->result = $result;
     }
 
     public function getMovimientoId(){
@@ -100,19 +79,7 @@ class MovimientosModel
         $this->status = $status;
     }
 
-    //  GETTERS Y SETTERS ESPECÍFICOS (mantener igual)
-    public function getIdmovimiento() { return $this->idmovimiento; }
-    public function setIdmovimiento($idmovimiento) { 
-        $this->idmovimiento = filter_var($idmovimiento, FILTER_VALIDATE_INT);
-        return $this;
-    }
-
-    public function getNumeroMovimiento() { return $this->numero_movimiento; }
-    public function setNumeroMovimiento($numero_movimiento) { 
-        $this->numero_movimiento = trim($numero_movimiento);
-        return $this;
-    }
-
+    //  GETTERS Y SETTERS ESPECÍFICOS
     public function getIdproducto() { return $this->idproducto; }
     public function setIdproducto($idproducto) { 
         $this->idproducto = filter_var($idproducto, FILTER_VALIDATE_INT);
@@ -175,7 +142,7 @@ class MovimientosModel
 
     public function getEstatusMovimiento() { return $this->estatus; }
     public function setEstatusMovimiento($estatus) { 
-        $estatusValidos = ['activo', 'inactivo', 'eliminado'];
+        $estatusValidos = ['activo', 'devolucion', 'correccion', 'inactivo', 'eliminado'];
         $this->estatus = in_array($estatus, $estatusValidos) ? $estatus : 'activo';
         return $this;
     }
@@ -216,7 +183,7 @@ class MovimientosModel
                 FROM movimientos_existencia m
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
-                WHERE m.estatus = 'activo'
+                WHERE m.estatus NOT IN ('eliminado', 'inactivo')
                 ORDER BY COALESCE(m.fecha_creacion, m.idmovimiento) DESC"
             );
             
@@ -225,7 +192,6 @@ class MovimientosModel
             $stmt->execute($this->getArray());
             $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Siempre retornar status true si la consulta fue exitosa
             $resultado = [
                 'status' => true,
                 'message' => $movimientos ? 'Movimientos obtenidos correctamente.' : 'No hay movimientos disponibles.',
@@ -233,7 +199,6 @@ class MovimientosModel
             ];
             
         } catch (Exception $e) {
-            error_log("MovimientosModel::ejecutarBusquedaTodosMovimientos - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error al obtener movimientos: ' . $e->getMessage(),
@@ -280,7 +245,7 @@ class MovimientosModel
                 FROM movimientos_existencia m
                 INNER JOIN producto p ON m.idproducto = p.idproducto
                 INNER JOIN tipo_movimiento tm ON m.idtipomovimiento = tm.idtipomovimiento
-                WHERE m.idmovimiento = ? AND m.estatus != 'eliminado'"
+                WHERE m.idmovimiento = ? AND m.estatus NOT IN ('eliminado', 'inactivo')"
             );
             
             $this->setArray([$idmovimiento]);
@@ -330,7 +295,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
                  cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
             
             // Usar setters con validación
@@ -344,6 +309,7 @@ class MovimientosModel
             $this->setStockAnterior($data['stock_anterior'] ?? 0);
             $this->setStockResultante($data['stock_resultante'] ?? 0);
             $this->setObservaciones($data['observaciones'] ?? '');
+            $this->setEstatusMovimiento($data['estatus'] ?? 'activo');
             
             $this->setArray([
                 $numeroMovimiento,
@@ -357,7 +323,8 @@ class MovimientosModel
                 $this->getStockAnterior(),
                 $this->getStockResultante(),
                 $this->getStockResultante(), 
-                $this->getObservaciones()
+                $this->getObservaciones(),
+                $this->getEstatusMovimiento()
             ]);
             
             $stmt = $db->prepare($this->getQuery());
@@ -376,8 +343,6 @@ class MovimientosModel
                     $this->getStockResultante(),
                     $this->getIdproducto()
                 ]);
-                
-                error_log("🔔 Movimiento registrado, verificando stock para producto ID: " . $this->getIdproducto());
                 
                 // Verificar stock y notificar si es necesario
                 $productosModel = new ProductosModel();
@@ -419,116 +384,6 @@ class MovimientosModel
         }
 
         return $resultado;
-    }
-
-    /**
-     * Función privada para actualizar movimiento
-     */
-    private function ejecutarActualizacionMovimiento(int $idmovimiento, array $data){
-        $conexion = new Conexion();
-        $conexion->connect();
-        $db = $conexion->get_conectGeneral();
-
-        try {
-            $db->beginTransaction();
-
-           
-            $this->setQuery(
-                "UPDATE movimientos_existencia 
-                SET idproducto = ?, idtipomovimiento = ?, idcompra = ?, idventa = ?, idproduccion = ?,
-                    cantidad_entrada = ?, cantidad_salida = ?, stock_anterior = ?, stock_resultante = ?, 
-                    total = ?, observaciones = ?, estatus = ?, fecha_modificacion = NOW()
-                WHERE idmovimiento = ?"
-            );
-            
-            // Usar setters con validación
-            $this->setIdproducto($data['idproducto']);
-            $this->setIdtipomovimiento($data['idtipomovimiento']);
-            $this->setIdcompra($data['idcompra'] ?? null);
-            $this->setIdventa($data['idventa'] ?? null);
-            $this->setIdproduccion($data['idproduccion'] ?? null);
-            $this->setCantidadEntrada($data['cantidad_entrada'] ?? 0);
-            $this->setCantidadSalida($data['cantidad_salida'] ?? 0);
-            $this->setStockAnterior($data['stock_anterior'] ?? 0);
-            $this->setStockResultante($data['stock_resultante'] ?? 0);
-            $this->setObservaciones($data['observaciones'] ?? '');
-            $this->setEstatusMovimiento($data['estatus'] ?? 'activo');
-            
-            $this->setArray([
-                $this->getIdproducto(),
-                $this->getIdtipomovimiento(),
-                $this->getIdcompra(),
-                $this->getIdventa(),
-                $this->getIdproduccion(),
-                $this->getCantidadEntrada(),
-                $this->getCantidadSalida(),
-                $this->getStockAnterior(),
-                $this->getStockResultante(),
-                $this->getStockResultante(), // Campo 'total' = stock_resultante
-                $this->getObservaciones(),
-                $this->getEstatusMovimiento(),
-                $idmovimiento
-            ]);
-            
-            $stmt = $db->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-            $rowCount = $stmt->rowCount();
-            
-            if ($rowCount > 0) {
-                // Actualizar la existencia del producto con el nuevo stock_resultante
-                $updateProductoStmt = $db->prepare(
-                    "UPDATE producto 
-                    SET existencia = ?, 
-                        ultima_modificacion = NOW() 
-                    WHERE idproducto = ?"
-                );
-                $updateProductoStmt->execute([
-                    $this->getStockResultante(),
-                    $this->getIdproducto()
-                ]);
-                
-                // Verificar stock y notificar si es necesario
-                $productosModel = new ProductosModel();
-                $productosModel->verificarStockYNotificar($this->getIdproducto());
-                
-                $db->commit();
-                $resultado = [
-                    'status' => true,
-                    'message' => 'Movimiento actualizado correctamente.',
-                    'data' => ['idmovimiento' => $idmovimiento]
-                ];
-            } else {
-                $db->commit();
-                $resultado = [
-                    'status' => true,
-                    'message' => 'No se realizaron cambios en el movimiento (datos idénticos).',
-                    'data' => ['idmovimiento' => $idmovimiento]
-                ];
-            }
-            
-        } catch (Exception $e) {
-            if ($db->inTransaction()) {
-                $db->rollBack();
-            }
-            error_log("MovimientosModel::ejecutarActualizacionMovimiento - Error: " . $e->getMessage());
-            $resultado = [
-                'status' => false,
-                'message' => 'Error al actualizar movimiento: ' . $e->getMessage(),
-                'data' => null
-            ];
-        } finally {
-            $conexion->disconnect();
-        }
-
-        return $resultado;
-    }
-
-    /**
-     * Función privada para eliminar (desactivar) movimiento - OBSOLETO
-     * Usar anularMovimiento() en su lugar
-     */
-    private function ejecutarEliminacionMovimiento(int $idmovimiento){
-        return false;
     }
 
     /**
@@ -587,7 +442,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, cantidad_entrada, cantidad_salida, 
                  stock_anterior, stock_resultante, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'devolucion')"
             );
             
             $stmtAnulacion->execute([
@@ -599,7 +454,7 @@ class MovimientosModel
                 $stockActual,
                 $stockDespuesAnulacion,
                 $stockDespuesAnulacion,
-                '[ANULACIÓN AUTOMÁTICA] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
+                '[DEVOLUCIÓN] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
             ]);
 
             $idAnulacion = $db->lastInsertId();
@@ -630,7 +485,6 @@ class MovimientosModel
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            error_log("MovimientosModel::ejecutarAnulacionMovimiento - Error: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error al anular: ' . $e->getMessage(),
@@ -665,7 +519,6 @@ class MovimientosModel
             ];
             
         } catch (Exception $e) {
-            error_log("MovimientosModel::ejecutarBusquedaProductosActivos - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error al obtener productos: ' . $e->getMessage(),
@@ -701,7 +554,6 @@ class MovimientosModel
             ];
             
         } catch (Exception $e) {
-            error_log("MovimientosModel::ejecutarBusquedaTiposMovimientoActivos - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error al obtener tipos de movimiento: ' . $e->getMessage(),
@@ -774,7 +626,6 @@ class MovimientosModel
             }
             
         } catch (Exception $e) {
-            error_log("MovimientosModel::ejecutarBusquedaMovimientosPorCriterio - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error en la búsqueda: ' . $e->getMessage(),
@@ -897,7 +748,6 @@ class MovimientosModel
             
             return $prefijo . $fecha . '-' . str_pad($consecutivo, 4, '0', STR_PAD_LEFT);
         } catch (Exception $e) {
-            error_log("MovimientosModel::generarCodigoMovimiento - Error: " . $e->getMessage());
             return $prefijo . $fecha . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
         }
     }
@@ -908,14 +758,12 @@ class MovimientosModel
      * Insertar nuevo movimiento
      */
     public function insertMovimiento(array $data){
-        error_log("🔵 insertMovimiento llamado con datos: " . json_encode($data));
         
         $this->setData($data);
         
       
         $validacion = $this->validarDatosMovimiento($this->getData());
         if (!$validacion['valido']) {
-            error_log("❌ Validación falló: " . $validacion['mensaje']);
             return [
                 'status' => false,
                 'message' => $validacion['mensaje'],
@@ -923,21 +771,8 @@ class MovimientosModel
             ];
         }
         
-        error_log("✅ Validación OK, ejecutando inserción...");
-
+        
         return $this->ejecutarInsercionMovimiento($this->getData());
-    }
-
-    /**
-     * Actualizar movimiento existente - ELIMINADO
-     * Usar anularMovimiento() en su lugar
-     */
-    public function updateMovimiento(int $idmovimiento, array $data){
-        return [
-            'status' => false,
-            'message' => 'La edición directa no está permitida. Use la función de anular y crear nuevo movimiento.',
-            'data' => null
-        ];
     }
 
     /**
@@ -996,7 +831,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, cantidad_entrada, cantidad_salida, 
                  stock_anterior, stock_resultante, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'devolucion')"
             );
             
             $stmtAnulacion->execute([
@@ -1008,7 +843,7 @@ class MovimientosModel
                 $stockActual,
                 $stockDespuesAnulacion,
                 $stockDespuesAnulacion,
-                '[ANULACIÓN AUTOMÁTICA] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
+                '[DEVOLUCIÓN] Anulación de ' . $original['numero_movimiento'] . '. ' . ($original['observaciones'] ?? '')
             ]);
 
             $updateProducto1 = $db->prepare("UPDATE producto SET existencia = ?, ultima_modificacion = NOW() WHERE idproducto = ?");
@@ -1052,7 +887,7 @@ class MovimientosModel
                 "INSERT INTO movimientos_existencia 
                 (numero_movimiento, idproducto, idtipomovimiento, idcompra, idventa, idproduccion,
                  cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, total, observaciones, estatus)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')"
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'correccion')"
             );
 
             $stmtNuevo->execute([
@@ -1097,7 +932,6 @@ class MovimientosModel
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            error_log("MovimientosModel::anularYCorregirMovimiento - Error: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => 'Error: ' . $e->getMessage(),
@@ -1142,18 +976,7 @@ class MovimientosModel
         return $this->ejecutarAnulacionMovimiento($this->getMovimientoId());
     }
 
-    /**
-     * Eliminar movimiento por ID - OBSOLETO
-     * Usar anularMovimientoById() en su lugar
-     */
-    public function deleteMovimientoById(int $idmovimiento){
-        return [
-            'status' => false,
-            'message' => 'La eliminación directa no está permitida. Use la función de anular movimiento.',
-            'data' => null
-        ];
-    }
-
+  
     /**
      * Obtener todos los movimientos
      */
@@ -1225,7 +1048,6 @@ class MovimientosModel
             ];
             
         } catch (Exception $e) {
-            error_log("MovimientosModel::getTiposMovimientoConEstadisticas - Error: " . $e->getMessage());
             $resultado = [
                 'status' => false,
                 'message' => 'Error al obtener tipos de movimiento: ' . $e->getMessage(),

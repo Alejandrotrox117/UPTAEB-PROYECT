@@ -166,7 +166,7 @@ $permisos = $data['permisos'];
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-600">Estatus:</label>
-                    <p id="verMovimientoEstatus" class="text-gray-900"></p>
+                    <p id="verMovimientoTipoOperacion" class="text-gray-900"></p>
                 </div>
             </div>
             <div>
