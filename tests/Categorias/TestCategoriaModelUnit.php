@@ -5,6 +5,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\MockObject\MockObject;
 use App\Models\categoriasModel;
 
 #[CoversClass(categoriasModel::class)]
@@ -12,8 +13,8 @@ use App\Models\categoriasModel;
 class TestCategoriaModelUnit extends TestCase
 {
     private categoriasModel $model;
-    private PDO $mockPdo;
-    private PDOStatement $mockStmt;
+    private PDO&MockObject $mockPdo;
+    private PDOStatement&MockObject $mockStmt;
 
     protected function setUp(): void
     {
