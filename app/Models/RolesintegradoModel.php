@@ -163,16 +163,15 @@ class RolesintegradoModel
                         m.descripcion as descripcion_modulo,
                         GROUP_CONCAT(DISTINCT rmp.idpermiso ORDER BY rmp.idpermiso) as permisos_especificos_ids,
                         GROUP_CONCAT(DISTINCT p.nombre_permiso ORDER BY rmp.idpermiso SEPARATOR '|') as permisos_especificos_nombres,
-                        CASE WHEN rm.idrol IS NOT NULL THEN 1 ELSE 0 END as tiene_acceso_modulo
+                        CASE WHEN COUNT(rmp.idpermiso) > 0 THEN 1 ELSE 0 END as tiene_acceso_modulo
                     FROM modulos m
-                    LEFT JOIN rol_modulo rm ON m.idmodulo = rm.idmodulo AND rm.idrol = ?
                     LEFT JOIN rol_modulo_permisos rmp ON m.idmodulo = rmp.idmodulo AND rmp.idrol = ? AND rmp.activo = 1
                     LEFT JOIN permisos p ON rmp.idpermiso = p.idpermiso
                     WHERE m.estatus = 'activo'
-                    GROUP BY m.idmodulo, m.titulo, m.descripcion, rm.idrol
+                    GROUP BY m.idmodulo, m.titulo, m.descripcion
                     ORDER BY m.titulo ASC");
 
-            $this->setArray([$this->getIdRol(), $this->getIdRol()]);
+            $this->setArray([$this->getIdRol()]);
 
             $stmt = $dbSeguridad->prepare($this->getQuery());
             $stmt->execute($this->getArray());
@@ -251,7 +250,6 @@ class RolesintegradoModel
 
                 if ($idmodulo > 0 && !empty($permisosEspecificos)) {
                     $this->setIdModulo($idmodulo);
-                    $this->ejecutarInsercionRolModulo($dbSeguridad);
                     $totalModulos++;
 
                     foreach ($permisosEspecificos as $idpermiso) {
@@ -294,26 +292,6 @@ class RolesintegradoModel
         $this->setArray([$this->getIdRol()]);
         $stmt = $dbSeguridad->prepare($this->getQuery());
         $stmt->execute($this->getArray());
-
-        $this->setQuery("DELETE FROM rol_modulo WHERE idrol = ?");
-        $this->setArray([$this->getIdRol()]);
-        $stmt = $dbSeguridad->prepare($this->getQuery());
-        $stmt->execute($this->getArray());
-    }
-
-    private function ejecutarInsercionRolModulo($dbSeguridad)
-    {
-        $this->setQuery("SELECT COUNT(*) FROM rol_modulo WHERE idrol = ? AND idmodulo = ?");
-        $this->setArray([$this->getIdRol(), $this->getIdModulo()]);
-        $stmt = $dbSeguridad->prepare($this->getQuery());
-        $stmt->execute($this->getArray());
-        
-        if ($stmt->fetchColumn() == 0) {
-            $this->setQuery("INSERT INTO rol_modulo (idrol, idmodulo) VALUES (?, ?)");
-            $this->setArray([$this->getIdRol(), $this->getIdModulo()]);
-            $stmt = $dbSeguridad->prepare($this->getQuery());
-            $stmt->execute($this->getArray());
-        }
     }
 
     private function ejecutarInsercionRolModuloPermiso($dbSeguridad)
