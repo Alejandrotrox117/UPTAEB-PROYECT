@@ -15,6 +15,7 @@ class SueldosModel
     private $sueldoId;
     private $message;
     private $status;
+    private $objModelSueldosModel;
     
    
     const SUPER_USUARIO_ROL_ID = 1; 
@@ -22,6 +23,13 @@ class SueldosModel
     public function __construct()
     {
         
+    }
+
+    private function getInstanciaModel() {
+        if ($this->objModelSueldosModel == null) {
+            $this->objModelSueldosModel = new SueldosModel();
+        }
+        return $this->objModelSueldosModel;
     }
 
     // Getters y Setters
@@ -439,11 +447,17 @@ class SueldosModel
      * Verificar si un usuario es super usuario (método público)
      */
     public function verificarEsSuperUsuario(int $idusuario){
-        return $this->esSuperUsuario($idusuario);
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->esSuperUsuario($idusuario);
     }
 
     // Función para obtener personas activas
     public function selectPersonasActivas(){
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarSelectPersonasActivas();
+    }
+
+    private function ejecutarSelectPersonasActivas(){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -485,6 +499,11 @@ class SueldosModel
 
     // Función para obtener empleados activos
     public function selectEmpleadosActivos(){
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarSelectEmpleadosActivos();
+    }
+
+    private function ejecutarSelectEmpleadosActivos(){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -527,6 +546,11 @@ class SueldosModel
 
     // Función para obtener todas las monedas activas
     public function getMonedas(){
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarGetMonedas();
+    }
+
+    private function ejecutarGetMonedas(){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -564,7 +588,12 @@ class SueldosModel
     }
 
     // Función para obtener la tasa de cambio más reciente de una moneda
-    public function getTasaCambioActual($codigoMoneda)
+    public function getTasaCambioActual($codigoMoneda){
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarGetTasaCambioActual($codigoMoneda);
+    }
+
+    private function ejecutarGetTasaCambioActual($codigoMoneda)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -611,7 +640,12 @@ class SueldosModel
     }
 
     // Función para convertir monto de sueldo a bolívares
-    public function convertirMontoABolivares($idsueldo)
+    public function convertirMontoABolivares($idsueldo){
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarConvertirMontoABolivares($idsueldo);
+    }
+
+    private function ejecutarConvertirMontoABolivares($idsueldo)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -655,7 +689,7 @@ class SueldosModel
             }
             
             // Obtener tasa de cambio actual
-            $tasaInfo = $this->getTasaCambioActual($sueldo['codigo_moneda']);
+            $tasaInfo = $this->ejecutarGetTasaCambioActual($sueldo['codigo_moneda']);
             
             if (!$tasaInfo['status']) {
                 return [
@@ -718,32 +752,43 @@ class SueldosModel
 
     // Funciones públicas para acceso desde el controlador
     public function insertSueldo(array $data){
-        return $this->ejecutarInsercionSueldo($data);
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarInsercionSueldo($data);
     }
 
     public function updateSueldo(int $idsueldo, array $data){
-        return $this->ejecutarActualizacionSueldo($idsueldo, $data);
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarActualizacionSueldo($idsueldo, $data);
     }
 
     public function selectSueldoById(int $idsueldo){
-        return $this->ejecutarBusquedaSueldoPorId($idsueldo);
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarBusquedaSueldoPorId($idsueldo);
     }
 
     public function deleteSueldo(int $idsueldo){
-        return $this->ejecutarEliminacionSueldo($idsueldo);
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarEliminacionSueldo($idsueldo);
     }
 
     public function selectAllSueldos(int $idUsuarioSesion = 0){
-        return $this->ejecutarBusquedaTodosSueldos($idUsuarioSesion);
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarBusquedaTodosSueldos($idUsuarioSesion);
     }
 
     // Función para reactivar sueldo (cambio de estatus a POR_PAGAR)
     public function reactivarSueldo(int $idsueldo){
-        return $this->ejecutarReactivacionSueldo($idsueldo);
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarReactivacionSueldo($idsueldo);
     }
 
     // Función para procesar pago de sueldo
-    public function procesarPagoSueldo($data)
+    public function procesarPagoSueldo($data){
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarProcesarPagoSueldo($data);
+    }
+
+    private function ejecutarProcesarPagoSueldo($data)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -775,7 +820,7 @@ class SueldosModel
             }
 
             // 2. Convertir monto del sueldo a bolívares si es necesario
-            $conversionResult = $this->convertirMontoABolivares(intval($data['idsueldo']));
+            $conversionResult = $this->ejecutarConvertirMontoABolivares(intval($data['idsueldo']));
             if (!$conversionResult['status']) {
                 throw new Exception('Error al convertir monto: ' . $conversionResult['message']);
             }
@@ -844,7 +889,7 @@ class SueldosModel
             // Convertir el nuevo balance a la moneda original del sueldo
             $nuevoBalanceMonedaOriginal = $nuevoBalance;
             if ($sueldo['codigo_moneda'] !== 'VES' && $sueldo['codigo_moneda'] !== null) {
-                $tasaInfo = $this->getTasaCambioActual($sueldo['codigo_moneda']);
+                $tasaInfo = $this->ejecutarGetTasaCambioActual($sueldo['codigo_moneda']);
                 if ($tasaInfo['status']) {
                     $nuevoBalanceMonedaOriginal = $nuevoBalance / $tasaInfo['data']['tasa_a_bs'];
                 }
@@ -893,7 +938,12 @@ class SueldosModel
     }
 
     // Función para obtener pagos asociados a un sueldo
-    public function getPagosSueldo($idsueldo)
+    public function getPagosSueldo($idsueldo){
+        $objModelSueldosModel = $this->getInstanciaModel();
+        return $objModelSueldosModel->ejecutarGetPagosSueldo($idsueldo);
+    }
+
+    private function ejecutarGetPagosSueldo($idsueldo)
     {
         $conexion = new Conexion();
         $conexion->connect();

@@ -160,8 +160,8 @@ function sueldos_createSueldo() {
             die();
         }
 
-        $model = getSueldosModel();
-        $arrResponse = $model->insertSueldo($arrData);
+        $objSueldos = getSueldosModel();
+        $arrResponse = $objSueldos->insertSueldo($arrData);
 
         if ($arrResponse['status'] === true) {
             $resultadoBitacora = $bitacoraModel->registrarAccion('Sueldos', 'INSERTAR', $idusuario);
@@ -200,8 +200,8 @@ function sueldos_getMonedas() {
     try {
         error_log("Sueldos::getMonedas - Iniciando...");
 
-        $model = getSueldosModel();
-        $arrResponse = $model->getMonedas();
+        $objSueldos = getSueldosModel();
+        $arrResponse = $objSueldos->getMonedas();
         error_log("Sueldos::getMonedas - Respuesta del modelo: " . json_encode($arrResponse));
 
         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -225,8 +225,8 @@ function sueldos_debugMonedas() {
 
     try {
         error_log("DEBUG: Intentando obtener monedas...");
-        $model = getSueldosModel();
-        $result = $model->getMonedas();
+        $objSueldos = getSueldosModel();
+        $result = $objSueldos->getMonedas();
         error_log("DEBUG: Resultado: " . json_encode($result));
 
         header('Content-Type: application/json');
@@ -268,8 +268,8 @@ function sueldos_getSueldosData() {
         $idusuario = $bitacoraHelper->obtenerUsuarioSesion();
 
         // Obtener sueldos
-        $model = getSueldosModel();
-        $arrResponse = $model->selectAllSueldos($idusuario);
+        $objSueldos = getSueldosModel();
+        $arrResponse = $objSueldos->selectAllSueldos($idusuario);
 
         if ($arrResponse['status']) {
             $bitacoraModel->registrarAccion('Sueldos', 'CONSULTA_LISTADO', $idusuario);
@@ -308,8 +308,8 @@ function sueldos_getSueldoById($idsueldo) {
     }
 
     try {
-        $model = getSueldosModel();
-        $arrData = $model->selectSueldoById(intval($idsueldo));
+        $objSueldos = getSueldosModel();
+        $arrData = $objSueldos->selectSueldoById(intval($idsueldo));
         if (!empty($arrData)) {
             $arrResponse = array('status' => true, 'data' => $arrData);
         } else {
@@ -348,8 +348,8 @@ function sueldos_getMontoBolivares($idsueldo) {
     }
 
     try {
-        $model = getSueldosModel();
-        $arrResponse = $model->convertirMontoABolivares(intval($idsueldo));
+        $objSueldos = getSueldosModel();
+        $arrResponse = $objSueldos->convertirMontoABolivares(intval($idsueldo));
         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         error_log("Error en getMontoBolivares: " . $e->getMessage());
@@ -463,8 +463,8 @@ function sueldos_updateSueldo() {
             die();
         }
 
-        $model = getSueldosModel();
-        $arrResponse = $model->updateSueldo($intIdSueldo, $arrData);
+        $objSueldos = getSueldosModel();
+        $arrResponse = $objSueldos->updateSueldo($intIdSueldo, $arrData);
 
         if ($arrResponse['status'] === true) {
             $resultadoBitacora = $bitacoraModel->registrarAccion('Sueldos', 'ACTUALIZAR', $idusuario);
@@ -525,8 +525,8 @@ function sueldos_deleteSueldo() {
         }
 
         $idusuario = $bitacoraHelper->obtenerUsuarioSesion();
-        $model = getSueldosModel();
-        $requestDelete = $model->deleteSueldo($intIdSueldo);
+        $objSueldos = getSueldosModel();
+        $requestDelete = $objSueldos->deleteSueldo($intIdSueldo);
 
         if ($requestDelete) {
             $arrResponse = array('status' => true, 'message' => 'Sueldo desactivado correctamente');
@@ -569,8 +569,8 @@ function sueldos_getPersonasActivas() {
     }
 
     try {
-        $model = getSueldosModel();
-        $arrResponse = $model->selectPersonasActivas();
+        $objSueldos = getSueldosModel();
+        $arrResponse = $objSueldos->selectPersonasActivas();
         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         error_log("Error en getPersonasActivas: " . $e->getMessage());
@@ -598,8 +598,8 @@ function sueldos_getEmpleadosActivos() {
     }
 
     try {
-        $model = getSueldosModel();
-        $arrResponse = $model->selectEmpleadosActivos();
+        $objSueldos = getSueldosModel();
+        $arrResponse = $objSueldos->selectEmpleadosActivos();
         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         error_log("Error en getEmpleadosActivos: " . $e->getMessage());
@@ -643,8 +643,8 @@ function sueldos_buscarSueldo() {
             die();
         }
 
-        $model = getSueldosModel();
-        $arrData = $model->buscarSueldos($strTermino);
+        $objSueldos = getSueldosModel();
+        $arrData = $objSueldos->buscarSueldos($strTermino);
         if ($arrData['status']) {
             $arrResponse = array('status' => true, 'data' => $arrData['data']);
         } else {
@@ -679,8 +679,8 @@ function sueldos_exportarSueldos() {
 
     try {
         $idusuario = $bitacoraHelper->obtenerUsuarioSesion();
-        $model = getSueldosModel();
-        $arrData = $model->selectAllSueldos($idusuario);
+        $objSueldos = getSueldosModel();
+        $arrData = $objSueldos->selectAllSueldos($idusuario);
 
         if ($arrData['status']) {
             $data['sueldos'] = $arrData['data'];
@@ -731,8 +731,8 @@ function sueldos_verificarSuperUsuario() {
             die();
         }
 
-        $model = getSueldosModel();
-        $esSuperAdmin = $model->verificarEsSuperUsuario($idusuario);
+        $objSueldos = getSueldosModel();
+        $esSuperAdmin = $objSueldos->verificarEsSuperUsuario($idusuario);
 
         echo json_encode([
             'status' => true,
@@ -773,8 +773,8 @@ function sueldos_reactivarSueldo() {
     try {
         // Verificar si es super usuario
         $idusuario = $bitacoraHelper->obtenerUsuarioSesion();
-        $model = getSueldosModel();
-        $esSuperUsuario = $model->verificarEsSuperUsuario($idusuario);
+        $objSueldos = getSueldosModel();
+        $esSuperUsuario = $objSueldos->verificarEsSuperUsuario($idusuario);
 
         if (!$esSuperUsuario) {
             $arrResponse = array('status' => false, 'message' => 'Solo los super usuarios pueden reactivar sueldos');
@@ -798,7 +798,7 @@ function sueldos_reactivarSueldo() {
             die();
         }
 
-        $requestReactivar = $model->reactivarSueldo($intIdSueldo);
+        $requestReactivar = $objSueldos->reactivarSueldo($intIdSueldo);
 
         if ($requestReactivar) {
             $arrResponse = array('status' => true, 'message' => 'Sueldo reactivado correctamente');
@@ -874,8 +874,8 @@ function sueldos_procesarPagoSueldo() {
     }
 
     // Procesar el pago
-    $model = getSueldosModel();
-    $result = $model->procesarPagoSueldo($data);
+    $objSueldos = getSueldosModel();
+    $result = $objSueldos->procesarPagoSueldo($data);
 
     // Si el pago fue exitoso, registrar en bitácora
     if ($result['status']) {
@@ -944,8 +944,8 @@ function sueldos_getPagosSueldo($idsueldo = null) {
     }
 
     try {
-        $model = getSueldosModel();
-        $result = $model->getPagosSueldo($idsueldo);
+        $objSueldos = getSueldosModel();
+        $result = $objSueldos->getPagosSueldo($idsueldo);
         echo json_encode($result);
     } catch (Exception $e) {
         echo json_encode([

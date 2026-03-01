@@ -90,8 +90,8 @@ function clientes_getClientesData()
             }
 
             $idUsuarioSesion = obtenerUsuarioSesion();
-            $model = getClientesModel();
-            $arrResponse = $model->selectAllClientes($idUsuarioSesion);
+            $objClientes = getClientesModel();
+            $arrResponse = $objClientes->selectAllClientes($idUsuarioSesion);
 
             if ($arrResponse['status']) {
                 $bitacoraModel = getClientesBitacoraModel();
@@ -178,8 +178,8 @@ function clientes_createCliente()
                 die();
             }
 
-            $model = getClientesModel();
-            $arrResponse = $model->insertCliente($arrData);
+            $objClientes = getClientesModel();
+            $arrResponse = $objClientes->insertCliente($arrData);
 
             if ($arrResponse['status'] === true) {
                 $bitacoraModel = getClientesBitacoraModel();
@@ -220,8 +220,8 @@ function clientes_getClienteById($idcliente)
         }
 
         try {
-            $model = getClientesModel();
-            $arrData = $model->selectClienteById(intval($idcliente));
+            $objClientes = getClientesModel();
+            $arrData = $objClientes->selectClienteById(intval($idcliente));
             if (!empty($arrData)) {
                 $idUsuarioSesion = obtenerUsuarioSesion();
                 $bitacoraModel = getClientesBitacoraModel();
@@ -304,8 +304,8 @@ function clientes_updateCliente()
                 die();
             }
 
-            $model = getClientesModel();
-            $arrResponse = $model->updateCliente($intIdCliente, $datosLimpios);
+            $objClientes = getClientesModel();
+            $arrResponse = $objClientes->updateCliente($intIdCliente, $datosLimpios);
 
             if ($arrResponse['status'] === true) {
                 $bitacoraModel = getClientesBitacoraModel();
@@ -356,9 +356,9 @@ function clientes_deleteCliente()
             }
 
             $idusuario = obtenerUsuarioSesion();
-            $model = getClientesModel();
+            $objClientes = getClientesModel();
 
-            $requestDelete = $model->deleteClienteById($intIdCliente);
+            $requestDelete = $objClientes->deleteClienteById($intIdCliente);
             if ($requestDelete) {
                 $arrResponse = array('status' => true, 'message' => 'Cliente desactivado correctamente');
             } else {
@@ -413,8 +413,8 @@ function clientes_buscarClientes()
                 die();
             }
 
-            $model = getClientesModel();
-            $arrData = $model->buscarClientes($strTermino);
+            $objClientes = getClientesModel();
+            $arrData = $objClientes->buscarClientes($strTermino);
             if ($arrData['status']) {
                 $arrResponse = array('status' => true, 'data' => $arrData['data']);
             } else {
@@ -448,8 +448,8 @@ function clientes_exportarClientes()
         }
 
         try {
-            $model = getClientesModel();
-            $clientesResponse = $model->selectAllClientes();
+            $objClientes = getClientesModel();
+            $clientesResponse = $objClientes->selectAllClientes();
 
             if ($clientesResponse['status'] && !empty($clientesResponse['data'])) {
                 $idusuario = obtenerUsuarioSesion();
@@ -495,8 +495,8 @@ function clientes_getEstadisticas()
                 die();
             }
 
-            $model = getClientesModel();
-            $estadisticas = $model->getEstadisticasClientes();
+            $objClientes = getClientesModel();
+            $estadisticas = $objClientes->getEstadisticasClientes();
             $arrResponse = array('status' => true, 'data' => $estadisticas);
 
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -613,8 +613,8 @@ function clientes_registrarClienteModal()
                 die();
             }
 
-            $model = getClientesModel();
-            $arrResponse = $model->insertClienteCompleto($arrData);
+            $objClientes = getClientesModel();
+            $arrResponse = $objClientes->insertClienteCompleto($arrData);
 
             if ($arrResponse['status'] === true) {
                 $bitacoraModel = getClientesBitacoraModel();
@@ -667,8 +667,8 @@ function clientes_reactivarCliente()
         }
 
         $intIdCliente = intval($data['idcliente']);
-        $model = getClientesModel();
-        $resultado = $model->reactivarCliente($intIdCliente);
+        $objClientes = getClientesModel();
+        $resultado = $objClientes->reactivarCliente($intIdCliente);
 
         if (isset($resultado['status']) && $resultado['status'] === true) {
             $detalle = "Cliente reactivado con ID: " . $intIdCliente;
