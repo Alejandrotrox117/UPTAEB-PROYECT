@@ -1,8 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
 use App\Models\SueldosModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestSueldosInsert extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private function showMessage(string $msg): void
     {
@@ -10,6 +14,7 @@ class TestSueldosInsert extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new SueldosModel();
     }
     public function testInsertSueldoConDatosCompletos()

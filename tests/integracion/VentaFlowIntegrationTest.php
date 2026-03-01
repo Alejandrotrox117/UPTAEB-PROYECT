@@ -5,8 +5,12 @@ use App\Models\ProductosModel;
 use App\Models\ClientesModel;
 use App\Models\PagosModel;
 
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class VentaFlowIntegrationTest extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $ventasModel;
     private $productosModel;
     private $clientesModel;
@@ -22,6 +26,7 @@ class VentaFlowIntegrationTest extends TestCase
     
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->ventasModel = new VentasModel();
         $this->productosModel = new ProductosModel();
         $this->clientesModel = new ClientesModel();

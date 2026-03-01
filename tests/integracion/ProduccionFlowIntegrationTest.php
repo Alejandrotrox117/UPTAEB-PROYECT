@@ -4,8 +4,12 @@ use App\Models\ProduccionModel;
 use App\Models\ProductosModel;
 use App\Models\EmpleadosModel;
 
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class ProduccionFlowIntegrationTest extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $produccionModel;
     private $productosModel;
     private $empleadosModel;
@@ -19,6 +23,7 @@ class ProduccionFlowIntegrationTest extends TestCase
     
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->produccionModel = new ProduccionModel();
         $this->productosModel = new ProductosModel();
         $this->empleadosModel = new EmpleadosModel();

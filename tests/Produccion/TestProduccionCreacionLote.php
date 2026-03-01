@@ -3,8 +3,12 @@
 use PHPUnit\Framework\TestCase;
 use App\Models\ProduccionModel;
 
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestProduccionCreacionLote extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private function showMessage(string $msg): void
     {
@@ -12,6 +16,7 @@ class TestProduccionCreacionLote extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new ProduccionModel();
     }
     public function testCrearLoteConDatosCompletos()

@@ -1,8 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
 use App\Models\ProductosModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestProductoDelete extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private $productoIdPrueba;
     private function showMessage(string $msg)
@@ -11,6 +15,7 @@ class TestProductoDelete extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new ProductosModel();
         $data = [
             'nombre' => 'Producto Delete Test ' . time(),

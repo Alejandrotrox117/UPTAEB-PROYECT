@@ -1,0 +1,13 @@
+PHPUnit 10.5.58 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.2.12
+Configuration: C:\xampp\htdocs\project\phpunit.xml
+
+
+Probando obtener tasa del Dólar (USD)...
+[ÉXITO] Tasa Dólar BCV: 417.3579 (Fecha: 2026-02-27)
+Probando obtener tasa del Euro (EUR)...
+[ÉXITO] Tasa Euro BCV: 493.1125 (Fecha: 2026-02-27)Time: 04:08.681, Memory: 16.00 MB
+
+OK, but there were issues!
+Tests: 431, Assertions: 204, PHPUnit Deprecations: 1, Skipped: 369.

@@ -1,0 +1,95 @@
+PHPUnit 10.5.58 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.2.12
+Configuration: C:\xampp\htdocs\project\phpunit.xml
+
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+CategoriasModel: Error al seleccionar todos las categorias- Connection lost
+Error al eliminar categoria: Database locked
+Error al actualizar categoria: Constraint violation
+CategoriasModel: Error al obtener categoria por ID - Table not found
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+🔵 insertMovimiento llamado con datos: {"idtipomovimiento":1,"cantidad_entrada":100,"cantidad_salida":0,"stock_anterior":0,"stock_resultante":100,"observaciones":"Sin producto"}
+❌ Validación falló: El producto es obligatorio.
+🔵 insertMovimiento llamado con datos: {"idproducto":null,"idtipomovimiento":1,"cantidad_entrada":100,"cantidad_salida":0,"stock_anterior":0,"stock_resultante":100}
+❌ Validación falló: El producto es obligatorio.
+🔵 insertMovimiento llamado con datos: {"idproducto":"","idtipomovimiento":1,"cantidad_entrada":100,"cantidad_salida":0,"stock_anterior":0,"stock_resultante":100}
+❌ Validación falló: El producto es obligatorio.
+🔵 insertMovimiento llamado con datos: {"idproducto":1,"cantidad_entrada":100,"cantidad_salida":0,"stock_anterior":0,"stock_resultante":100}
+❌ Validación falló: El tipo de movimiento es obligatorio.
+🔵 insertMovimiento llamado con datos: {"idproducto":1,"idtipomovimiento":null,"cantidad_entrada":100,"cantidad_salida":0,"stock_anterior":0,"stock_resultante":100}
+❌ Validación falló: El tipo de movimiento es obligatorio.
+🔵 insertMovimiento llamado con datos: {"idproducto":1,"idtipomovimiento":1,"cantidad_entrada":0,"cantidad_salida":0,"stock_anterior":0,"stock_resultante":0}
+❌ Validación falló: Debe especificar al menos una cantidad (entrada o salida).
+🔵 insertMovimiento llamado con datos: {"idproducto":1,"idtipomovimiento":1,"cantidad_entrada":-10,"cantidad_salida":-5,"stock_anterior":0,"stock_resultante":0}
+❌ Validación falló: Debe especificar al menos una cantidad (entrada o salida).
+🔵 insertMovimiento llamado con datos: {"idproducto":1,"idtipomovimiento":1,"cantidad_entrada":100,"cantidad_salida":50,"stock_anterior":0,"stock_resultante":50}
+❌ Validación falló: No puede tener cantidad de entrada y salida al mismo tiempo.
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+🔵 insertMovimiento llamado con datos: {"idtipomovimiento":1,"cantidad_entrada":100,"cantidad_salida":0,"stock_anterior":0,"stock_resultante":100}
+❌ Validación falló: El producto es obligatorio.
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+
+Probando obtener tasa del Dólar (USD)...
+[ÉXITO] Tasa Dólar BCV: 417.3579 (Fecha: 2026-02-27)
+Probando obtener tasa del Euro (EUR)...
+[ÉXITO] Tasa Euro BCV: 493.1125 (Fecha: 2026-02-27)Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Error de conexión a la base de datos: SQLSTATE[HY000] [2002] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+Time: 04:09.299, Memory: 16.00 MB
+
+OK, but there were issues!
+Tests: 431, Assertions: 204, PHPUnit Deprecations: 1, Skipped: 369.

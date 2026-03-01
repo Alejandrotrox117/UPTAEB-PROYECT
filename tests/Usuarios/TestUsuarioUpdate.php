@@ -3,8 +3,12 @@
 use PHPUnit\Framework\TestCase;
 use App\Models\UsuariosModel;
 
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestUsuarioUpdate extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
 
     private function showMessage(string $msg)
@@ -14,6 +18,7 @@ class TestUsuarioUpdate extends TestCase
 
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new UsuariosModel();
     }
 

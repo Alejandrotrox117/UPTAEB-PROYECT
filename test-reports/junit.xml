@@ -1,7 +1,1148 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="VentaFlowIntegrationTest" file="C:\xampp\htdocs\project\tests\Integration\VentaFlowIntegrationTest.php" tests="2" assertions="7" errors="0" failures="0" skipped="0" time="0.144470">
-    <testcase name="testFlujoCompletoVentaConPagos" file="C:\xampp\htdocs\project\tests\Integration\VentaFlowIntegrationTest.php" line="32" class="VentaFlowIntegrationTest" classname="VentaFlowIntegrationTest" assertions="5" time="0.084396"/>
-    <testcase name="testVentaConDescuentoMultiplesProductos" file="C:\xampp\htdocs\project\tests\Integration\VentaFlowIntegrationTest.php" line="147" class="VentaFlowIntegrationTest" classname="VentaFlowIntegrationTest" assertions="2" time="0.060074"/>
+  <testsuite name="C:\xampp\htdocs\project\phpunit.xml" tests="431" assertions="864" errors="30" failures="33" skipped="87" time="19.028650">
+    <testsuite name="All Tests" tests="431" assertions="864" errors="30" failures="33" skipped="87" time="19.028650">
+      <testsuite name="TestCategoriaDelete" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDelete.php" tests="5" assertions="0" errors="0" failures="0" skipped="5" time="0.000000">
+        <testcase name="testDeleteCategoriaExistente" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDelete.php" line="31" class="TestCategoriaDelete" classname="TestCategoriaDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteCategoriaYaEliminada" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDelete.php" line="48" class="TestCategoriaDelete" classname="TestCategoriaDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteCategoriaInexistente" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDelete.php" line="58" class="TestCategoriaDelete" classname="TestCategoriaDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteCategoriaConIdNulo" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDelete.php" line="63" class="TestCategoriaDelete" classname="TestCategoriaDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteCategoriaConIdString" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaDelete.php" line="72" class="TestCategoriaDelete" classname="TestCategoriaDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestCategoriaInsert" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaInsert.php" tests="3" assertions="0" errors="0" failures="0" skipped="3" time="0.000000">
+        <testcase name="testInsertCategoriaConDatosValidos" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaInsert.php" line="20" class="TestCategoriaInsert" classname="TestCategoriaInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testInsertCategoriaSinNombre" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaInsert.php" line="30" class="TestCategoriaInsert" classname="TestCategoriaInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testInsertCategoriaConDatosIncompletos" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaInsert.php" line="45" class="TestCategoriaInsert" classname="TestCategoriaInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestCategoriaModelUnit" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" tests="38" assertions="97" errors="0" failures="0" skipped="0" time="0.056790">
+        <testcase name="testSelectAllCategoriasRetornaDatosEnExito" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="35" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="6" time="0.037540"/>
+        <testcase name="testSelectAllCategoriasRetornaArrayVacioCuandoNoHayDatos" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="61" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="4" time="0.001258"/>
+        <testcase name="testSelectAllCategoriasRetornaArrayVacioEnExcepcion" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="79" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.001157"/>
+        <testsuite name="TestCategoriaModelUnit::testInsertCategoriaConDatosValidos" tests="6" assertions="18" errors="0" failures="0" skipped="0" time="0.004631">
+          <testcase name="testInsertCategoriaConDatosValidos with data set &quot;estatus_minusculas&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="93" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.001655"/>
+          <testcase name="testInsertCategoriaConDatosValidos with data set &quot;estatus_mayusculas&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="93" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000608"/>
+          <testcase name="testInsertCategoriaConDatosValidos with data set &quot;estatus_mixto&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="93" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000592"/>
+          <testcase name="testInsertCategoriaConDatosValidos with data set &quot;estatus_inactivo&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="93" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000596"/>
+          <testcase name="testInsertCategoriaConDatosValidos with data set &quot;descripcion_larga&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="93" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000597"/>
+          <testcase name="testInsertCategoriaConDatosValidos with data set &quot;caracteres_especiales&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="93" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000584"/>
+        </testsuite>
+        <testcase name="testInsertCategoriaRetornaFalseCuandoExecuteFalla" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="146" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000760"/>
+        <testcase name="testInsertCategoriaPropagaExcepcionPDO" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="163" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000772"/>
+        <testsuite name="TestCategoriaModelUnit::testInsertCategoriaConDatosIncompletos" tests="4" assertions="4" errors="0" failures="0" skipped="0" time="0.002660">
+          <testcase name="testInsertCategoriaConDatosIncompletos with data set &quot;sin_clave_nombre&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="178" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.001716"/>
+          <testcase name="testInsertCategoriaConDatosIncompletos with data set &quot;sin_clave_descripcion&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="178" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000310"/>
+          <testcase name="testInsertCategoriaConDatosIncompletos with data set &quot;sin_clave_estatus&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="178" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000321"/>
+          <testcase name="testInsertCategoriaConDatosIncompletos with data set &quot;array_completamente_vacio&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="178" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000313"/>
+        </testsuite>
+        <testsuite name="TestCategoriaModelUnit::testDeleteCategoriaConDiferentesResultados" tests="3" assertions="9" errors="0" failures="0" skipped="0" time="0.000984">
+          <testcase name="testDeleteCategoriaConDiferentesResultados with data set &quot;delete_exitoso&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="202" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000379"/>
+          <testcase name="testDeleteCategoriaConDiferentesResultados with data set &quot;delete_id_inexistente_execute_true&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="202" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000302"/>
+          <testcase name="testDeleteCategoriaConDiferentesResultados with data set &quot;delete_execute_falla&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="202" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000303"/>
+        </testsuite>
+        <testcase name="testDeleteCategoriaRetornaFalseEnExcepcion" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="231" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="2" time="0.000471"/>
+        <testsuite name="TestCategoriaModelUnit::testUpdateCategoriaConDiferentesEscenarios" tests="4" assertions="12" errors="0" failures="0" skipped="0" time="0.001357">
+          <testcase name="testUpdateCategoriaConDiferentesEscenarios with data set &quot;update_exitoso_datos_completos&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="244" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000341"/>
+          <testcase name="testUpdateCategoriaConDiferentesEscenarios with data set &quot;update_sin_cambios_reales&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="244" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000341"/>
+          <testcase name="testUpdateCategoriaConDiferentesEscenarios with data set &quot;update_execute_falla&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="244" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000338"/>
+          <testcase name="testUpdateCategoriaConDiferentesEscenarios with data set &quot;update_cambio_estatus_inactivo&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="244" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000337"/>
+        </testsuite>
+        <testcase name="testUpdateCategoriaRetornaFalseEnExcepcion" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="286" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="2" time="0.000435"/>
+        <testsuite name="TestCategoriaModelUnit::testUpdateCategoriaConDatosIncompletos" tests="3" assertions="3" errors="0" failures="0" skipped="0" time="0.000911">
+          <testcase name="testUpdateCategoriaConDatosIncompletos with data set &quot;sin_idcategoria&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="300" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000288"/>
+          <testcase name="testUpdateCategoriaConDatosIncompletos with data set &quot;sin_nombre&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="300" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000318"/>
+          <testcase name="testUpdateCategoriaConDatosIncompletos with data set &quot;array_vacio&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="300" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000305"/>
+        </testsuite>
+        <testcase name="testGetCategoriaByIdRetornaDatosYSeteaPropiedades" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="320" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="9" time="0.000402"/>
+        <testcase name="testGetCategoriaByIdRetornaFalseCuandoNoExiste" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="356" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000525"/>
+        <testcase name="testGetCategoriaByIdRetornaNullEnExcepcion" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="375" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="2" time="0.000698"/>
+        <testsuite name="TestCategoriaModelUnit::testGetCategoriaByIdConIdsLimite" tests="3" assertions="3" errors="0" failures="0" skipped="0" time="0.000947">
+          <testcase name="testGetCategoriaByIdConIdsLimite with data set &quot;id_1_encontrado&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="388" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000363"/>
+          <testcase name="testGetCategoriaByIdConIdsLimite with data set &quot;id_maximo_no_encontrado&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="388" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000295"/>
+          <testcase name="testGetCategoriaByIdConIdsLimite with data set &quot;id_grande_no_encontrado&quot;" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="388" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000288"/>
+        </testsuite>
+        <testcase name="testReactivarCategoriaExitoso" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="419" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000275"/>
+        <testcase name="testReactivarCategoriaExecuteRetornaFalse" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="436" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000252"/>
+        <testcase name="testReactivarCategoriaPropagaExcepcion" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="451" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="3" time="0.000235"/>
+        <testcase name="testInsertCategoriaVerificaParametrosSQLCorrectos" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="463" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000266"/>
+        <testcase name="testDeleteCategoriaVerificaEsSoftDelete" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaModelUnit.php" line="482" class="TestCategoriaModelUnit" classname="TestCategoriaModelUnit" assertions="1" time="0.000256"/>
+      </testsuite>
+      <testsuite name="TestCategoriaSelect" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaSelect.php" tests="6" assertions="0" errors="0" failures="0" skipped="6" time="0.000000">
+        <testcase name="testSelectAllCategoriasRetornaArray" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaSelect.php" line="20" class="TestCategoriaSelect" classname="TestCategoriaSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectAllCategoriasRetornaSoloActivas" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaSelect.php" line="25" class="TestCategoriaSelect" classname="TestCategoriaSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectAllCategoriasTieneEstructuraCorrecta" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaSelect.php" line="32" class="TestCategoriaSelect" classname="TestCategoriaSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testGetCategoriaByIdExistente" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaSelect.php" line="45" class="TestCategoriaSelect" classname="TestCategoriaSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testGetCategoriaByIdInexistente" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaSelect.php" line="56" class="TestCategoriaSelect" classname="TestCategoriaSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testGetCategoriaByIdNulo" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaSelect.php" line="61" class="TestCategoriaSelect" classname="TestCategoriaSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestCategoriaUpdate" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaUpdate.php" tests="4" assertions="0" errors="0" failures="0" skipped="4" time="0.000000">
+        <testcase name="testUpdateCategoriaDatosCompletos" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaUpdate.php" line="31" class="TestCategoriaUpdate" classname="TestCategoriaUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateCategoriaInexistente" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaUpdate.php" line="45" class="TestCategoriaUpdate" classname="TestCategoriaUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateCategoriaSinId" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaUpdate.php" line="59" class="TestCategoriaUpdate" classname="TestCategoriaUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateCategoriaSinNombre" file="C:\xampp\htdocs\project\tests\Categorias\TestCategoriaUpdate.php" line="73" class="TestCategoriaUpdate" classname="TestCategoriaUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestProductoDelete" file="C:\xampp\htdocs\project\tests\Productos\TestProductoDelete.php" tests="3" assertions="0" errors="0" failures="0" skipped="3" time="0.000000">
+        <testcase name="testDeleteProductoExistente" file="C:\xampp\htdocs\project\tests\Productos\TestProductoDelete.php" line="33" class="TestProductoDelete" classname="TestProductoDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteProductoVerificarEstatus" file="C:\xampp\htdocs\project\tests\Productos\TestProductoDelete.php" line="45" class="TestProductoDelete" classname="TestProductoDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteProductoInexistente" file="C:\xampp\htdocs\project\tests\Productos\TestProductoDelete.php" line="59" class="TestProductoDelete" classname="TestProductoDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestProductoInsert" file="C:\xampp\htdocs\project\tests\Productos\TestProductoInsert.php" tests="4" assertions="0" errors="0" failures="0" skipped="4" time="0.000000">
+        <testcase name="testInsertProductoConDatosCompletos" file="C:\xampp\htdocs\project\tests\Productos\TestProductoInsert.php" line="20" class="TestProductoInsert" classname="TestProductoInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testInsertProductoSinCampoRequerido" file="C:\xampp\htdocs\project\tests\Productos\TestProductoInsert.php" line="42" class="TestProductoInsert" classname="TestProductoInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testInsertProductoConCategoriaInexistente" file="C:\xampp\htdocs\project\tests\Productos\TestProductoInsert.php" line="58" class="TestProductoInsert" classname="TestProductoInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testInsertProductoDuplicado" file="C:\xampp\htdocs\project\tests\Productos\TestProductoInsert.php" line="73" class="TestProductoInsert" classname="TestProductoInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestProductoModelUnit" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" tests="18" assertions="0" errors="0" failures="0" skipped="18" time="0.000000">
+        <testcase name="testInsertProductoExitosoConDatosCompletos" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="25" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testsuite name="TestProductoModelUnit::testInsertProductoConDatosInvalidos" tests="2" assertions="0" errors="0" failures="0" skipped="2" time="0.000000">
+          <testcase name="testInsertProductoConDatosInvalidos with data set &quot;nombre_vacio&quot;" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="51" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+            <skipped/>
+          </testcase>
+          <testcase name="testInsertProductoConDatosInvalidos with data set &quot;categoria_inexistente&quot;" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="51" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+            <skipped/>
+          </testcase>
+        </testsuite>
+        <testcase name="testInsertProductoDuplicadoRetornaError" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="96" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateProductoExitoso" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="121" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testsuite name="TestProductoModelUnit::testUpdateProductoConDatosInvalidos" tests="3" assertions="0" errors="0" failures="0" skipped="3" time="0.000000">
+          <testcase name="testUpdateProductoConDatosInvalidos with data set &quot;id_inexistente&quot;" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="143" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+            <skipped/>
+          </testcase>
+          <testcase name="testUpdateProductoConDatosInvalidos with data set &quot;nombre_vacio&quot;" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="143" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+            <skipped/>
+          </testcase>
+          <testcase name="testUpdateProductoConDatosInvalidos with data set &quot;precio_negativo&quot;" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="143" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+            <skipped/>
+          </testcase>
+        </testsuite>
+        <testcase name="testUpdateProductoConNombreDuplicado" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="177" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectProductoByIdExistenteRetornaEstructuraCompleta" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="200" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testsuite name="TestProductoModelUnit::testSelectProductoByIdInexistente" tests="2" assertions="0" errors="0" failures="0" skipped="2" time="0.000000">
+          <testcase name="testSelectProductoByIdInexistente with data set &quot;id_grande&quot;" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="218" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+            <skipped/>
+          </testcase>
+          <testcase name="testSelectProductoByIdInexistente with data set &quot;id_negativo_como_int&quot;" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="218" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+            <skipped/>
+          </testcase>
+        </testsuite>
+        <testcase name="testDeleteProductoExitenteEsSoftDelete" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="233" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteProductoInexistenteRetornaFalse" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="251" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectAllProductosRetornaEstructuraCorrecta" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="261" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectAllProductosTieneColumnasEsperadas" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="273" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectProductosActivosSoloRetornaActivos" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="293" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectCategoriasActivasRetornaEstructura" file="C:\xampp\htdocs\project\tests\Productos\TestProductoModelUnit.php" line="308" class="TestProductoModelUnit" classname="TestProductoModelUnit" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestProductoSelect" file="C:\xampp\htdocs\project\tests\Productos\TestProductoSelect.php" tests="6" assertions="0" errors="0" failures="0" skipped="6" time="0.000000">
+        <testcase name="testSelectAllProductosRetornaArray" file="C:\xampp\htdocs\project\tests\Productos\TestProductoSelect.php" line="20" class="TestProductoSelect" classname="TestProductoSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectAllProductosTieneEstructuraCorrecta" file="C:\xampp\htdocs\project\tests\Productos\TestProductoSelect.php" line="26" class="TestProductoSelect" classname="TestProductoSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectProductosActivos" file="C:\xampp\htdocs\project\tests\Productos\TestProductoSelect.php" line="43" class="TestProductoSelect" classname="TestProductoSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectProductoByIdExistente" file="C:\xampp\htdocs\project\tests\Productos\TestProductoSelect.php" line="53" class="TestProductoSelect" classname="TestProductoSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectCategoriasActivas" file="C:\xampp\htdocs\project\tests\Productos\TestProductoSelect.php" line="65" class="TestProductoSelect" classname="TestProductoSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectProductoByIdInexistente" file="C:\xampp\htdocs\project\tests\Productos\TestProductoSelect.php" line="75" class="TestProductoSelect" classname="TestProductoSelect" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestProductoUpdate" file="C:\xampp\htdocs\project\tests\Productos\TestProductoUpdate.php" tests="6" assertions="0" errors="0" failures="0" skipped="6" time="0.000000">
+        <testcase name="testUpdateProductoDatosCompletos" file="C:\xampp\htdocs\project\tests\Productos\TestProductoUpdate.php" line="33" class="TestProductoUpdate" classname="TestProductoUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateProductoInexistente" file="C:\xampp\htdocs\project\tests\Productos\TestProductoUpdate.php" line="53" class="TestProductoUpdate" classname="TestProductoUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateProductoConNombreVacio" file="C:\xampp\htdocs\project\tests\Productos\TestProductoUpdate.php" line="71" class="TestProductoUpdate" classname="TestProductoUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateProductoConCategoriaInvalida" file="C:\xampp\htdocs\project\tests\Productos\TestProductoUpdate.php" line="89" class="TestProductoUpdate" classname="TestProductoUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateProductoConPrecioNegativo" file="C:\xampp\htdocs\project\tests\Productos\TestProductoUpdate.php" line="107" class="TestProductoUpdate" classname="TestProductoUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testUpdateProductoConDatosIncompletos" file="C:\xampp\htdocs\project\tests\Productos\TestProductoUpdate.php" line="121" class="TestProductoUpdate" classname="TestProductoUpdate" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestClienteDelete" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteDelete.php" tests="3" assertions="0" errors="0" failures="0" skipped="3" time="0.000000">
+        <testcase name="testDeleteClienteExistente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteDelete.php" line="33" class="TestClienteDelete" classname="TestClienteDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteClienteVerificarEstatus" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteDelete.php" line="45" class="TestClienteDelete" classname="TestClienteDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testDeleteClienteInexistente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteDelete.php" line="59" class="TestClienteDelete" classname="TestClienteDelete" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestClienteInsert" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteInsert.php" tests="3" assertions="0" errors="0" failures="0" skipped="3" time="0.000000">
+        <testcase name="testInsertClienteConDatosCompletos" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteInsert.php" line="20" class="TestClienteInsert" classname="TestClienteInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testInsertClienteSinCampoRequerido" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteInsert.php" line="42" class="TestClienteInsert" classname="TestClienteInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+        <testcase name="testInsertClienteConCedulaDuplicada" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteInsert.php" line="56" class="TestClienteInsert" classname="TestClienteInsert" assertions="0" time="0.000000">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestClienteModelUnit" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" tests="26" assertions="121" errors="0" failures="7" skipped="0" time="4.287806">
+        <testcase name="testInsertClienteExitosoConDatosCompletos" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="24" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="7" time="2.214063"/>
+        <testsuite name="TestClienteModelUnit::testInsertClienteConDatosInvalidos" tests="2" assertions="6" errors="0" failures="1" skipped="0" time="0.167649">
+          <testcase name="testInsertClienteConDatosInvalidos with data set &quot;cedula_vacia&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="50" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="4" time="0.030041"/>
+          <testcase name="testInsertClienteConDatosInvalidos with data set &quot;nombre_vacio&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="50" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="2" time="0.137608">
+            <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteModelUnit::testInsertClienteConDatosInvalidos with data set "nombre_vacio"&#13;
+Debería rechazar datos inválidos
+Failed asserting that true is false.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php:57</failure>
+          </testcase>
+        </testsuite>
+        <testcase name="testInsertClienteConCedulaDuplicada" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="94" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="3" time="0.079570"/>
+        <testcase name="testUpdateClienteExitoso" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="118" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="3" time="0.175284"/>
+        <testsuite name="TestClienteModelUnit::testUpdateClienteConDatosInvalidos" tests="3" assertions="7" errors="0" failures="2" skipped="0" time="0.218183">
+          <testcase name="testUpdateClienteConDatosInvalidos with data set &quot;id_inexistente&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="139" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="2" time="0.120950">
+            <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteModelUnit::testUpdateClienteConDatosInvalidos with data set "id_inexistente"&#13;
+Failed asserting that true matches expected false.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php:147</failure>
+          </testcase>
+          <testcase name="testUpdateClienteConDatosInvalidos with data set &quot;cedula_vacia&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="139" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="3" time="0.031301"/>
+          <testcase name="testUpdateClienteConDatosInvalidos with data set &quot;nombre_vacio&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="139" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="2" time="0.065933">
+            <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteModelUnit::testUpdateClienteConDatosInvalidos with data set "nombre_vacio"&#13;
+Failed asserting that true matches expected false.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php:147</failure>
+          </testcase>
+        </testsuite>
+        <testcase name="testUpdateClienteConCedulaDuplicadaDeOtroCliente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="173" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="5" time="0.185004"/>
+        <testcase name="testSelectClienteByIdExistenteRetornaEstructura" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="196" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="7" time="0.089907"/>
+        <testsuite name="TestClienteModelUnit::testSelectClienteByIdInexistente" tests="2" assertions="2" errors="0" failures="0" skipped="0" time="0.061160">
+          <testcase name="testSelectClienteByIdInexistente with data set &quot;id_muy_grande&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="212" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="1" time="0.029951"/>
+          <testcase name="testSelectClienteByIdInexistente with data set &quot;id_cero&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="212" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="1" time="0.031209"/>
+        </testsuite>
+        <testcase name="testSelectClienteByCedulaExistente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="227" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="2" time="0.111219">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteModelUnit::testSelectClienteByCedulaExistente&#13;
+Failed asserting that false is of type array.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php:234</failure>
+        </testcase>
+        <testsuite name="TestClienteModelUnit::testSelectClienteByCedulaInexistente" tests="3" assertions="3" errors="0" failures="1" skipped="0" time="0.106544">
+          <testcase name="testSelectClienteByCedulaInexistente with data set &quot;cedula_fantasma&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="240" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="1" time="0.042886"/>
+          <testcase name="testSelectClienteByCedulaInexistente with data set &quot;cedula_formato_invalido&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="240" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="1" time="0.030710"/>
+          <testcase name="testSelectClienteByCedulaInexistente with data set &quot;cedula_vacia&quot;" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="240" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="1" time="0.032947">
+            <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteModelUnit::testSelectClienteByCedulaInexistente with data set "cedula_vacia"&#13;
+Failed asserting that Array &amp;0 [
+    'cedula' =&gt; '',
+] is false.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php:243</failure>
+          </testcase>
+        </testsuite>
+        <testcase name="testDeleteClienteExitoso" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="256" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="2" time="0.109290">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteModelUnit::testDeleteClienteExitoso&#13;
+Failed asserting that true is of type array.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php:262</failure>
+        </testcase>
+        <testcase name="testDeleteClienteInexistente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="274" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="1" time="0.044089">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteModelUnit::testDeleteClienteInexistente&#13;
+Failed asserting that false is of type array.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php:278</failure>
+        </testcase>
+        <testcase name="testReactivarClienteExitoso" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="283" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="5" time="0.166442"/>
+        <testcase name="testReactivarClienteNoEncontrado" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="301" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="3" time="0.030392"/>
+        <testcase name="testReactivarClienteYaActivo" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="311" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="4" time="0.108518"/>
+        <testcase name="testInsertClienteCompletoExitoso" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="323" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="4" time="0.062211"/>
+        <testcase name="testInsertClienteCompletoCedulaDuplicada" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="347" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="2" time="0.155085"/>
+        <testcase name="testSelectAllClientesRetornaEstructura" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="372" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="3" time="0.093053"/>
+        <testcase name="testSelectAllClientesActivosSoloRetornaActivos" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="382" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="47" time="0.032985"/>
+        <testcase name="testSelectAllClientesTieneColumnasRequeridas" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteModelUnit.php" line="397" class="TestClienteModelUnit" classname="TestClienteModelUnit" assertions="5" time="0.077160"/>
+      </testsuite>
+      <testsuite name="TestClienteSelect" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteSelect.php" tests="7" assertions="51" errors="0" failures="0" skipped="0" time="0.354137">
+        <testcase name="testSelectAllClientesRetornaArray" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteSelect.php" line="20" class="TestClienteSelect" classname="TestClienteSelect" assertions="2" time="0.119624"/>
+        <testcase name="testSelectAllClientesTieneEstructuraCorrecta" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteSelect.php" line="26" class="TestClienteSelect" classname="TestClienteSelect" assertions="7" time="0.049927"/>
+        <testcase name="testSelectAllClientesActivos" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteSelect.php" line="43" class="TestClienteSelect" classname="TestClienteSelect" assertions="36" time="0.007907"/>
+        <testcase name="testSelectClienteByIdExistente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteSelect.php" line="53" class="TestClienteSelect" classname="TestClienteSelect" assertions="2" time="0.065615"/>
+        <testcase name="testSelectClienteByCedula" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteSelect.php" line="65" class="TestClienteSelect" classname="TestClienteSelect" assertions="2" time="0.092476"/>
+        <testcase name="testSelectClienteByIdInexistente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteSelect.php" line="77" class="TestClienteSelect" classname="TestClienteSelect" assertions="1" time="0.016152"/>
+        <testcase name="testSelectClienteByCedulaInexistente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteSelect.php" line="82" class="TestClienteSelect" classname="TestClienteSelect" assertions="1" time="0.002437"/>
+      </testsuite>
+      <testsuite name="TestClienteUpdate" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php" tests="5" assertions="11" errors="0" failures="4" skipped="0" time="0.595644">
+        <testcase name="testUpdateClienteDatosCompletos" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php" line="33" class="TestClienteUpdate" classname="TestClienteUpdate" assertions="3" time="0.186393">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteUpdate::testUpdateClienteDatosCompletos&#13;
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php:50</failure>
+        </testcase>
+        <testcase name="testUpdateClienteInexistente" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php" line="53" class="TestClienteUpdate" classname="TestClienteUpdate" assertions="2" time="0.109204">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteUpdate::testUpdateClienteInexistente&#13;
+Failed asserting that true is false.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php:65</failure>
+        </testcase>
+        <testcase name="testUpdateClienteConCedulaVacia" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php" line="70" class="TestClienteUpdate" classname="TestClienteUpdate" assertions="2" time="0.058156"/>
+        <testcase name="testUpdateClienteConNombreVacio" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php" line="87" class="TestClienteUpdate" classname="TestClienteUpdate" assertions="2" time="0.056783">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteUpdate::testUpdateClienteConNombreVacio&#13;
+Failed asserting that true is false.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php:99</failure>
+        </testcase>
+        <testcase name="testUpdateClienteConDatosIncompletos" file="C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php" line="104" class="TestClienteUpdate" classname="TestClienteUpdate" assertions="2" time="0.185107">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestClienteUpdate::testUpdateClienteConDatosIncompletos&#13;
+Failed asserting that true is false.
+&#13;
+C:\xampp\htdocs\project\tests\Clientes\TestClienteUpdate.php:112</failure>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestEmpleadoDelete" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoDelete.php" tests="4" assertions="3" errors="0" failures="1" skipped="1" time="0.282964">
+        <testcase name="testEliminarEmpleadoExistente" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoDelete.php" line="20" class="TestEmpleadoDelete" classname="TestEmpleadoDelete" assertions="0" time="0.096742">
+          <skipped/>
+        </testcase>
+        <testcase name="testEliminarYVerificarEliminacion" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoDelete.php" line="48" class="TestEmpleadoDelete" classname="TestEmpleadoDelete" assertions="1" time="0.052011"/>
+        <testcase name="testEliminarEmpleadoInexistente" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoDelete.php" line="54" class="TestEmpleadoDelete" classname="TestEmpleadoDelete" assertions="1" time="0.074452">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestEmpleadoDelete::testEliminarEmpleadoInexistente&#13;
+Failed asserting that true is false.
+&#13;
+C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoDelete.php:58</failure>
+        </testcase>
+        <testcase name="testEliminarEmpleadoYaEliminado" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoDelete.php" line="63" class="TestEmpleadoDelete" classname="TestEmpleadoDelete" assertions="1" time="0.059759"/>
+      </testsuite>
+      <testsuite name="TestEmpleadoInsert" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoInsert.php" tests="3" assertions="3" errors="0" failures="1" skipped="0" time="0.219310">
+        <testcase name="testInsertEmpleadoConDatosCompletos" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoInsert.php" line="20" class="TestEmpleadoInsert" classname="TestEmpleadoInsert" assertions="1" time="0.092638"/>
+        <testcase name="testInsertEmpleadoSinCampoRequerido" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoInsert.php" line="41" class="TestEmpleadoInsert" classname="TestEmpleadoInsert" assertions="1" time="0.065551"/>
+        <testcase name="testInsertEmpleadoConCorreoDuplicado" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoInsert.php" line="64" class="TestEmpleadoInsert" classname="TestEmpleadoInsert" assertions="1" time="0.061121">
+          <failure type="PHPUnit\Framework\AssertionFailedError">TestEmpleadoInsert::testInsertEmpleadoConCorreoDuplicado&#13;
+Debería lanzar PDOException por correo duplicado
+&#13;
+C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoInsert.php:82</failure>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestEmpleadoSelect" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoSelect.php" tests="6" assertions="3" errors="0" failures="0" skipped="3" time="0.235450">
+        <testcase name="testSeleccionarTodosEmpleados" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoSelect.php" line="20" class="TestEmpleadoSelect" classname="TestEmpleadoSelect" assertions="1" time="0.189730"/>
+        <testcase name="testObtenerEmpleadoPorId" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoSelect.php" line="25" class="TestEmpleadoSelect" classname="TestEmpleadoSelect" assertions="1" time="0.034403"/>
+        <testcase name="testBuscarEmpleadoPorIdentificacion" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoSelect.php" line="36" class="TestEmpleadoSelect" classname="TestEmpleadoSelect" assertions="0" time="0.002993">
+          <skipped/>
+        </testcase>
+        <testcase name="testListarEmpleadosActivos" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoSelect.php" line="47" class="TestEmpleadoSelect" classname="TestEmpleadoSelect" assertions="0" time="0.002809">
+          <skipped/>
+        </testcase>
+        <testcase name="testObtenerEmpleadoInexistente" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoSelect.php" line="56" class="TestEmpleadoSelect" classname="TestEmpleadoSelect" assertions="1" time="0.002967"/>
+        <testcase name="testBuscarEmpleadoPorIdentificacionInexistente" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoSelect.php" line="66" class="TestEmpleadoSelect" classname="TestEmpleadoSelect" assertions="0" time="0.002548">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestEmpleadoUpdate" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoUpdate.php" tests="6" assertions="7" errors="0" failures="1" skipped="0" time="0.423139">
+        <testcase name="testActualizarEmpleadoConDatosCompletos" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoUpdate.php" line="20" class="TestEmpleadoUpdate" classname="TestEmpleadoUpdate" assertions="1" time="0.099494"/>
+        <testcase name="testActualizarEmpleadoInexistente" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoUpdate.php" line="38" class="TestEmpleadoUpdate" classname="TestEmpleadoUpdate" assertions="1" time="0.048305">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestEmpleadoUpdate::testActualizarEmpleadoInexistente&#13;
+Failed asserting that true is false.
+&#13;
+C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoUpdate.php:46</failure>
+        </testcase>
+        <testcase name="testActualizarSinId" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoUpdate.php" line="51" class="TestEmpleadoUpdate" classname="TestEmpleadoUpdate" assertions="2" time="0.123378"/>
+        <testcase name="testActualizarConEmailInvalido" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoUpdate.php" line="64" class="TestEmpleadoUpdate" classname="TestEmpleadoUpdate" assertions="1" time="0.073027"/>
+        <testcase name="testActualizarConSalarioNegativo" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoUpdate.php" line="73" class="TestEmpleadoUpdate" classname="TestEmpleadoUpdate" assertions="1" time="0.032855"/>
+        <testcase name="testActualizarConFechaNacimientoInvalida" file="C:\xampp\htdocs\project\tests\Empleados\TestEmpleadoUpdate.php" line="82" class="TestEmpleadoUpdate" classname="TestEmpleadoUpdate" assertions="1" time="0.046079"/>
+      </testsuite>
+      <testsuite name="TestProveedorDelete" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorDelete.php" tests="5" assertions="4" errors="1" failures="0" skipped="0" time="0.139924">
+        <testcase name="testEliminarProveedorExistente" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorDelete.php" line="20" class="TestProveedorDelete" classname="TestProveedorDelete" assertions="0" time="0.030659">
+          <error type="TypeError">TestProveedorDelete::testEliminarProveedorExistente&#13;
+TypeError: App\Models\ProveedoresModel::ejecutarVerificacionProveedor(): Argument #1 ($identificacion) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\ProveedoresModel.php on line 453
+&#13;
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:86
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:453
+C:\xampp\htdocs\project\tests\Proveedores\TestProveedorDelete.php:30</error>
+        </testcase>
+        <testcase name="testEliminarYVerificarEliminacion" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorDelete.php" line="45" class="TestProveedorDelete" classname="TestProveedorDelete" assertions="1" time="0.050016"/>
+        <testcase name="testEliminarProveedorInexistente" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorDelete.php" line="51" class="TestProveedorDelete" classname="TestProveedorDelete" assertions="1" time="0.026901"/>
+        <testcase name="testEliminarProveedorYaEliminado" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorDelete.php" line="60" class="TestProveedorDelete" classname="TestProveedorDelete" assertions="1" time="0.030370"/>
+        <testcase name="testEliminarProveedorConComprasAsociadas" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorDelete.php" line="67" class="TestProveedorDelete" classname="TestProveedorDelete" assertions="1" time="0.001978"/>
+      </testsuite>
+      <testsuite name="TestProveedorInsert" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorInsert.php" tests="3" assertions="0" errors="3" failures="0" skipped="0" time="0.004012">
+        <testcase name="testInsertProveedorConDatosCompletos" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorInsert.php" line="20" class="TestProveedorInsert" classname="TestProveedorInsert" assertions="0" time="0.002449">
+          <error type="TypeError">TestProveedorInsert::testInsertProveedorConDatosCompletos&#13;
+TypeError: App\Models\ProveedoresModel::ejecutarVerificacionProveedor(): Argument #1 ($identificacion) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\ProveedoresModel.php on line 453
+&#13;
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:86
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:453
+C:\xampp\htdocs\project\tests\Proveedores\TestProveedorInsert.php:32</error>
+        </testcase>
+        <testcase name="testInsertProveedorSinCampoRequerido" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorInsert.php" line="37" class="TestProveedorInsert" classname="TestProveedorInsert" assertions="0" time="0.000848">
+          <error type="TypeError">TestProveedorInsert::testInsertProveedorSinCampoRequerido&#13;
+TypeError: App\Models\ProveedoresModel::ejecutarVerificacionProveedor(): Argument #1 ($identificacion) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\ProveedoresModel.php on line 453
+&#13;
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:86
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:453
+C:\xampp\htdocs\project\tests\Proveedores\TestProveedorInsert.php:48</error>
+        </testcase>
+        <testcase name="testInsertProveedorConRifDuplicado" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorInsert.php" line="53" class="TestProveedorInsert" classname="TestProveedorInsert" assertions="0" time="0.000715">
+          <error type="TypeError">TestProveedorInsert::testInsertProveedorConRifDuplicado&#13;
+TypeError: App\Models\ProveedoresModel::ejecutarVerificacionProveedor(): Argument #1 ($identificacion) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\ProveedoresModel.php on line 453
+&#13;
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:86
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:453
+C:\xampp\htdocs\project\tests\Proveedores\TestProveedorInsert.php:65</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestProveedorSelect" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorSelect.php" tests="4" assertions="10" errors="0" failures="0" skipped="0" time="0.270459">
+        <testcase name="testSelectAllProveedoresRetornaArray" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorSelect.php" line="20" class="TestProveedorSelect" classname="TestProveedorSelect" assertions="2" time="0.107894"/>
+        <testcase name="testSelectAllProveedoresTieneEstructuraCorrecta" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorSelect.php" line="26" class="TestProveedorSelect" classname="TestProveedorSelect" assertions="5" time="0.073383"/>
+        <testcase name="testSelectProveedorByIdExistente" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorSelect.php" line="41" class="TestProveedorSelect" classname="TestProveedorSelect" assertions="2" time="0.073890"/>
+        <testcase name="testSelectProveedorByIdInexistente" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorSelect.php" line="53" class="TestProveedorSelect" classname="TestProveedorSelect" assertions="1" time="0.015292"/>
+      </testsuite>
+      <testsuite name="TestProveedorUpdate" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php" tests="4" assertions="0" errors="4" failures="0" skipped="0" time="0.036414">
+        <testcase name="testActualizarProveedorConDatosCompletos" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php" line="20" class="TestProveedorUpdate" classname="TestProveedorUpdate" assertions="0" time="0.030305">
+          <error type="TypeError">TestProveedorUpdate::testActualizarProveedorConDatosCompletos&#13;
+TypeError: App\Models\ProveedoresModel::ejecutarVerificacionProveedor(): Argument #1 ($identificacion) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\ProveedoresModel.php on line 469
+&#13;
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:86
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:469
+C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php:31</error>
+        </testcase>
+        <testcase name="testActualizarProveedorInexistente" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php" line="34" class="TestProveedorUpdate" classname="TestProveedorUpdate" assertions="0" time="0.001983">
+          <error type="TypeError">TestProveedorUpdate::testActualizarProveedorInexistente&#13;
+TypeError: App\Models\ProveedoresModel::ejecutarVerificacionProveedor(): Argument #1 ($identificacion) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\ProveedoresModel.php on line 469
+&#13;
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:86
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:469
+C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php:39</error>
+        </testcase>
+        <testcase name="testActualizarConEmailInvalido" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php" line="45" class="TestProveedorUpdate" classname="TestProveedorUpdate" assertions="0" time="0.002159">
+          <error type="TypeError">TestProveedorUpdate::testActualizarConEmailInvalido&#13;
+TypeError: App\Models\ProveedoresModel::ejecutarVerificacionProveedor(): Argument #1 ($identificacion) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\ProveedoresModel.php on line 469
+&#13;
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:86
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:469
+C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php:50</error>
+        </testcase>
+        <testcase name="testActualizarConRifDuplicado" file="C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php" line="53" class="TestProveedorUpdate" classname="TestProveedorUpdate" assertions="0" time="0.001968">
+          <error type="TypeError">TestProveedorUpdate::testActualizarConRifDuplicado&#13;
+TypeError: App\Models\ProveedoresModel::ejecutarVerificacionProveedor(): Argument #1 ($identificacion) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\ProveedoresModel.php on line 469
+&#13;
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:86
+C:\xampp\htdocs\project\app\Models\ProveedoresModel.php:469
+C:\xampp\htdocs\project\tests\Proveedores\TestProveedorUpdate.php:58</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestUsuarioDelete" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" tests="4" assertions="3" errors="1" failures="0" skipped="0" time="0.133579">
+        <testcase name="testEliminarUsuarioExistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="29" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="0" time="0.060883">
+          <error type="TypeError">TestUsuarioDelete::testEliminarUsuarioExistente&#13;
+TypeError: App\Models\UsuariosModel::ejecutarVerificacionUsuarioPorNombre(): Argument #1 ($usuario) must be of type string, null given, called in C:\xampp\htdocs\project\app\Models\UsuariosModel.php on line 781
+&#13;
+C:\xampp\htdocs\project\app\Models\UsuariosModel.php:178
+C:\xampp\htdocs\project\app\Models\UsuariosModel.php:781
+C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php:39</error>
+        </testcase>
+        <testcase name="testEliminarYVerificarEliminacion" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="59" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="1" time="0.039820"/>
+        <testcase name="testEliminarUsuarioInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="68" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="1" time="0.005386"/>
+        <testcase name="testEliminarUsuarioYaEliminado" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioDelete.php" line="81" class="TestUsuarioDelete" classname="TestUsuarioDelete" assertions="1" time="0.027489"/>
+      </testsuite>
+      <testsuite name="TestUsuarioInsert" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" tests="8" assertions="26" errors="0" failures="0" skipped="0" time="0.183165">
+        <testcase name="testInsertarUsuarioConDatosCompletos" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="30" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="5" time="0.030363"/>
+        <testcase name="testInsertarUsuarioSinNombreUsuario" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="49" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.028213"/>
+        <testcase name="testInsertarUsuarioSinCorreo" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="71" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.015167"/>
+        <testcase name="testInsertarUsuarioSinPassword" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="93" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.016294"/>
+        <testcase name="testInsertarUsuarioConCorreoDuplicado" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="115" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.014941"/>
+        <testcase name="testInsertarUsuarioConEmailInvalido" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="137" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.047285"/>
+        <testcase name="testInsertarUsuarioSinRol" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="159" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.014593"/>
+        <testcase name="testInsertarUsuarioConPasswordDebil" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioInsert.php" line="180" class="TestUsuarioInsert" classname="TestUsuarioInsert" assertions="3" time="0.016310"/>
+      </testsuite>
+      <testsuite name="TestUsuarioSelect" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" tests="6" assertions="12" errors="0" failures="0" skipped="0" time="0.277847">
+        <testcase name="testSeleccionarTodosUsuarios" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="18" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="4" time="0.013514"/>
+        <testcase name="testSeleccionarUsuariosActivos" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="29" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="4" time="0.034554"/>
+        <testcase name="testObtenerUsuarioPorId" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="39" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.073514"/>
+        <testcase name="testBuscarUsuarioPorEmail" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="52" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.030467"/>
+        <testcase name="testObtenerUsuarioInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="58" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.094153"/>
+        <testcase name="testBuscarUsuarioPorEmailInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioSelect.php" line="66" class="TestUsuarioSelect" classname="TestUsuarioSelect" assertions="1" time="0.031646"/>
+      </testsuite>
+      <testsuite name="TestUsuarioUpdate" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" tests="5" assertions="8" errors="0" failures="1" skipped="0" time="0.414764">
+        <testcase name="testActualizarUsuarioConDatosCompletos" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="25" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="1" time="0.079202">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestUsuarioUpdate::testActualizarUsuarioConDatosCompletos&#13;
+Failed asserting that Array &amp;0 [
+    'status' =&gt; false,
+    'message' =&gt; 'No tienes permisos para editar este usuario.',
+] is of type bool.
+&#13;
+C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php:34</failure>
+        </testcase>
+        <testcase name="testActualizarUsuarioInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="37" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="1" time="0.167689"/>
+        <testcase name="testActualizarConCorreoDuplicado" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="54" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="2" time="0.093245"/>
+        <testcase name="testActualizarConEmailInvalido" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="71" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="2" time="0.032183"/>
+        <testcase name="testActualizarConRolInexistente" file="C:\xampp\htdocs\project\tests\Usuarios\TestUsuarioUpdate.php" line="88" class="TestUsuarioUpdate" classname="TestUsuarioUpdate" assertions="2" time="0.042444"/>
+      </testsuite>
+      <testsuite name="TestLoginAutenticacion" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" tests="8" assertions="8" errors="0" failures="0" skipped="0" time="0.276956">
+        <testcase name="testLoginConCredencialesValidas" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" line="20" class="TestLoginAutenticacion" classname="TestLoginAutenticacion" assertions="1" time="0.063542"/>
+        <testcase name="testLoginConPasswordIncorrecto" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" line="33" class="TestLoginAutenticacion" classname="TestLoginAutenticacion" assertions="1" time="0.045946"/>
+        <testcase name="testLoginConEmailInexistente" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" line="41" class="TestLoginAutenticacion" classname="TestLoginAutenticacion" assertions="1" time="0.048531"/>
+        <testcase name="testLoginConEmailVacio" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" line="49" class="TestLoginAutenticacion" classname="TestLoginAutenticacion" assertions="1" time="0.027532"/>
+        <testcase name="testLoginConPasswordVacio" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" line="57" class="TestLoginAutenticacion" classname="TestLoginAutenticacion" assertions="1" time="0.032253"/>
+        <testcase name="testLoginConCamposVacios" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" line="65" class="TestLoginAutenticacion" classname="TestLoginAutenticacion" assertions="1" time="0.004320"/>
+        <testcase name="testLoginConEmailInvalido" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" line="73" class="TestLoginAutenticacion" classname="TestLoginAutenticacion" assertions="1" time="0.024541"/>
+        <testcase name="testLoginConUsuarioInactivo" file="C:\xampp\htdocs\project\tests\Login\TestLoginAutenticacion.php" line="84" class="TestLoginAutenticacion" classname="TestLoginAutenticacion" assertions="1" time="0.030291"/>
+      </testsuite>
+      <testsuite name="TestLoginRecuperacion" file="C:\xampp\htdocs\project\tests\Login\TestLoginRecuperacion.php" tests="4" assertions="3" errors="0" failures="0" skipped="1" time="0.127369">
+        <testcase name="testGetUsuarioEmailExiste" file="C:\xampp\htdocs\project\tests\Login\TestLoginRecuperacion.php" line="20" class="TestLoginRecuperacion" classname="TestLoginRecuperacion" assertions="0" time="0.004575">
+          <skipped/>
+        </testcase>
+        <testcase name="testGetTokenUserByTokenInvalido" file="C:\xampp\htdocs\project\tests\Login\TestLoginRecuperacion.php" line="32" class="TestLoginRecuperacion" classname="TestLoginRecuperacion" assertions="1" time="0.002899"/>
+        <testcase name="testGetUsuarioEmailNoExiste" file="C:\xampp\htdocs\project\tests\Login\TestLoginRecuperacion.php" line="39" class="TestLoginRecuperacion" classname="TestLoginRecuperacion" assertions="1" time="0.071082"/>
+        <testcase name="testUpdatePasswordConUsuarioInvalido" file="C:\xampp\htdocs\project\tests\Login\TestLoginRecuperacion.php" line="46" class="TestLoginRecuperacion" classname="TestLoginRecuperacion" assertions="1" time="0.048813"/>
+      </testsuite>
+      <testsuite name="TestVentaAnulacion" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaAnulacion.php" tests="7" assertions="0" errors="0" failures="0" skipped="7" time="0.046530">
+        <testcase name="testAnularVentaExistente" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaAnulacion.php" line="20" class="TestVentaAnulacion" classname="TestVentaAnulacion" assertions="0" time="0.045314">
+          <skipped/>
+        </testcase>
+        <testcase name="testAnularVentaConMotivo" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaAnulacion.php" line="32" class="TestVentaAnulacion" classname="TestVentaAnulacion" assertions="0" time="0.000224">
+          <skipped/>
+        </testcase>
+        <testcase name="testVerificarReposicionInventario" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaAnulacion.php" line="43" class="TestVentaAnulacion" classname="TestVentaAnulacion" assertions="0" time="0.000207">
+          <skipped/>
+        </testcase>
+        <testcase name="testAnularVentaInexistente" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaAnulacion.php" line="54" class="TestVentaAnulacion" classname="TestVentaAnulacion" assertions="0" time="0.000196">
+          <skipped/>
+        </testcase>
+        <testcase name="testAnularVentaYaAnulada" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaAnulacion.php" line="69" class="TestVentaAnulacion" classname="TestVentaAnulacion" assertions="0" time="0.000207">
+          <skipped/>
+        </testcase>
+        <testcase name="testAnularVentaConIdNegativo" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaAnulacion.php" line="82" class="TestVentaAnulacion" classname="TestVentaAnulacion" assertions="0" time="0.000195">
+          <skipped/>
+        </testcase>
+        <testcase name="testAnularVentaConIdCero" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaAnulacion.php" line="92" class="TestVentaAnulacion" classname="TestVentaAnulacion" assertions="0" time="0.000188">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestVentaConsultas" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaConsultas.php" tests="1" assertions="0" errors="0" failures="0" skipped="1" time="0.040713">
+        <testcase name="testBuscarTodasLasVentas" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaConsultas.php" line="20" class="TestVentaConsultas" classname="TestVentaConsultas" assertions="0" time="0.040713">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestVentaCreacion" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php" tests="7" assertions="11" errors="0" failures="1" skipped="0" time="0.466929">
+        <testcase name="testCrearVentaConUnProducto" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php" line="20" class="TestVentaCreacion" classname="TestVentaCreacion" assertions="2" time="0.170646">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestVentaCreacion::testCrearVentaConUnProducto&#13;
+Failed asserting that an array has the key 'status'.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php:46</failure>
+        </testcase>
+        <testcase name="testCrearVentaConDescuento" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php" line="48" class="TestVentaCreacion" classname="TestVentaCreacion" assertions="1" time="0.099372"/>
+        <testcase name="testCrearVentaSinCliente" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php" line="73" class="TestVentaCreacion" classname="TestVentaCreacion" assertions="1" time="0.030352"/>
+        <testcase name="testCrearVentaSinProductos" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php" line="97" class="TestVentaCreacion" classname="TestVentaCreacion" assertions="1" time="0.034330"/>
+        <testcase name="testCrearVentaConClienteInexistente" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php" line="114" class="TestVentaCreacion" classname="TestVentaCreacion" assertions="2" time="0.025486"/>
+        <testcase name="testCrearVentaConProductoInexistente" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php" line="136" class="TestVentaCreacion" classname="TestVentaCreacion" assertions="2" time="0.047006"/>
+        <testcase name="testCrearVentaConCantidadNegativa" file="C:\xampp\htdocs\project\tests\Ventas\TestVentaCreacion.php" line="158" class="TestVentaCreacion" classname="TestVentaCreacion" assertions="2" time="0.059738"/>
+      </testsuite>
+      <testsuite name="ConsultarVentasTest" file="C:\xampp\htdocs\project\tests\Ventas\consultarVentasTest.php" tests="2" assertions="7" errors="0" failures="0" skipped="0" time="0.155553">
+        <testcase name="testConsultarTodasVentas" file="C:\xampp\htdocs\project\tests\Ventas\consultarVentasTest.php" line="20" class="ConsultarVentasTest" classname="ConsultarVentasTest" assertions="1" time="0.081135"/>
+        <testcase name="testEstructuraBasicaVenta" file="C:\xampp\htdocs\project\tests\Ventas\consultarVentasTest.php" line="26" class="ConsultarVentasTest" classname="ConsultarVentasTest" assertions="6" time="0.074418"/>
+      </testsuite>
+      <testsuite name="crearVentaTest" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" tests="11" assertions="32" errors="0" failures="3" skipped="2" time="0.976878">
+        <testcase name="testCrearVentaExitosa" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="26" class="crearVentaTest" classname="crearVentaTest" assertions="4" time="0.217633">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">crearVentaTest::testCrearVentaExitosa&#13;
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php:64</failure>
+        </testcase>
+        <testcase name="testCrearVentaConClienteInactivo" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="85" class="crearVentaTest" classname="crearVentaTest" assertions="1" time="0.033047">
+          <skipped/>
+        </testcase>
+        <testcase name="testCrearVentaConProductoInexistente" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="127" class="crearVentaTest" classname="crearVentaTest" assertions="4" time="0.105178"/>
+        <testcase name="testCrearVentaConCantidadNegativa" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="161" class="crearVentaTest" classname="crearVentaTest" assertions="3" time="0.108195"/>
+        <testcase name="testCrearVentaConPrecioNegativo" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="204" class="crearVentaTest" classname="crearVentaTest" assertions="3" time="0.065573"/>
+        <testcase name="testCrearVentaSinCliente" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="247" class="crearVentaTest" classname="crearVentaTest" assertions="2" time="0.055633"/>
+        <testcase name="testCrearVentaConDescuentoMayorAlTotal" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="280" class="crearVentaTest" classname="crearVentaTest" assertions="3" time="0.067077"/>
+        <testcase name="testCrearVentaConMonedaInvalida" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="323" class="crearVentaTest" classname="crearVentaTest" assertions="3" time="0.103252"/>
+        <testcase name="testValidacionClienteActivoEnModelo" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="366" class="crearVentaTest" classname="crearVentaTest" assertions="2" time="0.007141">
+          <skipped/>
+        </testcase>
+        <testcase name="testValidacionProductoExistenteEnModelo" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="416" class="crearVentaTest" classname="crearVentaTest" assertions="3" time="0.104258">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">crearVentaTest::testValidacionProductoExistenteEnModelo&#13;
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php:448</failure>
+        </testcase>
+        <testcase name="testValidacionCantidadYPrecioEnModelo" file="C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php" line="460" class="crearVentaTest" classname="crearVentaTest" assertions="4" time="0.109892">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">crearVentaTest::testValidacionCantidadYPrecioEnModelo&#13;
+Failed asserting that 'error al registrar venta: el producto en el detalle #1 no tiene id válido' [UTF-8](length: 74) contains "cantidad" [ASCII](length: 8).
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\crearVentaTest.php:493</failure>
+        </testcase>
+      </testsuite>
+      <testsuite name="editarVentaTest" file="C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php" tests="7" assertions="20" errors="0" failures="5" skipped="1" time="0.664445">
+        <testcase name="testEditarVentaExitosa" file="C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php" line="26" class="editarVentaTest" classname="editarVentaTest" assertions="4" time="0.122232">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">editarVentaTest::testEditarVentaExitosa&#13;
+No se pudo crear la venta original: Error al registrar venta: El producto en el detalle #1 no tiene ID válido
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php:64</failure>
+        </testcase>
+        <testcase name="testEditarVentaConClienteInactivo" file="C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php" line="101" class="editarVentaTest" classname="editarVentaTest" assertions="2" time="0.044466">
+          <skipped/>
+        </testcase>
+        <testcase name="testEditarVentaConProductoInexistente" file="C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php" line="153" class="editarVentaTest" classname="editarVentaTest" assertions="3" time="0.062547">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">editarVentaTest::testEditarVentaConProductoInexistente&#13;
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php:187</failure>
+        </testcase>
+        <testcase name="testEditarVentaConCantidadNegativa" file="C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php" line="203" class="editarVentaTest" classname="editarVentaTest" assertions="3" time="0.109672">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">editarVentaTest::testEditarVentaConCantidadNegativa&#13;
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php:237</failure>
+        </testcase>
+        <testcase name="testEditarVentaConPrecioNegativo" file="C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php" line="253" class="editarVentaTest" classname="editarVentaTest" assertions="3" time="0.138895">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">editarVentaTest::testEditarVentaConPrecioNegativo&#13;
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php:287</failure>
+        </testcase>
+        <testcase name="testEditarVentaInexistente" file="C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php" line="303" class="editarVentaTest" classname="editarVentaTest" assertions="2" time="0.043488"/>
+        <testcase name="testEditarVentaSinDetalles" file="C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php" line="312" class="editarVentaTest" classname="editarVentaTest" assertions="3" time="0.143145">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">editarVentaTest::testEditarVentaSinDetalles&#13;
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\editarVentaTest.php:346</failure>
+        </testcase>
+      </testsuite>
+      <testsuite name="eliminarVentaTest" file="C:\xampp\htdocs\project\tests\Ventas\eliminarVentaTest.php" tests="3" assertions="10" errors="0" failures="2" skipped="0" time="0.232853">
+        <testcase name="testEliminarVentaExitosa" file="C:\xampp\htdocs\project\tests\Ventas\eliminarVentaTest.php" line="27" class="eliminarVentaTest" classname="eliminarVentaTest" assertions="4" time="0.080973">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">eliminarVentaTest::testEliminarVentaExitosa&#13;
+La inserción inicial de la venta falló: Error al registrar venta: El producto en el detalle #1 no tiene ID válido
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\eliminarVentaTest.php:62</failure>
+        </testcase>
+        <testcase name="testNoSePuedeEliminarVentaSiNoEstaEnBorrador" file="C:\xampp\htdocs\project\tests\Ventas\eliminarVentaTest.php" line="72" class="eliminarVentaTest" classname="eliminarVentaTest" assertions="3" time="0.139001">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">eliminarVentaTest::testNoSePuedeEliminarVentaSiNoEstaEnBorrador&#13;
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\Ventas\eliminarVentaTest.php:106</failure>
+        </testcase>
+        <testcase name="testEliminarVentaInexistente" file="C:\xampp\htdocs\project\tests\Ventas\eliminarVentaTest.php" line="128" class="eliminarVentaTest" classname="eliminarVentaTest" assertions="3" time="0.012879">
+          <system-out>Error esperado al eliminar venta inexistente: No se pudo desactivar la venta</system-out>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestRomanaPesajeExitoso" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php" tests="7" assertions="0" errors="7" failures="0" skipped="0" time="0.000000">
+        <testcase name="testRegistrarPesajeExitoso" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php" line="20" class="TestRomanaPesajeExitoso" classname="TestRomanaPesajeExitoso" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeExitoso::testRegistrarPesajeExitoso&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php:18</error>
+        </testcase>
+        <testcase name="testRegistrarPesajeConPesoDecimal" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php" line="35" class="TestRomanaPesajeExitoso" classname="TestRomanaPesajeExitoso" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeExitoso::testRegistrarPesajeConPesoDecimal&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php:18</error>
+        </testcase>
+        <testcase name="testConsultarTodosPesajes" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php" line="49" class="TestRomanaPesajeExitoso" classname="TestRomanaPesajeExitoso" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeExitoso::testConsultarTodosPesajes&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php:18</error>
+        </testcase>
+        <testcase name="testConsultarPesajePorId" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php" line="54" class="TestRomanaPesajeExitoso" classname="TestRomanaPesajeExitoso" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeExitoso::testConsultarPesajePorId&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php:18</error>
+        </testcase>
+        <testcase name="testConsultarPesajesPorLote" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php" line="66" class="TestRomanaPesajeExitoso" classname="TestRomanaPesajeExitoso" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeExitoso::testConsultarPesajesPorLote&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php:18</error>
+        </testcase>
+        <testcase name="testCalcularPesoTotal" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php" line="76" class="TestRomanaPesajeExitoso" classname="TestRomanaPesajeExitoso" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeExitoso::testCalcularPesoTotal&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php:18</error>
+        </testcase>
+        <testcase name="testCalcularPromedioPeso" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php" line="87" class="TestRomanaPesajeExitoso" classname="TestRomanaPesajeExitoso" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeExitoso::testCalcularPromedioPeso&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeExitoso.php:18</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestRomanaPesajeFallido" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php" tests="7" assertions="0" errors="7" failures="0" skipped="0" time="0.000000">
+        <testcase name="testRegistrarPesajeSinPeso" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php" line="20" class="TestRomanaPesajeFallido" classname="TestRomanaPesajeFallido" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeFallido::testRegistrarPesajeSinPeso&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php:18</error>
+        </testcase>
+        <testcase name="testRegistrarPesajeConPesoNegativo" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php" line="39" class="TestRomanaPesajeFallido" classname="TestRomanaPesajeFallido" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeFallido::testRegistrarPesajeConPesoNegativo&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php:18</error>
+        </testcase>
+        <testcase name="testRegistrarPesajeConPesoCero" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php" line="53" class="TestRomanaPesajeFallido" classname="TestRomanaPesajeFallido" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeFallido::testRegistrarPesajeConPesoCero&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php:18</error>
+        </testcase>
+        <testcase name="testRegistrarPesajeSinLote" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php" line="67" class="TestRomanaPesajeFallido" classname="TestRomanaPesajeFallido" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeFallido::testRegistrarPesajeSinLote&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php:18</error>
+        </testcase>
+        <testcase name="testRegistrarPesajeConLoteInexistente" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php" line="85" class="TestRomanaPesajeFallido" classname="TestRomanaPesajeFallido" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeFallido::testRegistrarPesajeConLoteInexistente&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php:18</error>
+        </testcase>
+        <testcase name="testRegistrarPesajeConPesoExcesivo" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php" line="104" class="TestRomanaPesajeFallido" classname="TestRomanaPesajeFallido" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeFallido::testRegistrarPesajeConPesoExcesivo&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php:18</error>
+        </testcase>
+        <testcase name="testConsultarPesajeInexistente" file="C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php" line="118" class="TestRomanaPesajeFallido" classname="TestRomanaPesajeFallido" assertions="0" time="0.000000">
+          <error type="Error">TestRomanaPesajeFallido::testConsultarPesajeInexistente&#13;
+Error: Class "Mysql" not found
+&#13;
+C:\xampp\htdocs\project\app\Models\RomanaModel.php:5
+C:\xampp\htdocs\project\tests\Romana\TestRomanaPesajeFallido.php:18</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestConfiguracionProduccion" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" tests="9" assertions="22" errors="0" failures="0" skipped="0" time="0.360061">
+        <testcase name="testSelectConfiguracionProduccion" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="21" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="3" time="0.009070"/>
+        <testcase name="testUpdateConfiguracionConDatosVacios" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="28" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="1" time="0.041053"/>
+        <testcase name="testUpdateConfiguracionConValoresNegativos" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="38" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="2" time="0.030643"/>
+        <testcase name="testUpdateConfiguracionConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="56" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="2" time="0.030856"/>
+        <testcase name="testSelectEmpleadosActivos" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="72" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="3" time="0.031701"/>
+        <testcase name="testSelectProductosTodos" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="79" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="3" time="0.067075"/>
+        <testcase name="testSelectProductosPorClasificar" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="86" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="3" time="0.041807"/>
+        <testcase name="testSelectProductosClasificados" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="93" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="3" time="0.059575"/>
+        <testcase name="testSelectProductosConTipoInvalido" file="C:\xampp\htdocs\project\tests\Produccion\TestConfiguracionProduccion.php" line="100" class="TestConfiguracionProduccion" classname="TestConfiguracionProduccion" assertions="2" time="0.048280"/>
+      </testsuite>
+      <testsuite name="TestLotesGestion" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" tests="13" assertions="33" errors="0" failures="0" skipped="0" time="0.318202">
+        <testcase name="testSelectAllLotesRetornaArray" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="21" class="TestLotesGestion" classname="TestLotesGestion" assertions="3" time="0.068249"/>
+        <testcase name="testSelectLoteByIdConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="28" class="TestLotesGestion" classname="TestLotesGestion" assertions="1" time="0.042964"/>
+        <testcase name="testInsertarLoteSinSupervisor" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="33" class="TestLotesGestion" classname="TestLotesGestion" assertions="3" time="0.001308"/>
+        <testcase name="testInsertarLoteConVolumenCero" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="45" class="TestLotesGestion" classname="TestLotesGestion" assertions="3" time="0.003449"/>
+        <testcase name="testInsertarLoteConVolumenNegativo" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="58" class="TestLotesGestion" classname="TestLotesGestion" assertions="2" time="0.000793"/>
+        <testcase name="testInsertarLoteSinFechaJornada" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="69" class="TestLotesGestion" classname="TestLotesGestion" assertions="3" time="0.000785"/>
+        <testcase name="testInsertarLoteConFechaInvalida" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="80" class="TestLotesGestion" classname="TestLotesGestion" assertions="3" time="0.003140"/>
+        <testcase name="testInsertarLoteConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="92" class="TestLotesGestion" classname="TestLotesGestion" assertions="5" time="0.030774"/>
+        <testcase name="testIniciarLoteConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="109" class="TestLotesGestion" classname="TestLotesGestion" assertions="2" time="0.035429"/>
+        <testcase name="testCerrarLoteConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="115" class="TestLotesGestion" classname="TestLotesGestion" assertions="2" time="0.032273"/>
+        <testcase name="testActualizarLoteConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="121" class="TestLotesGestion" classname="TestLotesGestion" assertions="2" time="0.030364"/>
+        <testcase name="testEliminarLoteConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="131" class="TestLotesGestion" classname="TestLotesGestion" assertions="2" time="0.032192"/>
+        <testcase name="testInsertarLoteConSupervisorInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestLotesGestion.php" line="137" class="TestLotesGestion" classname="TestLotesGestion" assertions="2" time="0.036483"/>
+      </testsuite>
+      <testsuite name="TestNominaYSalarios" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" tests="17" assertions="36" errors="0" failures="0" skipped="0" time="0.257528">
+        <testcase name="testRegistrarSolicitudPagoSinRegistros" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="21" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="3" time="0.065437"/>
+        <testcase name="testRegistrarSolicitudPagoConRegistrosInexistentes" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="31" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.020638"/>
+        <testcase name="testSelectPreciosProceso" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="38" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="3" time="0.032150"/>
+        <testcase name="testCreatePrecioProcesoSinTipo" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="45" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.007655"/>
+        <testcase name="testCreatePrecioProcesoSinProducto" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="57" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.023679"/>
+        <testcase name="testCreatePrecioProcesoSinSalario" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="69" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.042758"/>
+        <testcase name="testCreatePrecioProcesoConSalarioNegativo" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="80" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.002955"/>
+        <testcase name="testCreatePrecioProcesoConSalarioCero" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="92" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.002772"/>
+        <testcase name="testCreatePrecioProcesoConTipoInvalido" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="104" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.003047"/>
+        <testcase name="testCreatePrecioProcesoConProductoInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="117" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.005724"/>
+        <testcase name="testCreatePrecioProcesoClasificacionConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="131" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.017257"/>
+        <testcase name="testCreatePrecioProcesoEmpaqueConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="144" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.004540"/>
+        <testcase name="testUpdatePrecioProcesoConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="157" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.002593"/>
+        <testcase name="testUpdatePrecioProcesoSinCambios" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="168" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.020739"/>
+        <testcase name="testDeletePrecioProcesoConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="175" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.002284"/>
+        <testcase name="testMarcarRegistroComoPagadoConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="183" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.001758"/>
+        <testcase name="testCancelarRegistroConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestNominaYSalarios.php" line="189" class="TestNominaYSalarios" classname="TestNominaYSalarios" assertions="2" time="0.001540"/>
+      </testsuite>
+      <testsuite name="TestProduccionCierreLote" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCierreLote.php" tests="5" assertions="11" errors="0" failures="0" skipped="0" time="0.228560">
+        <testcase name="testCerrarLoteEnProceso" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCierreLote.php" line="20" class="TestProduccionCierreLote" classname="TestProduccionCierreLote" assertions="3" time="0.011541"/>
+        <testcase name="testVerificarEstadoTrasCierre" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCierreLote.php" line="39" class="TestProduccionCierreLote" classname="TestProduccionCierreLote" assertions="2" time="0.045049"/>
+        <testcase name="testCerrarLoteInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCierreLote.php" line="63" class="TestProduccionCierreLote" classname="TestProduccionCierreLote" assertions="2" time="0.002293"/>
+        <testcase name="testCerrarLoteYaCerrado" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCierreLote.php" line="73" class="TestProduccionCierreLote" classname="TestProduccionCierreLote" assertions="2" time="0.121560"/>
+        <testcase name="testCerrarLoteSinIniciar" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCierreLote.php" line="98" class="TestProduccionCierreLote" classname="TestProduccionCierreLote" assertions="2" time="0.048116"/>
+      </testsuite>
+      <testsuite name="TestProduccionCreacionLote" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" tests="9" assertions="21" errors="0" failures="0" skipped="0" time="0.158716">
+        <testcase name="testCrearLoteConDatosCompletos" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="22" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="5" time="0.052122"/>
+        <testcase name="testGeneracionNumeroLoteUnico" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="39" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.058059"/>
+        <testcase name="testCrearLoteSinSupervisor" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="60" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="3" time="0.000830"/>
+        <testcase name="testCrearLoteConVolumenCero" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="72" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="3" time="0.000762"/>
+        <testcase name="testCrearLoteConVolumenNegativo" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="85" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="2" time="0.000598"/>
+        <testcase name="testCrearLoteSinFechaJornada" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="96" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="3" time="0.001346"/>
+        <testcase name="testCrearLoteConFechaInvalida" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="108" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="2" time="0.000800"/>
+        <testcase name="testCrearLoteExcedeCapacidadMaxima" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="120" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.024892"/>
+        <testcase name="testCrearLoteConSupervisorInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionCreacionLote.php" line="136" class="TestProduccionCreacionLote" classname="TestProduccionCreacionLote" assertions="1" time="0.019307"/>
+      </testsuite>
+      <testsuite name="TestProduccionInicioLote" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionInicioLote.php" tests="4" assertions="8" errors="0" failures="0" skipped="0" time="0.224917">
+        <testcase name="testIniciarLotePlanificado" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionInicioLote.php" line="21" class="TestProduccionInicioLote" classname="TestProduccionInicioLote" assertions="3" time="0.025318"/>
+        <testcase name="testVerificarEstadoTrasInicio" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionInicioLote.php" line="39" class="TestProduccionInicioLote" classname="TestProduccionInicioLote" assertions="2" time="0.090855"/>
+        <testcase name="testIniciarLoteInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionInicioLote.php" line="62" class="TestProduccionInicioLote" classname="TestProduccionInicioLote" assertions="2" time="0.031120"/>
+        <testcase name="testIniciarLoteYaIniciado" file="C:\xampp\htdocs\project\tests\Produccion\TestProduccionInicioLote.php" line="72" class="TestProduccionInicioLote" classname="TestProduccionInicioLote" assertions="1" time="0.077624"/>
+      </testsuite>
+      <testsuite name="TestRegistrosProduccion" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" tests="13" assertions="27" errors="0" failures="0" skipped="0" time="0.291616">
+        <testcase name="testInsertarRegistroSinIdLote" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="21" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="2" time="0.061050"/>
+        <testcase name="testInsertarRegistroConLoteInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="42" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="3" time="0.017219"/>
+        <testcase name="testInsertarRegistroConEmpleadoInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="60" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="2" time="0.032775"/>
+        <testcase name="testInsertarRegistroConCantidadNegativa" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="76" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="1" time="0.009380"/>
+        <testcase name="testInsertarRegistroSinFechaJornada" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="94" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="1" time="0.006065"/>
+        <testcase name="testInsertarRegistroSinTipoMovimiento" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="112" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="1" time="0.026272"/>
+        <testcase name="testObtenerRegistrosPorLoteConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="130" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="4" time="0.032885"/>
+        <testcase name="testSelectAllRegistrosProduccion" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="140" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="3" time="0.003109"/>
+        <testcase name="testSelectAllRegistrosConFiltroFechas" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="147" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="2" time="0.002391"/>
+        <testcase name="testSelectAllRegistrosConFiltroTipoMovimiento" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="157" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="2" time="0.023021"/>
+        <testcase name="testActualizarRegistroConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="166" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="2" time="0.031635"/>
+        <testcase name="testEliminarRegistroConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="181" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="2" time="0.031185"/>
+        <testcase name="testGetRegistroByIdConIdInexistente" file="C:\xampp\htdocs\project\tests\Produccion\TestRegistrosProduccion.php" line="187" class="TestRegistrosProduccion" classname="TestRegistrosProduccion" assertions="2" time="0.014630"/>
+      </testsuite>
+      <testsuite name="TestMovimientosInsert" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosInsert.php" tests="6" assertions="12" errors="0" failures="0" skipped="0" time="0.025246">
+        <testcase name="testInsertMovimientoEntradaConDatosCompletos" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosInsert.php" line="20" class="TestMovimientosInsert" classname="TestMovimientosInsert" assertions="2" time="0.017260"/>
+        <testcase name="testInsertMovimientoAjusteInventario" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosInsert.php" line="38" class="TestMovimientosInsert" classname="TestMovimientosInsert" assertions="2" time="0.003388"/>
+        <testcase name="testInsertMovimientoSinProducto" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosInsert.php" line="52" class="TestMovimientosInsert" classname="TestMovimientosInsert" assertions="2" time="0.001332"/>
+        <testcase name="testInsertMovimientoConCantidadNegativa" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosInsert.php" line="67" class="TestMovimientosInsert" classname="TestMovimientosInsert" assertions="2" time="0.001296"/>
+        <testcase name="testInsertMovimientoConProductoInexistente" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosInsert.php" line="83" class="TestMovimientosInsert" classname="TestMovimientosInsert" assertions="2" time="0.001030"/>
+        <testcase name="testInsertMovimientoConTipoInvalido" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosInsert.php" line="96" class="TestMovimientosInsert" classname="TestMovimientosInsert" assertions="2" time="0.000940"/>
+      </testsuite>
+      <testsuite name="TestMovimientosModelUnit" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" tests="32" assertions="135" errors="0" failures="0" skipped="0" time="0.259897">
+        <testsuite name="TestMovimientosModelUnit::testUpdateMovimientoSiempreRetornaError" tests="4" assertions="16" errors="0" failures="0" skipped="0" time="0.001339">
+          <testcase name="testUpdateMovimientoSiempreRetornaError with data set &quot;id_valido_datos_completos&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="25" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000389"/>
+          <testcase name="testUpdateMovimientoSiempreRetornaError with data set &quot;id_grande_datos_vacios&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="25" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000370"/>
+          <testcase name="testUpdateMovimientoSiempreRetornaError with data set &quot;id_uno_datos_nulos&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="25" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000288"/>
+          <testcase name="testUpdateMovimientoSiempreRetornaError with data set &quot;id_maximo_datos_complejos&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="25" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000294"/>
+        </testsuite>
+        <testsuite name="TestMovimientosModelUnit::testDeleteMovimientoSiempreRetornaError" tests="3" assertions="12" errors="0" failures="0" skipped="0" time="0.000795">
+          <testcase name="testDeleteMovimientoSiempreRetornaError with data set &quot;id_valido&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="62" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000269"/>
+          <testcase name="testDeleteMovimientoSiempreRetornaError with data set &quot;id_inexistente&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="62" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000266"/>
+          <testcase name="testDeleteMovimientoSiempreRetornaError with data set &quot;id_maximo&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="62" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000259"/>
+        </testsuite>
+        <testcase name="testSelectMovimientoByIdCeroRetornaErrorSinBD" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="83" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000246"/>
+        <testcase name="testAnularMovimientoByIdCeroRetornaErrorSinBD" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="95" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000235"/>
+        <testcase name="testUpdateYDeleteRetornanMensajesConsistentes" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="107" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="3" time="0.000260"/>
+        <testsuite name="TestMovimientosModelUnit::testInsertMovimientoValidacionesFallan" tests="8" assertions="32" errors="0" failures="0" skipped="0" time="0.010339">
+          <testcase name="testInsertMovimientoValidacionesFallan with data set &quot;rama1_sin_producto&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="124" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.002279"/>
+          <testcase name="testInsertMovimientoValidacionesFallan with data set &quot;rama1_producto_nulo&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="124" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.001182"/>
+          <testcase name="testInsertMovimientoValidacionesFallan with data set &quot;rama1_producto_vacio&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="124" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.001167"/>
+          <testcase name="testInsertMovimientoValidacionesFallan with data set &quot;rama2_sin_tipo_movimiento&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="124" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.001212"/>
+          <testcase name="testInsertMovimientoValidacionesFallan with data set &quot;rama2_tipo_nulo&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="124" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.001189"/>
+          <testcase name="testInsertMovimientoValidacionesFallan with data set &quot;rama3_ambas_cantidades_cero&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="124" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.001061"/>
+          <testcase name="testInsertMovimientoValidacionesFallan with data set &quot;rama3_cantidades_negativas&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="124" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.000971"/>
+          <testcase name="testInsertMovimientoValidacionesFallan with data set &quot;rama4_ambas_cantidades_positivas&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="124" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.001277"/>
+        </testsuite>
+        <testcase name="testInsertMovimientoStockDesincronizado" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="234" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="3" time="0.038515"/>
+        <testcase name="testSelectMovimientoByIdInexistente" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="255" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="3" time="0.002504"/>
+        <testsuite name="TestMovimientosModelUnit::testSelectMovimientoByIdConIdsFalsy" tests="1" assertions="3" errors="0" failures="0" skipped="0" time="0.000276">
+          <testcase name="testSelectMovimientoByIdConIdsFalsy with data set &quot;id_cero&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="268" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="3" time="0.000276"/>
+        </testsuite>
+        <testcase name="testSelectAllMovimientosRetornaEstructura" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="285" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="5" time="0.014820"/>
+        <testcase name="testSelectAllMovimientosValidaEstructuraDatos" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="298" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="5" time="0.011294"/>
+        <testsuite name="TestMovimientosModelUnit::testBuscarMovimientosConCriterioVacioDelegaATodos" tests="3" assertions="12" errors="0" failures="0" skipped="0" time="0.054248">
+          <testcase name="testBuscarMovimientosConCriterioVacioDelegaATodos with data set &quot;string_vacio&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="318" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.012765"/>
+          <testcase name="testBuscarMovimientosConCriterioVacioDelegaATodos with data set &quot;solo_espacios&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="318" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.028754"/>
+          <testcase name="testBuscarMovimientosConCriterioVacioDelegaATodos with data set &quot;tab_y_espacios&quot;" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="318" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.012729"/>
+        </testsuite>
+        <testcase name="testBuscarMovimientosConCriterioTexto" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="345" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="3" time="0.014014"/>
+        <testcase name="testGetProductosActivosRetornaEstructura" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="356" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="3" time="0.042191"/>
+        <testcase name="testGetTiposMovimientoActivosRetornaEstructura" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="367" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="3" time="0.027389"/>
+        <testcase name="testGetTiposMovimientoConEstadisticasRetornaEstructura" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="378" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="4" time="0.033703"/>
+        <testcase name="testContratoDeRespuestaMetodosDeshabilitados" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="391" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="14" time="0.001805"/>
+        <testcase name="testContratoDeRespuestaValidacionFallida" file="C:\xampp\htdocs\project\tests\Movimientos\TestMovimientosModelUnit.php" line="413" class="TestMovimientosModelUnit" classname="TestMovimientosModelUnit" assertions="6" time="0.005925"/>
+      </testsuite>
+      <testsuite name="consultarComprasTest" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" tests="10" assertions="12" errors="0" failures="0" skipped="0" time="0.297061">
+        <testcase name="testSelectAllComprasRetornaArray" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="20" class="consultarComprasTest" classname="consultarComprasTest" assertions="1" time="0.047261"/>
+        <testcase name="testGetCompraByIdConIdInexistente" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="26" class="consultarComprasTest" classname="consultarComprasTest" assertions="1" time="0.013715"/>
+        <testcase name="testSelectCompraConIdInexistente" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="33" class="consultarComprasTest" classname="consultarComprasTest" assertions="2" time="0.034150"/>
+        <testcase name="testGetDetalleCompraByIdInexistente" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="41" class="consultarComprasTest" classname="consultarComprasTest" assertions="2" time="0.015774"/>
+        <testcase name="testGetCompraCompletaParaEditarInexistente" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="48" class="consultarComprasTest" classname="consultarComprasTest" assertions="1" time="0.031126"/>
+        <testcase name="testObtenerEstadoCompraInexistente" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="55" class="consultarComprasTest" classname="consultarComprasTest" assertions="1" time="0.029695"/>
+        <testcase name="testGetMonedasActivas" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="61" class="consultarComprasTest" classname="consultarComprasTest" assertions="1" time="0.032040"/>
+        <testcase name="testGetProductosConCategoria" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="67" class="consultarComprasTest" classname="consultarComprasTest" assertions="1" time="0.033959"/>
+        <testcase name="testGetProductoByIdInexistente" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="73" class="consultarComprasTest" classname="consultarComprasTest" assertions="1" time="0.028656"/>
+        <testcase name="testGetProveedorByIdInexistente" file="C:\xampp\htdocs\project\tests\Compra\consultarComprasTest.php" line="79" class="consultarComprasTest" classname="consultarComprasTest" assertions="1" time="0.030685"/>
+      </testsuite>
+      <testsuite name="crearCompraTest" file="C:\xampp\htdocs\project\tests\Compra\crearCompraTest.php" tests="5" assertions="4" errors="0" failures="0" skipped="3" time="0.477273">
+        <testcase name="testCrearCompraExitosa" file="C:\xampp\htdocs\project\tests\Compra\crearCompraTest.php" line="51" class="crearCompraTest" classname="crearCompraTest" assertions="0" time="0.092807">
+          <skipped/>
+        </testcase>
+        <testcase name="testCrearCompraConProveedorInexistente" file="C:\xampp\htdocs\project\tests\Compra\crearCompraTest.php" line="101" class="crearCompraTest" classname="crearCompraTest" assertions="0" time="0.028485">
+          <skipped/>
+        </testcase>
+        <testcase name="testCrearCompraSinDetalles" file="C:\xampp\htdocs\project\tests\Compra\crearCompraTest.php" line="147" class="crearCompraTest" classname="crearCompraTest" assertions="2" time="0.125812"/>
+        <testcase name="testCrearCompraConCantidadCero" file="C:\xampp\htdocs\project\tests\Compra\crearCompraTest.php" line="170" class="crearCompraTest" classname="crearCompraTest" assertions="0" time="0.061584">
+          <skipped/>
+        </testcase>
+        <testcase name="testCrearCompraConProductoInexistente" file="C:\xampp\htdocs\project\tests\Compra\crearCompraTest.php" line="204" class="crearCompraTest" classname="crearCompraTest" assertions="2" time="0.168585"/>
+      </testsuite>
+      <testsuite name="editarCompraTest" file="C:\xampp\htdocs\project\tests\Compra\editarCompraTest.php" tests="2" assertions="0" errors="0" failures="0" skipped="2" time="0.170841">
+        <testcase name="testEditarCompraConProveedorInexistente" file="C:\xampp\htdocs\project\tests\Compra\editarCompraTest.php" line="51" class="editarCompraTest" classname="editarCompraTest" assertions="0" time="0.075968">
+          <skipped/>
+        </testcase>
+        <testcase name="testEditarCompraConProductoInexistente" file="C:\xampp\htdocs\project\tests\Compra\editarCompraTest.php" line="87" class="editarCompraTest" classname="editarCompraTest" assertions="0" time="0.094873">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="eliminarCompraTest" file="C:\xampp\htdocs\project\tests\Compra\eliminarCompraTest.php" tests="1" assertions="2" errors="0" failures="0" skipped="0" time="0.185164">
+        <testcase name="testEliminarCompraConIdInexistente" file="C:\xampp\htdocs\project\tests\Compra\eliminarCompraTest.php" line="52" class="eliminarCompraTest" classname="eliminarCompraTest" assertions="2" time="0.185164"/>
+      </testsuite>
+      <testsuite name="BcvScraperModelTest" file="C:\xampp\htdocs\project\tests\bcv\BcvScraperModelTest.php" tests="2" assertions="12" errors="0" failures="0" skipped="0" time="2.872320">
+        <testcase name="testObtenerTasaDolar" file="C:\xampp\htdocs\project\tests\bcv\BcvScraperModelTest.php" line="15" class="BcvScraperModelTest" classname="BcvScraperModelTest" assertions="6" time="1.451619">
+          <system-out>
+Probando obtener tasa del Dólar (USD)...
+[ÉXITO] Tasa Dólar BCV: 417.3579 (Fecha: 2026-02-27)</system-out>
+        </testcase>
+        <testcase name="testObtenerTasaEuro" file="C:\xampp\htdocs\project\tests\bcv\BcvScraperModelTest.php" line="27" class="BcvScraperModelTest" classname="BcvScraperModelTest" assertions="6" time="1.420700">
+          <system-out>
+Probando obtener tasa del Euro (EUR)...
+[ÉXITO] Tasa Euro BCV: 493.1125 (Fecha: 2026-02-27)</system-out>
+        </testcase>
+      </testsuite>
+      <testsuite name="ExampleTest" file="C:\xampp\htdocs\project\tests\bcv\ExampleTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.000233">
+        <testcase name="testTrueIsTrue" file="C:\xampp\htdocs\project\tests\bcv\ExampleTest.php" line="9" class="ExampleTest" classname="ExampleTest" assertions="1" time="0.000233"/>
+      </testsuite>
+      <testsuite name="TestBitacora" file="C:\xampp\htdocs\project\tests\Bitacora\TestBitacora.php" tests="5" assertions="8" errors="0" failures="0" skipped="0" time="0.175483">
+        <testcase name="testRegistrarAccionEnBitacora" file="C:\xampp\htdocs\project\tests\Bitacora\TestBitacora.php" line="21" class="TestBitacora" classname="TestBitacora" assertions="2" time="0.107259"/>
+        <testcase name="testRegistrarAccionSinUsuario" file="C:\xampp\htdocs\project\tests\Bitacora\TestBitacora.php" line="33" class="TestBitacora" classname="TestBitacora" assertions="1" time="0.006990"/>
+        <testcase name="testRegistrarAccionSinModulo" file="C:\xampp\htdocs\project\tests\Bitacora\TestBitacora.php" line="38" class="TestBitacora" classname="TestBitacora" assertions="1" time="0.030017"/>
+        <testcase name="testConsultarBitacoraPorUsuarioInexistente" file="C:\xampp\htdocs\project\tests\Bitacora\TestBitacora.php" line="43" class="TestBitacora" classname="TestBitacora" assertions="2" time="0.014438"/>
+        <testcase name="testConsultarBitacoraPorModuloInexistente" file="C:\xampp\htdocs\project\tests\Bitacora\TestBitacora.php" line="49" class="TestBitacora" classname="TestBitacora" assertions="2" time="0.016778"/>
+      </testsuite>
+      <testsuite name="TestDashboard" file="C:\xampp\htdocs\project\tests\Dashboard\TestDashboard.php" tests="4" assertions="6" errors="0" failures="0" skipped="0" time="0.073905">
+        <testcase name="testGetUltimasVentasConLimiteCero" file="C:\xampp\htdocs\project\tests\Dashboard\TestDashboard.php" line="20" class="TestDashboard" classname="TestDashboard" assertions="2" time="0.028660"/>
+        <testcase name="testGetUltimasVentasConLimiteNegativo" file="C:\xampp\htdocs\project\tests\Dashboard\TestDashboard.php" line="26" class="TestDashboard" classname="TestDashboard" assertions="1" time="0.002341"/>
+        <testcase name="testGetReporteComprasConFechasInvalidas" file="C:\xampp\htdocs\project\tests\Dashboard\TestDashboard.php" line="31" class="TestDashboard" classname="TestDashboard" assertions="1" time="0.026649"/>
+        <testcase name="testGetEficienciaEmpleadosConEmpleadoInexistente" file="C:\xampp\htdocs\project\tests\Dashboard\TestDashboard.php" line="36" class="TestDashboard" classname="TestDashboard" assertions="2" time="0.016255"/>
+      </testsuite>
+      <testsuite name="RolesIntegradoTest" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" tests="3" assertions="4" errors="0" failures="0" skipped="1" time="0.081662">
+        <testcase name="testGuardarYRecuperarAsignaciones" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="20" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="0" time="0.044296">
+          <skipped/>
+        </testcase>
+        <testcase name="testGuardarAsignacionesConRolInvalido" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="66" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="2" time="0.001988"/>
+        <testcase name="testGuardarAsignacionesConModuloInvalido" file="C:\xampp\htdocs\project\tests\Roles\RolesIntegradoTest.php" line="82" class="RolesIntegradoTest" classname="RolesIntegradoTest" assertions="2" time="0.035378"/>
+      </testsuite>
+      <testsuite name="TestRoles" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" tests="8" assertions="8" errors="5" failures="2" skipped="0" time="0.271030">
+        <testcase name="testInsertRolConDatosCompletos" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" line="20" class="TestRoles" classname="TestRoles" assertions="4" time="0.073132"/>
+        <testcase name="testSelectRolByIdExistente" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" line="35" class="TestRoles" classname="TestRoles" assertions="0" time="0.000720">
+          <error type="Error">TestRoles::testSelectRolByIdExistente&#13;
+Error: Call to undefined method App\Models\RolesModel::getAllRoles()
+&#13;
+C:\xampp\htdocs\project\tests\Roles\TestRoles.php:37</error>
+        </testcase>
+        <testcase name="testObtenerPermisosPorRol" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" line="46" class="TestRoles" classname="TestRoles" assertions="0" time="0.000618">
+          <error type="Error">TestRoles::testObtenerPermisosPorRol&#13;
+Error: Call to undefined method App\Models\RolesModel::getPermisosByRol()
+&#13;
+C:\xampp\htdocs\project\tests\Roles\TestRoles.php:48</error>
+        </testcase>
+        <testcase name="testInsertRolSinNombre" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" line="51" class="TestRoles" classname="TestRoles" assertions="2" time="0.064427">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestRoles::testInsertRolSinNombre&#13;
+Failed asserting that true is false.
+&#13;
+C:\xampp\htdocs\project\tests\Roles\TestRoles.php:60</failure>
+        </testcase>
+        <testcase name="testInsertRolDuplicado" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" line="62" class="TestRoles" classname="TestRoles" assertions="2" time="0.124568">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestRoles::testInsertRolDuplicado&#13;
+Failed asserting that true is false.
+&#13;
+C:\xampp\htdocs\project\tests\Roles\TestRoles.php:73</failure>
+        </testcase>
+        <testcase name="testSelectRolByIdInexistente" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" line="75" class="TestRoles" classname="TestRoles" assertions="0" time="0.002537">
+          <error type="Error">TestRoles::testSelectRolByIdInexistente&#13;
+Error: Call to undefined method App\Models\RolesModel::getRolById()
+&#13;
+C:\xampp\htdocs\project\tests\Roles\TestRoles.php:77</error>
+        </testcase>
+        <testcase name="testAsignarPermisoConRolInexistente" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" line="80" class="TestRoles" classname="TestRoles" assertions="0" time="0.002515">
+          <error type="Error">TestRoles::testAsignarPermisoConRolInexistente&#13;
+Error: Call to undefined method App\Models\RolesModel::asignarPermiso()
+&#13;
+C:\xampp\htdocs\project\tests\Roles\TestRoles.php:90</error>
+        </testcase>
+        <testcase name="testObtenerPermisosPorRolInexistente" file="C:\xampp\htdocs\project\tests\Roles\TestRoles.php" line="93" class="TestRoles" classname="TestRoles" assertions="0" time="0.002512">
+          <error type="Error">TestRoles::testObtenerPermisosPorRolInexistente&#13;
+Error: Call to undefined method App\Models\RolesModel::getPermisosByRol()
+&#13;
+C:\xampp\htdocs\project\tests\Roles\TestRoles.php:95</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="TestSueldosInsert" file="C:\xampp\htdocs\project\tests\Sueldos\TestSueldosInsert.php" tests="5" assertions="13" errors="0" failures="0" skipped="0" time="0.165363">
+        <testcase name="testInsertSueldoConDatosCompletos" file="C:\xampp\htdocs\project\tests\Sueldos\TestSueldosInsert.php" line="20" class="TestSueldosInsert" classname="TestSueldosInsert" assertions="4" time="0.066293"/>
+        <testcase name="testInsertSueldoSinEmpleado" file="C:\xampp\htdocs\project\tests\Sueldos\TestSueldosInsert.php" line="44" class="TestSueldosInsert" classname="TestSueldosInsert" assertions="2" time="0.045976"/>
+        <testcase name="testInsertSueldoConEmpleadoInexistente" file="C:\xampp\htdocs\project\tests\Sueldos\TestSueldosInsert.php" line="66" class="TestSueldosInsert" classname="TestSueldosInsert" assertions="3" time="0.015075"/>
+        <testcase name="testInsertSueldoConMontoNegativo" file="C:\xampp\htdocs\project\tests\Sueldos\TestSueldosInsert.php" line="87" class="TestSueldosInsert" classname="TestSueldosInsert" assertions="2" time="0.029589"/>
+        <testcase name="testInsertSueldoDuplicadoMismoPeriodo" file="C:\xampp\htdocs\project\tests\Sueldos\TestSueldosInsert.php" line="108" class="TestSueldosInsert" classname="TestSueldosInsert" assertions="2" time="0.008431"/>
+      </testsuite>
+      <testsuite name="TestPagosInsert" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosInsert.php" tests="4" assertions="9" errors="1" failures="0" skipped="0" time="0.130196">
+        <testcase name="testInsertPagoConDatosCompletos" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosInsert.php" line="20" class="TestPagosInsert" classname="TestPagosInsert" assertions="5" time="0.053591"/>
+        <testcase name="testInsertPagoSinMonto" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosInsert.php" line="49" class="TestPagosInsert" classname="TestPagosInsert" assertions="0" time="0.030328">
+          <error type="PDOException">TestPagosInsert::testInsertPagoSinMonto&#13;
+PDOException: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'monto' cannot be null
+&#13;
+C:\xampp\htdocs\project\app\Models\PagosModel.php:144
+C:\xampp\htdocs\project\app\Models\PagosModel.php:984
+C:\xampp\htdocs\project\tests\Pagos\TestPagosInsert.php:62</error>
+        </testcase>
+        <testcase name="testInsertPagoConMontoNegativo" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosInsert.php" line="72" class="TestPagosInsert" classname="TestPagosInsert" assertions="2" time="0.004203"/>
+        <testcase name="testInsertPagoConCompraInexistente" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosInsert.php" line="96" class="TestPagosInsert" classname="TestPagosInsert" assertions="2" time="0.042074"/>
+      </testsuite>
+      <testsuite name="TestPagosSelect" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php" tests="7" assertions="4" errors="0" failures="2" skipped="4" time="0.413955">
+        <testcase name="testSelectAllPagosRetornaArray" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php" line="20" class="TestPagosSelect" classname="TestPagosSelect" assertions="1" time="0.078143"/>
+        <testcase name="testSelectPagosPorCompraRetornaArray" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php" line="25" class="TestPagosSelect" classname="TestPagosSelect" assertions="0" time="0.041667">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectPagosPorFechaRetornaArray" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php" line="29" class="TestPagosSelect" classname="TestPagosSelect" assertions="0" time="0.031328">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectPagoByIdExistente" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php" line="33" class="TestPagosSelect" classname="TestPagosSelect" assertions="2" time="0.113451">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestPagosSelect::testSelectPagoByIdExistente&#13;
+Failed asserting that null matches expected 57.
+&#13;
+C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php:43</failure>
+        </testcase>
+        <testcase name="testSelectPagoByIdInexistente" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php" line="45" class="TestPagosSelect" classname="TestPagosSelect" assertions="1" time="0.077599">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">TestPagosSelect::testSelectPagoByIdInexistente&#13;
+Failed asserting that Array &amp;0 [
+    'status' =&gt; false,
+    'message' =&gt; 'Pago no encontrado',
+] is false.
+&#13;
+C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php:48</failure>
+        </testcase>
+        <testcase name="testSelectPagosPorCompraInexistente" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php" line="50" class="TestPagosSelect" classname="TestPagosSelect" assertions="0" time="0.041095">
+          <skipped/>
+        </testcase>
+        <testcase name="testSelectPagosPorFechaInvalida" file="C:\xampp\htdocs\project\tests\Pagos\TestPagosSelect.php" line="54" class="TestPagosSelect" classname="TestPagosSelect" assertions="0" time="0.030671">
+          <skipped/>
+        </testcase>
+      </testsuite>
+      <testsuite name="CompraFlowIntegrationTest" file="C:\xampp\htdocs\project\tests\integracion\CompraFlowIntegrationTest.php" tests="2" assertions="1" errors="1" failures="1" skipped="0" time="0.247132">
+        <testcase name="testFlujoCompletoCompraConPagos" file="C:\xampp\htdocs\project\tests\integracion\CompraFlowIntegrationTest.php" line="36" class="CompraFlowIntegrationTest" classname="CompraFlowIntegrationTest" assertions="1" time="0.141840">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">CompraFlowIntegrationTest::testFlujoCompletoCompraConPagos&#13;
+Fallo al crear producto
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\integracion\CompraFlowIntegrationTest.php:48</failure>
+        </testcase>
+        <testcase name="testEditarCompraExistente" file="C:\xampp\htdocs\project\tests\integracion\CompraFlowIntegrationTest.php" line="149" class="CompraFlowIntegrationTest" classname="CompraFlowIntegrationTest" assertions="0" time="0.105292">
+          <error type="TypeError">CompraFlowIntegrationTest::testEditarCompraExistente&#13;
+TypeError: App\Models\ProductosModel::selectProductoById(): Argument #1 ($idproducto) must be of type int, null given, called in C:\xampp\htdocs\project\tests\integracion\CompraFlowIntegrationTest.php on line 153
+&#13;
+C:\xampp\htdocs\project\app\Models\ProductosModel.php:680
+C:\xampp\htdocs\project\tests\integracion\CompraFlowIntegrationTest.php:153</error>
+        </testcase>
+      </testsuite>
+      <testsuite name="ProduccionFlowIntegrationTest" file="C:\xampp\htdocs\project\tests\integracion\ProduccionFlowIntegrationTest.php" tests="3" assertions="23" errors="0" failures="0" skipped="0" time="0.414903">
+        <testcase name="testFlujoCompletoProduccionLote" file="C:\xampp\htdocs\project\tests\integracion\ProduccionFlowIntegrationTest.php" line="32" class="ProduccionFlowIntegrationTest" classname="ProduccionFlowIntegrationTest" assertions="16" time="0.392010"/>
+        <testcase name="testCrearMultiplesLotesMismaFecha" file="C:\xampp\htdocs\project\tests\integracion\ProduccionFlowIntegrationTest.php" line="122" class="ProduccionFlowIntegrationTest" classname="ProduccionFlowIntegrationTest" assertions="4" time="0.011443"/>
+        <testcase name="testValidacionesNegocioProduccion" file="C:\xampp\htdocs\project\tests\integracion\ProduccionFlowIntegrationTest.php" line="147" class="ProduccionFlowIntegrationTest" classname="ProduccionFlowIntegrationTest" assertions="3" time="0.011451"/>
+      </testsuite>
+      <testsuite name="VentaFlowIntegrationTest" file="C:\xampp\htdocs\project\tests\integracion\VentaFlowIntegrationTest.php" tests="2" assertions="2" errors="0" failures="2" skipped="0" time="0.023756">
+        <testcase name="testFlujoCompletoVentaConPagos" file="C:\xampp\htdocs\project\tests\integracion\VentaFlowIntegrationTest.php" line="36" class="VentaFlowIntegrationTest" classname="VentaFlowIntegrationTest" assertions="1" time="0.010836">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">VentaFlowIntegrationTest::testFlujoCompletoVentaConPagos&#13;
+Fallo al crear producto
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\integracion\VentaFlowIntegrationTest.php:71</failure>
+        </testcase>
+        <testcase name="testVentaConDescuentoMultiplesProductos" file="C:\xampp\htdocs\project\tests\integracion\VentaFlowIntegrationTest.php" line="151" class="VentaFlowIntegrationTest" classname="VentaFlowIntegrationTest" assertions="1" time="0.012920">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">VentaFlowIntegrationTest::testVentaConDescuentoMultiplesProductos&#13;
+Fallo al crear productos
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\project\tests\integracion\VentaFlowIntegrationTest.php:191</failure>
+        </testcase>
+      </testsuite>
+    </testsuite>
   </testsuite>
 </testsuites>

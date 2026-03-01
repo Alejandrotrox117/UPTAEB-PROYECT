@@ -1,8 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
 use App\Models\EmpleadosModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestEmpleadoDelete extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private function showMessage(string $msg): void
     {
@@ -10,6 +14,7 @@ class TestEmpleadoDelete extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new EmpleadosModel();
     }
     public function testEliminarEmpleadoExistente()

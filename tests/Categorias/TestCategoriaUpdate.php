@@ -1,8 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
 use App\Models\CategoriasModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestCategoriaUpdate extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private $categoriaIdPrueba;
     private function showMessage(string $msg): void
@@ -11,6 +15,7 @@ class TestCategoriaUpdate extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new categoriasModel();
         $data = [
             'nombre' => 'Categoría Update Test ' . time(),

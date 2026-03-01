@@ -4,8 +4,12 @@ use App\Models\ComprasModel;
 use App\Models\ProductosModel;
 use App\Models\ProveedoresModel;
 
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class eliminarCompraTest extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $comprasModel;
     private $productosModel;
     private $proveedoresModel;
@@ -19,6 +23,7 @@ class eliminarCompraTest extends TestCase
     
     public function setUp(): void
     {
+        $this->requireDatabase();
         $this->comprasModel = new ComprasModel();
         $this->productosModel = new ProductosModel();
         $this->proveedoresModel = new ProveedoresModel();

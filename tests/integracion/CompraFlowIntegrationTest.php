@@ -5,8 +5,12 @@ use App\Models\ProductosModel;
 use App\Models\ProveedoresModel;
 use App\Models\PagosModel;
 
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class CompraFlowIntegrationTest extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $comprasModel;
     private $productosModel;
     private $proveedoresModel;
@@ -22,6 +26,7 @@ class CompraFlowIntegrationTest extends TestCase
     
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->comprasModel = new ComprasModel();
         $this->productosModel = new ProductosModel();
         $this->proveedoresModel = new ProveedoresModel();

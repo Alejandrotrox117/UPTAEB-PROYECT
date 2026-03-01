@@ -1,8 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
 use App\Models\ProveedoresModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestProveedorInsert extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private function showMessage(string $msg)
     {
@@ -10,6 +14,7 @@ class TestProveedorInsert extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new ProveedoresModel();
     }
     public function testInsertProveedorConDatosCompletos()

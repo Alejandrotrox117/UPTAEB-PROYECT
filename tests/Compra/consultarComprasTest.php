@@ -2,13 +2,18 @@
 use PHPUnit\Framework\TestCase;
 use App\Models\ComprasModel;
 
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class consultarComprasTest extends TestCase{
+    use \Tests\Traits\RequiresDatabase;
+
 	private $compras;
 	private function showMessage(string $msg): void
 	{
 		fwrite(STDOUT, "\n[MODEL MESSAGE] " . $msg . "\n");
 	}
 	public function setUp():void{
+        $this->requireDatabase();
 		$this->compras = new ComprasModel();
 	}
 

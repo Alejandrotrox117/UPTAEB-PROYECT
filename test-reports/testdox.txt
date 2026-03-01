@@ -1,4 +1,474 @@
+Bcv Scraper Model
+ [x] Obtener tasa dolar
+ [x] Obtener tasa euro
+
+Bitacora
+ [x] Registrar accion en bitacora
+ [x] Registrar accion sin usuario
+ [x] Registrar accion sin modulo
+ [x] Consultar bitacora por usuario inexistente
+ [x] Consultar bitacora por modulo inexistente
+
+Categoria Model Unit
+ [x] Select all categorias retorna datos en exito
+ [x] Select all categorias retorna array vacio cuando no hay datos
+ [x] Select all categorias retorna array vacio en excepcion
+ [x] Insert categoria con datos validos with data set "estatus_minusculas"
+ [x] Insert categoria con datos validos with data set "estatus_mayusculas"
+ [x] Insert categoria con datos validos with data set "estatus_mixto"
+ [x] Insert categoria con datos validos with data set "estatus_inactivo"
+ [x] Insert categoria con datos validos with data set "descripcion_larga"
+ [x] Insert categoria con datos validos with data set "caracteres_especiales"
+ [x] Insert categoria retorna false cuando execute falla
+ [x] Insert categoria propaga excepcion p d o
+ [x] Insert categoria con datos incompletos with data set "sin_clave_nombre"
+ [x] Insert categoria con datos incompletos with data set "sin_clave_descripcion"
+ [x] Insert categoria con datos incompletos with data set "sin_clave_estatus"
+ [x] Insert categoria con datos incompletos with data set "array_completamente_vacio"
+ [x] Delete categoria con diferentes resultados with data set "delete_exitoso"
+ [x] Delete categoria con diferentes resultados with data set "delete_id_inexistente_execute_true"
+ [x] Delete categoria con diferentes resultados with data set "delete_execute_falla"
+ [x] Delete categoria retorna false en excepcion
+ [x] Update categoria con diferentes escenarios with data set "update_exitoso_datos_completos"
+ [x] Update categoria con diferentes escenarios with data set "update_sin_cambios_reales"
+ [x] Update categoria con diferentes escenarios with data set "update_execute_falla"
+ [x] Update categoria con diferentes escenarios with data set "update_cambio_estatus_inactivo"
+ [x] Update categoria retorna false en excepcion
+ [x] Update categoria con datos incompletos with data set "sin_idcategoria"
+ [x] Update categoria con datos incompletos with data set "sin_nombre"
+ [x] Update categoria con datos incompletos with data set "array_vacio"
+ [x] Get categoria by id retorna datos y setea propiedades
+ [x] Get categoria by id retorna false cuando no existe
+ [x] Get categoria by id retorna null en excepcion
+ [x] Get categoria by id con ids limite with data set "id_1_encontrado"
+ [x] Get categoria by id con ids limite with data set "id_maximo_no_encontrado"
+ [x] Get categoria by id con ids limite with data set "id_grande_no_encontrado"
+ [x] Reactivar categoria exitoso
+ [x] Reactivar categoria execute retorna false
+ [x] Reactivar categoria propaga excepcion
+ [x] Insert categoria verifica parametros s q l correctos
+ [x] Delete categoria verifica es soft delete
+
+Cliente Model Unit
+ [x] Insert cliente exitoso con datos completos
+ [x] Insert cliente con datos invalidos with data set "cedula_vacia"
+ [ ] Insert cliente con datos invalidos with data set "nombre_vacio"
+ [x] Insert cliente con cedula duplicada
+ [x] Update cliente exitoso
+ [ ] Update cliente con datos invalidos with data set "id_inexistente"
+ [x] Update cliente con datos invalidos with data set "cedula_vacia"
+ [ ] Update cliente con datos invalidos with data set "nombre_vacio"
+ [x] Update cliente con cedula duplicada de otro cliente
+ [x] Select cliente by id existente retorna estructura
+ [x] Select cliente by id inexistente with data set "id_muy_grande"
+ [x] Select cliente by id inexistente with data set "id_cero"
+ [ ] Select cliente by cedula existente
+ [x] Select cliente by cedula inexistente with data set "cedula_fantasma"
+ [x] Select cliente by cedula inexistente with data set "cedula_formato_invalido"
+ [ ] Select cliente by cedula inexistente with data set "cedula_vacia"
+ [ ] Delete cliente exitoso
+ [ ] Delete cliente inexistente
+ [x] Reactivar cliente exitoso
+ [x] Reactivar cliente no encontrado
+ [x] Reactivar cliente ya activo
+ [x] Insert cliente completo exitoso
+ [x] Insert cliente completo cedula duplicada
+ [x] Select all clientes retorna estructura
+ [x] Select all clientes activos solo retorna activos
+ [x] Select all clientes tiene columnas requeridas
+
+Cliente Select
+ [x] Select all clientes retorna array
+ [x] Select all clientes tiene estructura correcta
+ [x] Select all clientes activos
+ [x] Select cliente by id existente
+ [x] Select cliente by cedula
+ [x] Select cliente by id inexistente
+ [x] Select cliente by cedula inexistente
+
+Cliente Update
+ [ ] Update cliente datos completos
+ [ ] Update cliente inexistente
+ [x] Update cliente con cedula vacia
+ [ ] Update cliente con nombre vacio
+ [ ] Update cliente con datos incompletos
+
+Compra Flow Integration
+ [ ] Flujo completo compra con pagos
+ [ ] Editar compra existente
+
+Configuracion Produccion
+ [x] Select configuracion produccion
+ [x] Update configuracion con datos vacios
+ [x] Update configuracion con valores negativos
+ [x] Update configuracion con datos completos
+ [x] Select empleados activos
+ [x] Select productos todos
+ [x] Select productos por clasificar
+ [x] Select productos clasificados
+ [x] Select productos con tipo invalido
+
+Consultar Ventas
+ [x] Consultar todas ventas
+ [x] Estructura basica venta
+
+Dashboard
+ [x] Get ultimas ventas con limite cero
+ [x] Get ultimas ventas con limite negativo
+ [x] Get reporte compras con fechas invalidas
+ [x] Get eficiencia empleados con empleado inexistente
+
+Empleado Delete
+ [ ] Eliminar empleado existente
+ [x] Eliminar y verificar eliminacion
+ [ ] Eliminar empleado inexistente
+ [x] Eliminar empleado ya eliminado
+
+Empleado Insert
+ [x] Insert empleado con datos completos
+ [x] Insert empleado sin campo requerido
+ [ ] Insert empleado con correo duplicado
+
+Empleado Select
+ [x] Seleccionar todos empleados
+ [x] Obtener empleado por id
+ [ ] Buscar empleado por identificacion
+ [ ] Listar empleados activos
+ [x] Obtener empleado inexistente
+ [ ] Buscar empleado por identificacion inexistente
+
+Empleado Update
+ [x] Actualizar empleado con datos completos
+ [ ] Actualizar empleado inexistente
+ [x] Actualizar sin id
+ [x] Actualizar con email invalido
+ [x] Actualizar con salario negativo
+ [x] Actualizar con fecha nacimiento invalida
+
+Example
+ [x] True is true
+
+Login Autenticacion
+ [x] Login con credenciales validas
+ [x] Login con password incorrecto
+ [x] Login con email inexistente
+ [x] Login con email vacio
+ [x] Login con password vacio
+ [x] Login con campos vacios
+ [x] Login con email invalido
+ [x] Login con usuario inactivo
+
+Login Recuperacion
+ [ ] Get usuario email existe
+ [x] Get token user by token invalido
+ [x] Get usuario email no existe
+ [x] Update password con usuario invalido
+
+Lotes Gestion
+ [x] Select all lotes retorna array
+ [x] Select lote by id con id inexistente
+ [x] Insertar lote sin supervisor
+ [x] Insertar lote con volumen cero
+ [x] Insertar lote con volumen negativo
+ [x] Insertar lote sin fecha jornada
+ [x] Insertar lote con fecha invalida
+ [x] Insertar lote con datos completos
+ [x] Iniciar lote con id inexistente
+ [x] Cerrar lote con id inexistente
+ [x] Actualizar lote con id inexistente
+ [x] Eliminar lote con id inexistente
+ [x] Insertar lote con supervisor inexistente
+
+Movimientos Insert
+ [x] Insert movimiento entrada con datos completos
+ [x] Insert movimiento ajuste inventario
+ [x] Insert movimiento sin producto
+ [x] Insert movimiento con cantidad negativa
+ [x] Insert movimiento con producto inexistente
+ [x] Insert movimiento con tipo invalido
+
+Movimientos Model Unit
+ [x] Update movimiento siempre retorna error with data set "id_valido_datos_completos"
+ [x] Update movimiento siempre retorna error with data set "id_grande_datos_vacios"
+ [x] Update movimiento siempre retorna error with data set "id_uno_datos_nulos"
+ [x] Update movimiento siempre retorna error with data set "id_maximo_datos_complejos"
+ [x] Delete movimiento siempre retorna error with data set "id_valido"
+ [x] Delete movimiento siempre retorna error with data set "id_inexistente"
+ [x] Delete movimiento siempre retorna error with data set "id_maximo"
+ [x] Select movimiento by id cero retorna error sin b d
+ [x] Anular movimiento by id cero retorna error sin b d
+ [x] Update y delete retornan mensajes consistentes
+ [x] Insert movimiento validaciones fallan with data set "rama1_sin_producto"
+ [x] Insert movimiento validaciones fallan with data set "rama1_producto_nulo"
+ [x] Insert movimiento validaciones fallan with data set "rama1_producto_vacio"
+ [x] Insert movimiento validaciones fallan with data set "rama2_sin_tipo_movimiento"
+ [x] Insert movimiento validaciones fallan with data set "rama2_tipo_nulo"
+ [x] Insert movimiento validaciones fallan with data set "rama3_ambas_cantidades_cero"
+ [x] Insert movimiento validaciones fallan with data set "rama3_cantidades_negativas"
+ [x] Insert movimiento validaciones fallan with data set "rama4_ambas_cantidades_positivas"
+ [x] Insert movimiento stock desincronizado
+ [x] Select movimiento by id inexistente
+ [x] Select movimiento by id con ids falsy with data set "id_cero"
+ [x] Select all movimientos retorna estructura
+ [x] Select all movimientos valida estructura datos
+ [x] Buscar movimientos con criterio vacio delega a todos with data set "string_vacio"
+ [x] Buscar movimientos con criterio vacio delega a todos with data set "solo_espacios"
+ [x] Buscar movimientos con criterio vacio delega a todos with data set "tab_y_espacios"
+ [x] Buscar movimientos con criterio texto
+ [x] Get productos activos retorna estructura
+ [x] Get tipos movimiento activos retorna estructura
+ [x] Get tipos movimiento con estadisticas retorna estructura
+ [x] Contrato de respuesta metodos deshabilitados
+ [x] Contrato de respuesta validacion fallida
+
+Nomina YSalarios
+ [x] Registrar solicitud pago sin registros
+ [x] Registrar solicitud pago con registros inexistentes
+ [x] Select precios proceso
+ [x] Create precio proceso sin tipo
+ [x] Create precio proceso sin producto
+ [x] Create precio proceso sin salario
+ [x] Create precio proceso con salario negativo
+ [x] Create precio proceso con salario cero
+ [x] Create precio proceso con tipo invalido
+ [x] Create precio proceso con producto inexistente
+ [x] Create precio proceso clasificacion con datos completos
+ [x] Create precio proceso empaque con datos completos
+ [x] Update precio proceso con id inexistente
+ [x] Update precio proceso sin cambios
+ [x] Delete precio proceso con id inexistente
+ [x] Marcar registro como pagado con id inexistente
+ [x] Cancelar registro con id inexistente
+
+Pagos Insert
+ [x] Insert pago con datos completos
+ [ ] Insert pago sin monto
+ [x] Insert pago con monto negativo
+ [x] Insert pago con compra inexistente
+
+Pagos Select
+ [x] Select all pagos retorna array
+ [ ] Select pagos por compra retorna array
+ [ ] Select pagos por fecha retorna array
+ [ ] Select pago by id existente
+ [ ] Select pago by id inexistente
+ [ ] Select pagos por compra inexistente
+ [ ] Select pagos por fecha invalida
+
+Produccion Cierre Lote
+ [x] Cerrar lote en proceso
+ [x] Verificar estado tras cierre
+ [x] Cerrar lote inexistente
+ [x] Cerrar lote ya cerrado
+ [x] Cerrar lote sin iniciar
+
+Produccion Creacion Lote
+ [x] Crear lote con datos completos
+ [x] Generacion numero lote unico
+ [x] Crear lote sin supervisor
+ [x] Crear lote con volumen cero
+ [x] Crear lote con volumen negativo
+ [x] Crear lote sin fecha jornada
+ [x] Crear lote con fecha invalida
+ [x] Crear lote excede capacidad maxima
+ [x] Crear lote con supervisor inexistente
+
+Produccion Flow Integration
+ [x] Flujo completo produccion lote
+ [x] Crear multiples lotes misma fecha
+ [x] Validaciones negocio produccion
+
+Produccion Inicio Lote
+ [x] Iniciar lote planificado
+ [x] Verificar estado tras inicio
+ [x] Iniciar lote inexistente
+ [x] Iniciar lote ya iniciado
+
+Proveedor Delete
+ [ ] Eliminar proveedor existente
+ [x] Eliminar y verificar eliminacion
+ [x] Eliminar proveedor inexistente
+ [x] Eliminar proveedor ya eliminado
+ [x] Eliminar proveedor con compras asociadas
+
+Proveedor Insert
+ [ ] Insert proveedor con datos completos
+ [ ] Insert proveedor sin campo requerido
+ [ ] Insert proveedor con rif duplicado
+
+Proveedor Select
+ [x] Select all proveedores retorna array
+ [x] Select all proveedores tiene estructura correcta
+ [x] Select proveedor by id existente
+ [x] Select proveedor by id inexistente
+
+Proveedor Update
+ [ ] Actualizar proveedor con datos completos
+ [ ] Actualizar proveedor inexistente
+ [ ] Actualizar con email invalido
+ [ ] Actualizar con rif duplicado
+
+Registros Produccion
+ [x] Insertar registro sin id lote
+ [x] Insertar registro con lote inexistente
+ [x] Insertar registro con empleado inexistente
+ [x] Insertar registro con cantidad negativa
+ [x] Insertar registro sin fecha jornada
+ [x] Insertar registro sin tipo movimiento
+ [x] Obtener registros por lote con id inexistente
+ [x] Select all registros produccion
+ [x] Select all registros con filtro fechas
+ [x] Select all registros con filtro tipo movimiento
+ [x] Actualizar registro con id inexistente
+ [x] Eliminar registro con id inexistente
+ [x] Get registro by id con id inexistente
+
+Roles
+ [x] Insert rol con datos completos
+ [ ] Select rol by id existente
+ [ ] Obtener permisos por rol
+ [ ] Insert rol sin nombre
+ [ ] Insert rol duplicado
+ [ ] Select rol by id inexistente
+ [ ] Asignar permiso con rol inexistente
+ [ ] Obtener permisos por rol inexistente
+
+Roles Integrado
+ [ ] Guardar y recuperar asignaciones
+ [x] Guardar asignaciones con rol invalido
+ [x] Guardar asignaciones con modulo invalido
+
+Romana Pesaje Exitoso
+ [ ] Registrar pesaje exitoso
+ [ ] Registrar pesaje con peso decimal
+ [ ] Consultar todos pesajes
+ [ ] Consultar pesaje por id
+ [ ] Consultar pesajes por lote
+ [ ] Calcular peso total
+ [ ] Calcular promedio peso
+
+Romana Pesaje Fallido
+ [ ] Registrar pesaje sin peso
+ [ ] Registrar pesaje con peso negativo
+ [ ] Registrar pesaje con peso cero
+ [ ] Registrar pesaje sin lote
+ [ ] Registrar pesaje con lote inexistente
+ [ ] Registrar pesaje con peso excesivo
+ [ ] Consultar pesaje inexistente
+
+Sueldos Insert
+ [x] Insert sueldo con datos completos
+ [x] Insert sueldo sin empleado
+ [x] Insert sueldo con empleado inexistente
+ [x] Insert sueldo con monto negativo
+ [x] Insert sueldo duplicado mismo periodo
+
+Usuario Delete
+ [ ] Eliminar usuario existente
+ [x] Eliminar y verificar eliminacion
+ [x] Eliminar usuario inexistente
+ [x] Eliminar usuario ya eliminado
+
+Usuario Insert
+ [x] Insertar usuario con datos completos
+ [x] Insertar usuario sin nombre usuario
+ [x] Insertar usuario sin correo
+ [x] Insertar usuario sin password
+ [x] Insertar usuario con correo duplicado
+ [x] Insertar usuario con email invalido
+ [x] Insertar usuario sin rol
+ [x] Insertar usuario con password debil
+
+Usuario Select
+ [x] Seleccionar todos usuarios
+ [x] Seleccionar usuarios activos
+ [x] Obtener usuario por id
+ [x] Buscar usuario por email
+ [x] Obtener usuario inexistente
+ [x] Buscar usuario por email inexistente
+
+Usuario Update
+ [ ] Actualizar usuario con datos completos
+ [x] Actualizar usuario inexistente
+ [x] Actualizar con correo duplicado
+ [x] Actualizar con email invalido
+ [x] Actualizar con rol inexistente
+
+Venta Anulacion
+ [ ] Anular venta existente
+ [ ] Anular venta con motivo
+ [ ] Verificar reposicion inventario
+ [ ] Anular venta inexistente
+ [ ] Anular venta ya anulada
+ [ ] Anular venta con id negativo
+ [ ] Anular venta con id cero
+
+Venta Consultas
+ [ ] Buscar todas las ventas
+
+Venta Creacion
+ [ ] Crear venta con un producto
+ [x] Crear venta con descuento
+ [x] Crear venta sin cliente
+ [x] Crear venta sin productos
+ [x] Crear venta con cliente inexistente
+ [x] Crear venta con producto inexistente
+ [x] Crear venta con cantidad negativa
+
 Venta Flow Integration
- [x] Flujo completo venta con pagos
- [x] Venta con descuento multiples productos
+ [ ] Flujo completo venta con pagos
+ [ ] Venta con descuento multiples productos
+
+consultar Compras
+ [x] Select all compras retorna array
+ [x] Get compra by id con id inexistente
+ [x] Select compra con id inexistente
+ [x] Get detalle compra by id inexistente
+ [x] Get compra completa para editar inexistente
+ [x] Obtener estado compra inexistente
+ [x] Get monedas activas
+ [x] Get productos con categoria
+ [x] Get producto by id inexistente
+ [x] Get proveedor by id inexistente
+
+crear Compra
+ [ ] Crear compra exitosa
+ [ ] Crear compra con proveedor inexistente
+ [x] Crear compra sin detalles
+ [ ] Crear compra con cantidad cero
+ [x] Crear compra con producto inexistente
+
+crear Venta
+ [ ] Crear venta exitosa
+ [ ] Crear venta con cliente inactivo
+ [x] Crear venta con producto inexistente
+ [x] Crear venta con cantidad negativa
+ [x] Crear venta con precio negativo
+ [x] Crear venta sin cliente
+ [x] Crear venta con descuento mayor al total
+ [x] Crear venta con moneda invalida
+ [ ] Validacion cliente activo en modelo
+ [ ] Validacion producto existente en modelo
+ [ ] Validacion cantidad y precio en modelo
+
+editar Compra
+ [ ] Editar compra con proveedor inexistente
+ [ ] Editar compra con producto inexistente
+
+editar Venta
+ [ ] Editar venta exitosa
+ [ ] Editar venta con cliente inactivo
+ [ ] Editar venta con producto inexistente
+ [ ] Editar venta con cantidad negativa
+ [ ] Editar venta con precio negativo
+ [x] Editar venta inexistente
+ [ ] Editar venta sin detalles
+
+eliminar Compra
+ [x] Eliminar compra con id inexistente
+
+eliminar Venta
+ [ ] Eliminar venta exitosa
+ [ ] No se puede eliminar venta si no esta en borrador
+ [x] Eliminar venta inexistente
 

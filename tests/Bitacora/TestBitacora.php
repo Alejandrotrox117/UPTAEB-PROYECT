@@ -2,8 +2,12 @@
 use PHPUnit\Framework\TestCase;
 use App\Models\BitacoraModel;
 
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestBitacora extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private function showMessage(string $msg): void
     {
@@ -11,6 +15,7 @@ class TestBitacora extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new BitacoraModel();
     }
     public function testRegistrarAccionEnBitacora()

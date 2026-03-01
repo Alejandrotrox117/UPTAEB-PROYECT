@@ -102,7 +102,7 @@ class Conexion
         } catch(PDOException $e) {
             error_log("Error de conexión a la base de datos: " . $e->getMessage());
             echo "Error de conexión a la base de datos.";
-            throw new Exception("Error de conexión a la base de datos.");
+            throw new \Exception("Error de conexión a la base de datos.");
         }
     }
 
