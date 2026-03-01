@@ -24,7 +24,7 @@ function iniciarTourCompras() {
             });
         },
         onCancel: function() {
-            console.log('Tour del módulo de compras cancelado');
+            // Tour cancelado
         }
     });
 
@@ -338,15 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Agregar botón de ayuda
     agregarBotonAyudaCompras();
     
-    // Esperar a que la página cargue completamente
-    setTimeout(() => {
-        const tourCompleted = localStorage.getItem('compras-tour-completed');
-        
-        // Si es la primera vez o el usuario eliminó el registro, iniciar el tour
-        if (!tourCompleted) {
-            iniciarTourCompras();
-        }
-    }, 1000);
+    // Auto-inicio del tour deshabilitado - solo se inicia manualmente desde el botón de ayuda
 });
 
 // Exponer la función globalmente por si se quiere iniciar manualmente

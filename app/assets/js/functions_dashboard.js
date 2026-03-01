@@ -41,8 +41,6 @@ document.addEventListener("DOMContentLoaded", inicializarDashboard);
 function inicializarDashboard() {
   try {
 
-    console.log("✅ Inicializando Dashboard...");
-
     configurarFechasPorDefecto();
     configurarEventListeners();
 
@@ -53,8 +51,6 @@ function inicializarDashboard() {
 
 
     setInterval(cargarDashboardAvanzado, 300000);
-
-    console.log("🚀 Dashboard inicializado correctamente.");
   } catch (error) {
 
     console.error("❌ Error fatal durante la inicialización del dashboard:", error);
@@ -182,11 +178,9 @@ function cargarDatosDashboard() {
 
   fetch(`dashboard/getDashboardData?${params.toString()}`)
     .then(response => {
-      console.log("Respuesta del servidor:", response);
       return response.json();
     })
     .then(data => {
-      console.log("Datos recibidos del dashboard:", data);
       actualizarResumen(data.resumen);
 
       datosGraficos.ingresos = data.reporteIngresos;
@@ -376,7 +370,6 @@ function renderizarTablaCompras(data) {
 }
 
 function actualizarResumen(resumen) {
-  console.log("Datos de resumen recibidos:", resumen);
   
   if (!resumen || typeof resumen !== 'object') {
     console.error("Datos de resumen no válidos recibidos.");
@@ -435,14 +428,11 @@ function actualizarResumen(resumen) {
     }`;
   document.getElementById("comprasHoyComparacion").className = `text-xs ${comprasComparacion >= 0 ? "text-green-600" : "text-red-600"
     }`;
-
-  console.log("Resumen actualizado correctamente");
 }
 
 
 
 function actualizarKPIsEjecutivos(kpis) {
-  console.log("Actualizando KPIs Ejecutivos:", kpis);
   if (!kpis || typeof kpis !== 'object') {
     console.error("Datos de KPIs no válidos recibidos.");
     document.getElementById("margenGanancia").textContent = "0.0%";
@@ -1326,8 +1316,6 @@ async function cargarReportesSemanales() {
       idempleado: idempleado
     });
     
-    console.log('🔍 Cargando reportes semanales con parámetros:', params.toString());
-    
     const response = await fetch(`dashboard/getReportesSemanalesProduccion?${params}`);
     
     if (!response.ok) {
@@ -1337,7 +1325,6 @@ async function cargarReportesSemanales() {
     }
     
     const data = await response.json();
-    console.log('✅ Datos recibidos:', data);
     datosReportesSemanal = data;
     
     // Renderizar resumen
@@ -1356,8 +1343,6 @@ async function cargarReportesSemanales() {
     renderizarTablaEmpleadosSemanal(data.reporteEmpleados);
     renderizarTablaMaterialesSemanal(data.reporteMateriales);
     renderizarTablaTotalesSemanal(data.reporteTotalMateriales);
-    
-    console.log('✅ Reportes semanales cargados exitosamente');
     
   } catch (error) {
     console.error('❌ Error al cargar reportes semanales:', error);

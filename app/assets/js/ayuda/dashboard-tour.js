@@ -313,36 +313,7 @@ function agregarBotonAyuda() {
 document.addEventListener('DOMContentLoaded', function() {
     // Verificar si estamos en el dashboard
     if (window.location.pathname.includes('dashboard')) {
-        
-        // Esperar a que todos los elementos se carguen completamente
-        setTimeout(function() {
-            // Agregar botón de ayuda
-            agregarBotonAyuda();
-            
-            // Auto-iniciar tour solo la primera vez
-            if (!localStorage.getItem('dashboard-tour-completed')) {
-                setTimeout(function() {
-                    // Preguntar si quiere hacer el tour
-                    Swal.fire({
-                        title: '¿Quieres hacer un tour?',
-                        text: 'Te mostramos las principales funcionalidades del dashboard',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, empezar tour',
-                        cancelButtonText: 'Ahora no',
-                        confirmButtonColor: '#16a34a',
-                        cancelButtonColor: '#6b7280'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            iniciarTourDashboard();
-                        } else {
-                            // Si dice que no, marcar como completado para no molestarlo más
-                            localStorage.setItem('dashboard-tour-completed', 'true');
-                        }
-                    });
-                }, 1000); // Reducir el tiempo de espera
-            }
-        }, 500); // Esperar menos tiempo para mejor experiencia
+        agregarBotonAyuda();
     }
 });
 

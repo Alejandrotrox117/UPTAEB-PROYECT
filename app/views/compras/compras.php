@@ -476,7 +476,6 @@ $permisos = PermisosModuloVerificar::getPermisosUsuarioModulo('Compras');
 document.addEventListener("DOMContentLoaded", function() {
     // Llamar a obtenerPermisos desde el archivo de permisos
     if (typeof window.permisosCompras !== 'undefined' && typeof window.permisosCompras.obtenerPermisos === 'function') {
-        console.log("MAIN - Llamando a obtenerPermisos desde la vista");
         window.permisosCompras.obtenerPermisos();
     } else {
         console.warn("MAIN - No se encontró la función obtenerPermisos en window.permisosCompras");

@@ -2159,7 +2159,6 @@ async function editarCompra(idCompra) {
 window.editarCompra = editarCompra;
 
 async function abrirModalEditarCompra(compra, detalles) {
-  console.log("Abriendo modal de edición para la compra:", detalles);
   const formEditarCompraModal = document.getElementById(
     "formEditarCompraModal"
   );
