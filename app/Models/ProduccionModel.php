@@ -505,6 +505,16 @@ class ProduccionModel
             $queryStock = "SELECT existencia FROM producto WHERE idproducto = ?";
             $stmtStock = $db->prepare($queryStock);
             
+         
+            $queryMovimientoT = "SELECT idtipomovimiento FROM tipo_movimiento WHERE nombre = 'Producción' LIMIT 1";
+            $stmtMovimientoT = $db->prepare($queryMovimientoT);
+            $stmtMovimientoT->execute();
+            $idTipoMovimiento = $stmtMovimientoT->fetchColumn();
+            
+            if (!$idTipoMovimiento) {
+                throw new Exception("No se encontró el tipo de movimiento 'Producción'");
+            }
+            
             // Primer movimiento: SALIDA del producto a producir
             $stmtStock->execute([$idproductoProducir]);
             $stockAnteriorProducir = floatval($stmtStock->fetchColumn());
@@ -522,6 +532,7 @@ class ProduccionModel
             $stmtMovimiento->execute([
                 $numeroMovimiento1,
                 $idproductoProducir,
+                $idTipoMovimiento,
                 $idregistro,
                 $cantidadProducir,
                 $stockAnteriorProducir,
@@ -530,7 +541,7 @@ class ProduccionModel
                 $stockResultanteProducir
             ]);
             
-            // Segundo movimiento: ENTRADA del producto terminado
+      
             $stmtStock->execute([$idproductoTerminado]);
             $stockAnteriorTerminado = floatval($stmtStock->fetchColumn());
             $stockResultanteTerminado = $stockAnteriorTerminado;
@@ -540,13 +551,14 @@ class ProduccionModel
                 (numero_movimiento, idproducto, idtipomovimiento, idproduccion, 
                 cantidad_entrada, cantidad_salida, stock_anterior, stock_resultante, 
                 observaciones, total, estatus) 
-                VALUES (?, ?, 5, ?, ?, NULL, ?, ?, ?, ?, 'activo')";
+                VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, 'activo')";
             
             $stmtMovimiento2 = $db->prepare($queryMovimientoEntrada);
             $observacion2 = "Entrada de producto terminado - Lote: {$registro['idlote']}, Registro: {$idregistro}";
             $stmtMovimiento2->execute([
                 $numeroMovimiento2,
                 $idproductoTerminado,
+                $idTipoMovimiento,
                 $idregistro,
                 $cantidadProducida,
                 $stockAnteriorTerminado,
@@ -1183,6 +1195,24 @@ class ProduccionModel
                 }
             }
 
+            // VALIDAR STOCK ANTES DE PROCEDER
+            $queryStockValidacion = "SELECT existencia, nombre, descripcion FROM producto WHERE idproducto = ?";
+            $stmtStock = $db->prepare($queryStockValidacion);
+            $stmtStock->execute([$this->getIdProductoProducir()]);
+            $productoProducir = $stmtStock->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$productoProducir) {
+                throw new Exception("El producto a producir no existe");
+            }
+            
+            $stockDisponible = floatval($productoProducir['existencia']);
+            $cantidadRequerida = $this->getCantidadProducir();
+            
+            if ($stockDisponible < $cantidadRequerida) {
+                $nombreProducto = $productoProducir['descripcion'] ?? $productoProducir['nombre'] ?? 'Producto';
+                throw new Exception("Stock insuficiente para '{$nombreProducto}'. Disponible: {$stockDisponible} kg, Requerido: {$cantidadRequerida} kg. No se puede crear el registro de producción.");
+            }
+            
             // Calcular salarios usando getters
             $salario_base_dia = floatval($config['salario_base'] ?? 30.00);
             $this->setSalarioBaseDia($salario_base_dia);

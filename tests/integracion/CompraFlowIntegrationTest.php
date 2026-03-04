@@ -1,13 +1,16 @@
 <?php
 use PHPUnit\Framework\TestCase;
+use App\Models\ComprasModel;
+use App\Models\ProductosModel;
+use App\Models\ProveedoresModel;
+use App\Models\PagosModel;
 
-require_once __DIR__ . '/../../app/models/ComprasModel.php';
-require_once __DIR__ . '/../../app/models/productosModel.php';
-require_once __DIR__ . '/../../app/models/proveedoresModel.php';
-require_once __DIR__ . '/../../app/models/pagosModel.php';
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
 
 class CompraFlowIntegrationTest extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $comprasModel;
     private $productosModel;
     private $proveedoresModel;
@@ -23,6 +26,7 @@ class CompraFlowIntegrationTest extends TestCase
     
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->comprasModel = new ComprasModel();
         $this->productosModel = new ProductosModel();
         $this->proveedoresModel = new ProveedoresModel();

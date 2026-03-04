@@ -1,8 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/clientesModel.php';
+use App\Models\ClientesModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestClienteUpdate extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private $clienteIdPrueba;
     private function showMessage(string $msg): void
@@ -11,6 +15,7 @@ class TestClienteUpdate extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new ClientesModel();
         $data = [
             'cedula' => 'V' . time(),

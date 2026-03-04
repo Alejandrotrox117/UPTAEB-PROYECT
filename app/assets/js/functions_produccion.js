@@ -1558,7 +1558,7 @@ function limpiarSalariosRegistroLote() {
 }
 
 
-function agregarRegistroProduccionLote() {
+async function agregarRegistroProduccionLote() {
   
   const idempleado = document.getElementById("lote_prod_empleado").value;
   const fecha = document.getElementById("lote_prod_fecha").value;
@@ -1576,6 +1576,99 @@ function agregarRegistroProduccionLote() {
   
   if (isNaN(cantidadInicial) || cantidadInicial <= 0 || isNaN(cantidadProducida) || cantidadProducida <= 0) {
     mostrarAdvertencia("Las cantidades deben ser mayores a cero");
+    return;
+  }
+  
+  // VALIDAR STOCK DISPONIBLE ANTES DE AGREGAR
+  try {
+    const response = await fetch(`Productos/getProductosData`);
+    const data = await response.json();
+    
+    if (data.status && Array.isArray(data.data)) {
+      const productoInicial = data.data.find(p => p.idproducto == idproductoInicial);
+      
+      if (!productoInicial) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Producto no encontrado',
+          text: 'No se pudo validar el stock del producto inicial.',
+          confirmButtonColor: '#dc2626'
+        });
+        return;
+      }
+      
+      const stockDisponible = parseFloat(productoInicial.existencia || 0);
+      
+      const consumoAcumulado = registrosProduccionLote
+        .filter(r => r.idproducto_producir == idproductoInicial)
+        .reduce((sum, r) => sum + parseFloat(r.cantidad_producir), 0);
+      
+      const stockDisponibleReal = stockDisponible - consumoAcumulado;
+      
+      if (stockDisponibleReal < cantidadInicial) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Stock Insuficiente',
+          html: `
+            <div class="text-left space-y-3">
+              <p class="text-gray-700">No hay suficiente stock del producto inicial para crear este registro.</p>
+              <div class="bg-red-50 border border-red-200 rounded p-3">
+                <p class="text-sm text-red-800 mb-2"><strong>Producto:</strong> ${productoInicial.nombre || productoInicial.descripcion}</p>
+                <p class="text-sm text-red-800"><strong>Stock disponible:</strong> ${stockDisponible.toFixed(2)} kg</p>
+                <p class="text-sm text-red-800"><strong>Ya consumido en registros:</strong> ${consumoAcumulado.toFixed(2)} kg</p>
+                <p class="text-sm text-red-800"><strong>Stock real disponible:</strong> ${stockDisponibleReal.toFixed(2)} kg</p>
+                <p class="text-sm font-bold text-red-900 mt-2"><strong>Requerido:</strong> ${cantidadInicial.toFixed(2)} kg</p>
+              </div>
+              <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mt-3">
+                <p class="text-xs text-yellow-800">
+                  <i class="fas fa-exclamation-triangle mr-1"></i>
+                  <strong>No se puede agregar el registro.</strong> Por favor, reduce la cantidad o verifica el inventario.
+                </p>
+              </div>
+            </div>
+          `,
+          confirmButtonColor: '#dc2626',
+          confirmButtonText: 'Entendido'
+        });
+        return;
+      }
+      
+      // Si hay advertencia pero no bloqueo total, mostrarla
+      if (stockDisponibleReal < cantidadInicial * 1.1) { // Advertencia si está cerca del límite (menos del 10% de margen)
+        const continuar = await Swal.fire({
+          icon: 'warning',
+          title: 'Advertencia de Stock',
+          html: `
+            <div class="text-left space-y-3">
+              <p class="text-gray-700">El stock disponible está cerca del límite.</p>
+              <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                <p class="text-sm text-yellow-800"><strong>Producto:</strong> ${productoInicial.nombre || productoInicial.descripcion}</p>
+                <p class="text-sm text-yellow-800"><strong>Stock real disponible:</strong> ${stockDisponibleReal.toFixed(2)} kg</p>
+                <p class="text-sm text-yellow-800"><strong>Requerido:</strong> ${cantidadInicial.toFixed(2)} kg</p>
+                <p class="text-sm text-yellow-800"><strong>Margen restante:</strong> ${(stockDisponibleReal - cantidadInicial).toFixed(2)} kg</p>
+              </div>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonColor: '#f59e0b',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: 'Continuar de todas formas',
+          cancelButtonText: 'Cancelar'
+        });
+        
+        if (!continuar.isConfirmed) {
+          return;
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error al validar stock:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de validación',
+      text: 'No se pudo validar el stock disponible. Por favor, intenta de nuevo.',
+      confirmButtonColor: '#dc2626'
+    });
     return;
   }
   
@@ -1696,6 +1789,106 @@ async function registrarLote() {
   
   // Validar seguridad antes de procesar
   if (!validarFormularioLoteCompleto()) {
+    return;
+  }
+  
+  // VALIDAR QUE HAYA REGISTROS
+  if (!registrosProduccionLote || registrosProduccionLote.length === 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "Sin registros",
+      text: "Debes agregar al menos un registro de producción antes de crear el lote",
+      confirmButtonColor: "#f59e0b"
+    });
+    return;
+  }
+  
+  // VALIDAR STOCK DISPONIBLE PARA TODOS LOS REGISTROS
+  try {
+    const response = await fetch(`Productos/getProductosData`);
+    const data = await response.json();
+    
+    if (data.status && Array.isArray(data.data)) {
+      const productosInsuficientes = [];
+      const consumoPorProducto = {};
+      
+      // Calcular consumo total por producto
+      registrosProduccionLote.forEach(reg => {
+        const idProducto = reg.idproducto_producir;
+        const cantidad = parseFloat(reg.cantidad_producir || 0);
+        
+        if (!consumoPorProducto[idProducto]) {
+          consumoPorProducto[idProducto] = 0;
+        }
+        consumoPorProducto[idProducto] += cantidad;
+      });
+      
+      // Validar cada producto
+      for (const [idProducto, cantidadRequerida] of Object.entries(consumoPorProducto)) {
+        const producto = data.data.find(p => p.idproducto == idProducto);
+        
+        if (!producto) {
+          productosInsuficientes.push({
+            nombre: `Producto ID ${idProducto}`,
+            disponible: 0,
+            requerido: cantidadRequerida
+          });
+          continue;
+        }
+        
+        const stockDisponible = parseFloat(producto.existencia || 0);
+        
+        if (stockDisponible < cantidadRequerida) {
+          productosInsuficientes.push({
+            nombre: producto.nombre || producto.descripcion,
+            disponible: stockDisponible,
+            requerido: cantidadRequerida,
+            faltante: cantidadRequerida - stockDisponible
+          });
+        }
+      }
+      
+      // Si hay productos con stock insuficiente, mostrar error y bloquear
+      if (productosInsuficientes.length > 0) {
+        const listaProductos = productosInsuficientes.map(p => `
+          <div class="bg-red-50 border border-red-200 rounded p-2 mb-2">
+            <p class="text-sm text-red-800"><strong>${p.nombre}</strong></p>
+            <p class="text-xs text-red-700">Disponible: ${p.disponible.toFixed(2)} kg</p>
+            <p class="text-xs text-red-700">Requerido: ${p.requerido.toFixed(2)} kg</p>
+            <p class="text-xs font-bold text-red-900">Faltante: ${p.faltante.toFixed(2)} kg</p>
+          </div>
+        `).join('');
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'No se puede crear el lote',
+          html: `
+            <div class="text-left space-y-3">
+              <p class="text-gray-700 mb-3">Los siguientes productos tienen stock insuficiente:</p>
+              ${listaProductos}
+              <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mt-3">
+                <p class="text-xs text-yellow-800">
+                  <i class="fas fa-exclamation-triangle mr-1"></i>
+                  <strong>No se puede crear el lote.</strong> Elimina los registros problemáticos o ajusta las cantidades.
+                </p>
+              </div>
+            </div>
+          `,
+          confirmButtonColor: '#dc2626',
+          confirmButtonText: 'Entendido',
+          width: '600px'
+        });
+        return;
+      }
+    }
+  } catch (error) {
+    console.error('Error al validar stock del lote:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error de validación',
+      text: 'No se pudo validar el stock disponible. Por favor, intenta de nuevo.',
+      confirmButtonColor: '#dc2626'
+    });
     return;
   }
   

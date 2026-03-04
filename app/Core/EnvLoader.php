@@ -40,8 +40,13 @@ class EnvLoader
             // Parsear la línea
             if (strpos($line, '=') !== false) {
                 list($key, $value) = explode('=', $line, 2);
-                $key = trim($key);
+                $key = trim($key); 
                 $value = trim($value);
+
+                // Verificar si ya existe en entorno (prioridad a variables de sistema/server)
+                if (getenv($key) !== false || isset($_ENV[$key])) {
+                    continue;
+                }
 
                 // Remover comillas si existen
                 if (preg_match('/^"(.*)"$/', $value, $matches)) {
@@ -80,15 +85,17 @@ class EnvLoader
             return self::parseValue($_ENV[$key]);
         }
 
-        // Buscar en array interno
-        if (isset(self::$variables[$key])) {
-            return self::parseValue(self::$variables[$key]);
-        }
-
         // Buscar en getenv()
         $value = getenv($key);
         if ($value !== false) {
+            // Si el valor viene de getenv, puede necesitar parseo si fue inyectado via putenv desde .env
+            // Pero si viene de sistema (o phpunit), tambien.
             return self::parseValue($value);
+        }
+
+        // Buscar en array interno
+        if (isset(self::$variables[$key])) {
+            return self::parseValue(self::$variables[$key]);
         }
 
         return $default;

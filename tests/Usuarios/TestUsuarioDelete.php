@@ -1,15 +1,18 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-
-require_once __DIR__ . '/../../app/models/UsuariosModel.php';
-
+use App\Models\UsuariosModel;
 
 
 
+
+
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
 
 class TestUsuarioDelete extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
 
     private function showMessage(string $msg): void
@@ -19,6 +22,7 @@ class TestUsuarioDelete extends TestCase
 
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new UsuariosModel();
     }
 

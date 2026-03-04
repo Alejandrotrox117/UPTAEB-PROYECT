@@ -1,8 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/movimientosModel.php';
+use App\Models\MovimientosModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestMovimientosInsert extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private function showMessage(string $msg): void
     {
@@ -10,6 +14,7 @@ class TestMovimientosInsert extends TestCase
     }
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new MovimientosModel();
     }
     public function testInsertMovimientoEntradaConDatosCompletos()

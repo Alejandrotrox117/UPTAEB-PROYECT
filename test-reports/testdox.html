@@ -1,48 +1,47 @@
 <!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Test Documentation</title>
+        <style>
+            body {
+                text-rendering: optimizeLegibility;
+                font-family: Source SansSerif Pro, Arial, sans-serif;
+                font-variant-ligatures: common-ligatures;
+                font-kerning: normal;
+                margin-left: 2rem;
+                background-color: #fff;
+                color: #000;
+            }
 
-<head>
-    <meta charset="utf-8" />
-    <title>Test Documentation</title>
-    <style>
-        body {
-            text-rendering: optimizeLegibility;
-            font-family: Source SansSerif Pro, Arial, sans-serif;
-            font-variant-ligatures: common-ligatures;
-            font-kerning: normal;
-            margin-left: 2rem;
-            background-color: #fff;
-            color: #000;
-        }
+            body > ul > li {
+                font-size: larger;
+            }
 
-        body>ul>li {
-            font-size: larger;
-        }
+            h2 {
+                font-size: larger;
+                text-decoration-line: underline;
+                text-decoration-thickness: 2px;
+                margin: 0;
+                padding: 0.5rem 0;
+            }
 
-        h2 {
-            font-size: larger;
-            text-decoration-line: underline;
-            text-decoration-thickness: 2px;
-            margin: 0;
-            padding: 0.5rem 0;
-        }
+            ul {
+                list-style: none;
+                margin: 0 0 2rem;
+                padding: 0 0 0 1rem;
+                text-indent: -1rem;
+            }
 
-        ul {
-            list-style: none;
-            margin: 0 0 2rem;
-            padding: 0 0 0 1rem;
-            text-indent: -1rem;
-        }
+            .success:before {
+                color: #4e9a06;
+                content: '✓';
+                padding-right: 0.5rem;
+            }
 
-        .success:before {
-            color: #4e9a06;
-            content: '✓';
-            padding-right: 0.5rem;
-        }
-
-        .defect {
-            color: #a40000;
-        }
+            .defect {
+                color: #a40000;
+            }
 
             .defect:before {
                 color: #a40000;
@@ -52,10 +51,46 @@
         </style>
     </head>
     <body>
-        <h2>Venta Flow Integration</h2>
+        <h2>Categoria Model Unit</h2>
         <ul>
-            <li class="success">Flujo completo venta con pagos</li>
-            <li class="defect">Venta con descuento multiples productos</li>
+            <li class="success">Select all categorias retorna datos en exito</li>
+            <li class="success">Select all categorias retorna array vacio cuando no hay datos</li>
+            <li class="success">Select all categorias retorna array vacio en excepcion</li>
+            <li class="success">Insert categoria con datos validos with data set "estatus_minusculas"</li>
+            <li class="success">Insert categoria con datos validos with data set "estatus_mayusculas"</li>
+            <li class="success">Insert categoria con datos validos with data set "estatus_mixto"</li>
+            <li class="success">Insert categoria con datos validos with data set "estatus_inactivo"</li>
+            <li class="success">Insert categoria con datos validos with data set "descripcion_larga"</li>
+            <li class="success">Insert categoria con datos validos with data set "caracteres_especiales"</li>
+            <li class="success">Insert categoria retorna false cuando execute falla</li>
+            <li class="success">Insert categoria propaga excepcion p d o</li>
+            <li class="success">Insert categoria con datos incompletos with data set "sin_clave_nombre"</li>
+            <li class="success">Insert categoria con datos incompletos with data set "sin_clave_descripcion"</li>
+            <li class="success">Insert categoria con datos incompletos with data set "sin_clave_estatus"</li>
+            <li class="success">Insert categoria con datos incompletos with data set "array_completamente_vacio"</li>
+            <li class="success">Delete categoria con diferentes resultados with data set "delete_exitoso"</li>
+            <li class="success">Delete categoria con diferentes resultados with data set "delete_id_inexistente_execute_true"</li>
+            <li class="success">Delete categoria con diferentes resultados with data set "delete_execute_falla"</li>
+            <li class="success">Delete categoria retorna false en excepcion</li>
+            <li class="success">Update categoria con diferentes escenarios with data set "update_exitoso_datos_completos"</li>
+            <li class="success">Update categoria con diferentes escenarios with data set "update_sin_cambios_reales"</li>
+            <li class="success">Update categoria con diferentes escenarios with data set "update_execute_falla"</li>
+            <li class="success">Update categoria con diferentes escenarios with data set "update_cambio_estatus_inactivo"</li>
+            <li class="success">Update categoria retorna false en excepcion</li>
+            <li class="success">Update categoria con datos incompletos with data set "sin_idcategoria"</li>
+            <li class="success">Update categoria con datos incompletos with data set "sin_nombre"</li>
+            <li class="success">Update categoria con datos incompletos with data set "array_vacio"</li>
+            <li class="success">Get categoria by id retorna datos y setea propiedades</li>
+            <li class="success">Get categoria by id retorna false cuando no existe</li>
+            <li class="success">Get categoria by id retorna null en excepcion</li>
+            <li class="success">Get categoria by id con ids limite with data set "id_1_encontrado"</li>
+            <li class="success">Get categoria by id con ids limite with data set "id_maximo_no_encontrado"</li>
+            <li class="success">Get categoria by id con ids limite with data set "id_grande_no_encontrado"</li>
+            <li class="success">Reactivar categoria exitoso</li>
+            <li class="success">Reactivar categoria execute retorna false</li>
+            <li class="success">Reactivar categoria propaga excepcion</li>
+            <li class="success">Insert categoria verifica parametros s q l correctos</li>
+            <li class="success">Delete categoria verifica es soft delete</li>
         </ul>
     </body>
 </html>
