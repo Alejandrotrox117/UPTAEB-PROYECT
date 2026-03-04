@@ -60,7 +60,6 @@ function empleados_getEmpleadoData()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            error_log("=== getEmpleadoData llamado ===");
 
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Empleados', 'ver')) {
                 $response = array('status' => false, 'message' => 'No tienes permisos para ver empleados', 'data' => []);
@@ -70,13 +69,11 @@ function empleados_getEmpleadoData()
 
             // Obtener ID del usuario actual
             $idusuario = obtenerUsuarioSesion();
-            error_log("Usuario ID obtenido: " . ($idusuario ?: 'NULL'));
 
             // Obtener empleados (activos para usuarios normales, todos para super usuarios)
             $objEmpleados = getEmpleadosModel();
             $arrResponse = $objEmpleados->selectAllEmpleados($idusuario);
 
-            error_log("Empleados encontrados: " . count($arrResponse['data']));
 
             if ($arrResponse['status']) {
                 registrarEnBitacora('Empleados', 'CONSULTA_LISTADO', $idusuario);
@@ -376,25 +373,20 @@ function empleados_reactivarEmpleado()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
-            error_log("=== Iniciando reactivarEmpleado ===");
 
             $idusuarioSesion = obtenerUsuarioSesion();
-            error_log("Usuario de sesión: " . ($idusuarioSesion ?: 'NULL'));
 
             // Solo super usuarios pueden reactivar empleados
             $objEmpleados = getEmpleadosModel();
             $esSuperUsuario = $objEmpleados->verificarEsSuperUsuario($idusuarioSesion);
-            error_log("Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
 
             if (!$esSuperUsuario) {
-                error_log("Acceso denegado - no es super usuario");
                 $arrResponse = array('status' => false, 'message' => 'Solo los super usuarios pueden reactivar empleados');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                 die();
             }
 
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Empleados', 'editar')) {
-                error_log("Acceso denegado - sin permisos de editar");
                 $arrResponse = array('status' => false, 'message' => 'No tienes permisos para reactivar empleados');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                 die();
@@ -402,24 +394,19 @@ function empleados_reactivarEmpleado()
 
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
-            error_log("Datos recibidos: " . print_r($data, true));
 
             if (empty($data['idempleado']) || !is_numeric($data['idempleado'])) {
-                error_log("ID de empleado inválido: " . print_r($data['idempleado'] ?? 'NULL', true));
                 $arrResponse = array('status' => false, 'message' => 'ID de empleado inválido');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                 die();
             }
 
             $idempleado = intval($data['idempleado']);
-            error_log("Intentando reactivar empleado ID: $idempleado");
 
             $arrResponse = $objEmpleados->reactivarEmpleado($idempleado);
-            error_log("Resultado del modelo: " . print_r($arrResponse, true));
 
             if ($arrResponse['status']) {
                 registrarEnBitacora('Empleados', 'REACTIVAR', $idusuarioSesion, "Empleado ID: $idempleado reactivado");
-                error_log("Acción registrada en bitácora");
             }
 
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -440,22 +427,16 @@ function empleados_verificarSuperUsuario()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
-            error_log("=== Iniciando verificarSuperUsuario en Empleados controller ===");
 
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
-                error_log("Sesión iniciada en verificarSuperUsuario");
             } else {
-                error_log("Sesión ya estaba iniciada");
             }
 
-            error_log("Contenido de _SESSION: " . print_r($_SESSION, true));
 
             $idusuario = obtenerUsuarioSesion();
-            error_log("obtenerUsuarioSesion devolvió usuario ID: " . ($idusuario ?: 'NULL'));
 
             if (!$idusuario) {
-                error_log("Usuario no autenticado - obtenerUsuarioSesion no devolvió usuario");
                 echo json_encode([
                     'status' => false,
                     'message' => 'Usuario no autenticado',
@@ -466,12 +447,10 @@ function empleados_verificarSuperUsuario()
                 die();
             }
 
-            error_log("Verificando usuario ID: $idusuario con esSuperAdmin");
 
             $objEmpleados = getEmpleadosModel();
             $esSuperAdmin = $objEmpleados->verificarEsSuperUsuario($idusuario);
 
-            error_log("Resultado esSuperAdmin: " . ($esSuperAdmin ? 'SÍ' : 'NO'));
 
             echo json_encode([
                 'status' => true,

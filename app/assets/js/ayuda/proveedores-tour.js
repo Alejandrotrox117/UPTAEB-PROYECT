@@ -24,7 +24,7 @@ function iniciarTourProveedores() {
             });
         },
         onCancel: function() {
-            console.log('Tour del módulo de proveedores cancelado');
+            // Tour cancelado
         }
     });
 
@@ -345,15 +345,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Agregar botón de ayuda
     agregarBotonAyudaProveedores();
     
-    // Esperar a que la página cargue completamente
-    setTimeout(() => {
-        const tourCompleted = localStorage.getItem('proveedores-tour-completed');
-        
-        // Si es la primera vez o el usuario eliminó el registro, iniciar el tour
-        if (!tourCompleted) {
-            iniciarTourProveedores();
-        }
-    }, 1000);
+    // Auto-inicio del tour deshabilitado - solo se inicia manualmente desde el botón de ayuda
+    // setTimeout(() => {
+    //     const tourCompleted = localStorage.getItem('proveedores-tour-completed');
+    //     
+    //     // Si es la primera vez o el usuario eliminó el registro, iniciar el tour
+    //     if (!tourCompleted) {
+    //         iniciarTourProveedores();
+    //     }
+    // }, 1000);
 });
 
 // Exponer la función globalmente por si se quiere iniciar manualmente

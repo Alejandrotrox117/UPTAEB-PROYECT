@@ -198,19 +198,16 @@ const camposFormularioActualizarProducto = [
 function recargarTablaProductos() {
   try {
     if (tablaProductos && tablaProductos.ajax && typeof tablaProductos.ajax.reload === 'function') {
-      console.log("Recargando tabla con variable global");
       tablaProductos.ajax.reload(null, false);
       return true;
     }
 
     if ($.fn.DataTable.isDataTable('#TablaProductos')) {
-      console.log("Recargando tabla con selector ID");
       const tabla = $('#TablaProductos').DataTable();
       tabla.ajax.reload(null, false);
       return true;
     }
 
-    console.log("Recargando página completa");
     window.location.reload();
     return true;
 
@@ -536,7 +533,6 @@ function inicializarTablaProductos() {
           left: 1
       },
       initComplete: function (settings, json) {
-        console.log("DataTable inicializado correctamente");
         window.tablaProductos = this.api();
       },
       drawCallback: function (settings) {
@@ -634,25 +630,21 @@ function inicializarTablaProductos() {
   // Event listeners delegados para botones de cerrar/cancelar modales (más robusto)
   $(document).on("click", "#btnCerrarModalActualizar", function (e) {
     e.preventDefault();
-    console.log("Botón cerrar modal actualizar clickeado");
     cerrarModal("modalActualizarProducto");
   });
 
   $(document).on("click", "#btnCancelarModalActualizar", function (e) {
     e.preventDefault();
-    console.log("Botón cancelar modal actualizar clickeado");
     cerrarModal("modalActualizarProducto");
   });
 
   $(document).on("click", "#btnCerrarModalVer", function (e) {
     e.preventDefault();
-    console.log("Botón cerrar modal ver clickeado");
     cerrarModal("modalVerProducto");
   });
 
   $(document).on("click", "#btnCerrarModalVer2", function (e) {
     e.preventDefault();
-    console.log("Botón cerrar modal ver 2 clickeado");
     cerrarModal("modalVerProducto");
   });
 
