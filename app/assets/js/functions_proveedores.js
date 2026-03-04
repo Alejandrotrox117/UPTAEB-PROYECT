@@ -983,25 +983,9 @@ function forzarRedrawTablaProveedores() {
     tablaProveedores.draw();
   } else if ($.fn.DataTable.isDataTable('#TablaProveedores')) {
     $('#TablaProveedores').DataTable().draw();
-  } else {
-    console.log("[REDRAW] No se pudo encontrar la tabla");
   }
 }
 
-/**
- * Función de debug para verificar el estado actual
- */
-function debugEstadoProveedores() {
-  return {
-    esSuperUsuarioActual,
-    idUsuarioActual,
-    tablaProveedores: !!tablaProveedores,
-    dataTableExists: $.fn.DataTable.isDataTable('#TablaProveedores')
-  };
-}
-
-// Exponer función globalmente para debug
-window.debugEstadoProveedores = debugEstadoProveedores;
 window.forzarRedrawTablaProveedores = forzarRedrawTablaProveedores;
 
 /**

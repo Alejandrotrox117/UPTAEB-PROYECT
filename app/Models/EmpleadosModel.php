@@ -62,17 +62,12 @@ class EmpleadosModel
                 $this->setUsuarioActual($db, $idUsuario);
             }
 
-            error_log("=== selectAllEmpleados llamado con Usuario ID: $idUsuarioSesion ===");
-
             $esSuperUsuarioActual = $this->esSuperUsuario($idUsuarioSesion);
-            error_log("Es Super Usuario: " . ($esSuperUsuarioActual ? 'SI' : 'NO'));
 
             $whereClause = "";
             if (!$esSuperUsuarioActual) {
                 $whereClause = " WHERE estatus = 'ACTIVO'";
-                error_log("Aplicando filtro WHERE estatus = 'ACTIVO'");
             } else {
-                error_log("Super Admin detectado - mostrando TODOS los empleados");
             }
 
             $query = "SELECT 
@@ -86,13 +81,9 @@ class EmpleadosModel
                 FROM empleado" . $whereClause . " 
                 ORDER BY idempleado DESC";
 
-            error_log("Query ejecutada: $query");
-
             $stmt = $db->prepare($query);
             $stmt->execute();
             $empleados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            error_log("Total empleados encontrados: " . count($empleados));
 
             $resultado = [
                 "status" => true,
@@ -331,7 +322,6 @@ class EmpleadosModel
         $dbSeguridad = $conexion->get_conectSeguridad();
 
         try {
-            error_log("EmpleadosModel::esSuperUsuario - Verificando usuario ID: $idusuario");
 
             $sql = "SELECT u.idrol, r.nombre as rol_nombre 
                     FROM usuario u

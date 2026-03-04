@@ -189,7 +189,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (result && result.status) {
         esSuperUsuarioActual = result.es_super_usuario;
         idUsuarioActual = result.usuario_id;
-        console.log('Super usuario verificado:', esSuperUsuarioActual);
       } else {
         console.error('Error al verificar super usuario:', result ? result.message : 'Sin respuesta');
         esSuperUsuarioActual = false;
