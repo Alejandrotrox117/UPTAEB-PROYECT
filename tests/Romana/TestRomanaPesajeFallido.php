@@ -1,8 +1,14 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/romanaModel.php';
+use App\Models\RomanaModel;
+use romanaModel as GlobalRomanaModel;
+
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class TestRomanaPesajeFallido extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
     private function showMessage(string $msg): void
     {
@@ -10,7 +16,8 @@ class TestRomanaPesajeFallido extends TestCase
     }
     protected function setUp(): void
     {
-        $this->model = new RomanaModel();
+        $this->requireDatabase();
+        $this->model = new GlobalRomanaModel();
     }
     public function testRegistrarPesajeSinPeso()
     {
@@ -22,13 +29,13 @@ class TestRomanaPesajeFallido extends TestCase
             ];
             try {
                 $this->model->insertPesaje($data);
-                $this->fail('Debería lanzar PDOException');
+                $this->fail('Deberï¿½a lanzar PDOException');
             } catch (PDOException $e) {
                 $this->assertInstanceOf(PDOException::class, $e);
                 $this->assertNotEmpty($e->getMessage());
             }
         } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
+            $this->markTestSkipped('Mï¿½todo insertPesaje no existe');
         }
     }
     public function testRegistrarPesajeConPesoNegativo()
@@ -42,7 +49,7 @@ class TestRomanaPesajeFallido extends TestCase
             $result = $this->model->insertPesaje($data);
             $this->assertFalse($result);
         } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
+            $this->markTestSkipped('Mï¿½todo insertPesaje no existe');
         }
     }
     public function testRegistrarPesajeConPesoCero()
@@ -56,7 +63,7 @@ class TestRomanaPesajeFallido extends TestCase
             $result = $this->model->insertPesaje($data);
             $this->assertIsBool($result);
         } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
+            $this->markTestSkipped('Mï¿½todo insertPesaje no existe');
         }
     }
     public function testRegistrarPesajeSinLote()
@@ -68,13 +75,13 @@ class TestRomanaPesajeFallido extends TestCase
             ];
             try {
                 $this->model->insertPesaje($data);
-                $this->fail('Debería lanzar PDOException');
+                $this->fail('Deberï¿½a lanzar PDOException');
             } catch (PDOException $e) {
                 $this->assertInstanceOf(PDOException::class, $e);
                 $this->assertNotEmpty($e->getMessage());
             }
         } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
+            $this->markTestSkipped('Mï¿½todo insertPesaje no existe');
         }
     }
     public function testRegistrarPesajeConLoteInexistente()
@@ -87,13 +94,13 @@ class TestRomanaPesajeFallido extends TestCase
             ];
             try {
                 $this->model->insertPesaje($data);
-                $this->fail('Debería lanzar PDOException');
+                $this->fail('Deberï¿½a lanzar PDOException');
             } catch (PDOException $e) {
                 $this->assertInstanceOf(PDOException::class, $e);
                 $this->assertNotEmpty($e->getMessage());
             }
         } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
+            $this->markTestSkipped('Mï¿½todo insertPesaje no existe');
         }
     }
     public function testRegistrarPesajeConPesoExcesivo()
@@ -107,7 +114,7 @@ class TestRomanaPesajeFallido extends TestCase
             $result = $this->model->insertPesaje($data);
             $this->assertIsBool($result);
         } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
+            $this->markTestSkipped('Mï¿½todo insertPesaje no existe');
         }
     }
     public function testConsultarPesajeInexistente()
@@ -116,7 +123,7 @@ class TestRomanaPesajeFallido extends TestCase
             $result = $this->model->selectPesajeById(99999);
             $this->assertFalse($result);
         } else {
-            $this->markTestSkipped('Método selectPesajeById no existe');
+            $this->markTestSkipped('Mï¿½todo selectPesajeById no existe');
         }
     }
     protected function tearDown(): void

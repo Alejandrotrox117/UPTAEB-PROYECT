@@ -1,4 +1,40 @@
-Venta Flow Integration
- [x] Flujo completo venta con pagos
- [x] Venta con descuento multiples productos
+Categoria Model Unit
+ [x] Select all categorias retorna datos en exito
+ [x] Select all categorias retorna array vacio cuando no hay datos
+ [x] Select all categorias retorna array vacio en excepcion
+ [x] Insert categoria con datos validos with data set "estatus_minusculas"
+ [x] Insert categoria con datos validos with data set "estatus_mayusculas"
+ [x] Insert categoria con datos validos with data set "estatus_mixto"
+ [x] Insert categoria con datos validos with data set "estatus_inactivo"
+ [x] Insert categoria con datos validos with data set "descripcion_larga"
+ [x] Insert categoria con datos validos with data set "caracteres_especiales"
+ [x] Insert categoria retorna false cuando execute falla
+ [x] Insert categoria propaga excepcion p d o
+ [x] Insert categoria con datos incompletos with data set "sin_clave_nombre"
+ [x] Insert categoria con datos incompletos with data set "sin_clave_descripcion"
+ [x] Insert categoria con datos incompletos with data set "sin_clave_estatus"
+ [x] Insert categoria con datos incompletos with data set "array_completamente_vacio"
+ [x] Delete categoria con diferentes resultados with data set "delete_exitoso"
+ [x] Delete categoria con diferentes resultados with data set "delete_id_inexistente_execute_true"
+ [x] Delete categoria con diferentes resultados with data set "delete_execute_falla"
+ [x] Delete categoria retorna false en excepcion
+ [x] Update categoria con diferentes escenarios with data set "update_exitoso_datos_completos"
+ [x] Update categoria con diferentes escenarios with data set "update_sin_cambios_reales"
+ [x] Update categoria con diferentes escenarios with data set "update_execute_falla"
+ [x] Update categoria con diferentes escenarios with data set "update_cambio_estatus_inactivo"
+ [x] Update categoria retorna false en excepcion
+ [x] Update categoria con datos incompletos with data set "sin_idcategoria"
+ [x] Update categoria con datos incompletos with data set "sin_nombre"
+ [x] Update categoria con datos incompletos with data set "array_vacio"
+ [x] Get categoria by id retorna datos y setea propiedades
+ [x] Get categoria by id retorna false cuando no existe
+ [x] Get categoria by id retorna null en excepcion
+ [x] Get categoria by id con ids limite with data set "id_1_encontrado"
+ [x] Get categoria by id con ids limite with data set "id_maximo_no_encontrado"
+ [x] Get categoria by id con ids limite with data set "id_grande_no_encontrado"
+ [x] Reactivar categoria exitoso
+ [x] Reactivar categoria execute retorna false
+ [x] Reactivar categoria propaga excepcion
+ [x] Insert categoria verifica parametros s q l correctos
+ [x] Delete categoria verifica es soft delete
 

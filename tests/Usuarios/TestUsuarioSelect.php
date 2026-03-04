@@ -1,14 +1,18 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use App\Models\UsuariosModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
 
-require_once __DIR__ . '/../../app/models/UsuariosModel.php';
 class TestUsuarioSelect extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $model;
 
     protected function setUp(): void
     {
+        $this->requireDatabase();
         $this->model = new UsuariosModel();
     }
     public function testSeleccionarTodosUsuarios()

@@ -1,8 +1,12 @@
 <?php
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../app/models/RolesIntegradoModel.php';
+use App\Models\RolesIntegradoModel;
+require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+
 class RolesIntegradoTest extends TestCase
 {
+    use \Tests\Traits\RequiresDatabase;
+
     private $rolesIntegradoModel;
     private function showMessage(string $msg): void
     {
@@ -10,6 +14,7 @@ class RolesIntegradoTest extends TestCase
     }
     public function setUp(): void
     {
+        $this->requireDatabase();
         $this->rolesIntegradoModel = new RolesIntegradoModel();
     }
     public function testGuardarYRecuperarAsignaciones()
