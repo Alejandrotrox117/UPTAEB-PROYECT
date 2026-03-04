@@ -1,6 +1,8 @@
 <?php
 use PHPUnit\Framework\TestCase;
 use App\Models\RomanaModel;
+use romanaModel as GlobalRomanaModel;
+
 require_once __DIR__ . '/../Traits/RequiresDatabase.php';
 
 class TestRomanaPesajeFallido extends TestCase
@@ -15,7 +17,7 @@ class TestRomanaPesajeFallido extends TestCase
     protected function setUp(): void
     {
         $this->requireDatabase();
-        $this->model = new RomanaModel();
+        $this->model = new GlobalRomanaModel();
     }
     public function testRegistrarPesajeSinPeso()
     {
