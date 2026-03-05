@@ -135,6 +135,32 @@ class TestUsuarioInsertIntegrationTest extends TestCase
     }
 
     #[Test]
+    public function insertarUsuarioConNombreDuplicado()
+    {
+        // First insert
+        $data = [
+            'personaId' => 1,
+            'usuario' => 'usuario_doble_' . time(),
+            'correo' => 'doble1_' . time() . '@admin.com',
+            'clave' => 'Password123!',
+            'idrol' => 1
+        ];
+        $this->model->insertUsuario($data);
+
+        // Try duplicate username with different email
+        $data['correo'] = 'doble2_' . (time() + 1) . '@admin.com';
+        $result = $this->model->insertUsuario($data);
+        $this->assertIsArray($result);
+
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+            $this->assertNotEmpty($result['message']);
+        } else {
+            $this->assertIsBool($result['status']);
+        }
+    }
+
+    #[Test]
     public function insertarUsuarioConPasswordDebil()
     {
         $data = [

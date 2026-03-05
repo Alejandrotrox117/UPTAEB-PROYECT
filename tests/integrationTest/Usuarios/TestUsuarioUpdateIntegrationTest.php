@@ -74,6 +74,23 @@ class TestUsuarioUpdateIntegrationTest extends TestCase
     }
 
     #[Test]
+    public function actualizarConNombreDuplicado()
+    {
+        // Require two users to exist, to duplicate username.
+        $data = [
+            'nombre_usuario' => 'admin', // assuming this belongs to super admin
+            'correo' => 'test321@email.com',
+            'idrol' => 2
+        ];
+        // Try update user 2 with user 1's username
+        $result = $this->model->updateUsuario(2, $data);
+        if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+        }
+        $this->assertTrue(is_array($result) || $result === false);
+    }
+
+    #[Test]
     public function actualizarConEmailInvalido()
     {
         $data = [

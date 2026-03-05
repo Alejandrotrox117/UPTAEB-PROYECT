@@ -778,6 +778,23 @@ class UsuariosModel
     public function insertUsuario(array $data)
     {
         $this->setData($data);
+
+        if (empty($data['usuario'])) {
+            return ['status' => false, 'message' => 'El nombre de usuario es obligatorio.'];
+        }
+        if (empty($data['correo'])) {
+            return ['status' => false, 'message' => 'El correo electrónico es obligatorio.'];
+        }
+        if (empty($data['clave'])) {
+            return ['status' => false, 'message' => 'La contraseña es obligatoria.'];
+        }
+        if (empty($data['idrol'])) {
+            return ['status' => false, 'message' => 'El rol de usuario es obligatorio.'];
+        }
+        if (!filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
+            return ['status' => false, 'message' => 'El formato del correo electrónico es inválido.'];
+        }
+
         $correo = $this->getData()['correo'];
         $usuario = $this->getData()['usuario'];
 
@@ -807,6 +824,10 @@ class UsuariosModel
      */
     public function updateUsuario(int $idusuario, array $data)
     {
+        if (isset($data['correo']) && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
+            return ['status' => false, 'message' => 'El formato del correo electrónico es inválido.'];
+        }
+
         // Validaciones si son necesarias (ej. verificar si el correo se duplicaria)
         if (isset($data['correo'])) {
             if ($this->ejecutarVerificacionUsuarioPorCorreo($data['correo'], $idusuario)) {
@@ -824,6 +845,22 @@ class UsuariosModel
                     'message' => 'El nombre de usuario ya está registrado por otro usuario.',
                 ];
             }
+        }
+
+        if (isset($data['nombre_usuario'])) {
+            if ($this->ejecutarVerificacionUsuarioPorNombre($data['nombre_usuario'], $idusuario)) {
+                return [
+                    'status' => false,
+                    'message' => 'El nombre de usuario ya está registrado por otro usuario.',
+                ];
+            }
+            $data['usuario'] = $data['nombre_usuario']; // Asegurar mapeo
+        }
+
+        // Verificar si existe para no actualizar fantasmas
+        $existe = $this->ejecutarBusquedaUsuarioPorId($idusuario);
+        if (!$existe) {
+            return ['status' => false, 'message' => 'El usuario especificado no existe.'];
         }
 
         return $this->ejecutarActualizacionUsuario($idusuario, $data);

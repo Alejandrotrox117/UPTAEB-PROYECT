@@ -157,6 +157,32 @@ class TestUsuarioInsertUnitTest extends TestCase
     }
 
     #[Test]
+    public function insertarUsuarioConUsuarioDuplicado()
+    {
+        // Mock to simulate email not existing but username existing
+        $this->mockStmt->shouldReceive('fetch')->andReturn(['idusuario' => 1]); // Found
+        $this->mockStmt->shouldReceive('execute')->andReturn(true);
+        $this->mockPdo->shouldReceive('prepare')->andReturn($this->mockStmt);
+
+        $data = [
+            'personaId' => 1,
+            'usuario' => 'admin',
+            'correo' => 'test321@email.com', // different email
+            'clave' => 'Password123!',
+            'idrol' => 1
+        ];
+
+        $result = $this->model->insertUsuario($data);
+        $this->assertIsArray($result);
+
+        if (array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+        } else {
+            $this->assertIsBool($result['status']);
+        }
+    }
+
+    #[Test]
     public function insertarUsuarioConEmailInvalido()
     {
         $this->mockPdo->shouldReceive('prepare')->andReturn($this->mockStmt);

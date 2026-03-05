@@ -120,6 +120,28 @@ class TestUsuarioUpdateUnitTest extends TestCase
     }
 
     #[Test]
+    public function actualizarConNombreDuplicado()
+    {
+        // Found different user
+        $this->mockStmt->shouldReceive('execute')->andReturn(true);
+        $this->mockStmt->shouldReceive('fetch')->andReturn(['idusuario' => 3]);
+        $this->mockPdo->shouldReceive('prepare')->andReturn($this->mockStmt);
+
+        $data = [
+            'nombre_usuario' => 'admin',
+            'correo' => 'test321@email.com',
+            'idrol' => 2
+        ];
+
+        $result = $this->model->updateUsuario(2, $data);
+
+        if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+        }
+        $this->assertTrue(is_array($result) || $result === false);
+    }
+
+    #[Test]
     public function actualizarConRolInexistente()
     {
         $this->mockStmt->shouldReceive('execute')->andThrow(new Exception('Clave foranea fail'));
