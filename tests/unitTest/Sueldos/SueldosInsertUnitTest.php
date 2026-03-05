@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Sueldos;
+namespace Tests\UnitTest\Sueldos;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
@@ -12,7 +12,7 @@ use Mockery;
 
 #[RunTestsInSeparateProcesses]
 #[PreserveGlobalState(false)]
-class SueldosInsertTest extends TestCase
+class SueldosInsertUnitTest extends TestCase
 {
     private SueldosModel $model;
     /** @var \Mockery\MockInterface */
@@ -24,7 +24,7 @@ class SueldosInsertTest extends TestCase
     {
         ini_set('error_log', 'NUL');
 
-        $this->mockPdo  = Mockery::mock(\PDO::class);
+        $this->mockPdo = Mockery::mock(\PDO::class);
         $this->mockStmt = Mockery::mock(\PDOStatement::class);
 
         // Stmt por defecto: verificación → no existe sueldo previo (total=0)
@@ -53,29 +53,20 @@ class SueldosInsertTest extends TestCase
         Mockery::close();
     }
 
-    // ---------------------------------------------------------------
-    // Helpers de datos venezolanos de prueba
-    // ---------------------------------------------------------------
-
     private function datosSueldoValidos(): array
     {
         return [
-            'idpersona'   => null,
-            'idempleado'  => 3,
-            'monto'       => 800.00,
-            'idmoneda'    => 3,       // Bolívares (VES)
+            'idpersona' => null,
+            'idempleado' => 3,
+            'monto' => 800.00,
+            'idmoneda' => 3,       // Bolívares (VES)
             'observacion' => 'Pago quincenal - Caracas',
         ];
     }
 
-    // ---------------------------------------------------------------
-    // insertSueldo — casos típicos
-    // ---------------------------------------------------------------
-
     #[Test]
     public function testInsertSueldo_Exitosa_DatosValidos(): void
     {
-        // insertSueldo() → ejecutarInsercionSueldo() → 1 sola llamada a prepare.
         $stmtInsert = Mockery::mock(\PDOStatement::class);
         $stmtInsert->shouldReceive('execute')->andReturn(true);
 
@@ -87,9 +78,7 @@ class SueldosInsertTest extends TestCase
         $this->assertIsArray($result);
         $this->assertTrue($result['status'], $result['message'] ?? 'sin mensaje del modelo');
         $this->assertArrayHasKey('sueldo_id', $result);
-        $this->assertGreaterThan(0, (int)$result['sueldo_id']);
-
-        fwrite(STDOUT, "\n[MODELO] " . ($result['message'] ?? '') . "\n");
+        $this->assertGreaterThan(0, (int) $result['sueldo_id']);
     }
 
     #[Test]
@@ -110,17 +99,9 @@ class SueldosInsertTest extends TestCase
         $this->assertArrayHasKey('status', $result);
     }
 
-    // ---------------------------------------------------------------
-    // insertSueldo — casos atípicos
-    // ---------------------------------------------------------------
-
     #[Test]
     public function testInsertSueldo_AceptaInsercion_SinEmpleadoNiPersona(): void
     {
-        // insertSueldo() delega directo a ejecutarInsercionSueldo() sin validar PHP-side.
-        // Con idpersona=null e idempleado=null/ausente, el modelo sí intenta insertar.
-        // La BD (constraint NOT NULL) sería la que rechazaría, no el PHP.
-        // Aquí simulamos ese rechazo de BD mediante excepción en execute.
         $stmtInsert = Mockery::mock(\PDOStatement::class);
         $stmtInsert->shouldReceive('execute')->andThrow(
             new \Exception('Column idpersona/idempleado cannot both be NULL')
@@ -128,9 +109,9 @@ class SueldosInsertTest extends TestCase
         $this->mockPdo->shouldReceive('prepare')->andReturn($stmtInsert);
 
         $datos = [
-            'idpersona'   => null,
-            'monto'       => 800.00,
-            'idmoneda'    => 3,
+            'idpersona' => null,
+            'monto' => 800.00,
+            'idmoneda' => 3,
             'observacion' => 'Sin empleado ni persona',
         ];
 
@@ -138,14 +119,11 @@ class SueldosInsertTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status'], $result['message'] ?? 'sin mensaje del modelo');
-        fwrite(STDOUT, "\n[MODELO] " . ($result['message'] ?? '') . "\n");
     }
 
     #[Test]
     public function testInsertSueldo_Falla_ConMontoNegativo(): void
     {
-        // insertSueldo() → ejecutarInsercionSueldo() → 1 sola llamada a prepare.
-        // El modelo no valida PHP-side; simulamos rechazo de BD mediante excepción.
         $stmtInsert = Mockery::mock(\PDOStatement::class);
         $stmtInsert->shouldReceive('execute')
             ->andThrow(new \Exception('CHECK constraint failed: monto >= 0'));
@@ -158,7 +136,6 @@ class SueldosInsertTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status'], $result['message'] ?? 'sin mensaje del modelo');
-        fwrite(STDOUT, "\n[MODELO] " . ($result['message'] ?? '') . "\n");
     }
 
     #[Test]
@@ -178,13 +155,11 @@ class SueldosInsertTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status'], $result['message'] ?? 'sin mensaje del modelo');
-        fwrite(STDOUT, "\n[MODELO] " . ($result['message'] ?? '') . "\n");
     }
 
     #[Test]
     public function testInsertSueldo_Falla_ErrorDeBD(): void
     {
-        // insertSueldo() → ejecutarInsercionSueldo() → 1 sola llamada a prepare.
         $stmtInsert = Mockery::mock(\PDOStatement::class);
         $stmtInsert->shouldReceive('execute')
             ->andThrow(new \Exception('SQLSTATE: Connection lost'));
@@ -194,19 +169,14 @@ class SueldosInsertTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertFalse($result['status'], $result['message'] ?? 'sin mensaje del modelo');
-        fwrite(STDOUT, "\n[MODELO] " . ($result['message'] ?? '') . "\n");
     }
-
-    // ---------------------------------------------------------------
-    // DataProviders — datos con distintos empleados
-    // ---------------------------------------------------------------
 
     public static function providerDatosSueldosVariados(): array
     {
         return [
-            'empleado_1_bolivares' => [1, 800.00,   3],
-            'empleado_2_dolares'   => [2, 200.00,   1],
-            'empleado_3_euros'     => [3, 180.00,   2],
+            'empleado_1_bolivares' => [1, 800.00, 3],
+            'empleado_2_dolares' => [2, 200.00, 1],
+            'empleado_3_euros' => [3, 180.00, 2],
         ];
     }
 
@@ -218,13 +188,13 @@ class SueldosInsertTest extends TestCase
         $stmtInsert->shouldReceive('execute')->andReturn(true);
 
         $this->mockPdo->shouldReceive('prepare')->andReturn($stmtInsert);
-        $this->mockPdo->shouldReceive('lastInsertId')->andReturn((string)(10 + $idempleado));
+        $this->mockPdo->shouldReceive('lastInsertId')->andReturn((string) (10 + $idempleado));
 
         $datos = [
-            'idpersona'   => null,
-            'idempleado'  => $idempleado,
-            'monto'       => $monto,
-            'idmoneda'    => $idmoneda,
+            'idpersona' => null,
+            'idempleado' => $idempleado,
+            'monto' => $monto,
+            'idmoneda' => $idmoneda,
             'observacion' => 'Pago prueba empleado ' . $idempleado,
         ];
 

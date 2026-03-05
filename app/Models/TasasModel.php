@@ -98,6 +98,7 @@ class TasasModel
         }
 
         $conexion = new Conexion();
+        $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
@@ -137,6 +138,7 @@ class TasasModel
         $this->setCodigoMoneda($codigoMoneda);
 
         $conexion = new Conexion();
+        $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         $sql = "SELECT codigo_moneda, tasa_a_bs AS tasa_a_ves, fecha_publicacion_bcv, fecha_creacion AS fecha_captura
@@ -165,6 +167,7 @@ class TasasModel
     private function ejecutarSelectAllTasas(): array
     {
         $conexion = new Conexion();
+        $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         $sql = "SELECT id, codigo_moneda, tasa_a_bs AS tasa_a_ves, fecha_publicacion_bcv, fecha_creacion AS fecha_captura FROM historial_tasas_bcv ORDER BY fecha_publicacion_bcv DESC, fecha_creacion DESC";
