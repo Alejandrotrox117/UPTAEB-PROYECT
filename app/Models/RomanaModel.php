@@ -1,8 +1,12 @@
 <?php
-require_once("app/core/conexion.php");
-require_once("app/core/mysql.php");
+namespace App\Models;
 
-class romanaModel extends Mysql
+use App\Core\Conexion;
+use App\Core\Mysql;
+use PDO;
+use PDOException;
+
+class RomanaModel extends Mysql
 {
     private $conexionObjeto;
     private $db;
@@ -20,45 +24,45 @@ class romanaModel extends Mysql
 
     public function __construct()
     {
+        // Llamar explícitamente al constructor del padre si es necesario
+        parent::__construct();
         $this->conexionObjeto = new Conexion();
-        $this->db = $this->conexionObjeto->connect();
+        $this->db = clone $this->conexionObjeto;
+        $this->db->connect();
     }
 
     public function __destruct()
     {
-        if ($this->conexionObjeto) {
-            $this->conexionObjeto->disconnect();
+        if ($this->db) {
+            $this->db->disconnect();
         }
     }
 
-  
-public function selectAllRomana()
-{
-    $conexion = new Conexion();
-    $conexion->connect();
-    $db = $conexion->get_conectGeneral();
+    public function selectAllRomana()
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
 
-    try {
-        $this->setQuery("SELECT idromana, peso, fecha, estatus, fecha_creacion FROM historial_romana ORDER BY idromana DESC");
-        $stmt = $db->prepare($this->getQuery());
-        $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $this->setQuery("SELECT idromana, peso, fecha, estatus, fecha_creacion FROM historial_romana ORDER BY idromana DESC");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return [
-            'status' => true,
-            'data' => $result
-        ];
-    } catch (PDOException $e) {
-        error_log("RomanaModel::selectAllRomana - Error: " . $e->getMessage());
-        return [
-            'status' => false,
-            'data' => [],
-            'message' => 'Error al obtener los registros'
-        ];
-    } finally {
-        $conexion->disconnect();
+            return [
+                'status' => true,
+                'data' => $result
+            ];
+        } catch (PDOException $e) {
+            error_log("RomanaModel::selectAllRomana - Error: " . $e->getMessage());
+            return [
+                'status' => false,
+                'data' => [],
+                'message' => 'Error al obtener los registros'
+            ];
+        } finally {
+            $conexion->disconnect();
+        }
     }
 }
-
-}
-   
