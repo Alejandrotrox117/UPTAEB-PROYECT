@@ -37,6 +37,9 @@ class AnularVentaUnitTest extends TestCase
 
         $mockConexion = Mockery::mock('overload:App\Core\Conexion');
         $mockConexion->shouldReceive('getConexion')->andReturn($mockPdo);
+        $mockConexion->shouldReceive('connect')->andReturn(true);
+        $mockConexion->shouldReceive('disconnect')->andReturn(true);
+        $mockConexion->shouldReceive('get_conectGeneral')->andReturn($mockPdo);
 
         if (method_exists($this->model, 'anularVenta')) {
             $resultado = $this->model->anularVenta(1, 'Prueba unitaria anulación');

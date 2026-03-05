@@ -37,6 +37,10 @@ class ConsultarVentasUnitTest extends TestCase
 
         $mockConexion = Mockery::mock('overload:App\Core\Conexion');
         $mockConexion->shouldReceive('getConexion')->andReturn($mockPdo);
+        $mockConexion->shouldReceive('connect')->andReturn(true);
+        $mockConexion->shouldReceive('disconnect')->andReturn(true);
+        $mockConexion->shouldReceive('get_conectGeneral')->andReturn($mockPdo);
+        $mockConexion->shouldReceive('get_conectSeguridad')->andReturn($mockPdo);
 
         if (method_exists($this->model, 'getAllVentas')) {
             $resultado = $this->model->getAllVentas();
