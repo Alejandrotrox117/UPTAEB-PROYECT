@@ -6,7 +6,6 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
-use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use App\Models\CategoriasModel;
 use Mockery;
 use PDO;
@@ -14,7 +13,6 @@ use PDOStatement;
 use PDOException;
 
 #[RunTestsInSeparateProcesses]
-#[PreserveGlobalState(false)]
 class CategoriasUnitTest extends TestCase
 {
     private CategoriasModel $model;

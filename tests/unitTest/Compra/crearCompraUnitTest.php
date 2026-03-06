@@ -6,14 +6,12 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
-use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use App\Models\ComprasModel;
 use Mockery;
 use PDO;
 use PDOStatement;
 
 #[RunTestsInSeparateProcesses]
-#[PreserveGlobalState(false)]
 class crearCompraUnitTest extends TestCase
 {
     private ComprasModel $comprasModel;

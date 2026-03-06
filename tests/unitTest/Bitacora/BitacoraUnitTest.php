@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
-use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use App\Models\BitacoraModel;
 use Mockery;
 
@@ -19,7 +18,6 @@ use Mockery;
  * No toca la base de datos real.
  */
 #[RunTestsInSeparateProcesses]
-#[PreserveGlobalState(false)]
 class BitacoraUnitTest extends TestCase
 {
     private BitacoraModel $model;
