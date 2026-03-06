@@ -334,7 +334,7 @@ $permisos = $data['permisos'] ?? []; ?>
 
 <!-- Modal Pagos de Venta -->
 <div id="modalPagosVenta" class="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 opacity-0 pointer-events-none transparent backdrop-blur-[2px] transition-opacity duration-300">
-  <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg flex flex-col" style="max-height:90vh">
+  <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg flex flex-col" style="max-height:92vh">
     <!-- Header -->
     <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200 flex-shrink-0">
       <div>
@@ -350,21 +350,103 @@ $permisos = $data['permisos'] ?? []; ?>
         </svg>
       </button>
     </div>
+
     <!-- Resumen balance -->
     <div id="modalPagos_resumen" class="px-6 pt-4 pb-3 border-b border-gray-100 flex-shrink-0"></div>
-    <!-- Cuerpo scrolleable: historial + formulario -->
+
+    <!-- Cuerpo scrolleable: historial -->
     <div class="overflow-y-auto flex-1 px-6 py-4" id="modalPagos_cuerpo">
       <div class="flex justify-center items-center py-8">
         <i class="fas fa-spinner fa-spin mr-2 text-gray-400"></i>
         <span class="text-gray-400">Cargando...</span>
       </div>
     </div>
-    <!-- Footer -->
-    <div class="flex justify-end px-6 py-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
-      <button type="button" id="cerrarModalPagosVentaBtn2" class="px-5 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Cerrar</button>
+
+    <!-- Formulario de nuevo pago (estático, se muestra/oculta por JS) -->
+    <div id="seccionNuevoPago" class="hidden border-t border-gray-200 px-6 py-4 bg-gray-50 flex-shrink-0">
+      <h4 class="text-sm font-semibold text-gray-700 mb-3">
+        <i class="fas fa-plus-circle mr-1 text-green-500"></i>Registrar nuevo pago
+      </h4>
+      <form id="formNuevoPagoVenta" novalidate>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+          <!-- Monto -->
+          <div>
+            <label for="pagoMonto" class="block text-xs font-medium text-gray-600 mb-1">
+              Monto <span class="text-red-400">*</span>
+              <span id="pagoMonto_hint" class="text-gray-400 font-normal ml-1"></span>
+            </label>
+            <div id="pagoMonto_wrapper" class="flex items-center border rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-green-400">
+              <input type="number" id="pagoMonto" name="monto" step="0.01" min="0.01"
+                class="flex-1 px-3 py-2 text-sm outline-none bg-white"
+                placeholder="0.00" />
+              <span id="pagoMonto_moneda" class="px-2 text-xs text-gray-400 bg-gray-50 border-l whitespace-nowrap">—</span>
+            </div>
+            <p id="pagoMonto_error" class="mt-1 text-xs text-red-500 hidden"></p>
+          </div>
+
+          <!-- Método de pago -->
+          <div>
+            <label for="pagoTipo" class="block text-xs font-medium text-gray-600 mb-1">
+              Método de pago <span class="text-red-400">*</span>
+            </label>
+            <select id="pagoTipo" name="idtipo_pago"
+              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 bg-white">
+              <option value="">Seleccionar...</option>
+            </select>
+            <p id="pagoTipo_error" class="mt-1 text-xs text-red-500 hidden"></p>
+          </div>
+
+          <!-- Fecha -->
+          <div>
+            <label for="pagoFecha" class="block text-xs font-medium text-gray-600 mb-1">
+              Fecha <span class="text-red-400">*</span>
+            </label>
+            <input type="date" id="pagoFecha" name="fecha_pago"
+              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 bg-white" />
+            <p id="pagoFecha_error" class="mt-1 text-xs text-red-500 hidden"></p>
+          </div>
+
+          <!-- Referencia (opcional) -->
+          <div>
+            <label for="pagoReferencia" class="block text-xs font-medium text-gray-600 mb-1">
+              Referencia <span class="text-gray-400 font-normal">(opcional)</span>
+            </label>
+            <input type="text" id="pagoReferencia" name="referencia"
+              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 bg-white"
+              placeholder="Nro. transferencia, cheque..." maxlength="100" />
+          </div>
+
+          <!-- Observaciones (span 2, opcional) -->
+          <div class="sm:col-span-2">
+            <label for="pagoObservaciones" class="block text-xs font-medium text-gray-600 mb-1">
+              Observaciones <span class="text-gray-400 font-normal">(opcional)</span>
+            </label>
+            <input type="text" id="pagoObservaciones" name="observaciones"
+              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 bg-white"
+              placeholder="Ej: Pago parcial del cliente, cheque diferido..." maxlength="255" />
+          </div>
+
+        </div>
+      </form>
     </div>
+
+   
+    <div class="flex justify-between px-6 py-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
+      <button type="button" id="cerrarModalPagosVentaBtn2"
+        class="btn-neutral px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-base font-medium">
+        Cancelar
+      </button>
+      <button type="submit" form="formNuevoPagoVenta" id="btnSubmitPago"
+        class="btn-success px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-base font-medium disabled:opacity-60 flex items-center gap-2">
+        <i class="fas fa-save mr-2"></i> Guardar Pago
+      </button>
+    </div>
+
   </div>
 </div>
+
+
 
 <div id="permisosUsuario" data-permisos='<?= json_encode($permisos) ?>' style="display:none"></div>
 <?php footerAdmin($data); ?>

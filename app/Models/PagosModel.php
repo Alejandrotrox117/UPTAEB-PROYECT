@@ -1361,7 +1361,7 @@ class PagosModel
 
             // Si el balance llega a 0, marcar como pagada
             if ($nuevoBalance <= 0.01) {
-                $this->setQuery("UPDATE venta SET estatus = 'PAGADA', balance = 0, ultima_modificacion = NOW() WHERE idventa = ?");
+                $this->setQuery("UPDATE venta SET estatus = 'FINALIZADA', balance = 0, ultima_modificacion = NOW() WHERE idventa = ?");
                 $stmt = $db->prepare($this->getQuery());
                 $stmt->execute([$idventa]);
 
@@ -1375,7 +1375,7 @@ class PagosModel
                         //     $notificacionesModel->limpiarNotificacionesVentaPagada($idventa);
                         //     error_log("PagosModel: Notificaciones limpiadas para venta pagada ID: {$idventa}");
                         // }
-                        error_log("PagosModel: Venta marcada como pagada ID: {$idventa}");
+                        error_log("PagosModel: Venta marcada como FINALIZADA ID: {$idventa}");
                     }
                 } catch (Exception $e) {
                     error_log("PagosModel: Error al procesar notificaciones de venta pagada ID {$idventa}: " . $e->getMessage());

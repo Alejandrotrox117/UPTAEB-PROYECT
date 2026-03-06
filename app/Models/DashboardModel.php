@@ -230,8 +230,8 @@ class DashboardModel
         $db = $conexion->get_conectGeneral();
         try {
             $stmt = $db->prepare("SELECT 
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus = 'PAGADA') as ventas_hoy,
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus = 'PAGADA') as ventas_ayer,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = CURDATE() AND estatus = 'FINALIZADA') as ventas_hoy,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus = 'FINALIZADA') as ventas_ayer,
                 (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = CURDATE() AND estatus_compra = 'PAGADA') as compras_hoy,
                 (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE fecha = DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND estatus_compra = 'PAGADA') as compras_ayer,
                 (SELECT COALESCE(SUM(existencia * precio), 0) FROM producto WHERE estatus = 'activo') as valor_inventario,
@@ -302,7 +302,7 @@ class DashboardModel
                 FROM detalle_venta dv
                 JOIN producto p ON dv.idproducto = p.idproducto
                 JOIN venta v ON dv.idventa = v.idventa
-                WHERE v.estatus = 'PAGADA' AND MONTH(v.fecha_venta) = MONTH(CURDATE())
+                WHERE v.estatus = 'FINALIZADA' AND MONTH(v.fecha_venta) = MONTH(CURDATE())
                 GROUP BY p.idproducto, p.nombre
                 ORDER BY cantidad DESC
                 LIMIT 5");
@@ -339,7 +339,7 @@ class DashboardModel
                 v.estatus as estado
                 FROM venta v
                 JOIN cliente c ON v.idcliente = c.idcliente
-                WHERE v.estatus = 'PAGADA'
+                WHERE v.estatus = 'FINALIZADA'
                 ORDER BY v.fecha_venta DESC, v.idventa DESC
                 LIMIT 10");
             $stmt->execute();
@@ -364,7 +364,7 @@ class DashboardModel
                 COUNT(*) as cantidad
                 FROM venta 
                 WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-                AND estatus = 'PAGADA'
+                AND estatus = 'FINALIZADA'
                 GROUP BY mes 
                 ORDER BY mes ASC");
             $stmt->execute();
@@ -624,13 +624,13 @@ class DashboardModel
             $stmt = $db->prepare("SELECT 
                 CAST(COALESCE(
                     (SELECT (SUM(v.total_general) - (SELECT COALESCE(SUM(c.total_general), 0) FROM compra c WHERE MONTH(c.fecha) = MONTH(CURDATE()))) / NULLIF(SUM(v.total_general), 0) * 100
-                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'PAGADA'), 0
+                    FROM venta v WHERE MONTH(v.fecha_venta) = MONTH(CURDATE()) AND v.estatus = 'FINALIZADA'), 0
                 ) AS DECIMAL(10,2)) as margen_ganancia,
                 
                 CAST(COALESCE(
                     (SELECT ((SUM(total_general) - (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND estatus_compra = 'PAGADA')) / 
                     NULLIF((SELECT SUM(total_general) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND estatus_compra = 'PAGADA'), 0)) * 100
-                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'PAGADA'), 0
+                    FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND estatus = 'FINALIZADA'), 0
                 ) AS DECIMAL(10,2)) as roi_mes,
                 
                 CAST(COALESCE(
@@ -666,7 +666,7 @@ class DashboardModel
                 AVG(total_general) as ticket_promedio
                 FROM venta 
                 WHERE fecha_venta >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                AND estatus = 'PAGADA'
+                AND estatus = 'FINALIZADA'
                 GROUP BY periodo 
                 ORDER BY periodo ASC");
             $stmt->execute();
@@ -697,7 +697,7 @@ class DashboardModel
                         SUM(dv.cantidad * dv.precio_unitario_venta) as ingresos
                     FROM detalle_venta dv
                     INNER JOIN venta v ON dv.idventa = v.idventa
-                    WHERE v.estatus = 'PAGADA'
+                    WHERE v.estatus = 'FINALIZADA'
                     GROUP BY dv.idproducto
                 ) ventas ON p.idproducto = ventas.idproducto
                 LEFT JOIN (
@@ -848,7 +848,7 @@ class DashboardModel
                 AVG(v.total_general) as ticket_promedio
                 FROM cliente c
                 JOIN venta v ON c.idcliente = v.idcliente
-                WHERE c.estatus = 'activo' AND v.estatus = 'PAGADA'
+                WHERE c.estatus = 'activo' AND v.estatus = 'FINALIZADA'
                 GROUP BY c.idcliente, c.nombre, c.apellido
                 HAVING total_comprado > 0
                 ORDER BY total_comprado DESC
@@ -902,7 +902,7 @@ class DashboardModel
         try {
             // Margen de ganancia del mes
             $stmt = $db->prepare("SELECT 
-                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND YEAR(fecha_venta) = YEAR(CURDATE()) AND estatus = 'PAGADA') as ingresos_mes,
+                (SELECT COALESCE(SUM(total_general), 0) FROM venta WHERE MONTH(fecha_venta) = MONTH(CURDATE()) AND YEAR(fecha_venta) = YEAR(CURDATE()) AND estatus = 'FINALIZADA') as ingresos_mes,
                 (SELECT COALESCE(SUM(total_general), 0) FROM compra WHERE MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE()) AND estatus_compra = 'PAGADA') as egresos_mes");
             $stmt->execute();
             $finanzas = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -963,7 +963,7 @@ class DashboardModel
                 COALESCE(SUM(CASE WHEN fecha_venta = DATE_SUB(CURDATE(), INTERVAL 1 DAY) THEN total_general ELSE 0 END), 0) as ayer,
                 COALESCE(SUM(CASE WHEN YEARWEEK(fecha_venta, 1) = YEARWEEK(CURDATE(), 1) THEN total_general ELSE 0 END), 0) as esta_semana,
                 COALESCE(SUM(CASE WHEN MONTH(fecha_venta) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) THEN total_general ELSE 0 END), 0) as mes_pasado
-                FROM venta WHERE estatus = 'PAGADA'
+                FROM venta WHERE estatus = 'FINALIZADA'
                 
                 UNION ALL
                 
