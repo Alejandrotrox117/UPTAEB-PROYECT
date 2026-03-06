@@ -736,23 +736,21 @@ class eliminarProveedorUnitTest extends TestCase
 
 **ENTRADAS:**
 
-Para la creación de proveedores se probaron dos casos válidos: uno con fecha de nacimiento (María López, identificación V-12345678, con datos completos de dirección, correo y teléfono) y otro sin fecha de nacimiento (Carlos Ramos, identificación V-98765432). También se verificó el comportamiento ante identificaciones duplicadas usando V-11111111 y V-22222222, donde el sistema debe rechazar la inserción. Adicionalmente se evaluó el caso donde la inserción no genera un ID válido y cuando ocurren excepciones en la base de datos.
-
-Para las consultas se utilizaron múltiples escenarios: consultar todos los proveedores con diferentes niveles de usuario (superusuario y usuario regular), consultar proveedores por ID tanto existentes (ID 5 - Pedro Jiménez) como inexistentes (IDs 99999 y 12345678), obtener solo proveedores activos, y realizar búsquedas con términos válidos (Luis) e inválidos (término vacío y xyzxyzxyz).
-
-En las actualizaciones se probaron casos exitosos con datos completos (ID 10 - Proveedor Actualizado S.A.) y parciales (ID 20 - solo cambio de nombre), así como intentos de actualización con identificaciones duplicadas (IDs 1 y 5 con identificaciones V-99999999 y J-12345678-0 respectivamente) y casos de excepciones en base de datos.
-
-Para la eliminación se verificó la desactivación exitosa de proveedores existentes (ID 5), intentos de eliminar IDs inexistentes (99999 y 12345678), y el manejo de excepciones. Finalmente, se probó la reactivación de proveedores tanto exitosa (ID 3) como fallida (IDs 88888 y 77777 inexistentes), incluyendo casos de excepciones en la base de datos.
+- Creación: María López (V-12345678, con fecha de nacimiento), Carlos Ramos (V-98765432, sin fecha); duplicados V-11111111 y V-22222222; fallo de `lastInsertId`; excepción BD.
+- Consultas: todos (superusuario y usuario regular); por ID existente (5 - Pedro Jiménez) e inexistente (99999, 12345678); solo activos; búsquedas (“Luis”, vacío, “xyzxyzxyz”).
+- Actualización: datos completos (ID 10), solo nombre (ID 20), identificación duplicada (IDs 1 y 5), excepción BD.
+- Eliminación: ID existente (5), inexistentes (99999, 12345678), excepción BD.
+- Reactivación: ID inactivo (3), inexistentes (88888, 77777), excepción BD.
 
 **SALIDAS ESPERADAS:**
 
-Las operaciones de inserción exitosas deben retornar un array con status true y un mensaje confirmando que el proveedor fue creado exitosamente, mientras que los intentos con identificaciones duplicadas o fallos en lastInsertId deben retornar status false con mensajes indicando la duplicación o el error correspondiente.
-
-Las consultas de todos los proveedores deben retornar siempre un array con las claves status y data, siendo status true cuando la operación se ejecuta correctamente independientemente de si hay o no registros. Las consultas por ID deben retornar false cuando el ID no existe, o un array con los datos completos del proveedor (incluyendo idproveedor, nombre, apellido, identificacion, teléfono, correo y estatus) cuando el ID existe. La consulta de proveedores activos debe retornar un array con status true y data vacía cuando no hay proveedores, o con los datos de los proveedores activos. Las búsquedas deben retornar status true con data vacía cuando no hay coincidencias, o status true con los datos encontrados cuando hay coincidencias.
-
-Las actualizaciones exitosas deben retornar un array con status true y un mensaje indicando que el proveedor fue actualizado correctamente. Los intentos de actualización con identificaciones duplicadas deben retornar status false con un mensaje indicando que la identificación está duplicada. Las excepciones en base de datos durante la actualización deben resultar en status false.
-
-Las eliminaciones exitosas de proveedores existentes deben retornar true, mientras que los intentos de eliminar IDs inexistentes o que ya están inactivos deben retornar false. Las excepciones durante la eliminación también deben resultar en false. La reactivación exitosa debe retornar un array con status true, mientras que intentos de reactivar IDs inexistentes o excepciones en base de datos deben retornar un array con status false.
+- Inserción válida → `status true` + mensaje; duplicado / fallo → `status false` + mensaje.
+- Consulta de todos → siempre `{status true, data [...]}`.
+- Por ID existente → datos completos (idproveedor, nombre, apellido, identificacion, teléfono, correo, estatus); inexistente → `false`.
+- Activos / búsquedas → `status true` + `data` (vacío si sin coincidencias).
+- Actualización exitosa → `status true`; identificación duplicada / excepción → `status false`.
+- Eliminación de existente → `true`; inexistente / inactivo / excepción → `false`.
+- Reactivación exitosa → `status true`; inexistente / excepción → `status false`.
 
 ### Resultado
 
@@ -780,4 +778,4 @@ Command exited with code 1
 
 ### Observaciones
 
-Todas las 30 pruebas unitarias del módulo Proveedores se ejecutaron exitosamente con 68 aserciones confirmadas. Las pruebas validan adecuadamente las operaciones CRUD, la prevención de duplicados mediante validación de identificaciones, el correcto manejo de excepciones y la integridad de los datos. El uso de mocks de PDO permite aislar efectivamente la lógica de negocio de la capa de acceso a datos. La ejecución en procesos separados garantiza que no haya interferencia entre las diferentes pruebas. El sistema demuestra una robusta validación de datos de proveedores y un manejo apropiado de casos extremos y errores.
+30 pruebas y 68 aserciones ejecutadas correctamente en ~6 s. La validación de duplicados de identificación opera tanto en creación como en actualización. El módulo cubre el ciclo CRUD completo más la operación de reactivación de registros inactivos.

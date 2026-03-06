@@ -464,15 +464,18 @@ class consultarPagosUnitTest extends TestCase
 
 **ENTRADAS:**
 
-Las pruebas de inserción utilizan datos de pagos completos que incluyen información del tipo de pago, monto, referencia y fecha. Se probaron dos escenarios exitosos: primero un pago relacionado con una compra donde la persona es nula, con un monto de 500.00 y referencia REF-TEST-001, y segundo un pago de venta con monto de 1200.50 y referencia REF-TEST-002. Para los casos de falla, se probó intencionalmente la omisión del campo monto para simular datos incompletos, y se envió un monto negativo de -100.00 para validar que el sistema rechace valores inválidos. También se verificó el comportamiento cuando la base de datos retorna un ID cero después de la inserción, lo cual indica un fallo en la operación. Finalmente, se probó el caso de una persona inexistente con ID 9999, para confirmar que el sistema nulifica automáticamente la referencia y continúa con la inserción.
-
-En cuanto a las consultas, se probaron escenarios donde el listado de todos los pagos retorna múltiples registros con sus detalles completos (monto, referencia, fecha formateada, estado, método de pago), así como el caso donde no existen registros y debe retornar un array vacío. Para las búsquedas por ID se utilizaron tanto IDs existentes como el 5 que debería retornar los datos completos del pago, como IDs inexistentes como el 99999 que debe indicar que no se encontró el registro. También se simularon excepciones de conexión a la base de datos para verificar el manejo de errores.
+- Inserción exitosa: pago por compra (`idpersona` nulo, monto 500.00, REF-TEST-001) y por venta (`idventa` = 10, monto 1 200.50, REF-TEST-002).
+- Inserción fallida: campo `monto` omitido, monto negativo (−100.00), `lastInsertId` = 0, persona inexistente (ID 9999).
+- Consultas: listado con 2 registros y vacío; búsqueda por ID existente (5) e inexistente (99999); excepciones PDO simuladas.
 
 **SALIDAS ESPERADAS:**
 
-Cuando se inserta un pago con datos válidos y completos, el sistema debe retornar un array con status true y dentro de data debe incluir el idpago generado que sea mayor a cero, específicamente esperamos los IDs 42 y 55 en nuestras pruebas simuladas. En contraste, cuando hay problemas como datos incompletos (ausencia del campo monto) o valores inválidos (monto negativo), el sistema debe responder con status false acompañado de un mensaje descriptivo del error. Lo mismo ocurre cuando lastInsertId retorna cero, donde también esperamos status false. El caso especial de la persona inexistente es interesante porque aunque la persona no existe, el sistema debe nulificar esa referencia y completar la inserción exitosamente, retornando status true con el ID generado.
-
-Para las consultas, cuando se solicitan todos los pagos y existen registros, debe retornar status true con un array data conteniendo todos los pagos, cada uno con su información completa incluyendo el monto formateado, la referencia, fecha de pago con formato legible, estado activo, método de pago y destinatario. Si no hay registros, aunque status sea true, el array data debe estar vacío. En la búsqueda por ID, si el pago existe debe retornar status true con todos los datos del pago específico, pero si el ID no existe en el sistema, debe retornar status false con un mensaje indicando que no se encontró el registro. Cuando ocurre cualquier excepción de base de datos, ya sea en el listado completo o en la búsqueda individual, el sistema debe capturar el error y retornar status false con un mensaje descriptivo del problema.
+- Inserción válida → `status true` + `data.idpago` > 0.
+- Monto omitido / negativo / `lastInsertId` = 0 → `status false` + mensaje.
+- Persona inexistente (ID 9999) → `idpersona` se nulifica, inserción exitosa → `status true`.
+- Listado con datos → `status true` + `data` con pagos completos; vacío → `status true` + `data []`.
+- Búsqueda por ID existente → `status true`; inexistente → `status false` + mensaje.
+- Excepción de BD → `status false` + mensaje descriptivo.
 
 ### Resultado
 
@@ -496,17 +499,7 @@ Tests: 12, Assertions: 47, PHPUnit Warnings: 1, Warnings: 1, PHPUnit Deprecation
 
 ### Observaciones
 
-La ejecución de las pruebas unitarias del módulo de Gestión de Pagos fue completamente exitosa, procesando un total de 12 pruebas que juntas realizaron 47 aserciones. Todas las pruebas pasaron sin ningún fallo, lo cual demuestra que el modelo de pagos está funcionando correctamente en todos los escenarios planteados. El proceso tomó apenas 2.050 segundos y utilizó 10 MB de memoria, lo que indica una buena eficiencia en la ejecución.
-
-Las pruebas cubrieron de manera exhaustiva tanto el proceso de creación de pagos como las operaciones de consulta. En el lado de las inserciones, se validó exitosamente que el sistema acepta pagos bien formados relacionados tanto con compras como con ventas, manejando correctamente los casos donde la persona asociada es nula. Una característica interesante que se confirmó es la capacidad del sistema para detectar cuando se intenta asociar un pago a una persona inexistente, en cuyo caso nulifica automáticamente esa referencia pero permite que la operación continúe, lo cual es un comportamiento robusto que evita fallos en la inserción por datos de referencia incorrectos.
-
-El sistema demostró una sólida validación de datos al rechazar apropiadamente los pagos con información incompleta o inválida. Los casos de prueba confirmaron que cuando falta el campo monto o cuando se proporciona un monto negativo, el modelo captura la excepción de base de datos y retorna un mensaje de error claro al usuario. También se verificó que cuando lastInsertId retorna cero, lo cual indicaría un problema en la inserción a nivel de base de datos, el sistema lo detecta y responde con status false.
-
-En cuanto a las operaciones de consulta, las pruebas confirmaron que tanto el listado completo de pagos como la búsqueda por ID funcionan correctamente. El método selectAllPagos retorna apropiadamente un array con todos los registros cuando existen datos, y maneja bien el caso de una base de datos vacía retornando un array data sin elementos. La búsqueda individual por ID fue igualmente robusta, devolviendo el pago completo cuando el ID existe y respondiendo con un mensaje claro cuando no se encuentra el registro solicitado.
-
-Un aspecto importante que se validó es el manejo de excepciones. El sistema demostró resiliencia ante problemas de conectividad o errores de base de datos simulados, capturando las excepciones PDO y transformándolas en respuestas controladas con status false y mensajes descriptivos, evitando así que la aplicación falle abruptamente ante problemas de infraestructura.
-
-El único warning reportado se refiere a la ausencia de un driver de cobertura de código, lo cual no afecta la funcionalidad de las pruebas sino solo la capacidad de generar reportes de cobertura. Este es un tema de configuración del entorno y no un problema del código bajo prueba.
+12 pruebas y 47 aserciones ejecutadas correctamente en ~2 s. El sistema nulifica automáticamente referencias a personas inexistentes sin interrumpir la operación. Todas las excepciones PDO son capturadas y convertidas en respuestas controladas con `status false`.
 
 ---
 

@@ -952,27 +952,21 @@ class rolesIntegradoUnitTest extends TestCase
 
 **ENTRADAS:**
 
-Para las consultas se probaron IDs existentes que devuelven datos completos del rol (ID 5, nombre OPERADOR), IDs inexistentes muy altos (999999, 888888, 2147483647) que devuelven false, listados de roles con datos y vacíos, y consultas específicas para selects. Para verificación de super usuario se probaron IDs con cuenta igual a 1 (es super usuario) y cuenta igual a 0 (usuario normal).
-
-En la creación se probaron casos exitosos con nombres únicos como GERENTE, AUDITOR y SUPERVISOR con descripciones de diferentes longitudes (hasta 255 caracteres), estados ACTIVO e INACTIVO. Se validaron casos de nombres duplicados como ADMIN y SUPER_USUARIO que ya existen en el sistema. También se simularon fallos en la base de datos durante la inserción con constraint violations. 
-
-Para la actualización se probaron cambios exitosos de nombre (GERENTE_NUEVO) y estatus (INACTIVO), conflictos de nombre cuando otro rol ya usa el nombre (ADMIN), y casos sin cambios reales donde los datos son idénticos a los actuales. En reactivación se probaron roles inactivos (ID 10, nombre VIEJO), roles que no existen (ID 99999 devuelve false), y roles ya activos que no requieren reactivación.
-
-En eliminación se validaron roles sin usuarios asociados (IDs 7 y 12 con count 0 y rowCount 1), roles en uso por 1 o 10 usuarios, IDs inexistentes con count 0 pero rowCount 0, y excepciones de base de datos durante la desactivación.
-
-Para el módulo integrado se probaron IDs de rol inválidos (0 y -5), asignaciones sin permisos específicos (solo módulos 1 y 5), asignaciones con permisos específicos (módulo 1 con permisos 1 y 2, módulo 4 con permiso 3), fallos de transacción con FK constraint, y consultas de asignaciones con datos y vacías. También se probaron métodos generales de consulta retornando arrays con status true para roles, módulos activos y permisos activos.
+- Consultas: ID existente (5 - OPERADOR), IDs inexistentes (999999, 888888, 2147483647), listados, selects; super usuario con count = 1 y count = 0.
+- Creación: nombres únicos (GERENTE, AUDITOR, SUPERVISOR), duplicados (ADMIN, SUPER_USUARIO), fallo BD con constraint violation.
+- Actualización: cambio de nombre/estatus, conflicto con ADMIN, sin cambios reales; reactivación de rol inactivo (ID 10), inexistente (99999), ya activo.
+- Eliminación: sin usuarios asociados (IDs 7, 12), en uso (1 o 10 usuarios), IDs inexistentes, excepción BD.
+- Integrado: IDs inválidos (0, −5), asignación sin/con permisos específicos (módulo 1+permisos 1,2; módulo 4+permiso 3), fallo FK, consultas de asignaciones.
 
 **SALIDAS ESPERADAS:**
 
-En operaciones exitosas de consulta por ID se espera un array con los datos completos del rol incluyendo idrol, nombre, descripción, estatus y fechas. Para IDs inexistentes se espera false. Los listados deben retornar arrays con status true y data conteniendo los registros o vacío según corresponda. La verificación de super usuario retorna true si count es 1 y false si es 0.
-
-La creación exitosa retorna un array con status true, un mensaje de éxito y rol_id igual a 42 (lastInsertId mockeado). Cuando hay nombre duplicado se espera status false con mensaje "Ya existe un rol activo con ese nombre." Los fallos de base de datos retornan status false con mensaje conteniendo "Error".
-
-En actualización exitosa se retorna status true. Los conflictos de nombre generan status false con "Ya existe otro rol activo con ese nombre." Sin cambios reales retorna status true con mensaje conteniendo "idénticos". La reactivación exitosa retorna status true con mensaje conteniendo "reactivado". Si el rol no existe retorna status false con "El rol no existe." Si ya está activo retorna status false con "El rol ya se encuentra activo."
-
-La eliminación exitosa retorna status true con mensaje conteniendo "desactivado". Roles en uso retornan status false con mensaje conteniendo "siendo usado". IDs inexistentes retornan status false con mensaje conteniendo "No se encontró". Excepciones de BD retornan status false.
-
-Para el módulo integrado, IDs inválidos retornan status false con "ID de rol no válido." Asignaciones sin permisos específicos retornan status true con modulos_asignados 0 y permisos_especificos_asignados 0. Asignaciones con permisos retornan status true con modulos_asignados 2 y permisos_especificos_asignados 3 según la configuración. Fallos de transacción retornan status false con mensaje conteniendo "Error". Las consultas de asignaciones retornan status true con data conteniendo los módulos y permisos asignados o vacío. Los métodos generales de consulta retornan status true con data según los registros disponibles.
+- Consulta por ID existente → datos completos (idrol, nombre, descripción, estatus, fechas); inexistente → `false`.
+- Super usuario (count = 1) → `true`; count = 0 → `false`.
+- Creación exitosa → `status true` + mensaje + `rol_id = 42`; nombre duplicado → `status false` + “Ya existe un rol activo con ese nombre.”
+- Actualización exitosa → `status true`; conflicto de nombre → `status false`; sin cambios → `status true` + “idénticos”.
+- Reactivación exitosa → `status true` + “reactivado”; inexistente → “El rol no existe.”; ya activo → “El rol ya se encuentra activo.”
+- Eliminación exitosa → “desactivado”; en uso → “siendo usado”; inexistente → “No se encontró”.
+- Integrado, ID inválido → “ID de rol no válido.”; con permisos → `modulos_asignados 2`, `permisos 3`; fallo FK → `status false`.
 
 ### Resultado
 
@@ -997,16 +991,4 @@ Tests: 41, Assertions: 113, PHPUnit Warnings: 1, PHPUnit Deprecations: 1.
 
 ### Observaciones
 
-Se observa la ejecución exitosa de 41 pruebas unitarias para el módulo de "Gestión de Roles", con 113 aserciones verificadas. Todas las pruebas pasaron correctamente, validando los siguientes aspectos críticos:
-
-**Consultas (consultarRolUnitTest):** 9 pruebas exitosas que verifican la consulta de roles por ID con datos existentes e inexistentes, listados completos y para selects con datos y vacíos, y verificación de super usuarios con comportamiento correcto para usuarios con y sin privilegios especiales.
-
-**Creación (crearRolUnitTest):** 5 pruebas exitosas que validan la creación de roles con datos válidos en diferentes configuraciones (activos, inactivos, descripciones largas), detección correcta de nombres duplicados con mensajes apropiados, y manejo robusto de errores de base de datos durante transacciones.
-
-**Edición (editarRolUnitTest):** 8 pruebas exitosas que confirman la actualización exitosa de roles con cambios en nombre y estatus, detección de conflictos cuando el nombre ya existe en otro rol, comportamiento correcto cuando no hay cambios reales en los datos, y reactivación de roles inactivos con validaciones apropiadas de existencia y estado actual.
-
-**Eliminación (eliminarRolUnitTest):** 6 pruebas exitosas que verifican la desactivación exitosa de roles sin usuarios asociados, prevención de eliminación de roles en uso activo, manejo correcto de IDs inexistentes, y recuperación adecuada ante excepciones de base de datos.
-
-**Gestión Integrada (rolesIntegradoUnitTest):** 13 pruebas exitosas que validan la asignación completa de módulos y permisos a roles con manejo transaccional, validación de IDs de rol, guardado correcto de asignaciones con y sin permisos específicos, recuperación ante fallos de transacción por FK constraints, consulta de asignaciones existentes y vacías, y métodos de consulta general para roles, módulos y permisos activos.
-
-El sistema demostró robustez en el manejo de validaciones de negocio, integridad referencial, transacciones y casos excepcionales. La advertencia sobre code coverage driver es esperada en entornos sin extensión Xdebug instalada y no afecta la validación funcional. La depreciación de PHPUnit es informativa y no impacta los resultados.
+41 pruebas y 113 aserciones ejecutadas correctamente en ~7 s, distribuidas en 5 clases: consultar (9), crear (5), editar (8), eliminar (6) e integrado (13). La gestión transaccional con rollback ante fallos de FK y la prevención de eliminación de roles en uso activo fueron validadas correctamente.

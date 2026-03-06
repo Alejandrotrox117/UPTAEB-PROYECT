@@ -85,10 +85,10 @@ Pruebas de caja blanca con enfoque en [aspectos técnicos: integración, transac
 **DESCRIPCIÓN:** [Descripción de los escenarios probados]
 
 **ENTRADAS:**
-[Describe las entradas de forma natural, como un texto corrido. Incluye los casos válidos e inválidos que se probaron, explicando qué datos se usaron y qué se esperaba de cada uno. No uses listas con flechas, sino párrafos descriptivos.]
+[Lista de viñetas cortas (máximo 4-5 ítems) con los datos y escenarios de entrada utilizados: casos válidos, inválidos y bordes. Incluye valores concretos (IDs, montos, nombres). Sin párrafos extensos.]
 
 **SALIDAS ESPERADAS:**
-[Describe las salidas esperadas de manera natural, explicando qué debe pasar en casos exitosos y qué en casos de error. Escribe en párrafos fluidos, no en listas estructuradas.]
+[Lista de viñetas cortas o tabla de 2 columnas: Escenario → Resultado esperado. Máximo 8 ítems. Solo los casos más representativos.]
 
 ### Resultado
 
@@ -98,7 +98,7 @@ Pruebas de caja blanca con enfoque en [aspectos técnicos: integración, transac
 
 ### Observaciones
 
-[Escribe las observaciones de forma narrativa y natural. Cuenta lo que se probó como si estuvieras explicándoselo a alguien. Menciona cuántas pruebas se ejecutaron, qué aspectos se verificaron, si todo funcionó correctamente, y cualquier detalle relevante sobre el comportamiento del sistema. Usa un lenguaje fluido y descriptivo, evitando listas de bullets.]
+[Máximo 2-3 oraciones: número de pruebas y aserciones, tiempo de ejecución, y el hallazgo más relevante del módulo.]
 ```
 
 ### 6. Guardar la Documentación
@@ -119,7 +119,7 @@ Después de generar la documentación:
 4. **Formato consistente**: Mantén la estructura exacta del formato especificado
 5. **Detalles precisos**: Extrae información real del código, no inventes datos
 6. **Idioma**: Toda la documentación debe estar en español
-7. **Lenguaje natural**: Escribe las entradas, salidas y observaciones en párrafos fluidos y naturales, no en listas estructuradas
+7. **Concisión**: Escribe las entradas y salidas en viñetas cortas (máximo 8 ítems cada una). Las observaciones deben ser 2-3 oraciones máximo. Evita párrafos extensos.
 8. **Almacenamiento**: Guarda SIEMPRE cada documentación en un archivo .md en la carpeta `Documents/`
 
 ## Ejemplo de Uso
