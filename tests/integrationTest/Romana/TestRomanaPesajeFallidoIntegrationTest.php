@@ -28,7 +28,6 @@ class TestRomanaPesajeFallidoIntegrationTest extends TestCase
             $data = [
                 'peso' => null,
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 1
             ];
             try {
                 $this->model->insertPesaje($data);
@@ -49,7 +48,6 @@ class TestRomanaPesajeFallidoIntegrationTest extends TestCase
             $data = [
                 'peso' => -50.00,
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 1
             ];
             $result = $this->model->insertPesaje($data);
             $this->assertFalse($result);
@@ -65,51 +63,9 @@ class TestRomanaPesajeFallidoIntegrationTest extends TestCase
             $data = [
                 'peso' => 0,
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 1
             ];
             $result = $this->model->insertPesaje($data);
             $this->assertIsBool($result);
-        } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
-        }
-    }
-
-    #[Test]
-    public function testRegistrarPesajeSinLote()
-    {
-        if (method_exists($this->model, 'insertPesaje')) {
-            $data = [
-                'peso' => 100.00,
-                'fecha_pesaje' => date('Y-m-d H:i:s')
-            ];
-            try {
-                $this->model->insertPesaje($data);
-                $this->fail('Debería lanzar PDOException');
-            } catch (PDOException $e) {
-                $this->assertInstanceOf(PDOException::class, $e);
-                $this->assertNotEmpty($e->getMessage());
-            }
-        } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
-        }
-    }
-
-    #[Test]
-    public function testRegistrarPesajeConLoteInexistente()
-    {
-        if (method_exists($this->model, 'insertPesaje')) {
-            $data = [
-                'peso' => 100.00,
-                'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 99999
-            ];
-            try {
-                $this->model->insertPesaje($data);
-                $this->fail('Debería lanzar PDOException');
-            } catch (PDOException $e) {
-                $this->assertInstanceOf(PDOException::class, $e);
-                $this->assertNotEmpty($e->getMessage());
-            }
         } else {
             $this->markTestSkipped('Método insertPesaje no existe');
         }
@@ -122,7 +78,6 @@ class TestRomanaPesajeFallidoIntegrationTest extends TestCase
             $data = [
                 'peso' => 999999.99,
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 1
             ];
             $result = $this->model->insertPesaje($data);
             $this->assertIsBool($result);

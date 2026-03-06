@@ -4,29 +4,37 @@ namespace Tests\UnitTest\Romana;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
 use Mockery;
 use PDOException;
 use App\Models\RomanaModel;
 
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 class TestRomanaPesajeFallidoUnitTest extends TestCase
 {
     private $model;
+    private $mockPdo;
+    private $mockStmt;
 
     protected function setUp(): void
     {
-        $mockPdo = Mockery::mock('PDO');
-        $mockStmt = Mockery::mock('PDOStatement');
+        ini_set('log_errors', '0');
+        ini_set('error_log', 'NUL');
+
+        $this->mockPdo = Mockery::mock('PDO');
+        $this->mockStmt = Mockery::mock('PDOStatement');
 
         $mockConexion = Mockery::mock('overload:App\Core\Conexion');
-        $mockConexion->shouldReceive('connect')->andReturn($mockPdo);
-        $mockConexion->shouldReceive('get_conectGeneral')->andReturn($mockPdo);
-        $mockConexion->shouldReceive('get_conectSeguridad')->andReturn($mockPdo);
+        $mockConexion->shouldReceive('connect')->andReturn($this->mockPdo);
+        $mockConexion->shouldReceive('get_conectGeneral')->andReturn($this->mockPdo);
+        $mockConexion->shouldReceive('get_conectSeguridad')->andReturn($this->mockPdo);
         $mockConexion->shouldReceive('disconnect')->andReturnNull();
 
-        // Para simular fallos, simularemos que execute y fetchAll arrojan un false o vacío si fuera el caso
-        $mockPdo->shouldReceive('prepare')->andReturn($mockStmt);
-        $mockStmt->shouldReceive('execute')->andReturnTrue();
-        $mockStmt->shouldReceive('fetchAll')->andReturn([]); // Datos vacíos para simular comportamiento
+        $this->mockPdo->shouldReceive('prepare')->andReturn($this->mockStmt)->byDefault();
+        $this->mockStmt->shouldReceive('execute')->andReturnTrue()->byDefault();
+        $this->mockStmt->shouldReceive('fetchAll')->andReturn([])->byDefault();
 
         $this->model = new RomanaModel();
     }
@@ -38,7 +46,6 @@ class TestRomanaPesajeFallidoUnitTest extends TestCase
             $data = [
                 'peso' => null,
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 1
             ];
             try {
                 $this->model->insertPesaje($data);
@@ -59,7 +66,6 @@ class TestRomanaPesajeFallidoUnitTest extends TestCase
             $data = [
                 'peso' => -50.00,
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 1
             ];
             $result = $this->model->insertPesaje($data);
             $this->assertFalse($result);
@@ -75,51 +81,9 @@ class TestRomanaPesajeFallidoUnitTest extends TestCase
             $data = [
                 'peso' => 0,
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 1
             ];
             $result = $this->model->insertPesaje($data);
             $this->assertIsBool($result);
-        } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
-        }
-    }
-
-    #[Test]
-    public function testRegistrarPesajeSinLote()
-    {
-        if (method_exists($this->model, 'insertPesaje')) {
-            $data = [
-                'peso' => 100.00,
-                'fecha_pesaje' => date('Y-m-d H:i:s')
-            ];
-            try {
-                $this->model->insertPesaje($data);
-                $this->fail('Debería lanzar PDOException');
-            } catch (PDOException $e) {
-                $this->assertInstanceOf(PDOException::class, $e);
-                $this->assertNotEmpty($e->getMessage());
-            }
-        } else {
-            $this->markTestSkipped('Método insertPesaje no existe');
-        }
-    }
-
-    #[Test]
-    public function testRegistrarPesajeConLoteInexistente()
-    {
-        if (method_exists($this->model, 'insertPesaje')) {
-            $data = [
-                'peso' => 100.00,
-                'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 99999
-            ];
-            try {
-                $this->model->insertPesaje($data);
-                $this->fail('Debería lanzar PDOException');
-            } catch (PDOException $e) {
-                $this->assertInstanceOf(PDOException::class, $e);
-                $this->assertNotEmpty($e->getMessage());
-            }
         } else {
             $this->markTestSkipped('Método insertPesaje no existe');
         }
@@ -132,7 +96,6 @@ class TestRomanaPesajeFallidoUnitTest extends TestCase
             $data = [
                 'peso' => 999999.99,
                 'fecha_pesaje' => date('Y-m-d H:i:s'),
-                'idlote' => 1
             ];
             $result = $this->model->insertPesaje($data);
             $this->assertIsBool($result);

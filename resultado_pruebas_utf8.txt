@@ -1,0 +1,178 @@
+﻿PHPUnit 10.5.63 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.2.20
+Configuration: C:\xampp\htdocs\project\phpunit.xml
+
+D............................................SS.SSSSSSSSSSS....  63 / 224 ( 28%)
+..................WW......W.W.W..WW.SWW....WWWWWW......SSSSSSSS 126 / 224 ( 56%)
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS 189 / 224 ( 84%)
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS                             224 / 224 (100%)
+
+Time: 00:11.092, Memory: 16.00 MB
+
+Anular Venta Unit (Tests\UnitTest\Ventas\AnularVentaUnit)
+ ↩ Anular venta mocks
+
+Bcv Scraper Model Unit (Tests\UnitTest\BCV\BcvScraperModelUnit)
+ ✔ ObtenerTasaBcv Exito ParaUSD
+ ✔ ObtenerTasaBcv Exito ParaEUR
+ ✔ ObtenerTasaBcv Falla CodigoMonedaNoSoportado
+ ✔ ObtenerTasaBcv Falla FalloConexionHtml
+ ✔ ObtenerTasaBcv Falla NodoDeTasaNoEncontrado
+
+Consultar Ventas Unit (Tests\UnitTest\Ventas\ConsultarVentasUnit)
+ ⚠ Consultar ventas mocks
+
+Crear Venta Unit (Tests\UnitTest\Ventas\CrearVentaUnit)
+ ⚠ Crear venta mocks
+ ✔ InsertVenta Falla ClienteInexistente
+ ✔ InsertVenta Falla ClienteInactivo
+ ✔ InsertVenta Falla MonedaInexistente
+ ✔ InsertVenta Falla DescuentoMayorSubtotal
+ ⚠ InsertVenta Falla ProductoInexistente
+ ⚠ InsertVenta Falla ProductoInactivo
+ ⚠ InsertVenta Falla CantidadInvalida
+ ⚠ InsertVenta Falla PrecioInvalido
+ ⚠ InsertVenta Falla StockInsuficiente
+
+Editar Venta Unit (Tests\UnitTest\Ventas\EditarVentaUnit)
+ ⚠ Editar venta mocks
+ ✔ EditarVenta Falla VentaNoExiste
+ ✔ EditarVenta Falla VentaNoBorrador
+ ✔ EditarVenta Falla ClienteNoExiste
+
+Eliminar Venta Unit (Tests\UnitTest\Ventas\EliminarVentaUnit)
+ ✔ Eliminar venta mocks
+ ✔ EliminarVenta Falla VentaNoExiste
+ ✔ EliminarVenta Falla VentaNoBorrador
+
+Example Unit (Tests\UnitTest\BCV\ExampleUnit)
+ ✔ True is true
+
+Roles Integrado Unit (Tests\UnitTest\Roles\RolesIntegradoUnit)
+ ✔ Guardar asignaciones rol completas with data set "Exito"
+ ✔ Guardar asignaciones rol completas with data set "Rol Invalido"
+ ✔ Select asignaciones rol completas with data set "Exito"
+
+Roles Unit (Tests\UnitTest\Roles\RolesUnit)
+ ✔ Insert rol with data set "Exito"
+ ✔ Insert rol with data set "Nombre Existente"
+ ✔ Select rol by id with data set "Existente"
+ ✔ Select rol by id with data set "Inexistente"
+
+Romana Pesaje Exitoso Unit (Tests\UnitTest\Romana\RomanaPesajeExitosoUnit)
+ ↩ Registrar pesaje exitoso
+ ↩ Registrar pesaje con peso decimal
+ ✔ Consultar todos pesajes
+ ↩ Consultar pesaje por id
+ ↩ Consultar pesajes por lote
+ ↩ Calcular peso total
+ ↩ Calcular promedio peso
+
+Romana Pesaje Fallido Unit (Tests\UnitTest\Romana\RomanaPesajeFallidoUnit)
+ ↩ Registrar pesaje sin peso
+ ↩ Registrar pesaje con peso negativo
+ ↩ Registrar pesaje con peso cero
+ ↩ Registrar pesaje sin lote
+ ↩ Registrar pesaje con lote inexistente
+ ↩ Registrar pesaje con peso excesivo
+ ↩ Consultar pesaje inexistente
+
+Sueldos Delete Unit (Tests\UnitTest\Sueldos\SueldosDeleteUnit)
+ ✔ DeleteSueldo Exitosa BorradoLogico
+ ✔ DeleteSueldo Falla NoExistente
+ ✔ DeleteSueldo Falla ErrorDeBD
+
+Sueldos Insert Unit (Tests\UnitTest\Sueldos\SueldosInsertUnit)
+ ✔ InsertSueldo Exitosa DatosValidos
+ ✔ InsertSueldo Falla SinEmpleadoNiPersona
+ ✔ InsertSueldo Falla ConMontoNegativo
+
+Sueldos Select Unit (Tests\UnitTest\Sueldos\SueldosSelectUnit)
+ ✔ SelectSueldoById Exitosa Encontrado
+ ✔ SelectSueldoById Falla NoEncontrado
+ ✔ SelectAllSueldos Exitosa
+ ✔ SelectAllSueldos Falla Excepcion
+
+Sueldos Update Unit (Tests\UnitTest\Sueldos\SueldosUpdateUnit)
+ ✔ UpdateSueldo Exitosa DatosValidos
+ ✔ UpdateSueldo Falla SinEmpleadoNiPersona
+ ✔ UpdateSueldo Falla ConMontoNegativoOCero
+ ✔ UpdateSueldo Falla SinCambios
+
+Usuario Delete Unit (Tests\UnitTest\Usuarios\UsuarioDeleteUnit)
+ ✔ Eliminar usuario with data set "Eliminar Existente"
+ ✔ Eliminar usuario with data set "Eliminar Inexistente"
+ ✔ Eliminar usuario with data set "Eliminar Ya Eliminado"
+
+Usuario Insert Unit (Tests\UnitTest\Usuarios\UsuarioInsertUnit)
+ ✔ Insertar usuario with data set "Con datos completos"
+ ✔ Insertar usuario with data set "Sin nombre de usuario"
+ ✔ Insertar usuario with data set "Sin correo"
+ ✔ Insertar usuario with data set "Sin password"
+ ✔ Insertar usuario with data set "Sin rol"
+ ⚠ Insertar usuario con correo duplicado
+ ⚠ Insertar usuario con usuario duplicado
+ ✔ Insertar usuario con email invalido
+ ✔ Insertar usuario con password debil
+
+Usuario Select Unit (Tests\UnitTest\Usuarios\UsuarioSelectUnit)
+ ✔ Seleccionar todos usuarios exito with data set "Con usuarios"
+ ✔ Seleccionar todos usuarios exito with data set "Sin usuarios"
+ ✔ Seleccionar todos usuarios exito with data set "Error en BD"
+ ✔ Seleccionar usuarios activos
+ ⚠ Obtener usuario por id
+ ✔ Obtener usuario inexistente
+ ⚠ Buscar usuario por email
+ ✔ Buscar usuario por email inexistente
+
+Usuario Update Unit (Tests\UnitTest\Usuarios\UsuarioUpdateUnit)
+ ⚠ Actualizar usuario with data set "Datos Completos"
+ ✔ Actualizar usuario with data set "Usuario Inexistente"
+ ✔ Actualizar usuario with data set "Email Invalido"
+ ⚠ Actualizar con correo duplicado
+ ⚠ Actualizar con nombre duplicado
+ ✔ Actualizar con rol inexistente
+
+consultar Compras Unit (Tests\UnitTest\Compra\consultarComprasUnit)
+ ✔ Select all compras retorna array
+ ✔ Get compra by id con id inexistente with data set "0"
+ ✔ Get compra by id con id inexistente with data set "1"
+ ✔ Get compra by id con id inexistente with data set "2"
+ ✔ Select compra con id inexistente with data set "0"
+ ✔ Select compra con id inexistente with data set "1"
+ ✔ Select compra con id inexistente with data set "2"
+ ✔ Get detalle compra by id inexistente with data set "0"
+ ✔ Get detalle compra by id inexistente with data set "1"
+ ✔ Get detalle compra by id inexistente with data set "2"
+ ✔ Get compra completa para editar inexistente with data set "0"
+ ✔ Get compra completa para editar inexistente with data set "1"
+ ✔ Get compra completa para editar inexistente with data set "2"
+ ✔ Obtener estado compra inexistente with data set "0"
+ ✔ Obtener estado compra inexistente with data set "1"
+ ✔ Obtener estado compra inexistente with data set "2"
+ ✔ Get monedas activas
+ ✔ Get productos con categoria
+ ✔ Get producto by id inexistente with data set "0"
+ ✔ Get producto by id inexistente with data set "1"
+ ✔ Get producto by id inexistente with data set "2"
+ ✔ Get proveedor by id inexistente with data set "0"
+ ✔ Get proveedor by id inexistente with data set "1"
+ ✔ Get proveedor by id inexistente with data set "2"
+
+crear Compra Unit (Tests\UnitTest\Compra\crearCompraUnit)
+ ✔ CrearCompra CasosInvalidos DevuelvenFalseYMensaje with data set "Sin Detalles"
+ ✔ CrearCompra CasosInvalidos DevuelvenFalseYMensaje with data set "Proveedor Inexistente"
+ ✔ CrearCompra CasosInvalidos DevuelvenFalseYMensaje with data set "Producto Inexistente"
+ ✔ CrearCompra CasosInvalidos DevuelvenFalseYMensaje with data set "Cantidad o Precio Negativo"
+ ✔ CrearCompra Exitosa
+
+editar Compra Unit (Tests\UnitTest\Compra\editarCompraUnit)
+ ✔ EditarCompra CasosInvalidos DevuelvenFalseYMensaje with data set "Proveedor Inexistente"
+ ✔ EditarCompra CasosInvalidos DevuelvenFalseYMensaje with data set "Producto Inexistente"
+
+eliminar Compra Unit (Tests\UnitTest\Compra\eliminarCompraUnit)
+ ✔ Eliminar compra con id inexistente with data set "0"
+
+OK, but there were issues!
+Tests: 224, Assertions: 211, Warnings: 36, Deprecations: 1, PHPUnit Deprecations: 2, Skipped: 120.

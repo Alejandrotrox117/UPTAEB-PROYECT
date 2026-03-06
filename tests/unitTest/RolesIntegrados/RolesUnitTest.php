@@ -25,7 +25,7 @@ class RolesUnitTest extends TestCase
                     'descripcion' => 'Administrador',
                     'estatus' => 'ACTIVO'
                 ],
-                'nombreExtiste' => false,
+                'nombreExiste' => false,
                 'lastInsertId' => 1,
                 'dbExecuteReturn' => true,
                 'expected' => ['status' => true, 'message' => 'Rol registrado exitosamente.', 'rol_id' => 1]
@@ -36,7 +36,7 @@ class RolesUnitTest extends TestCase
                     'descripcion' => 'Administrador',
                     'estatus' => 'ACTIVO'
                 ],
-                'nombreExtiste' => true,
+                'nombreExiste' => true,
                 'lastInsertId' => 0,
                 'dbExecuteReturn' => true,
                 'expected' => ['status' => false, 'message' => 'Ya existe un rol activo con ese nombre.']
