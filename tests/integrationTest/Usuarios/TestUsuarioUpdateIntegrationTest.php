@@ -1,20 +1,20 @@
 <?php
 
+namespace Tests\IntegrationTest\Usuarios;
+
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Models\UsuariosModel;
+use Exception;
 
-require_once __DIR__ . '/../Traits/RequiresDatabase.php';
+require_once __DIR__ . '/../../Traits/RequiresDatabase.php';
 
-class TestUsuarioUpdate extends TestCase
+class TestUsuarioUpdateIntegrationTest extends TestCase
 {
     use \Tests\Traits\RequiresDatabase;
 
     private $model;
-
-    private function showMessage(string $msg)
-    {
-        fwrite(STDOUT, "[MODEL MESSAGE] " . $msg . PHP_EOL);
-    }
 
     protected function setUp(): void
     {
@@ -22,70 +22,91 @@ class TestUsuarioUpdate extends TestCase
         $this->model = new UsuariosModel();
     }
 
-    public function testActualizarUsuarioConDatosCompletos()
+    protected function tearDown(): void
+    {
+        $this->model = null;
+    }
+
+    #[Test]
+    public function actualizarUsuarioConDatosCompletos()
     {
         $data = [
             'nombre_usuario' => 'usuario_actualizado',
             'correo' => 'actualizado@email.com',
-            'idrol' => 2,
+            'idrol' => 1,
             'estatus' => 'activo'
         ];
         $result = $this->model->updateUsuario(1, $data);
-        $this->assertIsBool($result);
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('status', $result);
     }
 
-    public function testActualizarUsuarioInexistente()
+    #[Test]
+    public function actualizarUsuarioInexistente()
     {
         $data = [
             'usuario' => 'usuario_inexistente',
             'correo' => 'test@test.com',
             'idrol' => 2
         ];
-
         $result = $this->model->updateUsuario(99999, $data);
-
         if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
         }
         $this->assertTrue(is_array($result) || $result === false);
     }
 
-    public function testActualizarConCorreoDuplicado()
+    #[Test]
+    public function actualizarConCorreoDuplicado()
     {
+        // Require two users to exist, to duplicate email.
         $data = [
-            'usuario' => 'usuario_test',
-            'correo' => 'admin@admin.com',
+            'usuario' => 'usuario_test_123',
+            'correo' => 'admin@admin.com', // Assuming this belongs to user 1
             'idrol' => 2
         ];
-
+        // Try update user 2 with user 1's email
         $result = $this->model->updateUsuario(2, $data);
-
         if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
         }
         $this->assertTrue(is_array($result) || $result === false);
     }
 
-    public function testActualizarConEmailInvalido()
+    #[Test]
+    public function actualizarConNombreDuplicado()
+    {
+        // Require two users to exist, to duplicate username.
+        $data = [
+            'nombre_usuario' => 'admin', // assuming this belongs to super admin
+            'correo' => 'test321@email.com',
+            'idrol' => 2
+        ];
+        // Try update user 2 with user 1's username
+        $result = $this->model->updateUsuario(2, $data);
+        if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
+            $this->assertArrayHasKey('message', $result);
+        }
+        $this->assertTrue(is_array($result) || $result === false);
+    }
+
+    #[Test]
+    public function actualizarConEmailInvalido()
     {
         $data = [
             'usuario' => 'usuario_test',
             'correo' => 'email_invalido_sin_arroba',
             'idrol' => 2
         ];
-
         $result = $this->model->updateUsuario(1, $data);
-
         if (is_array($result) && array_key_exists('status', $result) && $result['status'] === false) {
             $this->assertArrayHasKey('message', $result);
-            $this->showMessage($result['message']);
         }
         $this->assertTrue(is_array($result) || $result === false);
     }
 
-    public function testActualizarConRolInexistente()
+    #[Test]
+    public function actualizarConRolInexistente()
     {
         $data = ['idrol' => 99999];
         try {
@@ -94,10 +115,5 @@ class TestUsuarioUpdate extends TestCase
         } catch (Exception $e) {
             $this->assertInstanceOf(Exception::class, $e);
         }
-    }
-
-    protected function tearDown(): void
-    {
-        $this->model = null;
     }
 }

@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Prevent execution if user is not logged in
+    if (typeof window.SESSION_USER_ID === 'undefined' || window.SESSION_USER_ID <= 0) {
+        return;
+    }
+
     // Inject the Help Button
     const faqBtn = document.createElement('button');
     faqBtn.id = 'faq-global-help-btn';

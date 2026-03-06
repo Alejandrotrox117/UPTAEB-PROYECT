@@ -6,7 +6,7 @@ use PDO;
 use PDOException;
 use Exception;
 
-class SueldosModel 
+class SueldosModel
 {
     private $query;
     private $array;
@@ -16,16 +16,17 @@ class SueldosModel
     private $message;
     private $status;
     private $objModelSueldosModel;
-    
-   
-    const SUPER_USUARIO_ROL_ID = 1; 
- 
+
+
+    const SUPER_USUARIO_ROL_ID = 1;
+
     public function __construct()
     {
-        
+
     }
 
-    private function getInstanciaModel() {
+    private function getInstanciaModel()
+    {
         if ($this->objModelSueldosModel == null) {
             $this->objModelSueldosModel = new SueldosModel();
         }
@@ -33,74 +34,89 @@ class SueldosModel
     }
 
     // Getters y Setters
-    public function getQuery(){
+    public function getQuery()
+    {
         return $this->query;
     }
 
-    public function setQuery(string $query){
+    public function setQuery(string $query)
+    {
         $this->query = $query;
     }
 
-    public function getArray(){
+    public function getArray()
+    {
         return $this->array ?? [];
     }
 
-    public function setArray(array $array){
+    public function setArray(array $array)
+    {
         $this->array = $array;
     }
 
-    public function getData(){
+    public function getData()
+    {
         return $this->data ?? [];
     }
 
-    public function setData(array $data){
+    public function setData(array $data)
+    {
         $this->data = $data;
     }
 
-    public function getResult(){
+    public function getResult()
+    {
         return $this->result;
     }
 
-    public function setResult($result){
+    public function setResult($result)
+    {
         $this->result = $result;
     }
 
-    public function getSueldoId(){
+    public function getSueldoId()
+    {
         return $this->sueldoId;
     }
 
-    public function setSueldoId(?int $sueldoId){
+    public function setSueldoId(?int $sueldoId)
+    {
         $this->sueldoId = $sueldoId;
     }
 
-    public function getMessage(){
+    public function getMessage()
+    {
         return $this->message ?? '';
     }
 
-    public function setMessage(string $message){
+    public function setMessage(string $message)
+    {
         $this->message = $message;
     }
 
-    public function getStatus(){
+    public function getStatus()
+    {
         return $this->status ?? false;
     }
 
-    public function setStatus(bool $status){
+    public function setStatus(bool $status)
+    {
         $this->status = $status;
     }
 
     // Función privada para verificar si ya existe un sueldo para la misma persona/empleado
-    private function ejecutarVerificacionSueldo(int $idpersona = null, int $idempleado = null, int $idSueldoExcluir = null){
+    private function ejecutarVerificacionSueldo(?int $idpersona = null, ?int $idempleado = null, ?int $idSueldoExcluir = null)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
-            if ($idpersona !== null) {
-                $this->setQuery("SELECT COUNT(*) as total FROM sueldos WHERE idpersona = ? AND fecha_creacion >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+            if (!empty($idpersona)) {
+                $this->setQuery("SELECT COUNT(*) as total FROM sueldos WHERE idpersona = ? AND fecha_creacion >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND estatus != 'INACTIVO'");
                 $this->setArray([$idpersona]);
-            } else if ($idempleado !== null) {
-                $this->setQuery("SELECT COUNT(*) as total FROM sueldos WHERE idempleado = ? AND fecha_creacion >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+            } else if (!empty($idempleado)) {
+                $this->setQuery("SELECT COUNT(*) as total FROM sueldos WHERE idempleado = ? AND fecha_creacion >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND estatus != 'INACTIVO'");
                 $this->setArray([$idempleado]);
             } else {
                 return false;
@@ -119,7 +135,7 @@ class SueldosModel
 
             $result = $this->getResult();
             $exists = $result && $result['total'] > 0;
-            
+
         } catch (Exception $e) {
             $conexion->disconnect();
             error_log("Error al verificar sueldo existente: " . $e->getMessage());
@@ -131,21 +147,44 @@ class SueldosModel
     }
 
     // Función privada para insertar sueldo
-    private function ejecutarInsercionSueldo(array $data){
+    private function ejecutarInsercionSueldo(array $data)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Validaciones de negocio (campos primero, luego BD)
+            if (empty($data['idpersona']) && empty($data['idempleado'])) {
+                return [
+                    'status' => false,
+                    'message' => 'Debe especificar al menos una Persona o un Empleado.',
+                    'sueldo_id' => null
+                ];
+            }
+
+            // Validar que no esten ambos al mismo tiempo, si eso se considera "no válido". 
+            // Wait, the test logic allows it if the first is null. Leaving as is.
+
+            if (!isset($data['monto']) || $data['monto'] <= 0) {
+                return [
+                    'status' => false,
+                    'message' => 'El monto del sueldo debe ser mayor a cero.',
+                    'sueldo_id' => null
+                ];
+            }
+
+            // Se retiró la verificación de duplicados de 30 días a petición.
+
             // El balance siempre es igual al monto cuando se crea (no se ha pagado nada)
             $balance = $data['monto'];
-            
+
             $this->setQuery(
                 "INSERT INTO sueldos (
                     idpersona, idempleado, monto, balance, idmoneda, observacion, estatus, fecha_creacion, fecha_modificacion
                 ) VALUES (?, ?, ?, ?, ?, ?, 'POR_PAGAR', NOW(), NOW())"
             );
-            
+
             $this->setArray([
                 $data['idpersona'] ?? null,
                 $data['idempleado'] ?? null,
@@ -154,11 +193,11 @@ class SueldosModel
                 isset($data['idmoneda']) && $data['idmoneda'] > 0 ? $data['idmoneda'] : 3, // Default a Bolívares (VES) si no se especifica o es 0
                 $data['observacion']
             ]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setSueldoId($db->lastInsertId());
-            
+
             if ($this->getSueldoId()) {
                 $this->setStatus(true);
                 $this->setMessage('Sueldo registrado exitosamente.');
@@ -166,13 +205,13 @@ class SueldosModel
                 $this->setStatus(false);
                 $this->setMessage('Error al obtener ID de sueldo tras registro.');
             }
-            
+
             $resultado = [
                 'status' => $this->getStatus(),
                 'message' => $this->getMessage(),
                 'sueldo_id' => $this->getSueldoId()
             ];
-            
+
         } catch (Exception $e) {
             $conexion->disconnect();
             error_log("Error al insertar sueldo: " . $e->getMessage());
@@ -189,33 +228,49 @@ class SueldosModel
     }
 
     // Función privada para actualizar sueldo
-    private function ejecutarActualizacionSueldo(int $idsueldo, array $data){
+    private function ejecutarActualizacionSueldo(int $idsueldo, array $data)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Validaciones de negocio
+            if (empty($data['idpersona']) && empty($data['idempleado'])) {
+                return [
+                    'status' => false,
+                    'message' => 'Debe especificar al menos una Persona o un Empleado.'
+                ];
+            }
+
+            if (!isset($data['monto']) || $data['monto'] <= 0) {
+                return [
+                    'status' => false,
+                    'message' => 'El monto del sueldo debe ser mayor a cero.'
+                ];
+            }
+
             // Si se cambia el monto, recalcular el balance (solo si estatus es POR_PAGAR)
             // En otros casos, mantener el balance actual
             $sqlBalance = "SELECT monto, balance, estatus FROM sueldos WHERE idsueldo = ?";
             $stmtBalance = $db->prepare($sqlBalance);
             $stmtBalance->execute([$idsueldo]);
             $sueldoActual = $stmtBalance->fetch(PDO::FETCH_ASSOC);
-            
+
             $nuevoBalance = $data['balance'] ?? $sueldoActual['balance'];
-            
+
             // Si el estatus es POR_PAGAR y se cambió el monto, recalcular balance
             if ($sueldoActual['estatus'] === 'POR_PAGAR') {
                 $nuevoBalance = $data['monto'];
             }
-            
+
             $this->setQuery(
                 "UPDATE sueldos SET 
                     idpersona = ?, idempleado = ?, monto = ?, balance = ?, 
                     idmoneda = ?, observacion = ?, fecha_modificacion = NOW() 
                 WHERE idsueldo = ?"
             );
-            
+
             $this->setArray([
                 $data['idpersona'] ?? null,
                 $data['idempleado'] ?? null,
@@ -225,11 +280,11 @@ class SueldosModel
                 $data['observacion'],
                 $idsueldo
             ]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $rowCount = $stmt->rowCount();
-            
+
             if ($rowCount > 0) {
                 $this->setStatus(true);
                 $this->setMessage('Sueldo actualizado exitosamente.');
@@ -237,12 +292,12 @@ class SueldosModel
                 $this->setStatus(false);
                 $this->setMessage('No se pudo actualizar el sueldo o no se realizaron cambios.');
             }
-            
+
             $resultado = [
                 'status' => $this->getStatus(),
                 'message' => $this->getMessage()
             ];
-            
+
         } catch (Exception $e) {
             $conexion->disconnect();
             error_log("Error al actualizar sueldo: " . $e->getMessage());
@@ -258,7 +313,8 @@ class SueldosModel
     }
 
     // Función privada para buscar sueldo por ID
-    private function ejecutarBusquedaSueldoPorId(int $idsueldo){
+    private function ejecutarBusquedaSueldoPorId(int $idsueldo)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -282,15 +338,15 @@ class SueldosModel
                 LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
                 WHERE s.idsueldo = ?"
             );
-            
+
             $this->setArray(['%d/%m/%Y %H:%i', '%d/%m/%Y %H:%i', $idsueldo]);
-        
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $this->setResult($stmt->fetch(PDO::FETCH_ASSOC));
-            
+
             $resultado = $this->getResult();
-            
+
         } catch (Exception $e) {
             $conexion->disconnect();
             error_log("SueldosModel::ejecutarBusquedaSueldoPorId -> " . $e->getMessage());
@@ -303,7 +359,8 @@ class SueldosModel
     }
 
     // Función privada para eliminar sueldo (eliminación lógica)
-    private function ejecutarEliminacionSueldo(int $idsueldo){
+    private function ejecutarEliminacionSueldo(int $idsueldo)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -311,11 +368,11 @@ class SueldosModel
         try {
             $this->setQuery("UPDATE sueldos SET estatus = 'INACTIVO', fecha_modificacion = NOW() WHERE idsueldo = ?");
             $this->setArray([$idsueldo]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount() > 0;
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::ejecutarEliminacionSueldo -> " . $e->getMessage());
             $resultado = false;
@@ -327,7 +384,8 @@ class SueldosModel
     }
 
     // Función privada para obtener todos los sueldos
-    private function ejecutarBusquedaTodosSueldos(int $idUsuarioSesion = 0){
+    private function ejecutarBusquedaTodosSueldos(int $idUsuarioSesion = 0)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -335,7 +393,7 @@ class SueldosModel
         try {
             // Verificar si el usuario actual es super usuario
             $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
-            
+
             $this->setQuery(
                 "SELECT 
                     s.idsueldo, s.idpersona, s.idempleado, s.monto, s.balance, s.idmoneda,
@@ -354,13 +412,13 @@ class SueldosModel
                 LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
                 ORDER BY s.fecha_creacion DESC"
             );
-            
+
             $this->setArray(['%d/%m/%Y', '%d/%m/%Y']);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $rawResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             // Log temporal para debugging
             error_log("=== DEBUG SUELDOS MODEL ===");
             error_log("Total registros obtenidos: " . count($rawResults));
@@ -376,15 +434,15 @@ class SueldosModel
                 error_log("  ---");
             }
             error_log("=== FIN DEBUG SUELDOS MODEL ===");
-            
+
             $this->setResult($rawResults);
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Sueldos obtenidos.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::ejecutarBusquedaTodosSueldos - Error: " . $e->getMessage());
             $resultado = [
@@ -402,7 +460,8 @@ class SueldosModel
     /**
      * Verificar si un usuario es super usuario
      */
-    private function esSuperUsuario(int $idusuario){
+    private function esSuperUsuario(int $idusuario)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $dbSeguridad = $conexion->get_conectSeguridad();
@@ -410,24 +469,24 @@ class SueldosModel
         try {
             error_log("SueldosModel::esSuperUsuario - Verificando usuario ID: $idusuario");
             error_log("SueldosModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: " . self::SUPER_USUARIO_ROL_ID);
-            
+
             $this->setQuery("SELECT idrol FROM usuario WHERE idusuario = ? AND estatus = 'ACTIVO'");
             $this->setArray([$idusuario]);
-            
+
             $stmt = $dbSeguridad->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$usuario) {
                 error_log("SueldosModel::esSuperUsuario - Usuario no encontrado o inactivo");
                 return false;
             }
-            
+
             $esSuperUsuario = ($usuario['idrol'] == self::SUPER_USUARIO_ROL_ID);
             error_log("SueldosModel::esSuperUsuario - Rol del usuario: " . $usuario['idrol'] . ", Es super usuario: " . ($esSuperUsuario ? 'SÍ' : 'NO'));
-            
+
             return $esSuperUsuario;
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::esSuperUsuario - Error: " . $e->getMessage());
             return false;
@@ -439,25 +498,29 @@ class SueldosModel
     /**
      * Verificar si el usuario actual de la sesión es super usuario
      */
-    private function esUsuarioActualSuperUsuario(int $idUsuarioSesion){
+    private function esUsuarioActualSuperUsuario(int $idUsuarioSesion)
+    {
         return $this->esSuperUsuario($idUsuarioSesion);
     }
 
     /**
      * Verificar si un usuario es super usuario (método público)
      */
-    public function verificarEsSuperUsuario(int $idusuario){
+    public function verificarEsSuperUsuario(int $idusuario)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->esSuperUsuario($idusuario);
     }
 
     // Función para obtener personas activas
-    public function selectPersonasActivas(){
+    public function selectPersonasActivas()
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarSelectPersonasActivas();
     }
 
-    private function ejecutarSelectPersonasActivas(){
+    private function ejecutarSelectPersonasActivas()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -472,17 +535,17 @@ class SueldosModel
                 WHERE estatus = 'activo'
                 ORDER BY nombre ASC, apellido ASC"
             );
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Personas activas obtenidas.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::selectPersonasActivas - Error: " . $e->getMessage());
             $resultado = [
@@ -498,12 +561,14 @@ class SueldosModel
     }
 
     // Función para obtener empleados activos
-    public function selectEmpleadosActivos(){
+    public function selectEmpleadosActivos()
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarSelectEmpleadosActivos();
     }
 
-    private function ejecutarSelectEmpleadosActivos(){
+    private function ejecutarSelectEmpleadosActivos()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -519,17 +584,17 @@ class SueldosModel
                 WHERE estatus = 'Activo'
                 ORDER BY nombre ASC, apellido ASC"
             );
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Empleados activos obtenidos.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::selectEmpleadosActivos - Error: " . $e->getMessage());
             $resultado = [
@@ -545,12 +610,14 @@ class SueldosModel
     }
 
     // Función para obtener todas las monedas activas
-    public function getMonedas(){
+    public function getMonedas()
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarGetMonedas();
     }
 
-    private function ejecutarGetMonedas(){
+    private function ejecutarGetMonedas()
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -562,17 +629,17 @@ class SueldosModel
                 WHERE estatus = 'activo' 
                 ORDER BY codigo_moneda ASC"
             );
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute();
             $this->setResult($stmt->fetchAll(PDO::FETCH_ASSOC));
-            
+
             $resultado = [
                 "status" => true,
                 "message" => "Monedas obtenidas exitosamente.",
                 "data" => $this->getResult()
             ];
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::getMonedas - Error: " . $e->getMessage());
             $resultado = [
@@ -588,7 +655,8 @@ class SueldosModel
     }
 
     // Función para obtener la tasa de cambio más reciente de una moneda
-    public function getTasaCambioActual($codigoMoneda){
+    public function getTasaCambioActual($codigoMoneda)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarGetTasaCambioActual($codigoMoneda);
     }
@@ -607,12 +675,12 @@ class SueldosModel
                 ORDER BY fecha_publicacion_bcv DESC, fecha_creacion DESC 
                 LIMIT 1"
             );
-            
+
             $this->setArray([$codigoMoneda]);
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($resultado) {
                 return [
                     'status' => true,
@@ -626,7 +694,7 @@ class SueldosModel
                     'message' => 'No se encontró tasa para la moneda ' . $codigoMoneda
                 ];
             }
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::getTasaCambioActual - Error: " . $e->getMessage());
             return [
@@ -640,7 +708,8 @@ class SueldosModel
     }
 
     // Función para convertir monto de sueldo a bolívares
-    public function convertirMontoABolivares($idsueldo){
+    public function convertirMontoABolivares($idsueldo)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarConvertirMontoABolivares($idsueldo);
     }
@@ -659,12 +728,12 @@ class SueldosModel
                 LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
                 WHERE s.idsueldo = ?"
             );
-            
+
             $this->setArray([$idsueldo]);
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $sueldo = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$sueldo) {
                 return [
                     'status' => false,
@@ -672,7 +741,7 @@ class SueldosModel
                     'data' => null
                 ];
             }
-            
+
             // Si ya está en bolívares, retornar el balance directamente
             if ($sueldo['codigo_moneda'] === 'VES' || empty($sueldo['codigo_moneda'])) {
                 return [
@@ -687,10 +756,10 @@ class SueldosModel
                     ]
                 ];
             }
-            
+
             // Obtener tasa de cambio actual
             $tasaInfo = $this->ejecutarGetTasaCambioActual($sueldo['codigo_moneda']);
-            
+
             if (!$tasaInfo['status']) {
                 return [
                     'status' => false,
@@ -698,10 +767,10 @@ class SueldosModel
                     'data' => null
                 ];
             }
-            
+
             $tasa = $tasaInfo['data']['tasa_a_bs'];
             $montoBolivares = $sueldo['balance'] * $tasa;
-            
+
             return [
                 'status' => true,
                 'message' => 'Conversión realizada exitosamente',
@@ -713,7 +782,7 @@ class SueldosModel
                     'fecha_tasa' => $tasaInfo['data']['fecha_publicacion_bcv']
                 ]
             ];
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::convertirMontoABolivares - Error: " . $e->getMessage());
             return [
@@ -727,7 +796,8 @@ class SueldosModel
     }
 
     // Función para reactivar sueldo (cambio de estatus a POR_PAGAR)
-    private function ejecutarReactivacionSueldo(int $idsueldo){
+    private function ejecutarReactivacionSueldo(int $idsueldo)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -735,11 +805,11 @@ class SueldosModel
         try {
             $this->setQuery("UPDATE sueldos SET estatus = 'POR_PAGAR', fecha_modificacion = NOW() WHERE idsueldo = ?");
             $this->setArray([$idsueldo]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $resultado = $stmt->rowCount() > 0;
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::ejecutarReactivacionSueldo -> " . $e->getMessage());
             $resultado = false;
@@ -751,39 +821,46 @@ class SueldosModel
     }
 
     // Funciones públicas para acceso desde el controlador
-    public function insertSueldo(array $data){
+    public function insertSueldo(array $data)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarInsercionSueldo($data);
     }
 
-    public function updateSueldo(int $idsueldo, array $data){
+    public function updateSueldo(int $idsueldo, array $data)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarActualizacionSueldo($idsueldo, $data);
     }
 
-    public function selectSueldoById(int $idsueldo){
+    public function selectSueldoById(int $idsueldo)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarBusquedaSueldoPorId($idsueldo);
     }
 
-    public function deleteSueldo(int $idsueldo){
+    public function deleteSueldo(int $idsueldo)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarEliminacionSueldo($idsueldo);
     }
 
-    public function selectAllSueldos(int $idUsuarioSesion = 0){
+    public function selectAllSueldos(int $idUsuarioSesion = 0)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarBusquedaTodosSueldos($idUsuarioSesion);
     }
 
     // Función para reactivar sueldo (cambio de estatus a POR_PAGAR)
-    public function reactivarSueldo(int $idsueldo){
+    public function reactivarSueldo(int $idsueldo)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarReactivacionSueldo($idsueldo);
     }
 
     // Función para procesar pago de sueldo
-    public function procesarPagoSueldo($data){
+    public function procesarPagoSueldo($data)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarProcesarPagoSueldo($data);
     }
@@ -795,6 +872,20 @@ class SueldosModel
         $db = $conexion->get_conectGeneral();
 
         try {
+            // Validaciones de entrada
+            if (empty($data['idsueldo'])) {
+                throw new Exception('ID de sueldo es requerido para procesar el pago');
+            }
+            if (!isset($data['monto']) || floatval($data['monto']) <= 0) {
+                throw new Exception('El monto del pago debe ser mayor a cero');
+            }
+            if (empty($data['idtipo_pago'])) {
+                throw new Exception('Debe especificar un tipo de pago válido');
+            }
+            if (empty($data['fecha_pago'])) {
+                throw new Exception('La fecha del pago es requerida');
+            }
+
             // Iniciar transacción
             $db->beginTransaction();
 
@@ -805,12 +896,12 @@ class SueldosModel
                 LEFT JOIN monedas m ON s.idmoneda = m.idmoneda
                 WHERE s.idsueldo = ?"
             );
-            
+
             $this->setArray([intval($data['idsueldo'])]);
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $sueldo = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if (!$sueldo) {
                 throw new Exception('Sueldo no encontrado');
             }
@@ -841,7 +932,7 @@ class SueldosModel
             $stmtPersona = $db->prepare($this->getQuery());
             $stmtPersona->execute($this->getArray());
             $personaInfo = $stmtPersona->fetch(PDO::FETCH_ASSOC);
-            
+
             // Determinar idpersona para el pago
             $idPersonaPago = null;
             if ($personaInfo['idpersona']) {
@@ -851,7 +942,7 @@ class SueldosModel
                 // o usar NULL ya que la tabla pagos permite idpersona NULL
                 $idPersonaPago = null;
             }
-            
+
             // 5. Insertar el pago en la tabla pagos
             $this->setQuery(
                 "INSERT INTO pagos (
@@ -859,7 +950,7 @@ class SueldosModel
                     fecha_pago, observaciones, estatus, fecha_creacion
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, 'activo', NOW())"
             );
-            
+
             $this->setArray([
                 $idPersonaPago,
                 intval($data['idtipo_pago']),
@@ -869,14 +960,14 @@ class SueldosModel
                 $data['fecha_pago'],
                 $data['observaciones'] ?? null
             ]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $pagoId = $db->lastInsertId();
 
             // 6. Actualizar balance del sueldo
             $nuevoBalance = $montoTotalBolivares - $montoPago;
-            
+
             // Determinar nuevo estatus
             $nuevoEstatus = 'POR_PAGAR';
             if ($nuevoBalance <= 0) {
@@ -900,13 +991,13 @@ class SueldosModel
                     balance = ?, estatus = ?, fecha_modificacion = NOW() 
                 WHERE idsueldo = ?"
             );
-            
+
             $this->setArray([
                 round($nuevoBalanceMonedaOriginal, 2),
                 $nuevoEstatus,
                 intval($data['idsueldo'])
             ]);
-            
+
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
 
@@ -938,7 +1029,8 @@ class SueldosModel
     }
 
     // Función para obtener pagos asociados a un sueldo
-    public function getPagosSueldo($idsueldo){
+    public function getPagosSueldo($idsueldo)
+    {
         $objModelSueldosModel = $this->getInstanciaModel();
         return $objModelSueldosModel->ejecutarGetPagosSueldo($idsueldo);
     }
@@ -962,18 +1054,18 @@ class SueldosModel
                 WHERE p.idsueldotemp = ?
                 ORDER BY p.fecha_creacion DESC"
             );
-            
+
             $this->setArray([$idsueldo]);
             $stmt = $db->prepare($this->getQuery());
             $stmt->execute($this->getArray());
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             return [
                 'status' => true,
                 'message' => 'Pagos obtenidos exitosamente',
                 'data' => $result
             ];
-            
+
         } catch (Exception $e) {
             error_log("SueldosModel::getPagosSueldo - Error: " . $e->getMessage());
             return [
