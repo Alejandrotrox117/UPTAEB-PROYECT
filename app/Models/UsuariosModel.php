@@ -17,7 +17,7 @@ class UsuariosModel
     private $status;
 
     // Propiedad para la instancia interna (patrón de doble instancia)
-    private $objModelUsuariosModel;
+    private $objUsuariosModel;
 
     // Definir constante para el rol de super usuario
     const SUPER_USUARIO_ROL_ID = 1;
@@ -31,10 +31,10 @@ class UsuariosModel
      */
     private function getInstanciaModel()
     {
-        if ($this->objModelUsuariosModel == null) {
-            $this->objModelUsuariosModel = new UsuariosModel();
+        if ($this->objUsuariosModel == null) {
+            $this->objUsuariosModel = new UsuariosModel();
         }
-        return $this->objModelUsuariosModel;
+        return $this->objUsuariosModel;
     }
 
     //  GETTERS Y SETTERS
@@ -151,7 +151,7 @@ class UsuariosModel
     /**
      * Verificar si existe usuario por correo
      */
-    private function ejecutarVerificacionUsuarioPorCorreo(string $correo, int $idUsuarioExcluir = null)
+    private function ejecutarVerificacionUsuarioPorCorreo(string $correo, ?int $idUsuarioExcluir = null)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -188,7 +188,7 @@ class UsuariosModel
     /**
      * Verificar si existe usuario por nombre de usuario
      */
-    private function ejecutarVerificacionUsuarioPorNombre(string $usuario, int $idUsuarioExcluir = null)
+    private function ejecutarVerificacionUsuarioPorNombre(string $usuario, ?int $idUsuarioExcluir = null)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -777,7 +777,9 @@ class UsuariosModel
      */
     public function insertUsuario(array $data)
     {
-        $this->setData($data);
+        $objUsuariosModel = $this->getInstanciaModel();
+
+        $objUsuariosModel->setData($data);
 
         if (empty($data['usuario'])) {
             return ['status' => false, 'message' => 'El nombre de usuario es obligatorio.'];
@@ -795,11 +797,11 @@ class UsuariosModel
             return ['status' => false, 'message' => 'El formato del correo electrónico es inválido.'];
         }
 
-        $correo = $this->getData()['correo'];
-        $usuario = $this->getData()['usuario'];
+        $correo = $objUsuariosModel->getData()['correo'];
+        $usuario = $objUsuariosModel->getData()['usuario'];
 
         // Verificar si ya existe el correo
-        if ($this->ejecutarVerificacionUsuarioPorCorreo($correo)) {
+        if ($objUsuariosModel->ejecutarVerificacionUsuarioPorCorreo($correo)) {
             return [
                 'status' => false,
                 'message' => 'El correo electrónico ya está registrado. Por favor, utilice otro.',
@@ -808,7 +810,7 @@ class UsuariosModel
         }
 
         // Verificar si ya existe el nombre de usuario
-        if ($this->ejecutarVerificacionUsuarioPorNombre($usuario)) {
+        if ($objUsuariosModel->ejecutarVerificacionUsuarioPorNombre($usuario)) {
             return [
                 'status' => false,
                 'message' => 'El nombre de usuario ya está registrado. Por favor, utilice otro.',
@@ -816,7 +818,7 @@ class UsuariosModel
             ];
         }
 
-        return $this->ejecutarInsercionUsuario($this->getData());
+        return $objUsuariosModel->ejecutarInsercionUsuario($objUsuariosModel->getData());
     }
 
     /**
@@ -824,13 +826,15 @@ class UsuariosModel
      */
     public function updateUsuario(int $idusuario, array $data)
     {
+        $objUsuariosModel = $this->getInstanciaModel();
+
         if (isset($data['correo']) && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
             return ['status' => false, 'message' => 'El formato del correo electrónico es inválido.'];
         }
 
         // Validaciones si son necesarias (ej. verificar si el correo se duplicaria)
         if (isset($data['correo'])) {
-            if ($this->ejecutarVerificacionUsuarioPorCorreo($data['correo'], $idusuario)) {
+            if ($objUsuariosModel->ejecutarVerificacionUsuarioPorCorreo($data['correo'], $idusuario)) {
                 return [
                     'status' => false,
                     'message' => 'El correo electrónico ya está registrado por otro usuario.',
@@ -839,7 +843,7 @@ class UsuariosModel
         }
 
         if (isset($data['usuario'])) {
-            if ($this->ejecutarVerificacionUsuarioPorNombre($data['usuario'], $idusuario)) {
+            if ($objUsuariosModel->ejecutarVerificacionUsuarioPorNombre($data['usuario'], $idusuario)) {
                 return [
                     'status' => false,
                     'message' => 'El nombre de usuario ya está registrado por otro usuario.',
@@ -848,7 +852,7 @@ class UsuariosModel
         }
 
         if (isset($data['nombre_usuario'])) {
-            if ($this->ejecutarVerificacionUsuarioPorNombre($data['nombre_usuario'], $idusuario)) {
+            if ($objUsuariosModel->ejecutarVerificacionUsuarioPorNombre($data['nombre_usuario'], $idusuario)) {
                 return [
                     'status' => false,
                     'message' => 'El nombre de usuario ya está registrado por otro usuario.',
@@ -858,12 +862,12 @@ class UsuariosModel
         }
 
         // Verificar si existe para no actualizar fantasmas
-        $existe = $this->ejecutarBusquedaUsuarioPorId($idusuario);
+        $existe = $objUsuariosModel->ejecutarBusquedaUsuarioPorId($idusuario);
         if (!$existe) {
             return ['status' => false, 'message' => 'El usuario especificado no existe.'];
         }
 
-        return $this->ejecutarActualizacionUsuario($idusuario, $data);
+        return $objUsuariosModel->ejecutarActualizacionUsuario($idusuario, $data);
     }
 
     /**
@@ -871,11 +875,13 @@ class UsuariosModel
      */
     public function selectUsuarioById(int $idusuario, int $idUsuarioSesion = 0)
     {
-        $this->setUsuarioId($idusuario);
+        $objUsuariosModel = $this->getInstanciaModel();
+
+        $objUsuariosModel->setUsuarioId($idusuario);
 
         // Verificar si el usuario a consultar es super usuario
-        $esSuperUsuarioAConsultar = $this->esSuperUsuario($idusuario);
-        $esSuperUsuarioActual = $this->esUsuarioActualSuperUsuario($idUsuarioSesion);
+        $esSuperUsuarioAConsultar = $objUsuariosModel->esSuperUsuario($idusuario);
+        $esSuperUsuarioActual = $objUsuariosModel->esUsuarioActualSuperUsuario($idUsuarioSesion);
 
         // Si se está consultando un super usuario
         if ($esSuperUsuarioAConsultar) {
@@ -885,7 +891,7 @@ class UsuariosModel
             }
         }
 
-        return $this->ejecutarBusquedaUsuarioPorId($this->getUsuarioId());
+        return $objUsuariosModel->ejecutarBusquedaUsuarioPorId($objUsuariosModel->getUsuarioId());
     }
 
     /**
@@ -893,17 +899,19 @@ class UsuariosModel
      */
     public function deleteUsuarioById(int $idusuario, int $idUsuarioSesion = 0)
     {
-        $this->setUsuarioId($idusuario);
+        $objUsuariosModel = $this->getInstanciaModel();
+
+        $objUsuariosModel->setUsuarioId($idusuario);
 
         // Verificar si el usuario a eliminar es super usuario
-        $esSuperUsuarioAEliminar = $this->esSuperUsuario($idusuario);
+        $esSuperUsuarioAEliminar = $objUsuariosModel->esSuperUsuario($idusuario);
 
         // No permitir eliminar super usuarios
         if ($esSuperUsuarioAEliminar) {
             return false;
         }
 
-        return $this->ejecutarEliminacionUsuario($this->getUsuarioId());
+        return $objUsuariosModel->ejecutarEliminacionUsuario($objUsuariosModel->getUsuarioId());
     }
 
     /**
@@ -911,7 +919,8 @@ class UsuariosModel
      */
     public function selectAllUsuarios(int $idUsuarioSesion = 0)
     {
-        return $this->ejecutarBusquedaTodosUsuarios($idUsuarioSesion);
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->ejecutarBusquedaTodosUsuarios($idUsuarioSesion);
     }
 
     /**
@@ -919,7 +928,8 @@ class UsuariosModel
      */
     public function selectAllUsuariosActivos(int $idUsuarioSesion = 0)
     {
-        return $this->ejecutarBusquedaTodosUsuarios($idUsuarioSesion);
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->ejecutarBusquedaTodosUsuarios($idUsuarioSesion);
     }
 
     /**
@@ -927,7 +937,8 @@ class UsuariosModel
      */
     public function selectAllRoles(int $idUsuarioSesion = 0)
     {
-        return $this->ejecutarBusquedaTodosRoles($idUsuarioSesion);
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->ejecutarBusquedaTodosRoles($idUsuarioSesion);
     }
 
     /**
@@ -935,7 +946,8 @@ class UsuariosModel
      */
     public function selectAllPersonasActivas(int $idPersonaActual = 0)
     {
-        return $this->ejecutarBusquedaPersonasActivas($idPersonaActual);
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->ejecutarBusquedaPersonasActivas($idPersonaActual);
     }
 
     /**
@@ -943,7 +955,8 @@ class UsuariosModel
      */
     public function selectUsuarioByEmail(string $email, int $idUsuarioExcluir = 0)
     {
-        return $this->ejecutarVerificacionUsuarioPorCorreo($email, $idUsuarioExcluir > 0 ? $idUsuarioExcluir : null)
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->ejecutarVerificacionUsuarioPorCorreo($email, $idUsuarioExcluir > 0 ? $idUsuarioExcluir : null)
             ? ['correo' => $email] : false;
     }
 
@@ -952,7 +965,8 @@ class UsuariosModel
      */
     public function verificarEsSuperUsuario(int $idusuario)
     {
-        return $this->esSuperUsuario($idusuario);
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->esSuperUsuario($idusuario);
     }
 
     /**
@@ -960,6 +974,8 @@ class UsuariosModel
      */
     public function puedeEliminarUsuario(int $idusuario, int $idUsuarioSesion = 0)
     {
+        $objUsuariosModel = $this->getInstanciaModel();
+
         // No puede eliminarse a sí mismo
         if ($idusuario === $idUsuarioSesion) {
             return [
@@ -969,7 +985,7 @@ class UsuariosModel
         }
 
         // NUNCA puede eliminar super usuarios (ya no aparecen en la lista)
-        if ($this->esSuperUsuario($idusuario)) {
+        if ($objUsuariosModel->esSuperUsuario($idusuario)) {
             return [
                 'puede_eliminar' => false,
                 'razon' => 'Los super usuarios no pueden ser eliminados.'
@@ -987,7 +1003,8 @@ class UsuariosModel
      */
     public function selectAllUsuariosEliminados(int $idUsuarioSesion = 0)
     {
-        return $this->ejecutarBusquedaUsuariosEliminados($idUsuarioSesion);
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->ejecutarBusquedaUsuariosEliminados($idUsuarioSesion);
     }
 
     /**
@@ -995,7 +1012,8 @@ class UsuariosModel
      */
     public function reactivarUsuario(int $idusuario)
     {
-        return $this->ejecutarReactivacionUsuario($idusuario);
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->ejecutarReactivacionUsuario($idusuario);
     }
 
     /**
@@ -1003,7 +1021,8 @@ class UsuariosModel
      */
     public function buscarUsuarios(string $termino)
     {
-        return $this->ejecutarBusquedaUsuariosPorTermino($termino);
+        $objUsuariosModel = $this->getInstanciaModel();
+        return $objUsuariosModel->ejecutarBusquedaUsuariosPorTermino($termino);
     }
 
     /**
