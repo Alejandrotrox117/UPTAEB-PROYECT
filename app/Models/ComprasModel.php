@@ -43,9 +43,19 @@ class ComprasModel
     private $peso_bruto;
     private $peso_neto;
 
+    private $objComprasModel;
+
     public function __construct()
     {
 
+    }
+
+    private function getInstanciaModel()
+    {
+        if ($this->objComprasModel == null) {
+            $this->objComprasModel = new ComprasModel();
+        }
+        return $this->objComprasModel;
     }
 
     // GETTERS Y SETTERS DE CONTROL
@@ -543,7 +553,7 @@ class ComprasModel
     {
         // Validación: solo se puede editar si la compra está en estado BORRADOR
         $compraActual = $this->ejecutarBusquedaCompraPorId($idcompra);
-        if (!$compraActual || (isset($compraActual['estatus_compra']) && $compraActual['estatus_compra'] !== 'BORRADOR')) {
+        if (!is_array($compraActual) || (isset($compraActual['estatus_compra']) && $compraActual['estatus_compra'] !== 'BORRADOR')) {
             return [
                 'status' => false,
                 'message' => 'La compra no se puede editar porque no está en estado BORRADOR.'
@@ -892,8 +902,8 @@ class ComprasModel
             // Obtener datos de la compra para notificaciones
             $stmtInfo = $db->prepare("SELECT nro_compra, total_general FROM compra WHERE idcompra = ?");
             $stmtInfo->execute([$idcompra]);
-            $infoCompra  = $stmtInfo->fetch(PDO::FETCH_ASSOC);
-            $nroCompra   = $infoCompra['nro_compra']    ?? $idcompra;
+            $infoCompra = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+            $nroCompra = $infoCompra['nro_compra'] ?? $idcompra;
             $totalCompra = $infoCompra['total_general'] ?? 0;
 
             // Disparar notificaciones según el nuevo estado
@@ -1313,181 +1323,152 @@ class ComprasModel
     // MÉTODOS PÚBLICOS QUE SE LLAMAN EN EL CONTROLADOR
     public function selectAllCompras(int $idUsuarioSesion = 0)
     {
-        return $this->ejecutarConsultaTodasCompras($idUsuarioSesion);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarConsultaTodasCompras($idUsuarioSesion);
     }
 
     public function generarNumeroCompra()
     {
-        return $this->ejecutarGeneracionNumeroCompra();
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarGeneracionNumeroCompra();
     }
 
     public function buscarProveedor($termino)
     {
-        $this->setTermino($termino);
-        return $this->ejecutarBusquedaProveedor();
+        $objComprasModel = $this->getInstanciaModel();
+        $objComprasModel->setTermino($termino);
+        return $objComprasModel->ejecutarBusquedaProveedor();
     }
 
     public function getProductosConCategoria()
     {
-        return $this->ejecutarConsultaProductosConCategoria();
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarConsultaProductosConCategoria();
     }
 
     public function getProductoById(int $idproducto)
     {
-        $this->setIdProducto($idproducto);
-        return $this->ejecutarBusquedaProductoPorId();
+        $objComprasModel = $this->getInstanciaModel();
+        $objComprasModel->setIdProducto($idproducto);
+        return $objComprasModel->ejecutarBusquedaProductoPorId();
     }
 
     public function getMonedasActivas()
     {
-        return $this->ejecutarConsultaMonedasActivas();
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarConsultaMonedasActivas();
     }
 
     public function getTasasPorFecha($fecha)
     {
-        $this->setFecha($fecha);
-        return $this->ejecutarConsultaTasasPorFecha();
+        $objComprasModel = $this->getInstanciaModel();
+        $objComprasModel->setFecha($fecha);
+        return $objComprasModel->ejecutarConsultaTasasPorFecha();
     }
 
     public function getUltimoPesoRomana()
     {
-        return $this->ejecutarConsultaUltimoPesoRomana();
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarConsultaUltimoPesoRomana();
     }
 
     public function insertarCompra(array $datosCompra, array $detallesCompra)
     {
-        if (empty($detallesCompra)) {
-            $errorMessage = 'No hay detalles de compra para procesar.';
-            error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
-            return ['status' => false, 'message' => $errorMessage];
-        }
-
-        // Validación de proveedor
-        $proveedor = $this->getProveedorById($datosCompra['idproveedor']);
-        if (!$proveedor) {
-            $errorMessage = "El proveedor con ID " . $datosCompra['idproveedor'] . " no existe.";
-            error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
-            return ['status' => false, 'message' => $errorMessage];
-        }
-
-        // Validación de detalles
-        foreach ($detallesCompra as $detalle) {
-            // Validación de producto existente
-            $producto = $this->getProductoById($detalle['idproducto']);
-            if (!$producto) {
-                $errorMessage = "El producto con ID " . $detalle['idproducto'] . " no existe.";
-                error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
-                return ['status' => false, 'message' => $errorMessage];
-            }
-
-            // Validación de valores no negativos
-            if ($detalle['cantidad'] <= 0 || $detalle['precio_unitario_compra'] < 0) {
-                $errorMessage = "La cantidad o el precio unitario no pueden ser negativos o cero.";
-                error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
-                return ['status' => false, 'message' => $errorMessage];
-            }
-        }
-
-        return $this->ejecutarInsercionCompra($datosCompra, $detallesCompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarInsercionCompraProxy($datosCompra, $detallesCompra);
     }
 
     public function actualizarCompra(int $idcompra, array $datosCompra, array $detallesCompra)
     {
-        // Validación de proveedor
-        $proveedor = $this->getProveedorById($datosCompra['idproveedor']);
-        if (!$proveedor) {
-            $errorMessage = "El proveedor con ID " . $datosCompra['idproveedor'] . " no existe.";
-            error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
-            return ['status' => false, 'message' => $errorMessage];
-        }
-
-        // Validación de detalles
-        foreach ($detallesCompra as $detalle) {
-            // Validación de producto existente
-            $producto = $this->getProductoById($detalle['idproducto']);
-            if (!$producto) {
-                $errorMessage = "El producto con ID " . $detalle['idproducto'] . " no existe.";
-                error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
-                return ['status' => false, 'message' => $errorMessage];
-            }
-
-            // Validación de valores no negativos
-            if ($detalle['cantidad'] <= 0 || $detalle['precio_unitario_compra'] < 0) {
-                $errorMessage = "La cantidad o el precio unitario no pueden ser negativos o cero.";
-                error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
-                return ['status' => false, 'message' => $errorMessage];
-            }
-        }
-
-        return $this->ejecutarActualizacionCompra($idcompra, $datosCompra, $detallesCompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarActualizacionCompraProxy($idcompra, $datosCompra, $detallesCompra);
     }
 
     public function getCompraCompletaParaEditar($idcompra)
     {
-        return $this->ejecutarBusquedaCompraCompletaParaEditar($idcompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarBusquedaCompraCompletaParaEditar($idcompra);
     }
 
     public function getCompraById($idcompra)
     {
-        return $this->ejecutarBusquedaCompraPorId($idcompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarBusquedaCompraPorId($idcompra);
     }
 
     public function getDetalleCompraById($idcompra)
     {
-        return $this->ejecutarBusquedaDetalleCompraPorId($idcompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarBusquedaDetalleCompraPorId($idcompra);
     }
 
     public function deleteCompraById(int $idcompra)
     {
-        return $this->ejecutarEliminacionLogicaCompra($idcompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarEliminacionLogicaCompra($idcompra);
     }
 
     public function cambiarEstadoCompra(int $idcompra, string $nuevoEstado, int $idusuario = 0)
     {
-        return $this->ejecutarCambioEstadoCompra($idcompra, $nuevoEstado, $idusuario);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarCambioEstadoCompra($idcompra, $nuevoEstado, $idusuario);
     }
 
     public function insertProveedor(array $data): array
     {
-        return $this->ejecutarInsercionProveedor($data);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarInsercionProveedor($data);
     }
 
     public function getProveedorById($idproveedor)
     {
-        return $this->ejecutarBusquedaProveedorPorId($idproveedor);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarBusquedaProveedorPorId($idproveedor);
     }
 
     public function guardarPesoRomana($peso, $fecha = null, $estatus = 'activo')
     {
-        return $this->ejecutarGuardarPesoRomana($peso, $fecha, $estatus);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarGuardarPesoRomana($peso, $fecha, $estatus);
     }
 
     public function obtenerPermisosUsuarioModulo($idusuario, $modulo)
     {
-        return $this->ejecutarBusquedaPermisosUsuarioModulo($idusuario, $modulo);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarBusquedaPermisosUsuarioModulo($idusuario, $modulo);
     }
 
     public function obtenerTodosPermisosRol($idrol)
     {
-        return $this->ejecutarBusquedaTodosPermisosRol($idrol);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarBusquedaTodosPermisosRol($idrol);
     }
 
     public function selectCompra($idcompra)
     {
-        return $this->ejecutarBusquedaCompraCompleta($idcompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarBusquedaCompraCompleta($idcompra);
     }
 
     public function obtenerEstadoCompra($idcompra)
     {
-        return $this->ejecutarBusquedaEstadoCompra($idcompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarBusquedaEstadoCompra($idcompra);
     }
 
     public function reactivarCompra(int $idcompra)
     {
-        return $this->ejecutarReactivacionCompra($idcompra);
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarReactivacionCompra($idcompra);
     }
 
     public function getTasaBcvDelDia()
+    {
+        $objComprasModel = $this->getInstanciaModel();
+        return $objComprasModel->ejecutarConsultaTasaBcvDelDia();
+    }
+
+    private function ejecutarConsultaTasaBcvDelDia()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1514,6 +1495,76 @@ class ComprasModel
         } finally {
             $conexion->disconnect();
         }
+    }
+
+    private function ejecutarInsercionCompraProxy(array $datosCompra, array $detallesCompra)
+    {
+        if (empty($detallesCompra)) {
+            $errorMessage = 'No hay detalles de compra para procesar.';
+            error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
+            return ['status' => false, 'message' => $errorMessage];
+        }
+
+        // Validación de proveedor
+        $proveedor = $this->ejecutarBusquedaProveedorPorId($datosCompra['idproveedor']);
+        if (!$proveedor) {
+            $errorMessage = "El proveedor con ID " . $datosCompra['idproveedor'] . " no existe.";
+            error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
+            return ['status' => false, 'message' => $errorMessage];
+        }
+
+        // Validación de detalles
+        foreach ($detallesCompra as $detalle) {
+            // Validación de producto existente
+            $this->setIdProducto($detalle['idproducto']);
+            $producto = $this->ejecutarBusquedaProductoPorId();
+            if (!$producto) {
+                $errorMessage = "El producto con ID " . $detalle['idproducto'] . " no existe.";
+                error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
+                return ['status' => false, 'message' => $errorMessage];
+            }
+
+            // Validación de valores no negativos
+            if ($detalle['cantidad'] <= 0 || $detalle['precio_unitario_compra'] < 0) {
+                $errorMessage = "La cantidad o el precio unitario no pueden ser negativos o cero.";
+                error_log("ComprasModel::insertarCompra - Error: " . $errorMessage);
+                return ['status' => false, 'message' => $errorMessage];
+            }
+        }
+
+        return $this->ejecutarInsercionCompra($datosCompra, $detallesCompra);
+    }
+
+    private function ejecutarActualizacionCompraProxy(int $idcompra, array $datosCompra, array $detallesCompra)
+    {
+        // Validación de proveedor
+        $proveedor = $this->ejecutarBusquedaProveedorPorId($datosCompra['idproveedor']);
+        if (!$proveedor) {
+            $errorMessage = "El proveedor con ID " . $datosCompra['idproveedor'] . " no existe.";
+            error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
+            return ['status' => false, 'message' => $errorMessage];
+        }
+
+        // Validación de detalles
+        foreach ($detallesCompra as $detalle) {
+            // Validación de producto existente
+            $this->setIdProducto($detalle['idproducto']);
+            $producto = $this->ejecutarBusquedaProductoPorId();
+            if (!$producto) {
+                $errorMessage = "El producto con ID " . $detalle['idproducto'] . " no existe.";
+                error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
+                return ['status' => false, 'message' => $errorMessage];
+            }
+
+            // Validación de valores no negativos
+            if ($detalle['cantidad'] <= 0 || $detalle['precio_unitario_compra'] < 0) {
+                $errorMessage = "La cantidad o el precio unitario no pueden ser negativos o cero.";
+                error_log("ComprasModel::actualizarCompra - Error: " . $errorMessage);
+                return ['status' => false, 'message' => $errorMessage];
+            }
+        }
+
+        return $this->ejecutarActualizacionCompra($idcompra, $datosCompra, $detallesCompra);
     }
 
     // Métodos de notificación WebSocket
@@ -1597,16 +1648,16 @@ class ComprasModel
             $notificador = new NotificacionHelper();
 
             $data = [
-                'titulo'        => 'Compra Autorizada - Pendiente Pago',
-                'mensaje'       => "Compra #$numero por $" . number_format($total, 2) . " fue autorizada y está lista para pagar",
-                'modulo'        => 'compras',
+                'titulo' => 'Compra Autorizada - Pendiente Pago',
+                'mensaje' => "Compra #$numero por $" . number_format($total, 2) . " fue autorizada y está lista para pagar",
+                'modulo' => 'compras',
                 'referencia_id' => $compraId,
-                'compra_id'     => $compraId
+                'compra_id' => $compraId
             ];
 
             // Obtener roles con acceso al módulo compras,
             // pero excluir los roles autorizadores (ellos ya saben que aprobaron)
-            $rolesConPermiso    = $notificador->obtenerRolesConPermiso('compras');
+            $rolesConPermiso = $notificador->obtenerRolesConPermiso('compras');
             $rolesAutorizadores = $notificador->obtenerRolesConAccesoTotal('compras');
 
             // Quitar roles autorizadores de la lista de destinatarios
@@ -1627,7 +1678,7 @@ class ComprasModel
     {
         try {
             $compraData = $this->ejecutarBusquedaCompraPorId($compraId);
-            if (!$compraData) {
+            if (!is_array($compraData)) {
                 return;
             }
             $notificador = new NotificacionHelper();

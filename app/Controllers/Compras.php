@@ -11,13 +11,10 @@ use App\Helpers\PermisosModuloVerificar;
  */
 
 // Helper para obtener modelos
-function compras_getModels()
+// Función de Fábrica
+function getComprasModel()
 {
-    return [
-        'compras' => new ComprasModel(),
-        'bitacora' => new BitacoraModel(),
-        'notificaciones' => new NotificacionesModel()
-    ];
+    return new ComprasModel();
 }
 
 // Helper para verificar acceso común
@@ -88,9 +85,9 @@ function compras_getComprasDataTable()
         exit();
     }
 
-    $models = compras_getModels();
+    $objCompras = getComprasModel();
     $idusuario = obtenerUsuarioSesion();
-    $arrData = $models['compras']->selectAllCompras($idusuario);
+    $arrData = $objCompras->selectAllCompras($idusuario);
     echo json_encode(['data' => $arrData], JSON_UNESCAPED_UNICODE);
     exit();
 }
@@ -98,8 +95,8 @@ function compras_getComprasDataTable()
 function compras_getListaMonedasParaFormulario()
 {
     header('Content-Type: application/json');
-    $models = compras_getModels();
-    $monedas = $models['compras']->getMonedasActivas();
+    $objCompras = getComprasModel();
+    $monedas = $objCompras->getMonedasActivas();
     echo json_encode($monedas);
     exit();
 }
@@ -111,8 +108,8 @@ function compras_getTasasMonedasPorFecha()
         echo json_encode(['status' => false, 'message' => 'Fecha requerida']);
         exit();
     }
-    $models = compras_getModels();
-    $tasas = $models['compras']->getTasasPorFecha($_GET['fecha']);
+    $objCompras = getComprasModel();
+    $tasas = $objCompras->getTasasPorFecha($_GET['fecha']);
     echo json_encode(['status' => true, 'tasas' => $tasas]);
     exit();
 }
@@ -120,8 +117,8 @@ function compras_getTasasMonedasPorFecha()
 function compras_getListaProductosParaFormulario()
 {
     header('Content-Type: application/json');
-    $models = compras_getModels();
-    $productos = $models['compras']->getProductosConCategoria();
+    $objCompras = getComprasModel();
+    $productos = $objCompras->getProductosConCategoria();
     echo json_encode($productos);
     exit();
 }
@@ -130,8 +127,8 @@ function compras_buscarProveedores()
 {
     header('Content-Type: application/json');
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['term'])) {
-        $models = compras_getModels();
-        $proveedores = $models['compras']->buscarProveedor($_GET['term']);
+        $objCompras = getComprasModel();
+        $proveedores = $objCompras->buscarProveedor($_GET['term']);
         echo json_encode($proveedores);
     } else {
         echo json_encode([]);
@@ -161,7 +158,7 @@ function compras_setCompra()
         exit();
     }
 
-    $models = compras_getModels();
+    $objCompras = getComprasModel();
     $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
     $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
     $total_general_compra = floatval($_POST['total_general_input'] ?? 0);
@@ -171,7 +168,7 @@ function compras_setCompra()
         exit();
     }
 
-    $nro_compra = $models['compras']->generarNumeroCompra();
+    $nro_compra = $objCompras->generarNumeroCompra();
     $datosCompra = [
         'nro_compra' => $nro_compra,
         'fecha_compra' => $fecha_compra,
@@ -206,7 +203,7 @@ function compras_setCompra()
         }
     }
 
-    $resultado = $models['compras']->insertarCompra($datosCompra, $detallesParaGuardar);
+    $resultado = $objCompras->insertarCompra($datosCompra, $detallesParaGuardar);
     if ($resultado['status']) {
         registrarEnBitacora('compras', 'INSERTAR');
         echo json_encode(['status' => true, 'message' => 'Compra registrada.', 'idcompra' => $resultado['idcompra'] ?? 0], JSON_UNESCAPED_UNICODE);
@@ -222,9 +219,9 @@ function compras_getCompraById($idcompra)
     $id = is_array($idcompra) ? ($idcompra[0] ?? 0) : $idcompra;
     $id = intval($id);
 
-    $models = compras_getModels();
-    $compra = $models['compras']->getCompraById($id);
-    $detalles = $models['compras']->getDetalleCompraById($id);
+    $objCompras = getComprasModel();
+    $compra = $objCompras->getCompraById($id);
+    $detalles = $objCompras->getDetalleCompraById($id);
 
     echo json_encode(['status' => true, 'data' => ['compra' => $compra, 'detalles' => $detalles]], JSON_UNESCAPED_UNICODE);
     exit();
@@ -239,7 +236,7 @@ function compras_updateCompra()
         exit();
     }
 
-    $models = compras_getModels();
+    $objCompras = getComprasModel();
     $idcompra = intval($_POST['idcompra'] ?? 0);
     $idproveedor = intval($_POST['idproveedor_seleccionado'] ?? 0);
     $fecha_compra = $_POST['fecha_compra'] ?? date('Y-m-d');
@@ -279,7 +276,7 @@ function compras_updateCompra()
     }
 
     try {
-        $resultado = $models['compras']->actualizarCompra($idcompra, $datosCompra, $detallesParaGuardar);
+        $resultado = $objCompras->actualizarCompra($idcompra, $datosCompra, $detallesParaGuardar);
         if ($resultado['status']) {
             registrarEnBitacora('compras', 'ACTUALIZAR', null, "ID Compra: $idcompra");
             echo json_encode(['status' => true, 'message' => 'Compra actualizada correctamente.'], JSON_UNESCAPED_UNICODE);
@@ -302,8 +299,8 @@ function compras_deleteCompra()
     $data = json_decode(file_get_contents('php://input'), true);
     $idcompra = intval($data['idcompra'] ?? 0);
 
-    $models = compras_getModels();
-    $res = $models['compras']->deleteCompraById($idcompra);
+    $objCompras = getComprasModel();
+    $res = $objCompras->deleteCompraById($idcompra);
     if ($res['status']) {
         registrarEnBitacora('compras', 'ELIMINAR', null, "ID Compra: $idcompra");
     }
@@ -321,8 +318,8 @@ function compras_reactivarCompra()
     $data = json_decode(file_get_contents('php://input'), true);
     $idcompra = intval($data['idcompra'] ?? 0);
 
-    $models = compras_getModels();
-    $res = $models['compras']->reactivarCompra($idcompra);
+    $objCompras = getComprasModel();
+    $res = $objCompras->reactivarCompra($idcompra);
     if ($res['status']) {
         registrarEnBitacora('compras', 'REACTIVAR', null, "ID Compra: $idcompra");
     }
@@ -338,9 +335,9 @@ function compras_cambiarEstadoCompra()
     $idcompra = intval($data['idcompra'] ?? 0);
     $nuevoEstado = $data['nuevo_estado'] ?? '';
 
-    $models = compras_getModels();
-    $estadoAnterior = $models['compras']->obtenerEstadoCompra($idcompra);
-    $res = $models['compras']->cambiarEstadoCompra($idcompra, $nuevoEstado, $idusuario);
+    $objCompras = getComprasModel();
+    $estadoAnterior = $objCompras->obtenerEstadoCompra($idcompra);
+    $res = $objCompras->cambiarEstadoCompra($idcompra, $nuevoEstado, $idusuario);
 
     if ($res['status']) {
         registrarEnBitacora('compras', 'CAMBIO_ESTADO', null, "De $estadoAnterior a $nuevoEstado");
@@ -363,10 +360,10 @@ function compras_validarProducto()
         exit();
     }
 
-    $models = compras_getModels();
+    $objCompras = getComprasModel();
     try {
-        $producto = $models['compras']->getProductoById($idproducto);
-        if ($producto) {
+        $producto = $objCompras->getProductoById($idproducto);
+        if (is_array($producto)) {
             echo json_encode([
                 'status' => true,
                 'producto' => [
@@ -405,9 +402,9 @@ function compras_guardarPesoRomana()
         exit();
     }
 
-    $models = compras_getModels();
+    $objCompras = getComprasModel();
     try {
-        $resultado = $models['compras']->guardarPesoRomana($peso, $fecha);
+        $resultado = $objCompras->guardarPesoRomana($peso, $fecha);
         echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         echo json_encode(['status' => false, 'message' => 'Error: ' . $e->getMessage()]);
@@ -428,16 +425,16 @@ function compras_factura($idcompra)
     }
 
     try {
-        $models = compras_getModels();
-        $compraData = $models['compras']->getCompraById($id);
+        $objCompras = getComprasModel();
+        $compraData = $objCompras->getCompraById($id);
 
         if (!$compraData) {
             header('Location: ' . base_url() . '/compras?error=no_encontrada');
             exit();
         }
 
-        $detalles = $models['compras']->getDetalleCompraById($id);
-        $tasasBcv = $models['compras']->getTasaBcvDelDia();
+        $detalles = $objCompras->getDetalleCompraById($id);
+        $tasasBcv = $objCompras->getTasaBcvDelDia();
 
         $data = [];
         $data['page_tag'] = "Nota de Recepción";
