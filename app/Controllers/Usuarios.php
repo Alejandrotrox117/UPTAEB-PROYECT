@@ -13,14 +13,16 @@ use App\Helpers\Validation\ExpresionesRegulares;
 /**
  * Obtiene el modelo de usuarios
  */
-function getUsuariosModel() {
+function getUsuariosModel()
+{
     return new UsuariosModel();
 }
 
 /**
  * Renderiza una vista de usuarios
  */
-function renderUsuariosView($view, $data = []) {
+function renderUsuariosView($view, $data = [])
+{
     renderView('usuarios', $view, $data);
 }
 
@@ -31,10 +33,11 @@ function renderUsuariosView($view, $data = []) {
 /**
  * Página principal del módulo de usuarios
  */
-function usuarios_index() {
+function usuarios_index()
+{
     // Verificar acceso al módulo
     verificarAccesoModulo('usuarios');
-    
+
     // Verificar permiso de ver
     if (!PermisosModuloVerificar::verificarPermisoModuloAccion('usuarios', 'ver')) {
         renderView('errors', 'permisos');
@@ -50,14 +53,15 @@ function usuarios_index() {
     $data['page_name'] = "usuarios";
     $data['page_content'] = "Gestión integral de usuarios del sistema";
     $data['page_functions_js'] = "functions_usuarios.js";
-    
+
     renderUsuariosView("usuarios", $data);
 }
 
 /**
  * Crear un nuevo usuario
  */
-function usuarios_createUsuario() {
+function usuarios_createUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'crear')) {
@@ -119,7 +123,7 @@ function usuarios_createUsuario() {
 
             $arrData = array(
                 'usuario' => $datosLimpios['usuario'],
-                'correo' => $datosLimpios['correo'], 
+                'correo' => $datosLimpios['correo'],
                 'clave' => $datosLimpios['clave'],
                 'idrol' => $datosLimpios['idrol'],
                 'personaId' => $datosLimpios['personaId']
@@ -134,8 +138,8 @@ function usuarios_createUsuario() {
                 die();
             }
 
-            $model = getUsuariosModel();
-            $arrResponse = $model->insertUsuario($arrData);
+            $objUsuarios = getUsuariosModel();
+            $arrResponse = $objUsuarios->insertUsuario($arrData);
 
             if ($arrResponse['status'] === true) {
                 $resultadoBitacora = registrarEnBitacora('Usuarios', 'CREAR_USUARIO', $idusuario);
@@ -159,7 +163,8 @@ function usuarios_createUsuario() {
 /**
  * Obtener listado de usuarios
  */
-function usuarios_getUsuariosData() {
+function usuarios_getUsuariosData()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
@@ -170,15 +175,15 @@ function usuarios_getUsuariosData() {
 
             // Obtener ID del usuario actual para filtrar correctamente
             $idusuario = obtenerUsuarioSesion();
-            
+
             // Obtener usuarios (activos para usuarios normales, todos para super usuarios)
-            $model = getUsuariosModel();
-            $arrResponse = $model->selectAllUsuariosActivos($idusuario);
+            $objUsuarios = getUsuariosModel();
+            $arrResponse = $objUsuarios->selectAllUsuariosActivos($idusuario);
 
             if ($arrResponse['status']) {
                 registrarEnBitacora('Usuarios', 'CONSULTA_LISTADO', $idusuario);
             }
-            
+
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getUsuariosData: " . $e->getMessage());
@@ -192,7 +197,8 @@ function usuarios_getUsuariosData() {
 /**
  * Obtener un usuario por ID
  */
-function usuarios_getUsuarioById($idusuario) {
+function usuarios_getUsuarioById($idusuario)
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
             $arrResponse = array('status' => false, 'message' => 'No tienes permisos para ver usuarios');
@@ -209,12 +215,12 @@ function usuarios_getUsuarioById($idusuario) {
         try {
             // Obtener ID del usuario actual para controlar acceso a super usuarios
             $idUsuarioSesion = obtenerUsuarioSesion();
-            
-            $model = getUsuariosModel();
-            $arrData = $model->selectUsuarioById(intval($idusuario), $idUsuarioSesion);
+
+            $objUsuarios = getUsuariosModel();
+            $arrData = $objUsuarios->selectUsuarioById(intval($idusuario), $idUsuarioSesion);
             if ($arrData !== false) {
                 registrarEnBitacora('Usuarios', 'VER_USUARIO', $idUsuarioSesion);
-                
+
                 $arrResponse = array('status' => true, 'data' => $arrData);
             } else {
                 $arrResponse = array('status' => false, 'message' => 'Usuario no encontrado o no tienes permisos para verlo');
@@ -232,7 +238,8 @@ function usuarios_getUsuarioById($idusuario) {
 /**
  * Actualizar un usuario
  */
-function usuarios_updateUsuario() {
+function usuarios_updateUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'editar')) {
@@ -261,7 +268,7 @@ function usuarios_updateUsuario() {
             $datosLimpios = [
                 'usuario' => ExpresionesRegulares::limpiar($request['usuario'] ?? '', 'alfanumerico'),
                 'correo' => ExpresionesRegulares::limpiar($request['correo'] ?? '', 'email'),
-                'clave' => $request['clave'] ?? '', 
+                'clave' => $request['clave'] ?? '',
                 'idrol' => intval($request['idrol'] ?? 0),
                 'personaId' => !empty($request['personaId']) ? intval($request['personaId']) : null
             ];
@@ -320,8 +327,8 @@ function usuarios_updateUsuario() {
             }
 
             // Pasar el ID del usuario actual al modelo para verificaciones de super usuario
-            $model = getUsuariosModel();
-            $arrResponse = $model->updateUsuario($intIdUsuario, $arrData, $idusuario);
+            $objUsuarios = getUsuariosModel();
+            $arrResponse = $objUsuarios->updateUsuario($intIdUsuario, $arrData, $idusuario);
 
             if ($arrResponse['status'] === true) {
                 $resultadoBitacora = registrarEnBitacora('Usuarios', 'ACTUALIZAR_USUARIO', $idusuario);
@@ -344,7 +351,8 @@ function usuarios_updateUsuario() {
 /**
  * Eliminar (desactivar) un usuario
  */
-function usuarios_deleteUsuario() {
+function usuarios_deleteUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'eliminar')) {
@@ -370,10 +378,10 @@ function usuarios_deleteUsuario() {
             }
 
             $idusuario = obtenerUsuarioSesion();
-            
+
             // Verificar si puede eliminar el usuario usando el nuevo método del modelo
-            $model = getUsuariosModel();
-            $verificacion = $model->puedeEliminarUsuario($intIdUsuario, $idusuario);
+            $objUsuarios = getUsuariosModel();
+            $verificacion = $objUsuarios->puedeEliminarUsuario($intIdUsuario, $idusuario);
             if (!$verificacion['puede_eliminar']) {
                 $arrResponse = array('status' => false, 'message' => $verificacion['razon']);
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -381,7 +389,7 @@ function usuarios_deleteUsuario() {
             }
 
             // Pasar el ID del usuario actual al modelo para verificaciones de super usuario
-            $requestDelete = $model->deleteUsuarioById($intIdUsuario, $idusuario);
+            $requestDelete = $objUsuarios->deleteUsuarioById($intIdUsuario, $idusuario);
             if ($requestDelete) {
                 $arrResponse = array('status' => true, 'message' => 'Usuario desactivado correctamente');
             } else {
@@ -409,7 +417,8 @@ function usuarios_deleteUsuario() {
 /**
  * Obtener lista de roles
  */
-function usuarios_getRoles() {
+function usuarios_getRoles()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
@@ -420,9 +429,9 @@ function usuarios_getRoles() {
 
             // Obtener ID del usuario actual para filtrar roles según permisos
             $idusuario = obtenerUsuarioSesion();
-            
-            $model = getUsuariosModel();
-            $arrResponse = $model->selectAllRoles($idusuario);
+
+            $objUsuarios = getUsuariosModel();
+            $arrResponse = $objUsuarios->selectAllRoles($idusuario);
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getRoles: " . $e->getMessage());
@@ -436,7 +445,8 @@ function usuarios_getRoles() {
 /**
  * Obtener lista de personas
  */
-function usuarios_getPersonas() {
+function usuarios_getPersonas()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
@@ -446,8 +456,8 @@ function usuarios_getPersonas() {
             }
 
             $idPersonaActual = isset($_GET['idPersonaActual']) ? intval($_GET['idPersonaActual']) : 0;
-            $model = getUsuariosModel();
-            $arrResponse = $model->selectAllPersonasActivas($idPersonaActual);
+            $objUsuarios = getUsuariosModel();
+            $arrResponse = $objUsuarios->selectAllPersonasActivas($idPersonaActual);
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en getPersonas: " . $e->getMessage());
@@ -461,7 +471,8 @@ function usuarios_getPersonas() {
 /**
  * Exportar usuarios
  */
-function usuarios_exportarUsuarios() {
+function usuarios_exportarUsuarios()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'exportar')) {
@@ -472,9 +483,9 @@ function usuarios_exportarUsuarios() {
 
             // Obtener ID del usuario actual para filtrar correctamente en la exportación
             $idusuario = obtenerUsuarioSesion();
-            
-            $model = getUsuariosModel();
-            $arrData = $model->selectAllUsuariosActivos($idusuario);
+
+            $objUsuarios = getUsuariosModel();
+            $arrData = $objUsuarios->selectAllUsuariosActivos($idusuario);
 
             if ($arrData['status']) {
                 $data['usuarios'] = $arrData['data'];
@@ -501,7 +512,8 @@ function usuarios_exportarUsuarios() {
 /**
  * Buscar usuarios
  */
-function usuarios_buscarUsuario() {
+function usuarios_buscarUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'ver')) {
@@ -527,8 +539,8 @@ function usuarios_buscarUsuario() {
                 die();
             }
 
-            $model = getUsuariosModel();
-            $arrData = $model->buscarUsuarios($strTermino);
+            $objUsuarios = getUsuariosModel();
+            $arrData = $objUsuarios->buscarUsuarios($strTermino);
             if ($arrData['status']) {
                 $arrResponse = array('status' => true, 'data' => $arrData['data']);
             } else {
@@ -548,19 +560,20 @@ function usuarios_buscarUsuario() {
 /**
  * Verificar si el usuario actual es super usuario
  */
-function usuarios_verificarSuperUsuario() {
+function usuarios_verificarSuperUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         try {
             $idusuario = obtenerUsuarioSesion();
-            $model = getUsuariosModel();
-            $esSuperUsuario = $model->verificarEsSuperUsuario($idusuario);
-            
+            $objUsuarios = getUsuariosModel();
+            $esSuperUsuario = $objUsuarios->verificarEsSuperUsuario($idusuario);
+
             $arrResponse = array(
-                'status' => true, 
+                'status' => true,
                 'es_super_usuario' => $esSuperUsuario,
                 'usuario_id' => $idusuario
             );
-            
+
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en verificarSuperUsuario: " . $e->getMessage());
@@ -574,20 +587,21 @@ function usuarios_verificarSuperUsuario() {
 /**
  * Reactivar un usuario
  */
-function usuarios_reactivarUsuario() {
+function usuarios_reactivarUsuario()
+{
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $idusuarioSesion = obtenerUsuarioSesion();
-            
+
             // Solo super usuarios pueden reactivar usuarios
-            $model = getUsuariosModel();
-            $esSuperUsuario = $model->verificarEsSuperUsuario($idusuarioSesion);
+            $objUsuarios = getUsuariosModel();
+            $esSuperUsuario = $objUsuarios->verificarEsSuperUsuario($idusuarioSesion);
             if (!$esSuperUsuario) {
                 $arrResponse = array('status' => false, 'message' => 'Solo los super usuarios pueden reactivar usuarios');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
                 die();
             }
-            
+
             if (!PermisosModuloVerificar::verificarPermisoModuloAccion('Usuarios', 'editar')) {
                 $arrResponse = array('status' => false, 'message' => 'No tienes permisos para reactivar usuarios');
                 echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
@@ -604,14 +618,14 @@ function usuarios_reactivarUsuario() {
             }
 
             $idusuario = intval($data['idusuario']);
-            
+
             // Reactivar usuario directamente (el modelo se encarga de las validaciones)
-            $arrResponse = $model->reactivarUsuario($idusuario);
-            
+            $arrResponse = $objUsuarios->reactivarUsuario($idusuario);
+
             if ($arrResponse['status']) {
                 registrarEnBitacora('Usuarios', 'REACTIVAR', $idusuarioSesion, "Usuario ID: $idusuario reactivado");
             }
-            
+
             echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             error_log("Error en reactivarUsuario: " . $e->getMessage());
