@@ -32,7 +32,7 @@ class eliminarClienteIntegrationTest extends TestCase
     private function crearClienteTemporal(string $sufijo = ''): ?int
     {
         $data = [
-            'cedula'             => 'V-DEL-' . uniqid('', true) . $sufijo,
+            'cedula'             => 'V-' . bin2hex(random_bytes(4)) . $sufijo,
             'nombre'             => 'ClienteEliminar',
             'apellido'           => 'Prueba',
             'direccion'          => 'Calle Eliminar 1',

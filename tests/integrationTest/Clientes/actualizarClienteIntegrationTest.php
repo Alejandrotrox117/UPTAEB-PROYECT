@@ -22,7 +22,7 @@ class actualizarClienteIntegrationTest extends TestCase
         $this->model = new ClientesModel();
 
         if (self::$idClienteTemporal === null) {
-            $cedula = 'V-UPD-' . uniqid('', true);
+            $cedula = 'V-' . bin2hex(random_bytes(4));
             $data   = [
                 'cedula'             => $cedula,
                 'nombre'             => 'ClienteUpdateTest',
@@ -135,7 +135,7 @@ class actualizarClienteIntegrationTest extends TestCase
         }
 
         // Crear un segundo cliente para tener una cédula que ya existe
-        $cedulaSegundo = 'V-SEC-' . uniqid('', true);
+        $cedulaSegundo = 'V-' . bin2hex(random_bytes(4));
         $dataSegundo   = [
             'cedula'             => $cedulaSegundo,
             'nombre'             => 'SegundoCliente',

@@ -34,7 +34,7 @@ class insertarClienteIntegrationTest extends TestCase
     {
         return [
             'cliente_basico' => [[
-                'cedula'             => 'V-TEST-' . uniqid('', true),
+                'cedula'             => 'V-' . bin2hex(random_bytes(4)),
                 'nombre'             => 'ClienteTest',
                 'apellido'           => 'IntegracionA',
                 'direccion'          => 'Av. Prueba 1',
@@ -43,7 +43,7 @@ class insertarClienteIntegrationTest extends TestCase
                 'observaciones'      => 'Test de inserción básica',
             ]],
             'cliente_con_observaciones' => [[
-                'cedula'             => 'E-TEST-' . uniqid('', true),
+                'cedula'             => 'E-' . bin2hex(random_bytes(4)),
                 'nombre'             => 'ClienteExtTest',
                 'apellido'           => 'IntegracionB',
                 'direccion'          => 'Calle Prueba 2',
@@ -81,7 +81,7 @@ class insertarClienteIntegrationTest extends TestCase
     #[Test]
     public function insertClienteCedulaDuplicadaRetornaStatusFalse(): void
     {
-        $cedula = 'V-DUP-' . uniqid('', true);
+        $cedula = 'V-' . bin2hex(random_bytes(4));
         $data   = [
             'cedula'             => $cedula,
             'nombre'             => 'DuplicadoTest',
@@ -115,7 +115,7 @@ class insertarClienteIntegrationTest extends TestCase
     public function insertClienteCompletoExitosoRetornaStatusTrue(): void
     {
         $data = [
-            'cedula'             => 'V-COMP-' . uniqid('', true),
+            'cedula'             => 'V-COMP-' . bin2hex(random_bytes(4)),
             'nombre'             => 'ClienteCompleto',
             'apellido'           => 'IntegTest',
             'direccion'          => 'Calle Completa 3',
@@ -142,7 +142,7 @@ class insertarClienteIntegrationTest extends TestCase
     #[Test]
     public function insertClienteCompletoCedulaDuplicadaRetornaStatusFalse(): void
     {
-        $cedula = 'V-CDUP-' . uniqid('', true);
+        $cedula = 'V-' . bin2hex(random_bytes(4));
         $data   = [
             'cedula'             => $cedula,
             'nombre'             => 'ClienteCompletoDup',
