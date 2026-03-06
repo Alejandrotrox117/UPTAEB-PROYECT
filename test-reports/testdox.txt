@@ -1,40 +1,37 @@
-Categoria Model Unit
- [x] Select all categorias retorna datos en exito
- [x] Select all categorias retorna array vacio cuando no hay datos
- [x] Select all categorias retorna array vacio en excepcion
- [x] Insert categoria con datos validos with data set "estatus_minusculas"
- [x] Insert categoria con datos validos with data set "estatus_mayusculas"
- [x] Insert categoria con datos validos with data set "estatus_mixto"
- [x] Insert categoria con datos validos with data set "estatus_inactivo"
- [x] Insert categoria con datos validos with data set "descripcion_larga"
- [x] Insert categoria con datos validos with data set "caracteres_especiales"
- [x] Insert categoria retorna false cuando execute falla
- [x] Insert categoria propaga excepcion p d o
- [x] Insert categoria con datos incompletos with data set "sin_clave_nombre"
- [x] Insert categoria con datos incompletos with data set "sin_clave_descripcion"
- [x] Insert categoria con datos incompletos with data set "sin_clave_estatus"
- [x] Insert categoria con datos incompletos with data set "array_completamente_vacio"
- [x] Delete categoria con diferentes resultados with data set "delete_exitoso"
- [x] Delete categoria con diferentes resultados with data set "delete_id_inexistente_execute_true"
- [x] Delete categoria con diferentes resultados with data set "delete_execute_falla"
- [x] Delete categoria retorna false en excepcion
- [x] Update categoria con diferentes escenarios with data set "update_exitoso_datos_completos"
- [x] Update categoria con diferentes escenarios with data set "update_sin_cambios_reales"
- [x] Update categoria con diferentes escenarios with data set "update_execute_falla"
- [x] Update categoria con diferentes escenarios with data set "update_cambio_estatus_inactivo"
- [x] Update categoria retorna false en excepcion
- [x] Update categoria con datos incompletos with data set "sin_idcategoria"
- [x] Update categoria con datos incompletos with data set "sin_nombre"
- [x] Update categoria con datos incompletos with data set "array_vacio"
- [x] Get categoria by id retorna datos y setea propiedades
- [x] Get categoria by id retorna false cuando no existe
- [x] Get categoria by id retorna null en excepcion
- [x] Get categoria by id con ids limite with data set "id_1_encontrado"
- [x] Get categoria by id con ids limite with data set "id_maximo_no_encontrado"
- [x] Get categoria by id con ids limite with data set "id_grande_no_encontrado"
- [x] Reactivar categoria exitoso
- [x] Reactivar categoria execute retorna false
- [x] Reactivar categoria propaga excepcion
- [x] Insert categoria verifica parametros s q l correctos
- [x] Delete categoria verifica es soft delete
+actualizar Producto Unit (Tests\UnitTest\Productos\actualizarProductoUnit)
+ [x] UpdateProducto Exitoso RetornaStatusTrue with data set "cambio_nombre_y_precio"
+ [x] UpdateProducto Exitoso RetornaStatusTrue with data set "cambio_moneda"
+ [x] UpdateProducto NombreConflicto RetornaStatusFalse with data set "nombre_ya_usado"
+ [x] UpdateProducto IdInexistente RetornaStatusFalse with data set "id_grande"
+ [x] UpdateProducto ExcepcionEnBD RetornaStatusFalse
+ [x] UpdateProducto NombreVacio VerificacionPasaInsertFalla
+
+consultar Producto Unit (Tests\UnitTest\Productos\consultarProductoUnit)
+ [x] SelectAllProductos ConDatos RetornaEstructuraCorrecta
+ [x] SelectAllProductos SinDatos RetornaArrayVacio
+ [x] SelectAllProductos ExcepcionEnBD RetornaStatusFalse
+ [x] SelectProductoById Existente RetornaProducto with data set "producto_usd"
+ [x] SelectProductoById Existente RetornaProducto with data set "producto_bs"
+ [x] SelectProductoById Inexistente RetornaFalse with data set "id_grande"
+ [x] SelectProductoById Inexistente RetornaFalse with data set "id_cero"
+ [x] SelectProductoById Inexistente RetornaFalse with data set "id_muy_grande"
+ [x] SelectProductosActivos RetornaSoloActivos
+ [x] SelectProductosActivos ExcepcionEnBD RetornaStatusFalse
+ [x] SelectCategoriasActivas RetornaEstructuraCorrecta
+ [x] SelectCategoriasActivas ExcepcionEnBD RetornaStatusFalse
+
+eliminar Producto Unit (Tests\UnitTest\Productos\eliminarProductoUnit)
+ [x] DeleteProducto Existente RetornaTrue with data set "id_1"
+ [x] DeleteProducto Existente RetornaTrue with data set "id_50"
+ [x] DeleteProducto Inexistente RetornaFalse with data set "id_muy_grande"
+ [x] DeleteProducto Inexistente RetornaFalse with data set "id_inexistente"
+ [x] DeleteProducto ExcepcionEnBD RetornaFalse
+ [x] DeleteProducto SoftDelete NoEliminaFisicamente
+
+insertar Producto Unit (Tests\UnitTest\Productos\insertarProductoUnit)
+ [x] InsertProducto Exitoso RetornaStatusTrueConId with data set "producto_kg"
+ [x] InsertProducto Exitoso RetornaStatusTrueConId with data set "producto_lt"
+ [x] InsertProducto NombreDuplicado RetornaStatusFalse with data set "nombre_repetido"
+ [x] InsertProducto LastInsertIdCero RetornaError
+ [x] InsertProducto ExcepcionEnBD RetornaStatusFalse
 

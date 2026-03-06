@@ -51,46 +51,46 @@
         </style>
     </head>
     <body>
-        <h2>Categoria Model Unit</h2>
+        <h2>actualizar Producto Unit (Tests\UnitTest\Productos\actualizarProductoUnit)</h2>
         <ul>
-            <li class="success">Select all categorias retorna datos en exito</li>
-            <li class="success">Select all categorias retorna array vacio cuando no hay datos</li>
-            <li class="success">Select all categorias retorna array vacio en excepcion</li>
-            <li class="success">Insert categoria con datos validos with data set "estatus_minusculas"</li>
-            <li class="success">Insert categoria con datos validos with data set "estatus_mayusculas"</li>
-            <li class="success">Insert categoria con datos validos with data set "estatus_mixto"</li>
-            <li class="success">Insert categoria con datos validos with data set "estatus_inactivo"</li>
-            <li class="success">Insert categoria con datos validos with data set "descripcion_larga"</li>
-            <li class="success">Insert categoria con datos validos with data set "caracteres_especiales"</li>
-            <li class="success">Insert categoria retorna false cuando execute falla</li>
-            <li class="success">Insert categoria propaga excepcion p d o</li>
-            <li class="success">Insert categoria con datos incompletos with data set "sin_clave_nombre"</li>
-            <li class="success">Insert categoria con datos incompletos with data set "sin_clave_descripcion"</li>
-            <li class="success">Insert categoria con datos incompletos with data set "sin_clave_estatus"</li>
-            <li class="success">Insert categoria con datos incompletos with data set "array_completamente_vacio"</li>
-            <li class="success">Delete categoria con diferentes resultados with data set "delete_exitoso"</li>
-            <li class="success">Delete categoria con diferentes resultados with data set "delete_id_inexistente_execute_true"</li>
-            <li class="success">Delete categoria con diferentes resultados with data set "delete_execute_falla"</li>
-            <li class="success">Delete categoria retorna false en excepcion</li>
-            <li class="success">Update categoria con diferentes escenarios with data set "update_exitoso_datos_completos"</li>
-            <li class="success">Update categoria con diferentes escenarios with data set "update_sin_cambios_reales"</li>
-            <li class="success">Update categoria con diferentes escenarios with data set "update_execute_falla"</li>
-            <li class="success">Update categoria con diferentes escenarios with data set "update_cambio_estatus_inactivo"</li>
-            <li class="success">Update categoria retorna false en excepcion</li>
-            <li class="success">Update categoria con datos incompletos with data set "sin_idcategoria"</li>
-            <li class="success">Update categoria con datos incompletos with data set "sin_nombre"</li>
-            <li class="success">Update categoria con datos incompletos with data set "array_vacio"</li>
-            <li class="success">Get categoria by id retorna datos y setea propiedades</li>
-            <li class="success">Get categoria by id retorna false cuando no existe</li>
-            <li class="success">Get categoria by id retorna null en excepcion</li>
-            <li class="success">Get categoria by id con ids limite with data set "id_1_encontrado"</li>
-            <li class="success">Get categoria by id con ids limite with data set "id_maximo_no_encontrado"</li>
-            <li class="success">Get categoria by id con ids limite with data set "id_grande_no_encontrado"</li>
-            <li class="success">Reactivar categoria exitoso</li>
-            <li class="success">Reactivar categoria execute retorna false</li>
-            <li class="success">Reactivar categoria propaga excepcion</li>
-            <li class="success">Insert categoria verifica parametros s q l correctos</li>
-            <li class="success">Delete categoria verifica es soft delete</li>
+            <li class="success">UpdateProducto Exitoso RetornaStatusTrue with data set "cambio_nombre_y_precio"</li>
+            <li class="success">UpdateProducto Exitoso RetornaStatusTrue with data set "cambio_moneda"</li>
+            <li class="success">UpdateProducto NombreConflicto RetornaStatusFalse with data set "nombre_ya_usado"</li>
+            <li class="success">UpdateProducto IdInexistente RetornaStatusFalse with data set "id_grande"</li>
+            <li class="success">UpdateProducto ExcepcionEnBD RetornaStatusFalse</li>
+            <li class="success">UpdateProducto NombreVacio VerificacionPasaInsertFalla</li>
+        </ul>
+        <h2>consultar Producto Unit (Tests\UnitTest\Productos\consultarProductoUnit)</h2>
+        <ul>
+            <li class="success">SelectAllProductos ConDatos RetornaEstructuraCorrecta</li>
+            <li class="success">SelectAllProductos SinDatos RetornaArrayVacio</li>
+            <li class="success">SelectAllProductos ExcepcionEnBD RetornaStatusFalse</li>
+            <li class="success">SelectProductoById Existente RetornaProducto with data set "producto_usd"</li>
+            <li class="success">SelectProductoById Existente RetornaProducto with data set "producto_bs"</li>
+            <li class="success">SelectProductoById Inexistente RetornaFalse with data set "id_grande"</li>
+            <li class="success">SelectProductoById Inexistente RetornaFalse with data set "id_cero"</li>
+            <li class="success">SelectProductoById Inexistente RetornaFalse with data set "id_muy_grande"</li>
+            <li class="success">SelectProductosActivos RetornaSoloActivos</li>
+            <li class="success">SelectProductosActivos ExcepcionEnBD RetornaStatusFalse</li>
+            <li class="success">SelectCategoriasActivas RetornaEstructuraCorrecta</li>
+            <li class="success">SelectCategoriasActivas ExcepcionEnBD RetornaStatusFalse</li>
+        </ul>
+        <h2>eliminar Producto Unit (Tests\UnitTest\Productos\eliminarProductoUnit)</h2>
+        <ul>
+            <li class="success">DeleteProducto Existente RetornaTrue with data set "id_1"</li>
+            <li class="success">DeleteProducto Existente RetornaTrue with data set "id_50"</li>
+            <li class="success">DeleteProducto Inexistente RetornaFalse with data set "id_muy_grande"</li>
+            <li class="success">DeleteProducto Inexistente RetornaFalse with data set "id_inexistente"</li>
+            <li class="success">DeleteProducto ExcepcionEnBD RetornaFalse</li>
+            <li class="success">DeleteProducto SoftDelete NoEliminaFisicamente</li>
+        </ul>
+        <h2>insertar Producto Unit (Tests\UnitTest\Productos\insertarProductoUnit)</h2>
+        <ul>
+            <li class="success">InsertProducto Exitoso RetornaStatusTrueConId with data set "producto_kg"</li>
+            <li class="success">InsertProducto Exitoso RetornaStatusTrueConId with data set "producto_lt"</li>
+            <li class="success">InsertProducto NombreDuplicado RetornaStatusFalse with data set "nombre_repetido"</li>
+            <li class="success">InsertProducto LastInsertIdCero RetornaError</li>
+            <li class="success">InsertProducto ExcepcionEnBD RetornaStatusFalse</li>
         </ul>
     </body>
 </html>
