@@ -65,6 +65,7 @@ class VentaCreacionUnitTest extends TestCase
         return [
             'Sin Cliente' => [
                 [
+                    'idcliente'                    => null,   
                     'fecha_venta'                  => '2025-01-01',
                     'idmoneda_general'             => 3,
                     'subtotal_general'             => 50.00,

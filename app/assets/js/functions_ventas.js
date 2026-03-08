@@ -1636,7 +1636,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!validarFormularioPago(balance)) return;
 
     const btn = document.getElementById("btnSubmitPago");
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
+    const textoOriginal = btn ? btn.innerHTML : "";
+    if (btn) { btn.disabled = true; }
 
     try {
       const payload = {
@@ -1658,26 +1659,22 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!data.status) throw new Error(data.message || "Error al registrar pago");
 
       if (data.auto_pagada) {
-        await Swal.fire({
-          icon: "success",
-          title: "¡Venta Finalizada!",
-          text: "El pago completó el saldo. La venta fue marcada como FINALIZADA automáticamente.",
-          confirmButtonText: "Aceptar",
-          confirmButtonColor: "#16a34a",
-        });
+        await Swal.fire(
+          "¡Éxito!",
+          "El pago completó el saldo. La venta fue marcada como FINALIZADA automáticamente.",
+          "success"
+        );
         cerrarModalPagosVenta();
         recargarTablaVentas();
       } else {
         recargarTablaVentas();
         await cargarDatosModalPagos(idVenta);
-        Swal.fire({
-          toast: true, position: "top-end", icon: "success",
-          title: "Pago registrado correctamente", showConfirmButton: false, timer: 2500
-        });
+        await Swal.fire("¡Éxito!", "Pago registrado correctamente.", "success");
       }
     } catch (err) {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save mr-2"></i> Guardar Pago'; }
-      Swal.fire({ icon: "error", title: "Error al registrar", text: err.message, confirmButtonColor: "#dc2626" });
+      await Swal.fire("¡Error!", err.message || "Error al registrar el pago.", "error");
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = textoOriginal; }
     }
   }
 

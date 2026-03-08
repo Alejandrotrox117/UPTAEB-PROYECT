@@ -842,14 +842,14 @@ class VentasModel
             $stmt->execute();
             $tipoMovimiento = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$tipoMovimiento) {
+            $idtipomovimiento = $tipoMovimiento['idtipomovimiento'] ?? null;
+
+            if (!$idtipomovimiento) {
                 error_log("VentasModel::registrarMovimientosDevolucion - Creando tipo de movimiento 'Devolución'");
                 $this->setQuery("INSERT INTO tipo_movimiento (nombre, descripcion, estatus, fecha_creacion, fecha_modificacion) VALUES ('Devolución', 'Entrada por cancelación de venta', 'activo', NOW(), NOW())");
                 $stmt = $db->prepare($this->getQuery());
                 $stmt->execute();
                 $idtipomovimiento = $db->lastInsertId();
-            } else {
-                $idtipomovimiento = $tipoMovimiento['idtipomovimiento'];
             }
             error_log("VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: $idtipomovimiento");
 
@@ -957,8 +957,8 @@ class VentasModel
             $stmt->execute($this->getArray());
             $ultimo = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($ultimo) {
-                $partes = explode('-', $ultimo['numero_movimiento']);
+            if ($ultimo && !empty($ultimo['numero_movimiento'])) {
+                $partes = explode('-', (string)$ultimo['numero_movimiento']);
                 $consecutivo = intval(end($partes)) + 1;
             } else {
                 $consecutivo = 1;
@@ -987,8 +987,8 @@ class VentasModel
             $stmt->execute($this->getArray());
             $ultimo = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($ultimo) {
-                $partes = explode('-', $ultimo['numero_movimiento']);
+            if ($ultimo && !empty($ultimo['numero_movimiento'])) {
+                $partes = explode('-', (string)$ultimo['numero_movimiento']);
                 $consecutivo = intval(end($partes)) + 1;
             } else {
                 $consecutivo = 1;
@@ -1226,6 +1226,63 @@ class VentasModel
             return ['success' => false, 'message' => 'No se pudo desactivar la venta'];
         }
     }
+
+    /**
+     * Anula una venta: cambia su estado a ANULADA y revierte el stock de inventario.
+     * No elimina registros — sólo marca como inactiva.
+     */
+    public function anularVenta(int $idventa, string $motivo): array
+    {
+        $conexion = new Conexion();
+        $conexion->connect();
+        $db = $conexion->get_conectGeneral();
+
+        try {
+            $db->beginTransaction();
+
+            // 1. Verificar que la venta existe
+            $this->setQuery("SELECT idventa, estatus, nro_venta FROM venta WHERE idventa = ?");
+            $stmt = $db->prepare($this->getQuery());
+            $stmt->execute([$idventa]);
+            $venta = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$venta) {
+                return ['success' => false, 'message' => 'La venta especificada no existe.'];
+            }
+
+            // 2. Rechazar si ya está anulada
+            if (strtoupper((string)($venta['estatus'] ?? '')) === 'ANULADA') {
+                return ['success' => false, 'message' => 'La venta ya se encuentra en estado ANULADA.'];
+            }
+
+            // 3. Actualizar estado a ANULADA registrando el motivo en observaciones
+            $this->setQuery(
+                "UPDATE venta SET estatus = 'ANULADA', observaciones = CONCAT(COALESCE(observaciones,''), ' | Anulada: ', ?), ultima_modificacion = NOW() WHERE idventa = ?"
+            );
+            $stmtUpdate = $db->prepare($this->getQuery());
+            $stmtUpdate->execute([trim($motivo), $idventa]);
+
+            // 4. Revertir movimientos de inventario
+            $this->registrarMovimientosDevolucion($db, $idventa);
+
+            $db->commit();
+
+            return [
+                'success'   => true,
+                'message'   => 'Venta ' . ($venta['nro_venta'] ?? $idventa) . ' anulada correctamente.',
+                'nro_venta' => $venta['nro_venta'] ?? null,
+            ];
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log("VentasModel::anularVenta - Error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Error al anular la venta: ' . $e->getMessage()];
+        } finally {
+            $conexion->disconnect();
+        }
+    }
+
 
     public function buscarClientes(string $criterio)
     {
