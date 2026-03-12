@@ -187,6 +187,32 @@ Las 41 pruebas se ejecutaron correctamente en ~7 s con 10 MB de memoria, distrib
 
 ---
 
+## Módulo de Romana (RF07) — 7 pruebas · 31 aserciones
+
+### Entradas
+- **Consulta exitosa (varios registros):** `idromana` 1/2, pesos 250.50/310.00 kg, estatus ACTIVO, fechas 2026-03-01/02.
+- **Consulta exitosa (un registro):** `idromana` 5, peso 99.99 kg, estatus INACTIVO, fecha 2026-03-05.
+- **Consulta exitosa (vacía):** `fetchAll` retorna `[]`.
+- **Validación de estructura:** registro con `idromana` 3, peso 175.25 kg, fecha 2026-03-03, estatus ACTIVO.
+- **Fallo en `prepare`:** `PDOException('Simulated DB error')` / `PDOException('Connection lost')`.
+- **Fallo en `execute`:** `PDOException('Execute failed')`.
+
+### Salidas Esperadas
+| Escenario | Resultado esperado |
+|---|---|
+| Varios registros | `status true` + `data` con 2 elementos |
+| Un registro | `status true` + `data` con 1 elemento |
+| Lista vacía | `status true` + `data []` |
+| Estructura de campos | `data[0]` tiene `idromana`, `peso`, `fecha`, `estatus`, `fecha_creacion` |
+| Fallo en `prepare` | `status false` + `data []` + `message` presente |
+| Fallo en `execute` | `status false` + `data []` + `message` contiene 'Error' |
+| Mensaje exacto | `message === 'Error al obtener los registros'` |
+
+### Observaciones
+Las 7 pruebas se ejecutaron correctamente en ~1.9 s con 10 MB de memoria. El DataProvider cubre tres variantes del resultado: múltiples registros, un registro y lista vacía. El mensaje de error está fijado exactamente como `'Error al obtener los registros'`, garantizando consistencia en la respuesta del modelo ante fallos de base de datos.
+
+---
+
 ## Resumen consolidado
 
 | Módulo | Pruebas | Aserciones | Tiempo | Estado |
@@ -197,7 +223,8 @@ Las 41 pruebas se ejecutaron correctamente en ~7 s con 10 MB de memoria, distrib
 | Proveedores (RF005) | 30 | 68 | ~6 s | ✅ |
 | Movimientos (RF06) | 19 | 95 | ~4 s | ✅ |
 | Pagos (RF05) | 12 | 47 | ~2 s | ✅ |
-| **Total** | **200** | **602** | | ✅ **Todas pasaron** |
+| Romana (RF07) | 7 | 31 | ~2 s | ✅ |
+| **Total** | **207** | **633** | | ✅ **Todas pasaron** |
 
 > **Nota:** El warning recurrente de "No code coverage driver available" en todos los módulos se debe a la ausencia de Xdebug en el entorno y no afecta la validez de las pruebas.
 
