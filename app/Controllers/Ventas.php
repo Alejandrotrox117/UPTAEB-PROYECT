@@ -18,6 +18,30 @@ function getVentasModel()
     return new VentasModel();
 }
 
+/**
+ * Obtiene el modelo de bitácora
+ */
+function getBitacoraModel()
+{
+    return new BitacoraModel();
+}
+
+/**
+ * Obtiene el modelo de notificaciones
+ */
+function getNotificacionesModel()
+{
+    return new NotificacionesModel();
+}
+
+/**
+ * Obtiene el modelo de pagos
+ */
+function getPagosModel()
+{
+    return new PagosModel();
+}
+
 // Helper para obtener modelos
 function ventas_getModels()
 {

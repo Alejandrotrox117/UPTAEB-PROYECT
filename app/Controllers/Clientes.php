@@ -36,6 +36,14 @@ function renderClientesView(string $view, array $data = [])
     renderView('clientes', $view, $data);
 }
 
+/**
+ * Obtiene una instancia del modelo UsuariosModel.
+ */
+function getUsuariosModel()
+{
+    return new UsuariosModel();
+}
+
 // =============================================================================
 // FUNCIONES PÚBLICAS DEL CONTROLADOR
 // =============================================================================
