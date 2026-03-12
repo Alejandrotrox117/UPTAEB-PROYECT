@@ -9,7 +9,7 @@ class RolesModel
 {
     const SUPER_USUARIO_ROL_ID = 1;
     
-    private $objModelRolesModel = null;
+    private $objRolesModel = null;
 
     public function __construct()
     {
@@ -21,10 +21,10 @@ class RolesModel
      */
     private function getInstanciaModel()
     {
-        if ($this->objModelRolesModel == null) {
-            $this->objModelRolesModel = new RolesModel();
+        if ($this->objRolesModel == null) {
+            $this->objRolesModel = new RolesModel();
         }
-        return $this->objModelRolesModel;
+        return $this->objRolesModel;
     }
 
     private function esSuperUsuario(int $idusuario): bool
@@ -241,67 +241,67 @@ class RolesModel
 
     public function insertRol(array $data)
     {
-        $objModelRolesModel = $this->getInstanciaModel();
-        if ($objModelRolesModel->ejecutarVerificacionNombreExistente($data['nombre'])) {
+        $objRolesModel = $this->getInstanciaModel();
+        if ($objRolesModel->ejecutarVerificacionNombreExistente($data['nombre'])) {
             return ['status' => false, 'message' => 'Ya existe un rol activo con ese nombre.'];
         }
-        return $objModelRolesModel->ejecutarInsercionRol($data);
+        return $objRolesModel->ejecutarInsercionRol($data);
     }
 
     public function updateRol(int $idrol, array $data): array
     {
-        $objModelRolesModel = $this->getInstanciaModel();
-        if ($objModelRolesModel->ejecutarVerificacionNombreExistente($data['nombre'], $idrol)) {
+        $objRolesModel = $this->getInstanciaModel();
+        if ($objRolesModel->ejecutarVerificacionNombreExistente($data['nombre'], $idrol)) {
             return ['status' => false, 'message' => 'Ya existe otro rol activo con ese nombre.'];
         }
-        return $objModelRolesModel->ejecutarActualizacionRol($idrol, $data);
+        return $objRolesModel->ejecutarActualizacionRol($idrol, $data);
     }
 
     public function selectRolById(int $idrol)
     {
-        $objModelRolesModel = $this->getInstanciaModel();
-        return $objModelRolesModel->ejecutarBusquedaRolPorId($idrol);
+        $objRolesModel = $this->getInstanciaModel();
+        return $objRolesModel->ejecutarBusquedaRolPorId($idrol);
     }
 
     public function deleteRolById(int $idrol): array
     {
-        $objModelRolesModel = $this->getInstanciaModel();
-        if ($objModelRolesModel->ejecutarVerificacionUsoRol($idrol)) {
+        $objRolesModel = $this->getInstanciaModel();
+        if ($objRolesModel->ejecutarVerificacionUsoRol($idrol)) {
             return ['status' => false, 'message' => 'No se puede desactivar el rol porque está siendo usado por usuarios activos.'];
         }
-        return $objModelRolesModel->ejecutarDesactivacionRol($idrol);
+        return $objRolesModel->ejecutarDesactivacionRol($idrol);
     }
 
     public function selectAllRoles(int $idUsuarioSesion): array
     {
-        $objModelRolesModel = $this->getInstanciaModel();
-        $esSuperUsuario = $objModelRolesModel->verificarEsSuperUsuario($idUsuarioSesion);
-        return $objModelRolesModel->ejecutarBusquedaTodosRoles($esSuperUsuario);
+        $objRolesModel = $this->getInstanciaModel();
+        $esSuperUsuario = $objRolesModel->verificarEsSuperUsuario($idUsuarioSesion);
+        return $objRolesModel->ejecutarBusquedaTodosRoles($esSuperUsuario);
     }
 
     public function reactivarRol(int $idrol): array
     {
-        $objModelRolesModel = $this->getInstanciaModel();
-        $rol = $objModelRolesModel->selectRolById($idrol);
+        $objRolesModel = $this->getInstanciaModel();
+        $rol = $objRolesModel->selectRolById($idrol);
         if (!$rol) {
             return ['status' => false, 'message' => 'El rol no existe.'];
         }
         if ($rol['estatus'] === 'ACTIVO') {
             return ['status' => false, 'message' => 'El rol ya se encuentra activo.'];
         }
-        return $objModelRolesModel->ejecutarReactivacionRol($idrol);
+        return $objRolesModel->ejecutarReactivacionRol($idrol);
     }
 
     public function verificarEsSuperUsuario(int $idusuario): bool
     {
-        $objModelRolesModel = $this->getInstanciaModel();
-        return $objModelRolesModel->esSuperUsuario($idusuario);
+        $objRolesModel = $this->getInstanciaModel();
+        return $objRolesModel->esSuperUsuario($idusuario);
     }
 
     public function selectAllRolesForSelect()
     {
-        $objModelRolesModel = $this->getInstanciaModel();
-        return $objModelRolesModel->ejecutarBusquedaRolesParaSelect();
+        $objRolesModel = $this->getInstanciaModel();
+        return $objRolesModel->ejecutarBusquedaRolesParaSelect();
     }
 }
 ?>

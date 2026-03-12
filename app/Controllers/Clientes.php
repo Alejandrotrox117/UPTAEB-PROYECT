@@ -650,8 +650,8 @@ function clientes_reactivarCliente()
     $bitacoraModel = getClientesBitacoraModel();
 
     try {
-        $usuariosModel = new UsuariosModel();
-        $esSuperAdmin = $usuariosModel->verificarEsSuperUsuario($idusuario);
+        $objUsuarios = getUsuariosModel();
+        $esSuperAdmin = $objUsuarios->verificarEsSuperUsuario($idusuario);
 
         if (!$esSuperAdmin) {
             BitacoraHelper::registrarError('clientes', 'Intento de reactivar cliente sin ser super usuario', $idusuario, $bitacoraModel);
@@ -708,8 +708,8 @@ function clientes_verificarSuperUsuario()
                 die();
             }
 
-            $usuariosModel = new UsuariosModel();
-            $esSuperAdmin = $usuariosModel->verificarEsSuperUsuario($idusuario);
+            $objUsuarios = getUsuariosModel();
+            $esSuperAdmin = $objUsuarios->verificarEsSuperUsuario($idusuario);
 
             echo json_encode([
                 'status' => true,

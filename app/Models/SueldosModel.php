@@ -15,7 +15,7 @@ class SueldosModel
     private $sueldoId;
     private $message;
     private $status;
-    private $objModelSueldosModel;
+    private $objSueldosModel;
 
 
     const SUPER_USUARIO_ROL_ID = 1;
@@ -27,10 +27,10 @@ class SueldosModel
 
     private function getInstanciaModel()
     {
-        if ($this->objModelSueldosModel == null) {
-            $this->objModelSueldosModel = new SueldosModel();
+        if ($this->objSueldosModel == null) {
+            $this->objSueldosModel = new SueldosModel();
         }
-        return $this->objModelSueldosModel;
+        return $this->objSueldosModel;
     }
 
     // Getters y Setters
@@ -508,15 +508,15 @@ class SueldosModel
      */
     public function verificarEsSuperUsuario(int $idusuario)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->esSuperUsuario($idusuario);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->esSuperUsuario($idusuario);
     }
 
     // Función para obtener personas activas
     public function selectPersonasActivas()
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarSelectPersonasActivas();
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarSelectPersonasActivas();
     }
 
     private function ejecutarSelectPersonasActivas()
@@ -563,8 +563,8 @@ class SueldosModel
     // Función para obtener empleados activos
     public function selectEmpleadosActivos()
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarSelectEmpleadosActivos();
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarSelectEmpleadosActivos();
     }
 
     private function ejecutarSelectEmpleadosActivos()
@@ -612,8 +612,8 @@ class SueldosModel
     // Función para obtener todas las monedas activas
     public function getMonedas()
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarGetMonedas();
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarGetMonedas();
     }
 
     private function ejecutarGetMonedas()
@@ -657,8 +657,8 @@ class SueldosModel
     // Función para obtener la tasa de cambio más reciente de una moneda
     public function getTasaCambioActual($codigoMoneda)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarGetTasaCambioActual($codigoMoneda);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarGetTasaCambioActual($codigoMoneda);
     }
 
     private function ejecutarGetTasaCambioActual($codigoMoneda)
@@ -710,8 +710,8 @@ class SueldosModel
     // Función para convertir monto de sueldo a bolívares
     public function convertirMontoABolivares($idsueldo)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarConvertirMontoABolivares($idsueldo);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarConvertirMontoABolivares($idsueldo);
     }
 
     private function ejecutarConvertirMontoABolivares($idsueldo)
@@ -823,46 +823,46 @@ class SueldosModel
     // Funciones públicas para acceso desde el controlador
     public function insertSueldo(array $data)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarInsercionSueldo($data);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarInsercionSueldo($data);
     }
 
     public function updateSueldo(int $idsueldo, array $data)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarActualizacionSueldo($idsueldo, $data);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarActualizacionSueldo($idsueldo, $data);
     }
 
     public function selectSueldoById(int $idsueldo)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarBusquedaSueldoPorId($idsueldo);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarBusquedaSueldoPorId($idsueldo);
     }
 
     public function deleteSueldo(int $idsueldo)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarEliminacionSueldo($idsueldo);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarEliminacionSueldo($idsueldo);
     }
 
     public function selectAllSueldos(int $idUsuarioSesion = 0)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarBusquedaTodosSueldos($idUsuarioSesion);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarBusquedaTodosSueldos($idUsuarioSesion);
     }
 
     // Función para reactivar sueldo (cambio de estatus a POR_PAGAR)
     public function reactivarSueldo(int $idsueldo)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarReactivacionSueldo($idsueldo);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarReactivacionSueldo($idsueldo);
     }
 
     // Función para procesar pago de sueldo
     public function procesarPagoSueldo($data)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarProcesarPagoSueldo($data);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarProcesarPagoSueldo($data);
     }
 
     private function ejecutarProcesarPagoSueldo($data)
@@ -1031,8 +1031,8 @@ class SueldosModel
     // Función para obtener pagos asociados a un sueldo
     public function getPagosSueldo($idsueldo)
     {
-        $objModelSueldosModel = $this->getInstanciaModel();
-        return $objModelSueldosModel->ejecutarGetPagosSueldo($idsueldo);
+        $objSueldosModel = $this->getInstanciaModel();
+        return $objSueldosModel->ejecutarGetPagosSueldo($idsueldo);
     }
 
     private function ejecutarGetPagosSueldo($idsueldo)

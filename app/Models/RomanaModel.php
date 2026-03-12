@@ -20,9 +20,22 @@ class RomanaModel extends Mysql
         return $this->query;
     }
 
+    // Propiedad para la instancia interna (patrón de doble instancia)
+    private $objRomanaModel = null;
+
     public function __construct()
     {
-        parent::__construct();
+    }
+
+    /**
+     * Obtiene la instancia interna del modelo (Lazy Load - Patrón de doble instancia)
+     */
+    private function getInstanciaModel(): RomanaModel
+    {
+        if ($this->objRomanaModel == null) {
+            $this->objRomanaModel = new RomanaModel();
+        }
+        return $this->objRomanaModel;
     }
 
     // ─── CONSULTAS ────────────────────────────────────────────────────────────
@@ -31,6 +44,12 @@ class RomanaModel extends Mysql
      * Retorna todos los registros de pesaje en historial_romana.
      */
     public function selectAllRomana(): array
+    {
+        $objRomanaModel = $this->getInstanciaModel();
+        return $objRomanaModel->ejecutarBusquedaTodasRomana();
+    }
+
+    private function ejecutarBusquedaTodasRomana(): array
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -69,6 +88,12 @@ class RomanaModel extends Mysql
      */
     public function selectPesajeById(int $id)
     {
+        $objRomanaModel = $this->getInstanciaModel();
+        return $objRomanaModel->ejecutarBusquedaPesajePorId($id);
+    }
+
+    private function ejecutarBusquedaPesajePorId(int $id)
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -101,6 +126,12 @@ class RomanaModel extends Mysql
      */
     public function calcularPesoTotal(): float
     {
+        $objRomanaModel = $this->getInstanciaModel();
+        return $objRomanaModel->ejecutarCalculoPesoTotal();
+    }
+
+    private function ejecutarCalculoPesoTotal(): float
+    {
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -128,6 +159,12 @@ class RomanaModel extends Mysql
      * @return float
      */
     public function calcularPromedioPeso(): float
+    {
+        $objRomanaModel = $this->getInstanciaModel();
+        return $objRomanaModel->ejecutarCalculoPromedioPeso();
+    }
+
+    private function ejecutarCalculoPromedioPeso(): float
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -165,6 +202,12 @@ class RomanaModel extends Mysql
      * @throws PDOException
      */
     public function insertPesaje(array $data): bool
+    {
+        $objRomanaModel = $this->getInstanciaModel();
+        return $objRomanaModel->ejecutarInsercionPesaje($data);
+    }
+
+    private function ejecutarInsercionPesaje(array $data): bool
     {
         // ── Validar presencia y valor de 'peso' ──────────────────────────────
         if (!array_key_exists('peso', $data) || $data['peso'] === null) {

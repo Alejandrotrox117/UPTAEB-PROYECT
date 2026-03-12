@@ -7,6 +7,14 @@ use App\Helpers\PermisosModuloVerificar;
  * Controlador Romana - Estilo Funcional
  */
 
+/**
+ * Función de fábrica para obtener la instancia del modelo RomanaModel
+ */
+function getRomanaModel()
+{
+    return new RomanaModel();
+}
+
 function romana_index()
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -38,8 +46,8 @@ function romana_index()
 
 function romana_getRomanaData()
 {
-    $model = new RomanaModel();
-    $arrData = $model->selectAllRomana();
+    $objRomana = getRomanaModel();
+    $arrData = $objRomana->selectAllRomana();
     $data = isset($arrData['data']) ? $arrData['data'] : $arrData;
 
     echo json_encode([

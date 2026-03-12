@@ -5,6 +5,7 @@ use App\Core\Mysql;
 use App\Core\Conexion;
 use PDO;
 use PDOException;
+use Exception;
 
 class PersonasModel extends mysql
 {
@@ -12,16 +13,34 @@ class PersonasModel extends mysql
     private $dbPrincipal;
     private $dbSeguridad;
 
+    // Propiedad para la instancia interna (patrón de doble instancia)
+    private $objPersonasModel = null;
+
     public function __construct()
+    {
+    }
+
+    /**
+     * Obtiene la instancia interna del modelo (Lazy Load - Patrón de doble instancia)
+     */
+    private function getInstanciaModel(): PersonasModel
+    {
+        if ($this->objPersonasModel == null) {
+            $this->objPersonasModel = new PersonasModel();
+            $this->objPersonasModel->inicializarConexion();
+        }
+        return $this->objPersonasModel;
+    }
+
+    private function inicializarConexion()
     {
         $this->conexion = new Conexion();
         $this->conexion->connect();
         $this->dbPrincipal = $this->conexion->get_conectGeneral();
         $this->dbSeguridad = $this->conexion->get_conectSeguridad();
-    $idUsuario = $this->obtenerIdUsuarioSesion();
-
+        
+        $idUsuario = $this->obtenerIdUsuarioSesion();
         if ($idUsuario) {
-            // Establecer la variable de sesión SQL
             $this->setUsuarioActual($idUsuario);
         }
     }
@@ -48,6 +67,12 @@ class PersonasModel extends mysql
     }
 
     public function insertPersona(array $data): array
+    {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarInsercionPersona($data);
+    }
+
+    private function ejecutarInsercionPersona(array $data): array
     {
         try {
             $this->dbPrincipal->beginTransaction();
@@ -108,6 +133,12 @@ class PersonasModel extends mysql
      */
     public function existeCorreoUsuario(string $correo): bool
     {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarVerificacionCorreoUsuario($correo);
+    }
+
+    private function ejecutarVerificacionCorreoUsuario(string $correo): bool
+    {
         try {
             $sql = "SELECT COUNT(*) as total FROM usuario WHERE correo = ? OR usuario = ?";
             $stmt = $this->dbSeguridad->prepare($sql);
@@ -122,10 +153,16 @@ class PersonasModel extends mysql
 
     public function insertUsuario(int $personaId, array $dataUsuario): array
     {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarInsercionUsuario($personaId, $dataUsuario);
+    }
+
+    private function ejecutarInsercionUsuario(int $personaId, array $dataUsuario): array
+    {
         try {
             // Validar correo duplicado
             $correo = $dataUsuario['correo_electronico_usuario'];
-            if ($this->existeCorreoUsuario($correo)) {
+            if ($this->ejecutarVerificacionCorreoUsuario($correo)) {
                 return [
                     'status' => false,
                     'message' => 'Ya existe un usuario registrado con ese correo electrónico.'
@@ -184,8 +221,14 @@ class PersonasModel extends mysql
 
     public function insertPersonaConUsuario(array $data): array
     {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarInsercionPersonaConUsuario($data);
+    }
+
+    private function ejecutarInsercionPersonaConUsuario(array $data): array
+    {
         try {
-            $resultadoPersona = $this->insertPersona($data);
+            $resultadoPersona = $this->ejecutarInsercionPersona($data);
             
             if (!$resultadoPersona['status']) {
                 return $resultadoPersona;
@@ -194,7 +237,7 @@ class PersonasModel extends mysql
             $personaId = $resultadoPersona['persona_id'];
             
             if (isset($data['crear_usuario']) && $data['crear_usuario'] == "1") {
-                $resultadoUsuario = $this->insertUsuario($personaId, $data);
+                $resultadoUsuario = $this->ejecutarInsercionUsuario($personaId, $data);
                 
                 if (!$resultadoUsuario['status']) {
                     return [
@@ -229,6 +272,12 @@ class PersonasModel extends mysql
     }
 
     public function updatePersona(int $idpersona_pk, array $data): array
+    {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarActualizacionPersona($idpersona_pk, $data);
+    }
+
+    private function ejecutarActualizacionPersona(int $idpersona_pk, array $data): array
     {
         try {
             $this->dbPrincipal->beginTransaction();
@@ -290,6 +339,12 @@ class PersonasModel extends mysql
     }
 
     public function updateUsuario(int $idpersona_pk, array $dataUsuario): array
+    {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarActualizacionUsuario($idpersona_pk, $dataUsuario);
+    }
+
+    private function ejecutarActualizacionUsuario(int $idpersona_pk, array $dataUsuario): array
     {
         try {
             $this->dbSeguridad->beginTransaction();
@@ -363,8 +418,14 @@ class PersonasModel extends mysql
 
     public function updatePersonaConUsuario(int $idpersona_pk, array $data): array
     {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarActualizacionPersonaConUsuario($idpersona_pk, $data);
+    }
+
+    private function ejecutarActualizacionPersonaConUsuario(int $idpersona_pk, array $data): array
+    {
         try {
-            $resultadoPersona = $this->updatePersona($idpersona_pk, $data);
+            $resultadoPersona = $this->ejecutarActualizacionPersona($idpersona_pk, $data);
             
             if (!$resultadoPersona['status']) {
                 return $resultadoPersona;
@@ -372,7 +433,7 @@ class PersonasModel extends mysql
 
             // Actualizar usuario si se proporcionan datos
             if (isset($data['actualizar_usuario']) && $data['actualizar_usuario'] == "1") {
-                $resultadoUsuario = $this->updateUsuario($idpersona_pk, $data);
+                $resultadoUsuario = $this->ejecutarActualizacionUsuario($idpersona_pk, $data);
                 
                 if (!$resultadoUsuario['status']) {
                     return [
@@ -403,6 +464,12 @@ class PersonasModel extends mysql
     }
 
     public function selectPersonaById(int $idpersona_pk)
+    {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarBusquedaPersonaPorId($idpersona_pk);
+    }
+
+    private function ejecutarBusquedaPersonaPorId(int $idpersona_pk)
     {
         $sql = "SELECT 
                         p.idpersona AS idpersona_pk, 
@@ -437,6 +504,12 @@ class PersonasModel extends mysql
     }
 
     public function deletePersonaById(int $idpersona_pk): bool
+    {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarEliminacionPersonaPorId($idpersona_pk);
+    }
+
+    private function ejecutarEliminacionPersonaPorId(int $idpersona_pk): bool
     {
         if (!$this->dbPrincipal || !$this->dbSeguridad) {
             error_log("PersonasModel::deletePersonaById -> Conexión a la base de datos no establecida.");
@@ -484,6 +557,12 @@ class PersonasModel extends mysql
 
     public function selectAllPersonasActivas()
     {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarBusquedaTodasPersonasActivas();
+    }
+
+    private function ejecutarBusquedaTodasPersonasActivas()
+    {
         $sql = "SELECT p.idpersona as idpersona_pk, p.nombre as persona_nombre, p.apellido as persona_apellido,
                     p.identificacion as persona_cedula, p.genero as persona_genero,
                     u.correo as correo_usuario_login, u.idusuario as usuario_id, p.telefono_principal, p.estatus as persona_estatus,
@@ -504,6 +583,12 @@ class PersonasModel extends mysql
     }
 
     public function reactivarPersonaById(int $idpersona_pk): bool
+    {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarReactivacionPersonaPorId($idpersona_pk);
+    }
+
+    private function ejecutarReactivacionPersonaPorId(int $idpersona_pk): bool
     {
         if (!$this->dbPrincipal || !$this->dbSeguridad) {
             error_log("PersonasModel::reactivarPersonaById -> Conexión a la base de datos no establecida.");
@@ -551,6 +636,12 @@ class PersonasModel extends mysql
 
     public function desasociarUsuarioDePersona(int $idpersona_pk): array
     {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarDesasociacionUsuarioDePersona($idpersona_pk);
+    }
+
+    private function ejecutarDesasociacionUsuarioDePersona(int $idpersona_pk): array
+    {
         if (!$this->dbSeguridad) {
             error_log("PersonasModel::desasociarUsuarioDePersona -> Conexión a la base de datos de seguridad no establecida.");
             return ['status' => false, 'message' => 'Error de conexión a la base de datos.'];
@@ -589,6 +680,12 @@ class PersonasModel extends mysql
     }
 
     public function selectAllRoles()
+    {
+        $objPersonasModel = $this->getInstanciaModel();
+        return $objPersonasModel->ejecutarBusquedaTodosRoles();
+    }
+
+    private function ejecutarBusquedaTodosRoles()
     {
         $sql = "SELECT idrol, nombre FROM roles WHERE estatus = 'ACTIVO' ORDER BY nombre ASC";
         

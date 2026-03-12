@@ -8,7 +8,7 @@ use PDOException;
 
 class CategoriasModel
 {
-    private $objModelCategoriasModel;
+    private $objCategoriasModel;
 
     private $idcategoria;
     private $nombre;
@@ -22,10 +22,10 @@ class CategoriasModel
 
     private function getInstanciaModel()
     {
-        if ($this->objModelCategoriasModel == null) {
-            $this->objModelCategoriasModel = new CategoriasModel();
+        if ($this->objCategoriasModel == null) {
+            $this->objCategoriasModel = new CategoriasModel();
         }
-        return $this->objModelCategoriasModel;
+        return $this->objCategoriasModel;
     }
 
     // Métodos Getters y Setters
@@ -75,38 +75,38 @@ class CategoriasModel
 
     public function SelectAllCategorias()
     {
-        $objModelCategoriasModel = $this->getInstanciaModel();
-        return $objModelCategoriasModel->ejecutarSelectAllCategorias();
+        $objCategoriasModel = $this->getInstanciaModel();
+        return $objCategoriasModel->ejecutarSelectAllCategorias();
     }
 
     public function insertCategoria($data)
     {
-        $objModelCategoriasModel = $this->getInstanciaModel();
-        return $objModelCategoriasModel->ejecutarInsertCategoria($data);
+        $objCategoriasModel = $this->getInstanciaModel();
+        return $objCategoriasModel->ejecutarInsertCategoria($data);
     }
 
     public function deleteCategoria($idcategoria)
     {
-        $objModelCategoriasModel = $this->getInstanciaModel();
-        return $objModelCategoriasModel->ejecutarDeleteCategoria($idcategoria);
+        $objCategoriasModel = $this->getInstanciaModel();
+        return $objCategoriasModel->ejecutarDeleteCategoria($idcategoria);
     }
 
     public function updateCategoria($data)
     {
-        $objModelCategoriasModel = $this->getInstanciaModel();
-        return $objModelCategoriasModel->ejecutarUpdateCategoria($data);
+        $objCategoriasModel = $this->getInstanciaModel();
+        return $objCategoriasModel->ejecutarUpdateCategoria($data);
     }
 
     public function getCategoriaById($idcategoria)
     {
-        $objModelCategoriasModel = $this->getInstanciaModel();
-        return $objModelCategoriasModel->ejecutarGetCategoriaById($idcategoria);
+        $objCategoriasModel = $this->getInstanciaModel();
+        return $objCategoriasModel->ejecutarGetCategoriaById($idcategoria);
     }
 
     public function reactivarCategoria($idcategoria)
     {
-        $objModelCategoriasModel = $this->getInstanciaModel();
-        return $objModelCategoriasModel->ejecutarReactivarCategoria($idcategoria);
+        $objCategoriasModel = $this->getInstanciaModel();
+        return $objCategoriasModel->ejecutarReactivarCategoria($idcategoria);
     }
 
     // ==========================================

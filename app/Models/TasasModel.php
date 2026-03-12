@@ -7,7 +7,7 @@ use PDOException;
 
 class TasasModel
 {
-    private $objModelTasasModel;
+    private $objTasasModel;
 
     private $id;
     private $codigoMoneda;
@@ -61,28 +61,28 @@ class TasasModel
 
     private function getInstanciaModel()
     {
-        if ($this->objModelTasasModel == null) {
-            $this->objModelTasasModel = new TasasModel();
+        if ($this->objTasasModel == null) {
+            $this->objTasasModel = new TasasModel();
         }
-        return $this->objModelTasasModel;
+        return $this->objTasasModel;
     }
 
     public function guardarTasa(string $codigoMoneda, float $tasa, string $fechaBcv)
     {
-        $objModelTasasModel = $this->getInstanciaModel();
-        return $objModelTasasModel->ejecutarGuardarTasa($codigoMoneda, $tasa, $fechaBcv);
+        $objTasasModel = $this->getInstanciaModel();
+        return $objTasasModel->ejecutarGuardarTasa($codigoMoneda, $tasa, $fechaBcv);
     }
 
     public function obtenerTasasPorMoneda(string $codigoMoneda, int $limite = 0)
     {
-        $objModelTasasModel = $this->getInstanciaModel();
-        return $objModelTasasModel->ejecutarObtenerTasasPorMoneda($codigoMoneda, $limite);
+        $objTasasModel = $this->getInstanciaModel();
+        return $objTasasModel->ejecutarObtenerTasasPorMoneda($codigoMoneda, $limite);
     }
 
     public function SelectAllTasas(): array
     {
-        $objModelTasasModel = $this->getInstanciaModel();
-        return $objModelTasasModel->ejecutarSelectAllTasas();
+        $objTasasModel = $this->getInstanciaModel();
+        return $objTasasModel->ejecutarSelectAllTasas();
     }
 
     private function ejecutarGuardarTasa(string $codigoMoneda, float $tasa, string $fechaBcv)

@@ -11,7 +11,7 @@ class DashboardModel
     private $query;
     private $array;
     private $result;
-    private $objModelDashboardModel;
+    private $objDashboardModel;
 
     public function __construct() {}
 
@@ -20,10 +20,10 @@ class DashboardModel
      * Asegura la coexistencia de dos instancias
      */
     private function getInstanciaModel() {
-        if ($this->objModelDashboardModel == null) {
-            $this->objModelDashboardModel = new DashboardModel();
+        if ($this->objDashboardModel == null) {
+            $this->objDashboardModel = new DashboardModel();
         }
-        return $this->objModelDashboardModel;
+        return $this->objDashboardModel;
     }
 
     // --- Getters y Setters ---
@@ -61,110 +61,110 @@ class DashboardModel
 
     public function getResumen()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaResumen();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaResumen();
     }
 
     public function getAnalisisInventario()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaAnalisisInventario();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaAnalisisInventario();
     }
 
     public function getUltimasVentas()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaUltimasVentas();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaUltimasVentas();
     }
 
     public function getMonedas()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaMonedas();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaMonedas();
     }
 
     public function getProveedoresActivos()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaProveedoresActivos();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaProveedoresActivos();
     }
 
     public function getProductos()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaProductos();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaProductos();
     }
 
     public function getProductosStockBajo()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaEmpleadosActivos();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaEmpleadosActivos();
     }
 
     public function getReporteCompras($fecha_desde, $fecha_hasta, $idproveedor = null, $idproducto = null)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaReporteCompras($fecha_desde, $fecha_hasta, $idproveedor, $idproducto);
     }
 
     public function getEmpleadosActivos()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaKPIsEjecutivos();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaKPIsEjecutivos();
     }
 
     public function getTendenciasVentas()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaTendenciasVentas();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaTendenciasVentas();
     }
 
     public function getRentabilidadProductos()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaRentabilidadProductos();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaRentabilidadProductos();
     }
 
     public function getEficienciaEmpleados($fecha_desde, $fecha_hasta, $idempleado, $estado)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaEficienciaEmpleados($fecha_desde, $fecha_hasta, $idempleado, $estado);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaEficienciaEmpleados($fecha_desde, $fecha_hasta, $idempleado, $estado);
     }
 
     public function getEstadosProduccion($fecha_desde, $fecha_hasta)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaEstadosProduccion($fecha_desde, $fecha_hasta);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaEstadosProduccion($fecha_desde, $fecha_hasta);
     }
 
     public function getCumplimientoTareas($fecha_desde, $fecha_hasta)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaCumplimientoTareas($fecha_desde, $fecha_hasta);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaCumplimientoTareas($fecha_desde, $fecha_hasta);
     }
 
     public function getTopClientes($limit = 10)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaTopClientes($limit);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaTopClientes($limit);
     }
 
     public function getTopProveedores($limit = 10)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaTopProveedores($limit);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaTopProveedores($limit);
     }
 
     public function getKPIsEjecutivos()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaKPIsEjecutivosCompleto();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaKPIsEjecutivosCompleto();
     }
 
     public function getKPIsTiempoReal()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaKPIsTiempoReal();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaKPIsTiempoReal();
     }
 
     public function getTareasPendientes()
@@ -199,26 +199,26 @@ class DashboardModel
 
     public function getMovimientosInventarioMes()
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaMovimientosInventarioMes();
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaMovimientosInventarioMes();
     }
 
     public function getReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso = null, $idempleado = null)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso, $idempleado);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaReporteSemanalEmpleados($fecha_desde, $fecha_hasta, $tipo_proceso, $idempleado);
     }
 
     public function getReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso = null)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaReporteSemanalMateriales($fecha_desde, $fecha_hasta, $tipo_proceso);
     }
 
     public function getReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta)
     {
-        $objModelDashboardModel = $this->getInstanciaModel();
-        return $objModelDashboardModel->ejecutarBusquedaReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta);
+        $objDashboardModel = $this->getInstanciaModel();
+        return $objDashboardModel->ejecutarBusquedaReporteSemanalTotalMateriales($fecha_desde, $fecha_hasta);
     }
 
     // --- Métodos Privados (Trabajadores) ---

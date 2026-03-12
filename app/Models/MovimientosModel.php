@@ -8,14 +8,14 @@ use Exception;
 
 class MovimientosModel
 {
-    private $objModelMovimientosModel;
+    private $objMovimientosModel;
 
     private function getInstanciaModel()
     {
-        if ($this->objModelMovimientosModel == null) {
-            $this->objModelMovimientosModel = new MovimientosModel();
+        if ($this->objMovimientosModel == null) {
+            $this->objMovimientosModel = new MovimientosModel();
         }
-        return $this->objModelMovimientosModel;
+        return $this->objMovimientosModel;
     }
 
     private $query;
@@ -987,8 +987,8 @@ class MovimientosModel
      */
     public function insertMovimiento(array $data)
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarInsertMovimientoPublico($data);
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarInsertMovimientoPublico($data);
     }
 
     private function ejecutarInsertMovimientoPublico(array $data)
@@ -1018,8 +1018,8 @@ class MovimientosModel
      */
     public function updateMovimiento(int $idmovimiento, array $data)
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarUpdateMovimientoPublico($idmovimiento, $data);
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarUpdateMovimientoPublico($idmovimiento, $data);
     }
 
     private function ejecutarUpdateMovimientoPublico(int $idmovimiento, array $data)
@@ -1036,8 +1036,8 @@ class MovimientosModel
      */
     public function anularYCorregirMovimiento(int $idmovimiento, array $datosNuevoMovimiento)
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarAnularYCorregirMovimiento($idmovimiento, $datosNuevoMovimiento);
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarAnularYCorregirMovimiento($idmovimiento, $datosNuevoMovimiento);
     }
 
     private function ejecutarAnularYCorregirMovimiento(int $idmovimiento, array $datosNuevoMovimiento)
@@ -1210,8 +1210,8 @@ class MovimientosModel
      */
     public function selectMovimientoById(int $idmovimiento)
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarSelectMovimientoByIdPublico($idmovimiento);
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarSelectMovimientoByIdPublico($idmovimiento);
     }
 
     private function ejecutarSelectMovimientoByIdPublico(int $idmovimiento)
@@ -1234,8 +1234,8 @@ class MovimientosModel
      */
     public function anularMovimientoById(int $idmovimiento)
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarAnularMovimientoByIdPublico($idmovimiento);
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarAnularMovimientoByIdPublico($idmovimiento);
     }
 
     private function ejecutarAnularMovimientoByIdPublico(int $idmovimiento)
@@ -1259,8 +1259,8 @@ class MovimientosModel
      */
     public function deleteMovimientoById(int $idmovimiento)
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarDeleteMovimientoByIdPublico($idmovimiento);
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarDeleteMovimientoByIdPublico($idmovimiento);
     }
 
     private function ejecutarDeleteMovimientoByIdPublico(int $idmovimiento)
@@ -1277,8 +1277,8 @@ class MovimientosModel
      */
     public function selectAllMovimientos()
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarSelectAllMovimientosPublico();
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarSelectAllMovimientosPublico();
     }
 
     private function ejecutarSelectAllMovimientosPublico()
@@ -1291,8 +1291,8 @@ class MovimientosModel
      */
     public function buscarMovimientos(string $criterio)
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarBuscarMovimientosPublico($criterio);
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarBuscarMovimientosPublico($criterio);
     }
 
     private function ejecutarBuscarMovimientosPublico(string $criterio)
@@ -1309,8 +1309,8 @@ class MovimientosModel
      */
     public function getProductosActivos()
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarGetProductosActivosPublico();
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarGetProductosActivosPublico();
     }
 
     private function ejecutarGetProductosActivosPublico()
@@ -1323,8 +1323,8 @@ class MovimientosModel
      */
     public function getTiposMovimientoActivos()
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarGetTiposMovimientoActivosPublico();
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarGetTiposMovimientoActivosPublico();
     }
 
     private function ejecutarGetTiposMovimientoActivosPublico()
@@ -1337,8 +1337,8 @@ class MovimientosModel
      */
     public function getTiposMovimientoConEstadisticas()
     {
-        $objModelMovimientosModel = $this->getInstanciaModel();
-        return $objModelMovimientosModel->ejecutarGetTiposMovimientoConEstadisticasPublico();
+        $objMovimientosModel = $this->getInstanciaModel();
+        return $objMovimientosModel->ejecutarGetTiposMovimientoConEstadisticasPublico();
     }
 
     private function ejecutarGetTiposMovimientoConEstadisticasPublico()

@@ -20,7 +20,7 @@ class ModulosModel
     private $descripcion;
     private $estatus;
 
-    private $objModelModulosModel;
+    private $objModulosModel;
 
     public function __construct()
     {
@@ -33,10 +33,10 @@ class ModulosModel
      */
     private function getInstanciaModel()
     {
-        if ($this->objModelModulosModel == null) {
-            $this->objModelModulosModel = new ModulosModel();
+        if ($this->objModulosModel == null) {
+            $this->objModulosModel = new ModulosModel();
         }
-        return $this->objModelModulosModel;
+        return $this->objModulosModel;
     }
 
     // GETTERS Y SETTERS DE CONTROL
@@ -106,43 +106,43 @@ class ModulosModel
     // MÉTODOS PÚBLICOS
     public function insertModulo(array $data)
     {
-        $objModelModulosModel = $this->getInstanciaModel();
-        $objModelModulosModel->setData($data);
-        return $objModelModulosModel->ejecutarInsercionModulo();
+        $objModulosModel = $this->getInstanciaModel();
+        $objModulosModel->setData($data);
+        return $objModulosModel->ejecutarInsercionModulo();
     }
 
     public function updateModulo(int $idmodulo, array $data)
     {
-        $objModelModulosModel = $this->getInstanciaModel();
-        $objModelModulosModel->setIdModulo($idmodulo);
-        $objModelModulosModel->setData($data);
-        return $objModelModulosModel->ejecutarActualizacionModulo();
+        $objModulosModel = $this->getInstanciaModel();
+        $objModulosModel->setIdModulo($idmodulo);
+        $objModulosModel->setData($data);
+        return $objModulosModel->ejecutarActualizacionModulo();
     }
 
     public function selectModuloById(int $idmodulo)
     {
-        $objModelModulosModel = $this->getInstanciaModel();
-        $objModelModulosModel->setIdModulo($idmodulo);
-        return $objModelModulosModel->ejecutarConsultaModuloPorId();
+        $objModulosModel = $this->getInstanciaModel();
+        $objModulosModel->setIdModulo($idmodulo);
+        return $objModulosModel->ejecutarConsultaModuloPorId();
     }
 
     public function deleteModuloById(int $idmodulo)
     {
-        $objModelModulosModel = $this->getInstanciaModel();
-        $objModelModulosModel->setIdModulo($idmodulo);
-        return $objModelModulosModel->ejecutarEliminacionLogicaModulo();
+        $objModulosModel = $this->getInstanciaModel();
+        $objModulosModel->setIdModulo($idmodulo);
+        return $objModulosModel->ejecutarEliminacionLogicaModulo();
     }
 
     public function selectAllModulosActivos()
     {
-        $objModelModulosModel = $this->getInstanciaModel();
-        return $objModelModulosModel->ejecutarConsultaTodosModulosActivos();
+        $objModulosModel = $this->getInstanciaModel();
+        return $objModulosModel->ejecutarConsultaTodosModulosActivos();
     }
 
     public function getControlladoresDisponibles()
     {
-        $objModelModulosModel = $this->getInstanciaModel();
-        return $objModelModulosModel->ejecutarConsultaControlladoresDisponibles();
+        $objModulosModel = $this->getInstanciaModel();
+        return $objModulosModel->ejecutarConsultaControlladoresDisponibles();
     }
 
     // MÉTODOS PRIVADOS

@@ -26,7 +26,7 @@ class ClientesModel
     private $fecha_creacion;
     private $ultima_modificacion;
     private $fecha_eliminacion;
-    private $objModelClientesModel;
+    private $objClientesModel;
 
     const SUPER_USUARIO_ROL_ID = 1;
 
@@ -37,10 +37,10 @@ class ClientesModel
 
     private function getInstanciaModel()
     {
-        if ($this->objModelClientesModel == null) {
-            $this->objModelClientesModel = new ClientesModel();
+        if ($this->objClientesModel == null) {
+            $this->objClientesModel = new ClientesModel();
         }
-        return $this->objModelClientesModel;
+        return $this->objClientesModel;
     }
 
     //  GETTERS Y SETTERS GENERALES 
@@ -694,8 +694,8 @@ class ClientesModel
      */
     public function insertCliente(array $data)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarInsertCliente($data);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarInsertCliente($data);
     }
 
     private function ejecutarInsertCliente(array $data)
@@ -721,8 +721,8 @@ class ClientesModel
      */
     public function updateCliente(int $idcliente, array $data)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarUpdateCliente($idcliente, $data);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarUpdateCliente($idcliente, $data);
     }
 
     private function ejecutarUpdateCliente(int $idcliente, array $data)
@@ -748,8 +748,8 @@ class ClientesModel
      */
     public function selectClienteById(int $idcliente)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarSelectClienteById($idcliente);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarSelectClienteById($idcliente);
     }
 
     private function ejecutarSelectClienteById(int $idcliente)
@@ -763,8 +763,8 @@ class ClientesModel
      */
     public function deleteClienteById(int $idcliente)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarDeleteClienteById($idcliente);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarDeleteClienteById($idcliente);
     }
 
     private function ejecutarDeleteClienteById(int $idcliente)
@@ -779,8 +779,8 @@ class ClientesModel
      */
     public function verificarEsSuperUsuario(int $idusuario)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarVerificarEsSuperUsuario($idusuario);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarVerificarEsSuperUsuario($idusuario);
     }
 
     private function ejecutarVerificarEsSuperUsuario(int $idusuario)
@@ -795,8 +795,8 @@ class ClientesModel
      */
     public function selectAllClientes(int $idUsuarioSesion = 0)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarSelectAllClientes($idUsuarioSesion);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarSelectAllClientes($idUsuarioSesion);
     }
 
     private function ejecutarSelectAllClientes(int $idUsuarioSesion = 0)
@@ -810,8 +810,8 @@ class ClientesModel
      */
     public function selectAllClientesActivos()
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarSelectAllClientesActivos();
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarSelectAllClientesActivos();
     }
 
     private function ejecutarSelectAllClientesActivos()
@@ -824,8 +824,8 @@ class ClientesModel
      */
     public function buscarClientes(string $criterio)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarBuscarClientes($criterio);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarBuscarClientes($criterio);
     }
 
     private function ejecutarBuscarClientes(string $criterio)
@@ -838,8 +838,8 @@ class ClientesModel
      */
     public function selectClienteByCedula(string $cedula, int $idClienteExcluir = 0)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarSelectClienteByCedula($cedula, $idClienteExcluir);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarSelectClienteByCedula($cedula, $idClienteExcluir);
     }
 
     private function ejecutarSelectClienteByCedula(string $cedula, int $idClienteExcluir = 0)
@@ -853,8 +853,8 @@ class ClientesModel
      */
     public function getEstadisticasClientes(): array
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarGetEstadisticasClientes();
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarGetEstadisticasClientes();
     }
 
     private function ejecutarGetEstadisticasClientes(): array
@@ -898,8 +898,8 @@ class ClientesModel
      */
     public function insertClienteCompleto(array $data)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarInsertClienteCompleto($data);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarInsertClienteCompleto($data);
     }
 
     private function ejecutarInsertClienteCompleto(array $data)
@@ -1001,8 +1001,8 @@ class ClientesModel
     }
     public function reactivarCliente(int $idcliente)
     {
-        $objModelClientesModel = $this->getInstanciaModel();
-        return $objModelClientesModel->ejecutarReactivarCliente($idcliente);
+        $objClientesModel = $this->getInstanciaModel();
+        return $objClientesModel->ejecutarReactivarCliente($idcliente);
     }
 
     private function ejecutarReactivarCliente(int $idcliente)

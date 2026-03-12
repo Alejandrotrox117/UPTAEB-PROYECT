@@ -10,13 +10,13 @@ use DateTime;
 
 class ProduccionModel
 {
-    private $objModelProduccionModel;
+    private $objProduccionModel;
 
     private function getInstanciaModel() {
-        if ($this->objModelProduccionModel == null) {
-            $this->objModelProduccionModel = new ProduccionModel();
+        if ($this->objProduccionModel == null) {
+            $this->objProduccionModel = new ProduccionModel();
         }
-        return $this->objModelProduccionModel;
+        return $this->objProduccionModel;
     }
 
     
@@ -1498,26 +1498,26 @@ class ProduccionModel
 
     public function registrarSolicitudPago(array $registros = [])
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarRegistroSolicitudPago($registros);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarRegistroSolicitudPago($registros);
     }
 
     public function insertarRegistroProduccion(array $data)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarInsercionRegistroProduccion($data);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarInsercionRegistroProduccion($data);
     }
 
     public function obtenerRegistrosPorLote($idlote)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarConsultaRegistrosPorLote($idlote);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarConsultaRegistrosPorLote($idlote);
     }
 
     public function selectAllRegistrosProduccion($filtros = [])
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarConsultaTodosRegistrosProduccion($filtros);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarConsultaTodosRegistrosProduccion($filtros);
     }
 
     /**
@@ -1525,8 +1525,8 @@ class ProduccionModel
      */
     public function actualizarRegistroProduccion($idregistro, array $data)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarActualizacionRegistroProduccion($idregistro, $data);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarActualizacionRegistroProduccion($idregistro, $data);
     }
 
     private function ejecutarActualizacionRegistroProduccion($idregistro, array $data)
@@ -1684,8 +1684,8 @@ class ProduccionModel
     /** Obtiene listado de salarios configurados por proceso/producto */
     public function selectPreciosProceso()
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarConsultaPreciosProceso();
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarConsultaPreciosProceso();
     }
 
     private function ejecutarConsultaPreciosProceso()
@@ -1715,8 +1715,8 @@ class ProduccionModel
     /** Crea un salario por proceso/producto */
     public function createPrecioProceso(array $data)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarCreacionPrecioProceso($data);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarCreacionPrecioProceso($data);
     }
 
     private function ejecutarCreacionPrecioProceso(array $data)
@@ -1766,8 +1766,8 @@ class ProduccionModel
     /** Actualiza un salario por proceso/producto */
     public function updatePrecioProceso(int $idconfig_salario, array $data)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarActualizacionPrecioProceso($idconfig_salario, $data);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarActualizacionPrecioProceso($idconfig_salario, $data);
     }
 
     private function ejecutarActualizacionPrecioProceso(int $idconfig_salario, array $data)
@@ -1802,8 +1802,8 @@ class ProduccionModel
     /** Elimina (lógico) un salario por proceso/producto */
     public function deletePrecioProceso(int $idconfig_salario)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarEliminacionPrecioProceso($idconfig_salario);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarEliminacionPrecioProceso($idconfig_salario);
     }
 
     private function ejecutarEliminacionPrecioProceso(int $idconfig_salario)
@@ -1829,8 +1829,8 @@ class ProduccionModel
      */
     public function eliminarRegistroProduccion($idregistro)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarEliminacionRegistroProduccion($idregistro);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarEliminacionRegistroProduccion($idregistro);
     }
 
     private function ejecutarEliminacionRegistroProduccion($idregistro)
@@ -1914,8 +1914,8 @@ class ProduccionModel
      */
     public function marcarRegistroComoPagado($idregistro)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarMarcadoRegistroComoPagado($idregistro);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarMarcadoRegistroComoPagado($idregistro);
     }
 
     private function ejecutarMarcadoRegistroComoPagado($idregistro)
@@ -1981,8 +1981,8 @@ class ProduccionModel
      */
     public function cancelarRegistroProduccion($idregistro)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarCancelacionRegistroProduccion($idregistro);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarCancelacionRegistroProduccion($idregistro);
     }
 
     private function ejecutarCancelacionRegistroProduccion($idregistro)
@@ -2057,8 +2057,8 @@ class ProduccionModel
      */
     public function getRegistroById($idregistro)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarObtenerRegistroById($idregistro);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarObtenerRegistroById($idregistro);
     }
 
     private function ejecutarObtenerRegistroById($idregistro)
@@ -2118,8 +2118,8 @@ class ProduccionModel
      */
     public function actualizarLote($idlote, array $data)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarActualizacionLote($idlote, $data);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarActualizacionLote($idlote, $data);
     }
 
     private function ejecutarActualizacionLote($idlote, array $data)
@@ -2255,8 +2255,8 @@ class ProduccionModel
      */
     public function eliminarLote($idlote)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarEliminacionLote($idlote);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarEliminacionLote($idlote);
     }
 
     private function ejecutarEliminacionLote($idlote)
@@ -2332,56 +2332,56 @@ class ProduccionModel
 
     public function insertLote(array $data)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarInsercionLote($data);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarInsercionLote($data);
     }
 
     public function selectAllLotes()
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarConsultaTodosLotes();
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarConsultaTodosLotes();
     }
 
     public function selectLoteById(int $idlote)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarConsultaLotePorId($idlote);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarConsultaLotePorId($idlote);
     }
 
     public function iniciarLoteProduccion(int $idlote)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarInicioLote($idlote);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarInicioLote($idlote);
     }
 
     public function cerrarLoteProduccion(int $idlote)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarCierreLote($idlote);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarCierreLote($idlote);
     }
 
     public function selectConfiguracionProduccion()
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarConsultaConfiguracionProduccion();
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarConsultaConfiguracionProduccion();
     }
 
     public function updateConfiguracionProduccion(array $data)
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarActualizacionConfiguracionProduccion($data);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarActualizacionConfiguracionProduccion($data);
     }
 
     public function selectEmpleadosActivos()
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarConsultaEmpleadosActivos();
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarConsultaEmpleadosActivos();
     }
 
     public function selectProductos(string $tipo = 'todos')
     {
-        $objModelProduccionModel = $this->getInstanciaModel();
-        return $objModelProduccionModel->ejecutarConsultaProductos($tipo);
+        $objProduccionModel = $this->getInstanciaModel();
+        return $objProduccionModel->ejecutarConsultaProductos($tipo);
     }
 
 

@@ -27,18 +27,18 @@ Esta skill permite refactorizar un módulo completo (Controlador y Modelo) sigui
 
 ### 2. En el Modelo (`app/Models/<Modulo>Model.php`)
 
-*   **Propiedad de Instancia**: Agregue una propiedad privada llamada `$objModel<Modulo>Model` (o el nombre específico del modelo).
+*   **Propiedad de Instancia**: Agregue una propiedad privada llamada `$obj<Modulo>Model` (o el nombre específico del modelo).
 *   **Gestión de Instancias (Lazy Load)**: Agregue un método privado `getInstanciaModel()` que asegure la coexistencia de dos instancias:
     ```php
     private function getInstanciaModel() {
-        if ($this->objModel<Modulo>Model == null) {
-            $this->objModel<Modulo>Model = new <Modulo>Model();
+        if ($this->obj<Modulo>Model == null) {
+            $this->obj<Modulo>Model = new <Modulo>Model();
         }
-        return $this->objModel<Modulo>Model;
+        return $this->obj<Modulo>Model;
     }
     ```
 *   **Métodos Públicos (Proxies)**: Todas las funciones públicas deben:
-    1.  Obtener la instancia interna: `$objModel<Modulo>Model = $this->getInstanciaModel();`.
+    1.  Obtener la instancia interna: `$obj<Modulo>Model = $this->getInstanciaModel();`.
     2.  Delegar la ejecución a un método privado correspondiente.
     3.  No contener lógica de base de datos directa.
 *   **Métodos Privados (Trabajadores)**:

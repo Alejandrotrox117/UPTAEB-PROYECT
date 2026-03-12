@@ -12,7 +12,7 @@ class ProveedoresModel
     private $status;
 
     // Propiedad privada para manejar la instancia interna
-    private $objModelProveedor;
+    private $objProveedoresModel;
 
     // Definir constante para el rol de super usuario
     const SUPER_USUARIO_ROL_ID = 1;
@@ -25,10 +25,10 @@ class ProveedoresModel
     // Método para obtener la instancia interna (una sola vez por objeto)
     private function getInstanciaModel()
     {
-        if ($this->objModelProveedor == null) {
-            $this->objModelProveedor = new ProveedoresModel();
+        if ($this->objProveedoresModel == null) {
+            $this->objProveedoresModel = new ProveedoresModel();
         }
-        return $this->objModelProveedor;
+        return $this->objProveedoresModel;
     }
 
     // Getters y Setters

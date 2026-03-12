@@ -37,6 +37,14 @@ function getProductosNotificacionesModel()
 }
 
 /**
+ * Obtiene el modelo de empleados
+ */
+function getEmpleadosModel()
+{
+    return new EmpleadosModel();
+}
+
+/**
  * Renderiza una vista de productos
  */
 function renderProductosView($view, $data = [])
@@ -424,8 +432,8 @@ function productos_verificarSuperUsuario()
                 die();
             }
 
-            $empleadosModel = new EmpleadosModel();
-            $esSuperAdmin = $empleadosModel->verificarEsSuperUsuario($idusuario);
+            $objEmpleados = getEmpleadosModel();
+            $esSuperAdmin = $objEmpleados->verificarEsSuperUsuario($idusuario);
 
             echo json_encode([
                 'status' => true,
