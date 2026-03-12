@@ -18,13 +18,37 @@ function getVentasModel()
     return new VentasModel();
 }
 
+/**
+ * Obtiene el modelo de bitácora
+ */
+function getBitacoraModel()
+{
+    return new BitacoraModel();
+}
+
+/**
+ * Obtiene el modelo de notificaciones
+ */
+function getNotificacionesModel()
+{
+    return new NotificacionesModel();
+}
+
+/**
+ * Obtiene el modelo de pagos
+ */
+function getPagosModel()
+{
+    return new PagosModel();
+}
+
 // Helper para obtener modelos
 function ventas_getModels()
 {
     return [
-        'ventas' => new VentasModel(),
-        'bitacora' => new BitacoraModel(),
-        'notificaciones' => new NotificacionesModel()
+        'ventas' => getVentasModel(),
+        'bitacora' => getBitacoraModel(),
+        'notificaciones' => getNotificacionesModel()
     ];
 }
 
@@ -557,7 +581,7 @@ function ventas_registrarPago()
             throw new Exception('Solo se pueden registrar pagos en ventas con estado POR_PAGAR');
         }
 
-        $objPagos  = new PagosModel();
+        $objPagos  = getPagosModel();
         $infoVenta = $objPagos->getInfoVenta($idventa);
 
         $arrData = [

@@ -9,6 +9,14 @@ use App\Helpers\Validation\ExpresionesRegulares;
  * Controlador TiposPagos - Estilo Funcional
  */
 
+/**
+ * Función de fábrica para obtener el modelo TiposPagosModel
+ */
+function getTiposPagosModel()
+{
+    return new TiposPagosModel();
+}
+
 function tipospagos_verificarSesion()
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -39,8 +47,8 @@ function tipospagos_getTiposPagosData()
 {
     tipospagos_verificarSesion();
     try {
-        $model = new TiposPagosModel();
-        $arrResponse = $model->selectAllTiposPagos();
+        $objTiposPagos = getTiposPagosModel();
+        $arrResponse = $objTiposPagos->selectAllTiposPagos();
         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         echo json_encode(['status' => false, 'message' => 'Error interno', 'data' => []], JSON_UNESCAPED_UNICODE);
@@ -59,8 +67,8 @@ function tipospagos_createTipoPago()
             die();
         }
 
-        $model = new TiposPagosModel();
-        $arrResponse = $model->insertTipoPago(['nombre' => $nombre]);
+        $objTiposPagos = getTiposPagosModel();
+        $arrResponse = $objTiposPagos->insertTipoPago(['nombre' => $nombre]);
 
         if ($arrResponse['status']) {
             registrarEnBitacora('tipos_pagos', 'INSERTAR');
@@ -76,8 +84,8 @@ function tipospagos_getTipoPagoById($idtipo_pago)
 {
     tipospagos_verificarSesion();
     try {
-        $model = new TiposPagosModel();
-        $arrData = $model->selectTipoPagoById(intval($idtipo_pago));
+        $objTiposPagos = getTiposPagosModel();
+        $arrData = $objTiposPagos->selectTipoPagoById(intval($idtipo_pago));
         echo json_encode($arrData ? ['status' => true, 'data' => $arrData] : ['status' => false, 'message' => 'No encontrado']);
     } catch (Exception $e) {
         echo json_encode(['status' => false, 'message' => 'Error interno']);
@@ -93,8 +101,8 @@ function tipospagos_updateTipoPago()
         $id = intval($request['idtipo_pago'] ?? 0);
         $nombre = trim($request['nombre'] ?? '');
 
-        $model = new TiposPagosModel();
-        $arrResponse = $model->updateTipoPago($id, ['nombre' => $nombre]);
+        $objTiposPagos = getTiposPagosModel();
+        $arrResponse = $objTiposPagos->updateTipoPago($id, ['nombre' => $nombre]);
 
         if ($arrResponse['status']) {
             registrarEnBitacora('tipos_pagos', 'ACTUALIZAR');
@@ -113,8 +121,8 @@ function tipospagos_deleteTipoPago()
         $request = json_decode(file_get_contents('php://input'), true);
         $id = intval($request['idtipo_pago'] ?? 0);
 
-        $model = new TiposPagosModel();
-        $res = $model->deleteTipoPagoById($id);
+        $objTiposPagos = getTiposPagosModel();
+        $res = $objTiposPagos->deleteTipoPagoById($id);
 
         if ($res) {
             registrarEnBitacora('tipos_pagos', 'ELIMINAR');
@@ -132,8 +140,8 @@ function tipospagos_getTiposPagosActivos()
 {
     tipospagos_verificarSesion();
     try {
-        $model = new TiposPagosModel();
-        $arrResponse = $model->selectTiposPagosActivos();
+        $objTiposPagos = getTiposPagosModel();
+        $arrResponse = $objTiposPagos->selectTiposPagosActivos();
         echo json_encode($arrResponse, JSON_UNESCAPED_UNICODE);
     } catch (Exception $e) {
         echo json_encode(['status' => false, 'message' => 'Error interno', 'data' => []]);

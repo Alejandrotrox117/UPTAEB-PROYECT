@@ -36,6 +36,14 @@ function renderPersonasView(string $view, array $data = [])
     renderView('personas', $view, $data);
 }
 
+/**
+ * Obtiene una instancia del modelo UsuariosModel.
+ */
+function getUsuariosModel()
+{
+    return new UsuariosModel();
+}
+
 // =============================================================================
 // FUNCIONES PÚBLICAS DEL CONTROLADOR
 // =============================================================================
@@ -89,8 +97,8 @@ function personas_getPersonasData()
                 echo json_encode(['status' => false, 'message' => 'No tienes permisos para ver las personas'], JSON_UNESCAPED_UNICODE);
                 die();
             }
-            $model = getPersonasModel();
-            $arrData = $model->selectAllPersonasActivas();
+            $objPersonas = getPersonasModel();
+            $arrData = $objPersonas->selectAllPersonasActivas();
             echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
         } catch (\Exception $e) {
             error_log("Error en getPersonasData: " . $e->getMessage());
@@ -143,17 +151,17 @@ function personas_createPersona()
             'idrol_usuario' => $data['usuario']['idrol'] ?? null
         ];
 
-        $model = getPersonasModel();
-
+        $objPersonas = getPersonasModel();
+        
         // Validar correo duplicado si se va a crear usuario
         if (($personaData['crear_usuario'] ?? '0') === '1' && !empty($personaData['correo_electronico_usuario'])) {
-            if ($model->existeCorreoUsuario($personaData['correo_electronico_usuario'])) {
+            if ($objPersonas->existeCorreoUsuario($personaData['correo_electronico_usuario'])) {
                 echo json_encode(['status' => false, 'message' => 'Ya existe un usuario registrado con ese correo electrónico.'], JSON_UNESCAPED_UNICODE);
                 die();
             }
         }
 
-        $request = $model->insertPersonaConUsuario($personaData);
+        $request = $objPersonas->insertPersonaConUsuario($personaData);
 
         if (isset($request['status']) && $request['status'] === true) {
             $detalle = "Persona creada: " . trim($data['persona']['nombre']) . " " . trim($data['persona']['apellido']);
@@ -176,8 +184,8 @@ function personas_createPersona()
 function personas_getPersonaById(int $idpersona_pk)
 {
     if ($idpersona_pk > 0) {
-        $model = getPersonasModel();
-        $arrData = $model->selectPersonaById($idpersona_pk);
+        $objPersonas = getPersonasModel();
+        $arrData = $objPersonas->selectPersonaById($idpersona_pk);
         if (empty($arrData)) {
             $response = ["status" => false, "message" => "Datos no encontrados."];
         } else {
@@ -251,8 +259,8 @@ function personas_updatePersona()
             ]);
         }
 
-        $model = getPersonasModel();
-        $resultado = $model->updatePersonaConUsuario($idPersona, $dataParaModelo);
+        $objPersonas = getPersonasModel();
+        $resultado = $objPersonas->updatePersonaConUsuario($idPersona, $dataParaModelo);
 
         if (isset($resultado['status']) && $resultado['status'] === true) {
             $detalle = "Persona actualizada con ID: " . $idPersona;
@@ -302,8 +310,8 @@ function personas_deletePersona()
         $idpersona_pk = intval($data['idpersona_pk']);
 
         // Verificar que no se desactive la persona asociada al usuario logueado
-        $model = getPersonasModel();
-        $personaData = $model->selectPersonaById($idpersona_pk);
+        $objPersonas = getPersonasModel();
+        $personaData = $objPersonas->selectPersonaById($idpersona_pk);
         if (!empty($personaData) && isset($personaData['idusuario'])) {
             $idUsuarioAsociado = intval($personaData['idusuario']);
             if ($idUsuarioAsociado === $idusuario) {
@@ -313,7 +321,7 @@ function personas_deletePersona()
             }
         }
 
-        $requestDelete = $model->deletePersonaById($idpersona_pk);
+        $requestDelete = $objPersonas->deletePersonaById($idpersona_pk);
 
         if ($requestDelete) {
             $detalle = "Persona desactivada con ID: " . $idpersona_pk;
@@ -346,8 +354,8 @@ function personas_reactivarPersona()
 
     try {
         // Solo super usuarios pueden reactivar personas
-        $usuariosModel = new UsuariosModel();
-        $esSuperAdmin = $usuariosModel->verificarEsSuperUsuario($idusuario);
+        $objUsuarios = getUsuariosModel();
+        $esSuperAdmin = $objUsuarios->verificarEsSuperUsuario($idusuario);
 
         if (!$esSuperAdmin) {
             BitacoraHelper::registrarError('personas', 'Intento de reactivar persona sin ser super usuario', $idusuario, $bitacoraModel);
@@ -363,8 +371,8 @@ function personas_reactivarPersona()
         }
 
         $idpersona_pk = intval($data['idpersona_pk']);
-        $model = getPersonasModel();
-        $requestReactivar = $model->reactivarPersonaById($idpersona_pk);
+        $objPersonas = getPersonasModel();
+        $requestReactivar = $objPersonas->reactivarPersonaById($idpersona_pk);
 
         if ($requestReactivar) {
             $detalle = "Persona reactivada con ID: " . $idpersona_pk;
@@ -388,8 +396,8 @@ function personas_reactivarPersona()
 function personas_getRoles()
 {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-        $model = getPersonasModel();
-        $arrData = $model->selectAllRoles();
+        $objPersonas = getPersonasModel();
+        $arrData = $objPersonas->selectAllRoles();
         echo json_encode($arrData, JSON_UNESCAPED_UNICODE);
     }
     die();
@@ -418,8 +426,8 @@ function personas_verificarSuperUsuario()
                 die();
             }
 
-            $usuariosModel = new UsuariosModel();
-            $esSuperAdmin = $usuariosModel->verificarEsSuperUsuario($idusuario);
+            $objUsuarios = getUsuariosModel();
+            $esSuperAdmin = $objUsuarios->verificarEsSuperUsuario($idusuario);
 
             echo json_encode([
                 'status' => true,
@@ -471,8 +479,8 @@ function personas_desasociarUsuario()
         $idpersona_pk = intval($data['idpersona_pk']);
 
         // Verificar que no se desasocie su propio usuario
-        $model = getPersonasModel();
-        $personaData = $model->selectPersonaById($idpersona_pk);
+        $objPersonas = getPersonasModel();
+        $personaData = $objPersonas->selectPersonaById($idpersona_pk);
         if (!empty($personaData) && isset($personaData['idusuario'])) {
             $idUsuarioAsociado = intval($personaData['idusuario']);
             if ($idUsuarioAsociado === $idusuario) {
@@ -481,7 +489,7 @@ function personas_desasociarUsuario()
             }
         }
 
-        $resultado = $model->desasociarUsuarioDePersona($idpersona_pk);
+        $resultado = $objPersonas->desasociarUsuarioDePersona($idpersona_pk);
 
         if (isset($resultado['status']) && $resultado['status'] === true) {
             $detalle = "Usuario desasociado de persona ID: " . $idpersona_pk;
@@ -529,10 +537,10 @@ function personas_asociarUsuario()
         }
 
         $idpersona_pk = intval($data['idpersona_pk']);
-        $model = getPersonasModel();
+        $objPersonas = getPersonasModel();
 
         // Verificar que la persona no tenga ya un usuario asociado
-        $personaData = $model->selectPersonaById($idpersona_pk);
+        $personaData = $objPersonas->selectPersonaById($idpersona_pk);
         if (!empty($personaData) && !empty($personaData['idusuario'])) {
             echo json_encode(['status' => false, 'message' => 'Esta persona ya tiene un usuario asociado.'], JSON_UNESCAPED_UNICODE);
             die();
@@ -549,7 +557,7 @@ function personas_asociarUsuario()
         }
 
         // Validar correo duplicado
-        if ($model->existeCorreoUsuario($correo)) {
+        if ($objPersonas->existeCorreoUsuario($correo)) {
             echo json_encode(['status' => false, 'message' => 'Ya existe un usuario registrado con ese correo electrónico.'], JSON_UNESCAPED_UNICODE);
             die();
         }
@@ -560,7 +568,7 @@ function personas_asociarUsuario()
             'idrol_usuario' => $idrol
         ];
 
-        $resultado = $model->insertUsuario($idpersona_pk, $usuarioData);
+        $resultado = $objPersonas->insertUsuario($idpersona_pk, $usuarioData);
 
         if (isset($resultado['status']) && $resultado['status'] === true) {
             $detalle = "Usuario asociado a persona ID: " . $idpersona_pk . " (" . $correo . ")";

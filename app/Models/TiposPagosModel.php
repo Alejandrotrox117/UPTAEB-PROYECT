@@ -17,9 +17,22 @@ class TiposPagosModel extends Mysql
     private $message;
     private $status;
 
+    // Propiedad para la instancia interna (patrón de doble instancia)
+    private $objTiposPagosModel = null;
+
     public function __construct()
     {
-        
+    }
+
+    /**
+     * Obtiene la instancia interna del modelo (Lazy Load - Patrón de doble instancia)
+     */
+    private function getInstanciaModel(): TiposPagosModel
+    {
+        if ($this->objTiposPagosModel == null) {
+            $this->objTiposPagosModel = new TiposPagosModel();
+        }
+        return $this->objTiposPagosModel;
     }
 
     // Getters y Setters
@@ -79,7 +92,7 @@ class TiposPagosModel extends Mysql
         $this->status = $status;
     }
 
-    private function ejecutarVerificacionTipoPago(string $nombre, int $idTipoPagoExcluir = null){
+    private function ejecutarVerificacionTipoPago(string $nombre, ?int $idTipoPagoExcluir = null){
         $conexion = new Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
@@ -346,11 +359,13 @@ class TiposPagosModel extends Mysql
     }
 
     // Métodos públicos que usan las funciones privadas
-    public function insertTipoPago(array $data){
-        $this->setData($data);
-        $nombre = $this->getData()['nombre'];
+    public function insertTipoPago(array $data)
+    {
+        $objTiposPagosModel = $this->getInstanciaModel();
+        $objTiposPagosModel->setData($data);
+        $nombre = $objTiposPagosModel->getData()['nombre'];
 
-        if ($this->ejecutarVerificacionTipoPago($nombre)) {
+        if ($objTiposPagosModel->ejecutarVerificacionTipoPago($nombre)) {
             return [
                 'status' => false,
                 'message' => 'Ya existe un tipo de pago con ese nombre.',
@@ -358,40 +373,50 @@ class TiposPagosModel extends Mysql
             ];
         }
 
-        return $this->ejecutarInsercionTipoPago($this->getData());
+        return $objTiposPagosModel->ejecutarInsercionTipoPago($objTiposPagosModel->getData());
     }
 
-    public function updateTipoPago(int $idtipo_pago, array $data){
-        $this->setData($data);
-        $this->setTipoPagoId($idtipo_pago);
-        $nombre = $this->getData()['nombre'];
+    public function updateTipoPago(int $idtipo_pago, array $data)
+    {
+        $objTiposPagosModel = $this->getInstanciaModel();
+        $objTiposPagosModel->setData($data);
+        $objTiposPagosModel->setTipoPagoId($idtipo_pago);
+        $nombre = $objTiposPagosModel->getData()['nombre'];
 
-        if ($this->ejecutarVerificacionTipoPago($nombre, $this->getTipoPagoId())) {
+        if ($objTiposPagosModel->ejecutarVerificacionTipoPago($nombre, $objTiposPagosModel->getTipoPagoId())) {
             return [
                 'status' => false,
                 'message' => 'Ya existe otro tipo de pago con ese nombre.'
             ];
         }
 
-        return $this->ejecutarActualizacionTipoPago($this->getTipoPagoId(), $this->getData());
+        return $objTiposPagosModel->ejecutarActualizacionTipoPago($objTiposPagosModel->getTipoPagoId(), $objTiposPagosModel->getData());
     }
 
-    public function selectTipoPagoById(int $idtipo_pago){
-        $this->setTipoPagoId($idtipo_pago);
-        return $this->ejecutarBusquedaTipoPagoPorId($this->getTipoPagoId());
+    public function selectTipoPagoById(int $idtipo_pago)
+    {
+        $objTiposPagosModel = $this->getInstanciaModel();
+        $objTiposPagosModel->setTipoPagoId($idtipo_pago);
+        return $objTiposPagosModel->ejecutarBusquedaTipoPagoPorId($objTiposPagosModel->getTipoPagoId());
     }
 
-    public function deleteTipoPagoById(int $idtipo_pago){
-        $this->setTipoPagoId($idtipo_pago);
-        return $this->ejecutarEliminacionTipoPago($this->getTipoPagoId());
+    public function deleteTipoPagoById(int $idtipo_pago)
+    {
+        $objTiposPagosModel = $this->getInstanciaModel();
+        $objTiposPagosModel->setTipoPagoId($idtipo_pago);
+        return $objTiposPagosModel->ejecutarEliminacionTipoPago($objTiposPagosModel->getTipoPagoId());
     }
 
-    public function selectAllTiposPagos(){
-        return $this->ejecutarBusquedaTodosTiposPagos();
+    public function selectAllTiposPagos()
+    {
+        $objTiposPagosModel = $this->getInstanciaModel();
+        return $objTiposPagosModel->ejecutarBusquedaTodosTiposPagos();
     }
 
-    public function selectTiposPagosActivos(){
-        return $this->ejecutarBusquedaTiposPagosActivos();
+    public function selectTiposPagosActivos()
+    {
+        $objTiposPagosModel = $this->getInstanciaModel();
+        return $objTiposPagosModel->ejecutarBusquedaTiposPagosActivos();
     }
 }
 ?>

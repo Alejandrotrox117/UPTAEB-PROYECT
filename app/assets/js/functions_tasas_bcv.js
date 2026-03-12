@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    
+
     const tbodyTasasUsd = document.getElementById('tbodyTasasUsd');
     const tbodyTasasEur = document.getElementById('tbodyTasasEur');
     const mensajeNoDatosUsd = document.getElementById('mensajeNoDatosUsd');
@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
     let dataTasasEur = [];
     let dataTableUsd = null;
     let dataTableEur = null;
-    let monedaActiva = 'USD'; 
+    let monedaActiva = 'USD';
 
-    
+
     function mostrarAlertaSweet(tipo, titulo, textoHtml = '') {
         let icono;
         switch (tipo) {
@@ -85,9 +85,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    
+
     function limpiarDataTable(tablaId) {
-        
+
         try {
             const tabla = $('#' + tablaId);
             if ($.fn.DataTable.isDataTable(tabla)) {
@@ -100,13 +100,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function inicializarDataTable(tablaId, instancia) {
-        
+
         limpiarDataTable(tablaId);
 
         console.log(`Inicializando DataTable para ${tablaId}`);
         return $('#' + tablaId).DataTable({
             destroy: true,
             pageLength: 10,
+            responsive: true,
             language: {
                 decimal: "",
                 emptyTable: "No hay información",
@@ -121,10 +122,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 search: "Buscar:",
                 zeroRecords: "Sin resultados encontrados",
                 paginate: {
-                    first: "Primero",
-                    last: "Último",
-                    next: "Siguiente",
-                    previous: "Anterior",
+                    first: '<i class="fas fa-angle-double-left"></i>',
+                    last: '<i class="fas fa-angle-double-right"></i>',
+                    next: '<i class="fas fa-angle-right"></i>',
+                    previous: '<i class="fas fa-angle-left"></i>',
                 },
                 aria: {
                     sortAscending: ": activar para ordenar la columna ascendente",
@@ -141,10 +142,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    
+
     async function cargarDatosTasas() {
         try {
-            
+
             limpiarDataTable('tablaTasasUsd');
             limpiarDataTable('tablaTasasEur');
 
@@ -163,14 +164,14 @@ document.addEventListener('DOMContentLoaded', function () {
             dataTasasUsd = data.tasasUsd || [];
             dataTasasEur = data.tasasEur || [];
 
-            
+
             renderizarTabla(tbodyTasasUsd, dataTasasUsd, mensajeNoDatosUsd);
             renderizarTabla(tbodyTasasEur, dataTasasEur, mensajeNoDatosEur);
 
-            
+
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            
+
             dataTableUsd = inicializarDataTable('tablaTasasUsd', dataTableUsd);
             dataTableEur = inicializarDataTable('tablaTasasEur', dataTableEur);
 
@@ -181,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    
+
     async function manejarActualizacionGeneralBCV(event) {
         event.preventDefault();
         const form = event.currentTarget;
@@ -203,16 +204,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 try { errorData = await response.json(); } catch (e) { }
                 throw errorData;
             }
-            
+
             const resultado = await response.json();
             mostrarAlertaSweet(
                 resultado.tipo,
                 resultado.tipo.charAt(0).toUpperCase() + resultado.tipo.slice(1) + "!",
                 resultado.texto
             );
-            
+
             if (resultado.tipo === 'exito' || resultado.tipo === 'advertencia') {
-                
+
                 console.log("Actualizando datos después de operación exitosa...");
                 await cargarDatosTasas();
                 console.log("Datos actualizados con éxito.");
@@ -239,9 +240,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const esActiva = button === pestanaActiva;
             button.setAttribute('aria-selected', esActiva.toString());
 
-            
+
             const clasesActivo = ['text-yellow-600', 'shadow', 'bg-white', 'dark:text-white', 'dark:bg-yellow-600'];
-            
+
             const clasesInactivoHoverFocus = [
                 'hover:text-gray-800',
                 'dark:text-gray-400',
@@ -275,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pestanaActiva) actualizarEstilosPestana(pestanaActiva);
     }
 
-    
+
     if (tabsContainer) {
         tabsContainer.addEventListener('click', function (event) {
             const botonPestanaClickeado = event.target.closest('.tab-button');
@@ -285,16 +286,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    
+
     if (formActualizarUSD) {
         formActualizarUSD.addEventListener('submit', manejarActualizacionGeneralBCV);
-        
+
     }
     if (formActualizarEUR) {
         formActualizarEUR.addEventListener('submit', manejarActualizacionGeneralBCV);
-        
+
     }
 
-    
+
     cargarDatosTasas();
 });

@@ -16,7 +16,7 @@ class ProductosModel
     private $productoId;
     private $message;
     private $status;
-    private $objModelProductosModel;
+    private $objProductosModel;
 
     public function __construct()
     {
@@ -25,10 +25,10 @@ class ProductosModel
 
     private function getInstanciaModel()
     {
-        if ($this->objModelProductosModel == null) {
-            $this->objModelProductosModel = new ProductosModel();
+        if ($this->objProductosModel == null) {
+            $this->objProductosModel = new ProductosModel();
         }
-        return $this->objModelProductosModel;
+        return $this->objProductosModel;
     }
 
     // Getters y Setters
@@ -686,11 +686,11 @@ class ProductosModel
     // Métodos públicos que usan las funciones privadas
     public function insertProducto(array $data)
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        $objModelProductosModel->setData($data);
-        $nombre = $objModelProductosModel->getData()['nombre'];
+        $objProductosModel = $this->getInstanciaModel();
+        $objProductosModel->setData($data);
+        $nombre = $objProductosModel->getData()['nombre'];
 
-        if ($objModelProductosModel->ejecutarVerificacionProducto($nombre)) {
+        if ($objProductosModel->ejecutarVerificacionProducto($nombre)) {
             return [
                 'status' => false,
                 'message' => 'Ya existe un producto con ese nombre.',
@@ -698,75 +698,75 @@ class ProductosModel
             ];
         }
 
-        return $objModelProductosModel->ejecutarInsercionProducto($objModelProductosModel->getData());
+        return $objProductosModel->ejecutarInsercionProducto($objProductosModel->getData());
     }
 
     public function updateProducto(int $idproducto, array $data)
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        $objModelProductosModel->setData($data);
-        $objModelProductosModel->setProductoId($idproducto);
-        $nombre = $objModelProductosModel->getData()['nombre'];
+        $objProductosModel = $this->getInstanciaModel();
+        $objProductosModel->setData($data);
+        $objProductosModel->setProductoId($idproducto);
+        $nombre = $objProductosModel->getData()['nombre'];
 
-        if ($objModelProductosModel->ejecutarVerificacionProducto($nombre, $objModelProductosModel->getProductoId())) {
+        if ($objProductosModel->ejecutarVerificacionProducto($nombre, $objProductosModel->getProductoId())) {
             return [
                 'status' => false,
                 'message' => 'Ya existe otro producto con ese nombre.'
             ];
         }
 
-        return $objModelProductosModel->ejecutarActualizacionProducto($objModelProductosModel->getProductoId(), $objModelProductosModel->getData());
+        return $objProductosModel->ejecutarActualizacionProducto($objProductosModel->getProductoId(), $objProductosModel->getData());
     }
 
     public function selectProductoById(int $idproducto)
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        $objModelProductosModel->setProductoId($idproducto);
-        return $objModelProductosModel->ejecutarBusquedaProductoPorId($objModelProductosModel->getProductoId());
+        $objProductosModel = $this->getInstanciaModel();
+        $objProductosModel->setProductoId($idproducto);
+        return $objProductosModel->ejecutarBusquedaProductoPorId($objProductosModel->getProductoId());
     }
 
     public function deleteProductoById(int $idproducto)
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        $objModelProductosModel->setProductoId($idproducto);
-        return $objModelProductosModel->ejecutarEliminacionProducto($objModelProductosModel->getProductoId());
+        $objProductosModel = $this->getInstanciaModel();
+        $objProductosModel->setProductoId($idproducto);
+        return $objProductosModel->ejecutarEliminacionProducto($objProductosModel->getProductoId());
     }
 
     public function selectAllProductos()
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        return $objModelProductosModel->ejecutarBusquedaTodosProductos();
+        $objProductosModel = $this->getInstanciaModel();
+        return $objProductosModel->ejecutarBusquedaTodosProductos();
     }
 
     public function selectProductosActivos()
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        return $objModelProductosModel->ejecutarBusquedaProductosActivos();
+        $objProductosModel = $this->getInstanciaModel();
+        return $objProductosModel->ejecutarBusquedaProductosActivos();
     }
 
     public function selectCategoriasActivas()
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        return $objModelProductosModel->ejecutarBusquedaCategoriasActivas();
+        $objProductosModel = $this->getInstanciaModel();
+        return $objProductosModel->ejecutarBusquedaCategoriasActivas();
     }
 
     public function activarProductoById(int $idproducto)
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        $objModelProductosModel->setProductoId($idproducto);
-        return $objModelProductosModel->ejecutarActivacionProducto($objModelProductosModel->getProductoId());
+        $objProductosModel = $this->getInstanciaModel();
+        $objProductosModel->setProductoId($idproducto);
+        return $objProductosModel->ejecutarActivacionProducto($objProductosModel->getProductoId());
     }
 
     public function buscarProductos(string $termino)
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        return $objModelProductosModel->ejecutarBusquedaProductos($termino);
+        $objProductosModel = $this->getInstanciaModel();
+        return $objProductosModel->ejecutarBusquedaProductos($termino);
     }
 
     public function verificarStockYNotificar(int $productoId)
     {
-        $objModelProductosModel = $this->getInstanciaModel();
-        return $objModelProductosModel->ejecutarVerificacionStockYNotificar($productoId);
+        $objProductosModel = $this->getInstanciaModel();
+        return $objProductosModel->ejecutarVerificacionStockYNotificar($productoId);
     }
 }
 ?>

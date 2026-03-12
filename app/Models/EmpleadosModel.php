@@ -8,7 +8,7 @@ use Exception;
 
 class EmpleadosModel
 {
-    private $objModelEmpleadosModel = null;
+    private $objEmpleadosModel = null;
     const SUPER_USUARIO_ROL_ID = 1;
 
     public function __construct()
@@ -17,10 +17,10 @@ class EmpleadosModel
 
     private function getInstanciaModel()
     {
-        if ($this->objModelEmpleadosModel == null) {
-            $this->objModelEmpleadosModel = new EmpleadosModel();
+        if ($this->objEmpleadosModel == null) {
+            $this->objEmpleadosModel = new EmpleadosModel();
         }
-        return $this->objModelEmpleadosModel;
+        return $this->objEmpleadosModel;
     }
 
     private function obtenerIdUsuarioSesion(): ?int
@@ -46,8 +46,8 @@ class EmpleadosModel
 
     public function selectAllEmpleados(int $idUsuarioSesion = 0)
     {
-        $objModelEmpleadosModel = $this->getInstanciaModel();
-        return $objModelEmpleadosModel->ejecutarSelectAllEmpleados($idUsuarioSesion);
+        $objEmpleadosModel = $this->getInstanciaModel();
+        return $objEmpleadosModel->ejecutarSelectAllEmpleados($idUsuarioSesion);
     }
 
     private function ejecutarSelectAllEmpleados(int $idUsuarioSesion = 0)
@@ -107,8 +107,8 @@ class EmpleadosModel
 
     public function insertEmpleado($data)
     {
-        $objModelEmpleadosModel = $this->getInstanciaModel();
-        return $objModelEmpleadosModel->ejecutarInsertEmpleado($data);
+        $objEmpleadosModel = $this->getInstanciaModel();
+        return $objEmpleadosModel->ejecutarInsertEmpleado($data);
     }
 
     private function ejecutarInsertEmpleado($data)
@@ -171,8 +171,8 @@ class EmpleadosModel
 
     public function deleteEmpleado($idempleado)
     {
-        $objModelEmpleadosModel = $this->getInstanciaModel();
-        return $objModelEmpleadosModel->ejecutarDeleteEmpleado($idempleado);
+        $objEmpleadosModel = $this->getInstanciaModel();
+        return $objEmpleadosModel->ejecutarDeleteEmpleado($idempleado);
     }
 
     private function ejecutarDeleteEmpleado($idempleado)
@@ -200,8 +200,8 @@ class EmpleadosModel
 
     public function updateEmpleado($data)
     {
-        $objModelEmpleadosModel = $this->getInstanciaModel();
-        return $objModelEmpleadosModel->ejecutarUpdateEmpleado($data);
+        $objEmpleadosModel = $this->getInstanciaModel();
+        return $objEmpleadosModel->ejecutarUpdateEmpleado($data);
     }
 
     private function ejecutarUpdateEmpleado($data)
@@ -265,8 +265,8 @@ class EmpleadosModel
 
     public function getEmpleadoById($idempleado)
     {
-        $objModelEmpleadosModel = $this->getInstanciaModel();
-        return $objModelEmpleadosModel->ejecutarGetEmpleadoById($idempleado);
+        $objEmpleadosModel = $this->getInstanciaModel();
+        return $objEmpleadosModel->ejecutarGetEmpleadoById($idempleado);
     }
 
     private function ejecutarGetEmpleadoById($idempleado)
@@ -311,8 +311,8 @@ class EmpleadosModel
 
     public function verificarEsSuperUsuario(int $idusuario)
     {
-        $objModelEmpleadosModel = $this->getInstanciaModel();
-        return $objModelEmpleadosModel->esSuperUsuario($idusuario);
+        $objEmpleadosModel = $this->getInstanciaModel();
+        return $objEmpleadosModel->esSuperUsuario($idusuario);
     }
 
     private function esSuperUsuario(int $idusuario)
@@ -356,8 +356,8 @@ class EmpleadosModel
 
     public function reactivarEmpleado(int $idempleado)
     {
-        $objModelEmpleadosModel = $this->getInstanciaModel();
-        return $objModelEmpleadosModel->ejecutarReactivarEmpleado($idempleado);
+        $objEmpleadosModel = $this->getInstanciaModel();
+        return $objEmpleadosModel->ejecutarReactivarEmpleado($idempleado);
     }
 
     private function ejecutarReactivarEmpleado(int $idempleado)

@@ -19,7 +19,7 @@ class RolesintegradoModel
     private $idpermiso;
     private $asignaciones;
 
-    private $objModelRolesintegradoModel = null;
+    private $objRolesintegradoModel = null;
 
     public function __construct()
     {
@@ -31,10 +31,10 @@ class RolesintegradoModel
      */
     private function getInstanciaModel(): RolesintegradoModel
     {
-        if ($this->objModelRolesintegradoModel == null) {
-            $this->objModelRolesintegradoModel = new RolesintegradoModel();
+        if ($this->objRolesintegradoModel == null) {
+            $this->objRolesintegradoModel = new RolesintegradoModel();
         }
-        return $this->objModelRolesintegradoModel;
+        return $this->objRolesintegradoModel;
     }
 
     // GETTERS Y SETTERS DE CONTROL

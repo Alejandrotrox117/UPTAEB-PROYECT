@@ -9,7 +9,7 @@ use Exception;
 
 class PagosModel
 {
-    private $objModelPagosModel;
+    private $objPagosModel;
     private $query;
     private $array;
     private $data;
@@ -24,10 +24,10 @@ class PagosModel
 
     private function getInstanciaModel()
     {
-        if ($this->objModelPagosModel == null) {
-            $this->objModelPagosModel = new PagosModel();
+        if ($this->objPagosModel == null) {
+            $this->objPagosModel = new PagosModel();
         }
-        return $this->objModelPagosModel;
+        return $this->objPagosModel;
     }
 
     // Getters y Setters
@@ -1017,24 +1017,24 @@ class PagosModel
     // Métodos públicos que usan las funciones privadas
     public function insertPago(array $data)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        $objModelPagosModel->setData($data);
-        return $objModelPagosModel->ejecutarInsercionPago($objModelPagosModel->getData());
+        $objPagosModel = $this->getInstanciaModel();
+        $objPagosModel->setData($data);
+        return $objPagosModel->ejecutarInsercionPago($objPagosModel->getData());
     }
 
     public function updatePago(int $idpago, array $data)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        $objModelPagosModel->setData($data);
-        $objModelPagosModel->setPagoId($idpago);
-        return $objModelPagosModel->ejecutarActualizacionPago($objModelPagosModel->getPagoId(), $objModelPagosModel->getData());
+        $objPagosModel = $this->getInstanciaModel();
+        $objPagosModel->setData($data);
+        $objPagosModel->setPagoId($idpago);
+        return $objPagosModel->ejecutarActualizacionPago($objPagosModel->getPagoId(), $objPagosModel->getData());
     }
 
     public function selectPagoById(int $idpago)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        $objModelPagosModel->setPagoId($idpago);
-        $result = $objModelPagosModel->ejecutarBusquedaPagoPorId($objModelPagosModel->getPagoId());
+        $objPagosModel = $this->getInstanciaModel();
+        $objPagosModel->setPagoId($idpago);
+        $result = $objPagosModel->ejecutarBusquedaPagoPorId($objPagosModel->getPagoId());
 
         if (!empty($result)) {
             return [
@@ -1051,9 +1051,9 @@ class PagosModel
 
     public function deletePagoById(int $idpago)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        $objModelPagosModel->setPagoId($idpago);
-        $result = $objModelPagosModel->ejecutarEliminacionPago($objModelPagosModel->getPagoId());
+        $objPagosModel = $this->getInstanciaModel();
+        $objPagosModel->setPagoId($idpago);
+        $result = $objPagosModel->ejecutarEliminacionPago($objPagosModel->getPagoId());
 
         if ($result) {
             return [
@@ -1070,14 +1070,14 @@ class PagosModel
 
     public function selectAllPagos()
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarBusquedaTodosPagos();
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarBusquedaTodosPagos();
     }
 
     public function selectTiposPago()
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarBusquedaTiposPago();
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarBusquedaTiposPago();
     }
 
     private function ejecutarVerificacionTipoPagoExiste(int $idtipo_pago)
@@ -1105,38 +1105,38 @@ class PagosModel
 
     public function verificarTipoPagoExiste(int $idtipo_pago)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarVerificacionTipoPagoExiste($idtipo_pago);
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarVerificacionTipoPagoExiste($idtipo_pago);
     }
 
     public function selectComprasPendientes()
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarBusquedaComprasPendientes();
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarBusquedaComprasPendientes();
     }
 
     public function selectVentasPendientes()
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarBusquedaVentasPendientes();
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarBusquedaVentasPendientes();
     }
 
     public function selectSueldosPendientes()
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarBusquedaSueldosPendientes();
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarBusquedaSueldosPendientes();
     }
 
     public function getInfoCompra(int $idcompra)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarBusquedaInfoCompra($idcompra);
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarBusquedaInfoCompra($idcompra);
     }
 
     public function getInfoVenta(int $idventa)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarBusquedaInfoVenta($idventa);
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarBusquedaInfoVenta($idventa);
     }
 
     private function ejecutarBusquedaInfoSueldo(int $idsueldotemp)
@@ -1186,29 +1186,29 @@ class PagosModel
 
     public function getInfoSueldo(int $idsueldotemp)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarBusquedaInfoSueldo($idsueldotemp);
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarBusquedaInfoSueldo($idsueldotemp);
     }
 
     public function conciliarPago(int $idpago)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        $objModelPagosModel->setPagoId($idpago);
+        $objPagosModel = $this->getInstanciaModel();
+        $objPagosModel->setPagoId($idpago);
 
         try {
-            $result = $objModelPagosModel->ejecutarConciliacionPago($objModelPagosModel->getPagoId());
+            $result = $objPagosModel->ejecutarConciliacionPago($objPagosModel->getPagoId());
 
             return [
                 'status' => true,
                 'message' => 'Pago conciliado exitosamente',
-                'idpago' => $objModelPagosModel->getPagoId()
+                'idpago' => $objPagosModel->getPagoId()
             ];
 
         } catch (Exception $e) {
             return [
                 'status' => false,
                 'message' => $e->getMessage(),
-                'idpago' => $objModelPagosModel->getPagoId()
+                'idpago' => $objPagosModel->getPagoId()
             ];
         }
     }
@@ -1218,8 +1218,8 @@ class PagosModel
      */
     public function obtenerResumenPagosVenta($idventa)
     {
-        $objModelPagosModel = $this->getInstanciaModel();
-        return $objModelPagosModel->ejecutarObtenerResumenPagosVenta($idventa);
+        $objPagosModel = $this->getInstanciaModel();
+        return $objPagosModel->ejecutarObtenerResumenPagosVenta($idventa);
     }
 
     private function ejecutarObtenerResumenPagosVenta($idventa)

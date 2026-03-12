@@ -26,7 +26,21 @@ class VentasModel
     private $estatus;
     const SUPER_USUARIO_ROL_ID = 1;
 
+    // Propiedad para la instancia interna (patrón de doble instancia)
+    private $objVentasModel = null;
+
     public function __construct() {}
+
+    /**
+     * Obtiene la instancia interna del modelo (Lazy Load - Patrón de doble instancia)
+     */
+    private function getInstanciaModel(): VentasModel
+    {
+        if ($this->objVentasModel == null) {
+            $this->objVentasModel = new VentasModel();
+        }
+        return $this->objVentasModel;
+    }
 
     // Getters y Setters
     public function getQuery()
@@ -202,7 +216,7 @@ class VentasModel
         return $result;
     }
 
-    public function ejecutarBusquedaTodasVentas(int $idUsuarioSesion = 0)
+    private function ejecutarBusquedaTodasVentas(int $idUsuarioSesion = 0)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -245,7 +259,7 @@ class VentasModel
         }
     }
 
-    public function ejecutarInsercionVenta(array $data, array $detalles, array $datosClienteNuevo = null)
+    private function ejecutarInsercionVenta(array $data, array $detalles, ?array $datosClienteNuevo = null)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -360,7 +374,7 @@ class VentasModel
     }
 
 
-    public function ejecutarBusquedaVentaPorId(int $idventa)
+    private function ejecutarBusquedaVentaPorId(int $idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -397,7 +411,7 @@ class VentasModel
         return $this->getResult();
     }
 
-    public function ejecutarBusquedaDetalleVenta(int $idventa)
+    private function ejecutarBusquedaDetalleVenta(int $idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -428,7 +442,7 @@ class VentasModel
         return $this->getResult();
     }
 
-    public function ejecutarEliminacionVenta(int $idventa)
+    private function ejecutarEliminacionVenta(int $idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -482,7 +496,7 @@ class VentasModel
         return $resultado;
     }
 
-    public function ejecutarBusquedaClientes(string $criterio)
+    private function ejecutarBusquedaClientes(string $criterio)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -514,7 +528,7 @@ class VentasModel
         return $this->getResult();
     }
 
-    public function ejecutarBusquedaProductosParaFormulario()
+    private function ejecutarBusquedaProductosParaFormulario()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -560,7 +574,7 @@ class VentasModel
         return $this->getResult();
     }
 
-    public function ejecutarBusquedaMonedasActivas()
+    private function ejecutarBusquedaMonedasActivas()
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1006,24 +1020,27 @@ class VentasModel
 
     public function getVentasDatatable(int $idUsuarioSesion = 0)
     {
-        return $this->ejecutarBusquedaTodasVentas($idUsuarioSesion);
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarBusquedaTodasVentas($idUsuarioSesion);
     }
 
 
-    public function insertVenta(array $data, array $detalles, array $datosClienteNuevo = null)
+    public function insertVenta(array $data, array $detalles, ?array $datosClienteNuevo = null)
     {
-        $this->setData($data);
-        return $this->ejecutarInsercionVenta($this->getData(), $detalles, $datosClienteNuevo);
+        $objVentasModel = $this->getInstanciaModel();
+        $objVentasModel->setData($data);
+        return $objVentasModel->ejecutarInsercionVenta($objVentasModel->getData(), $detalles, $datosClienteNuevo);
     }
 
     public function updateVenta(int $idventa, array $data)
     {
-        $this->setVentaId($idventa);
-        $this->setData($data);
-        return $this->ejecutarActualizacionVenta($this->getVentaId(), $this->getData());
+        $objVentasModel = $this->getInstanciaModel();
+        $objVentasModel->setVentaId($idventa);
+        $objVentasModel->setData($data);
+        return $objVentasModel->ejecutarActualizacionVenta($objVentasModel->getVentaId(), $objVentasModel->getData());
     }
 
-    public function ejecutarActualizacionVenta(int $idventa, array $data)
+    private function ejecutarActualizacionVenta(int $idventa, array $data)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1157,14 +1174,16 @@ class VentasModel
 
     public function obtenerVentaPorId(int $idventa)
     {
-        $this->setVentaId($idventa);
-        return $this->ejecutarBusquedaVentaPorId($this->getVentaId());
+        $objVentasModel = $this->getInstanciaModel();
+        $objVentasModel->setVentaId($idventa);
+        return $objVentasModel->ejecutarBusquedaVentaPorId($objVentasModel->getVentaId());
     }
 
     public function obtenerDetalleVenta(int $idventa)
     {
-        $this->setVentaId($idventa);
-        return $this->ejecutarBusquedaDetalleVenta($this->getVentaId());
+        $objVentasModel = $this->getInstanciaModel();
+        $objVentasModel->setVentaId($idventa);
+        return $objVentasModel->ejecutarBusquedaDetalleVenta($objVentasModel->getVentaId());
     }
 
     /**
@@ -1172,10 +1191,11 @@ class VentasModel
      */
     public function obtenerDetalleVentaCompleto($idventa)
     {
-        return $this->ejecutarObtenerDetalleVentaCompleto($idventa);
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarObtenerDetalleVentaCompleto($idventa);
     }
 
-    public function ejecutarObtenerDetalleVentaCompleto($idventa)
+    private function ejecutarObtenerDetalleVentaCompleto($idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1217,8 +1237,9 @@ class VentasModel
 
     public function eliminarVenta(int $idventa)
     {
-        $this->setVentaId($idventa);
-        $resultado = $this->ejecutarEliminacionVenta($this->getVentaId());
+        $objVentasModel = $this->getInstanciaModel();
+        $objVentasModel->setVentaId($idventa);
+        $resultado = $objVentasModel->ejecutarEliminacionVenta($objVentasModel->getVentaId());
 
         if ($resultado) {
             return ['success' => true, 'message' => 'Venta desactivada exitosamente'];
@@ -1286,27 +1307,32 @@ class VentasModel
 
     public function buscarClientes(string $criterio)
     {
-        return $this->ejecutarBusquedaClientes($criterio);
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarBusquedaClientes($criterio);
     }
 
     public function getListaProductosParaFormulario()
     {
-        return $this->ejecutarBusquedaProductosParaFormulario();
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarBusquedaProductosParaFormulario();
     }
 
     public function getMonedasActivas()
     {
-        return $this->ejecutarBusquedaMonedasActivas();
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarBusquedaMonedasActivas();
     }
 
     public function obtenerProductos()
     {
-        return $this->ejecutarBusquedaProductosParaFormulario();
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarBusquedaProductosParaFormulario();
     }
 
     public function verificarEsSuperUsuario(int $idusuario)
     {
-        return $this->esSuperUsuario($idusuario);
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->esSuperUsuario($idusuario);
     }
 
     public function validarDatosCliente($datos)
@@ -1343,7 +1369,7 @@ class VentasModel
         return $this->ejecutarGetTasaPorCodigoYFecha($codigo, $fecha);
     }
 
-    public function ejecutarGetTasaPorCodigoYFecha($codigo, $fecha)
+    private function ejecutarGetTasaPorCodigoYFecha($codigo, $fecha)
     {
         try {
             $sql = "SELECT tasa_a_bs FROM historial_tasas_bcv WHERE codigo_moneda = ? AND DATE(fecha_publicacion_bcv) <= DATE(?) ORDER BY fecha_publicacion_bcv DESC LIMIT 1";
@@ -1360,7 +1386,7 @@ class VentasModel
         return $this->ejecutarObtenerEstadoVenta($idventa);
     }
 
-    public function ejecutarObtenerEstadoVenta($idventa)
+    private function ejecutarObtenerEstadoVenta($idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1383,10 +1409,11 @@ class VentasModel
 
     public function cambiarEstadoVenta(int $idventa, string $nuevoEstado)
     {
-        return $this->ejecutarCambioEstadoVenta($idventa, $nuevoEstado);
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarCambioEstadoVenta($idventa, $nuevoEstado);
     }
 
-    public function ejecutarCambioEstadoVenta(int $idventa, string $nuevoEstado)
+    private function ejecutarCambioEstadoVenta(int $idventa, string $nuevoEstado)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1487,15 +1514,17 @@ class VentasModel
      */
     public function obtenerTasaActualMoneda($codigoMoneda)
     {
-        return $this->ejecutarObtenerTasaActualMoneda($codigoMoneda);
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarObtenerTasaActualMoneda($codigoMoneda);
     }
 
     public function getVentaDetalle($idventa)
     {
-        return $this->ejecutarGetVentaDetalle($idventa);
+        $objVentasModel = $this->getInstanciaModel();
+        return $objVentasModel->ejecutarGetVentaDetalle($idventa);
     }
 
-    public function ejecutarGetVentaDetalle($idventa)
+    private function ejecutarGetVentaDetalle($idventa)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1542,7 +1571,7 @@ class VentasModel
         }
     }
 
-    public function ejecutarObtenerTasaActualMoneda($codigoMoneda)
+    private function ejecutarObtenerTasaActualMoneda($codigoMoneda)
     {
         $conexion = new Conexion();
         $conexion->connect();
@@ -1718,7 +1747,8 @@ class VentasModel
 
     public function obtenerPagosDeVenta(int $idventa): array
     {
-        $this->setVentaId($idventa);
-        return $this->ejecutarBusquedaPagosDeVenta($this->getVentaId());
+        $objVentasModel = $this->getInstanciaModel();
+        $objVentasModel->setVentaId($idventa);
+        return $objVentasModel->ejecutarBusquedaPagosDeVenta($objVentasModel->getVentaId());
     }
 }

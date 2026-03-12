@@ -31,8 +31,10 @@
 <!-- Sistema de Notificaciones WebSocket -->
 <script>console.log('DEBUG: Intentando cargar notificaciones_websocket.js desde:', '<?= base_url('app/assets/js/notificaciones_websocket.js'); ?>');</script>
 <script src="<?= base_url('app/assets/js/notificaciones_websocket.js'); ?>"></script>
-<!-- Herramienta Global de Ayuda (FAQ) -->
-<script src="<?= base_url('app/assets/js/global_help.js'); ?>"></script>
+<?php if (isset($_SESSION['usuario_id']) && $_SESSION['usuario_id'] > 0): ?>
+  <!-- Herramienta Global de Ayuda (FAQ) -->
+  <script src="<?= base_url('app/assets/js/global_help.js'); ?>"></script>
+<?php endif; ?>
 
 </div>
 </body>

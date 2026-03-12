@@ -1,13 +1,12 @@
 <?php
 namespace App\Models;
 
-use App\Core\Mysql;
 use App\Core\Conexion;
 use PDO;
 use PDOException;
 use Exception;
 
-class LoginModel extends Mysql
+class LoginModel
 {
     private $query;
     private $array;
@@ -20,10 +19,19 @@ class LoginModel extends Mysql
     private $personaId;
     private $message;
     private $status;
+    private $objLoginModel;
 
     public function __construct()
     {
-        parent::__construct();
+        // Constructor vacío
+    }
+
+    private function getInstanciaModel()
+    {
+        if ($this->objLoginModel == null) {
+            $this->objLoginModel = new LoginModel();
+        }
+        return $this->objLoginModel;
     }
 
     // Getters y Setters principales
@@ -367,62 +375,71 @@ class LoginModel extends Mysql
     // Métodos públicos que usan las funciones privadas
     public function login(string $email, string $password)
     {
-        $this->setEmailUser($email);
-        $this->setPass($password);
-        return $this->ejecutarAutenticacion($this->getEmailUser(), $this->getPass());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setEmailUser($email);
+        $objLoginModel->setPass($password);
+        return $objLoginModel->ejecutarAutenticacion($objLoginModel->getEmailUser(), $objLoginModel->getPass());
     }
 
     public function sessionLogin(int $id)
     {
-        $this->setIdUser($id);
-        return $this->ejecutarBusquedaSesion($this->getIdUser());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setIdUser($id);
+        return $objLoginModel->ejecutarBusquedaSesion($objLoginModel->getIdUser());
     }
 
 
 
     public function getUsuarioEmail(string $email)
     {
-        $this->setEmailUser($email);
-        return $this->ejecutarBusquedaPorEmail($this->getEmailUser());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setEmailUser($email);
+        return $objLoginModel->ejecutarBusquedaPorEmail($objLoginModel->getEmailUser());
     }
 
     public function setTokenUser(int $idUsuario, string $token)
     {
-        $this->setIdUser($idUsuario);
-        $this->setToken($token);
-        return $this->ejecutarActualizacionToken($this->getIdUser(), $this->getToken());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setIdUser($idUsuario);
+        $objLoginModel->setToken($token);
+        return $objLoginModel->ejecutarActualizacionToken($objLoginModel->getIdUser(), $objLoginModel->getToken());
     }
 
     public function getTokenUser(string $email, string $token)
     {
-        $this->setEmailUser($email);
-        $this->setToken($token);
-        return $this->ejecutarValidacionToken($this->getEmailUser(), $this->getToken());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setEmailUser($email);
+        $objLoginModel->setToken($token);
+        return $objLoginModel->ejecutarValidacionToken($objLoginModel->getEmailUser(), $objLoginModel->getToken());
     }
 
     public function getTokenUserByToken(string $token)
     {
-        $this->setToken($token);
-        return $this->ejecutarValidacionTokenOnly($this->getToken());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setToken($token);
+        return $objLoginModel->ejecutarValidacionTokenOnly($objLoginModel->getToken());
     }
 
     public function insertPassword(int $idUsuario, string $pass)
     {
-        $this->setIdUser($idUsuario);
-        $this->setPass($pass);
-        return $this->ejecutarActualizacionPassword($this->getIdUser(), $this->getPass());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setIdUser($idUsuario);
+        $objLoginModel->setPass($pass);
+        return $objLoginModel->ejecutarActualizacionPassword($objLoginModel->getIdUser(), $objLoginModel->getPass());
     }
 
     public function updatePassword($userId, $passwordHash)
     {
-        $this->setIdUser($userId);
-        $this->setPass($passwordHash);
-        return $this->ejecutarActualizacionPasswordRecuperacion($this->getIdUser(), $this->getPass());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setIdUser($userId);
+        $objLoginModel->setPass($passwordHash);
+        return $objLoginModel->ejecutarActualizacionPasswordRecuperacion($objLoginModel->getIdUser(), $objLoginModel->getPass());
     }
 
     public function deleteToken($token)
     {
-        $this->setToken($token);
-        return $this->ejecutarEliminacionToken($this->getToken());
+        $objLoginModel = $this->getInstanciaModel();
+        $objLoginModel->setToken($token);
+        return $objLoginModel->ejecutarEliminacionToken($objLoginModel->getToken());
     }
 }

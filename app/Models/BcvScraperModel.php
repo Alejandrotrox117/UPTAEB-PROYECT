@@ -10,7 +10,7 @@ class BcvScraperModel
     private $bcvUrl = 'https://www.bcv.org.ve/';
 
     // Funcion para obtener el HTML de la pagina del BCV
-    private function fetchBcvHtml()
+    protected function fetchBcvHtml()
     {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $this->bcvUrl);
@@ -42,6 +42,16 @@ class BcvScraperModel
 
     public function obtenerDatosTasaBcv(string $codigoMoneda): ?array
     {
+        $codigoMonedaLower = strtolower($codigoMoneda);
+        if ($codigoMonedaLower === 'usd') {
+            $monedaId = 'dolar';
+        } elseif ($codigoMonedaLower === 'eur') {
+            $monedaId = 'euro';
+        } else {
+            error_log("Actualizacion (BCV): Codigo de moneda no soportado: {$codigoMoneda}");
+            return null;
+        }
+
         $html = $this->fetchBcvHtml();
         if (!$html) {
             error_log("Actualizacion (BCV): No se pudo obtener el HTML para {$codigoMoneda}.");
@@ -52,8 +62,6 @@ class BcvScraperModel
         @$doc->loadHTML($html);
         $xpath = new DOMXPath($doc);
 
-        $monedaId = strtolower($codigoMoneda) === 'usd' ? 'dolar' : 'euro';
-
         // Extraer tasa
         $rateNode = $xpath->query("//div[@id='{$monedaId}']//strong")->item(0);
         $tasa = null;
@@ -61,7 +69,7 @@ class BcvScraperModel
             $tasaStr = trim($rateNode->nodeValue);
             $tasaStr = str_replace('.', '', $tasaStr);
             $tasaStr = str_replace(',', '.', $tasaStr);
-            $tasa = (float)$tasaStr;
+            $tasa = (float) $tasaStr;
         } else {
             error_log("Actualizacion (BCV): No se encontró el nodo de la tasa para {$monedaId}.");
             return null;
