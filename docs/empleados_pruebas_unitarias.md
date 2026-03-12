@@ -539,7 +539,7 @@ Configuration: C:\xampp\htdocs\project\phpunit.xml
 
 .......................                                           23 / 23 (100%)
 
-Time: 00:04.845, Memory: 10.00 MB
+Time: 00:03.860, Memory: 10.00 MB
 
 Empleado Delete Unit (Tests\UnitTest\Empleados\EmpleadoDeleteUnit)
  ✔ DeleteEmpleado ExecuteExitoso RetornaTrue with eliminar_id_1
