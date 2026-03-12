@@ -602,7 +602,7 @@ document.addEventListener("DOMContentLoaded", function () {
           if (detalleVentaBody.rows.length === 0 && noDetallesMsg) {
             noDetallesMsg.classList.remove("hidden");
           }
-        
+
           cargarProductosSelect();
         };
       });
@@ -1335,15 +1335,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let _modalPagosIdVenta = null;
 
+  // Cache de tipos de pago para no recargar en cada apertura
+  let _tiposPagoCargados = false;
+
+  async function cargarTiposPagoEnSelect() {
+    if (_tiposPagoCargados) return;
+    try {
+      const res = await fetch("pagos/getTiposPago");
+      const data = await res.json();
+      if (data.status && Array.isArray(data.data)) {
+        const sel = document.getElementById("pagoTipo");
+        if (!sel) return;
+        data.data.forEach(t => {
+          const opt = document.createElement("option");
+          opt.value = t.idtipo_pago;
+          opt.textContent = t.nombre;
+          sel.appendChild(opt);
+        });
+        _tiposPagoCargados = true;
+      }
+    } catch (_) { }
+  }
+
   async function abrirModalPagosVenta(idVenta) {
     _modalPagosIdVenta = idVenta;
     const modal = document.getElementById("modalPagosVenta");
     if (!modal) return;
     modal.classList.remove("opacity-0", "pointer-events-none", "transparent");
     modal.classList.add("opacity-100");
+
+    // Mostrar spinner en cuerpo, limpiar resumen y ocultar formulario
     document.getElementById("modalPagos_cuerpo").innerHTML =
       '<div class="flex justify-center items-center py-8"><i class="fas fa-spinner fa-spin mr-2 text-gray-400"></i><span class="text-gray-400">Cargando...</span></div>';
     document.getElementById("modalPagos_resumen").innerHTML = "";
+    document.getElementById("seccionNuevoPago").classList.add("hidden");
+
+    // Cargar tipos de pago en el select estático (solo una vez)
+    await cargarTiposPagoEnSelect();
+
     await cargarDatosModalPagos(idVenta);
   }
 
@@ -1356,46 +1385,143 @@ document.addEventListener("DOMContentLoaded", function () {
     _modalPagosIdVenta = null;
   }
 
+  function limpiarFormularioPago() {
+    const ids = ["pagoMonto", "pagoTipo", "pagoReferencia", "pagoObservaciones"];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = id === "pagoTipo" ? "" : "";
+    });
+    // Fecha: hoy
+    const fechaEl = document.getElementById("pagoFecha");
+    if (fechaEl) fechaEl.value = new Date().toISOString().slice(0, 10);
+
+    // Limpiar errores
+    ["pagoMonto_error", "pagoTipo_error", "pagoFecha_error", "pagoForm_error"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = ""; el.classList.add("hidden"); }
+    });
+    ["pagoMonto_wrapper"].forEach(id => {
+      document.getElementById(id)?.classList.remove("ring-2", "ring-red-400");
+    });
+  }
+
+  function mostrarErrorPago(fieldId, msg) {
+    const el = document.getElementById(fieldId + "_error");
+    if (el) { el.textContent = msg; el.classList.remove("hidden"); }
+    const wrapper = document.getElementById(fieldId + "_wrapper");
+    if (wrapper) wrapper.classList.add("ring-2", "ring-red-400");
+  }
+
+  function limpiarErrorPago(fieldId) {
+    const el = document.getElementById(fieldId + "_error");
+    if (el) { el.textContent = ""; el.classList.add("hidden"); }
+    const wrapper = document.getElementById(fieldId + "_wrapper");
+    if (wrapper) wrapper.classList.remove("ring-2", "ring-red-400");
+  }
+
+  function validarFormularioPago(balance) {
+    let valido = true;
+    limpiarErrorPago("pagoMonto");
+    limpiarErrorPago("pagoTipo");
+    limpiarErrorPago("pagoFecha");
+
+    const monto = parseFloat(document.getElementById("pagoMonto")?.value || 0);
+    const tipo = document.getElementById("pagoTipo")?.value;
+    const fecha = document.getElementById("pagoFecha")?.value;
+    const hoy = new Date().toISOString().slice(0, 10);
+
+    // Monto
+    if (!monto || monto <= 0) {
+      mostrarErrorPago("pagoMonto", "El monto debe ser mayor a 0.");
+      valido = false;
+    } else if (monto > balance + 0.001) {
+      mostrarErrorPago("pagoMonto", `El monto no puede superar el balance (${balance.toFixed(2)}).`);
+      valido = false;
+    }
+
+    // Tipo de pago
+    if (!tipo) {
+      mostrarErrorPago("pagoTipo", "Selecciona un método de pago.");
+      valido = false;
+    }
+
+    // Fecha
+    if (!fecha) {
+      mostrarErrorPago("pagoFecha", "La fecha es obligatoria.");
+      valido = false;
+    } else if (fecha > hoy) {
+      mostrarErrorPago("pagoFecha", "La fecha no puede ser futura.");
+      valido = false;
+    }
+
+    return valido;
+  }
+
   async function cargarDatosModalPagos(idVenta) {
     try {
-      const res  = await fetch(`ventas/getPagosVenta?idventa=${idVenta}`);
+      const res = await fetch(`ventas/getPagosVenta?idventa=${idVenta}`);
       const data = await res.json();
       if (!data.status) throw new Error(data.message || "Error al cargar datos");
 
-      const { venta, pagos, total_pagado } = data.data;
-      const moneda   = venta.codigo_moneda || "";
-      const total    = parseFloat(venta.total_general || 0);
-      const balance  = parseFloat(venta.balance || 0);
-      const pagado   = total - balance;
-      const pct      = total > 0 ? Math.min(99, Math.floor((pagado / total) * 100)) : 0;
-      const esPagada = venta.estatus.toUpperCase() === "PAGADA";
+      const { venta, pagos } = data.data;
+      const moneda = venta.codigo_moneda || "";
+      const total = parseFloat(venta.total_general || 0);
+      const balance = parseFloat(venta.balance || 0);
+
+      // Calcular conciliado y por conciliar desde el array de pagos
+      const totalConciliado = Array.isArray(pagos)
+        ? pagos.filter(p => p.estatus === 'conciliado').reduce((s, p) => s + parseFloat(p.monto || 0), 0)
+        : 0;
+      const totalPorConciliar = Array.isArray(pagos)
+        ? pagos.filter(p => p.estatus === 'activo').reduce((s, p) => s + parseFloat(p.monto || 0), 0)
+        : 0;
+
+      const pct = total > 0 ? Math.min(100, Math.floor((totalConciliado / total) * 100)) : 0;
+      const esFinalizada = venta.estatus.toUpperCase() === "FINALIZADA";
 
       // Título
       document.getElementById("modalPagos_titulo").textContent = `Pagos — ${venta.nro_venta}`;
       document.getElementById("modalPagos_subtitulo").textContent = venta.cliente_nombre || "";
 
-      // Resumen
-      const colorPct  = balance <= 0 ? "bg-green-500" : pct >= 75 ? "bg-yellow-400" : pct >= 40 ? "bg-orange-400" : "bg-red-500";
-      const colorBal  = balance <= 0 ? "text-green-600" : "text-red-600";
+      // Colores
+      const colorPct = balance <= 0 ? "bg-green-500" : pct >= 75 ? "bg-yellow-400" : pct >= 40 ? "bg-orange-400" : "bg-red-500";
+      const colorBal = balance <= 0 ? "text-green-600" : "text-red-600";
+
+      // Banner si hay por conciliar
+      const bannerConciliar = totalPorConciliar > 0 ? `
+        <div class="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-3 text-xs text-yellow-800">
+          <i class="fas fa-clock mt-0.5 text-yellow-500 flex-shrink-0"></i>
+          <span>
+            <strong>Por conciliar: ${totalPorConciliar.toFixed(2)} ${moneda}</strong> —
+            Hay pagos registrados pendientes de confirmación. Solo los pagos conciliados reducen el balance.
+          </span>
+        </div>
+      ` : '';
+
       document.getElementById("modalPagos_resumen").innerHTML = `
-        <div class="grid grid-cols-3 gap-4 mb-3 text-center">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3 text-center">
           <div class="bg-gray-50 rounded-lg p-2">
             <p class="text-xs text-gray-500 mb-0.5">Total</p>
-            <p class="font-bold text-gray-800">${total.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
+            <p class="font-bold text-gray-800 text-sm">${total.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
           </div>
           <div class="bg-green-50 rounded-lg p-2">
-            <p class="text-xs text-gray-500 mb-0.5">Pagado</p>
-            <p class="font-bold text-green-700">${pagado.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
+            <p class="text-xs text-gray-500 mb-0.5">Conciliado</p>
+            <p class="font-bold text-green-700 text-sm">${totalConciliado.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
+          </div>
+          <div class="${totalPorConciliar > 0 ? 'bg-yellow-50' : 'bg-gray-50'} rounded-lg p-2">
+            <p class="text-xs text-gray-500 mb-0.5">Por conciliar</p>
+            <p class="font-bold ${totalPorConciliar > 0 ? 'text-yellow-600' : 'text-gray-400'} text-sm">${totalPorConciliar.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
           </div>
           <div class="${balance <= 0 ? 'bg-green-50' : 'bg-red-50'} rounded-lg p-2">
-            <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
-            <p class="font-bold ${colorBal}">${balance <= 0 ? '0.00' : balance.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
+            <p class="text-xs text-gray-500 mb-0.5">Balance</p>
+            <p class="font-bold ${colorBal} text-sm">${balance <= 0 ? '0.00' : balance.toFixed(2)} <span class="text-xs font-normal text-gray-400">${moneda}</span></p>
           </div>
         </div>
-        <div class="w-full h-2 bg-gray-200 rounded-full">
-          <div class="h-2 rounded-full ${colorPct} transition-all" style="width:${balance <= 0 ? 100 : pct}%"></div>
+        <div class="w-full h-2 bg-gray-200 rounded-full mb-1">
+          <div class="h-2 rounded-full transition-all ${colorPct}" style="width:${balance <= 0 ? 100 : pct}%"></div>
         </div>
-        <p class="text-right text-xs text-gray-400 mt-1">${balance <= 0 ? '✅ Completamente pagado' : pct + '% pagado'}</p>
+        <p class="text-right text-xs text-gray-400 mb-3">${balance <= 0 ? 'Completamente pagado' : pct + '% conciliado'}</p>
+        ${bannerConciliar}
       `;
 
       // Historial de pagos
@@ -1404,9 +1530,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return `<span class="px-1.5 py-0.5 text-xs rounded-full font-medium ${map[est] || 'bg-gray-100 text-gray-500'}">${est}</span>`;
       };
 
-      let historialHtml = `
-        <h4 class="font-semibold text-gray-700 text-sm mb-2"><i class="fas fa-history mr-1 text-gray-400"></i>Historial de pagos</h4>
-      `;
+      let historialHtml = `<h4 class="font-semibold text-gray-700 text-sm mb-2"><i class="fas fa-history mr-1 text-gray-400"></i>Historial de pagos</h4>`;
       if (!pagos || pagos.length === 0) {
         historialHtml += `<p class="text-sm text-gray-400 italic mb-4">Sin pagos registrados aún.</p>`;
       } else {
@@ -1430,110 +1554,104 @@ document.addEventListener("DOMContentLoaded", function () {
         historialHtml += `</tbody></table>`;
       }
 
-      // Formulario de nuevo pago (solo si está en POR_PAGAR)
-      let formularioHtml = "";
-      if (!esPagada && balance > 0.01) {
-        formularioHtml = await construirFormularioPago(idVenta, balance, moneda);
-      }
+      document.getElementById("modalPagos_cuerpo").innerHTML = historialHtml;
 
-      document.getElementById("modalPagos_cuerpo").innerHTML = historialHtml + formularioHtml;
+      // Mostrar / preparar formulario estático
+      const seccion = document.getElementById("seccionNuevoPago");
+      if (!esFinalizada && balance > 0.01) {
+        limpiarFormularioPago();
+        // Configurar hint y máximo del monto
+        const monedaEl = document.getElementById("pagoMonto_moneda");
+        if (monedaEl) monedaEl.textContent = moneda;
+        const hintEl = document.getElementById("pagoMonto_hint");
+        if (hintEl) hintEl.textContent = `(Máx: ${balance.toFixed(2)} ${moneda})`;
+        const montoInput = document.getElementById("pagoMonto");
+        if (montoInput) {
+          montoInput.max = balance.toFixed(2);
+          montoInput.placeholder = balance.toFixed(2);
+        }
+        seccion.classList.remove("hidden");
 
-      // Listener del formulario
-      const form = document.getElementById("formNuevoPagoVenta");
-      if (form) {
-        form.addEventListener("submit", async (e) => {
+        // Registrar submit solo una vez usando referencia guardada
+        const form = document.getElementById("formNuevoPagoVenta");
+        const nuevoHandler = async (e) => {
           e.preventDefault();
-          await enviarPagoVenta(idVenta, form);
-        });
+          await enviarPagoVenta(idVenta, balance);
+        };
+        // Clonar para eliminar listeners anteriores sin acumulación
+        const formNuevo = form.cloneNode(true);
+        form.parentNode.replaceChild(formNuevo, form);
+        formNuevo.addEventListener("submit", nuevoHandler);
+
+        // Validaciones instantáneas (al escribir / al cambiar)
+        const montoEl = formNuevo.querySelector("#pagoMonto");
+        if (montoEl) {
+          montoEl.addEventListener("input", () => {
+            const v = parseFloat(montoEl.value || 0);
+            if (!v || v <= 0) {
+              mostrarErrorPago("pagoMonto", "El monto debe ser mayor a 0.");
+            } else if (v > balance + 0.001) {
+              mostrarErrorPago("pagoMonto", `El monto no puede superar el balance (${balance.toFixed(2)}).`);
+            } else {
+              limpiarErrorPago("pagoMonto");
+            }
+          });
+        }
+
+        const tipoEl = formNuevo.querySelector("#pagoTipo");
+        if (tipoEl) {
+          tipoEl.addEventListener("change", () => {
+            if (!tipoEl.value) {
+              mostrarErrorPago("pagoTipo", "Selecciona un método de pago.");
+            } else {
+              limpiarErrorPago("pagoTipo");
+            }
+          });
+        }
+
+        const fechaEl = formNuevo.querySelector("#pagoFecha");
+        if (fechaEl) {
+          fechaEl.addEventListener("change", () => {
+            const hoy = new Date().toISOString().slice(0, 10);
+            if (!fechaEl.value) {
+              mostrarErrorPago("pagoFecha", "La fecha es obligatoria.");
+            } else if (fechaEl.value > hoy) {
+              mostrarErrorPago("pagoFecha", "La fecha no puede ser futura.");
+            } else {
+              limpiarErrorPago("pagoFecha");
+            }
+          });
+        }
+      } else {
+        seccion.classList.add("hidden");
       }
+
     } catch (err) {
       document.getElementById("modalPagos_cuerpo").innerHTML =
         `<div class="text-red-500 text-center py-6"><i class="fas fa-exclamation-circle mr-1"></i>${err.message}</div>`;
     }
   }
 
-  async function construirFormularioPago(idVenta, balance, moneda) {
-    // Obtener tipos de pago
-    let opcionesTipo = '<option value="">Seleccionar...</option>';
-    try {
-      const resTipos = await fetch("pagos/getTiposPago");
-      const dataTipos = await resTipos.json();
-      if (dataTipos.status && Array.isArray(dataTipos.data)) {
-        dataTipos.data.forEach(t => {
-          opcionesTipo += `<option value="${t.idtipo_pago}">${t.nombre}</option>`;
-        });
-      }
-    } catch (_) {}
+  async function enviarPagoVenta(idVenta, balance) {
+    if (!validarFormularioPago(balance)) return;
 
-    return `
-      <div class="border-t border-gray-200 pt-4 mt-2">
-        <h4 class="font-semibold text-gray-700 text-sm mb-3">
-          <i class="fas fa-plus-circle mr-1 text-green-500"></i>Registrar nuevo pago
-        </h4>
-        <form id="formNuevoPagoVenta" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Monto <span class="text-red-400">*</span></label>
-            <div class="flex items-center border rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-green-400">
-              <input type="number" id="pagoMonto" name="monto" step="0.01" min="0.01"
-                max="${balance.toFixed(2)}"
-                class="flex-1 px-3 py-2 text-sm outline-none" placeholder="0.00" required />
-              <span class="px-2 text-xs text-gray-400 bg-gray-50 border-l">${moneda}</span>
-            </div>
-            <p class="text-xs text-gray-400 mt-0.5">Máx: ${balance.toFixed(2)} ${moneda}</p>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Método de pago <span class="text-red-400">*</span></label>
-            <select id="pagoTipo" name="idtipo_pago" class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" required>
-              ${opcionesTipo}
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Fecha <span class="text-red-400">*</span></label>
-            <input type="date" id="pagoFecha" name="fecha_pago"
-              value="${new Date().toISOString().slice(0,10)}"
-              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" required />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">Referencia</label>
-            <input type="text" id="pagoReferencia" name="referencia"
-              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Nro. de transferencia, cheque..." />
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-xs font-medium text-gray-600 mb-1">Observaciones</label>
-            <input type="text" id="pagoObservaciones" name="observaciones"
-              class="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Opcional..." />
-          </div>
-          <div class="sm:col-span-2 flex justify-end">
-            <button type="submit" id="btnSubmitPago"
-              class="flex items-center gap-2 px-5 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition disabled:opacity-60">
-              <i class="fas fa-check"></i> Registrar Pago
-            </button>
-          </div>
-        </form>
-      </div>
-    `;
-  }
-
-  async function enviarPagoVenta(idVenta, form) {
     const btn = document.getElementById("btnSubmitPago");
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
 
     try {
       const payload = {
-        idventa:       idVenta,
-        idtipo_pago:   parseInt(form.idtipo_pago.value),
-        monto:         parseFloat(form.monto.value),
-        fecha_pago:    form.fecha_pago.value,
-        referencia:    form.referencia.value,
-        observaciones: form.observaciones.value,
+        idventa: idVenta,
+        idtipo_pago: parseInt(document.getElementById("pagoTipo")?.value),
+        monto: parseFloat(document.getElementById("pagoMonto")?.value),
+        fecha_pago: document.getElementById("pagoFecha")?.value,
+        referencia: document.getElementById("pagoReferencia")?.value?.trim() || null,
+        observaciones: document.getElementById("pagoObservaciones")?.value?.trim() || null,
       };
 
-      const res  = await fetch("ventas/registrarPago", {
-        method:  "POST",
+      const res = await fetch("ventas/registrarPago", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(payload),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
 
@@ -1542,23 +1660,24 @@ document.addEventListener("DOMContentLoaded", function () {
       if (data.auto_pagada) {
         await Swal.fire({
           icon: "success",
-          title: "¡Venta Pagada!",
-          text: "El pago completó el saldo. La venta fue marcada como PAGADA automáticamente.",
+          title: "¡Venta Finalizada!",
+          text: "El pago completó el saldo. La venta fue marcada como FINALIZADA automáticamente.",
           confirmButtonText: "Aceptar",
           confirmButtonColor: "#16a34a",
         });
         cerrarModalPagosVenta();
         recargarTablaVentas();
       } else {
-        // Recargar el modal con los datos actualizados
-        await cargarDatosModalPagos(idVenta);
-        Swal.fire({ toast: true, position: "top-end", icon: "success",
-          title: "Pago registrado", showConfirmButton: false, timer: 2500 });
         recargarTablaVentas();
+        await cargarDatosModalPagos(idVenta);
+        Swal.fire({
+          toast: true, position: "top-end", icon: "success",
+          title: "Pago registrado correctamente", showConfirmButton: false, timer: 2500
+        });
       }
     } catch (err) {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Registrar Pago'; }
-      Swal.fire({ icon: "error", title: "Error", text: err.message });
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save mr-2"></i> Guardar Pago'; }
+      Swal.fire({ icon: "error", title: "Error al registrar", text: err.message, confirmButtonColor: "#dc2626" });
     }
   }
 
@@ -1581,7 +1700,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function cambiarEstadoVenta(idVenta, nuevoEstado) {
     const mensajesEstado = {
       POR_PAGAR: "marcar para pago",
-      PAGADA: "marcar como pagada",
+      FINALIZADA: "marcar como finalizada",
       BORRADOR: "devolver a borrador",
     };
 
@@ -1589,7 +1708,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Mensaje especial para marcar como pagada
     let textoConfirmacion = `¿Deseas ${mensaje} esta venta?`;
-    if (nuevoEstado === "PAGADA") {
+    if (nuevoEstado === "FINALIZADA") {
       textoConfirmacion = `¿Deseas marcar esta venta como pagada?\n\nNOTA: Esta acción solo será exitosa si existen pagos registrados y conciliados que cubran el total de la venta.`;
     }
 
@@ -1890,7 +2009,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Botón Nota de Despacho (disponible solo para ventas en estado PAGADA)
     if (window.PERMISOS_USUARIO && window.PERMISOS_USUARIO.puede_ver &&
-      estadoActual.toUpperCase() === "PAGADA") {
+      estadoActual.toUpperCase() === "FINALIZADA") {
       botones.push(`
         <button
           class="nota-despacho-btn text-purple-600 hover:text-purple-700 p-1 transition-colors duration-150"
@@ -1944,9 +2063,20 @@ document.addEventListener("DOMContentLoaded", function () {
               <i class="fas fa-credit-card fa-fw text-base"></i>
             </button>
           `);
+          // Revertir a borrador
+          botones.push(`
+            <button
+              class="cambiar-estado-venta-btn text-orange-500 hover:text-orange-700 p-1 transition-colors duration-150"
+              data-idventa="${idVenta}"
+              data-nuevo-estado="BORRADOR"
+              title="Revertir a Borrador"
+            >
+              <i class="fas fa-undo fa-fw text-base"></i>
+            </button>
+          `);
           break;
 
-        case "PAGADA":
+        case "FINALIZADA":
           // Ver pagos — solo lectura
           botones.push(`
             <button
@@ -2000,27 +2130,33 @@ document.addEventListener("DOMContentLoaded", function () {
         render: function (data, type, row) {
           const moneda = row.codigo_moneda || "";
           const balance = parseFloat(data || 0);
-          const total   = parseFloat(row.total_general || 0);
-          const estado  = (row.estatus || "").toUpperCase();
+          const total = parseFloat(row.total_general || 0);
+          const estado = (row.estatus || "").toUpperCase();
 
-          // Si está pagada o en borrador el balance no es relevante visualmente
-          if (estado === "PAGADA" || balance <= 0) {
+          // Solo mostrar "Pagado" si el estatus real es FINALIZADA
+          if (estado === "FINALIZADA") {
             return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                       <i class="fas fa-check-circle mr-1"></i>Pagado
                     </span>`;
           }
 
+          // Si el balance es 0 pero NO está finalizado, hay pagos por conciliar
+          if (balance <= 0.001) {
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      <i class="fas fa-clock mr-1"></i>Por conciliar
+                    </span>`;
+          }
+
           // Calcular porcentaje pagado para la barra de progreso
-          const pagado    = total - balance;
+          const pagado = total - balance;
           const porcentaje = total > 0 ? Math.min(99, Math.floor((pagado / total) * 100)) : 0;
 
-          let colorBarra  = "bg-red-500";
-          let colorTexto  = "text-red-700";
-          let colorFondo  = "bg-red-50";
+          let colorBarra = "bg-red-500";
+          let colorTexto = "text-red-700";
           if (porcentaje >= 75) {
-            colorBarra = "bg-yellow-400"; colorTexto = "text-yellow-700"; colorFondo = "bg-yellow-50";
+            colorBarra = "bg-yellow-400"; colorTexto = "text-yellow-700";
           } else if (porcentaje >= 40) {
-            colorBarra = "bg-orange-400"; colorTexto = "text-orange-700"; colorFondo = "bg-orange-50";
+            colorBarra = "bg-orange-400"; colorTexto = "text-orange-700";
           }
 
           return `<div class="min-w-[110px]">
@@ -2039,8 +2175,8 @@ document.addEventListener("DOMContentLoaded", function () {
         title: "Estatus",
         render: function (data, type, row) {
           const estadoUpper = data.toUpperCase();
-          if (estadoUpper === "ACTIVO" || estadoUpper === "PAGADA") {
-            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">${data}</span>`;
+          if (estadoUpper === "FINALIZADA") {
+            return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check-circle mr-1"></i>${data}</span>`;
           } else if (estadoUpper === "INACTIVO" || estadoUpper === "ANULADA") {
             return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">${data}</span>`;
           } else if (estadoUpper === "BORRADOR") {

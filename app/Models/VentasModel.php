@@ -1364,7 +1364,7 @@ class VentasModel
 
         try {
             $nuevoEstado = strtoupper(trim($nuevoEstado));
-            $estadosValidos = ['BORRADOR', 'POR_PAGAR', 'PAGADA', 'ANULADA'];
+            $estadosValidos = ['BORRADOR', 'POR_PAGAR', 'FINALIZADA', 'ANULADA'];
 
             if (!in_array($nuevoEstado, $estadosValidos)) {
                 error_log("VentasModel::ejecutarCambioEstadoVenta - Estado no válido: $nuevoEstado");
@@ -1398,8 +1398,8 @@ class VentasModel
                 ];
             }
 
-            // Validación especial para marcar como PAGADA
-            if ($nuevoEstado === 'PAGADA') {
+            // Validación especial para marcar como FINALIZADA
+            if ($nuevoEstado === 'FINALIZADA') {
                 $validacionPago = $this->validarPagosCompletosVenta($db, $idventa);
                 if (!$validacionPago['valido']) {
                     return [
@@ -1435,8 +1435,8 @@ class VentasModel
 
         $transicionesValidas = [
             'BORRADOR' => ['POR_PAGAR'],
-            'POR_PAGAR' => ['PAGADA', 'BORRADOR'],
-            'PAGADA' => [], // Una vez pagada, no se puede cambiar
+            'POR_PAGAR' => ['FINALIZADA', 'BORRADOR'],
+            'FINALIZADA' => [], // Una vez finalizada, no se puede cambiar
             'ANULADA' => [], // Una vez anulada, no se puede cambiar
             // Compatibilidad legacy
             'ACTIVO' => ['BORRADOR', 'POR_PAGAR'],
