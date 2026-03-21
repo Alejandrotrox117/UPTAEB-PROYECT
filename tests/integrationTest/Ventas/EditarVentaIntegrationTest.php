@@ -109,7 +109,7 @@ class EditarVentaIntegrationTest extends TestCase
         $conexion = new \App\Core\Conexion();
         $conexion->connect();
         $db = $conexion->get_conectGeneral();
-        $db->exec("UPDATE venta SET estatus = 'PROCESADO' WHERE idventa = $idVenta");
+        $db->exec("UPDATE venta SET estatus = 'FINALIZADA' WHERE idventa = $idVenta");
         $conexion->disconnect();
 
         $resultadoEdicion = $this->ventasModel->updateVenta($idVenta, []);
