@@ -1558,6 +1558,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Mostrar / preparar formulario estático
       const seccion = document.getElementById("seccionNuevoPago");
+      const btnSubmit = document.getElementById("btnSubmitPago");
+      const btnCancelar = document.getElementById("cerrarModalPagosVentaBtn2");
       if (!esFinalizada && balance > 0.01) {
         limpiarFormularioPago();
         // Configurar hint y máximo del monto
@@ -1570,6 +1572,8 @@ document.addEventListener("DOMContentLoaded", function () {
           montoInput.max = balance.toFixed(2);
           montoInput.placeholder = balance.toFixed(2);
         }
+        if (btnSubmit) btnSubmit.classList.remove("hidden");
+        if (btnCancelar) btnCancelar.innerHTML = "Cancelar";
         seccion.classList.remove("hidden");
 
         // Registrar submit solo una vez usando referencia guardada
@@ -1624,6 +1628,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       } else {
         seccion.classList.add("hidden");
+        if (btnSubmit) btnSubmit.classList.add("hidden");
+        if (btnCancelar) btnCancelar.innerHTML = "Cerrar";
       }
 
     } catch (err) {

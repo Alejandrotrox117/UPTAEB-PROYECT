@@ -1,0 +1,1298 @@
+[21-Mar-2026 09:37:33 America/Caracas] Actualizacion (BCV): Codigo de moneda no soportado: XYZ
+[21-Mar-2026 09:37:33 America/Caracas] Actualizacion (BCV): Error de cURL - Failed to connect to localhost port 65432 after 0 ms: Could not connect to server al acceder a http://localhost:65432/no-existe
+[21-Mar-2026 09:37:33 America/Caracas] Actualizacion (BCV): No se pudo obtener el HTML para USD.
+[21-Mar-2026 09:37:38 America/Caracas]  NotificacionHelper: Conectado a Redis usando Predis
+[21-Mar-2026 09:37:38 America/Caracas] enviarPorModulo: modulo=productos, tipo=PRODUCTO_NUEVO
+[21-Mar-2026 09:37:38 America/Caracas]  obtenerRolesConPermiso: módulo=productos, roles encontrados=1,6
+[21-Mar-2026 09:37:38 America/Caracas]  Roles con permiso en productos: 1, 6
+[21-Mar-2026 09:37:38 America/Caracas]  Roles destinatarios finales: 1, 6
+[21-Mar-2026 09:37:38 America/Caracas]  Módulo encontrado: ID 13
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación guardada (ID: 287) para rol 1
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación guardada (ID: 288) para rol 6
+[21-Mar-2026 09:37:38 America/Caracas]  Notificaciones guardadas, primer ID: 287
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación enviada: PRODUCTO_NUEVO a roles 1,6 (1 suscriptores conectados)
+[21-Mar-2026 09:37:38 America/Caracas]  NotificacionHelper: Conectado a Redis usando Predis
+[21-Mar-2026 09:37:38 America/Caracas] enviarPorModulo: modulo=productos, tipo=PRODUCTO_NUEVO
+[21-Mar-2026 09:37:38 America/Caracas]  obtenerRolesConPermiso: módulo=productos, roles encontrados=1,6
+[21-Mar-2026 09:37:38 America/Caracas]  Roles con permiso en productos: 1, 6
+[21-Mar-2026 09:37:38 America/Caracas]  Roles destinatarios finales: 1, 6
+[21-Mar-2026 09:37:38 America/Caracas]  Módulo encontrado: ID 13
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación guardada (ID: 289) para rol 1
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación guardada (ID: 290) para rol 6
+[21-Mar-2026 09:37:38 America/Caracas]  Notificaciones guardadas, primer ID: 289
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación enviada: PRODUCTO_NUEVO a roles 1,6 (1 suscriptores conectados)
+[21-Mar-2026 09:37:38 America/Caracas]  NotificacionHelper: Conectado a Redis usando Predis
+[21-Mar-2026 09:37:38 America/Caracas] enviarPorModulo: modulo=productos, tipo=PRODUCTO_NUEVO
+[21-Mar-2026 09:37:38 America/Caracas]  obtenerRolesConPermiso: módulo=productos, roles encontrados=1,6
+[21-Mar-2026 09:37:38 America/Caracas]  Roles con permiso en productos: 1, 6
+[21-Mar-2026 09:37:38 America/Caracas]  Roles destinatarios finales: 1, 6
+[21-Mar-2026 09:37:38 America/Caracas]  Módulo encontrado: ID 13
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación guardada (ID: 291) para rol 1
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación guardada (ID: 292) para rol 6
+[21-Mar-2026 09:37:38 America/Caracas]  Notificaciones guardadas, primer ID: 291
+[21-Mar-2026 09:37:38 America/Caracas]  Notificación enviada: PRODUCTO_NUEVO a roles 1,6 (1 suscriptores conectados)
+[21-Mar-2026 09:37:38 America/Caracas] RolesIntegradoModel::ejecutarGuardadoAsignacionesRolCompletas - Error: SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (`bd_pda_seguridad_test`.`rol_modulo_permisos`, CONSTRAINT `fk_rol_modulo_permisos_modulo` FOREIGN KEY (`idmodulo`) REFERENCES `modulos` (`idmodulo`) ON DELETE CASCADE)
+[21-Mar-2026 09:37:40 America/Caracas] SueldosModel::esSuperUsuario - Verificando usuario ID: 1
+[21-Mar-2026 09:37:40 America/Caracas] SueldosModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:40 America/Caracas] SueldosModel::esSuperUsuario - Rol del usuario: 1, Es super usuario: SÍ
+[21-Mar-2026 09:37:40 America/Caracas] === DEBUG SUELDOS MODEL ===
+[21-Mar-2026 09:37:40 America/Caracas] Total registros obtenidos: 21
+[21-Mar-2026 09:37:40 America/Caracas] Registro 0:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 21
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 1:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 20
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 2:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 11
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 3:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 19
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 4:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 18
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 5:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 17
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 6:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 16
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 7:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 14
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 8:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 15
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 9:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 12
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 10:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 13
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 11:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 8
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 12:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 9
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 13:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 10
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 14:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 7
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 2
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Richard Gil
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493511
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 15:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 6
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 16:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 3
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 17:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 4
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 18:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 5
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 19:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 2
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: 1
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona:  
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] Registro 20:
+[21-Mar-2026 09:37:40 America/Caracas]   idsueldo: 1
+[21-Mar-2026 09:37:40 America/Caracas]   idpersona: 1
+[21-Mar-2026 09:37:40 America/Caracas]   idempleado: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_persona: maria valentina pineda barroeta
+[21-Mar-2026 09:37:40 America/Caracas]   nombre_empleado:  
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_persona: 29624053
+[21-Mar-2026 09:37:40 America/Caracas]   identificacion_empleado: NULL
+[21-Mar-2026 09:37:40 America/Caracas]   ---
+[21-Mar-2026 09:37:40 America/Caracas] === FIN DEBUG SUELDOS MODEL ===
+[21-Mar-2026 09:37:41 America/Caracas] Error al actualizar usuario: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'correo' cannot be null
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:41 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Cliente no existe
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:41 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Moneda no existe
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:41 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Descuento mayor al subtotal
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:41 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El producto con ID 99999 no existe en el detalle #1
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:41 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:41 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: La cantidad debe ser mayor a 0 en el detalle #1
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [observaciones] => Venta editada
+    [total_general] => 125
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => 5
+                    [precio_unitario_venta] => 25
+                )
+
+        )
+
+)
+
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => 5
+            [precio_unitario_venta] => 25
+        )
+
+)
+
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 999999
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+)
+
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La venta especificada no existe
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 2
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+)
+
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La venta no se puede editar porque no está en estado BORRADOR
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 3
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [idcliente] => 999999
+)
+
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: El cliente especificado no existe
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0001
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 2
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 6
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0002
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 09:37:42 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 2
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 3
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0003
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 3
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 4
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0004
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 4
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 5
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0005
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 5
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Descuento mayor al subtotal
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::registrarMovimientosInventario - Error: Stock insuficiente para 'Carton'. Stock actual: 2, cantidad solicitada: 50
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Stock insuficiente para 'Carton'. Stock actual: 2, cantidad solicitada: 50
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Cliente inactivo
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Cliente no existe
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El producto 'ProdTestInactivo' no está activo (detalle #1)
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El producto con ID 888888 no existe en el detalle #1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: La cantidad debe ser mayor a 0 en el detalle #1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: La cantidad debe ser mayor a 0 en el detalle #1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El precio unitario debe ser válido en el detalle #1
+[21-Mar-2026 09:37:43 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El precio unitario debe ser válido en el detalle #1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [fecha_venta] => 2026-03-21
+    [idcliente] => 1
+    [idmoneda_general] => 3
+    [subtotal_general] => 125
+    [descuento_porcentaje_general] => 0
+    [monto_descuento_general] => 0
+    [estatus] => BORRADOR
+    [total_general] => 125
+    [observaciones] => Venta editada OK
+    [tasa_usada] => 1
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => 5
+                    [precio_unitario_venta] => 25
+                    [subtotal_general] => 125
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => 5
+            [precio_unitario_venta] => 25
+            [subtotal_general] => 125
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 2
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [fecha_venta] => 2026-03-21
+    [idcliente] => 1
+    [idmoneda_general] => 3
+    [subtotal_general] => 140
+    [descuento_porcentaje_general] => 0
+    [monto_descuento_general] => 0
+    [estatus] => BORRADOR
+    [total_general] => 140
+    [observaciones] => Test stock edición
+    [tasa_usada] => 1
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => 7
+                    [precio_unitario_venta] => 20
+                    [subtotal_general] => 140
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 2
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => 7
+            [precio_unitario_venta] => 20
+            [subtotal_general] => 140
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 2
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 2
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 3
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [observaciones] => Intento edición en POR_PAGAR
+    [total_general] => 999
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La venta no se puede editar porque no está en estado BORRADOR
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 888888
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [observaciones] => Test venta no existe
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La venta especificada no existe
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 4
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => 1
+                    [precio_unitario_venta] => -100
+                    [subtotal_general] => -100
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 4
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => 1
+            [precio_unitario_venta] => -100
+            [subtotal_general] => -100
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 4
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 4
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: El precio unitario debe ser válido en el detalle #1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 5
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => -5
+                    [precio_unitario_venta] => 20
+                    [subtotal_general] => -100
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 5
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => -5
+            [precio_unitario_venta] => 20
+            [subtotal_general] => -100
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 5
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 5
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La cantidad debe ser mayor a 0 en el detalle #1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 6
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 888888
+                    [cantidad] => 1
+                    [precio_unitario_venta] => 100
+                    [subtotal_general] => 100
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 6
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 888888
+            [cantidad] => 1
+            [precio_unitario_venta] => 100
+            [subtotal_general] => 100
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 6
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 6
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: El producto con ID 888888 no existe en el detalle #1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Iniciando registro de movimientos de devolución para venta ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0001
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Movimientos de devolución registrados exitosamente para venta ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Venta ID: 1 eliminada exitosamente
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Iniciando registro de movimientos de devolución para venta ID: 2
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 2
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 7
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0002
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 2
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Movimientos de devolución registrados exitosamente para venta ID: 2
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Venta ID: 2 eliminada exitosamente
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Iniciando registro de movimientos de devolución para venta ID: 3
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 3
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 4
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0003
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 3
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Movimientos de devolución registrados exitosamente para venta ID: 3
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Venta ID: 3 eliminada exitosamente
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Error al eliminar venta ID: 4 - La venta solo se puede eliminar si está en estado BORRADOR.
+[21-Mar-2026 09:37:45 America/Caracas] VentasModel::ejecutarEliminacionVenta - Error al eliminar venta ID: 888888 - La venta especificada no existe.
+[21-Mar-2026 10:09:52 America/Caracas] Actualizacion (BCV): Codigo de moneda no soportado: XYZ
+[21-Mar-2026 10:09:52 America/Caracas] Actualizacion (BCV): No se pudo obtener el HTML para USD.
+[21-Mar-2026 10:09:52 America/Caracas] Actualizacion (BCV): No se encontró el nodo de la tasa para dolar.
+[21-Mar-2026 10:09:56 America/Caracas] ComprasModel::insertarCompra - Error: No hay detalles de compra para procesar.
+[21-Mar-2026 10:09:56 America/Caracas] ComprasModel::insertarCompra - Error: El proveedor con ID 9999 no existe.
+[21-Mar-2026 10:09:56 America/Caracas] ComprasModel::insertarCompra - Error: El producto con ID 5555 no existe.
+[21-Mar-2026 10:09:57 America/Caracas] ComprasModel::insertarCompra - Error: La cantidad o el precio unitario no pueden ser negativos o cero.
+[21-Mar-2026 10:09:57 America/Caracas] ComprasModel::actualizarCompra - Error: El proveedor con ID 888888 no existe.
+[21-Mar-2026 10:09:57 America/Caracas] ComprasModel::actualizarCompra - Error: El producto con ID 888888 no existe.
+[21-Mar-2026 10:09:59 America/Caracas] SueldosModel::ejecutarEliminacionSueldo -> SQLSTATE: Connection lost
+[21-Mar-2026 10:10:00 America/Caracas] SueldosModel::esSuperUsuario - Verificando usuario ID: 1
+[21-Mar-2026 10:10:00 America/Caracas] SueldosModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:10:00 America/Caracas] SueldosModel::esSuperUsuario - Rol del usuario: 1, Es super usuario: SÍ
+[21-Mar-2026 10:10:00 America/Caracas] === DEBUG SUELDOS MODEL ===
+[21-Mar-2026 10:10:00 America/Caracas] Total registros obtenidos: 2
+[21-Mar-2026 10:10:00 America/Caracas] Registro 0:
+[21-Mar-2026 10:10:00 America/Caracas]   idsueldo: 1
+[21-Mar-2026 10:10:00 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   idempleado: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   nombre_persona: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   nombre_empleado: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   identificacion_empleado: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   ---
+[21-Mar-2026 10:10:00 America/Caracas] Registro 1:
+[21-Mar-2026 10:10:00 America/Caracas]   idsueldo: 2
+[21-Mar-2026 10:10:00 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   idempleado: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   nombre_persona: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   nombre_empleado: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   identificacion_empleado: NULL
+[21-Mar-2026 10:10:00 America/Caracas]   ---
+[21-Mar-2026 10:10:00 America/Caracas] === FIN DEBUG SUELDOS MODEL ===
+[21-Mar-2026 10:10:00 America/Caracas] SueldosModel::esSuperUsuario - Verificando usuario ID: 1
+[21-Mar-2026 10:10:00 America/Caracas] SueldosModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:10:00 America/Caracas] SueldosModel::esSuperUsuario - Rol del usuario: 1, Es super usuario: SÍ
+[21-Mar-2026 10:10:00 America/Caracas] SueldosModel::ejecutarBusquedaTodosSueldos - Error: SQLSTATE: Connection lost
+[21-Mar-2026 10:10:01 America/Caracas] Error al verificar super usuario: Received Mockery_0_PDOStatement::fetch(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al verificar super usuario: Received Mockery_0_PDOStatement::fetch(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al verificar super usuario: Received Mockery_0_PDOStatement::fetch(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al insertar usuario: Received Mockery_1_PDO::lastInsertId(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al insertar usuario: Received Mockery_1_PDO::lastInsertId(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al verificar usuario existente por correo: Received Mockery_0_PDOStatement::fetch(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al verificar super usuario: Received Mockery_0_PDOStatement::fetch(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al verificar super usuario: Received Mockery_0_PDOStatement::fetch(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al verificar super usuario: DB Error
+[21-Mar-2026 10:10:01 America/Caracas] UsuariosModel::ejecutarBusquedaTodosUsuarios - Error: DB Error
+[21-Mar-2026 10:10:01 America/Caracas] Error al verificar super usuario: Received Mockery_0_PDOStatement::fetch(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al actualizar usuario: Received Mockery_0_PDOStatement::rowCount(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] Error al actualizar usuario: Received Mockery_0_PDOStatement::rowCount(), but no expectations were specified
+[21-Mar-2026 10:10:01 America/Caracas] UsuariosModel::ejecutarBusquedaUsuarioPorId -> Clave foranea fail
+[21-Mar-2026 10:11:58 America/Caracas] Actualizacion (BCV): Codigo de moneda no soportado: XYZ
+[21-Mar-2026 10:11:58 America/Caracas] Actualizacion (BCV): Error de cURL - Failed to connect to localhost port 65432 after 0 ms: Could not connect to server al acceder a http://localhost:65432/no-existe
+[21-Mar-2026 10:11:58 America/Caracas] Actualizacion (BCV): No se pudo obtener el HTML para USD.
+[21-Mar-2026 10:12:03 America/Caracas]  NotificacionHelper: Conectado a Redis usando Predis
+[21-Mar-2026 10:12:03 America/Caracas] enviarPorModulo: modulo=productos, tipo=PRODUCTO_NUEVO
+[21-Mar-2026 10:12:03 America/Caracas]  obtenerRolesConPermiso: módulo=productos, roles encontrados=1,6
+[21-Mar-2026 10:12:03 America/Caracas]  Roles con permiso en productos: 1, 6
+[21-Mar-2026 10:12:03 America/Caracas]  Roles destinatarios finales: 1, 6
+[21-Mar-2026 10:12:03 America/Caracas]  Módulo encontrado: ID 13
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación guardada (ID: 293) para rol 1
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación guardada (ID: 294) para rol 6
+[21-Mar-2026 10:12:03 America/Caracas]  Notificaciones guardadas, primer ID: 293
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación enviada: PRODUCTO_NUEVO a roles 1,6 (1 suscriptores conectados)
+[21-Mar-2026 10:12:03 America/Caracas] ComprasModel::insertarCompra - Error: No hay detalles de compra para procesar.
+[21-Mar-2026 10:12:03 America/Caracas]  NotificacionHelper: Conectado a Redis usando Predis
+[21-Mar-2026 10:12:03 America/Caracas] enviarPorModulo: modulo=productos, tipo=PRODUCTO_NUEVO
+[21-Mar-2026 10:12:03 America/Caracas]  obtenerRolesConPermiso: módulo=productos, roles encontrados=1,6
+[21-Mar-2026 10:12:03 America/Caracas]  Roles con permiso en productos: 1, 6
+[21-Mar-2026 10:12:03 America/Caracas]  Roles destinatarios finales: 1, 6
+[21-Mar-2026 10:12:03 America/Caracas]  Módulo encontrado: ID 13
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación guardada (ID: 295) para rol 1
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación guardada (ID: 296) para rol 6
+[21-Mar-2026 10:12:03 America/Caracas]  Notificaciones guardadas, primer ID: 295
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación enviada: PRODUCTO_NUEVO a roles 1,6 (1 suscriptores conectados)
+[21-Mar-2026 10:12:03 America/Caracas] ComprasModel::actualizarCompra - Error: El proveedor con ID 903211 no existe.
+[21-Mar-2026 10:12:03 America/Caracas]  NotificacionHelper: Conectado a Redis usando Predis
+[21-Mar-2026 10:12:03 America/Caracas] enviarPorModulo: modulo=productos, tipo=PRODUCTO_NUEVO
+[21-Mar-2026 10:12:03 America/Caracas]  obtenerRolesConPermiso: módulo=productos, roles encontrados=1,6
+[21-Mar-2026 10:12:03 America/Caracas]  Roles con permiso en productos: 1, 6
+[21-Mar-2026 10:12:03 America/Caracas]  Roles destinatarios finales: 1, 6
+[21-Mar-2026 10:12:03 America/Caracas]  Módulo encontrado: ID 13
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación guardada (ID: 297) para rol 1
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación guardada (ID: 298) para rol 6
+[21-Mar-2026 10:12:03 America/Caracas]  Notificaciones guardadas, primer ID: 297
+[21-Mar-2026 10:12:03 America/Caracas]  Notificación enviada: PRODUCTO_NUEVO a roles 1,6 (1 suscriptores conectados)
+[21-Mar-2026 10:12:03 America/Caracas] RolesIntegradoModel::ejecutarGuardadoAsignacionesRolCompletas - Error: SQLSTATE[23000]: Integrity constraint violation: 1452 Cannot add or update a child row: a foreign key constraint fails (`bd_pda_seguridad_test`.`rol_modulo_permisos`, CONSTRAINT `fk_rol_modulo_permisos_modulo` FOREIGN KEY (`idmodulo`) REFERENCES `modulos` (`idmodulo`) ON DELETE CASCADE)
+[21-Mar-2026 10:12:06 America/Caracas] SueldosModel::esSuperUsuario - Verificando usuario ID: 1
+[21-Mar-2026 10:12:06 America/Caracas] SueldosModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:06 America/Caracas] SueldosModel::esSuperUsuario - Rol del usuario: 1, Es super usuario: SÍ
+[21-Mar-2026 10:12:06 America/Caracas] === DEBUG SUELDOS MODEL ===
+[21-Mar-2026 10:12:06 America/Caracas] Total registros obtenidos: 23
+[21-Mar-2026 10:12:06 America/Caracas] Registro 0:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 23
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 1:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 22
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 2:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 11
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 3:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 21
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 4:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 20
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 5:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 19
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 6:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 18
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 7:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 17
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 8:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 16
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 9:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 14
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 10:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 15
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 11:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 12
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 12:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 13
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 13:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 8
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 14:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 9
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 15:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 10
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 16:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 7
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 2
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Richard Gil
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493511
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 17:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 6
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 18:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 3
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 19:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 4
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 20:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 5
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 21:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 2
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: 1
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona:  
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado: Daniel Noboa
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: 28493521
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] Registro 22:
+[21-Mar-2026 10:12:06 America/Caracas]   idsueldo: 1
+[21-Mar-2026 10:12:06 America/Caracas]   idpersona: 1
+[21-Mar-2026 10:12:06 America/Caracas]   idempleado: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_persona: maria valentina pineda barroeta
+[21-Mar-2026 10:12:06 America/Caracas]   nombre_empleado:  
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_persona: 29624053
+[21-Mar-2026 10:12:06 America/Caracas]   identificacion_empleado: NULL
+[21-Mar-2026 10:12:06 America/Caracas]   ---
+[21-Mar-2026 10:12:06 America/Caracas] === FIN DEBUG SUELDOS MODEL ===
+[21-Mar-2026 10:12:07 America/Caracas] Error al actualizar usuario: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'correo' cannot be null
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Cliente no existe
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Moneda no existe
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Descuento mayor al subtotal
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El producto con ID 99999 no existe en el detalle #1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: La cantidad debe ser mayor a 0 en el detalle #1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [observaciones] => Venta editada
+    [total_general] => 125
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => 5
+                    [precio_unitario_venta] => 25
+                )
+
+        )
+
+)
+
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => 5
+            [precio_unitario_venta] => 25
+        )
+
+)
+
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 999999
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+)
+
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La venta especificada no existe
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 2
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+)
+
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La venta no se puede editar porque no está en estado BORRADOR
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Verificando usuario ID: 0
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Constante SUPER_USUARIO_ROL_ID: 1
+[21-Mar-2026 10:12:08 America/Caracas] ClientesModel::esSuperUsuario - Usuario no encontrado o inactivo
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 3
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [idcliente] => 999999
+)
+
+[21-Mar-2026 10:12:08 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: El cliente especificado no existe
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0001
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 2
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 6
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0002
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 2
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 3
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0003
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 3
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 4
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0004
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 4
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0005
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 10:12:09 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 5
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Descuento mayor al subtotal
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::registrarMovimientosInventario - Error: Stock insuficiente para 'Carton'. Stock actual: 2, cantidad solicitada: 50
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Stock insuficiente para 'Carton'. Stock actual: 2, cantidad solicitada: 50
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Cliente inactivo
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: Cliente no existe
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El producto 'ProdTestInactivo' no está activo (detalle #1)
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El producto con ID 888888 no existe en el detalle #1
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: La cantidad debe ser mayor a 0 en el detalle #1
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: La cantidad debe ser mayor a 0 en el detalle #1
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El precio unitario debe ser válido en el detalle #1
+[21-Mar-2026 10:12:10 America/Caracas] VentasModel::ejecutarInsercionVenta - Error: El precio unitario debe ser válido en el detalle #1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [fecha_venta] => 2026-03-21
+    [idcliente] => 1
+    [idmoneda_general] => 3
+    [subtotal_general] => 125
+    [descuento_porcentaje_general] => 0
+    [monto_descuento_general] => 0
+    [estatus] => BORRADOR
+    [total_general] => 125
+    [observaciones] => Venta editada OK
+    [tasa_usada] => 1
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => 5
+                    [precio_unitario_venta] => 25
+                    [subtotal_general] => 125
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => 5
+            [precio_unitario_venta] => 25
+            [subtotal_general] => 125
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 2
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [fecha_venta] => 2026-03-21
+    [idcliente] => 1
+    [idmoneda_general] => 3
+    [subtotal_general] => 140
+    [descuento_porcentaje_general] => 0
+    [monto_descuento_general] => 0
+    [estatus] => BORRADOR
+    [total_general] => 140
+    [observaciones] => Test stock edición
+    [tasa_usada] => 1
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => 7
+                    [precio_unitario_venta] => 20
+                    [subtotal_general] => 140
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 2
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => 7
+            [precio_unitario_venta] => 20
+            [subtotal_general] => 140
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 2
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 2
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 3
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [observaciones] => Intento edición en POR_PAGAR
+    [total_general] => 999
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La venta no se puede editar porque no está en estado BORRADOR
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 888888
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [observaciones] => Test venta no existe
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La venta especificada no existe
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 4
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => 1
+                    [precio_unitario_venta] => -100
+                    [subtotal_general] => -100
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 4
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => 1
+            [precio_unitario_venta] => -100
+            [subtotal_general] => -100
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 4
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 4
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: El precio unitario debe ser válido en el detalle #1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 5
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 1
+                    [cantidad] => -5
+                    [precio_unitario_venta] => 20
+                    [subtotal_general] => -100
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 5
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 1
+            [cantidad] => -5
+            [precio_unitario_venta] => 20
+            [subtotal_general] => -100
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 5
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 5
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: La cantidad debe ser mayor a 0 en el detalle #1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Iniciando actualización de venta ID: 6
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Datos recibidos: Array
+(
+    [detalles] => Array
+        (
+            [0] => Array
+                (
+                    [idproducto] => 888888
+                    [cantidad] => 1
+                    [precio_unitario_venta] => 100
+                    [subtotal_general] => 100
+                    [id_moneda_detalle] => 3
+                )
+
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Procesando detalles para venta ID: 6
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Número de detalles recibidos: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::updateVenta - Detalles recibidos: Array
+(
+    [0] => Array
+        (
+            [idproducto] => 888888
+            [cantidad] => 1
+            [precio_unitario_venta] => 100
+            [subtotal_general] => 100
+            [id_moneda_detalle] => 3
+        )
+
+)
+
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Iniciando para venta ID: 6
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::eliminarMovimientosVenta - Eliminados 1 movimientos para venta ID: 6
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarActualizacionVenta - Error: El producto con ID 888888 no existe en el detalle #1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Iniciando registro de movimientos de devolución para venta ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 5
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0001
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Movimientos de devolución registrados exitosamente para venta ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Venta ID: 1 eliminada exitosamente
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Iniciando registro de movimientos de devolución para venta ID: 2
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 2
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 7
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0002
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 2
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Movimientos de devolución registrados exitosamente para venta ID: 2
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Venta ID: 2 eliminada exitosamente
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Iniciando registro de movimientos de devolución para venta ID: 3
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Iniciando para venta ID: 3
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - ID tipo movimiento: 5
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Detalles obtenidos: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Procesando producto ID: 1, cantidad: 4
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Número movimiento generado: MOV-DEVOLUCION-20260321-0003
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Movimiento insertado para producto ID: 1
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Stock actualizado para producto ID: 1 a 999
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::registrarMovimientosDevolucion - Completado exitosamente para venta ID: 3
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Movimientos de devolución registrados exitosamente para venta ID: 3
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Venta ID: 3 eliminada exitosamente
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Error al eliminar venta ID: 4 - La venta solo se puede eliminar si está en estado BORRADOR.
+[21-Mar-2026 10:12:11 America/Caracas] VentasModel::ejecutarEliminacionVenta - Error al eliminar venta ID: 888888 - La venta especificada no existe.

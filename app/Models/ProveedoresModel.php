@@ -106,7 +106,7 @@ class ProveedoresModel
             $query = "INSERT INTO proveedor (
                         nombre, apellido, identificacion, fecha_nacimiento, 
                         direccion, correo_electronico, estatus, telefono_principal, 
-                        observaciones, genero, fecha_cracion, fecha_modificacion
+                        observaciones, genero, fecha_creacion, fecha_modificacion
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
             $params = [
@@ -203,7 +203,7 @@ class ProveedoresModel
         try {
             $query = "SELECT *, 
                         DATE_FORMAT(fecha_nacimiento, '%d/%m/%Y') as fecha_nacimiento_formato,
-                        DATE_FORMAT(fecha_cracion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
+                        DATE_FORMAT(fecha_creacion, '%d/%m/%Y %H:%i') as fecha_creacion_formato,
                         DATE_FORMAT(fecha_modificacion, '%d/%m/%Y %H:%i') as fecha_modificacion_formato
                     FROM proveedor WHERE idproveedor = ?";
             $stmt = $db->prepare($query);
@@ -249,7 +249,7 @@ class ProveedoresModel
 
             $query = "SELECT *, 
                         DATE_FORMAT(fecha_nacimiento, '%d/%m/%Y') as fecha_nacimiento_formato,
-                        DATE_FORMAT(fecha_cracion, '%d/%m/%Y') as fecha_creacion_formato
+                        DATE_FORMAT(fecha_creacion, '%d/%m/%Y') as fecha_creacion_formato
                     FROM proveedor" . $whereClause . " ORDER BY idproveedor DESC";
 
             $stmt = $db->prepare($query);
