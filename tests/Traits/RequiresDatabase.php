@@ -48,6 +48,17 @@ trait RequiresDatabase
             ob_start();
             $conexion = new Conexion();
             $conexion->connect();
+            
+            // Limpiar datos huérfanos antes de correr las pruebas para evitar choques de IDs
+            $db = $conexion->get_conectGeneral();
+            $db->exec('SET FOREIGN_KEY_CHECKS = 0;
+                       TRUNCATE TABLE venta;
+                       TRUNCATE TABLE detalle_venta;
+                       TRUNCATE TABLE movimientos_existencia;
+                       TRUNCATE TABLE compra;
+                       TRUNCATE TABLE detalle_compra;
+                       SET FOREIGN_KEY_CHECKS = 1;');
+
             $conexion->disconnect();
             ob_end_clean();
             return true;
@@ -57,3 +68,4 @@ trait RequiresDatabase
         }
     }
 }
+

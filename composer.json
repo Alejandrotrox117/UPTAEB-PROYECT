@@ -25,6 +25,10 @@
     }
     ,
     "scripts": {
-         "test": "vendor/bin/phpunit --colors=always"
+        "test": "vendor/bin/phpunit --colors=always",
+        "test:unit": "vendor/bin/phpunit --testsuite Unit --colors=always",
+        "test:integration": "vendor/bin/phpunit --testsuite Integration --colors=always",
+        "test:sequential": "php run_sequential_tests.php"
     }
 }
+

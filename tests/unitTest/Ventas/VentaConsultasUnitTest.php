@@ -24,7 +24,7 @@ class VentaConsultasUnitTest extends TestCase
 
     protected function setUp(): void
     {
-        ini_set('error_log', '/dev/null');
+        ini_set('error_log', strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' ? 'nul' : '/dev/null');
 
         $this->mockPdo  = Mockery::mock(PDO::class);
         $this->mockStmt = Mockery::mock(PDOStatement::class);

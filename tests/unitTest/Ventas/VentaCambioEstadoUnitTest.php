@@ -24,7 +24,7 @@ class VentaCambioEstadoUnitTest extends TestCase
 
     protected function setUp(): void
     {
-        ini_set('error_log', '/dev/null');
+        ini_set('error_log', strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' ? 'nul' : '/dev/null');
 
         $this->mockPdo  = Mockery::mock(PDO::class);
         $this->mockStmt = Mockery::mock(PDOStatement::class);
@@ -99,7 +99,7 @@ class VentaCambioEstadoUnitTest extends TestCase
         $this->mockStmt->shouldReceive('fetch')->with(PDO::FETCH_ASSOC)
             ->andReturn(['estatus' => 'POR_PAGAR']);
 
-        $resultado = $this->ventasModel->ejecutarCambioEstadoVenta(1, $estadoInvalido);
+        $resultado = $this->ventasModel->cambiarEstadoVenta(1, $estadoInvalido);
 
         $this->assertIsArray($resultado);
         $this->assertFalse($resultado['status']);
@@ -115,7 +115,7 @@ class VentaCambioEstadoUnitTest extends TestCase
             ->andReturn(['estatus' => 'BORRADOR']);
         $this->mockStmt->shouldReceive('rowCount')->andReturn(1);
 
-        $resultado = $this->ventasModel->ejecutarCambioEstadoVenta(1, 'por_pagar');
+        $resultado = $this->ventasModel->cambiarEstadoVenta(1, 'por_pagar');
 
         $this->assertIsArray($resultado);
         $this->assertTrue($resultado['status']);
@@ -132,7 +132,7 @@ class VentaCambioEstadoUnitTest extends TestCase
         $this->mockStmt->shouldReceive('fetch')->with(PDO::FETCH_ASSOC)
             ->andReturn(false);
 
-        $resultado = $this->ventasModel->ejecutarCambioEstadoVenta(99999, 'POR_PAGAR');
+        $resultado = $this->ventasModel->cambiarEstadoVenta(99999, 'POR_PAGAR');
 
         $this->assertIsArray($resultado);
         $this->assertFalse($resultado['status']);
@@ -150,7 +150,7 @@ class VentaCambioEstadoUnitTest extends TestCase
         $this->mockStmt->shouldReceive('fetch')->with(PDO::FETCH_ASSOC)
             ->andReturn(['estatus' => $estadoActual]);
 
-        $resultado = $this->ventasModel->ejecutarCambioEstadoVenta(1, $nuevoEstado);
+        $resultado = $this->ventasModel->cambiarEstadoVenta(1, $nuevoEstado);
 
         $this->assertIsArray($resultado);
         $this->assertFalse($resultado['status']);
@@ -172,7 +172,7 @@ class VentaCambioEstadoUnitTest extends TestCase
 
         $this->mockStmt->shouldReceive('rowCount')->andReturn(1);
 
-        $resultado = $this->ventasModel->ejecutarCambioEstadoVenta(1, $nuevoEstado);
+        $resultado = $this->ventasModel->cambiarEstadoVenta(1, $nuevoEstado);
 
         $this->assertIsArray($resultado);
         $this->assertTrue($resultado['status']);
@@ -196,7 +196,7 @@ class VentaCambioEstadoUnitTest extends TestCase
                 ['total_pagado'  => 0.00],                 // pagos conciliados = 0
             ]);
 
-        $resultado = $this->ventasModel->ejecutarCambioEstadoVenta(1, 'FINALIZADA');
+        $resultado = $this->ventasModel->cambiarEstadoVenta(1, 'FINALIZADA');
 
         $this->assertIsArray($resultado);
         $this->assertFalse($resultado['status']);
@@ -223,7 +223,7 @@ class VentaCambioEstadoUnitTest extends TestCase
 
         $this->mockStmt->shouldReceive('rowCount')->andReturn(1);
 
-        $resultado = $this->ventasModel->ejecutarCambioEstadoVenta(1, 'FINALIZADA');
+        $resultado = $this->ventasModel->cambiarEstadoVenta(1, 'FINALIZADA');
 
         $this->assertIsArray($resultado);
         $this->assertTrue($resultado['status']);
@@ -244,7 +244,7 @@ class VentaCambioEstadoUnitTest extends TestCase
                 ->andReturn(['estatus' => 'FINALIZADA'])
                 ->once();
 
-            $resultado = $this->ventasModel->ejecutarCambioEstadoVenta(1, $destino);
+            $resultado = $this->ventasModel->cambiarEstadoVenta(1, $destino);
 
             $this->assertFalse(
                 $resultado['status'],
